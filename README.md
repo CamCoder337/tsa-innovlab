@@ -73,10 +73,10 @@ Déploiement:      Docker + Cloud Infrastructure
 
 ### Prérequis
 ```bash
-Node.js >= 18.x
-Python >= 3.9
-PostgreSQL >= 13
-Redis >= 6.x
+Node.js >= 22.x
+Python >= 3.12
+PostgreSQL >= 18
+Redis >= 8.x
 Docker & Docker Compose
 ```
 
