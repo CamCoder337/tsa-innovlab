@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Tuple, Optional
 import numpy as np
 
 from app.core.config import settings
-from app.services.ml_service import ml_service
+# from app.services.ml_service import ml_service
 from app.schemas.eta import ETARequest, ETAResponse
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class ETAService:
         """
         try:
             # Get ML model
-            model = ml_service.get_model(self.model_name)
+            model = none
             if not model:
                 logger.warning("ETA model not available, using fallback calculation")
                 return await self._fallback_eta_calculation(request)
