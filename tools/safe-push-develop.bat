@@ -104,7 +104,7 @@ echo.
 echo ✅ SUCCESS! Push réussi sur branche %WORKING_BRANCH%!
 echo 🌐 Étape suivante - Créer Pull Request sur GitHub:
 echo    %WORKING_BRANCH% → develop
-echo    https://github.com/ton-username/tsa-logistique/compare/develop...%WORKING_BRANCH%
+echo    https://github.com/camcoder337/tsa-logistique/compare/develop...%WORKING_BRANCH%
 echo.
 echo 💡 Une fois la PR mergée dans develop:
 echo    git checkout develop
