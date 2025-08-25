@@ -39,7 +39,7 @@ fastapi-monolith/
 ```bash
 # Cloner le projet
 git clone <repo-url>
-cd services/fastapi-monolith
+cd services/tsa-ai
 
 # Lancer avec Docker Compose
 docker-compose up -d
