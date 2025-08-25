@@ -10,14 +10,13 @@ Le dossier `services/` contient tous les services backend de TSA-Logistique, con
 
 ```
 services/
-├── api-backend/              # 🔑 API principale (AdonisJS)
-├── ai-service/               # 🤖 Intelligence artificielle (FastAPI)
-└── notification-service/     # 📬 Notifications (Node.js)
+├── tsa-monolith/             # 🔑 API principale (AdonisJS)
+└── tsa-ai/                   # 🤖 Intelligence artificielle (FastAPI)
 ```
 
-## 🔑 API Backend
+## 🔑 TSA Monolith
 
-**Stack :** AdonisJS 6 + TypeScript + PostgreSQL
+**Stack :** AdonisJS 6 + TypeScript + SQLite (dev)
 
 ### Responsabilités
 - **Authentification & autorisation** (JWT, sessions)
@@ -32,37 +31,33 @@ services/
 
 ### Architecture Interne
 ```
-api-backend/
+tsa-monolith/
 ├── app/
-│   ├── controllers/          # Contrôleurs HTTP
-│   ├── models/              # Modèles Lucid ORM
-│   ├── services/            # Logique métier
+│   ├── exceptions/          # Gestion des exceptions
 │   ├── middleware/          # Middlewares HTTP
-│   ├── validators/          # Validation des données
-│   ├── jobs/               # Jobs background (Bull Queue)
-│   └── exceptions/         # Exceptions personnalisées
+│   └── models/             # Modèles Lucid ORM (User)
+├── bin/                    # Scripts de démarrage
 ├── config/                 # Configuration AdonisJS
-├── database/              # Migrations, seeders, factories
-├── start/                 # Démarrage et routes
-└── tests/                # Tests (unit, functional, integration)
+├── database/              # Migrations et seeders
+├── start/                 # Routes et kernel
+└── tests/                # Tests (bootstrap)
 ```
 
 ### Démarrage Rapide
 ```bash
-cd services/api-backend
+cd services/tsa-monolith
 
 # Installation
-pnpm install
+npm install
 
 # Configuration
 cp .env.example .env
 
 # Base de données
-pnpm db:migrate
-pnpm db:seed
+node ace migration:run
 
 # Développement
-pnpm dev        # http://localhost:8000
+npm run dev     # http://localhost:3333
 ```
 
 ### APIs Principales
@@ -75,9 +70,9 @@ pnpm dev        # http://localhost:8000
 | `GET /api/users/profile` | Profil utilisateur |
 | `POST /api/kyc/documents` | Upload documents KYC |
 
-## 🤖 AI Service
+## 🤖 TSA AI Service
 
-**Stack :** FastAPI + Python + TensorFlow/Scikit-learn
+**Stack :** FastAPI + Python + SQLite
 
 ### Responsabilités
 - **Optimisation de routes** via algorithmes ML
@@ -90,23 +85,23 @@ pnpm dev        # http://localhost:8000
 
 ### Architecture Interne
 ```
-ai-service/
+tsa-ai/
 ├── app/
-│   ├── routers/            # Routes FastAPI
-│   ├── services/           # Services ML
-│   ├── models/            # Modèles ML (TensorFlow, scikit-learn)
-│   ├── data/              # Traitement des données
-│   ├── utils/             # Utilitaires
-│   └── core/              # Configuration
-├── datasets/              # Données d'entraînement
-├── models/               # Modèles ML sérialisés
+│   ├── core/              # Configuration et dépendances
+│   ├── endpoints/         # Routes FastAPI (health, eta)
+│   ├── models/           # Modèles de base de données
+│   ├── schemas/          # Schémas Pydantic
+│   ├── services/         # Services métier (ETA)
+│   └── main.py           # Application FastAPI
+├── ml_models/            # Modèles ML
 ├── notebooks/            # Jupyter notebooks R&D
+├── scripts/              # Scripts utilitaires
 └── tests/               # Tests Python
 ```
 
 ### Démarrage Rapide
 ```bash
-cd services/ai-service
+cd services/tsa-ai
 
 # Environnement virtuel Python
 python -m venv venv
@@ -119,118 +114,66 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # Développement
-python main.py    # http://localhost:5000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### APIs ML Disponibles
 | Endpoint | Description |
 |----------|-------------|
-| `GET /health` | Status du service IA |
-| `POST /optimize/route` | Optimisation d'itinéraire |
-| `POST /predict/demand` | Prédiction de demande |
-| `POST /match/missions` | Matching missions/transporteurs |
-| `POST /recommend/products` | Recommandations produits |
-| `POST /analyze/pricing` | Analyse prédictive prix |
+| `GET /api/v1/health` | Status du service IA |
+| `POST /api/v1/eta/predict` | Prédiction ETA de livraison |
 
-## 📬 Notification Service
-
-**Stack :** Node.js + TypeScript + Bull Queue
-
-### Responsabilités
-- **Notifications push** mobiles (FCM)
-- **Emails transactionnels** (SendGrid/Mailgun)
-- **SMS** (Twilio/Africa's Talking)
-- **Notifications in-app** temps réel
-- **Templates** de messages
-- **Scheduling** de notifications
-- **Analytics** d'engagement
-
-### Démarrage Rapide
-```bash
-cd services/notification-service
-
-# Installation
-pnpm install
-
-# Configuration
-cp .env.example .env
-
-# Développement
-pnpm dev        # http://localhost:6000
-```
 
 ## 🔄 Communication Inter-Services
 
 ### Architecture de Communication
 ```mermaid
 graph TB
-    FE[Frontend] --> API[API Backend]
-    API --> AI[AI Service]
-    API --> NOTIF[Notification Service]
-    API --> DB[(PostgreSQL)]
-    API --> REDIS[(Redis)]
+    FE[Frontend Web] --> API[TSA Monolith]
+    API --> AI[TSA AI Service]
+    API --> DB[(SQLite)]
     AI --> API
-    NOTIF --> QUEUE[Bull Queue]
 ```
 
 ### Patterns de Communication
-- **Synchrone** : HTTP REST entre API Backend ↔ AI Service
-- **Asynchrone** : Queue Redis pour notifications
-- **Événements** : WebSocket pour temps réel
-- **Cache** : Redis pour sessions et cache
+- **Synchrone** : HTTP REST entre TSA Monolith ↔ TSA AI Service
+- **Base de données** : SQLite pour développement
 
 ## 🛠️ Développement
 
 ### Scripts Monorepo
 ```bash
-# Démarrer tous les services
-pnpm dev
+# Démarrer le monolith
+cd services/tsa-monolith && npm run dev
 
-# Démarrer un service spécifique
-pnpm dev:backend     # API Backend seulement
-pnpm dev:ai          # AI Service seulement
+# Démarrer le service IA
+cd services/tsa-ai && source venv/bin/activate && uvicorn app.main:app --reload
 
 # Tests
-pnpm test:services   # Tous les tests services
-pnpm test:backend    # Tests API Backend
-pnpm test:ai         # Tests AI Service
-
-# Build
-pnpm build:services  # Build tous les services
+npm test            # Tests monolith
+pytest tests/       # Tests service IA
 ```
 
-### Docker Compose
-```bash
-# Services de développement
-docker-compose up -d postgres redis
-
-# Tous les services (production)
-docker-compose -f docker-compose.prod.yml up -d
-```
 
 ## 🔐 Configuration
 
 ### Variables d'Environnement Communes
 ```env
 # Base de données
-DATABASE_URL=postgresql://user:pass@localhost:5432/tsa_logistique
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=sqlite:///./tsa_contest.db
 
 # Services internes
-API_BACKEND_URL=http://localhost:8000
-AI_SERVICE_URL=http://localhost:5000
-NOTIFICATION_SERVICE_URL=http://localhost:6000
+ADONIS_API_URL=http://localhost:3333
+FAST API_BASE_URL=http://localhost:8000
 
-# APIs externes
-SMILE_IDENTITY_API_KEY=your_key
-CLOUDINARY_API_KEY=your_key
-SENDGRID_API_KEY=your_key
+# Configuration
+APP_KEY=your_super_secret_app_key
+NODE_ENV=development
 ```
 
 ### Configuration par Service
-- **API Backend** : `.env` avec DB, Redis, APIs externes
-- **AI Service** : `.env` avec modèles ML, datasets
-- **Notification Service** : `.env` avec providers (FCM, SendGrid)
+- **TSA Monolith** : `.env` avec configuration AdonisJS et SQLite
+- **TSA AI Service** : `.env` avec configuration FastAPI et modèles ML
 
 ## 📊 Monitoring & Observabilité
 
@@ -254,8 +197,8 @@ SENDGRID_API_KEY=your_key
 ### Environnements
 | Service | Staging | Production |
 |---------|---------|------------|
-| **API Backend** | Railway | Railway |
-| **AI Service** | Render | Render |
+| **TSA Monolith** | Railway | Railway |
+| **TSA AI Service** | Render | Render |
 
 ### CI/CD Pipeline
 1. **Tests** automatiques sur PR
@@ -303,14 +246,10 @@ pnpm test:coverage
 
 ### Gestion des Migrations
 ```bash
-# API Backend (Lucid ORM)
-cd services/api-backend
-pnpm db:migrate
-pnpm db:rollback
-
-# Backup/Restore
-pnpm db:backup
-pnpm db:restore
+# TSA Monolith (Lucid ORM)
+cd services/tsa-monolith
+node ace migration:run
+node ace migration:rollback
 ```
 
 ### Monitoring de Performance
@@ -337,43 +276,39 @@ docker-compose restart service-name
 
 #### Base de données inaccessible
 ```bash
-# Vérifier PostgreSQL
-docker-compose logs postgres
-psql -h localhost -U postgres -d tsa_logistique
+# Vérifier SQLite
+ls -la services/tsa-ai/tsa_contest.db
 
 # Reset complet
-docker-compose down -v
-docker-compose up -d postgres
-pnpm db:migrate
+rm services/tsa-ai/tsa_contest.db
+cd services/tsa-monolith && node ace migration:run
 ```
 
 #### Communication inter-services
 ```bash
 # Tester la connectivité
-curl http://localhost:8000/health
-curl http://localhost:5000/health
+curl http://localhost:3333/
+curl http://localhost:8000/api/v1/health
 
 # Vérifier les URL de configuration
-grep SERVICE_URL .env
+grep API_URL .env
 ```
 
 ## 📚 Documentation Technique
 
 ### API Documentation
-- **API Backend** : Swagger UI sur `/docs`
-- **AI Service** : FastAPI docs sur `/docs`
-- **Postman Collections** : `docs/postman/`
+- **TSA Monolith** : Documentation AdonisJS
+- **TSA AI Service** : FastAPI docs sur `/docs`
 
 ### Guides Spécialisés
-- [API Backend Guide](api-backend/README.md)
-- [AI Service Guide](ai-service/README.md)
+- [TSA Monolith Guide](tsa-monolith/README.md)
+- [TSA AI Service Guide](tsa-ai/README.md)
 
 ## 🤝 Contribution
 
 ### Guidelines Spécifiques
-- **API Backend** : Suivre conventions AdonisJS
-- **AI Service** : PEP8 pour Python, docstrings obligatoires
-- **Notification Service** : TypeScript strict mode
+- **TSA Monolith** : Suivre conventions AdonisJS
+- **TSA AI Service** : PEP8 pour Python, docstrings obligatoires
 
 ### Architecture Decisions
 - **RESTful APIs** : Suivre conventions REST

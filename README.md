@@ -58,11 +58,10 @@ Créer l'"Uber de la logistique" avec une plateforme qui transforme la façon do
 
 ### Stack Technologique
 ```
-Frontend Web:     React.js + TypeScript
-Mobile:           Flutter
+Frontend Web:     React.js + TypeScript + Vite
 API Principale:   AdonisJS (TypeScript) - Backend core
 Services IA/ML:   FastAPI (Python) - Data & Intelligence
-Base de données:  PostgreSQL + Redis + Cache & Broker
+Base de données:  SQLite (dev) / PostgreSQL (prod)
 Services Externes: Storage, Mailing, KYC, Maps, Monitoring
 Load Balancer:    Nginx
 CI/CD:            GitHub Actions
@@ -87,68 +86,66 @@ git clone https://github.com/CamCoder337/tsa-innovlab.git
 cd tsa-innovlab
 
 # Installation API principale (AdonisJS)
-cd backend
+cd services/tsa-monolith
 npm install
 cp .env.example .env
 
+# Configuration de la base de données
+node ace migration:run
+
 # Installation services IA/ML (FastAPI)
-cd ../ai-services
+cd ../tsa-ai
+python -m venv venv
+source venv/bin/activate  # Sur Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
 
-# Installation Frontend
-cd ../frontend
-npm install
+# Installation Frontend Web
+cd ../../apps/frontend-web
+yarn install
 
-# Lancer avec Docker (recommandé)
-docker-compose up -d
+# Lancement manuel
+# Terminal 1 - API Principale (AdonisJS)
+cd services/tsa-monolith && npm run dev
 
-# Ou lancement manuel
-# Terminal 1 - API Principale
-cd backend && npm run dev
+# Terminal 2 - Services IA (FastAPI)
+cd services/tsa-ai && source venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Terminal 2 - Services IA
-cd ai-services && uvicorn main:app --reload
-
-# Terminal 3 - Frontend  
-cd frontend && npm run dev
+# Terminal 3 - Frontend Web
+cd apps/frontend-web && yarn dev
 ```
 
 ### Variables d'Environnement
 
-**Backend AdonisJS (.env)**
+**Backend AdonisJS (services/tsa-monolith/.env)**
 ```env
-# Base de données
-DB_CONNECTION=pg
-PG_HOST=localhost
-PG_PORT=5432
-PG_USER=tsa_user
-PG_PASSWORD=password
-PG_DB_NAME=tsa_innovlab
-
-# Redis
-REDIS_CONNECTION=local
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-
-# JWT
+# Application
+TZ=UTC
+PORT=3333
+HOST=0.0.0.0
+LOG_LEVEL=info
 APP_KEY=your_super_secret_app_key
-JWT_SECRET=your_jwt_secret
+NODE_ENV=development
 
-# Services externes
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-GOOGLE_MAPS_API_KEY=your_google_maps_key
-SMILE_ID_API_KEY=your_kyc_key
+# Base de données
+DB_CONNECTION=sqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=lucid
+DB_PASSWORD=
+DB_DATABASE=lucid
 
-# FastAPI Services
+# Authentification
+SESSION_DRIVER=cookie
+
+# Services IA FastAPI
 FASTAPI_BASE_URL=http://localhost:8000
 ```
 
-**Services IA FastAPI (.env)**
+**Services IA FastAPI (services/tsa-ai/.env)**
 ```env
 # Base de données
-DATABASE_URL=postgresql://user:password@localhost:5432/tsa_innovlab
+DATABASE_URL=sqlite:///./tsa_contest.db
 
 # APIs ML
 HUGGING_FACE_API_KEY=your_hugging_face_key
@@ -158,8 +155,12 @@ OPENWEATHER_API_KEY=your_weather_key
 ADONIS_API_URL=http://localhost:3333
 
 # Modèles IA
-MODEL_PATH=./models/
+MODEL_PATH=./ml_models/
 PREDICTION_THRESHOLD=0.85
+
+# Configuration API
+API_V1_STR=/api/v1
+PROJECT_NAME=TSA InnovLab AI Services
 ```
 
 ## 📊 Méthodologie Agile (Scrum)
@@ -211,23 +212,6 @@ black ai-services/  # Python formatting
 - **Sécurité** : Conformité OWASP
 - **Clean Code** : Principes SOLID, DRY, KISS
 
-## 📱 Applications Mobiles
-
-### Fonctionnalités Mobiles
-- **Affréteur** : Création/suivi commandes, chat, factures
-- **Transporteur** : Candidature, GPS intégré, preuves photo
-- **Admin** : Dashboard simplifié, validation commandes
-
-### Installation Mobile
-```bash
-# Android
-cd mobile/android
-./gradlew assembleDebug
-
-# iOS  
-cd mobile/ios
-xcodebuild -workspace App.xcworkspace -scheme App build
-```
 
 ## 📊 Analytics et IA
 
@@ -287,7 +271,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ### Environnements
 - **Development** : 
-  - Frontend: `http://localhost:3000`
+  - Frontend Web: `http://localhost:5173`
   - AdonisJS API: `http://localhost:3333`
   - FastAPI Services: `http://localhost:8000`
 - **Staging** : `https://staging.tsa-innovlab.com`
@@ -325,7 +309,7 @@ docker-compose -f docker-compose.prod.yml up -d
 | **Fonctionnalités** | 30% | Complétude, UX |
 | **Qualité logicielle** | 25% | Tests, clean code |
 | **Data & IA** | 15% | Intégration IA |
-| **UX & Mobile** | 10% | Design, responsivité |
+| **UX & Design** | 10% | Interface utilisateur |
 | **Architecture** | 10% | Robustesse, sécurité |
 | **Agilité** | 10% | Sprints, livrables |
 
@@ -364,7 +348,7 @@ Le code source des 3 premiers lauréats devient propriété de TSA-Logistique.
 - 🌐 Site web: [tsa-logistique.com](https://tsa-logistique.com)
 
 **Équipe de Développement**
-- 📧 Email: dev@tsa-innovlab.com
+- 📧 Email: dev@tsa-innovlab.co
 - 💬 Slack: #tsa-innovlab-team
 
 ---
