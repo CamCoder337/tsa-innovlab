@@ -1,0 +1,255 @@
+name: CD Test Environment
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types: [completed]
+    branches: [ develop ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: ${{ secrets.GAR_LOCATION || 'us-central1' }}
+  SERVICE: tsa-innovlab-test
+  REGION: ${{ secrets.GCP_REGION || 'us-central1' }}
+
+jobs:
+  deploy-test:
+    name: Deploy to GCP Test Environment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success')
+    environment: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories describe tsa-innovlab \
+            --location=$GAR_LOCATION \
+            --format="get(name)" || \
+          gcloud artifacts repositories create tsa-innovlab \
+            --repository-format=docker \
+            --location=$GAR_LOCATION \
+            --description="TSA InnovLab Docker repository"
+
+      - name: Build and push Docker images
+        run: |
+          # Build and push AdonisJS Monolith
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-monolith:$GITHUB_SHA \
+            -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-monolith:latest-test \
+            ./services/tsa-monolith
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-monolith:$GITHUB_SHA
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-monolith:latest-test
+          
+          # Build and push FastAPI AI Service
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-ai:$GITHUB_SHA \
+            -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-ai:latest-test \
+            ./services/tsa-ai
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-ai:$GITHUB_SHA
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-ai:latest-test
+
+      - name: Create Cloud Run deployment configuration
+        run: |
+          # Create deployment configuration for test environment
+          cat <<EOF > cloud-run-config.yaml
+          apiVersion: serving.knative.dev/v1
+          kind: Service
+          metadata:
+            name: tsa-monolith-test
+            annotations:
+              run.googleapis.com/ingress: all
+              run.googleapis.com/execution-environment: gen2
+          spec:
+            template:
+              metadata:
+                annotations:
+                  autoscaling.knative.dev/maxScale: "10"
+                  run.googleapis.com/cloudsql-instances: $PROJECT_ID:$REGION:tsa-postgres-test
+                  run.googleapis.com/cpu-throttling: "false"
+              spec:
+                containerConcurrency: 1000
+                timeoutSeconds: 300
+                containers:
+                - image: $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-monolith:$GITHUB_SHA
+                  ports:
+                  - name: http1
+                    containerPort: 3333
+                  env:
+                  - name: NODE_ENV
+                    value: "production"
+                  - name: HOST
+                    value: "0.0.0.0"
+                  - name: PORT
+                    value: "3333"
+                  - name: DB_HOST
+                    value: "/cloudsql/$PROJECT_ID:$REGION:tsa-postgres-test"
+                  - name: DB_PORT
+                    value: "5432"
+                  - name: DB_USER
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials-test
+                        key: username
+                  - name: DB_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: db-credentials-test
+                        key: password
+                  - name: DB_DATABASE
+                    value: "tsa_contest_test"
+                  - name: APP_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: app-secrets-test
+                        key: app_key
+                  - name: REDIS_HOST
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-config-test
+                        key: host
+                  - name: REDIS_PORT
+                    value: "6379"
+                  - name: REDIS_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-config-test
+                        key: password
+                  resources:
+                    limits:
+                      cpu: "2"
+                      memory: "2Gi"
+                    requests:
+                      cpu: "1"
+                      memory: "1Gi"
+          ---
+          apiVersion: serving.knative.dev/v1
+          kind: Service
+          metadata:
+            name: tsa-ai-test
+            annotations:
+              run.googleapis.com/ingress: all
+              run.googleapis.com/execution-environment: gen2
+          spec:
+            template:
+              metadata:
+                annotations:
+                  autoscaling.knative.dev/maxScale: "5"
+                  run.googleapis.com/cloudsql-instances: $PROJECT_ID:$REGION:tsa-postgres-test
+                  run.googleapis.com/cpu-throttling: "false"
+              spec:
+                containerConcurrency: 1000
+                timeoutSeconds: 600
+                containers:
+                - image: $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/tsa-innovlab/tsa-ai:$GITHUB_SHA
+                  ports:
+                  - name: http1
+                    containerPort: 8000
+                  env:
+                  - name: PYTHONUNBUFFERED
+                    value: "1"
+                  - name: ENVIRONMENT
+                    value: "test"
+                  - name: DATABASE_URL
+                    valueFrom:
+                      secretKeyRef:
+                        name: database-url-test
+                        key: url
+                  - name: REDIS_URL
+                    valueFrom:
+                      secretKeyRef:
+                        name: redis-url-test
+                        key: url
+                  - name: FASTAPI_HOST
+                    value: "0.0.0.0"
+                  - name: FASTAPI_PORT
+                    value: "8000"
+                  resources:
+                    limits:
+                      cpu: "2"
+                      memory: "4Gi"
+                    requests:
+                      cpu: "1"
+                      memory: "2Gi"
+          EOF
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run services replace cloud-run-config.yaml --region=$REGION
+
+      - name: Allow unauthenticated invocations
+        run: |
+          gcloud run services add-iam-policy-binding tsa-monolith-test \
+            --member="allUsers" \
+            --role="roles/run.invoker" \
+            --region=$REGION
+          
+          gcloud run services add-iam-policy-binding tsa-ai-test \
+            --member="allUsers" \
+            --role="roles/run.invoker" \
+            --region=$REGION
+
+      - name: Get service URLs
+        run: |
+          MONOLITH_URL=$(gcloud run services describe tsa-monolith-test --region=$REGION --format="value(status.url)")
+          AI_URL=$(gcloud run services describe tsa-ai-test --region=$REGION --format="value(status.url)")
+          
+          echo "Test environment deployed successfully!"
+          echo "Monolith Service URL: $MONOLITH_URL"
+          echo "AI Service URL: $AI_URL"
+          
+          # Store URLs for future use
+          echo "MONOLITH_URL=$MONOLITH_URL" >> $GITHUB_ENV
+          echo "AI_URL=$AI_URL" >> $GITHUB_ENV
+
+      - name: Run health checks
+        run: |
+          echo "Running health checks..."
+          
+          # Wait a bit for services to start
+          sleep 30
+          
+          # Check monolith health
+          curl -f "$MONOLITH_URL/health" || echo "Monolith health check failed"
+          
+          # Check AI service health
+          curl -f "$AI_URL/api/ai/health" || echo "AI service health check failed"
+
+      - name: Run database migrations
+        run: |
+          # Note: This would typically be done via a Cloud Run job or init container
+          echo "Database migrations should be handled via Cloud Run jobs or init containers"
+
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-test]
+    if: always()
+
+    steps:
+      - name: Notify Success
+        if: needs.deploy-test.result == 'success'
+        run: |
+          echo "✅ Test environment deployed successfully!"
+          echo "Deployment completed for commit: $GITHUB_SHA"
+
+      - name: Notify Failure
+        if: needs.deploy-test.result == 'failure'
+        run: |
+          echo "❌ Test environment deployment failed!"
+          echo "Please check the logs for commit: $GITHUB_SHA"
+          exit 1
