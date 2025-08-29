@@ -257,6 +257,145 @@ python -c "from app.core.database import test_connection; print(test_connection(
 4. Push to branch (`git push origin feature/new-prediction`)
 5. Créer Pull Request
 
+## 📋 Conventions de nommage
+
+### Variables
+```python
+# Snake_case pour variables et fonctions
+user_id = 123
+eta_prediction = calculate_eta()
+database_connection = get_db_connection()
+
+# UPPERCASE pour constantes
+MAX_RETRY_ATTEMPTS = 3
+DEFAULT_TIMEOUT = 30
+API_BASE_URL = "https://api.example.com"
+```
+
+### Fonctions
+```python
+# Snake_case, verbe descriptif
+def calculate_eta_prediction(origin: Point, destination: Point) -> ETAResult:
+    pass
+
+def validate_shipment_data(data: dict) -> bool:
+    pass
+
+def get_user_recommendations(user_id: int, limit: int = 10) -> List[Product]:
+    pass
+
+# Fonctions privées avec underscore
+def _process_ml_features(raw_data: dict) -> np.ndarray:
+    pass
+```
+
+### Classes
+```python
+# PascalCase pour classes
+class ETAPredictionService:
+    pass
+
+class AnomalyDetectionModel:
+    pass
+
+class ShipmentTracker:
+    pass
+
+# Exceptions avec "Error" ou "Exception" suffix
+class InvalidShipmentDataError(Exception):
+    pass
+
+class ModelLoadingException(Exception):
+    pass
+```
+
+### Fichiers et modules
+```python
+# Snake_case pour fichiers Python
+eta_service.py
+anomaly_detection.py
+data_preprocessing.py
+
+# Modules suivent la structure
+from app.services.eta_service import ETAPredictionService
+from app.models.shipment import Shipment
+from app.schemas.eta import ETARequest, ETAResponse
+```
+
+### Variables d'environnement
+```python
+# UPPERCASE avec underscores
+DATABASE_URL = os.getenv("DATABASE_URL")
+ML_MODEL_PATH = os.getenv("ML_MODEL_PATH")
+REDIS_HOST = os.getenv("REDIS_HOST")
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+```
+
+### Endpoints API
+```python
+# Kebab-case dans URLs, groupés par fonctionnalité
+"/api/ai/eta/predict"
+"/api/ai/eta/predict-batch" 
+"/api/ai/anomaly/detect"
+"/api/ai/recommendations/products"
+"/api/ai/health/detailed"
+```
+
+### Modèles Pydantic
+```python
+# PascalCase, suffixe descriptif
+class ETARequest(BaseModel):
+    origin_lat: float
+    origin_lng: float
+    destination_lat: float
+    destination_lng: float
+
+class ETAResponse(BaseModel):
+    estimated_duration_minutes: int
+    confidence_score: float
+    
+class ShipmentCreate(BaseModel):
+    pass
+
+class ShipmentUpdate(BaseModel):
+    pass
+```
+
+### Base de données
+```python
+# Snake_case pour tables et colonnes
+class Shipment(Base):
+    __tablename__ = "shipments"
+    
+    shipment_id = Column(Integer, primary_key=True)
+    origin_latitude = Column(Float)
+    destination_longitude = Column(Float)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+```
+
+### Tests
+```python
+# Préfixe "test_", descriptif
+def test_calculate_eta_with_valid_coordinates():
+    pass
+
+def test_validate_shipment_data_raises_error_for_invalid_input():
+    pass
+
+def test_get_user_recommendations_returns_empty_list_for_new_user():
+    pass
+
+# Fixtures avec snake_case
+@pytest.fixture
+def sample_shipment_data():
+    pass
+
+@pytest.fixture
+def mock_ml_model():
+    pass
+```
+
 ## 📄 License
 
 Projet TSA Contest 2025 - Usage interne uniquement.
