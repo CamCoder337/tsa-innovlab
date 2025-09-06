@@ -10,6 +10,8 @@ export default class MfaRecoveryCodesSchema extends BaseSchema {
       table.string('code_hash', 255).notNullable()
       table.timestamp('used_at', { useTz: true })
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['user_id'])
     })
   }
 

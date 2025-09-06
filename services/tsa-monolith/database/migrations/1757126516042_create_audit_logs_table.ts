@@ -15,6 +15,9 @@ export default class AuditLogsSchema extends BaseSchema {
       table.specificType('ip_address', 'inet') // PostgreSQL inet
       table.text('user_agent')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['user_id', 'action', 'created_at'])
+      table.index(['entity_type', 'entity_id'])
     })
   }
 

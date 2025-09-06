@@ -15,6 +15,8 @@ export default class AddressesSchema extends BaseSchema {
       table.decimal('latitude', 10, 8)
       table.decimal('longitude', 11, 8)
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['city', 'country'])
     })
   }
 

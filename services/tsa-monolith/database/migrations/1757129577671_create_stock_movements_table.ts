@@ -16,6 +16,8 @@ export default class StockMovements extends BaseSchema {
       table.uuid('reference_id')
       table.uuid('created_by').references('id').inTable('users')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['product_id', 'created_at'])
     })
   }
 

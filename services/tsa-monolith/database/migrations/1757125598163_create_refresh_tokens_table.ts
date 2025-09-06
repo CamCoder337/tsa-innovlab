@@ -12,6 +12,9 @@ export default class RefreshTokensSchema extends BaseSchema {
       table.timestamp('expires_at', { useTz: true }).notNullable()
       table.timestamp('revoked_at', { useTz: true })
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['user_id'])
+      table.index(['token_hash'])
     })
   }
 

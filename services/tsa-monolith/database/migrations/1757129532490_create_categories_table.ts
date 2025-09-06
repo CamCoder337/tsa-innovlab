@@ -15,6 +15,9 @@ export default class Categories extends BaseSchema {
       table.integer('display_order').defaultTo(0)
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['parent_id'])
+      table.index(['is_active', 'display_order'])
     })
   }
 

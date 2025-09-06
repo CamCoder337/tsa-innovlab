@@ -16,6 +16,9 @@ export default class AccessTokensSchema extends BaseSchema {
       table.timestamp('expires_at', { useTz: true })
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['tokenable_type', 'tokenable_id'])
+      table.index(['hash'])
     })
   }
 

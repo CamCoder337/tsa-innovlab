@@ -19,14 +19,21 @@ export default class MissionsSchema extends BaseSchema {
       table.decimal('budget_min', 12, 2)
       table.decimal('budget_max', 12, 2)
       table
-        .enum('status', ['draft', 'published', 'assigned', 'completed', 'cancelled'])
+        .enum('status', ['draft', 'published', 'assigned', 'completed', 'cancelled'], {
+          useNative: true,
+          enumName: 'mission_status',
+        })
         .defaultTo('draft')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['affreteur_id', 'status'])
+      table.index(['status'])
     })
   }
 
   async down() {
     this.schema.dropTable(this.tableName)
+    await this.raw('DROP TYPE IF EXISTS mission_status')
   }
 }

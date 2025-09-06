@@ -21,6 +21,10 @@ export default class Products extends BaseSchema {
       table.uuid('created_by').references('id').inTable('users')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['category_id', 'is_active'])
+      table.index(['stock', 'stock_alert'])
+      table.index(['reference'])
     })
   }
 

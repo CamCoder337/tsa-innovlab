@@ -13,8 +13,18 @@ export default class UsersSchema extends BaseSchema {
       table.string('last_name', 100)
       table.string('phone', 20)
 
-      table.enum('role', ['admin', 'transporteur', 'affreteur']).notNullable()
-      table.enum('status', ['pending', 'active', 'suspended']).defaultTo('pending')
+      table
+        .enum('role', ['admin', 'transporteur', 'affreteur'], {
+          useNative: true,
+          enumName: 'user_role',
+        })
+        .notNullable()
+      table
+        .enum('status', ['pending', 'active', 'suspended'], {
+          useNative: true,
+          enumName: 'user_status',
+        })
+        .defaultTo('pending')
 
       table.timestamp('email_verified_at', { useTz: true })
       table.boolean('mfa_enabled').defaultTo(false)
@@ -25,6 +35,9 @@ export default class UsersSchema extends BaseSchema {
 
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['email'])
+      table.index(['role', 'status'])
     })
   }
 
