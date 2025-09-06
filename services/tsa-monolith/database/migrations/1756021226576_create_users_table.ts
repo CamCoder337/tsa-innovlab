@@ -9,8 +9,8 @@ export default class UsersSchema extends BaseSchema {
 
       table.string('email', 255).notNullable().unique()
       table.string('password', 255).notNullable()
-      table.string('fistName', 100)
-      table.string('lastName', 100)
+      table.string('fist_name', 100)
+      table.string('last_name', 100)
       table.string('phone', 20)
 
       table.enum('role', ['admin', 'transporteur', 'affreteur']).notNullable()
