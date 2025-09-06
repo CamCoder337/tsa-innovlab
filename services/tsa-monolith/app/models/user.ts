@@ -9,6 +9,7 @@ import RefreshToken from '#models/refresh_token'
 import Mission from '#models/mission'
 import Proposition from '#models/proposition'
 import AuditLog from '#models/audit_log'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -36,6 +37,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column({ serializeAs: null })
   declare passwordHash: string
+
+  get fullName(): string {
+    return `${this.firstName ?? ''} ${this.lastName ?? ''}`.trim()
+  }
 
   @column()
   declare firstName: string | null
@@ -79,6 +84,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
   // Relations
   @hasMany(() => AccessToken)
   declare accessTokens: HasMany<typeof AccessToken>
+
+  static accessTokens = DbAccessTokensProvider.forModel(User)
 
   @hasMany(() => RefreshToken)
   declare refreshTokens: HasMany<typeof RefreshToken>
