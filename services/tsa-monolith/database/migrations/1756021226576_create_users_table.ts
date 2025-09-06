@@ -1,17 +1,30 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
-export default class extends BaseSchema {
+export default class UsersSchema extends BaseSchema {
   protected tableName = 'users'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id').notNullable()
-      table.string('full_name').nullable()
-      table.string('email', 254).notNullable().unique()
-      table.string('password').notNullable()
+      table.uuid('id').primary().defaultTo(this.raw('uuid_generate_v4()'))
 
-      table.timestamp('created_at').notNullable()
-      table.timestamp('updated_at').nullable()
+      table.string('email', 255).notNullable().unique()
+      table.string('password', 255).notNullable()
+      table.string('fistName', 100)
+      table.string('lastName', 100)
+      table.string('phone', 20)
+
+      table.enum('role', ['admin', 'transporteur', 'affreteur']).notNullable()
+      table.enum('status', ['pending', 'active', 'suspended']).defaultTo('pending')
+
+      table.timestamp('email_verified_at', { useTz: true })
+      table.boolean('mfa_enabled').defaultTo(false)
+      table.string('mfa_secret', 255)
+      table.timestamp('last_login_at', { useTz: true })
+      table.integer('failed_login_attempts').defaultTo(0)
+      table.timestamp('locked_until', { useTz: true })
+
+      table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })
   }
 
