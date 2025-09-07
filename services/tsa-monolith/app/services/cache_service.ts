@@ -185,4 +185,25 @@ export default class CacheService {
       await redis.del(keys)
     }
   }
+
+  // Generic cache methods for other services
+  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    if (ttlSeconds) {
+      await redis.setex(key, ttlSeconds, value)
+    } else {
+      await redis.set(key, value)
+    }
+  }
+
+  async get(key: string): Promise<string | null> {
+    return await redis.get(key)
+  }
+
+  async delete(key: string): Promise<void> {
+    await redis.del(key)
+  }
+
+  async getKeys(pattern: string): Promise<string[]> {
+    return await redis.keys(pattern)
+  }
 }
