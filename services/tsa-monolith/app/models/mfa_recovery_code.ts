@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { createHash, randomBytes } from 'node:crypto'
 
 export default class MfaRecoveryCode extends BaseModel {
   @column({ isPrimary: true })
@@ -21,4 +22,38 @@ export default class MfaRecoveryCode extends BaseModel {
 
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
+
+  static async generateCodesFor(user: User, count: number = 10) {
+    const plainCodes: string[] = []
+
+    const codes = Array.from({ length: count }, () => {
+      const plain = randomBytes(8).toString('hex') // ex: 'a3f9c4d8e1b2f0aa'
+      plainCodes.push(plain)
+
+      return {
+        userId: user.id,
+        codeHash: this.hashCode(plain),
+      }
+    })
+
+    await this.createMany(codes)
+
+    return plainCodes
+  }
+
+  async verify(plainCode: string): Promise<boolean> {
+    return this.codeHash === MfaRecoveryCode.hashCode(plainCode)
+  }
+
+  async markAsUsed() {
+    this.usedAt = DateTime.now()
+    await this.save()
+  }
+
+  /**
+   * Hash utilitaire
+   */
+  private static hashCode(code: string): string {
+    return createHash('sha256').update(code).digest('hex')
+  }
 }

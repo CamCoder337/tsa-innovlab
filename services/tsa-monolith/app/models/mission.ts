@@ -70,4 +70,16 @@ export default class Mission extends BaseModel {
 
   @belongsTo(() => Address, { foreignKey: 'adresseArriveeId' })
   declare adresseArrivee: BelongsTo<typeof Address>
+
+  public getBudgetRange(): string {
+    if (this.budgetMin && this.budgetMax) {
+      return `${this.budgetMin.toLocaleString('fr-FR')} - ${this.budgetMax.toLocaleString('fr-FR')} FCFA`
+    } else if (this.budgetMin) {
+      return `${this.budgetMin.toLocaleString('fr-FR')} FCFA`
+    } else if (this.budgetMax) {
+      return `Jusqu'à ${this.budgetMax.toLocaleString('fr-FR')} FCFA`
+    } else {
+      return 'Non spécifié'
+    }
+  }
 }

@@ -1,7 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, scope, beforeCreate } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import string from '@adonisjs/core/helpers/string'
+import Hash from '@adonisjs/core/services/hash'
 
 export default class AccessToken extends BaseModel {
   @column({ isPrimary: true })
@@ -39,4 +41,54 @@ export default class AccessToken extends BaseModel {
 
   @belongsTo(() => User, { foreignKey: 'tokenableId' })
   declare user: BelongsTo<typeof User>
+  public static active = scope((query) => {
+    query.where((builder) => {
+      builder.whereNull('expires_at').orWhere('expires_at', '>', DateTime.now().toSQL())
+    })
+  })
+
+  public static expired = scope((query) => {
+    query.where('expires_at', '<=', DateTime.now().toSQL())
+  })
+
+  @beforeCreate()
+  public static async generateId(token: AccessToken) {
+    if (!token.id) {
+      token.id = string.generateRandom(32)
+    }
+  }
+
+  public isExpired(): boolean {
+    if (!this.expiresAt) return false
+    return this.expiresAt <= DateTime.now()
+  }
+
+  public isValid(): boolean {
+    return !this.isExpired()
+  }
+
+  public async verify(plainToken: string): Promise<boolean> {
+    return Hash.verify(this.hash, plainToken)
+  }
+
+  public hasAbility(ability: string): boolean {
+    return this.abilities.includes('*') || this.abilities.includes(ability)
+  }
+
+  public async touch(): Promise<void> {
+    this.lastUsedAt = DateTime.now()
+    await this.save()
+  }
+
+  public async revoke(): Promise<void> {
+    this.expiresAt = DateTime.now()
+    await this.save()
+  }
+
+  // Clean up expired tokens
+  public static async cleanup(): Promise<number> {
+    const result = await this.query().where('expires_at', '<=', DateTime.now().toSQL()).delete()
+
+    return result[0]
+  }
 }
