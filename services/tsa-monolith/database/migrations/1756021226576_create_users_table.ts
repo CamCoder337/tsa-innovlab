@@ -8,8 +8,8 @@ export default class UsersSchema extends BaseSchema {
       table.uuid('id').primary().defaultTo(this.raw('uuid_generate_v4()'))
 
       table.string('email', 255).notNullable().unique()
-      table.string('password', 255).notNullable()
-      table.string('fist_name', 100)
+      table.string('password_hash', 255).notNullable()
+      table.string('first_name', 100)
       table.string('last_name', 100)
       table.string('phone', 20)
 
