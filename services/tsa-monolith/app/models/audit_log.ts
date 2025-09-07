@@ -43,24 +43,29 @@ export default class AuditLog extends BaseModel {
       action: 'auth.login_success',
       ipAddress,
       userAgent: userAgent || null,
-      newValues: { 
-        email: user.email, 
+      newValues: {
+        email: user.email,
         role: user.role,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
-  static async logFailedLogin(email: string, ipAddress: string, userAgent?: string, reason?: string) {
+  static async logFailedLogin(
+    email: string,
+    ipAddress: string,
+    userAgent?: string,
+    reason?: string
+  ) {
     await this.create({
       action: 'auth.login_failed',
       ipAddress,
       userAgent: userAgent || null,
-      newValues: { 
-        email, 
+      newValues: {
+        email,
         reason: reason || 'Invalid credentials',
-        timestamp: DateTime.now().toISO() 
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -68,26 +73,26 @@ export default class AuditLog extends BaseModel {
     await this.create({
       userId: user.id,
       action: 'auth.logout',
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
-  static async logUserRegistration(user: User, ipAddress: string) {
+  static async logUserRegistration(user: User, ipAddress: string, options?: any) {
     await this.create({
       userId: user.id,
       action: 'auth.register',
       entityType: 'users',
       entityId: user.id,
       ipAddress,
-      newValues: { 
-        email: user.email, 
+      newValues: {
+        email: user.email,
         role: user.role,
-        status: user.status
-      }
-    })
+        status: user.status,
+      },
+    }, options)
   }
 
   static async logPasswordReset(user: User, ipAddress: string) {
@@ -97,10 +102,10 @@ export default class AuditLog extends BaseModel {
       entityType: 'users',
       entityId: user.id,
       ipAddress,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -110,10 +115,10 @@ export default class AuditLog extends BaseModel {
       action: 'mfa.initialized',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -123,10 +128,10 @@ export default class AuditLog extends BaseModel {
       action: 'mfa.enabled',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -136,10 +141,10 @@ export default class AuditLog extends BaseModel {
       action: 'mfa.disabled',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -149,10 +154,10 @@ export default class AuditLog extends BaseModel {
       action: 'mfa.recovery_codes_regenerated',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -162,12 +167,12 @@ export default class AuditLog extends BaseModel {
       action: 'auth.account_locked',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
         reason,
         lockedUntil: user.lockedUntil?.toISO(),
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 
@@ -177,10 +182,10 @@ export default class AuditLog extends BaseModel {
       action: 'auth.account_unlocked',
       entityType: 'users',
       entityId: user.id,
-      newValues: { 
+      newValues: {
         email: user.email,
-        timestamp: DateTime.now().toISO()
-      }
+        timestamp: DateTime.now().toISO(),
+      },
     })
   }
 }

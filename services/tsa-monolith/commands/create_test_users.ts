@@ -43,7 +43,7 @@ export default class CreateTestUsers extends BaseCommand {
       try {
         // Import dynamique pour éviter les problèmes de contexte
         const { default: User } = await import('#models/user')
-        
+
         // Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findBy('email', userData.email)
         if (existingUser) {

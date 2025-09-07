@@ -23,7 +23,7 @@ export default class MfaRecoveryCode extends BaseModel {
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 
-  static async generateCodesFor(user: User, count: number = 10) {
+  static async generateCodesFor(user: User, count: number = 10, trx?: any) {
     const plainCodes: string[] = []
 
     const codes = Array.from({ length: count }, () => {
@@ -36,7 +36,7 @@ export default class MfaRecoveryCode extends BaseModel {
       }
     })
 
-    await this.createMany(codes)
+    await this.createMany(codes, trx ? { client: trx } : undefined)
 
     return plainCodes
   }

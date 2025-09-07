@@ -111,11 +111,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
    */
   async generateAccessToken(name = 'access_token'): Promise<string> {
     const abilities = this.getAbilities()
-    
+
     // Créer le token avec une durée de 15 minutes
     const token = string.generateRandom(64)
     const tokenHash = await hash.make(token)
-    
+
     await AccessToken.create({
       tokenableType: 'users',
       tokenableId: this.id,
@@ -123,9 +123,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
       name,
       hash: tokenHash,
       abilities,
-      expiresAt: DateTime.now().plus({ minutes: 15 })
+      expiresAt: DateTime.now().plus({ minutes: 15 }),
     })
-    
+
     return token
   }
 
@@ -137,7 +137,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
     // On utilise notre EmailService via l'IoC container
     const { default: EmailService } = await import('#services/email_service')
     const emailService = new EmailService()
-    
+
     await emailService.sendPasswordResetEmail(this, token)
   }
 
@@ -172,7 +172,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
     // Pour l'instant on utilise le cache
     const { default: CacheService } = await import('#services/cache_service')
     const cacheService = new CacheService()
-    
+
     await cacheService.set(`password_reset:${this.id}`, token, 3600) // 1 heure
     return token
   }
@@ -183,10 +183,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   static async findByPasswordResetToken(token: string): Promise<User | null> {
     const { default: CacheService } = await import('#services/cache_service')
     const cacheService = new CacheService()
-    
+
     // Chercher tous les tokens de reset actifs
     const keys = await cacheService.getKeys('password_reset:*')
-    
+
     for (const key of keys) {
       const storedToken = await cacheService.get(key)
       if (storedToken === token) {
@@ -194,7 +194,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
         return await User.find(userId)
       }
     }
-    
+
     return null
   }
 
@@ -204,7 +204,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   async isPasswordResetTokenValid(token: string): Promise<boolean> {
     const { default: CacheService } = await import('#services/cache_service')
     const cacheService = new CacheService()
-    
+
     const storedToken = await cacheService.get(`password_reset:${this.id}`)
     return storedToken === token
   }
@@ -215,7 +215,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   async clearPasswordResetToken(): Promise<void> {
     const { default: CacheService } = await import('#services/cache_service')
     const cacheService = new CacheService()
-    
+
     await cacheService.delete(`password_reset:${this.id}`)
   }
 

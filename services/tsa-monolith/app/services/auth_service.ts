@@ -4,6 +4,7 @@ import AccessToken from '#models/access_token'
 import AuditLog from '#models/audit_log'
 import Hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
+import Database from '@adonisjs/lucid/services/db'
 import CacheService from './cache_service.js'
 import MFAService from './mfa_service.js'
 import EmailService from './email_service.js'
@@ -225,24 +226,42 @@ export default class AuthService {
       throw new Exception('Email already registered', { status: 422 })
     }
 
-    // Create user
-    const { password, ...userData } = data
-    const user = await User.create({
-      ...userData,
-      email: data.email.toLowerCase(),
-      passwordHash: password,
-      status: 'pending',
+    // Use database transaction to ensure atomicity
+    const user = await Database.transaction(async (trx) => {
+      // Create user within transaction
+      const { password, ...userData } = data
+      const newUser = await User.create({
+        ...userData,
+        email: data.email.toLowerCase(),
+        passwordHash: password,
+        status: 'pending',
+      }, { client: trx })
+
+      // Log registration
+      await AuditLog.logUserRegistration(newUser, ipAddress, { client: trx })
+
+      // Force MFA setup for admin users
+      if (newUser.role === 'admin') {
+        // Pre-generate MFA secret for admin users
+        const mfaData = await this.mfaService.generateSecret(newUser, trx)
+        
+        // Force MFA enabled for admin users immediately
+        newUser.mfaEnabled = true
+        await newUser.save({ client: trx })
+        
+        // Send special admin MFA setup email instead of regular welcome
+        await this.emailService.sendAdminMFASetupEmail(newUser, mfaData.qrCode, mfaData.recoveryCodes)
+      } else {
+        // Send welcome email for non-admin users
+        await this.emailService.sendWelcomeEmail(newUser)
+      }
+
+      // Send verification email via queue Redis
+      const verificationToken = string.generateRandom(32)
+      await this.emailService.sendVerificationEmail(newUser, verificationToken)
+
+      return newUser
     })
-
-    // Log registration
-    await AuditLog.logUserRegistration(user, ipAddress)
-
-    // Send verification email via queue Redis
-    const verificationToken = string.generateRandom(32)
-    await this.emailService.sendVerificationEmail(user, verificationToken)
-
-    // Send welcome email
-    await this.emailService.sendWelcomeEmail(user)
 
     return user
   }

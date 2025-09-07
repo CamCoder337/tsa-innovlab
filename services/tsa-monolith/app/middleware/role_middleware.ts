@@ -18,49 +18,49 @@ export default class RoleMiddleware {
     } = {}
   ) {
     const { auth, response } = ctx
-    
+
     // Vérifier que l'utilisateur est authentifié
     const user = auth.getUserOrFail()
-    
+
     const { role, roles } = options
-    
+
     // Si un seul rôle est spécifié
     if (role && !user.hasRole(role)) {
       return response.status(403).json({
         success: false,
         message: 'Access forbidden. Insufficient permissions.',
         required_role: role,
-        user_role: user.role
+        user_role: user.role,
       })
     }
-    
+
     // Si plusieurs rôles sont autorisés
     if (roles && !roles.includes(user.role)) {
       return response.status(403).json({
         success: false,
         message: 'Access forbidden. Insufficient permissions.',
         required_roles: roles,
-        user_role: user.role
+        user_role: user.role,
       })
     }
-    
+
     // Vérifier que le compte est actif
     if (!user.isActive()) {
       return response.status(403).json({
         success: false,
-        message: 'Account is not active or is locked'
+        message: 'Account is not active or is locked',
       })
     }
-    
+
     // Pour les admins, vérifier que MFA est activé
     if (user.role === UserRole.ADMIN && user.mustEnableMFA()) {
       return response.status(403).json({
         success: false,
         message: 'MFA setup required for admin accounts',
-        action_required: 'enable_mfa'
+        action_required: 'enable_mfa',
       })
     }
-    
+
     await next()
   }
 }
@@ -73,13 +73,11 @@ export function roleMiddleware(roles: UserRole[]): typeof RoleMiddleware
 export function roleMiddleware(roleOrRoles: UserRole | UserRole[]): typeof RoleMiddleware {
   class ConfiguredRoleMiddleware extends RoleMiddleware {
     async handle(ctx: HttpContext, next: NextFn) {
-      const options = Array.isArray(roleOrRoles) 
-        ? { roles: roleOrRoles }
-        : { role: roleOrRoles }
-      
+      const options = Array.isArray(roleOrRoles) ? { roles: roleOrRoles } : { role: roleOrRoles }
+
       return super.handle(ctx, next, options)
     }
   }
-  
+
   return ConfiguredRoleMiddleware
 }

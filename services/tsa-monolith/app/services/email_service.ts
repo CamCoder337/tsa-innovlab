@@ -128,7 +128,7 @@ export default class EmailService {
       template,
       data,
       priority,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     }
 
     const queueName = priority === 'high' ? 'email_queue_priority' : 'email_queue'
@@ -167,6 +167,21 @@ export default class EmailService {
       unlockTime: user.lockedUntil?.toFormat('dd/MM/yyyy HH:mm'),
       supportEmail: env.get('SUPPORT_EMAIL', 'support@tsa-logistics.com'),
     })
+  }
+
+  async sendAdminMFASetupEmail(user: User, qrCode: string, recoveryCodes: string[]) {
+    return this.send(
+      user.email,
+      '🔐 Configuration MFA Obligatoire - Compte Administrateur',
+      'emails/admin_mfa_setup',
+      {
+        userName: user.fullName || 'Administrateur',
+        qrCode,
+        recoveryCodes,
+        mfaUrl: `${env.get('FRONTEND_URL')}/settings/mfa`,
+        supportEmail: env.get('SUPPORT_EMAIL', 'support@tsa-logistics.com'),
+      }
+    )
   }
 
   // === Helpers ===

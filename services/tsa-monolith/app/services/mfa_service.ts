@@ -1,7 +1,7 @@
 import User from '#models/user'
 import MfaRecoveryCode from '#models/mfa_recovery_code'
 import * as OTPAuth from 'otpauth'
-import * as base32 from 'hi-base32'
+import base32 from 'hi-base32'
 import crypto from 'node:crypto'
 import QRCode from 'qrcode'
 
@@ -12,7 +12,8 @@ export default class MFAService {
   private readonly period = 30
   private readonly window = 2
 
-  async generateSecret(user: User): Promise<{
+
+  async generateSecret(user: User, trx?: any): Promise<{
     secret: string
     qrCode: string
     recoveryCodes: string[]
@@ -36,12 +37,12 @@ export default class MFAService {
     const qrCode = await QRCode.toDataURL(otpauthUrl)
 
     // Generate recovery codes
-    const recoveryCodes = await MfaRecoveryCode.generateCodesFor(user, 10)
+    const recoveryCodes = await MfaRecoveryCode.generateCodesFor(user, 10, trx)
 
     // Store secret (should be encrypted in production)
     user.mfaSecret = secret
     user.mfaEnabled = false // Will be enabled after verification
-    await user.save()
+    await user.save(trx ? { client: trx } : undefined)
 
     return {
       secret,
