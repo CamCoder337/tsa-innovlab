@@ -95,6 +95,44 @@ export default class AuthController {
   }
 
   /**
+   * Verify email with token
+   */
+  async verifyEmail({ request, response }: HttpContext) {
+    try {
+      const { token } = request.only(['token'])
+      
+      if (!token) {
+        return response.badRequest({
+          success: false,
+          message: 'Verification token is required',
+          errors: ['Token missing'],
+        })
+      }
+
+      const result = await this.authService.verifyEmail(token)
+
+      if (result.success) {
+        return response.ok({
+          success: true,
+          message: result.message,
+        })
+      } else {
+        return response.badRequest({
+          success: false,
+          message: result.message,
+          errors: [result.message],
+        })
+      }
+    } catch (error) {
+      return response.internalServerError({
+        success: false,
+        message: 'Email verification failed',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
    * Déconnexion utilisateur
    */
   async logout({ auth, response }: HttpContext) {

@@ -109,6 +109,19 @@ export default class AuditLog extends BaseModel {
     })
   }
 
+  static async logEmailVerification(user: User) {
+    await this.create({
+      userId: user.id,
+      action: 'auth.email_verified',
+      entityType: 'users',
+      entityId: user.id,
+      newValues: {
+        email: user.email,
+        verifiedAt: DateTime.now().toISO(),
+      },
+    })
+  }
+
   static async logMFAInitialization(user: User) {
     await this.create({
       userId: user.id,

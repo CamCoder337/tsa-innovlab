@@ -1,8 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, scope, beforeCreate } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, scope } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
-import string from '@adonisjs/core/helpers/string'
 import Hash from '@adonisjs/core/services/hash'
 
 export default class AccessToken extends BaseModel {
@@ -51,12 +50,6 @@ export default class AccessToken extends BaseModel {
     query.where('expires_at', '<=', DateTime.now().toSQL())
   })
 
-  @beforeCreate()
-  public static async generateId(token: AccessToken) {
-    if (!token.id) {
-      token.id = string.generateRandom(32)
-    }
-  }
 
   public isExpired(): boolean {
     if (!this.expiresAt) return false

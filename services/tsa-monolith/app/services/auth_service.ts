@@ -1,4 +1,4 @@
-import User from '#models/user'
+import User, {UserStatus} from '#models/user'
 import RefreshToken from '#models/refresh_token'
 import AccessToken from '#models/access_token'
 import AuditLog from '#models/audit_log'
@@ -46,15 +46,26 @@ export default class AuthService {
   ): Promise<AuthTokens | MFARequiredResponse> {
     const { email, password, mfaCode } = credentials
 
-    // Find user with rate limiting check
+    // Find user first to determine role-based rate limiting
+    const user = await User.query().where('email', email.toLowerCase()).first()
+    
+    // Apply role-based rate limiting
     const rateLimitKey = `login:${email.toLowerCase()}`
-    const { allowed } = await this.cacheService.checkRateLimit(rateLimitKey, 5, 900)
+    const isAdmin = user?.role === 'admin'
+    const limits = isAdmin 
+      ? { maxAttempts: 15, windowMinutes: 10 } // Plus permissif pour admins
+      : { maxAttempts: 10, windowMinutes: 5 }   // Standard pour utilisateurs
+    
+    const { allowed, resetAt } = await this.cacheService.checkRateLimit(
+      rateLimitKey, 
+      limits.maxAttempts, 
+      limits.windowMinutes * 60
+    )
 
     if (!allowed) {
-      throw new Exception('Too many login attempts', { status: 429 })
+      const remainingMinutes = Math.ceil((resetAt - Date.now()) / (1000 * 60))
+      throw new Exception(`Too many login attempts. Try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`, { status: 429 })
     }
-
-    const user = await User.query().where('email', email.toLowerCase()).first()
 
     if (!user) {
       await this.logFailedLogin(email, ipAddress, userAgent)
@@ -244,11 +255,11 @@ export default class AuthService {
       if (newUser.role === 'admin') {
         // Pre-generate MFA secret for admin users
         const mfaData = await this.mfaService.generateSecret(newUser, trx)
-        
+
         // Force MFA enabled for admin users immediately
         newUser.mfaEnabled = true
         await newUser.save({ client: trx })
-        
+
         // Send special admin MFA setup email instead of regular welcome
         await this.emailService.sendAdminMFASetupEmail(newUser, mfaData.qrCode, mfaData.recoveryCodes)
       } else {
@@ -256,14 +267,58 @@ export default class AuthService {
         await this.emailService.sendWelcomeEmail(newUser)
       }
 
-      // Send verification email via queue Redis
+      // Send verification email with stored token
       const verificationToken = string.generateRandom(32)
+
+      // Store verification token in cache (24h expiration)
+      await this.cacheService.set(
+        `email_verification:${newUser.id}`,
+        verificationToken,
+        86400 // 24 heures
+      )
+
       await this.emailService.sendVerificationEmail(newUser, verificationToken)
 
       return newUser
     })
 
     return user
+  }
+
+  /**
+   * Vérifie l'email avec le token fourni
+   */
+  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+    // Chercher le token dans le cache
+    const cacheKeys = await this.cacheService.getKeys('email_verification:*')
+
+    for (const key of cacheKeys) {
+      const storedToken = await this.cacheService.get(key)
+
+      if (storedToken === token) {
+        const userId = key.replace('email_verification:', '')
+        const user = await User.find(userId)
+
+        if (!user) {
+          return { success: false, message: 'User not found' }
+        }
+
+        // Activer le compte
+        user.status = UserStatus.ACTIVE
+        user.emailVerifiedAt = DateTime.now()
+        await user.save()
+
+        // Supprimer le token du cache
+        await this.cacheService.delete(key)
+
+        // Log de vérification
+        await AuditLog.logEmailVerification(user)
+
+        return { success: true, message: 'Email verified successfully' }
+      }
+    }
+
+    return { success: false, message: 'Invalid or expired token' }
   }
 
   /**
