@@ -61,6 +61,7 @@ router
     // Routes publiques (pas d'authentification requise)
     router.post('/login', '#controllers/http/auth/auth_controller.login')
     router.post('/register', '#controllers/http/auth/auth_controller.register')
+    router.post('/verify-email', '#controllers/http/auth/auth_controller.verifyEmail')
     router.post('/forgot-password', '#controllers/http/auth/auth_controller.forgotPassword')
     router.post('/reset-password', '#controllers/http/auth/auth_controller.resetPassword')
     router.post('/refresh-token', '#controllers/http/auth/auth_controller.refreshToken')

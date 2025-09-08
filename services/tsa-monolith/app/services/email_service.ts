@@ -19,11 +19,15 @@ export default class EmailService {
     data: Record<string, any>,
     queue = true
   ) {
-    const runner = queue ? mail.sendLater.bind(mail) : mail.send.bind(mail)
-
-    await runner((message) => {
-      message.from(this.from).to(to).subject(subject).htmlView(view, data)
-    })
+    if (queue) {
+      // Utiliser notre queue Redis personnalisée
+      await this.sendViaQueue(to, subject, view, data)
+    } else {
+      // Envoi direct
+      await mail.send((message) => {
+        message.from(this.from).to(to).subject(subject).htmlView(view, data)
+      })
+    }
   }
 
   async sendVerificationEmail(user: User, token: string) {
@@ -37,7 +41,8 @@ export default class EmailService {
         userName: user.fullName || 'Utilisateur',
         verificationUrl,
         expiresIn: '24 heures',
-      }
+      },
+      false // Envoi direct, pas de queue
     )
   }
 
@@ -64,7 +69,7 @@ export default class EmailService {
       role: this.getRoleName(user.role),
       dashboardUrl,
       features: this.getRoleFeatures(user.role),
-    })
+    }, true) // Utiliser la queue pour les emails de bienvenue
   }
 
   async sendNewMissionNotification(transporteur: User, mission: Mission) {
@@ -180,7 +185,8 @@ export default class EmailService {
         recoveryCodes,
         mfaUrl: `${env.get('FRONTEND_URL')}/settings/mfa`,
         supportEmail: env.get('SUPPORT_EMAIL', 'support@tsa-logistics.com'),
-      }
+      },
+      false // Envoi direct, pas de queue
     )
   }
 

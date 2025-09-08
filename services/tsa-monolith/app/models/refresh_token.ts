@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, beforeCreate } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import string from '@adonisjs/core/helpers/string'
@@ -29,12 +29,6 @@ export default class RefreshToken extends BaseModel {
 
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
-  @beforeCreate()
-  public static async generateId(token: RefreshToken) {
-    if (!token.id) {
-      token.id = string.generateRandom(32)
-    }
-  }
 
   // Business Methods
   public isExpired(): boolean {
