@@ -1,0 +1,1125 @@
+{
+	"info": {
+		"_postman_id": "tsa-logistics-admin-crud-collection",
+		"name": "TSA Logistics - Admin CRUD Collection",
+		"description": "Collection complète pour tester les fonctionnalités CRUD admin des produits et catégories du système TSA Logistics.\n\n## 🚀 Comment utiliser cette collection\n\n1. **Importer** cette collection dans Postman\n2. **Configurer** les variables d'environnement (voir section Variables)\n3. **Authentification** : Commencer par faire un login pour obtenir le token\n4. **Tests** : Utiliser les exemples fournis pour chaque endpoint\n\n## 🔧 Variables requises\n- `baseUrl`: http://localhost:3333\n- `token`: sera auto-rempli après login\n- `categoryId`: ID d'une catégorie (sera auto-rempli)\n- `productId`: ID d'un produit (sera auto-rempli)\n\nDéveloppé pour TSA Contest 2025 🏆",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.token) {",
+									"        pm.environment.set('token', response.data.token);",
+									"        console.log('Token saved:', response.data.token.substring(0, 20) + '...');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authentification admin pour obtenir le token JWT nécessaire aux autres endpoints."
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Récupérer le profil de l'utilisateur connecté pour vérifier le token et le rôle."
+					}
+				}
+			],
+			"description": "Endpoints d'authentification pour obtenir et valider les tokens d'accès."
+		},
+		{
+			"name": "📂 Categories Management",
+			"item": [
+				{
+					"name": "📋 List Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "Electronics",
+									"disabled": true
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "displayOrder",
+									"disabled": true
+								},
+								{
+									"key": "sortOrder",
+									"value": "asc",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Liste paginée des catégories avec filtres optionnels :\n- `search`: recherche dans nom/description/slug\n- `isActive`: filtrer par statut actif\n- `parentId`: filtrer par catégorie parent\n- `sortBy`: tri (name, displayOrder, createdAt)\n- `sortOrder`: ordre (asc, desc)"
+					}
+				},
+				{
+					"name": "🌳 Category Tree",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories/tree",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories",
+								"tree"
+							]
+						},
+						"description": "Structure hiérarchique des catégories avec relations parent-enfant."
+					}
+				},
+				{
+					"name": "👁️ Show Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Détails d'une catégorie spécifique avec statistiques des produits associés."
+					}
+				},
+				{
+					"name": "➕ Create Category - Basic",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.category) {",
+									"        pm.environment.set('categoryId', response.data.category.id);",
+									"        console.log('Category ID saved:', response.data.category.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Électronique\",\n  \"description\": \"Produits électroniques et composants\",\n  \"isActive\": true,\n  \"displayOrder\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Création d'une catégorie avec les champs minimaux requis."
+					}
+				},
+				{
+					"name": "➕ Create Category - Complete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mobilier de Bureau\",\n  \"description\": \"Chaises, bureaux, armoires et mobilier professionnel\",\n  \"slug\": \"mobilier-bureau\",\n  \"isActive\": true,\n  \"displayOrder\": 2,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1586023492125-27b2c045efd7\",\n  \"parentId\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Création d'une catégorie avec tous les champs optionnels."
+					}
+				},
+				{
+					"name": "🏗️ Create Subcategory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ordinateurs Portables\",\n  \"description\": \"Laptops, ultrabooks, gaming laptops\",\n  \"isActive\": true,\n  \"displayOrder\": 1,\n  \"parentId\": \"{{categoryId}}\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1496181133206-80ce9b88a853\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Création d'une sous-catégorie avec parentId."
+					}
+				},
+				{
+					"name": "✏️ Update Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Électronique & High-Tech\",\n  \"description\": \"Dernières technologies électroniques et innovations\",\n  \"isActive\": true,\n  \"displayOrder\": 1,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1519389950473-47ba0277781c\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Mise à jour des informations d'une catégorie existante."
+					}
+				},
+				{
+					"name": "🗑️ Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories/{{categoryId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories",
+								"{{categoryId}}"
+							]
+						},
+						"description": "Suppression d'une catégorie (uniquement si elle ne contient pas de produits)."
+					}
+				}
+			],
+			"description": "Gestion complète des catégories : création, lecture, mise à jour, suppression avec structure hiérarchique."
+		},
+		{
+			"name": "📦 Products Management",
+			"item": [
+				{
+					"name": "📋 List Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "search",
+									"value": "laptop",
+									"disabled": true
+								},
+								{
+									"key": "categoryId",
+									"value": "{{categoryId}}",
+									"disabled": true
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "minPrice",
+									"value": "100",
+									"disabled": true
+								},
+								{
+									"key": "maxPrice",
+									"value": "2000",
+									"disabled": true
+								},
+								{
+									"key": "inStock",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "lowStock",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"disabled": true
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Liste paginée des produits avec filtres avancés :\n- `search`: recherche dans nom/description/référence\n- `categoryId`: filtrer par catégorie\n- `isActive`: filtrer par statut\n- `minPrice/maxPrice`: fourchette de prix\n- `inStock`: uniquement les produits en stock\n- `lowStock`: produits en rupture\n- `sortBy`: tri (name, price, stock, createdAt, category)\n- `sortOrder`: ordre (asc, desc)"
+					}
+				},
+				{
+					"name": "👁️ Show Product",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Détails complets d'un produit avec ses relations (catégorie, créateur)."
+					}
+				},
+				{
+					"name": "➕ Create Product - Basic",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.product) {",
+									"        pm.environment.set('productId', response.data.product.id);",
+									"        console.log('Product ID saved:', response.data.product.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"MacBook Pro 14\\\"\",\n  \"description\": \"Apple MacBook Pro avec puce M3, écran Liquid Retina XDR\",\n  \"price\": 2499.99,\n  \"stock\": 15,\n  \"categoryId\": \"{{categoryId}}\",\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products"
+							]
+						},
+						"description": "Création d'un produit avec les champs minimaux requis."
+					}
+				},
+				{
+					"name": "➕ Create Product - Complete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Gaming Laptop ASUS ROG Strix G17\",\n  \"description\": \"Laptop gaming haute performance avec RTX 4070, processeur Intel i7 de dernière génération\",\n  \"reference\": \"ASUS-ROG-STRIX-G17-2024\",\n  \"price\": 1899.99,\n  \"stock\": 8,\n  \"stockAlert\": 3,\n  \"unit\": \"pièce\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1603302576837-37561b2e2302\",\n  \"images\": [\n    \"https://images.unsplash.com/photo-1603302576837-37561b2e2302\",\n    \"https://images.unsplash.com/photo-1593642702821-c8da6771f0c6\",\n    \"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed\"\n  ],\n  \"specifications\": {\n    \"processor\": \"Intel Core i7-13700HX\",\n    \"graphics\": \"NVIDIA RTX 4070 8GB GDDR6\",\n    \"ram\": \"32GB DDR5-4800\",\n    \"storage\": \"1TB NVMe PCIe 4.0 SSD\",\n    \"display\": \"17.3\\\" QHD 240Hz IPS\",\n    \"weight\": \"2.8kg\",\n    \"battery\": \"90Wh\",\n    \"os\": \"Windows 11 Pro\",\n    \"warranty\": \"3 ans constructeur\",\n    \"connectivity\": \"Wi-Fi 6E, Bluetooth 5.3\",\n    \"ports\": \"USB-C, USB-A, HDMI 2.1, RJ45\"\n  },\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products"
+							]
+						},
+						"description": "Création d'un produit avec tous les champs optionnels, images multiples et spécifications détaillées."
+					}
+				},
+				{
+					"name": "🛒 Create Product - E-commerce Style",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"iPhone 15 Pro Max\",\n  \"description\": \"iPhone 15 Pro Max avec puce A17 Pro, appareil photo 48 Mpx et écran Super Retina XDR de 6,7 pouces\",\n  \"reference\": \"IPHONE-15-PRO-MAX-256\",\n  \"price\": 1479.00,\n  \"stock\": 25,\n  \"stockAlert\": 10,\n  \"unit\": \"pièce\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1592750475338-74b7b21085ab\",\n  \"images\": [\n    \"https://images.unsplash.com/photo-1592750475338-74b7b21085ab\",\n    \"https://images.unsplash.com/photo-1511707171634-5f897ff02aa9\",\n    \"https://images.unsplash.com/photo-1580910051074-3eb694886505\"\n  ],\n  \"specifications\": {\n    \"model\": \"iPhone 15 Pro Max\",\n    \"storage\": \"256GB\",\n    \"color\": \"Titane naturel\",\n    \"display\": \"6,7 pouces Super Retina XDR OLED\",\n    \"processor\": \"Puce A17 Pro\",\n    \"camera\": \"Triple appareil photo 48 Mpx\",\n    \"battery\": \"Jusqu'à 29h de lecture vidéo\",\n    \"os\": \"iOS 17\",\n    \"connectivity\": \"5G, Wi-Fi 6E, Bluetooth 5.3\",\n    \"materials\": \"Titane de qualité aérospatiale\",\n    \"waterproof\": \"IP68\",\n    \"warranty\": \"1 an garantie Apple\"\n  },\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products"
+							]
+						},
+						"description": "Exemple de produit e-commerce avec données commerciales réalistes."
+					}
+				},
+				{
+					"name": "✏️ Update Product - Price & Stock",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 2299.99,\n  \"stock\": 12,\n  \"stockAlert\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Mise à jour partielle : prix et stock uniquement."
+					}
+				},
+				{
+					"name": "✏️ Update Product - Complete",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"MacBook Pro 14\\\" - Édition 2024\",\n  \"description\": \"Apple MacBook Pro 2024 avec puce M3 Pro, performances exceptionnelles pour les créatifs et développeurs\",\n  \"price\": 2299.99,\n  \"stock\": 18,\n  \"specifications\": {\n    \"processor\": \"Apple M3 Pro 12-core CPU\",\n    \"graphics\": \"GPU 18-core intégré\",\n    \"ram\": \"18GB Unified Memory\",\n    \"storage\": \"1TB SSD\",\n    \"display\": \"14.2\\\" Liquid Retina XDR (3024×1964)\",\n    \"battery\": \"Jusqu'à 18h d'autonomie\",\n    \"ports\": \"3x Thunderbolt 4, HDMI, SDXC, MagSafe 3\",\n    \"weight\": \"1.6kg\",\n    \"os\": \"macOS Sonoma\",\n    \"webcam\": \"1080p FaceTime HD\",\n    \"audio\": \"Système audio à 6 haut-parleurs\",\n    \"keyboard\": \"Magic Keyboard rétroéclairé\"\n  },\n  \"isActive\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Mise à jour complète avec nouvelles spécifications."
+					}
+				},
+				{
+					"name": "⏸️ Deactivate Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Désactiver un produit (le retirer de la vente sans le supprimer)."
+					}
+				},
+				{
+					"name": "🗑️ Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Suppression définitive d'un produit."
+					}
+				}
+			],
+			"description": "Gestion complète des produits avec spécifications, images, stock et relations."
+		},
+		{
+			"name": "📊 Bulk Operations",
+			"item": [
+				{
+					"name": "🔄 Bulk Activate Products",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\n    \"{{productId}}\"\n  ],\n  \"action\": \"activate\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"bulk"
+							]
+						},
+						"description": "Activer plusieurs produits en une seule opération."
+					}
+				},
+				{
+					"name": "⏸️ Bulk Deactivate Products",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\n    \"{{productId}}\"\n  ],\n  \"action\": \"deactivate\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"bulk"
+							]
+						},
+						"description": "Désactiver plusieurs produits en une seule opération."
+					}
+				},
+				{
+					"name": "🗑️ Bulk Delete Products",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\n    \"product-id-to-delete-1\",\n    \"product-id-to-delete-2\"\n  ],\n  \"action\": \"delete\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"bulk"
+							]
+						},
+						"description": "⚠️ ATTENTION: Suppression définitive de plusieurs produits. Opération irréversible!"
+					}
+				}
+			],
+			"description": "Opérations en lot pour gérer plusieurs produits simultanément."
+		},
+		{
+			"name": "📈 Statistics & Reports",
+			"item": [
+				{
+					"name": "📊 Product Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/stats",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"stats"
+							]
+						},
+						"description": "Statistiques complètes des produits :\n- Nombre total, actifs, inactifs\n- Produits en stock bas/rupture\n- Valeur totale de l'inventaire\n- Top catégories par nombre de produits"
+					}
+				},
+				{
+					"name": "⚠️ Low Stock Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/low-stock?page=1&limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"low-stock"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Liste des produits avec un stock inférieur ou égal au seuil d'alerte, triés par stock croissant."
+					}
+				}
+			],
+			"description": "Rapports et statistiques pour le suivi des stocks et performances."
+		},
+		{
+			"name": "❌ Error Testing",
+			"item": [
+				{
+					"name": "❌ Unauthorized Access",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Test d'accès sans token - doit retourner 401 Unauthorized."
+					}
+				},
+				{
+					"name": "❌ Invalid Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid_token_here"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Test avec token invalide - doit retourner 401 Unauthorized."
+					}
+				},
+				{
+					"name": "❌ Duplicate Category Name",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Électronique\",\n  \"isActive\": true,\n  \"displayOrder\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"categories"
+							]
+						},
+						"description": "Test de création avec nom dupliqué - doit retourner 422 avec message d'erreur."
+					}
+				},
+				{
+					"name": "❌ Invalid Product Reference",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Test Product\",\n  \"reference\": \"ASUS-ROG-STRIX-G17-2024\",\n  \"price\": 100,\n  \"categoryId\": \"{{categoryId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products"
+							]
+						},
+						"description": "Test avec référence de produit existante - doit retourner 422."
+					}
+				},
+				{
+					"name": "❌ Product Not Found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/00000000-0000-4000-8000-000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"00000000-0000-4000-8000-000000000000"
+							]
+						},
+						"description": "Test avec ID inexistant - doit retourner 404 Not Found."
+					}
+				},
+				{
+					"name": "❌ Invalid Bulk Action",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productIds\": [\"{{productId}}\"],\n  \"action\": \"invalid_action\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/products/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"products",
+								"bulk"
+							]
+						},
+						"description": "Test avec action bulk invalide - doit retourner 422."
+					}
+				}
+			],
+			"description": "Tests d'erreurs pour valider la gestion des cas limites et la sécurité."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Vérification automatique du token avant chaque requête",
+					"if (pm.request.headers.get('Authorization')) {",
+					"    console.log('🔐 Using token:', pm.environment.get('token') ? 'Token present' : 'No token found');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Logs automatiques pour toutes les réponses",
+					"console.log('📡 Response Status:', pm.response.code, pm.response.status);",
+					"",
+					"// Vérification de la structure de réponse TSA Logistics",
+					"if (pm.response.code >= 200 && pm.response.code < 300) {",
+					"    const response = pm.response.json();",
+					"    if (response.success !== undefined) {",
+					"        pm.test('✅ Response has success field', function () {",
+					"            pm.expect(response).to.have.property('success');",
+					"        });",
+					"        ",
+					"        pm.test('✅ Success is true for 2xx responses', function () {",
+					"            pm.expect(response.success).to.be.true;",
+					"        });",
+					"        ",
+					"        pm.test('✅ Response has message', function () {",
+					"            pm.expect(response).to.have.property('message');",
+					"        });",
+					"    }",
+					"} else if (pm.response.code >= 400) {",
+					"    const response = pm.response.json();",
+					"    pm.test('❌ Error response has proper structure', function () {",
+					"        pm.expect(response).to.have.property('success').that.is.false;",
+					"        pm.expect(response).to.have.property('message');",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3333",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

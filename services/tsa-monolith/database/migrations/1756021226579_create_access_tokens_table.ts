@@ -1,27 +1,24 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
-export default class extends BaseSchema {
-  protected tableName = 'auth_access_tokens'
+export default class AccessTokensSchema extends BaseSchema {
+  protected tableName = 'access_tokens'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.increments('id')
-      table
-        .integer('tokenable_id')
-        .notNullable()
-        .unsigned()
-        .references('id')
-        .inTable('users')
-        .onDelete('CASCADE')
-
+      table.uuid('id').primary().defaultTo(this.raw('uuid_generate_v4()'))
+      table.string('tokenable_type').notNullable().defaultTo('users')
+      table.uuid('tokenable_id').notNullable().references('users.id').onDelete('CASCADE')
       table.string('type').notNullable()
-      table.string('name').nullable()
-      table.string('hash').notNullable()
-      table.text('abilities').notNullable()
-      table.timestamp('created_at')
-      table.timestamp('updated_at')
-      table.timestamp('last_used_at').nullable()
-      table.timestamp('expires_at').nullable()
+      table.string('name')
+      table.string('hash').notNullable().unique()
+      table.text('abilities').defaultTo('[]')
+      table.timestamp('last_used_at', { useTz: true })
+      table.timestamp('expires_at', { useTz: true })
+      table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
+      table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
+
+      table.index(['tokenable_type', 'tokenable_id'])
+      table.index(['hash'])
     })
   }
 

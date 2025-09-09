@@ -27,5 +27,28 @@ export default await Env.create(new URL('../', import.meta.url), {
   DB_PORT: Env.schema.number(),
   DB_USER: Env.schema.string(),
   DB_PASSWORD: Env.schema.string.optional(),
-  DB_DATABASE: Env.schema.string()
+  DB_DATABASE: Env.schema.string(),
+
+  REDIS_HOST: Env.schema.string(),
+  REDIS_PORT: Env.schema.number(),
+  REDIS_PASSWORD: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the mail package
+  |----------------------------------------------------------
+  */
+  SMTP_HOST: Env.schema.string(),
+  SMTP_PORT: Env.schema.string(),
+  SMTP_PASSWORD: Env.schema.string(),
+  SMTP_USERNAME: Env.schema.string(),
+  MAIL_FROM: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Application URLs
+  |----------------------------------------------------------
+  */
+  FRONTEND_URL: Env.schema.string(),
+  SUPPORT_EMAIL: Env.schema.string.optional(),
 })
