@@ -36,13 +36,13 @@ export default class AuthMiddleware {
     if (token) {
       const cacheService = new CacheService()
       const isBlacklisted = await cacheService.isTokenBlacklisted(token)
-      
+
       if (isBlacklisted) {
         console.log('🚫 Token blacklisté détecté:', token.substring(0, 10) + '...')
         return ctx.response.status(401).json({
           success: false,
           message: 'Token has been revoked',
-          error: 'TOKEN_BLACKLISTED'
+          error: 'TOKEN_BLACKLISTED',
         })
       }
     }

@@ -23,7 +23,6 @@ export default class MFAService {
   private readonly period = 30
   private readonly window = 5
 
-
   async generateSecret(user: User, trx?: TransactionClientContract): Promise<MfaSecretData> {
     // Generate random secret
     const buffer = crypto.randomBytes(20)

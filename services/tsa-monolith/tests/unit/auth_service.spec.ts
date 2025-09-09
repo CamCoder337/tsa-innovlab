@@ -14,7 +14,7 @@ test.group('AuthService', (group) => {
 
   group.setup(async () => {
     await Database.beginGlobalTransaction()
-    
+
     // Mock services
     mfaService = new MFAService()
     emailService = new EmailService()
@@ -33,7 +33,7 @@ test.group('AuthService', (group) => {
       firstName: 'Admin',
       lastName: 'Test',
       phone: '+33612345678',
-      role: UserRole.ADMIN
+      role: UserRole.ADMIN,
     }
 
     const user = await authService.register(userData, '127.0.0.1')
@@ -51,7 +51,7 @@ test.group('AuthService', (group) => {
       firstName: 'User',
       lastName: 'Test',
       phone: '+33612345679',
-      role: UserRole.TRANSPORTEUR
+      role: UserRole.TRANSPORTEUR,
     }
 
     const user = await authService.register(userData, '127.0.0.1')
@@ -69,7 +69,7 @@ test.group('AuthService', (group) => {
       firstName: 'User',
       lastName: 'Test',
       phone: '+33612345680',
-      role: UserRole.TRANSPORTEUR
+      role: UserRole.TRANSPORTEUR,
     }
 
     // First registration
@@ -91,7 +91,7 @@ test.group('AuthService', (group) => {
       lastName: 'User',
       phone: '+33612345681',
       role: UserRole.TRANSPORTEUR,
-      status: UserStatus.PENDING
+      status: UserStatus.PENDING,
     })
 
     // Store verification token

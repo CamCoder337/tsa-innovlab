@@ -89,8 +89,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   // Provider AdonisJS pour nos tables existantes
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     table: 'access_tokens',
-    foreignKey: 'tokenableId',
-    type: 'tokenableType',
   })
 
   @hasMany(() => RefreshToken)

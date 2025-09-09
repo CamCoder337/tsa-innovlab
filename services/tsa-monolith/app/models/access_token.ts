@@ -50,7 +50,6 @@ export default class AccessToken extends BaseModel {
     query.where('expires_at', '<=', DateTime.now().toSQL())
   })
 
-
   public isExpired(): boolean {
     if (!this.expiresAt) return false
     return this.expiresAt <= DateTime.utc()

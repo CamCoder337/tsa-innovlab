@@ -139,7 +139,7 @@ export default class AuthController {
   async logout({ auth, request, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      
+
       // Extraire le token pour le blacklister
       const authHeader = request.header('authorization')
       let token = authHeader?.replace('Bearer ', '')
@@ -159,7 +159,7 @@ export default class AuthController {
       // Utiliser le service de logout pour blacklister le token
       await this.authService.logout(user.id, token)
       await AuditLog.logLogout(user)
-      
+
       return response.json({
         success: true,
         message: 'Logout successful',
