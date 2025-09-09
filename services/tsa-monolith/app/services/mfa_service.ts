@@ -29,16 +29,6 @@ export default class MFAService {
     const buffer = crypto.randomBytes(20)
     const secret = base32.encode(buffer).replace(/=/g, '')
 
-    // Create TOTP instance
-    const totp = new OTPAuth.TOTP({
-      issuer: this.issuer,
-      label: user.email,
-      algorithm: this.algorithm,
-      digits: this.digits,
-      period: this.period,
-      secret: secret,
-    })
-
     // Format du secret pour saisie manuelle (groupes de 4, espaces)
     const manualEntryKey = secret.replace(/(.{4})/g, '$1 ').trim()
 
@@ -48,7 +38,10 @@ export default class MFAService {
     // Store secret (should be encrypted in production)
     user.mfaSecret = secret
     user.mfaEnabled = false // Will be enabled after verification
-    await user.save(trx ? { client: trx } : undefined)
+    if (trx) {
+      user.useTransaction(trx)
+    }
+    await user.save()
 
     return {
       secret,

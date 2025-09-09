@@ -11,7 +11,7 @@ export default class AccessTokensSchema extends BaseSchema {
       table.string('type').notNullable()
       table.string('name')
       table.string('hash').notNullable().unique()
-      table.specificType('abilities', 'text[]').defaultTo('{}')
+      table.text('abilities').defaultTo('[]')
       table.timestamp('last_used_at', { useTz: true })
       table.timestamp('expires_at', { useTz: true })
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())

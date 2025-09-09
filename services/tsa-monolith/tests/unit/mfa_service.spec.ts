@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
 import MFAService from '#services/mfa_service'
-import User from '#models/user'
+import User, { UserRole, UserStatus } from '#models/user'
 import * as OTPAuth from 'otpauth'
 import Database from '@adonisjs/lucid/services/db'
 
@@ -19,8 +19,8 @@ test.group('MFAService', (group) => {
       firstName: 'MFA',
       lastName: 'Test',
       phone: '+33612345682',
-      role: 'admin',
-      status: 'active'
+      role: UserRole.ADMIN,
+      status: UserStatus.ACTIVE
     })
   })
 

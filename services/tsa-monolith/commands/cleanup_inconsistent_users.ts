@@ -52,7 +52,7 @@ export default class CleanupInconsistentUsers extends BaseCommand {
           .delete()
 
         // Delete the user
-        await user.delete(trx)
+        await user.useTransaction(trx).delete()
       }
     })
 

@@ -86,6 +86,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasMany(() => AccessToken)
   declare accessTokens: HasMany<typeof AccessToken>
 
+  // Provider AdonisJS pour nos tables existantes
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     table: 'access_tokens',
     foreignKey: 'tokenableId',
@@ -112,25 +113,18 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   /**
    * Génère un access token pour l'utilisateur avec les abilities appropriées
+   * Utilise le provider AdonisJS avec notre table access_tokens (abilities en JSONB)
    */
   async generateAccessToken(name = 'access_token'): Promise<string> {
     const abilities = this.getAbilities()
 
-    // Créer le token avec une durée de 15 minutes
-    const token = string.generateRandom(64)
-    const tokenHash = await hash.make(token)
-
-    await AccessToken.create({
-      tokenableType: 'users',
-      tokenableId: this.id,
-      type: 'auth',
+    // Utiliser le provider AdonisJS avec nos tables
+    const token = await User.accessTokens.create(this, abilities, {
       name,
-      hash: tokenHash,
-      abilities,
-      expiresAt: DateTime.utc().plus({ minutes: 15 }),
+      expiresIn: '15 minutes',
     })
 
-    return token
+    return token.value!.release()
   }
 
   /**

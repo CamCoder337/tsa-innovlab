@@ -1,9 +1,9 @@
 import { test } from '@japa/runner'
-import AuthService, { type RegisterUserData } from '#services/auth_service'
+import AuthService from '#services/auth_service'
 import MFAService from '#services/mfa_service'
 import EmailService from '#services/email_service'
 import CacheService from '#services/cache_service'
-import User from '#models/user'
+import User, { UserRole, UserStatus } from '#models/user'
 import Database from '@adonisjs/lucid/services/db'
 
 test.group('AuthService', (group) => {
@@ -33,7 +33,7 @@ test.group('AuthService', (group) => {
       firstName: 'Admin',
       lastName: 'Test',
       phone: '+33612345678',
-      role: 'admin'
+      role: UserRole.ADMIN
     }
 
     const user = await authService.register(userData, '127.0.0.1')
@@ -51,7 +51,7 @@ test.group('AuthService', (group) => {
       firstName: 'User',
       lastName: 'Test',
       phone: '+33612345679',
-      role: 'transporteur'
+      role: UserRole.TRANSPORTEUR
     }
 
     const user = await authService.register(userData, '127.0.0.1')
@@ -69,7 +69,7 @@ test.group('AuthService', (group) => {
       firstName: 'User',
       lastName: 'Test',
       phone: '+33612345680',
-      role: 'transporteur'
+      role: UserRole.TRANSPORTEUR
     }
 
     // First registration
@@ -90,8 +90,8 @@ test.group('AuthService', (group) => {
       firstName: 'Test',
       lastName: 'User',
       phone: '+33612345681',
-      role: 'transporteur',
-      status: 'pending'
+      role: UserRole.TRANSPORTEUR,
+      status: UserStatus.PENDING
     })
 
     // Store verification token

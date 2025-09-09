@@ -15,7 +15,7 @@ interface EmailData {
 export default class EmailWorker extends BaseCommand {
   static commandName = 'email:worker'
   static description = 'Lance le worker de traitement des emails en arrière-plan'
-  
+
   static options = {
     startApp: true, // Important: démarre l'app AdonisJS
   }
@@ -120,7 +120,7 @@ export default class EmailWorker extends BaseCommand {
       this.logger.error(`❌ Échec email (tentative ${attempt}):`)
       this.logger.error(`Message: ${error?.message || 'Aucun message'}`)
       this.logger.error(`Type: ${typeof error}`)
-      this.logger.error(`Erreur complète:`, JSON.stringify(error, null, 2))
+      this.logger.error(`Erreur complète: ${JSON.stringify(error, null, 2)}`)
       this.logger.error(`Email data: ${emailStr}`)
 
       // Retry logic

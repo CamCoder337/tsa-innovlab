@@ -23,7 +23,7 @@ export default class AccessToken extends BaseModel {
   @column()
   declare hash: string
 
-  @column({ consume: (v) => v || [] })
+  @column()
   declare abilities: string[]
 
   @column.dateTime()

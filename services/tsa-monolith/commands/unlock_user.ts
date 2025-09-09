@@ -23,9 +23,9 @@ export default class UnlockUser extends BaseCommand {
       const rateLimitKey = `rate:login:${email.toLowerCase()}`
       
       // Check if user is actually rate limited
-      const deleted = await cacheService.delete(rateLimitKey)
+      const deletedCount = await cacheService.delete(rateLimitKey)
       
-      if (deleted) {
+      if (deletedCount > 0) {
         this.logger.success(`✅ User ${email} has been unlocked from rate limiting`)
       } else {
         this.logger.info(`ℹ️  User ${email} was not rate limited`)

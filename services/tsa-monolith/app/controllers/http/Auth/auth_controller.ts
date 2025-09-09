@@ -136,8 +136,11 @@ export default class AuthController {
   /**
    * Déconnexion utilisateur
    */
-  async logout({ request, response }: HttpContext) {
+  async logout({ auth, request, response }: HttpContext) {
     try {
+      const user = auth.getUserOrFail()
+      
+      // Extraire le token pour le blacklister
       const authHeader = request.header('authorization')
       let token = authHeader?.replace('Bearer ', '')
 
@@ -153,40 +156,14 @@ export default class AuthController {
         })
       }
 
-      // Try to find the user from the token
-      const accessTokens = await AccessToken.query().preload('user')
-      let user = null
-      let tokenFound = false
-
-      for (const at of accessTokens) {
-        if (await at.verify(token)) {
-          user = at.user
-          tokenFound = true
-          break
-        }
-      }
-
-      if (tokenFound && user) {
-        await this.authService.logout(user.id, token)
-        await AuditLog.logLogout(user)
-        return response.json({
-          success: true,
-          message: 'Logout successful',
-        })
-      } else if (tokenFound) {
-        // Token found but user is null
-        await this.authService.blacklistToken(token)
-        return response.json({
-          success: true,
-          message: 'Logout successful',
-        })
-      } else {
-        // Invalid token
-        return response.status(401).json({
-          success: false,
-          message: 'Invalid token',
-        })
-      }
+      // Utiliser le service de logout pour blacklister le token
+      await this.authService.logout(user.id, token)
+      await AuditLog.logLogout(user)
+      
+      return response.json({
+        success: true,
+        message: 'Logout successful',
+      })
     } catch (error) {
       return response.status(500).json({
         success: false,
@@ -329,15 +306,9 @@ export default class AuthController {
   /**
    * Profil utilisateur actuel
    */
-  async me({ user, response }: HttpContext) {
+  async me({ auth, response }: HttpContext) {
     try {
-      if (!user) {
-        return response.status(401).json({
-          success: false,
-          message: 'Unauthorized access',
-          errors: ['User not authenticated'],
-        })
-      }
+      const user = auth.getUserOrFail()
 
       return response.json({
         success: true,
@@ -369,14 +340,8 @@ export default class AuthController {
   /**
    * Mise à jour du profil
    */
-  async updateProfile({ user, request, response }: HttpContext) {
-    if (!user) {
-      return response.status(401).json({
-        success: false,
-        message: 'Unauthorized access',
-      })
-    }
-
+  async updateProfile({ auth, request, response }: HttpContext) {
+    const user = auth.getUserOrFail()
     const data = await request.validateUsing(updateProfileValidator)
 
     user.merge(data)
@@ -435,9 +400,10 @@ export default class AuthController {
         success: true,
         message: 'MFA initialization successful',
         data: {
-          qrCode: mfaData.qrCode,
+          secret: mfaData.secret,
+          manualEntryKey: mfaData.manualEntryKey,
           recoveryCodes: mfaData.recoveryCodes,
-          instructions: 'Scan the QR code with your authenticator app and verify with a code',
+          instructions: 'Enter the manual key in your authenticator app and verify with a code',
         },
       })
     } catch (error) {

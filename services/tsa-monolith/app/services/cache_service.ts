@@ -221,8 +221,8 @@ export default class CacheService {
     return await redis.get(key)
   }
 
-  async delete(key: string): Promise<void> {
-    await redis.del(key)
+  async delete(key: string): Promise<number> {
+    return await redis.del(key)
   }
 
   async getKeys(pattern: string): Promise<string[]> {

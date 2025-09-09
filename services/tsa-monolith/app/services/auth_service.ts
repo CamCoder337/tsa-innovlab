@@ -1,4 +1,4 @@
-import User, {UserStatus} from '#models/user'
+import User, {UserStatus, UserRole} from '#models/user'
 import RefreshToken from '#models/refresh_token'
 import AccessToken from '#models/access_token'
 import AuditLog from '#models/audit_log'
@@ -18,7 +18,7 @@ export interface RegisterUserData {
   firstName: string
   lastName: string
   phone: string
-  role: 'admin' | 'transporteur' | 'affreteur'
+  role: UserRole
 }
 
 export interface EmailVerificationResult {
@@ -274,7 +274,7 @@ export default class AuthService {
         ...userData,
         email: data.email.toLowerCase(),
         passwordHash: password,
-        status: 'pending',
+        status: UserStatus.PENDING,
         mfaEnabled: false,
       }, { client: trx })
 
