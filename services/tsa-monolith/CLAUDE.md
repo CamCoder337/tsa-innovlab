@@ -92,21 +92,50 @@ node ace email:worker         # Lancer le worker d'emails
 - **AFFRETEUR**: Création de missions, gestion expéditions
 
 ### Endpoints d'Authentification
+
+#### Authentification de base
 ```
-POST /api/auth/login           # Connexion (avec support MFA)
-POST /api/auth/register        # Inscription  
-POST /api/auth/logout          # Déconnexion
+POST /api/auth/login           # Connexion (avec support MFA automatique)
+POST /api/auth/register        # Inscription avec MFA obligatoire pour admins
+POST /api/auth/verify-email    # Vérification email après inscription
+POST /api/auth/logout          # Déconnexion sécurisée
 POST /api/auth/refresh-token   # Renouvellement token
 GET  /api/auth/me             # Profil utilisateur
 PUT  /api/auth/profile        # Mise à jour profil
 PUT  /api/auth/change-password # Changement mot de passe
+```
 
-# MFA (Multi-Factor Authentication)
-GET  /api/auth/mfa/status     # Statut MFA
-POST /api/auth/mfa/initialize # Initialiser MFA (QR Code)
-POST /api/auth/mfa/enable     # Activer MFA
-POST /api/auth/mfa/disable    # Désactiver MFA
-POST /api/auth/mfa/regenerate-codes # Régénérer codes de récupération
+#### Exemples d'utilisation
+
+**Inscription Admin :**
+```json
+POST /api/auth/register
+{
+  "email": "admin@tsa-logistics.com",
+  "password": "admin123!",
+  "firstName": "Admin",
+  "lastName": "User", 
+  "phone": "+33612345678",
+  "role": "admin"
+}
+```
+
+**Login avec MFA :**
+```json
+POST /api/auth/login
+{
+  "email": "admin@tsa-logistics.com",
+  "password": "admin123!",
+  "mfaToken": "123456"  // Code Google Authenticator
+}
+```
+
+**Vérification Email :**
+```json
+POST /api/auth/verify-email
+{
+  "token": "TOKEN_FROM_EMAIL"
+}
 ```
 
 ### Sécurité

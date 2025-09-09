@@ -65,11 +65,12 @@ router
     router.post('/forgot-password', '#controllers/http/auth/auth_controller.forgotPassword')
     router.post('/reset-password', '#controllers/http/auth/auth_controller.resetPassword')
     router.post('/refresh-token', '#controllers/http/auth/auth_controller.refreshToken')
+    router.post('/logout', '#controllers/http/auth/auth_controller.logout')
+    router.post('/debug-token', '#controllers/http/auth/auth_controller.debugToken')
 
     // Routes protégées (authentification requise)
     router
       .group(() => {
-        router.post('/logout', '#controllers/http/auth/auth_controller.logout')
         router.get('/me', '#controllers/http/auth/auth_controller.me')
         router.put('/profile', '#controllers/http/auth/auth_controller.updateProfile')
         router.put('/change-password', '#controllers/http/auth/auth_controller.changePassword')

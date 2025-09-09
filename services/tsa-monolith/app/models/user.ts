@@ -86,7 +86,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasMany(() => AccessToken)
   declare accessTokens: HasMany<typeof AccessToken>
 
-  static accessTokens = DbAccessTokensProvider.forModel(User)
+  static accessTokens = DbAccessTokensProvider.forModel(User, {
+    table: 'access_tokens',
+    foreignKey: 'tokenableId',
+    type: 'tokenableType'
+  })
 
   @hasMany(() => RefreshToken)
   declare refreshTokens: HasMany<typeof RefreshToken>
@@ -123,7 +127,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
       name,
       hash: tokenHash,
       abilities,
-      expiresAt: DateTime.now().plus({ minutes: 15 }),
+      expiresAt: DateTime.utc().plus({ minutes: 15}),
     })
 
     return token

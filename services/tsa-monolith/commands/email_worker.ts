@@ -1,6 +1,7 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import env from '#start/env'
 import { Redis } from 'ioredis'
+import mail from '@adonisjs/mail/services/main'
 
 interface EmailData {
   to: string
@@ -14,11 +15,15 @@ interface EmailData {
 export default class EmailWorker extends BaseCommand {
   static commandName = 'email:worker'
   static description = 'Lance le worker de traitement des emails en arrière-plan'
+  
+  static options = {
+    startApp: true, // Important: démarre l'app AdonisJS
+  }
 
   private isProcessing = false
   private processInterval = 1000 // 1 seconde
   private maxRetries = 3
-  // private from = `TSA Logistics <${env.get('MAIL_FROM')}>` // Unused for now
+  private from = `TSA Logistics <${env.get('MAIL_FROM')}>`
   private redis!: Redis
 
   async run() {
@@ -92,23 +97,30 @@ export default class EmailWorker extends BaseCommand {
 
       this.logger.info(`📨 Tentative envoi email: ${emailData.subject} → ${emailData.to}`)
 
-      // Pour l'instant, simuler l'envoi d'email
-      this.logger.info(`📮 Simulation envoi email vers ${emailData.to}`)
+      // Vérification que le service mail est disponible
+      if (!mail || typeof mail.send !== 'function') {
+        throw new Error('Service mail non disponible - AdonisJS pas correctement initialisé')
+      }
+
+      // Envoi réel de l'email
+      this.logger.info(`📮 Envoi email vers ${emailData.to}`)
       this.logger.info(`   Sujet: ${emailData.subject}`)
       this.logger.info(`   Template: ${emailData.template}`)
 
-      // TODO: Configurer le vrai service mail
-      // await mail.send((message) => {
-      //   message
-      //     .from(this.from)
-      //     .to(emailData.to)
-      //     .subject(emailData.subject)
-      //     .htmlView(emailData.template, emailData.data)
-      // })
+      await mail.send((message) => {
+        message
+          .from(this.from)
+          .to(emailData.to)
+          .subject(emailData.subject)
+          .htmlView(emailData.template, emailData.data)
+      })
 
       this.logger.info(`✅ Email envoyé avec succès: ${emailData.subject} → ${emailData.to}`)
     } catch (error) {
-      this.logger.error(`❌ Échec email (tentative ${attempt}):`, error.message)
+      this.logger.error(`❌ Échec email (tentative ${attempt}):`)
+      this.logger.error(`Message: ${error?.message || 'Aucun message'}`)
+      this.logger.error(`Type: ${typeof error}`)
+      this.logger.error(`Erreur complète:`, JSON.stringify(error, null, 2))
       this.logger.error(`Email data: ${emailStr}`)
 
       // Retry logic

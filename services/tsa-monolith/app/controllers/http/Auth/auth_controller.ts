@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import User from '#models/user'
+import AccessToken from '#models/access_token'
 import AuthService from '#services/auth_service'
 import AuditLog from '#models/audit_log'
 import Hash from '@adonisjs/core/services/hash'
@@ -100,7 +101,7 @@ export default class AuthController {
   async verifyEmail({ request, response }: HttpContext) {
     try {
       const { token } = request.only(['token'])
-      
+
       if (!token) {
         return response.badRequest({
           success: false,
@@ -135,18 +136,108 @@ export default class AuthController {
   /**
    * Déconnexion utilisateur
    */
-  async logout({ auth, response }: HttpContext) {
-    const user = auth.getUserOrFail()
-    const token = auth.user?.currentAccessToken?.value?.release()
+  async logout({ request, response }: HttpContext) {
+    try {
+      const authHeader = request.header('authorization')
+      let token = authHeader?.replace('Bearer ', '')
+      
+      // Handle case where token already contains "Bearer"
+      if (token?.startsWith('Bearer ')) {
+        token = token.replace('Bearer ', '')
+      }
 
-    if (token) {
-      await this.authService.logout(user.id, token)
-      await AuditLog.logLogout(user)
+      if (!token) {
+        return response.status(400).json({
+          success: false,
+          message: 'No authorization token provided',
+        })
+      }
+
+      // Try to find the user from the token
+      const accessTokens = await AccessToken.query().preload('user')
+      let user = null
+      let tokenFound = false
+      
+      for (const at of accessTokens) {
+        if (await at.verify(token)) {
+          user = at.user
+          tokenFound = true
+          break
+        }
+      }
+
+      if (tokenFound && user) {
+        await this.authService.logout(user.id, token)
+        await AuditLog.logLogout(user)
+        return response.json({
+          success: true,
+          message: 'Logout successful',
+        })
+      } else if (tokenFound) {
+        // Token found but user is null
+        await this.authService.blacklistToken(token)
+        return response.json({
+          success: true,
+          message: 'Logout successful',
+        })
+      } else {
+        // Invalid token
+        return response.status(401).json({
+          success: false,
+          message: 'Invalid token',
+        })
+      }
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Logout failed',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
+   * Debug token (pour test seulement)
+   */
+  async debugToken({ request, response }: HttpContext) {
+    const authHeader = request.header('authorization')
+    let token = authHeader?.replace('Bearer ', '')
+
+    // Handle case where token already contains "Bearer"
+    if (token?.startsWith('Bearer ')) {
+      token = token.replace('Bearer ', '')
+    }
+
+    if (!token || !authHeader) {
+      return response.json({
+        hasToken: false,
+        authHeader: authHeader,
+        token: token,
+      })
+    }
+
+    // Check all access tokens
+    const accessTokens = await AccessToken.query().preload('user')
+    const results = []
+
+    for (const at of accessTokens) {
+      const isValid = await at.verify(token)
+      results.push({
+        id: at.id,
+        tokenableId: at.tokenableId,
+        isValid,
+        isExpired: at.isExpired(),
+        expiresAt: at.expiresAt?.toISO(),
+        userId: at.user?.id,
+        userEmail: at.user?.email,
+      })
     }
 
     return response.json({
-      success: true,
-      message: 'Logout successful',
+      hasToken: true,
+      token: token.substring(0, 10) + '...',
+      totalTokens: accessTokens.length,
+      results,
     })
   }
 
@@ -238,34 +329,54 @@ export default class AuthController {
   /**
    * Profil utilisateur actuel
    */
-  async me({ auth, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async me({ user, response }: HttpContext) {
+    try {
+      if (!user) {
+        return response.status(401).json({
+          success: false,
+          message: 'Unauthorized access',
+          errors: ['User not authenticated'],
+        })
+      }
 
-    return response.json({
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName: user.fullName,
-        phone: user.phone,
-        role: user.role,
-        status: user.status,
-        mfaEnabled: user.mfaEnabled,
-        mustEnableMFA: user.mustEnableMFA(),
-        emailVerifiedAt: user.emailVerifiedAt?.toISO(),
-        lastLoginAt: user.lastLoginAt?.toISO(),
-        createdAt: user.createdAt.toISO(),
-      },
-    })
+      return response.json({
+        success: true,
+        data: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName,
+          phone: user.phone,
+          role: user.role,
+          status: user.status,
+          mfaEnabled: user.mfaEnabled,
+          mustEnableMFA: user.mustEnableMFA(),
+          emailVerifiedAt: user.emailVerifiedAt?.toISO(),
+          lastLoginAt: user.lastLoginAt?.toISO(),
+          createdAt: user.createdAt.toISO(),
+        },
+      })
+    } catch (error) {
+      return response.status(401).json({
+        success: false,
+        message: 'Unauthorized access',
+        errors: [error.message],
+      })
+    }
   }
 
   /**
    * Mise à jour du profil
    */
-  async updateProfile({ auth, request, response }: HttpContext) {
-    const user = auth.getUserOrFail()
+  async updateProfile({ user, request, response }: HttpContext) {
+    if (!user) {
+      return response.status(401).json({
+        success: false,
+        message: 'Unauthorized access',
+      })
+    }
+
     const data = await request.validateUsing(updateProfileValidator)
 
     user.merge(data)

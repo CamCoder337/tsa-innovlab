@@ -115,12 +115,34 @@ export default class CacheService {
   async blacklistToken(token: string): Promise<void> {
     const key = `${this.PREFIX}blacklist:${token}`
     await redis.setex(key, this.TTL.BLACKLIST_TOKEN, '1')
+    
+    // Invalider aussi le cache du token
+    await this.invalidateTokenCache(token)
   }
 
   async isTokenBlacklisted(token: string): Promise<boolean> {
     const key = `${this.PREFIX}blacklist:${token}`
     const exists = await redis.exists(key)
     return exists === 1
+  }
+
+  // Token Caching pour l'authentification
+  async invalidateTokenCache(token: string): Promise<void> {
+    const key = `${this.PREFIX}token_user:${token}`
+    await redis.del(key)
+  }
+
+  async invalidateAllUserTokens(userId: string): Promise<void> {
+    // Invalider tous les tokens en cache pour cet utilisateur
+    const pattern = `${this.PREFIX}token_user:*`
+    const keys = await redis.keys(pattern)
+    
+    for (const key of keys) {
+      const cachedUserId = await redis.get(key)
+      if (cachedUserId === userId) {
+        await redis.del(key)
+      }
+    }
   }
   async checkRateLimit(
     identifier: string,

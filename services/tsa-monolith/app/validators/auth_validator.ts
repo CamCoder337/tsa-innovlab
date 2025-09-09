@@ -56,7 +56,7 @@ export const resetPasswordValidator = vine.compile(
 
 export const refreshTokenValidator = vine.compile(
   vine.object({
-    refreshToken: vine.string().fixedLength(64).alphaNumeric(),
+    refreshToken: vine.string().minLength(32).maxLength(128),
   })
 )
 

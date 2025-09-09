@@ -31,6 +31,7 @@ export default class EmailService {
   }
 
   async sendVerificationEmail(user: User, token: string) {
+    console.log('🔍 ENVOI EMAIL VERIFICATION POUR:', user.email) // DEBUG
     const verificationUrl = `${env.get('FRONTEND_URL')}/verify-email?token=${token}`
 
     return this.send(
@@ -42,7 +43,7 @@ export default class EmailService {
         verificationUrl,
         expiresIn: '24 heures',
       },
-      false // Envoi direct, pas de queue
+      true // Test queue Redis à nouveau
     )
   }
 
@@ -174,19 +175,23 @@ export default class EmailService {
     })
   }
 
-  async sendAdminMFASetupEmail(user: User, qrCode: string, recoveryCodes: string[]) {
+  async sendAdminMFASetupEmail(user: User, manualEntryKey: string, recoveryCodes: string[], accountName: string, issuer: string) {
+    console.log('🔍 ENVOI EMAIL MFA POUR:', user.email) // DEBUG
+    // Envoi direct simple sans QR code (beaucoup plus rapide)
     return this.send(
       user.email,
       '🔐 Configuration MFA Obligatoire - Compte Administrateur',
       'emails/admin_mfa_setup',
       {
         userName: user.fullName || 'Administrateur',
-        qrCode,
+        manualEntryKey, // Secret formaté pour saisie manuelle
         recoveryCodes,
+        accountName,
+        issuer,
         mfaUrl: `${env.get('FRONTEND_URL')}/settings/mfa`,
         supportEmail: env.get('SUPPORT_EMAIL', 'support@tsa-logistics.com'),
       },
-      false // Envoi direct, pas de queue
+      true // Test queue Redis à nouveau
     )
   }
 

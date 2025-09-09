@@ -3,21 +3,28 @@ import MfaRecoveryCode from '#models/mfa_recovery_code'
 import * as OTPAuth from 'otpauth'
 import base32 from 'hi-base32'
 import crypto from 'node:crypto'
-import QRCode from 'qrcode'
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
+
+export interface MfaSecretData {
+  secret: string
+  manualEntryKey: string
+  recoveryCodes: string[]
+}
+
+export interface MfaVerificationResult {
+  success: boolean
+  message: string
+}
 
 export default class MFAService {
   private readonly issuer = 'TSA Logistics'
-  private readonly algorithm = 'SHA256'
+  private readonly algorithm = 'SHA1'
   private readonly digits = 6
   private readonly period = 30
-  private readonly window = 2
+  private readonly window = 5
 
 
-  async generateSecret(user: User, trx?: any): Promise<{
-    secret: string
-    qrCode: string
-    recoveryCodes: string[]
-  }> {
+  async generateSecret(user: User, trx?: TransactionClientContract): Promise<MfaSecretData> {
     // Generate random secret
     const buffer = crypto.randomBytes(20)
     const secret = base32.encode(buffer).replace(/=/g, '')
@@ -32,9 +39,8 @@ export default class MFAService {
       secret: secret,
     })
 
-    // Generate QR code
-    const otpauthUrl = totp.toString()
-    const qrCode = await QRCode.toDataURL(otpauthUrl)
+    // Format du secret pour saisie manuelle (groupes de 4, espaces)
+    const manualEntryKey = secret.replace(/(.{4})/g, '$1 ').trim()
 
     // Generate recovery codes
     const recoveryCodes = await MfaRecoveryCode.generateCodesFor(user, 10, trx)
@@ -46,7 +52,7 @@ export default class MFAService {
 
     return {
       secret,
-      qrCode,
+      manualEntryKey,
       recoveryCodes,
     }
   }

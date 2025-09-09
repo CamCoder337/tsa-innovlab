@@ -158,13 +158,27 @@
                 <li><strong>Authy</strong> (iOS/Android/Desktop)</li>
             </ul>
 
-            <h2>📷 Étape 2 : Scanner le code QR</h2>
+            <h2>⌨️ Étape 2 : Configuration manuelle</h2>
             <div class="qr-section">
-                <p>Scannez ce code QR avec votre application d'authentification :</p>
-                <div class="qr-code">
-                    <img src="{{ qrCode }}" alt="QR Code MFA">
+                <p><strong>Dans Google Authenticator :</strong></p>
+                <ol style="text-align: left; margin: 15px 0; padding-left: 20px;">
+                    <li>Ouvrez <strong>Google Authenticator</strong></li>
+                    <li>Appuyez sur <strong>+</strong> puis <strong>"Saisir une clé de configuration"</strong></li>
+                    <li>Saisissez ces informations :</li>
+                </ol>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>📧 Nom du compte :</strong></p>
+                    <code style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace;">{{ accountName }}</code>
+                    
+                    <p><strong>🔑 Clé secrète :</strong></p>
+                    <code style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace; font-size: 16px; letter-spacing: 2px;">{{ manualEntryKey }}</code>
+                    
+                    <p><strong>🏢 Émetteur :</strong></p>
+                    <code style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace;">{{ issuer }}</code>
                 </div>
-                <p><em>Ce code QR est unique et sécurisé pour votre compte.</em></p>
+                
+                <p style="color: #059669; font-weight: 600;">✅ Une fois configuré, Google Authenticator génèrera des codes à 6 chiffres toutes les 30 secondes.</p>
             </div>
 
             <h2>🔑 Codes de récupération de secours</h2>

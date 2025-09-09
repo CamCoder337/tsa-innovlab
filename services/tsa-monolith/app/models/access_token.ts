@@ -53,7 +53,7 @@ export default class AccessToken extends BaseModel {
 
   public isExpired(): boolean {
     if (!this.expiresAt) return false
-    return this.expiresAt <= DateTime.now()
+    return this.expiresAt <= DateTime.utc()
   }
 
   public isValid(): boolean {
