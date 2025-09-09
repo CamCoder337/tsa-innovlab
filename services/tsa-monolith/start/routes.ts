@@ -103,6 +103,9 @@ router
     // Gestion des produits
     router.get('/products', '#controllers/http/admin/products_controller.index')
     router.post('/products', '#controllers/http/admin/products_controller.store')
+    router.get('/products/stats', '#controllers/http/admin/products_controller.stats')
+    router.get('/products/low-stock', '#controllers/http/admin/products_controller.lowStock')
+    router.post('/products/bulk', '#controllers/http/admin/products_controller.bulk')
     router.get('/products/:id', '#controllers/http/admin/products_controller.show')
     router.put('/products/:id', '#controllers/http/admin/products_controller.update')
     router.delete('/products/:id', '#controllers/http/admin/products_controller.destroy')
@@ -110,6 +113,8 @@ router
     // Gestion des catégories
     router.get('/categories', '#controllers/http/admin/categories_controller.index')
     router.post('/categories', '#controllers/http/admin/categories_controller.store')
+    router.get('/categories/tree', '#controllers/http/admin/categories_controller.tree')
+    router.get('/categories/:id', '#controllers/http/admin/categories_controller.show')
     router.put('/categories/:id', '#controllers/http/admin/categories_controller.update')
     router.delete('/categories/:id', '#controllers/http/admin/categories_controller.destroy')
 

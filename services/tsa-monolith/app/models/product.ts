@@ -54,10 +54,14 @@ export default class Product extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => Category)
+  @belongsTo(() => Category, {
+    foreignKey: 'categoryId',
+  })
   declare category: BelongsTo<typeof Category>
 
-  @belongsTo(() => User)
+  @belongsTo(() => User, {
+    foreignKey: 'createdBy',
+  })
   declare creator: BelongsTo<typeof User>
 
   @beforeUpdate()
