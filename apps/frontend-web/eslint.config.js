@@ -7,25 +7,25 @@ import { globalIgnores } from 'eslint/config'
 import prettier from 'eslint-plugin-prettier'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-      'plugin:prettier/recommended'
-    ],
-    plugins: {
-      prettier,
+    globalIgnores(['dist']),
+    {
+        files: ['**/*.{ts,tsx}'],
+        extends: [
+            js.configs.recommended,
+            tseslint.configs.recommended,
+            reactHooks.configs['recommended-latest'],
+            reactRefresh.configs.vite,
+            'plugin:prettier/recommended'
+        ],
+        plugins: {
+            prettier,
+        },
+        rules: {
+            'prettier/prettier': 'error',
+        },
+        languageOptions: {
+            ecmaVersion: 2020,
+            globals: globals.browser,
+        },
     },
-    rules: {
-      'prettier/prettier': 'error',
-    },
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
-  },
 ])
