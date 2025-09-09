@@ -11,7 +11,7 @@ export default class Products extends BaseSchema {
       table.text('description')
       table.string('reference', 100).unique()
       table.decimal('price', 12, 2).notNullable().checkPositive()
-      table.integer('stock').defaultTo(0).checkPositive()
+      table.integer('stock').defaultTo(0).unsigned()
       table.integer('stock_alert').defaultTo(5)
       table.string('unit', 20).defaultTo('piece')
       table.text('image_url')
