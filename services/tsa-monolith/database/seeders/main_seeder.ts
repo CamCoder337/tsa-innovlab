@@ -5,12 +5,12 @@ export default class MainSeeder extends BaseSeeder {
     /**
      * Do not run when not in a environment specified in Seeder
      */
-    if (this.environment !== undefined && !this.environment.includes('development')) {
+    if (MainSeeder.environment !== undefined && !MainSeeder.environment.includes('development')) {
       return
     }
 
     const { default: SeederClass } = await import(acterPath)
-    await new SeederClass(this.client, this.file, this.environment).run()
+    await new SeederClass(this.client, undefined, MainSeeder.environment).run()
   }
 
   public async run() {

@@ -5,8 +5,9 @@ import User, { UserRole, UserStatus } from '#models/user'
 
 test.group('Admin Categories Controller', (group) => {
   let adminUser: User
+  let adminToken: string
 
-  group.setup(async () => {
+  group.each.setup(async () => {
     await Database.beginGlobalTransaction()
     
     // Créer un utilisateur admin pour les tests
@@ -17,11 +18,15 @@ test.group('Admin Categories Controller', (group) => {
       lastName: 'Test',
       role: UserRole.ADMIN,
       status: UserStatus.ACTIVE,
-      mfaEnabled: false,
+      mfaEnabled: true,
     })
+    
+    // Générer un token d'accès
+    const token = await adminUser.generateAccessToken('test-token')
+    adminToken = token
   })
 
-  group.teardown(async () => {
+  group.each.teardown(async () => {
     await Database.rollbackGlobalTransaction()
   })
 
@@ -35,7 +40,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .get('/api/admin/categories')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ page: 1, limit: 2 })
 
     response.assertStatus(200)
@@ -60,7 +65,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .get('/api/admin/categories')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ search: 'Computer' })
 
     response.assertStatus(200)
@@ -78,7 +83,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .get('/api/admin/categories')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ isActive: false })
 
     response.assertStatus(200)
@@ -97,7 +102,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .get(`/api/admin/categories/${category.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -121,7 +126,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .post('/api/admin/categories')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json(categoryData)
 
     response.assertStatus(201)
@@ -149,7 +154,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .post('/api/admin/categories')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json({
         name: 'Existing Category',
         description: 'This should fail',
@@ -178,7 +183,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .put(`/api/admin/categories/${category.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json(updateData)
 
     response.assertStatus(200)
@@ -203,7 +208,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .delete(`/api/admin/categories/${category.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -233,7 +238,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const response = await client
       .get('/api/admin/categories/tree')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -267,12 +272,14 @@ test.group('Admin Categories Controller', (group) => {
       lastName: 'User',
       role: UserRole.TRANSPORTEUR,
       status: UserStatus.ACTIVE,
-      mfaEnabled: false,
+      mfaEnabled: true,
     })
+
+    const regularToken = await regularUser.generateAccessToken('test-token')
 
     const response = await client
       .get('/api/admin/categories')
-      .loginAs(regularUser)
+      .bearerToken(regularToken)
 
     response.assertStatus(403)
   })

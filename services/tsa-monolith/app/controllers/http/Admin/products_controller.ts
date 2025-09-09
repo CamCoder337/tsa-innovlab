@@ -16,7 +16,7 @@ export default class ProductsController {
    */
   async index({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
+      auth.getUserOrFail()
       const filters = await request.validateUsing(productsListValidator)
       
       const {
@@ -72,7 +72,7 @@ export default class ProductsController {
       }
 
       // Tri
-      if (sortBy === 'category') {
+      if (sortBy === 'category' as any) {
         query.join('categories', 'products.category_id', 'categories.id')
         query.orderBy('categories.name', sortOrder)
         query.select('products.*') // Éviter les colonnes dupliquées
@@ -93,8 +93,8 @@ export default class ProductsController {
             perPage: products.perPage,
             total: products.total,
             lastPage: products.lastPage,
-            hasNext: products.hasNextPage,
-            hasPrev: products.hasPrevPage,
+            hasNext: products.currentPage < products.lastPage,
+            hasPrev: products.currentPage > 1,
           },
         },
       })
@@ -244,10 +244,10 @@ export default class ProductsController {
       // Traiter les données avant mise à jour
       const processedData = { ...data }
       if (data.images) {
-        processedData.images = JSON.stringify(data.images)
+        processedData.images = JSON.stringify(data.images) as any
       }
       if (data.specifications) {
-        processedData.specifications = JSON.stringify(data.specifications)
+        processedData.specifications = JSON.stringify(data.specifications) as any
       }
 
       // Mettre à jour le produit
@@ -475,8 +475,8 @@ export default class ProductsController {
             perPage: products.perPage,
             total: products.total,
             lastPage: products.lastPage,
-            hasNext: products.hasNextPage,
-            hasPrev: products.hasPrevPage,
+            hasNext: products.currentPage < products.lastPage,
+            hasPrev: products.currentPage > 1,
           },
         },
       })

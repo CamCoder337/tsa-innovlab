@@ -13,7 +13,7 @@ export default class CategoriesController {
    */
   async index({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
+      auth.getUserOrFail()
       const filters = await request.validateUsing(categoriesListValidator)
       
       const {
@@ -74,8 +74,8 @@ export default class CategoriesController {
             perPage: categories.perPage,
             total: categories.total,
             lastPage: categories.lastPage,
-            hasNext: categories.hasNextPage,
-            hasPrev: categories.hasPrevPage,
+            hasNext: categories.currentPage < categories.lastPage,
+            hasPrev: categories.currentPage > 1,
           },
         },
       })
@@ -175,11 +175,18 @@ export default class CategoriesController {
         }
       }
 
-      const category = await Category.create({
+      const categoryData = {
         ...data,
         isActive: data.isActive ?? true,
         displayOrder: data.displayOrder ?? 0,
-      })
+      }
+      
+      // Remove null slug if present
+      if (categoryData.slug === null) {
+        delete categoryData.slug
+      }
+      
+      const category = await Category.create(categoryData as any)
 
       // Log de l'audit
       await AuditLog.create({
@@ -262,7 +269,14 @@ export default class CategoriesController {
       }
 
       // Mettre à jour la catégorie
-      category.merge(data)
+      const updateData = { ...data }
+      
+      // Remove null slug if present
+      if (updateData.slug === null) {
+        delete updateData.slug
+      }
+      
+      category.merge(updateData as any)
       await category.save()
 
       // Log de l'audit

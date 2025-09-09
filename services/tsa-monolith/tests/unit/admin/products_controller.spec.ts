@@ -6,9 +6,10 @@ import User, { UserRole, UserStatus } from '#models/user'
 
 test.group('Admin Products Controller', (group) => {
   let adminUser: User
+  let adminToken: string
   let testCategory: Category
 
-  group.setup(async () => {
+  group.each.setup(async () => {
     await Database.beginGlobalTransaction()
     
     // Créer un utilisateur admin pour les tests
@@ -19,8 +20,12 @@ test.group('Admin Products Controller', (group) => {
       lastName: 'Test',
       role: UserRole.ADMIN,
       status: UserStatus.ACTIVE,
-      mfaEnabled: false,
+      mfaEnabled: true,
     })
+
+    // Générer un token d'accès
+    const token = await adminUser.generateAccessToken('test-token')
+    adminToken = token
 
     // Créer une catégorie de test
     testCategory = await Category.create({
@@ -31,7 +36,7 @@ test.group('Admin Products Controller', (group) => {
     })
   })
 
-  group.teardown(async () => {
+  group.each.teardown(async () => {
     await Database.rollbackGlobalTransaction()
   })
 
@@ -60,7 +65,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ page: 1, limit: 1 })
 
     response.assertStatus(200)
@@ -89,7 +94,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ search: 'Gaming' })
 
     response.assertStatus(200)
@@ -110,6 +115,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Product in Test Category',
         price: 100,
+        stock: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -117,6 +123,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Product in Other Category',
         price: 200,
+        stock: 3,
         categoryId: otherCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -125,7 +132,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ categoryId: testCategory.id })
 
     response.assertStatus(200)
@@ -140,6 +147,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Cheap Product',
         price: 50,
+        stock: 8,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -147,6 +155,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Expensive Product',
         price: 500,
+        stock: 2,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -155,7 +164,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .qs({ minPrice: 100, maxPrice: 600 })
 
     response.assertStatus(200)
@@ -178,7 +187,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get(`/api/admin/products/${product.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -215,7 +224,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .post('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json(productData)
 
     response.assertStatus(201)
@@ -240,6 +249,7 @@ test.group('Admin Products Controller', (group) => {
       name: 'Existing Product',
       reference: 'EXISTING-REF',
       price: 100,
+      stock: 5,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
       isActive: true
@@ -247,7 +257,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .post('/api/admin/products')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json({
         name: 'New Product',
         reference: 'EXISTING-REF',
@@ -283,7 +293,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .put(`/api/admin/products/${product.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json(updateData)
 
     response.assertStatus(200)
@@ -304,6 +314,7 @@ test.group('Admin Products Controller', (group) => {
     const product = await Product.create({
       name: 'To Delete',
       price: 100,
+      stock: 5,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
       isActive: true
@@ -311,7 +322,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .delete(`/api/admin/products/${product.id}`)
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -329,6 +340,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Product 1',
         price: 100,
+        stock: 8,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -336,6 +348,7 @@ test.group('Admin Products Controller', (group) => {
       {
         name: 'Product 2',
         price: 200,
+        stock: 12,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
         isActive: true
@@ -346,7 +359,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .post('/api/admin/products/bulk')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
       .json({
         productIds,
         action: 'deactivate'
@@ -396,7 +409,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products/stats')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -435,7 +448,7 @@ test.group('Admin Products Controller', (group) => {
 
     const response = await client
       .get('/api/admin/products/low-stock')
-      .loginAs(adminUser)
+      .bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -462,12 +475,14 @@ test.group('Admin Products Controller', (group) => {
       lastName: 'User',
       role: UserRole.TRANSPORTEUR,
       status: UserStatus.ACTIVE,
-      mfaEnabled: false,
+      mfaEnabled: true,
     })
+
+    const regularToken = await regularUser.generateAccessToken('test-token')
 
     const response = await client
       .get('/api/admin/products')
-      .loginAs(regularUser)
+      .bearerToken(regularToken)
 
     response.assertStatus(403)
   })

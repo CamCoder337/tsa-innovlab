@@ -39,6 +39,7 @@ export default class Category extends BaseModel {
 
   @beforeSave()
   public static async generateSlug(category: Category) {
+    // Only generate slug if it's empty or null
     if (!category.slug || category.slug.trim() === '') {
       // Replace non-alphanumeric characters with dashes, lowercase
       let baseSlug = category.name
@@ -51,14 +52,27 @@ export default class Category extends BaseModel {
       let slug = baseSlug
       let counter = 1
 
-      // Ensure uniqueness in the database
-      const existing = await Category.query().where('slug', slug).first()
-      while (existing) {
-        slug = `${baseSlug}-${counter}`
-        counter++
-      }
+      // Ensure uniqueness in the database, excluding current category if updating
+      try {
+        let query = Category.query().where('slug', slug)
+        if (category.id) {
+          query = query.whereNot('id', category.id)
+        }
+        
+        while (await query.first()) {
+          slug = `${baseSlug}-${counter}`
+          counter++
+          query = Category.query().where('slug', slug)
+          if (category.id) {
+            query = query.whereNot('id', category.id)
+          }
+        }
 
-      category.slug = slug
+        category.slug = slug
+      } catch (error) {
+        // If database query fails, use the base slug with timestamp as fallback
+        category.slug = `${baseSlug}-${Date.now()}`
+      }
     }
   }
 }
