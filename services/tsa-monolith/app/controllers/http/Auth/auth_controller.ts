@@ -140,7 +140,7 @@ export default class AuthController {
     try {
       const authHeader = request.header('authorization')
       let token = authHeader?.replace('Bearer ', '')
-      
+
       // Handle case where token already contains "Bearer"
       if (token?.startsWith('Bearer ')) {
         token = token.replace('Bearer ', '')
@@ -157,7 +157,7 @@ export default class AuthController {
       const accessTokens = await AccessToken.query().preload('user')
       let user = null
       let tokenFound = false
-      
+
       for (const at of accessTokens) {
         if (await at.verify(token)) {
           user = at.user
