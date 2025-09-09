@@ -4,7 +4,7 @@ import type { RegisterFormData, LoginFormData, ForgotPasswordFormData, FormError
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Password validation rules
-const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_MIN_LENGTH = 8;
 
 // Validation messages in French
 export const VALIDATION_MESSAGES = {
