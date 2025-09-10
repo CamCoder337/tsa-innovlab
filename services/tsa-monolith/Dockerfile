@@ -37,7 +37,7 @@ COPY . .
 RUN npm run build
 
 # =====================================
-# Stage 3: Production runtime
+# Stage 3: Production runtime (DEFAULT)
 # =====================================
 FROM base AS production
 
