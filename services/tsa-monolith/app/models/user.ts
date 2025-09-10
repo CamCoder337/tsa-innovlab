@@ -30,19 +30,16 @@ export enum UserStatus {
 }
 
 export default class User extends compose(BaseModel, AuthFinder) {
+  // Provider AdonisJS pour nos tables existantes
+  static accessTokens = DbAccessTokensProvider.forModel(User, {
+    table: 'access_tokens',
+  })
   @column({ isPrimary: true })
   declare id: string
-
   @column()
   declare email: string
-
   @column({ serializeAs: null, columnName: 'password_hash' })
   declare passwordHash: string
-
-  get fullName(): string {
-    return `${this.firstName ?? ''} ${this.lastName ?? ''}`.trim()
-  }
-
   @column({ columnName: 'first_name' })
   declare firstName: string | null
 
@@ -85,23 +82,39 @@ export default class User extends compose(BaseModel, AuthFinder) {
   // Relations
   @hasMany(() => AccessToken)
   declare accessTokens: HasMany<typeof AccessToken>
-
-  // Provider AdonisJS pour nos tables existantes
-  static accessTokens = DbAccessTokensProvider.forModel(User, {
-    table: 'access_tokens',
-  })
-
   @hasMany(() => RefreshToken)
   declare refreshTokens: HasMany<typeof RefreshToken>
-
   @hasMany(() => Mission, { foreignKey: 'affreteurId' })
   declare missions: HasMany<typeof Mission>
-
   @hasMany(() => Proposition, { foreignKey: 'transporteurId' })
   declare propositions: HasMany<typeof Proposition>
-
   @hasMany(() => AuditLog)
   declare auditLogs: HasMany<typeof AuditLog>
+
+  get fullName(): string {
+    return `${this.firstName ?? ''} ${this.lastName ?? ''}`.trim()
+  }
+
+  /**
+   * Trouve un utilisateur par token de reset password
+   */
+  static async findByPasswordResetToken(token: string): Promise<User | null> {
+    const { default: CacheService } = await import('#services/cache_service')
+    const cacheService = new CacheService()
+
+    // Chercher tous les tokens de reset actifs
+    const keys = await cacheService.getKeys('password_reset:*')
+
+    for (const key of keys) {
+      const storedToken = await cacheService.get(key)
+      if (storedToken === token) {
+        const userId = key.replace('password_reset:', '')
+        return await User.find(userId)
+      }
+    }
+
+    return null
+  }
 
   requiresMFA(): boolean {
     // MFA obligatoire pour les administrateurs
@@ -171,27 +184,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
     await cacheService.set(`password_reset:${this.id}`, token, 3600) // 1 heure
     return token
-  }
-
-  /**
-   * Trouve un utilisateur par token de reset password
-   */
-  static async findByPasswordResetToken(token: string): Promise<User | null> {
-    const { default: CacheService } = await import('#services/cache_service')
-    const cacheService = new CacheService()
-
-    // Chercher tous les tokens de reset actifs
-    const keys = await cacheService.getKeys('password_reset:*')
-
-    for (const key of keys) {
-      const storedToken = await cacheService.get(key)
-      if (storedToken === token) {
-        const userId = key.replace('password_reset:', '')
-        return await User.find(userId)
-      }
-    }
-
-    return null
   }
 
   /**

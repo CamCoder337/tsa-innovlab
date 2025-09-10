@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import string from '@adonisjs/core/helpers/string'
@@ -29,6 +29,37 @@ export default class RefreshToken extends BaseModel {
 
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
+
+  public static async generateFor(
+    user: User,
+    deviceInfo?: object
+  ): Promise<{ token: string; refreshToken: RefreshToken }> {
+    const plainToken = string.generateRandom(64)
+    const tokenHash = await Hash.make(plainToken)
+
+    const refreshToken = await RefreshToken.create({
+      userId: user.id,
+      tokenHash,
+      deviceInfo,
+      expiresAt: DateTime.now().plus({ days: 7 }),
+    })
+
+    return {
+      token: plainToken,
+      refreshToken,
+    }
+  }
+
+  // Clean up expired/revoked tokens
+  public static async cleanup(): Promise<number> {
+    const result = await this.query()
+      .where((query) => {
+        query.where('expires_at', '<=', DateTime.now().toSQL()).orWhereNotNull('revoked_at')
+      })
+      .delete()
+
+    return result[0]
+  }
 
   // Business Methods
   public isExpired(): boolean {
@@ -72,36 +103,5 @@ export default class RefreshToken extends BaseModel {
       token: plainToken,
       refreshToken: newRefreshToken,
     }
-  }
-
-  public static async generateFor(
-    user: User,
-    deviceInfo?: object
-  ): Promise<{ token: string; refreshToken: RefreshToken }> {
-    const plainToken = string.generateRandom(64)
-    const tokenHash = await Hash.make(plainToken)
-
-    const refreshToken = await RefreshToken.create({
-      userId: user.id,
-      tokenHash,
-      deviceInfo,
-      expiresAt: DateTime.now().plus({ days: 7 }),
-    })
-
-    return {
-      token: plainToken,
-      refreshToken,
-    }
-  }
-
-  // Clean up expired/revoked tokens
-  public static async cleanup(): Promise<number> {
-    const result = await this.query()
-      .where((query) => {
-        query.where('expires_at', '<=', DateTime.now().toSQL()).orWhereNotNull('revoked_at')
-      })
-      .delete()
-
-    return result[0]
   }
 }

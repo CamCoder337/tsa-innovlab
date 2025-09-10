@@ -4,10 +4,10 @@ import Product from '#models/product'
 import Category from '#models/category'
 import AuditLog from '#models/audit_log'
 import {
-  createProductValidator,
-  updateProductValidator,
-  productsListValidator,
   bulkProductValidator,
+  createProductValidator,
+  productsListValidator,
+  updateProductValidator,
 } from '#validators/product_validator'
 
 export default class ProductsController {
@@ -18,7 +18,7 @@ export default class ProductsController {
     try {
       auth.getUserOrFail()
       const filters = await request.validateUsing(productsListValidator)
-      
+
       const {
         page = 1,
         limit = 20,
@@ -72,7 +72,7 @@ export default class ProductsController {
       }
 
       // Tri
-      if (sortBy === 'category' as any) {
+      if (sortBy === ('category' as any)) {
         query.join('categories', 'products.category_id', 'categories.id')
         query.orderBy('categories.name', sortOrder)
         query.select('products.*') // Éviter les colonnes dupliquées
@@ -113,7 +113,7 @@ export default class ProductsController {
   async show({ params, response }: HttpContext) {
     try {
       const product = await Product.findOrFail(params.id)
-      
+
       // Charger les relations
       await product.load('category')
       await product.load('creator')
@@ -168,7 +168,9 @@ export default class ProductsController {
       const processedData = {
         ...data,
         images: data.images ? JSON.stringify(data.images) : JSON.stringify([]),
-        specifications: data.specifications ? JSON.stringify(data.specifications) : JSON.stringify({}),
+        specifications: data.specifications
+          ? JSON.stringify(data.specifications)
+          : JSON.stringify({}),
         isActive: data.isActive ?? true,
         stock: data.stock ?? 0,
         stockAlert: data.stockAlert ?? 5,
@@ -337,7 +339,7 @@ export default class ProductsController {
       }
 
       let message = ''
-      
+
       switch (action) {
         case 'activate':
           await Product.query().whereIn('id', productIds).update({ isActive: true })
@@ -408,9 +410,15 @@ export default class ProductsController {
         Product.query().count('* as total'),
         Product.query().where('isActive', true).count('* as total'),
         Product.query().where('isActive', false).count('* as total'),
-        Product.query().whereRaw('stock <= stock_alert').where('isActive', true).count('* as total'),
+        Product.query()
+          .whereRaw('stock <= stock_alert')
+          .where('isActive', true)
+          .count('* as total'),
         Product.query().where('stock', 0).where('isActive', true).count('* as total'),
-        Product.query().where('isActive', true).select(Database.raw('SUM(price * stock) as value')).first(),
+        Product.query()
+          .where('isActive', true)
+          .select(Database.raw('SUM(price * stock) as value'))
+          .first(),
         Category.query()
           .join('products', 'categories.id', 'products.category_id')
           .groupBy('categories.id', 'categories.name')

@@ -2,6 +2,7 @@ import { BaseCommand } from '@adonisjs/core/ace'
 import env from '#start/env'
 import { Redis } from 'ioredis'
 import mail from '@adonisjs/mail/services/main'
+import EmailFilterService from '#services/email_filter_service'
 
 interface EmailData {
   to: string
@@ -94,6 +95,12 @@ export default class EmailWorker extends BaseCommand {
     try {
       this.logger.info(`📧 Processing email data: ${emailStr.substring(0, 100)}...`)
       const emailData: EmailData = JSON.parse(emailStr)
+
+      // Vérifier si c'est un email de test
+      if (EmailFilterService.shouldIgnoreEmail(emailData.to)) {
+        this.logger.info(`🚫 Email de test ignoré: ${emailData.to} - ${emailData.subject}`)
+        return
+      }
 
       this.logger.info(`📨 Tentative envoi email: ${emailData.subject} → ${emailData.to}`)
 

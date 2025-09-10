@@ -2,9 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Category from '#models/category'
 import AuditLog from '#models/audit_log'
 import {
+  categoriesListValidator,
   createCategoryValidator,
   updateCategoryValidator,
-  categoriesListValidator,
 } from '#validators/category_validator'
 
 export default class CategoriesController {
@@ -15,7 +15,7 @@ export default class CategoriesController {
     try {
       auth.getUserOrFail()
       const filters = await request.validateUsing(categoriesListValidator)
-      
+
       const {
         page = 1,
         limit = 20,
@@ -60,9 +60,11 @@ export default class CategoriesController {
       }
 
       // Pagination avec préchargement des relations
-      const categories = await query.preload('products', (productsQuery) => {
-        productsQuery.select('id', 'name', 'categoryId').where('isActive', true).limit(5)
-      }).paginate(page, limit)
+      const categories = await query
+        .preload('products', (productsQuery) => {
+          productsQuery.select('id', 'name', 'categoryId').where('isActive', true).limit(5)
+        })
+        .paginate(page, limit)
 
       return response.json({
         success: true,
@@ -94,7 +96,7 @@ export default class CategoriesController {
   async show({ params, response }: HttpContext) {
     try {
       const category = await Category.findOrFail(params.id)
-      
+
       // Charger les relations
       await category.load('products', (productsQuery) => {
         productsQuery.where('isActive', true).orderBy('name', 'asc')
@@ -103,8 +105,14 @@ export default class CategoriesController {
       // Compter les produits par statut
       const productStats = {
         total: await category.related('products').query().count('* as total'),
-        active: await category.related('products').query().where('isActive', true).count('* as total'),
-        lowStock: await category.related('products').query()
+        active: await category
+          .related('products')
+          .query()
+          .where('isActive', true)
+          .count('* as total'),
+        lowStock: await category
+          .related('products')
+          .query()
           .whereRaw('stock <= stock_alert')
           .where('isActive', true)
           .count('* as total'),
@@ -180,12 +188,12 @@ export default class CategoriesController {
         isActive: data.isActive ?? true,
         displayOrder: data.displayOrder ?? 0,
       }
-      
+
       // Remove null slug if present
       if (categoryData.slug === null) {
         delete categoryData.slug
       }
-      
+
       const category = await Category.create(categoryData as any)
 
       // Log de l'audit
@@ -270,12 +278,12 @@ export default class CategoriesController {
 
       // Mettre à jour la catégorie
       const updateData = { ...data }
-      
+
       // Remove null slug if present
       if (updateData.slug === null) {
         delete updateData.slug
       }
-      
+
       category.merge(updateData as any)
       await category.save()
 
@@ -319,19 +327,25 @@ export default class CategoriesController {
         return response.status(422).json({
           success: false,
           message: 'Cannot delete category with associated products',
-          errors: [`This category has ${totalProducts} associated product(s). Please reassign or delete them first.`],
+          errors: [
+            `This category has ${totalProducts} associated product(s). Please reassign or delete them first.`,
+          ],
         })
       }
 
       // Vérifier s'il y a des sous-catégories
-      const childrenCount = await Category.query().where('parentId', category.id).count('* as total')
+      const childrenCount = await Category.query()
+        .where('parentId', category.id)
+        .count('* as total')
       const totalChildren = Number(childrenCount[0].$extras.total)
 
       if (totalChildren > 0) {
         return response.status(422).json({
           success: false,
           message: 'Cannot delete category with subcategories',
-          errors: [`This category has ${totalChildren} subcategorie(s). Please reassign or delete them first.`],
+          errors: [
+            `This category has ${totalChildren} subcategorie(s). Please reassign or delete them first.`,
+          ],
         })
       }
 

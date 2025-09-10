@@ -115,7 +115,7 @@ export default class CacheService {
   async blacklistToken(token: string): Promise<void> {
     const key = `${this.PREFIX}blacklist:${token}`
     await redis.setex(key, this.TTL.BLACKLIST_TOKEN, '1')
-    
+
     // Invalider aussi le cache du token
     await this.invalidateTokenCache(token)
   }
@@ -136,7 +136,7 @@ export default class CacheService {
     // Invalider tous les tokens en cache pour cet utilisateur
     const pattern = `${this.PREFIX}token_user:*`
     const keys = await redis.keys(pattern)
-    
+
     for (const key of keys) {
       const cachedUserId = await redis.get(key)
       if (cachedUserId === userId) {
@@ -144,6 +144,7 @@ export default class CacheService {
       }
     }
   }
+
   async checkRateLimit(
     identifier: string,
     limit: number,
@@ -190,16 +191,6 @@ export default class CacheService {
     }
   }
 
-  // Utility method to generate consistent cache keys
-  private generateCacheKey(prefix: string, filters: Record<string, any>): string {
-    const filterString = Object.entries(filters)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}:${value}`)
-      .join(':')
-
-    return `${this.PREFIX}${prefix}:${filterString || 'all'}`
-  }
-
   // Clear all cache (use with caution)
   async flushAll(): Promise<void> {
     const keys = await redis.keys(`${this.PREFIX}*`)
@@ -227,5 +218,15 @@ export default class CacheService {
 
   async getKeys(pattern: string): Promise<string[]> {
     return await redis.keys(pattern)
+  }
+
+  // Utility method to generate consistent cache keys
+  private generateCacheKey(prefix: string, filters: Record<string, any>): string {
+    const filterString = Object.entries(filters)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}:${value}`)
+      .join(':')
+
+    return `${this.PREFIX}${prefix}:${filterString || 'all'}`
   }
 }

@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, beforeSave } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeSave, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import Product from '#models/product'
 
@@ -58,7 +58,7 @@ export default class Category extends BaseModel {
         if (category.id) {
           query = query.whereNot('id', category.id)
         }
-        
+
         while (await query.first()) {
           slug = `${baseSlug}-${counter}`
           counter++

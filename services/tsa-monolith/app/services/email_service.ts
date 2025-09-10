@@ -7,28 +7,11 @@ import { DateTime } from 'luxon'
 import env from '#start/env'
 import redis from '@adonisjs/redis/services/main'
 import { EmailData } from '../types/email.js'
+import EmailFilterService from './email_filter_service.js'
 
 @inject()
 export default class EmailService {
   private from = `TSA Logistics <${env.get('MAIL_FROM')}>`
-
-  private async send(
-    to: string,
-    subject: string,
-    view: string,
-    data: Record<string, any>,
-    queue = true
-  ) {
-    if (queue) {
-      // Utiliser notre queue Redis personnalisée
-      await this.sendViaQueue(to, subject, view, data)
-    } else {
-      // Envoi direct
-      await mail.send((message) => {
-        message.from(this.from).to(to).subject(subject).htmlView(view, data)
-      })
-    }
-  }
 
   async sendVerificationEmail(user: User, token: string) {
     console.log('🔍 ENVOI EMAIL VERIFICATION POUR:', user.email) // DEBUG
@@ -65,12 +48,18 @@ export default class EmailService {
   async sendWelcomeEmail(user: User) {
     const dashboardUrl = `${env.get('FRONTEND_URL')}/dashboard`
 
-    return this.send(user.email, 'Bienvenue sur TSA Logistics 🚛', 'emails/welcome', {
-      userName: user.fullName || 'Utilisateur',
-      role: this.getRoleName(user.role),
-      dashboardUrl,
-      features: this.getRoleFeatures(user.role),
-    }, true) // Utiliser la queue pour les emails de bienvenue
+    return this.send(
+      user.email,
+      'Bienvenue sur TSA Logistics 🚛',
+      'emails/welcome',
+      {
+        userName: user.fullName || 'Utilisateur',
+        role: this.getRoleName(user.role),
+        dashboardUrl,
+        features: this.getRoleFeatures(user.role),
+      },
+      true
+    ) // Utiliser la queue pour les emails de bienvenue
   }
 
   async sendNewMissionNotification(transporteur: User, mission: Mission) {
@@ -175,7 +164,13 @@ export default class EmailService {
     })
   }
 
-  async sendAdminMFASetupEmail(user: User, manualEntryKey: string, recoveryCodes: string[], accountName: string, issuer: string) {
+  async sendAdminMFASetupEmail(
+    user: User,
+    manualEntryKey: string,
+    recoveryCodes: string[],
+    accountName: string,
+    issuer: string
+  ) {
     console.log('🔍 ENVOI EMAIL MFA POUR:', user.email) // DEBUG
     // Envoi direct simple sans QR code (beaucoup plus rapide)
     return this.send(
@@ -193,6 +188,32 @@ export default class EmailService {
       },
       true // Test queue Redis à nouveau
     )
+  }
+
+  private async send(
+    to: string,
+    subject: string,
+    view: string,
+    data: Record<string, any>,
+    queue = true
+  ) {
+    // Vérifier si c'est un email de test
+    if (EmailFilterService.shouldIgnoreEmail(to)) {
+      console.log(`🚫 Email de test ignoré: ${to} - ${subject}`)
+      return
+    }
+
+    console.log(`📧 Envoi email autorisé: ${to} - ${subject}`)
+
+    if (queue) {
+      // Utiliser notre queue Redis personnalisée
+      await this.sendViaQueue(to, subject, view, data)
+    } else {
+      // Envoi direct
+      await mail.send((message) => {
+        message.from(this.from).to(to).subject(subject).htmlView(view, data)
+      })
+    }
   }
 
   // === Helpers ===
