@@ -1,0 +1,490 @@
+# ================================
+# TSA Logistics - Production Docker Compose
+# ================================
+# Production environment with enhanced security and performance
+version: '3.8'
+
+# =====================================
+# Shared Network Configuration
+# =====================================
+networks:
+  tsa-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    driver_opts:
+      encrypted: "true"
+
+# =====================================
+# Named Volumes for Production
+# =====================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/data/postgres
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/data/redis
+  ai_models:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/data/ai_models
+  nginx_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/logs/nginx
+  app_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/logs/app
+  ssl_certs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/tsa/ssl
+
+# =====================================
+# Production Services
+# =====================================
+services:
+  # ===================
+  # PostgreSQL Database
+  # ===================
+  postgres:
+    image: postgres:16-alpine
+    container_name: tsa-postgres-prod
+    restart: always
+    
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /opt/tsa/backups:/backups
+    
+    # Production-only port binding (internal only)
+    expose:
+      - "5432"
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
+    # Enhanced security
+    security_opt:
+      - no-new-privileges:true
+      - apparmor:unconfined
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
+    
+    # Optimized PostgreSQL configuration for production
+    command: >
+      postgres
+      -c max_connections=300
+      -c shared_buffers=512MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=32MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=8MB
+      -c min_wal_size=2GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c shared_preload_libraries=pg_stat_statements
+    
+    networks:
+      - tsa-network
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =============
+  # Redis Cache
+  # =============
+  redis:
+    image: redis:7-alpine
+    container_name: tsa-redis-prod
+    restart: always
+    
+    # Enhanced Redis configuration for production
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --tcp-keepalive 60
+      --timeout 300
+      --databases 16
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --maxclients 10000
+      --tcp-backlog 511
+      --dir /data
+      --dbfilename dump.rdb
+      --rdbcompression yes
+      --rdbchecksum yes
+    
+    volumes:
+      - redis_data:/data
+      - /opt/tsa/backups:/backups
+    
+    # Internal port only
+    expose:
+      - "6379"
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    
+    networks:
+      - tsa-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =====================
+  # AdonisJS Monolith API
+  # =====================
+  tsa-monolith:
+    build:
+      context: ./services/tsa-monolith
+      dockerfile: Dockerfile
+      target: production
+    
+    container_name: tsa-monolith-prod
+    restart: always
+    
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3333
+      TZ: UTC
+      APP_KEY: ${APP_KEY}
+      
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_DATABASE: ${POSTGRES_DB}
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      
+      # Production security settings
+      SESSION_DRIVER: redis
+      SECURE_COOKIES: true
+      TRUST_PROXY: true
+      RATE_LIMIT_REQUESTS: 1000
+      RATE_LIMIT_WINDOW: 60000
+      
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      
+      # URLs
+      FRONTEND_URL: ${FRONTEND_URL}
+      API_BASE_URL: ${API_BASE_URL}
+      
+      # Monitoring
+      LOG_LEVEL: info
+      METRICS_ENABLED: true
+      PERFORMANCE_MONITORING: true
+    
+    volumes:
+      - app_logs:/app/logs
+      - /app/node_modules
+    
+    # Internal port only
+    expose:
+      - "3333"
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    
+    # Production startup sequence
+    command: >
+      sh -c "
+        echo '🚀 [PROD] Starting TSA Monolith...' &&
+        echo '📊 [PROD] Waiting for services...' &&
+        timeout 120 sh -c 'until nc -z postgres 5432; do sleep 2; done' &&
+        timeout 120 sh -c 'until nc -z redis 6379; do sleep 2; done' &&
+        echo '🗄️ [PROD] Running migrations...' &&
+        node ace migration:run --force &&
+        echo '✅ [PROD] Starting production server...' &&
+        node build/bin/server.js
+      "
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 120s
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    # Production resources
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+      replicas: 1
+    
+    networks:
+      - tsa-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # ===================
+  # FastAPI AI Service
+  # ===================
+  tsa-ai:
+    build:
+      context: ./services/tsa-ai
+      dockerfile: Dockerfile
+    
+    container_name: tsa-ai-prod
+    restart: always
+    
+    environment:
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/1
+      FASTAPI_HOST: 0.0.0.0
+      FASTAPI_PORT: 8000
+      
+      # Production ML settings
+      MODEL_CACHE_SIZE: 5
+      MODEL_PREDICTION_TIMEOUT: 60
+      MAX_CONCURRENT_PREDICTIONS: 10
+      
+      # Logging
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      
+      # Performance
+      WORKERS: 4
+      WORKER_CONNECTIONS: 1000
+    
+    volumes:
+      - ai_models:/app/ml_models
+      - app_logs:/app/logs
+    
+    expose:
+      - "8000"
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      tsa-monolith:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/ai/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+      start_period: 60s
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '6.0'
+        reservations:
+          memory: 4G
+          cpus: '2.0'
+    
+    networks:
+      - tsa-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  # ===============================
+  # Nginx Production Load Balancer
+  # ===============================
+  nginx:
+    image: nginx:alpine
+    container_name: tsa-nginx-prod
+    restart: always
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - ./services/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./services/nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+      - ssl_certs:/etc/nginx/ssl:ro
+    
+    depends_on:
+      tsa-monolith:
+        condition: service_healthy
+      tsa-ai:
+        condition: service_healthy
+    
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    
+    networks:
+      - tsa-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ===================
+  # Production Backup Service
+  # ===================
+  backup:
+    image: postgres:16-alpine
+    container_name: tsa-backup-service
+    restart: "no"
+    
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      BACKUP_RETENTION_DAYS: 30
+    
+    volumes:
+      - /opt/tsa/backups:/backups
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+    
+    command: >
+      sh -c "
+        apk add --no-cache dcron &&
+        echo '0 2 * * * /scripts/backup.sh' | crontab - &&
+        crond -f -l 2
+      "
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    networks:
+      - tsa-network
+    
+    # Profile: backup - only run when explicitly called
+    profiles:
+      - backup
+
+  # ===================
+  # Log Aggregation (Optional)
+  # ===================
+  # logspout:
+  #   image: gliderlabs/logspout:latest
+  #   container_name: tsa-logspout
+  #   restart: always
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   command: syslog://your-log-server:514
+  #   networks:
+  #     - tsa-network
+  #   profiles:
+  #     - logging

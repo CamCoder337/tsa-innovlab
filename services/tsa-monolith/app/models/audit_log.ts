@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 
@@ -81,18 +81,21 @@ export default class AuditLog extends BaseModel {
   }
 
   static async logUserRegistration(user: User, ipAddress: string, options?: any) {
-    await this.create({
-      userId: user.id,
-      action: 'auth.register',
-      entityType: 'users',
-      entityId: user.id,
-      ipAddress,
-      newValues: {
-        email: user.email,
-        role: user.role,
-        status: user.status,
+    await this.create(
+      {
+        userId: user.id,
+        action: 'auth.register',
+        entityType: 'users',
+        entityId: user.id,
+        ipAddress,
+        newValues: {
+          email: user.email,
+          role: user.role,
+          status: user.status,
+        },
       },
-    }, options)
+      options
+    )
   }
 
   static async logPasswordReset(user: User, ipAddress: string) {

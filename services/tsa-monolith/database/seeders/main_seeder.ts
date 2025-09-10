@@ -15,13 +15,16 @@ export default class MainSeeder extends BaseSeeder {
 
   public async run() {
     console.log('🌱 Starting database seeding...')
-    
-    // Seeder les catégories en premier
+
+    // 1. Créer l'utilisateur admin en premier
+    await this.runSeeder('./admin_user_seeder.js')
+
+    // 2. Seeder les catégories
     await this.runSeeder('./category_seeder.js')
-    
-    // Puis les produits qui dépendent des catégories
+
+    // 3. Puis les produits qui dépendent des catégories et de l'admin
     await this.runSeeder('./product_seeder.js')
-    
+
     console.log('🌱 Database seeding completed!')
   }
 }

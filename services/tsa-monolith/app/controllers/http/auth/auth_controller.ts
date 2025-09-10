@@ -6,15 +6,15 @@ import AuthService from '#services/auth_service'
 import AuditLog from '#models/audit_log'
 import Hash from '@adonisjs/core/services/hash'
 import {
-  loginValidator,
-  registerValidator,
-  forgotPasswordValidator,
-  resetPasswordValidator,
-  refreshTokenValidator,
-  enableMFAValidator,
-  verifyMFAValidator,
   changePasswordValidator,
+  enableMFAValidator,
+  forgotPasswordValidator,
+  loginValidator,
+  refreshTokenValidator,
+  registerValidator,
+  resetPasswordValidator,
   updateProfileValidator,
+  verifyMFAValidator,
 } from '#validators/auth_validator'
 
 @inject()

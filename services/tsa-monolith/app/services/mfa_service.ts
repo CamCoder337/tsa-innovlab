@@ -73,21 +73,6 @@ export default class MFAService {
     return this.verifyToken(user.mfaSecret, token)
   }
 
-  private verifyToken(secret: string, token: string): boolean {
-    const totp = new OTPAuth.TOTP({
-      issuer: this.issuer,
-      label: '',
-      algorithm: this.algorithm,
-      digits: this.digits,
-      period: this.period,
-      secret: secret,
-    })
-
-    // Verify with time window
-    const delta = totp.validate({ token, window: this.window })
-    return delta !== null
-  }
-
   async verifyRecoveryCode(user: User, code: string): Promise<boolean> {
     const recoveryCodes = await MfaRecoveryCode.query().where('userId', user.id).whereNull('usedAt')
 
@@ -116,5 +101,20 @@ export default class MFAService {
     }
 
     return MfaRecoveryCode.generateCodesFor(user, 10)
+  }
+
+  private verifyToken(secret: string, token: string): boolean {
+    const totp = new OTPAuth.TOTP({
+      issuer: this.issuer,
+      label: '',
+      algorithm: this.algorithm,
+      digits: this.digits,
+      period: this.period,
+      secret: secret,
+    })
+
+    // Verify with time window
+    const delta = totp.validate({ token, window: this.window })
+    return delta !== null
   }
 }

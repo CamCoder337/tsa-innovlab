@@ -6,6 +6,8 @@ import { defineConfig } from '@adonisjs/cors'
  *
  * https://docs.adonisjs.com/guides/security/cors
  */
+
+//TODO (camcoder): Improve CORS security by restraining some domains and applying permissions
 const corsConfig = defineConfig({
   enabled: true,
   origin: true,

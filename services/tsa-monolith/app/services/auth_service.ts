@@ -1,4 +1,4 @@
-import User, {UserStatus, UserRole} from '#models/user'
+import User, { UserRole, UserStatus } from '#models/user'
 import RefreshToken from '#models/refresh_token'
 import AccessToken from '#models/access_token'
 import AuditLog from '#models/audit_log'
@@ -6,7 +6,7 @@ import Hash from '@adonisjs/core/services/hash'
 import { DateTime } from 'luxon'
 import Database from '@adonisjs/lucid/services/db'
 import CacheService from './cache_service.js'
-import MFAService, {MfaSecretData} from './mfa_service.js'
+import MFAService, { MfaSecretData } from './mfa_service.js'
 import EmailService from './email_service.js'
 import { Exception } from '@adonisjs/core/exceptions'
 import { inject } from '@adonisjs/core'
@@ -68,7 +68,7 @@ export default class AuthService {
     const isAdmin = user?.role === 'admin'
     const limits = isAdmin
       ? { maxAttempts: 15, windowMinutes: 10 } // Plus permissif pour admins
-      : { maxAttempts: 10, windowMinutes: 5 }   // Standard pour utilisateurs
+      : { maxAttempts: 10, windowMinutes: 5 } // Standard pour utilisateurs
 
     const { allowed, resetAt } = await this.cacheService.checkRateLimit(
       rateLimitKey,
@@ -78,7 +78,10 @@ export default class AuthService {
 
     if (!allowed) {
       const remainingMinutes = Math.ceil((resetAt - Date.now()) / (1000 * 60))
-      throw new Exception(`Too many login attempts. Try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`, { status: 429 })
+      throw new Exception(
+        `Too many login attempts. Try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`,
+        { status: 429 }
+      )
     }
 
     if (!user) {
@@ -166,7 +169,7 @@ export default class AuthService {
     // Find access token by comparing hash
     const accessTokens = await AccessToken.query().where('tokenableId', userId)
     let accessToken = null
-    
+
     for (const at of accessTokens) {
       if (await at.verify(token)) {
         accessToken = at
@@ -203,7 +206,7 @@ export default class AuthService {
     // Find and verify refresh token
     const refreshTokens = await RefreshToken.query().preload('user')
     let refreshToken = null
-    
+
     for (const rt of refreshTokens) {
       if (await rt.verify(refreshTokenString)) {
         refreshToken = rt
@@ -232,33 +235,6 @@ export default class AuthService {
     }
   }
 
-  private async generateTokens(user: User): Promise<AuthTokens> {
-    // Generate access token
-    const accessToken = await user.generateAccessToken()
-
-    // Generate refresh token
-    const { token: refreshToken } = await RefreshToken.generateFor(user, {
-      platform: 'web',
-      lastActivity: DateTime.now().toISO(),
-    })
-
-    return {
-      accessToken,
-      refreshToken,
-      expiresIn: 900, // 15 minutes
-      tokenType: 'Bearer',
-    }
-  }
-
-  private async logFailedLogin(
-    email: string,
-    ipAddress: string,
-    userAgent?: string,
-    reason?: string
-  ): Promise<void> {
-    await AuditLog.logFailedLogin(email, ipAddress, userAgent, reason)
-  }
-
   async register(data: RegisterUserData, ipAddress: string): Promise<User> {
     // Check if email already exists
     const existingUser = await User.findBy('email', data.email.toLowerCase())
@@ -270,13 +246,16 @@ export default class AuthService {
     const user = await Database.transaction(async (trx) => {
       // Create user within transaction
       const { password, ...userData } = data
-      const newUser = await User.create({
-        ...userData,
-        email: data.email.toLowerCase(),
-        passwordHash: password,
-        status: UserStatus.PENDING,
-        mfaEnabled: false,
-      }, { client: trx })
+      const newUser = await User.create(
+        {
+          ...userData,
+          email: data.email.toLowerCase(),
+          passwordHash: password,
+          status: UserStatus.PENDING,
+          mfaEnabled: false,
+        },
+        { client: trx }
+      )
 
       // Log registration
       await AuditLog.logUserRegistration(newUser, ipAddress, { client: trx })
@@ -292,7 +271,13 @@ export default class AuthService {
         await newUser.save()
 
         // Send special admin MFA setup email instead of regular welcome
-        await this.emailService.sendAdminMFASetupEmail(newUser, mfaData.manualEntryKey, mfaData.recoveryCodes, newUser.email, 'TSA Logistics')
+        await this.emailService.sendAdminMFASetupEmail(
+          newUser,
+          mfaData.manualEntryKey,
+          mfaData.recoveryCodes,
+          newUser.email,
+          'TSA Logistics'
+        )
       } else {
         // Send welcome email for non-admin users
         await this.emailService.sendWelcomeEmail(newUser)
@@ -416,5 +401,32 @@ export default class AuthService {
    */
   async verifyMFACode(user: User, code: string): Promise<boolean> {
     return await this.mfaService.verifyTOTP(user, code)
+  }
+
+  private async generateTokens(user: User): Promise<AuthTokens> {
+    // Generate access token
+    const accessToken = await user.generateAccessToken()
+
+    // Generate refresh token
+    const { token: refreshToken } = await RefreshToken.generateFor(user, {
+      platform: 'web',
+      lastActivity: DateTime.now().toISO(),
+    })
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: 900, // 15 minutes
+      tokenType: 'Bearer',
+    }
+  }
+
+  private async logFailedLogin(
+    email: string,
+    ipAddress: string,
+    userAgent?: string,
+    reason?: string
+  ): Promise<void> {
+    await AuditLog.logFailedLogin(email, ipAddress, userAgent, reason)
   }
 }
