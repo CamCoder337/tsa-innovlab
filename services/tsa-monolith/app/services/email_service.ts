@@ -57,6 +57,7 @@ export default class EmailService {
         role: this.getRoleName(user.role),
         dashboardUrl,
         features: this.getRoleFeatures(user.role),
+        currentYear: new Date().getFullYear(),
       },
       true
     ) // Utiliser la queue pour les emails de bienvenue
