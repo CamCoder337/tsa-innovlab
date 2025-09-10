@@ -1,0 +1,84 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+*.env
+
+# Build outputs
+build/
+dist/
+coverage/
+.nyc_output/
+
+# Testing (keep tests/ for build, exclude compiled test files)
+*.test.js
+*.spec.js
+__tests__/
+jest.config.*
+vitest.config.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+tmp/
+temp/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+*.md
+docs/
+
+# Linting and formatting
+.eslintrc*
+.prettierrc*
+.eslintignore
+.prettierignore
+
+# TypeScript
+*.tsbuildinfo
+# tsconfig*.json  # Commented out - needed for Docker builds
+
+# Package managers
+.npm/
+.pnpm-store/
+yarn.lock
+pnpm-lock.yaml
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Misc development files
+.editorconfig
+.nvmrc
+.node-version
