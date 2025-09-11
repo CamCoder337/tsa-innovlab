@@ -1,4 +1,4 @@
-name: 🚛 CI - Monolith AdonisJS (Develop)
+name: 🚛 CI - Monolith AdonisJS Service (Develop)
 
 on:
   pull_request:
