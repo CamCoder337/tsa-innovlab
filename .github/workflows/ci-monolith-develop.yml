@@ -13,7 +13,7 @@ jobs:
     name: 📁 Check Monolith Changes
     runs-on: ubuntu-latest
     outputs:
-      monolith-changed: ${{ steps.changes.outputs.monolith-changed }}
+      monolith-changed: ${{ steps.changes.outputs.any-changed }}
     
     steps:
       - name: Checkout code
