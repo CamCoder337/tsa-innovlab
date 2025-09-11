@@ -47,7 +47,7 @@ router.get('/', async () => {
   }
 })
 
-// Health check
+// Health check for ensuring that the app is online
 router.get('/health', async () => {
   return {
     status: 'ok',
