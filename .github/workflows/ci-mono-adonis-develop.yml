@@ -13,7 +13,7 @@ jobs:
     name: 📁 Check Monolith Changes
     runs-on: ubuntu-latest
     outputs:
-      monolith-changed: ${{ steps.changes.outputs.any-changed }}
+      monolith-changed: ${{ steps.changes.outputs.any_changed }}
     
     steps:
       - name: Checkout code
@@ -31,15 +31,24 @@ jobs:
             services/tsa-monolith/**/*.md
             services/tsa-monolith/**/*.txt
 
-      - name: Set output
+      - name: Display result and debug
         run: |
-          if [ "${{ steps.changes.outputs.any-changed }}" = "true" ]; then
-            echo "monolith-changed=true" >> $GITHUB_OUTPUT
+          echo "🔍 DEBUG: Checking tj-actions outputs..."
+          echo "any_changed value: '${{ steps.changes.outputs.any_changed }}'"
+          echo "all_changed_files: '${{ steps.changes.outputs.all_changed_files }}'"
+          echo "changed_files: '${{ steps.changes.outputs.changed_files }}'"
+          echo ""
+          
+          if [ "${{ steps.changes.outputs.any_changed }}" = "true" ]; then
             echo "✅ Changes detected in services/tsa-monolith/"
+            echo "Files changed: ${{ steps.changes.outputs.all_changed_files }}"
           else
-            echo "monolith-changed=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No changes detected in services/tsa-monolith/"
           fi
+          
+          echo ""
+          echo "🎯 Final output that will be used by other jobs:"
+          echo "monolith-changed will be: '${{ steps.changes.outputs.any_changed }}'"
 
   # Job 2: Lint and TypeCheck
   lint-and-typecheck:
