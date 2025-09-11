@@ -31,13 +31,12 @@ jobs:
             services/tsa-monolith/**/*.md
             services/tsa-monolith/**/*.txt
 
-      - name: Set output
+      - name: Display result
         run: |
           if [ "${{ steps.changes.outputs.any-changed }}" = "true" ]; then
-            echo "monolith-changed=true" >> $GITHUB_OUTPUT
             echo "✅ Changes detected in services/tsa-monolith/"
+            echo "Files changed: ${{ steps.changes.outputs.all_changed_files }}"
           else
-            echo "monolith-changed=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No changes detected in services/tsa-monolith/"
           fi
 
