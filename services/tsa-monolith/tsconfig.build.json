@@ -4,10 +4,5 @@
     "rootDir": "./",
     "outDir": "./build"
   },
-  "exclude": [
-    "tests/**/*",
-    "bin/test.ts",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["tests/**/*", "bin/test.ts", "**/*.test.ts", "**/*.spec.ts"]
 }

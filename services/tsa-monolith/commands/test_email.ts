@@ -21,8 +21,7 @@ export default class TestEmail extends BaseCommand {
         message
           .from(`TSA Logistics <${env.get('MAIL_FROM')}>`)
           .to(testEmail)
-          .subject('🧪 Test Email - TSA Logistics')
-          .html(`
+          .subject('🧪 Test Email - TSA Logistics').html(`
             <h1>Test Email</h1>
             <p>Si vous recevez cet email, la configuration SMTP Gmail fonctionne !</p>
             <p>Envoyé le: ${new Date().toLocaleString()}</p>
@@ -40,7 +39,7 @@ export default class TestEmail extends BaseCommand {
     } catch (error) {
       this.logger.error('❌ Email sending failed:')
       this.logger.error(error.message)
-      
+
       if (error.code) {
         this.logger.error(`Error code: ${error.code}`)
       }

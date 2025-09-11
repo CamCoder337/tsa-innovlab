@@ -1,18 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8" />
-<title>Compte verrouillé</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f9fafb; color: #333; }
-  .card { max-width: 600px; margin: auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-</style>
-</head>
-<body>
-<div class="card">
-  <p>Bonjour {{ userName }},</p>
-  <p>Votre compte a été temporairement verrouillé jusqu'au {{ unlockTime }}.</p>
-  <p>Pour toute assistance, contactez : <a href="mailto:{{ supportEmail }}">{{ supportEmail }}</a></p>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      Compte verrouillé
+    </title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9fafb;
+        color: #333;
+      }
+      
+      .card {
+        max-width: 600px;
+        margin: auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>
+        Bonjour {{ userName }},
+      </p>
+      <p>
+        Votre compte a été temporairement verrouillé jusqu'au {{ unlockTime }}.
+      </p>
+      <p>
+        Pour toute assistance, contactez : <a href="mailto:{{ supportEmail }}">{{ supportEmail }}</a>
+      </p>
+    </div>
+  </body>
 </html>

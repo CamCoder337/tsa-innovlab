@@ -1,27 +1,66 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8" />
-<title>Nouvelle mission disponible</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f9fafb; color: #333; }
-  .card { max-width: 600px; margin: auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .cta { display: inline-block; margin-top: 16px; padding: 12px 20px; background: #2563eb; color: #fff; border-radius: 8px; text-decoration: none; }
-</style>
-</head>
-<body>
-<div class="card">
-  <p>Bonjour {{ userName }},</p>
-  <p>Une nouvelle mission est disponible :</p>
-  <ul>
-    <li><b>{{ missionTitle }}</b></li>
-    <li>Description : {{ description }}</li>
-    <li>Budget : {{ budget }}</li>
-    <li>Départ : {{ departCity }}</li>
-    <li>Arrivée : {{ arriveeCity }}</li>
-    <li>Date estimée : {{ dateDepart }}</li>
-  </ul>
-  <a href="{{ missionUrl }}" class="cta">Voir la mission</a>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      Nouvelle mission disponible
+    </title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f9fafb;
+        color: #333;
+      }
+      
+      .card {
+        max-width: 600px;
+        margin: auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      
+      .cta {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 12px 20px;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>
+        Bonjour {{ userName }},
+      </p>
+      <p>
+        Une nouvelle mission est disponible :
+      </p>
+      <ul>
+        <li>
+          <b>{{ missionTitle }}</b>
+        </li>
+        <li>
+          Description : {{ description }}
+        </li>
+        <li>
+          Budget : {{ budget }}
+        </li>
+        <li>
+          Départ : {{ departCity }}
+        </li>
+        <li>
+          Arrivée : {{ arriveeCity }}
+        </li>
+        <li>
+          Date estimée : {{ dateDepart }}
+        </li>
+      </ul>
+      <a href="{{ missionUrl }}" class="cta">Voir la mission</a>
+    </div>
+  </body>
 </html>

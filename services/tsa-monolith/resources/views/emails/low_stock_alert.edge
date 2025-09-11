@@ -1,34 +1,83 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8" />
-<title>Alerte stock faible</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #fef2f2; color: #333; }
-  .card { max-width: 600px; margin: auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-  th { background: #f87171; color: #fff; }
-  .cta { display: inline-block; margin-top: 16px; padding: 12px 20px; background: #ef4444; color: #fff; border-radius: 8px; text-decoration: none; }
-</style>
-</head>
-<body>
-<div class="card">
-  <p>⚠️ Attention, les produits suivants ont un stock faible :</p>
-  <table>
-    <tr>
-      <th>Produit</th>
-      <th>Quantité restante</th>
-    </tr>
-    @each(product in products)
-    <tr>
-      <td>{{ product.name }}</td>
-      <td>{{ product.quantity }}</td>
-    </tr>
-    @endeach
-  </table>
-  <a href="{{ dashboardUrl }}" class="cta">Voir les stocks</a>
-  <p>Date de l'alerte : {{ alertDate }}</p>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      Alerte stock faible
+    </title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #fef2f2;
+        color: #333;
+      }
+      
+      .card {
+        max-width: 600px;
+        margin: auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      
+      th {
+        background: #f87171;
+        color: #fff;
+      }
+      
+      .cta {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 12px 20px;
+        background: #ef4444;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>
+        ⚠️ Attention, les produits suivants ont un stock faible :
+      </p>
+      <table>
+        <tr>
+          <th>
+            Produit
+          </th>
+          <th>
+            Quantité restante
+          </th>
+        </tr>
+        @each(product in products)
+          <tr>
+            <td>
+              {{ product.name }}
+            </td>
+            <td>
+              {{ product.quantity }}
+            </td>
+          </tr>
+        @endeach
+      </table>
+      <a href="{{ dashboardUrl }}" class="cta">Voir les stocks</a>
+      <p>
+        Date de l'alerte : {{ alertDate }}
+      </p>
+    </div>
+  </body>
 </html>

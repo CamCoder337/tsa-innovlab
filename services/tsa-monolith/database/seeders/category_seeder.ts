@@ -28,7 +28,7 @@ export default class CategorySeeder extends BaseSeeder {
       },
       {
         name: 'Équipements Industriels',
-        description: 'Machines et équipements pour l\'industrie',
+        description: "Machines et équipements pour l'industrie",
         imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
         isActive: true,
         displayOrder: 4,

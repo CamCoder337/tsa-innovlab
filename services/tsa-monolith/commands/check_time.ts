@@ -12,9 +12,13 @@ export default class CheckTime extends BaseCommand {
   async run() {
     const serverTime = new Date()
     this.logger.info(`🕐 Heure serveur: ${serverTime.toISOString()}`)
-    this.logger.info(`🕐 Heure serveur (locale): ${serverTime.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}`)
-    this.logger.info(`🌍 Timezone serveur: ${serverTime.getTimezoneOffset()} minutes de décalage UTC`)
-    
+    this.logger.info(
+      `🕐 Heure serveur (locale): ${serverTime.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}`
+    )
+    this.logger.info(
+      `🌍 Timezone serveur: ${serverTime.getTimezoneOffset()} minutes de décalage UTC`
+    )
+
     // Timestamp Unix (utilisé par TOTP)
     const unixTime = Math.floor(Date.now() / 1000)
     this.logger.info(`⏱️  Unix timestamp: ${unixTime}`)

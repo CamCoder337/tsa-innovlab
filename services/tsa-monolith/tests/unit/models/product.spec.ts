@@ -10,7 +10,7 @@ test.group('Product Model', (group) => {
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
-    
+
     // Créer un utilisateur admin pour les tests
     adminUser = await User.create({
       email: 'admin-test@example.com',
@@ -27,7 +27,7 @@ test.group('Product Model', (group) => {
       name: 'Test Category',
       description: 'Category for testing',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
   })
 
@@ -141,7 +141,7 @@ test.group('Product Model', (group) => {
         categoryId: testCategory.id,
         createdBy: adminUser.id,
       } as any)
-      
+
       assert.fail('Should have thrown validation error')
     } catch (error) {
       assert.exists(error)
@@ -169,7 +169,7 @@ test.group('Product Model', (group) => {
         createdBy: adminUser.id,
         isActive: true,
       })
-      
+
       assert.fail('Should have thrown unique constraint error')
     } catch (error) {
       assert.exists(error)
@@ -278,7 +278,7 @@ test.group('Product Model', (group) => {
         createdBy: adminUser.id,
         isActive: true,
       })
-      
+
       // Note: This test assumes database validation or model validation
       // If no validation exists, this test might need to be removed
       // or validation should be added to the model
@@ -298,7 +298,7 @@ test.group('Product Model', (group) => {
         createdBy: adminUser.id,
         isActive: true,
       })
-      
+
       // Note: This test assumes database validation or model validation
       // If no validation exists, this test might need to be removed
       // or validation should be added to the model
@@ -321,7 +321,7 @@ test.group('Product Model', (group) => {
     const originalUpdatedAt = product.updatedAt
 
     // Wait a moment to ensure timestamp difference
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     product.name = 'Updated Product'
     await product.save()
@@ -339,7 +339,7 @@ test.group('Product Model', (group) => {
         createdBy: adminUser.id,
         isActive: true,
       })
-      
+
       assert.fail('Should have thrown foreign key constraint error')
     } catch (error) {
       assert.exists(error)
@@ -356,7 +356,7 @@ test.group('Product Model', (group) => {
         createdBy: '00000000-0000-4000-8000-000000000000', // Non-existent UUID
         isActive: true,
       })
-      
+
       assert.fail('Should have thrown foreign key constraint error')
     } catch (error) {
       assert.exists(error)
@@ -403,7 +403,7 @@ test.group('Product Model', (group) => {
     const anotherCategory = await Category.create({
       name: 'Another Category',
       isActive: true,
-      displayOrder: 2
+      displayOrder: 2,
     })
 
     await Product.createMany([
@@ -413,7 +413,7 @@ test.group('Product Model', (group) => {
         stock: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Product in Another Category',
@@ -421,8 +421,8 @@ test.group('Product Model', (group) => {
         stock: 3,
         categoryId: anotherCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
     const productsInTestCategory = await Product.query().where('categoryId', testCategory.id)
@@ -430,7 +430,7 @@ test.group('Product Model', (group) => {
 
     assert.equal(productsInTestCategory.length, 1)
     assert.equal(productsInTestCategory[0].name, 'Product in Test Category')
-    
+
     assert.equal(productsInAnotherCategory.length, 1)
     assert.equal(productsInAnotherCategory[0].name, 'Product in Another Category')
   })
@@ -444,7 +444,7 @@ test.group('Product Model', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Low Stock Product',
@@ -453,8 +453,8 @@ test.group('Product Model', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
     const lowStockProducts = await Product.query().whereRaw('stock <= stock_alert')

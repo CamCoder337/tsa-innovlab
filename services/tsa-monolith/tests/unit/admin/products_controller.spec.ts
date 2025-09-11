@@ -11,7 +11,7 @@ test.group('Admin Products Controller', (group) => {
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
-    
+
     // Créer un utilisateur admin pour les tests
     adminUser = await User.create({
       email: 'admin-test@example.com',
@@ -32,7 +32,7 @@ test.group('Admin Products Controller', (group) => {
       name: 'Test Category',
       description: 'Category for testing',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
   })
 
@@ -50,7 +50,7 @@ test.group('Admin Products Controller', (group) => {
         stock: 10,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Product 2',
@@ -59,8 +59,8 @@ test.group('Admin Products Controller', (group) => {
         stock: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
     const response = await client
@@ -89,7 +89,7 @@ test.group('Admin Products Controller', (group) => {
       stock: 3,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
-      isActive: true
+      isActive: true,
     })
 
     const response = await client
@@ -98,7 +98,7 @@ test.group('Admin Products Controller', (group) => {
       .qs({ search: 'Gaming' })
 
     response.assertStatus(200)
-    
+
     const body = response.body()
     assert.equal(body.data.products.data.length, 1)
     assert.equal(body.data.products.data[0].name, 'Gaming Laptop')
@@ -108,7 +108,7 @@ test.group('Admin Products Controller', (group) => {
     const otherCategory = await Category.create({
       name: 'Other Category',
       isActive: true,
-      displayOrder: 2
+      displayOrder: 2,
     })
 
     await Product.createMany([
@@ -118,7 +118,7 @@ test.group('Admin Products Controller', (group) => {
         stock: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Product in Other Category',
@@ -126,8 +126,8 @@ test.group('Admin Products Controller', (group) => {
         stock: 3,
         categoryId: otherCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
     const response = await client
@@ -136,7 +136,7 @@ test.group('Admin Products Controller', (group) => {
       .qs({ categoryId: testCategory.id })
 
     response.assertStatus(200)
-    
+
     const body = response.body()
     assert.equal(body.data.products.data.length, 1)
     assert.equal(body.data.products.data[0].name, 'Product in Test Category')
@@ -150,7 +150,7 @@ test.group('Admin Products Controller', (group) => {
         stock: 8,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Expensive Product',
@@ -158,8 +158,8 @@ test.group('Admin Products Controller', (group) => {
         stock: 2,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
     const response = await client
@@ -168,7 +168,7 @@ test.group('Admin Products Controller', (group) => {
       .qs({ minPrice: 100, maxPrice: 600 })
 
     response.assertStatus(200)
-    
+
     const body = response.body()
     assert.equal(body.data.products.data.length, 1)
     assert.equal(body.data.products.data[0].name, 'Expensive Product')
@@ -182,12 +182,10 @@ test.group('Admin Products Controller', (group) => {
       stock: 15,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
-      isActive: true
+      isActive: true,
     })
 
-    const response = await client
-      .get(`/api/admin/products/${product.id}`)
-      .bearerToken(adminToken)
+    const response = await client.get(`/api/admin/products/${product.id}`).bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -217,9 +215,9 @@ test.group('Admin Products Controller', (group) => {
       specifications: {
         color: 'Blue',
         weight: '1.5kg',
-        dimensions: '30x20x10cm'
+        dimensions: '30x20x10cm',
       },
-      isActive: true
+      isActive: true,
     }
 
     const response = await client
@@ -252,18 +250,15 @@ test.group('Admin Products Controller', (group) => {
       stock: 5,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
-      isActive: true
+      isActive: true,
     })
 
-    const response = await client
-      .post('/api/admin/products')
-      .bearerToken(adminToken)
-      .json({
-        name: 'New Product',
-        reference: 'EXISTING-REF',
-        price: 200,
-        categoryId: testCategory.id,
-      })
+    const response = await client.post('/api/admin/products').bearerToken(adminToken).json({
+      name: 'New Product',
+      reference: 'EXISTING-REF',
+      price: 200,
+      categoryId: testCategory.id,
+    })
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -280,7 +275,7 @@ test.group('Admin Products Controller', (group) => {
       stock: 10,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
-      isActive: true
+      isActive: true,
     })
 
     const updateData = {
@@ -317,7 +312,7 @@ test.group('Admin Products Controller', (group) => {
       stock: 5,
       categoryId: testCategory.id,
       createdBy: adminUser.id,
-      isActive: true
+      isActive: true,
     })
 
     const response = await client
@@ -343,7 +338,7 @@ test.group('Admin Products Controller', (group) => {
         stock: 8,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Product 2',
@@ -351,28 +346,25 @@ test.group('Admin Products Controller', (group) => {
         stock: 12,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
-    const productIds = products.map(p => p.id)
+    const productIds = products.map((p) => p.id)
 
-    const response = await client
-      .post('/api/admin/products/bulk')
-      .bearerToken(adminToken)
-      .json({
-        productIds,
-        action: 'deactivate'
-      })
+    const response = await client.post('/api/admin/products/bulk').bearerToken(adminToken).json({
+      productIds,
+      action: 'deactivate',
+    })
 
     response.assertStatus(200)
     response.assertBodyContains({
-      success: true
+      success: true,
     })
 
     // Vérifier que les produits ont été désactivés
     const updatedProducts = await Product.query().whereIn('id', productIds)
-    assert.isTrue(updatedProducts.every(p => !p.isActive))
+    assert.isTrue(updatedProducts.every((p) => !p.isActive))
   })
 
   test('should get product statistics', async ({ client, assert }) => {
@@ -385,7 +377,7 @@ test.group('Admin Products Controller', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Inactive Product',
@@ -394,7 +386,7 @@ test.group('Admin Products Controller', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: false
+        isActive: false,
       },
       {
         name: 'Low Stock Product',
@@ -403,13 +395,11 @@ test.group('Admin Products Controller', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
-    const response = await client
-      .get('/api/admin/products/stats')
-      .bearerToken(adminToken)
+    const response = await client.get('/api/admin/products/stats').bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -433,7 +423,7 @@ test.group('Admin Products Controller', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Low Stock Product',
@@ -442,13 +432,11 @@ test.group('Admin Products Controller', (group) => {
         stockAlert: 5,
         categoryId: testCategory.id,
         createdBy: adminUser.id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ])
 
-    const response = await client
-      .get('/api/admin/products/low-stock')
-      .bearerToken(adminToken)
+    const response = await client.get('/api/admin/products/low-stock').bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -480,9 +468,7 @@ test.group('Admin Products Controller', (group) => {
 
     const regularToken = await regularUser.generateAccessToken('test-token')
 
-    const response = await client
-      .get('/api/admin/products')
-      .bearerToken(regularToken)
+    const response = await client.get('/api/admin/products').bearerToken(regularToken)
 
     response.assertStatus(403)
   })
