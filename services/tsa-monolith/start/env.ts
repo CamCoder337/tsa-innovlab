@@ -46,7 +46,7 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
-  | Application URLs
+  | Application URLs Mailing and Frontend
   |----------------------------------------------------------
   */
   FRONTEND_URL: Env.schema.string(),
