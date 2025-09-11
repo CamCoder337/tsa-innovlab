@@ -96,9 +96,7 @@ test.group('Category Model', (group) => {
     assert.equal(childCategory.parentId, parentCategory.id)
 
     // Vérifier la relation dans la base de données
-    const savedChild = await Category.query()
-      .where('id', childCategory.id)
-      .first()
+    const savedChild = await Category.query().where('id', childCategory.id).first()
 
     assert.equal(savedChild!.parentId, parentCategory.id)
   })
@@ -146,7 +144,7 @@ test.group('Category Model', (group) => {
         isActive: true,
         displayOrder: 1,
       } as any)
-      
+
       assert.fail('Should have thrown validation error')
     } catch (error) {
       assert.exists(error)
@@ -166,7 +164,7 @@ test.group('Category Model', (group) => {
         isActive: true,
         displayOrder: 2,
       })
-      
+
       assert.fail('Should have thrown unique constraint error')
     } catch (error) {
       assert.exists(error)
@@ -188,12 +186,14 @@ test.group('Category Model', (group) => {
         isActive: true,
         displayOrder: 2,
       })
-      
+
       assert.fail('Should have thrown unique constraint error')
     } catch (error: any) {
       // Expect a database constraint error
       assert.exists(error)
-      assert.isTrue(error.message.includes('duplicate key value') || error.message.includes('unique constraint'))
+      assert.isTrue(
+        error.message.includes('duplicate key value') || error.message.includes('unique constraint')
+      )
     }
   })
 
@@ -262,7 +262,7 @@ test.group('Category Model', (group) => {
     const originalUpdatedAt = category.updatedAt
 
     // Wait a moment to ensure timestamp difference
-    await new Promise(resolve => setTimeout(resolve, 10))
+    await new Promise((resolve) => setTimeout(resolve, 10))
 
     category.name = 'Test Updated Name Timestamps'
     await category.save()

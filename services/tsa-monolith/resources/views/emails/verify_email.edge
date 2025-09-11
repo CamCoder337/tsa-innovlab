@@ -1,20 +1,49 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8" />
-<title>Vérifiez votre email - TSA Logistics</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f4f4f5; color: #333; }
-  .card { max-width: 600px; margin: auto; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .cta { display: inline-block; margin-top: 16px; padding: 12px 20px; background: #2563eb; color: #fff; border-radius: 8px; text-decoration: none; }
-</style>
-</head>
-<body>
-<div class="card">
-  <p>Bonjour {{ userName }},</p>
-  <p>Merci de vous être inscrit ! Veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :</p>
-  <a href="{{ verificationUrl }}" class="cta">Vérifier mon email</a>
-  <p>Ce lien expire dans {{ expiresIn }}.</p>
-</div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      Vérifiez votre email - TSA Logistics
+    </title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f5;
+        color: #333;
+      }
+      
+      .card {
+        max-width: 600px;
+        margin: auto;
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      }
+      
+      .cta {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 12px 20px;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>
+        Bonjour {{ userName }},
+      </p>
+      <p>
+        Merci de vous être inscrit ! Veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :
+      </p>
+      <a href="{{ verificationUrl }}" class="cta">Vérifier mon email</a>
+      <p>
+        Ce lien expire dans {{ expiresIn }}.
+      </p>
+    </div>
+  </body>
 </html>

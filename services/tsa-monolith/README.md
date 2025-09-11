@@ -5,6 +5,7 @@ API principale pour le concours TSA Contest 2025. Ce service gère l'authentific
 ## 🚀 Vue d'ensemble
 
 Monolithe AdonisJS qui fournit :
+
 - **Authentification & autorisation** : JWT, sessions utilisateurs
 - **Gestion des utilisateurs** : Profils, rôles, permissions
 - **API métier** : Logique principale de l'application
@@ -32,6 +33,7 @@ tsa-monolith/
 ## 🔧 Installation
 
 ### Prérequis
+
 - Node.js 20+
 - PostgreSQL 15+
 - Redis 7+ (optionnel)
@@ -102,18 +104,21 @@ FASTAPI_BASE_URL=http://localhost:8000
 ## 📡 API Endpoints
 
 ### Authentification
+
 - `POST /api/auth/register` - Inscription utilisateur
-- `POST /api/auth/login` - Connexion utilisateur  
+- `POST /api/auth/login` - Connexion utilisateur
 - `POST /api/auth/logout` - Déconnexion
 - `GET /api/auth/me` - Profil utilisateur courant
 
 ### Utilisateurs
+
 - `GET /api/users` - Liste des utilisateurs
 - `GET /api/users/:id` - Détails utilisateur
 - `PUT /api/users/:id` - Mise à jour profil
 - `DELETE /api/users/:id` - Suppression utilisateur
 
 ### Health Check
+
 - `GET /health` - Status basique
 - `GET /health/detailed` - Status détaillé avec DB
 
@@ -123,7 +128,7 @@ FASTAPI_BASE_URL=http://localhost:8000
 # Tests unitaires
 npm test
 
-# Tests fonctionnels  
+# Tests fonctionnels
 npm run test:functional
 
 # Tests avec couverture
@@ -142,6 +147,7 @@ npm run typecheck
 ## 🗄️ Base de données
 
 ### Migrations
+
 ```bash
 # Créer une migration
 node ace make:migration create_shipments_table
@@ -157,6 +163,7 @@ node ace migration:status
 ```
 
 ### Modèles
+
 ```bash
 # Créer un modèle
 node ace make:model Shipment
@@ -168,6 +175,7 @@ node ace make:model Shipment --migration
 ## 📋 Conventions de nommage
 
 ### Variables et fonctions
+
 ```typescript
 // camelCase pour variables et fonctions
 const userId = 123
@@ -181,6 +189,7 @@ const API_VERSION = 'v1'
 ```
 
 ### Classes et interfaces
+
 ```typescript
 // PascalCase pour classes
 class UserController {
@@ -196,25 +205,26 @@ interface IUserRepository {
   findById(id: number): Promise<User>
 }
 
-// Types avec préfixe "T" (optionnel)  
+// Types avec préfixe "T" (optionnel)
 type TUserRole = 'admin' | 'user' | 'moderator'
 ```
 
 ### Modèles Lucid
+
 ```typescript
 // PascalCase, singulier
 class User extends BaseModel {
   // Snake_case pour colonnes DB, camelCase en TS
   public static table = 'users'
-  
+
   @column({ isPrimary: true })
   public id: number
 
   @column()
-  public firstName: string  // first_name dans DB
+  public firstName: string // first_name dans DB
 
   @column()
-  public lastName: string   // last_name dans DB
+  public lastName: string // last_name dans DB
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -225,12 +235,13 @@ class User extends BaseModel {
 ```
 
 ### Contrôleurs
+
 ```typescript
 // PascalCase + "Controller" suffix
 class UsersController {
   // Actions en camelCase
   public async index({}: HttpContextContract) {}
-  public async show({}: HttpContextContract) {}  
+  public async show({}: HttpContextContract) {}
   public async store({}: HttpContextContract) {}
   public async update({}: HttpContextContract) {}
   public async destroy({}: HttpContextContract) {}
@@ -244,6 +255,7 @@ class AuthController {
 ```
 
 ### Services
+
 ```typescript
 // PascalCase + "Service" suffix
 class UserService {
@@ -259,15 +271,18 @@ class AuthService {
 ```
 
 ### Routes
+
 ```typescript
 // Kebab-case dans URLs, groupées par ressource
 Route.group(() => {
   Route.get('/users', 'UsersController.index')
-  Route.get('/users/:id', 'UsersController.show')  
+  Route.get('/users/:id', 'UsersController.show')
   Route.post('/users', 'UsersController.store')
   Route.put('/users/:id', 'UsersController.update')
   Route.delete('/users/:id', 'UsersController.destroy')
-}).prefix('/api').middleware('auth')
+})
+  .prefix('/api')
+  .middleware('auth')
 
 // Routes spéciales
 Route.post('/api/auth/login', 'AuthController.login')
@@ -275,6 +290,7 @@ Route.get('/health', 'HealthController.index')
 ```
 
 ### Middleware
+
 ```typescript
 // PascalCase + "Middleware" suffix
 class AuthMiddleware {
@@ -293,6 +309,7 @@ export default {
 ```
 
 ### Validateurs
+
 ```typescript
 // PascalCase + "Validator" suffix
 class CreateUserValidator {
@@ -300,19 +317,20 @@ class CreateUserValidator {
     firstName: schema.string(),
     lastName: schema.string(),
     email: schema.string({}, [rules.email()]),
-    password: schema.string({}, [rules.minLength(8)])
+    password: schema.string({}, [rules.minLength(8)]),
   })
 }
 
 class UpdateProfileValidator {
   public schema = schema.create({
     first_name: schema.string.optional(),
-    last_name: schema.string.optional()
+    last_name: schema.string.optional(),
   })
 }
 ```
 
 ### Migrations
+
 ```typescript
 // Snake_case pour fichiers
 // 1756021226576_create_users_table.ts
@@ -323,7 +341,7 @@ class CreateUsersTable extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.string('first_name').notNullable()  // Snake_case
+      table.string('first_name').notNullable() // Snake_case
       table.string('last_name').notNullable()
       table.string('email').unique().notNullable()
       table.timestamps(true)
@@ -333,6 +351,7 @@ class CreateUsersTable extends BaseSchema {
 ```
 
 ### Tests
+
 ```typescript
 // Descriptif avec "should"
 test('should authenticate user with valid credentials', async ({ assert }) => {
@@ -340,7 +359,7 @@ test('should authenticate user with valid credentials', async ({ assert }) => {
 })
 
 test('should return 401 for invalid credentials', async ({ assert }) => {
-  // Test logic  
+  // Test logic
 })
 
 test('should create user with valid data', async ({ assert }) => {
@@ -355,6 +374,7 @@ test.group('Auth Controller', () => {
 ```
 
 ### Variables d'environnement
+
 ```typescript
 // UPPER_SNAKE_CASE
 const dbConfig = {
@@ -362,11 +382,12 @@ const dbConfig = {
   port: Env.get('DB_PORT'),
   user: Env.get('DB_USER'),
   password: Env.get('DB_PASSWORD'),
-  database: Env.get('DB_DATABASE')
+  database: Env.get('DB_DATABASE'),
 }
 ```
 
 ### Fichiers et dossiers
+
 ```
 # Snake_case pour fichiers TypeScript
 user_controller.ts (si préféré)
@@ -380,7 +401,7 @@ CreateUsersTable.ts
 
 # Dossiers en minuscules, pluriels
 controllers/
-models/  
+models/
 services/
 middleware/
 ```
@@ -388,6 +409,7 @@ middleware/
 ## 🚢 Déploiement
 
 ### Docker Production
+
 ```bash
 # Build image
 docker build -t tsa-adonis-api .
@@ -402,6 +424,7 @@ docker run -d \
 ```
 
 ### Build pour production
+
 ```bash
 # Build TypeScript
 npm run build
@@ -416,7 +439,7 @@ npm start
 // Service pour communiquer avec l'AI
 class AIService {
   private baseUrl = Env.get('FASTAPI_BASE_URL')
-  
+
   public async predictETA(data: any) {
     const response = await axios.post(`${this.baseUrl}/api/ai/eta/predict`, data)
     return response.data
@@ -440,7 +463,7 @@ node ace serve --hmr --debug
 # Tests debug
 DEBUG=adonis:* npm test
 
-# DB queries debug  
+# DB queries debug
 DEBUG=knex:query npm run dev
 ```
 

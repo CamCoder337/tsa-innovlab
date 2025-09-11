@@ -16,7 +16,7 @@
       "type": "string"
     },
     {
-      "key": "refreshToken", 
+      "key": "refreshToken",
       "value": "",
       "type": "string"
     },

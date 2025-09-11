@@ -5,8 +5,9 @@
 **TSA Monolith** est le service d'API principal du système TSA Logistics, construit avec **AdonisJS v6** et **TypeScript**.
 
 ### Stack Technique
+
 - **Framework**: AdonisJS v6
-- **Runtime**: Node.js v22+ 
+- **Runtime**: Node.js v22+
 - **Language**: TypeScript (strict mode)
 - **Base de données**: PostgreSQL (prod) / SQLite (dev optionnel)
 - **Cache**: Redis avec ioredis
@@ -18,6 +19,7 @@
 ## 📁 Structure Actuelle du Projet
 
 ### ✅ Contrôleurs Implémentés (3/20+)
+
 ```
 app/controllers/http/
 ├── Auth/
@@ -28,6 +30,7 @@ app/controllers/http/
 ```
 
 ### ❌ Contrôleurs Manquants (Routes définies mais pas d'implémentation)
+
 ```
 app/controllers/http/
 ├── Admin/                          # Partiellement implémenté
@@ -52,6 +55,7 @@ app/controllers/http/
 ```
 
 ### ✅ Modèles Complets (11/11)
+
 ```
 app/models/
 ├── user.ts                     # Utilisateurs avec rôles (admin, transporteur, affreteur)
@@ -68,6 +72,7 @@ app/models/
 ```
 
 ### ✅ Services Métier Complets (5/5)
+
 ```
 app/services/
 ├── auth_service.ts             # Authentification avec MFA/TOTP
@@ -78,6 +83,7 @@ app/services/
 ```
 
 ### ✅ Middlewares (4)
+
 ```
 app/middleware/
 ├── auth_middleware.ts                # Authentification JWT
@@ -87,6 +93,7 @@ app/middleware/
 ```
 
 ### ✅ Validateurs (3)
+
 ```
 app/validators/
 ├── auth_validator.ts           # Validation authentification
@@ -95,6 +102,7 @@ app/validators/
 ```
 
 ### ✅ Commandes Ace (8)
+
 ```
 commands/
 ├── check_time.ts                    # Vérification horodatage
@@ -108,6 +116,7 @@ commands/
 ```
 
 ### ✅ Configuration Complète (9 configs)
+
 ```
 config/
 ├── app.ts                      # Configuration application
@@ -124,18 +133,21 @@ config/
 ## 🚀 Commandes de Développement
 
 ### Installation et Configuration
+
 ```bash
 npm install                    # Installer les dépendances
 cp .env.example .env          # Configurer l'environnement
 ```
 
 ### Base de données
+
 ```bash
 node ace migration:run        # Exécuter les migrations (13 migrations)
 node ace db:seed              # Peupler avec des données de test
 ```
 
 ### Développement
+
 ```bash
 npm run dev                   # Démarrer le serveur de développement (port 3333)
 npm run build                 # Construire pour la production
@@ -145,12 +157,14 @@ npm run format                # Prettier
 ```
 
 ### Tests
+
 ```bash
 npm test                      # Lancer tous les tests (Japa framework)
 npm run test:watch            # Tests en mode watch
 ```
 
 ### Services et Diagnostic
+
 ```bash
 node ace diagnose             # Diagnostic complet du système
 node ace email:worker         # Lancer le worker d'emails
@@ -160,6 +174,7 @@ node ace create:test-users    # Créer utilisateurs de test
 ```
 
 ### 🐳 Docker
+
 ```bash
 # Créer et lancer avec Docker
 docker build -t tsa-monolith .
@@ -167,7 +182,7 @@ docker run -d --name tsa-app --env-file .env.docker -p 3333:3333 tsa-monolith
 
 # Le Dockerfile lance automatiquement :
 # - Migrations (node ace migration:run --force)
-# - Seeds (node ace db:seed --force)  
+# - Seeds (node ace db:seed --force)
 # - Email worker (node ace email:worker &)
 # - Application principale (node build/bin/server.js)
 ```
@@ -175,6 +190,7 @@ docker run -d --name tsa-app --env-file .env.docker -p 3333:3333 tsa-monolith
 ## 🛣️ Routes API - État d'Implémentation
 
 ### ✅ Authentification (100% Implémenté)
+
 ```
 POST /api/auth/login            # Connexion (avec support MFA automatique)
 POST /api/auth/register         # Inscription avec MFA obligatoire pour admins
@@ -196,6 +212,7 @@ POST /api/auth/mfa/regenerate-codes # Régénération codes de récupération
 ```
 
 ### ✅ Admin - Produits & Catégories (100% Implémenté)
+
 ```
 # Gestion Produits
 GET    /api/admin/products              # Liste produits paginée
@@ -217,6 +234,7 @@ DELETE /api/admin/categories/:id        # Supprimer catégorie
 ```
 
 ### ❌ Admin - Fonctionnalités Manquantes (0% Implémenté)
+
 ```
 GET    /api/admin/dashboard            # ❌ Dashboard admin
 GET    /api/admin/users               # ❌ Gestion utilisateurs
@@ -229,6 +247,7 @@ GET    /api/admin/stats/*             # ❌ Statistiques globales
 ```
 
 ### ❌ Routes Affreteur (0% Implémenté)
+
 ```
 GET    /api/affreteur/missions                    # ❌ Mes missions
 POST   /api/affreteur/missions                    # ❌ Créer mission
@@ -243,6 +262,7 @@ GET    /api/affreteur/shipments/:id/tracking     # ❌ Suivi expédition
 ```
 
 ### ❌ Routes Transporteur (0% Implémenté)
+
 ```
 GET    /api/transporteur/missions/available      # ❌ Missions disponibles
 GET    /api/transporteur/missions/:id            # ❌ Détails mission
@@ -255,6 +275,7 @@ POST   /api/transporteur/missions/:id/proof     # ❌ Preuve livraison
 ```
 
 ### ❌ Routes Boutique (0% Implémenté)
+
 ```
 GET    /api/shop/products           # ❌ Catalogue produits
 GET    /api/shop/products/:id       # ❌ Détails produit
@@ -263,6 +284,7 @@ GET    /api/shop/search             # ❌ Recherche produits
 ```
 
 ### ❌ Routes Communes (0% Implémenté)
+
 ```
 GET    /api/common/messages         # ❌ Messagerie
 POST   /api/common/messages         # ❌ Envoyer message
@@ -275,6 +297,7 @@ PUT    /api/common/notifications/read-all # ❌ Tout marquer lu
 ## 📊 État d'Avancement du Projet
 
 ### ✅ Fonctionnalités Complètes
+
 - **Authentification complète** avec JWT + MFA/TOTP ✅
 - **Gestion admin des produits** (CRUD complet) ✅
 - **Gestion admin des catégories** (CRUD complet) ✅
@@ -285,6 +308,7 @@ PUT    /api/common/notifications/read-all # ❌ Tout marquer lu
 - **Docker** avec migrations/seeds/worker automatiques ✅
 
 ### 📈 Taux d'Implémentation
+
 - **Modèles de données** : 100% ✅ (11/11 complets)
 - **Migrations** : 100% ✅ (13/13 complètes)
 - **Services métier** : 100% ✅ (5/5 implémentés)
@@ -294,6 +318,7 @@ PUT    /api/common/notifications/read-all # ❌ Tout marquer lu
 - **Tests** : ~30% ⚠️ (seulement pour parties implémentées)
 
 ### 🚨 Contrôleurs à Implémenter en Priorité
+
 1. **Admin Dashboard** - `admin/dashboard_controller.ts`
 2. **Admin Users** - `admin/users_controller.ts`
 3. **Admin Missions** - `admin/missions_controller.ts`
@@ -303,6 +328,7 @@ PUT    /api/common/notifications/read-all # ❌ Tout marquer lu
 ## 🗄️ Base de Données
 
 ### ✅ Migrations Complètes (13)
+
 ```
 database/migrations/
 ├── 1756021226549_create_enable_uuid_oosps_table.ts      # Extensions UUID PostgreSQL
@@ -321,6 +347,7 @@ database/migrations/
 ```
 
 ### ✅ Seeders (3)
+
 ```
 database/seeders/
 ├── main_seeder.ts      # Seeder principal
@@ -331,11 +358,13 @@ database/seeders/
 ## 🔐 Système d'Authentification
 
 ### Rôles Utilisateurs
+
 - **ADMIN**: Accès complet, MFA obligatoire
-- **TRANSPORTEUR**: Gestion des courses, propositions  
+- **TRANSPORTEUR**: Gestion des courses, propositions
 - **AFFRETEUR**: Création de missions, gestion expéditions
 
 ### Sécurité Implémentée
+
 - **JWT** avec rotation automatique des tokens ✅
 - **Rate limiting** sur les tentatives de connexion ✅
 - **MFA/TOTP** obligatoire pour les admins ✅
@@ -347,19 +376,21 @@ database/seeders/
 ### Exemples d'utilisation
 
 **Inscription Admin :**
+
 ```json
 POST /api/auth/register
 {
   "email": "admin@tsa-logistics.com",
   "password": "admin123!",
   "firstName": "Admin",
-  "lastName": "User", 
+  "lastName": "User",
   "phone": "+33612345678",
   "role": "admin"
 }
 ```
 
 **Login avec MFA :**
+
 ```json
 POST /api/auth/login
 {
@@ -372,6 +403,7 @@ POST /api/auth/login
 ## 📊 Cache et Performance
 
 ### Redis Utilisé Pour
+
 - **Sessions utilisateurs** (30min) ✅
 - **Rate limiting** (par IP/utilisateur) ✅
 - **Queue d'emails** asynchrone ✅
@@ -379,6 +411,7 @@ POST /api/auth/login
 - **Blacklist des tokens** révoqués ✅
 
 ### Stratégies de Cache
+
 ```typescript
 // Cache des sessions
 await cacheService.setUserSession(userId, sessionData)
@@ -393,6 +426,7 @@ await cacheService.set(key, value, ttlSeconds)
 ## 📧 Système d'Email
 
 ### Architecture
+
 - **Queue Redis**: Stockage temporaire des emails ✅
 - **Worker Pattern**: Traitement asynchrone ✅
 - **Templates Edge**: Rendu HTML des emails ✅
@@ -400,6 +434,7 @@ await cacheService.set(key, value, ttlSeconds)
 - **Dead Letter Queue**: Emails échoués définitivement ✅
 
 ### Templates Disponibles (10)
+
 ```
 resources/views/emails/
 ├── account_locked.edge         # Compte bloqué
@@ -415,6 +450,7 @@ resources/views/emails/
 ```
 
 ### Lancement du Worker
+
 ```bash
 node ace email:worker          # Worker manuel
 # Ou automatique via Docker
@@ -423,6 +459,7 @@ node ace email:worker          # Worker manuel
 ## 🔧 Configuration
 
 ### Variables d'Environnement Actuelles
+
 ```bash
 # Application
 TZ=Africa/Douala
@@ -457,7 +494,9 @@ SUPPORT_EMAIL=support@tsa-logistics.com
 ```
 
 ### Configuration Docker
+
 Pour utiliser avec Docker, modifier uniquement :
+
 ```bash
 # .env.docker
 HOST=0.0.0.0                    # Au lieu de localhost
@@ -469,6 +508,7 @@ NODE_ENV=production             # Optionnel
 ## 🧪 Tests
 
 ### Tests Implémentés
+
 ```
 tests/unit/
 ├── auth_service.spec.ts             # Tests service auth ✅
@@ -482,10 +522,13 @@ tests/unit/
 ```
 
 ### Diagnostic Système
+
 ```bash
 node ace diagnose
 ```
+
 Vérifie:
+
 - ✅ Connexion PostgreSQL
 - ✅ Connexion Redis
 - ✅ Configuration email SMTP
@@ -495,13 +538,16 @@ Vérifie:
 ## 🚨 Monitoring
 
 ### Audit Logs Implémentés
+
 Toutes les actions critiques sont loggées dans `audit_logs`:
+
 - Connexions/déconnexions ✅
 - Changements de mot de passe ✅
 - Activation/désactivation MFA ✅
 - Actions d'administration ✅
 
 ### Métriques Redis
+
 - Nombre de sessions actives ✅
 - Taille des queues d'email ✅
 - Taux de rate limiting ✅
@@ -510,6 +556,7 @@ Toutes les actions critiques sont loggées dans `audit_logs`:
 ## 📚 Documentation API
 
 ### Format des Réponses
+
 ```json
 {
   "success": boolean,
@@ -520,6 +567,7 @@ Toutes les actions critiques sont loggées dans `audit_logs`:
 ```
 
 ### Codes d'Erreur
+
 - **401**: Non authentifié
 - **403**: Accès refusé (rôle insuffisant)
 - **422**: Erreur de validation
@@ -536,21 +584,24 @@ Toutes les actions critiques sont loggées dans `audit_logs`:
 ## 🚀 Prochaines Étapes
 
 ### Priorité 1 - Compléter l'Administration
+
 - [ ] Implémenter `admin/dashboard_controller.ts`
 - [ ] Implémenter `admin/users_controller.ts`
 - [ ] Implémenter `admin/missions_controller.ts`
 - [ ] Implémenter `admin/audit_logs_controller.ts`
 
 ### Priorité 2 - Core Business Logic
+
 - [ ] Implémenter `affreteur/missions_controller.ts`
 - [ ] Implémenter `transporteur/missions_controller.ts`
 - [ ] Implémenter `common/notifications_controller.ts`
 
 ### Priorité 3 - E-commerce
+
 - [ ] Implémenter `shop/products_controller.ts`
 - [ ] Implémenter système de commandes
 
 ---
 
-*Ce service fait partie de l'écosystème TSA Logistics pour le concours TSA Contest 2025.*
-*État : MVP en développement - Authentification et gestion produits complètes.*
+_Ce service fait partie de l'écosystème TSA Logistics pour le concours TSA Contest 2025._
+_État : MVP en développement - Authentification et gestion produits complètes._

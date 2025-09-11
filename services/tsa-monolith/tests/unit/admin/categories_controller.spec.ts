@@ -9,7 +9,7 @@ test.group('Admin Categories Controller', (group) => {
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
-    
+
     // Créer un utilisateur admin pour les tests
     adminUser = await User.create({
       email: 'admin-test@example.com',
@@ -20,7 +20,7 @@ test.group('Admin Categories Controller', (group) => {
       status: UserStatus.ACTIVE,
       mfaEnabled: true,
     })
-    
+
     // Générer un token d'accès
     const token = await adminUser.generateAccessToken('test-token')
     adminToken = token
@@ -60,7 +60,7 @@ test.group('Admin Categories Controller', (group) => {
       name: 'Computer Hardware',
       description: 'Computer components',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
     const response = await client
@@ -69,7 +69,7 @@ test.group('Admin Categories Controller', (group) => {
       .qs({ search: 'Computer' })
 
     response.assertStatus(200)
-    
+
     const body = response.body()
     assert.equal(body.data.categories.data.length, 1)
     assert.equal(body.data.categories.data[0].name, 'Computer Hardware')
@@ -87,7 +87,7 @@ test.group('Admin Categories Controller', (group) => {
       .qs({ isActive: false })
 
     response.assertStatus(200)
-    
+
     const body = response.body()
     assert.isTrue(body.data.categories.data.every((cat: any) => !cat.isActive))
   })
@@ -97,7 +97,7 @@ test.group('Admin Categories Controller', (group) => {
       name: 'Test Category',
       description: 'A test category',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
     const response = await client
@@ -121,7 +121,7 @@ test.group('Admin Categories Controller', (group) => {
       name: 'New Category',
       description: 'A brand new category',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     }
 
     const response = await client
@@ -149,16 +149,13 @@ test.group('Admin Categories Controller', (group) => {
     await Category.create({
       name: 'Existing Category',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
-    const response = await client
-      .post('/api/admin/categories')
-      .bearerToken(adminToken)
-      .json({
-        name: 'Existing Category',
-        description: 'This should fail',
-      })
+    const response = await client.post('/api/admin/categories').bearerToken(adminToken).json({
+      name: 'Existing Category',
+      description: 'This should fail',
+    })
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -172,7 +169,7 @@ test.group('Admin Categories Controller', (group) => {
       name: 'Original Name',
       description: 'Original description',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
     const updateData = {
@@ -203,7 +200,7 @@ test.group('Admin Categories Controller', (group) => {
     const category = await Category.create({
       name: 'To Delete',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
     const response = await client
@@ -226,19 +223,17 @@ test.group('Admin Categories Controller', (group) => {
     const parentCategory = await Category.create({
       name: 'Parent Category',
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
     await Category.create({
       name: 'Child Category',
       parentId: parentCategory.id,
       isActive: true,
-      displayOrder: 1
+      displayOrder: 1,
     })
 
-    const response = await client
-      .get('/api/admin/categories/tree')
-      .bearerToken(adminToken)
+    const response = await client.get('/api/admin/categories/tree').bearerToken(adminToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -249,7 +244,7 @@ test.group('Admin Categories Controller', (group) => {
     const body = response.body()
     assert.exists(body.data.categories)
     assert.isArray(body.data.categories)
-    
+
     // Vérifier la structure hiérarchique
     const parentInTree = body.data.categories.find((cat: any) => cat.name === 'Parent Category')
     assert.exists(parentInTree)
@@ -277,9 +272,7 @@ test.group('Admin Categories Controller', (group) => {
 
     const regularToken = await regularUser.generateAccessToken('test-token')
 
-    const response = await client
-      .get('/api/admin/categories')
-      .bearerToken(regularToken)
+    const response = await client.get('/api/admin/categories').bearerToken(regularToken)
 
     response.assertStatus(403)
   })

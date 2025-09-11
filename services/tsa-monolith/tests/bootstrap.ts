@@ -35,7 +35,7 @@ export const configureSuite: Config['configureSuite'] = (suite) => {
   if (['browser', 'functional', 'e2e'].includes(suite.name)) {
     return suite.setup(() => testUtils.httpServer().start())
   }
-  
+
   // Start HTTP server for unit tests that test controllers (making HTTP requests)
   if (suite.name === 'unit') {
     return suite.setup(() => testUtils.httpServer().start())

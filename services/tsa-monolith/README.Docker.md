@@ -98,7 +98,7 @@ DB_DATABASE=tsa_contest    # Nom de la base
 
 ```bash
 REDIS_HOST=redis           # Host Redis
-REDIS_PORT=6379           # Port Redis  
+REDIS_PORT=6379           # Port Redis
 REDIS_PASSWORD=strong-pwd  # Mot de passe Redis
 SESSION_DRIVER=redis       # Driver de session
 ```
@@ -208,12 +208,12 @@ docker system df
 
 ### Ressources optimisées
 
-| Service | CPU Limit | Memory Limit | CPU Request | Memory Request |
-|---------|-----------|--------------|-------------|----------------|
-| Monolith | 4.0 | 4G | 2.0 | 2G |
-| PostgreSQL | 2.0 | 2G | 1.0 | 1G |
-| Redis | 0.5 | 1G | 0.25 | 512M |
-| AI Service | 6.0 | 8G | 2.0 | 4G |
+| Service    | CPU Limit | Memory Limit | CPU Request | Memory Request |
+| ---------- | --------- | ------------ | ----------- | -------------- |
+| Monolith   | 4.0       | 4G           | 2.0         | 2G             |
+| PostgreSQL | 2.0       | 2G           | 1.0         | 1G             |
+| Redis      | 0.5       | 1G           | 0.25        | 512M           |
+| AI Service | 6.0       | 8G           | 2.0         | 4G             |
 
 ### Optimisations applicatives
 
@@ -274,4 +274,4 @@ Pour les questions liées à Docker :
 
 ---
 
-🚢 **Happy Dockerizing!** - *TSA Contest 2025*
+🚢 **Happy Dockerizing!** - _TSA Contest 2025_

@@ -16,9 +16,7 @@ export default class CleanupInconsistentUsers extends BaseCommand {
     this.logger.info('Starting cleanup of inconsistent users...')
 
     // Find admin users with MFA disabled
-    const inconsistentUsers = await User.query()
-      .where('role', 'admin')
-      .where('mfa_enabled', false)
+    const inconsistentUsers = await User.query().where('role', 'admin').where('mfa_enabled', false)
 
     if (inconsistentUsers.length === 0) {
       this.logger.success('No inconsistent users found.')
@@ -45,11 +43,9 @@ export default class CleanupInconsistentUsers extends BaseCommand {
     await Database.transaction(async (trx) => {
       for (const user of inconsistentUsers) {
         this.logger.info(`Deleting user: ${user.email}`)
-        
+
         // Delete MFA recovery codes
-        await MfaRecoveryCode.query({ client: trx })
-          .where('userId', user.id)
-          .delete()
+        await MfaRecoveryCode.query({ client: trx }).where('userId', user.id).delete()
 
         // Delete the user
         await user.useTransaction(trx).delete()

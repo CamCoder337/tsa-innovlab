@@ -12,7 +12,7 @@ export default class UnlockUser extends BaseCommand {
 
   async run() {
     const email = await this.prompt.ask('Enter email to unlock:')
-    
+
     if (!email) {
       this.logger.error('Email is required')
       return
@@ -21,20 +21,19 @@ export default class UnlockUser extends BaseCommand {
     try {
       const cacheService = new CacheService()
       const rateLimitKey = `rate:login:${email.toLowerCase()}`
-      
+
       // Check if user is actually rate limited
       const deletedCount = await cacheService.delete(rateLimitKey)
-      
+
       if (deletedCount > 0) {
         this.logger.success(`✅ User ${email} has been unlocked from rate limiting`)
       } else {
         this.logger.info(`ℹ️  User ${email} was not rate limited`)
       }
-      
+
       // Also clear any other potential keys
       const pattern = `*rate*login*${email.toLowerCase()}*`
       await cacheService.flushPattern(pattern)
-      
     } catch (error) {
       this.logger.error(`❌ Failed to unlock user: ${error.message}`)
     }
