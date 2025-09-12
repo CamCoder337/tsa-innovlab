@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import User from '#models/user'
-// Test CI workflow - Nine Tests Swords
+// Test CI workflow - Final Action test
 import AccessToken from '#models/access_token'
 import AuthService from '#services/auth_service'
 import AuditLog from '#models/audit_log'

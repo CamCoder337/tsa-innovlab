@@ -207,13 +207,29 @@ jobs:
       - name: Run database migrations
         working-directory: services/tsa-monolith
         env:
+          # Database
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: tsa_test_user
           DB_PASSWORD: tsa_test_password
           DB_DATABASE: tsa_contest_test
+          # App config
           NODE_ENV: test
           APP_KEY: test-key-32-characters-long-xxx
+          PORT: 3333
+          HOST: localhost
+          LOG_LEVEL: info
+          # Redis
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          # Email (dummy values for tests)
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: 587
+          SMTP_USERNAME: test@example.com
+          SMTP_PASSWORD: test_password
+          MAIL_FROM: test@example.com
+          # Frontend
+          FRONTEND_URL: http://localhost:5173
         run: |
           echo "🗄️ Running database migrations..."
           node ace migration:run --force
@@ -221,15 +237,29 @@ jobs:
       - name: Run tests with success rate validation
         working-directory: services/tsa-monolith
         env:
+          # Database
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: tsa_test_user
           DB_PASSWORD: tsa_test_password
           DB_DATABASE: tsa_contest_test
+          # App config
           NODE_ENV: test
           APP_KEY: test-key-32-characters-long-xxx
+          PORT: 3333
+          HOST: localhost
+          LOG_LEVEL: info
+          # Redis
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          # Email (dummy values for tests)
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: 587
+          SMTP_USERNAME: test@example.com
+          SMTP_PASSWORD: test_password
+          MAIL_FROM: test@example.com
+          # Frontend
+          FRONTEND_URL: http://localhost:5173
         run: |
           echo "🧪 Running AdonisJS tests with Japa framework..."
           
