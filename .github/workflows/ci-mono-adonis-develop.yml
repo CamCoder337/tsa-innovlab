@@ -330,33 +330,25 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if PR is mergeable
-        id: mergeable
+      - name: Enable auto-merge directly
+        id: auto-merge
         run: |
-          echo "🔍 Checking PR mergeability..."
-          mergeable=$(gh pr view ${{ github.event.pull_request.number }} --json mergeable -q '.mergeable')
+          echo "🤖 Enabling auto-merge for PR #${{ github.event.pull_request.number }}..."
           
-          if [ "$mergeable" = "MERGEABLE" ]; then
-            echo "can-merge=true" >> $GITHUB_OUTPUT
-            echo "✅ PR is mergeable"
+          # Try to enable auto-merge, capture result
+          if gh pr merge ${{ github.event.pull_request.number }} --auto --squash --delete-branch; then
+            echo "merge-enabled=true" >> $GITHUB_OUTPUT
+            echo "✅ Auto-merge enabled successfully!"
           else
-            echo "can-merge=false" >> $GITHUB_OUTPUT
-            echo "❌ PR has merge conflicts or other blocking issues"
+            echo "merge-enabled=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Auto-merge failed - may have conflicts or other issues"
+            echo "This is normal if the PR has conflicts or branch protection rules"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge
-        if: steps.mergeable.outputs.can-merge == 'true'
-        run: |
-          echo "🤖 Enabling auto-merge for PR #${{ github.event.pull_request.number }}..."
-          gh pr merge ${{ github.event.pull_request.number }} --auto --squash --delete-branch
-          echo "✅ Auto-merge enabled successfully!"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Add success comment
-        if: steps.mergeable.outputs.can-merge == 'true'
+        if: steps.auto-merge.outputs.merge-enabled == 'true'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body "🎉 **TSA Monolith CI - All Checks Passed!**
           
@@ -375,7 +367,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add failure comment
-        if: steps.mergeable.outputs.can-merge == 'false'
+        if: steps.auto-merge.outputs.merge-enabled == 'false'
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ **Auto-merge Blocked**
           
