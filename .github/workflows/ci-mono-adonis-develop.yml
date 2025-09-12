@@ -7,6 +7,12 @@ on:
   push:
     branches: [ develop ]
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  repository-projects: write
+
 jobs:
   # Job 1: Check if monolith has changes
   check-changes:
@@ -330,19 +336,18 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge directly
+      - name: Enable auto-merge
         id: auto-merge
         run: |
           echo "🤖 Enabling auto-merge for PR #${{ github.event.pull_request.number }}..."
           
-          # Try to enable auto-merge, capture result
           if gh pr merge ${{ github.event.pull_request.number }} --auto --squash --delete-branch; then
             echo "merge-enabled=true" >> $GITHUB_OUTPUT
             echo "✅ Auto-merge enabled successfully!"
           else
             echo "merge-enabled=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Auto-merge failed - may have conflicts or other issues"
-            echo "This is normal if the PR has conflicts or branch protection rules"
+            echo "⚠️ Auto-merge failed - may have conflicts or branch protection rules"
+            exit 1
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -360,28 +365,6 @@ jobs:
           - 📁 **Scope**: Changes detected in \`services/tsa-monolith/\`
           
           🤖 **Auto-merge Enabled** - This PR will be automatically merged when all GitHub status checks complete.
-          
-          ---
-          _TSA Logistics CI Pipeline_ 🚛"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Add failure comment
-        if: steps.auto-merge.outputs.merge-enabled == 'false'
-        run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ **Auto-merge Blocked**
-          
-          Cannot auto-merge due to:
-          - 🔄 Merge conflicts with \`develop\` branch
-          - ⏳ Required status checks pending
-          - 🛡️ Branch protection rules not satisfied
-          
-          **Next Steps:**
-          1. Resolve merge conflicts: \`git merge develop\`
-          2. Wait for all CI checks to complete
-          3. Ensure branch is up-to-date
-          
-          Auto-merge will activate once resolved.
           
           ---
           _TSA Logistics CI Pipeline_ 🚛"
