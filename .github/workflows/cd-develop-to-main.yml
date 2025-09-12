@@ -1,0 +1,436 @@
+name: 🚀 CD - Deploy Develop to Main with Release
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  repository-projects: write
+  models: read
+
+jobs:
+  # Job 1: Check if there are meaningful changes
+  check-changes:
+    name: 📁 Check Changes for Release
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.changes.outputs.should-release }}
+      version-bump: ${{ steps.changes.outputs.version-bump }}
+    
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Fetch main branch
+        run: |
+          git fetch origin main:main
+
+      - name: Analyze changes since last release
+        id: changes
+        run: |
+          echo "🔍 Analyzing changes since last main commit..."
+          
+          # Get commits between main and develop
+          commits=$(git log main..develop --oneline)
+          commit_count=$(git rev-list --count main..develop)
+          
+          if [ "$commit_count" -eq 0 ]; then
+            echo "❌ No new commits to release"
+            echo "should-release=false" >> $GITHUB_OUTPUT
+            echo "version-bump=none" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "📊 Found $commit_count new commits:"
+          echo "$commits"
+          echo ""
+          
+          # Analyze commit messages to determine version bump type
+          echo "🔍 Analyzing commit types for semantic versioning..."
+          
+          # Check for breaking changes (major version)
+          if echo "$commits" | grep -qiE "(BREAKING|breaking change|major)"; then
+            version_bump="major"
+          # Check for features (minor version)  
+          elif echo "$commits" | grep -qiE "(feat|feature|add|new)"; then
+            version_bump="minor"
+          # Default to patch version for fixes, improvements, etc.
+          else
+            version_bump="patch"
+          fi
+          
+          echo "should-release=true" >> $GITHUB_OUTPUT
+          echo "version-bump=$version_bump" >> $GITHUB_OUTPUT
+          echo "✅ Should release: true"
+          echo "📈 Version bump type: $version_bump"
+
+  # Job 2: Generate AI changelog
+  generate-changelog:
+    name: 🤖 Generate AI Changelog
+    runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.should-release == 'true'
+    outputs:
+      changelog: ${{ steps.ai-changelog.outputs.changelog }}
+      release-title: ${{ steps.ai-changelog.outputs.release-title }}
+    
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Fetch main branch  
+        run: git fetch origin main:main
+
+      - name: Collect commit and diff data
+        id: collect-data
+        run: |
+          echo "📊 Collecting data for AI analysis..."
+          
+          # Get commit details with enhanced information
+          commits_detailed=$(git log main..develop --pretty=format:"- %s (%h) by %an on %ad" --date=short)
+          
+          # Get file changes with stats
+          files_changed=$(git diff --stat main..develop)
+          
+          # Get a summary of the diff for AI analysis
+          diff_summary=$(git diff main..develop --stat --summary | head -30)
+          
+          # Count changes
+          commit_count=$(git rev-list --count main..develop)
+          
+          echo "commits_detailed<<EOF" >> $GITHUB_OUTPUT
+          echo "$commits_detailed" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "files_changed<<EOF" >> $GITHUB_OUTPUT  
+          echo "$files_changed" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "diff_summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$diff_summary" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "commit_count=$commit_count" >> $GITHUB_OUTPUT
+
+      - name: Generate AI-powered changelog and release notes
+        id: ai-changelog
+        uses: actions/ai-inference@v1
+        with:
+          prompt: |
+            You are an expert technical writer creating release notes for a logistics platform called "TSA Logistics".
+            
+            **Context:**
+            - This is a release from develop branch to main
+            - The platform includes: AdonisJS monolith, FastAPI AI service, React frontend
+            - Version bump type: ${{ needs.check-changes.outputs.version-bump }}
+            - Total commits: ${{ steps.collect-data.outputs.commit_count }}
+            
+            **Commit Details:**
+            ${{ steps.collect-data.outputs.commits_detailed }}
+            
+            **File Changes Summary:**  
+            ${{ steps.collect-data.outputs.diff_summary }}
+            
+            **Task:** Create professional release notes with:
+            
+            1. **Release Title** (one line, engaging, with version type)
+            2. **Executive Summary** (2-3 sentences about the key improvements)
+            3. **New Features** (if any, bullet points)
+            4. **Bug Fixes** (if any, bullet points)  
+            5. **Technical Improvements** (if any, bullet points)
+            6. **Breaking Changes** (if any, important callouts)
+            
+            Format as markdown. Be concise but informative. Focus on user/developer impact.
+            Use emojis appropriately. Make it sound professional yet engaging.
+            
+            If commits mention CI/CD, testing, or infrastructure - categorize as Technical Improvements.
+
+      - name: Process AI response and create final changelog
+        id: process-changelog
+        run: |
+          echo "🤖 Processing AI-generated release notes..."
+          
+          # Get the AI response
+          ai_response="${{ steps.ai-changelog.outputs.response }}"
+          
+          # Extract title from AI response (first line after removing markdown)
+          release_title=$(echo "$ai_response" | head -1 | sed 's/#*//g' | sed 's/^[ \t]*//')
+          
+          # If no good title from AI, generate fallback
+          if [ ${#release_title} -lt 10 ]; then
+            current_date=$(date '+%Y-%m-%d')
+            release_title="🚀 Release $current_date - ${{ needs.check-changes.outputs.version-bump }} update"
+          fi
+          
+          # Create enhanced changelog with AI content + technical details
+          changelog="$ai_response
+          
+          ---
+          
+          ## 🛠️ Technical Details
+          - **Branch**: develop → main  
+          - **Version Type**: ${{ needs.check-changes.outputs.version-bump }}
+          - **Total Commits**: ${{ steps.collect-data.outputs.commit_count }}
+          - **Release Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          
+          ## 📁 Files Modified
+          \`\`\`
+          ${{ steps.collect-data.outputs.files_changed }}
+          \`\`\`
+          
+          ## 🔄 Full Commit History  
+          ${{ steps.collect-data.outputs.commits_detailed }}
+          
+          ---
+          _🤖 Generated with GitHub Models AI • TSA Logistics Platform_ 🚛"
+          
+          # Save outputs (handle multiline)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$changelog" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "release-title=$release_title" >> $GITHUB_OUTPUT
+          
+          echo "✅ AI-powered changelog generated"
+          echo "📝 Title: $release_title"
+          echo ""
+          echo "📄 Changelog preview:"
+          echo "$ai_response" | head -20
+
+  # Job 3: Merge develop to main
+  merge-to-main:
+    name: 🔄 Merge Develop to Main
+    runs-on: ubuntu-latest
+    needs: [check-changes, generate-changelog]
+    if: needs.check-changes.outputs.should-release == 'true'
+    outputs:
+      merge-commit: ${{ steps.merge.outputs.merge-commit }}
+    
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Merge develop into main
+        id: merge
+        run: |
+          echo "🔄 Merging develop into main..."
+          
+          # Fetch develop
+          git fetch origin develop:develop
+          
+          # Merge develop into main
+          if git merge develop --no-ff -m "🚀 Release: Merge develop to main - ${{ needs.check-changes.outputs.version-bump }} update"; then
+            echo "✅ Merge successful"
+            merge_commit=$(git rev-parse HEAD)
+            echo "merge-commit=$merge_commit" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Merge failed - may have conflicts"
+            exit 1
+          fi
+
+      - name: Push to main
+        run: |
+          echo "📤 Pushing merged changes to main..."
+          git push origin main
+          echo "✅ Successfully pushed to main"
+
+  # Job 4: Calculate next version
+  calculate-version:
+    name: 🔢 Calculate Next Version
+    runs-on: ubuntu-latest
+    needs: [check-changes, merge-to-main]
+    outputs:
+      next-version: ${{ steps.version.outputs.next-version }}
+      current-version: ${{ steps.version.outputs.current-version }}
+    
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Get current version and calculate next
+        id: version
+        run: |
+          echo "🔢 Calculating next semantic version..."
+          
+          # Get the latest tag/version
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "📋 Current version: $latest_tag"
+          
+          # Remove 'v' prefix for calculation
+          current_version=${latest_tag#v}
+          
+          # Split version into parts
+          IFS='.' read -ra VERSION_PARTS <<< "$current_version"
+          major=${VERSION_PARTS[0]:-0}
+          minor=${VERSION_PARTS[1]:-0}
+          patch=${VERSION_PARTS[2]:-0}
+          
+          # Increment based on bump type
+          case "${{ needs.check-changes.outputs.version-bump }}" in
+            "major")
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            "minor")
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            "patch"|*)
+              patch=$((patch + 1))
+              ;;
+          esac
+          
+          next_version="v${major}.${minor}.${patch}"
+          
+          echo "current-version=$latest_tag" >> $GITHUB_OUTPUT
+          echo "next-version=$next_version" >> $GITHUB_OUTPUT
+          
+          echo "✅ Version calculated"
+          echo "📈 $latest_tag → $next_version (${{ needs.check-changes.outputs.version-bump }})"
+
+  # Job 5: Create release
+  create-release:
+    name: 🏷️ Create Git Release
+    runs-on: ubuntu-latest
+    needs: [check-changes, generate-changelog, merge-to-main, calculate-version]
+    if: needs.check-changes.outputs.should-release == 'true'
+    
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Create Git tag
+        run: |
+          echo "🏷️ Creating git tag ${{ needs.calculate-version.outputs.next-version }}..."
+          
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git tag -a ${{ needs.calculate-version.outputs.next-version }} -m "🚀 ${{ needs.generate-changelog.outputs.release-title }}"
+          git push origin ${{ needs.calculate-version.outputs.next-version }}
+          
+          echo "✅ Tag created and pushed"
+
+      - name: Create GitHub Release
+        run: |
+          echo "📦 Creating GitHub release..."
+          
+          gh release create ${{ needs.calculate-version.outputs.next-version }} \
+            --title "${{ needs.generate-changelog.outputs.release-title }}" \
+            --notes "${{ needs.generate-changelog.outputs.changelog }}" \
+            --target main \
+            --latest
+          
+          echo "✅ GitHub release created"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.calculate-version.outputs.next-version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Job 6: Post-release notifications
+  notify-release:
+    name: 📢 Release Notifications
+    runs-on: ubuntu-latest
+    needs: [calculate-version, create-release, generate-changelog]
+    if: always() && needs.check-changes.outputs.should-release == 'true'
+    
+    steps:
+      - name: Success notification
+        if: needs.create-release.result == 'success'
+        run: |
+          echo "🎉 **Release Deployed Successfully!**"
+          echo ""
+          echo "📋 **Release Details:**"
+          echo "- 🏷️ Version: ${{ needs.calculate-version.outputs.next-version }}"
+          echo "- 📈 Bump Type: ${{ needs.check-changes.outputs.version-bump }}"
+          echo "- 🌿 Source: develop → main"
+          echo "- 📅 Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "🔗 **Links:**"
+          echo "- Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.calculate-version.outputs.next-version }}"
+          echo "- Main branch: https://github.com/${{ github.repository }}/tree/main"
+          echo ""
+          echo "🚀 **Deployment complete!**"
+
+      - name: Failure notification
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "❌ **Release Deployment Failed!**"
+          echo ""
+          echo "🔍 **Failed Jobs:**"
+          if [ "${{ needs.merge-to-main.result }}" = "failure" ]; then
+            echo "- 🔄 Merge to main (may have conflicts)"
+          fi
+          if [ "${{ needs.create-release.result }}" = "failure" ]; then
+            echo "- 🏷️ Release creation"
+          fi
+          echo ""
+          echo "🛠️ **Next Steps:**"
+          echo "1. Check for merge conflicts in main branch"
+          echo "2. Verify GitHub permissions for releases"
+          echo "3. Review workflow logs for detailed errors"
+          echo ""
+          echo "💡 You may need to create the release manually"
+          exit 1
+
+  # Job 7: Cleanup and summary
+  cleanup-summary:
+    name: 🧹 Cleanup & Summary
+    runs-on: ubuntu-latest
+    needs: [check-changes, generate-changelog, merge-to-main, calculate-version, create-release, notify-release]
+    if: always()
+    
+    steps:
+      - name: No release needed
+        if: needs.check-changes.outputs.should-release == 'false'
+        run: |
+          echo "ℹ️ **No Release Required**"
+          echo ""
+          echo "No new commits found between main and develop branches."
+          echo "🚀 Workflow completed - no action required."
+
+      - name: Release summary
+        if: needs.check-changes.outputs.should-release == 'true'
+        run: |
+          echo "📊 **CD Pipeline Summary**"
+          echo ""
+          echo "✅ **Completed Steps:**"
+          echo "- 📁 Change detection: ${{ needs.check-changes.result }}"
+          echo "- 🤖 Changelog generation: ${{ needs.generate-changelog.result }}"
+          echo "- 🔄 Merge to main: ${{ needs.merge-to-main.result }}"
+          echo "- 🔢 Version calculation: ${{ needs.calculate-version.result }}"
+          echo "- 🏷️ Release creation: ${{ needs.create-release.result }}"
+          echo ""
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "❌ **Pipeline Status: FAILED**"
+            exit 1
+          else
+            echo "✅ **Pipeline Status: SUCCESS**"
+            echo ""
+            echo "🎯 **Release Information:**"
+            echo "- Version: ${{ needs.calculate-version.outputs.next-version }}"
+            echo "- Type: ${{ needs.check-changes.outputs.version-bump }}"
+            echo "- Branch: develop → main"
+          fi
