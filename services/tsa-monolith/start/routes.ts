@@ -120,6 +120,8 @@ router
 
     // Gestion des missions
     router.get('/missions', '#controllers/http/admin/missions_controller.index')
+    router.post('/missions', '#controllers/http/admin/missions_controller.store')
+    router.get('/missions/stats', '#controllers/http/admin/missions_controller.stats')
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
 
@@ -143,6 +145,11 @@ router
     router.post('/missions', '#controllers/http/affreteur/missions_controller.store')
     router.get('/missions/:id', '#controllers/http/affreteur/missions_controller.show')
     router.put('/missions/:id', '#controllers/http/affreteur/missions_controller.update')
+    router.post('/missions/:id/publish', '#controllers/http/affreteur/missions_controller.publish')
+    router.post(
+      '/missions/:id/unpublish',
+      '#controllers/http/affreteur/missions_controller.unpublish'
+    )
     router.delete('/missions/:id', '#controllers/http/affreteur/missions_controller.destroy')
 
     // Gestion des propositions reçues
