@@ -2,71 +2,100 @@
 // MISSION TYPES
 // ============================================================================
 
-export type MissionStatus = "brouillon" | "ouverte" | "en_negociation" | "assignee" | "en_transit" | "terminee" | "annulee";
-export type UrgencyLevel = "low" | "medium" | "high";
-export type CargoType = "" | "electronics" | "construction" | "food" | "medical" | "textiles" | "machinery" | "chemicals" | "other";
+import type { User } from './user.types';
+import type { Address } from './address.types';
 
-export interface MissionItem {
-    id: string;
-    description: string;
-    weight: string;
-    volume: string;
-    value: string;
-}
-
-export interface SpecialRequirements {
-    refrigerated: boolean;
-    fragile: boolean;
-    hazardous: boolean;
-    insurance: boolean;
-}
-
-export interface Shipper {
-    id: string;
-    name: string;
-    rating: number;
-    phone: string;
-    company: string;
-}
+export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
 
 export interface Mission {
     id: string;
-    title: string;
+    affreteurId: string;
+    titre: string;
     description: string;
-    origin: string;
-    destination: string;
-    cargoType: CargoType;
-    proposedPrice: number;
-    finalPrice?: number;
-    deadline: string;
-    bids: number;
-    distance?: number;
-    weight?: number;
-    urgency?: UrgencyLevel;
-    specialRequirements: SpecialRequirements;
-    missionItems: MissionItem[];
-    shipper?: Shipper;
+    typeMarchandise: string;
+    poids: number;
+    volume: number;
+    dateDepartEstime: string;
+    dateArriveePrevue: string;
+    adresseDepartId: string;
+    adresseArriveeId: string;
+    budgetMin: number;
+    budgetMax: number;
     status: MissionStatus;
     createdAt: string;
-    updatedAt?: string;
+    updatedAt: string;
+    // Relations
+    affreteur?: User;
+    adresseDepart?: Address;
+    adresseArrivee?: Address;
+    propositions?: Proposition[];
 }
 
-export interface SelectOption {
-    value: string;
-    label: string;
+export interface CreateMissionRequest {
+    titre: string;
+    description?: string;
+    typeMarchandise?: string;
+    poids?: number;
+    volume?: number;
+    dateDepartEstime?: string;
+    dateArriveePrevue?: string;
+    adresseDepartId?: string;
+    adresseArriveeId?: string;
+    budgetMin?: number;
+    budgetMax?: number;
 }
 
-export interface FilterOptions {
+export interface UpdateMissionRequest extends Partial<CreateMissionRequest> {
+    status?: MissionStatus;
+}
+
+export interface MissionFilters {
     status?: MissionStatus[];
-    urgency?: UrgencyLevel[];
-    cargoType?: CargoType[];
-    origin?: string[];
-    destination?: string[];
+    affreteurId?: string;
+    typeMarchandise?: string[];
+    budgetMin?: number;
+    budgetMax?: number;
+    dateDepartEstime?: string;
+    dateArriveePrevue?: string;
 }
 
-export interface SortOptions {
-    field: keyof Mission;
-    direction: 'asc' | 'desc';
+export interface MissionListParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    filters?: MissionFilters;
 }
 
+// Proposition types
+export type PropositionStatus = 'pending' | 'accepted' | 'rejected';
 
+export interface Proposition {
+    id: string;
+    missionId: string;
+    transporteurId: string;
+    prixPropose: number;
+    delaiPropose: number;
+    commentaire: string | null;
+    status: PropositionStatus;
+    createdAt: string;
+    updatedAt: string;
+    // Relations
+    mission?: Mission;
+    transporteur?: User;
+}
+
+export interface CreatePropositionRequest {
+    missionId: string;
+    prixPropose: number;
+    delaiPropose: number;
+    commentaire?: string;
+}
+
+export interface UpdatePropositionRequest {
+    prixPropose?: number;
+    delaiPropose?: number;
+    commentaire?: string;
+    status?: PropositionStatus;
+}

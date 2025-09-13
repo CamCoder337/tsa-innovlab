@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
     Search,
     AlertTriangle,
@@ -13,70 +13,67 @@ import {
     TrendingUp,
     Fuel,
     Settings,
-} from "lucide-react"
-import { Link } from "react-router-dom"
-import { useAuthStore } from '@/stores/user'
-
-// Mock data spécifique aux transporteurs
-const transporteurKPIData = {
-    availableMissions: 12,
-    activeMissions: 3,
-    completedToday: 2,
-    dailyEarnings: 8500,
-}
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const transporteurInsights = [
     {
-        title: "Missions Disponibles",
+        title: 'Missions Disponibles',
         icon: Search,
         value: 12,
-        change: "+4 nouvelles",
-        color: "blue",
-        href: "/transporteur/missions/available",
+        change: '+4 nouvelles',
+        color: 'blue',
+        href: '/transporteur/missions/available',
     },
     {
         title: "Gains Aujourd'hui",
         icon: Euro,
-        value: "8,500 FCFA",
-        change: "+15% vs hier",
-        color: "green",
-        href: "/transporteur/earnings/current",
+        value: '8,500 FCFA',
+        change: '+15% vs hier',
+        color: 'green',
+        href: '/transporteur/earnings/current',
     },
     {
-        title: "Missions Actives",
+        title: 'Missions Actives',
         icon: Truck,
         value: 3,
-        change: "En cours",
-        color: "orange",
-        href: "/transporteur/missions/active",
+        change: 'En cours',
+        color: 'orange',
+        href: '/transporteur/missions/active',
     },
     {
-        title: "Note Moyenne",
+        title: 'Note Moyenne',
         icon: CheckCircle,
-        value: "4.8/5",
-        change: "+0.2 ce mois",
-        color: "green",
-        href: "/transporteur/profile",
+        value: '4.8/5',
+        change: '+0.2 ce mois',
+        color: 'green',
+        href: '/transporteur/profile',
     },
-]
+];
 
 function TransporteurDashboard() {
-    const user = useAuthStore((s) => s.currentUser)
-    if (!user) return null
+    const { user } = useAuth();
+    if (!user) return null;
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Bonjour, {user.prenom} {user.nom}
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Véhicule en ligne" />
+                        Bonjour, {user.fullName}
+                        <div
+                            className="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                            title="Véhicule en ligne"
+                        />
                     </h1>
-                    <p className="text-muted-foreground">Trouvez de nouvelles missions et gérez vos livraisons.</p>
+                    <p className="text-muted-foreground">
+                        Trouvez de nouvelles missions et gérez vos livraisons.
+                    </p>
                 </div>
                 <div className="flex gap-3">
                     <Link to="/app/missions/">
-                        <Button className="gap-2" style={{ backgroundColor: "var(--tsa-blue)" }}>
+                        <Button className="gap-2" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                             <Search className="h-4 w-4" />
                             Missions Disponibles
                         </Button>
@@ -136,41 +133,41 @@ function TransporteurDashboard() {
                         <div className="space-y-4">
                             {[
                                 {
-                                    id: "TSA-TR-045",
-                                    route: "Douala → Yaoundé",
-                                    client: "Transport Express",
-                                    status: "En Transit",
-                                    eta: "2h 30m",
+                                    id: 'TSA-TR-045',
+                                    route: 'Douala → Yaoundé',
+                                    client: 'Transport Express',
+                                    status: 'En Transit',
+                                    eta: '2h 30m',
                                     progress: 65,
-                                    payment: "2,500 FCFA",
+                                    payment: '2,500 FCFA',
                                 },
                                 {
-                                    id: "TSA-TR-046",
-                                    route: "Yaoundé → Bafoussam",
-                                    client: "Logistics Pro",
-                                    status: "Chargement",
-                                    eta: "Départ 14h",
+                                    id: 'TSA-TR-046',
+                                    route: 'Yaoundé → Bafoussam',
+                                    client: 'Logistics Pro',
+                                    status: 'Chargement',
+                                    eta: 'Départ 14h',
                                     progress: 10,
-                                    payment: "3,200 FCFA",
+                                    payment: '3,200 FCFA',
                                 },
                                 {
-                                    id: "TSA-TR-047",
-                                    route: "Douala → Bamenda",
-                                    client: "Fret Rapide",
-                                    status: "Planifié",
-                                    eta: "Demain 8h",
+                                    id: 'TSA-TR-047',
+                                    route: 'Douala → Bamenda',
+                                    client: 'Fret Rapide',
+                                    status: 'Planifié',
+                                    eta: 'Demain 8h',
                                     progress: 0,
-                                    payment: "2,800 FCFA",
+                                    payment: '2,800 FCFA',
                                 },
                             ].map((mission, i) => (
                                 <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                                     <div className="flex items-center gap-3">
                                         <div
-                                            className={`w-2 h-2 rounded-full ${mission.status === "En Transit"
-                                                ? "bg-blue-500 animate-pulse"
-                                                : mission.status === "Chargement"
-                                                    ? "bg-orange-500"
-                                                    : "bg-gray-400"
+                                            className={`w-2 h-2 rounded-full ${mission.status === 'En Transit'
+                                                ? 'bg-blue-500 animate-pulse'
+                                                : mission.status === 'Chargement'
+                                                    ? 'bg-orange-500'
+                                                    : 'bg-gray-400'
                                                 }`}
                                         ></div>
                                         <div>
@@ -243,21 +240,27 @@ function TransporteurDashboard() {
                                     <Package className="h-4 w-4 text-blue-600" />
                                     <p className="text-sm font-medium text-blue-800">Nouvelle Mission</p>
                                 </div>
-                                <p className="text-xs text-blue-600">Mission urgente Douala → Yaoundé disponible (3,500 FCFA)</p>
+                                <p className="text-xs text-blue-600">
+                                    Mission urgente Douala → Yaoundé disponible (3,500 FCFA)
+                                </p>
                             </div>
                             <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Fuel className="h-4 w-4 text-orange-600" />
                                     <p className="text-sm font-medium text-orange-800">Carburant</p>
                                 </div>
-                                <p className="text-xs text-orange-600">Niveau carburant à 85% - Station recommandée à 2km</p>
+                                <p className="text-xs text-orange-600">
+                                    Niveau carburant à 85% - Station recommandée à 2km
+                                </p>
                             </div>
                             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                     <p className="text-sm font-medium text-green-800">Évaluation Client</p>
                                 </div>
-                                <p className="text-xs text-green-600">Nouvelle note 5/5 reçue pour votre dernière livraison</p>
+                                <p className="text-xs text-green-600">
+                                    Nouvelle note 5/5 reçue pour votre dernière livraison
+                                </p>
                             </div>
                         </div>
                     </CardContent>
@@ -300,7 +303,7 @@ function TransporteurDashboard() {
                 </Card>
             </div>
         </div>
-    )
+    );
 }
 
-export default TransporteurDashboard
+export default TransporteurDashboard;

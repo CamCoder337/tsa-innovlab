@@ -1,237 +1,165 @@
-import { useState, useMemo } from 'react'
-import { ProductFilters } from "@/components/shop/product-filters"
-import { ProductCard } from "@/components/shop/product-card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Grid, List, Search, SlidersHorizontal, Camera, ShoppingCart, AlertTriangle, Star } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { Product, ProductFilter, ViewMode } from "@/types/shop.types"
+import { useState, useMemo } from 'react';
+import { ProductFilters } from '@/components/shop/product-filters';
+import { ProductCard } from '@/components/shop/product-card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+    Grid,
+    List,
+    Search,
+    SlidersHorizontal,
+    Camera,
+    ShoppingCart,
+    AlertTriangle,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { Product } from '@/types/product.types';
+import { useProducts } from '@/hooks/useProducts';
+import type { ProductFilter } from '@/types/shop.types';
 
-const mockProducts: Product[] = [
-    {
-        id: "1",
-        name: "Bosch Engine Oil Filter",
-        description: "High-quality oil filter for diesel engines. Compatible with most European vehicles.",
-        price: 15000,
-        originalPrice: 18000,
-        condition: "Like New",
-        brand: "Bosch",
-        category: "Engine Parts",
-        subcategory: "Filters",
-        images: ["/oil-filter.png"],
-        inStock: true,
-        stockQuantity: 25,
-        rating: 4.5,
-        reviewCount: 12,
-        warranty: "6 months warranty",
-        compatibility: ["Toyota Camry", "Honda Accord", "Nissan Altima"],
-        specifications: {
-            "Part Number": "F026407006",
-            "Thread Size": "M20 x 1.5",
-            Height: "95mm",
-            Diameter: "76mm",
-        },
-        features: ["OEM Quality", "Long-lasting", "Easy Installation"],
-        weight: 0.3,
-        dimensions: { length: 10, width: 8, height: 9.5 },
-        qualityScore: 92,
-        // testingHistory: {
-        //     testsPerformed: 3,
-        //     passRate: 100,
-        //     lastTested: "2025-01-15",
-        // },
-        // reliabilityRating: "Excellent",
-    },
-    {
-        id: "2",
-        name: "Continental Brake Pads Set",
-        description: "Premium brake pads for enhanced stopping power and durability.",
-        price: 45000,
-        condition: "New",
-        brand: "Continental",
-        category: "Braking System",
-        subcategory: "Brake Pads",
-        images: ["/brake-pads-close-up.png"],
-        inStock: true,
-        stockQuantity: 2,
-        rating: 4.8,
-        reviewCount: 28,
-        warranty: "12 months warranty",
-        compatibility: ["BMW 3 Series", "Mercedes C-Class", "Audi A4"],
-        specifications: {
-            "Part Number": "P85020",
-            Thickness: "17.5mm",
-            Width: "155mm",
-            Height: "52mm",
-        },
-        features: ["Low Dust", "Quiet Operation", "Temperature Resistant"],
-        weight: 1.2,
-        dimensions: { length: 15.5, width: 5.2, height: 1.75 },
-        qualityScore: 96,
-        // testingHistory: {
-        //     testsPerformed: 5,
-        //     passRate: 100,
-        //     lastTested: "2025-01-18",
-        // },
-        // reliabilityRating: "Excellent",
-    },
-    {
-        id: "3",
-        name: "Michelin Truck Tire 315/80R22.5",
-        description: "Heavy-duty truck tire for long-haul transportation. Excellent fuel efficiency.",
-        price: 125000,
-        originalPrice: 180000,
-        condition: "Good",
-        brand: "Michelin",
-        category: "Tires & Wheels",
-        subcategory: "Truck Tires",
-        images: ["/truck-tire.png"],
-        inStock: true,
-        stockQuantity: 8,
-        rating: 4.3,
-        reviewCount: 15,
-        warranty: "3 months warranty",
-        compatibility: ["Volvo FH", "Mercedes Actros", "Scania R-Series"],
-        specifications: {
-            "Tire Size": "315/80R22.5",
-            "Load Index": "156/150",
-            "Speed Rating": "L",
-            "Tread Depth": "12mm",
-        },
-        features: ["Fuel Efficient", "Long Lasting", "All Weather"],
-        weight: 65,
-        dimensions: { length: 100, width: 31.5, height: 100 },
-        qualityScore: 78,
-        // testingHistory: {
-        //     testsPerformed: 2,
-        //     passRate: 100,
-        //     lastTested: "2025-01-10",
-        // },
-        // reliabilityRating: "Good",
-    },
-]
+function Shop() {
+    // Store hooks
+    const { products, isLoading } = useProducts();
 
-const defaultFilters: ProductFilter = {
-    categories: [],
-    priceRange: [0, 200000],
-    conditions: [],
-    brands: [],
-    inStockOnly: false,
-    compatibility: "",
-}
+    // Local state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [sortBy, setSortBy] = useState('newest');
+    const [showFilters, setShowFilters] = useState(false);
+    const [showPhotoSearch, setShowPhotoSearch] = useState(false);
+    const [wishlist, setWishlist] = useState<string[]>([]);
 
-export default function Shop() {
-    const [searchQuery, setSearchQuery] = useState("")
-    const [filters, setFilters] = useState<ProductFilter>(defaultFilters)
-    const [viewMode, setViewMode] = useState<ViewMode>("grid")
-    const [sortBy, setSortBy] = useState("newest")
-    const [showFilters, setShowFilters] = useState(true)
-    const [wishlist, setWishlist] = useState<string[]>([])
-    const [cart, setCart] = useState<{ [key: string]: number }>({})
-    const [showPhotoSearch, setShowPhotoSearch] = useState(false)
+    const defaultFilters: ProductFilter = {
+        categories: [],
+        priceRange: [0, 200000],
+        conditions: [],
+        brands: [],
+        inStockOnly: false,
+        compatibility: '',
+    };
 
+    const [filters, setFilters] = useState<ProductFilter>(defaultFilters);
+
+    // Filter and sort products
     const filteredProducts = useMemo(() => {
-        const filtered = mockProducts.filter((product) => {
-            // Search query
-            if (
-                searchQuery &&
-                !product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                !product.description.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                !product.brand.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                !product.specifications["Part Number"]?.toLowerCase().includes(searchQuery.toLowerCase())
-            ) {
-                return false
+        const filtered = products.filter((product) => {
+            // Search query filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                if (
+                    !product.name.toLowerCase().includes(query) &&
+                    !product.description.toLowerCase().includes(query) &&
+                    !product.categoryId.toLowerCase().includes(query)
+                ) {
+                    return false;
+                }
             }
 
-            // Categories
-            if (
-                filters.categories.length > 0 &&
-                !filters.categories.includes(product.category) &&
-                !filters.categories.includes(product.subcategory || "")
-            ) {
-                return false
+            // Category
+            if (filters.categories.length > 0 && !filters.categories.includes(product.categoryId)) {
+                return false;
             }
 
             // Price range
             if (product.price < filters.priceRange[0] || product.price > filters.priceRange[1]) {
-                return false
+                return false;
             }
 
-            // Conditions
-            if (filters.conditions.length > 0 && !filters.conditions.includes(product.condition)) {
-                return false
-            }
+            // Condition
+            // if (filters.conditions.length > 0 && !filters.conditions.includes(product.condition)) {
+            //     return false;
+            // }
 
-            // Brands
-            if (filters.brands.length > 0 && !filters.brands.includes(product.brand)) {
-                return false
-            }
+            // // Brand
+            // if (filters.brands.length > 0 && !filters.brands.includes(product.brand)) {
+            //     return false;
+            // }
 
-            // Stock
-            if (filters.inStockOnly && !product.inStock) {
-                return false
-            }
+            // // In stock
+            // if (filters.inStockOnly && !product.inStock) {
+            //     return false;
+            // }
 
-            // Compatibility
-            if (
-                filters.compatibility &&
-                !product.compatibility.some((comp) => comp.toLowerCase().includes(filters.compatibility.toLowerCase()))
-            ) {
-                return false
-            }
+            // // Compatibility
+            // if (
+            //     filters.compatibility &&
+            //     !product.compatibility.some((comp) =>
+            //         comp.toLowerCase().includes(filters.compatibility.toLowerCase())
+            //     )
+            // ) {
+            //     return false;
+            // }
 
-            return true
-        })
+            return true;
+        });
 
         // Sort
         switch (sortBy) {
-            case "price-low":
-                filtered.sort((a, b) => a.price - b.price)
-                break
-            case "price-high":
-                filtered.sort((a, b) => b.price - a.price)
-                break
-            case "rating":
-                filtered.sort((a, b) => b.rating - a.rating)
-                break
-            case "quality":
-                filtered.sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
-                break
-            case "newest":
+            case 'price-low':
+                filtered.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-high':
+                filtered.sort((a, b) => b.price - a.price);
+                break;
+            case 'newest':
             default:
-                // Keep original order for newest
-                break
+                break;
         }
 
-        return filtered
-    }, [searchQuery, filters, sortBy])
+        return filtered;
+    }, [products, searchQuery, filters, sortBy]);
 
     const handleAddToCart = (product: Product) => {
-        setCart((prev) => ({
-            ...prev,
-            [product.id]: (prev[product.id] || 0) + 1,
-        }))
-    }
+        // Convert shop product back to product store format
+        const productForCart: Product = {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            reference: product.id,
+            price: product.price,
+            stock: product.stock,
+            stockAlert: 5,
+            unit: 'pièce',
+            imageUrl: product.images[0],
+            images: product.images,
+            isActive: product.isActive,
+            categoryId: product.categoryId,
+            createdBy: product.createdBy,
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt,
+            specifications: {
+                color: '',
+                weight: ''
+            }
+        };
+        console.log(productForCart);
+        // toast.success('Produit ajouté au panier', `${product.name} a été ajouté à votre panier`);
+    };
 
     const handleToggleWishlist = (product: Product) => {
-        setWishlist((prev) => (prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]))
-    }
+        setWishlist((prev) =>
+            prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
+        );
+    };
 
     const handleQuickView = (product: Product) => {
-        // TODO: Implement quick view modal
-        console.log("Quick view:", product.name)
-    }
+        console.log('Quick view:', product.name);
+    };
 
     const clearFilters = () => {
-        setFilters(defaultFilters)
-        setSearchQuery("")
-    }
+        setFilters(defaultFilters);
+        setSearchQuery('');
+    };
 
-    const cartItemCount = Object.values(cart).reduce((sum, count) => sum + count, 0)
-    const lowStockProducts = mockProducts.filter((p) => p.inStock && p.stockQuantity <= 5)
+    const lowStockProducts = products.filter((p) => p.stock <= 5);
 
     return (
         <div className="p-6">
@@ -239,9 +167,9 @@ export default function Shop() {
             <div className="mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Vehicle Parts Catalog</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Catalogue de Pièces</h1>
                         <p className="text-muted-foreground">
-                            Browse our collection of quality-tested reconditioned vehicle parts
+                            Parcourez notre collection de pièces reconditionnées de qualité
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -251,33 +179,33 @@ export default function Shop() {
                             onClick={() => setShowPhotoSearch(!showPhotoSearch)}
                         >
                             <Camera className="h-4 w-4" />
-                            Photo Search
+                            Recherche Photo
                         </Button>
-                        <Button className="gap-2 relative" style={{ backgroundColor: "var(--tsa-blue)" }}>
+                        <Button className="gap-2 relative" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                             <ShoppingCart className="h-4 w-4" />
-                            Cart
-                            {cartItemCount > 0 && (
+                            Panier
+                            {/* {totalItems > 0 && (
                                 <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5">
-                                    {cartItemCount}
+                                    {totalItems}
                                 </Badge>
-                            )}
+                            )} */}
                         </Button>
                     </div>
                 </div>
             </div>
 
+            {/* Low Stock Alert */}
             {lowStockProducts.length > 0 && (
                 <Card className="mb-6 border-orange-200 bg-orange-50">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <AlertTriangle className="h-5 w-5 text-orange-600" />
-                            <h3 className="font-medium text-orange-800">Low Stock Alert</h3>
+                            <h3 className="font-medium text-orange-800">Alerte Stock Faible</h3>
                         </div>
                         <div className="space-y-1">
                             {lowStockProducts.map((product) => (
                                 <p key={product.id} className="text-sm text-orange-700">
-                                    <strong>{product.name}</strong> - Only {product.stockQuantity} left in stock!
-                                    {product.stockQuantity <= 2 && " Order before 5 PM for guaranteed availability."}
+                                    <strong>{product.name}</strong> - Plus que {product.stock} en stock!
                                 </p>
                             ))}
                         </div>
@@ -285,127 +213,118 @@ export default function Shop() {
                 </Card>
             )}
 
-            {showPhotoSearch && (
-                <Card className="mb-6 border-blue-200 bg-blue-50">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Camera className="h-5 w-5 text-blue-600" />
-                            <h3 className="font-medium text-blue-800">Smart Photo Search</h3>
+            {/* Search and Filters */}
+            <div className="mb-6 space-y-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                            placeholder="Rechercher des pièces..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="gap-2"
+                        >
+                            <SlidersHorizontal className="h-4 w-4" />
+                            Filtres
+                        </Button>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="w-48">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="newest">Plus récent</SelectItem>
+                                <SelectItem value="price-low">Prix croissant</SelectItem>
+                                <SelectItem value="price-high">Prix décroissant</SelectItem>
+                                <SelectItem value="rating">Mieux noté</SelectItem>
+                                <SelectItem value="quality">Meilleure qualité</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="flex border rounded-md">
+                            <Button
+                                variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('grid')}
+                                className="rounded-r-none"
+                            >
+                                <Grid className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => setViewMode('list')}
+                                className="rounded-l-none"
+                            >
+                                <List className="h-4 w-4" />
+                            </Button>
                         </div>
-                        <p className="text-sm text-blue-700 mb-3">
-                            Upload a photo of your part or scan the serial number for instant compatibility matching
-                        </p>
-                        <div className="flex gap-3">
-                            <Button variant="outline" className="gap-2 bg-white">
-                                <Camera className="h-4 w-4" />
-                                Take Photo
-                            </Button>
-                            <Button variant="outline" className="gap-2 bg-white">
-                                Upload Image
-                            </Button>
-                            <Button variant="outline" className="gap-2 bg-white">
-                                Scan Serial Number
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
+
+                {showFilters && (
+                    <ProductFilters
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onClearFilters={clearFilters}
+                    />
+                )}
+            </div>
+
+            {/* Results */}
+            <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                    {filteredProducts.length} produit(s) trouvé(s)
+                </p>
+            </div>
+
+            {/* Loading State */}
+            {isLoading && (
+                <div className="text-center py-8">
+                    <p>Chargement des produits...</p>
+                </div>
             )}
 
-            {/* Search and Controls */}
-            <div className="flex items-center gap-4 mb-6">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by name, part number, or serial..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                    />
-                </div>
-
-                <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="newest">Newest First</SelectItem>
-                        <SelectItem value="price-low">Price: Low to High</SelectItem>
-                        <SelectItem value="price-high">Price: High to Low</SelectItem>
-                        <SelectItem value="rating">Highest Rated</SelectItem>
-                        <SelectItem value="quality">Quality Score</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant={viewMode === "grid" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setViewMode("grid")}
-                    >
-                        <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant={viewMode === "list" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setViewMode("list")}
-                    >
-                        <List className="h-4 w-4" />
-                    </Button>
-                </div>
-
-                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="gap-2">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    Filters
-                </Button>
-            </div>
-
-            <div className="flex gap-6">
-                {/* Filters Sidebar */}
-                {showFilters && (
-                    <ProductFilters filters={filters} onFiltersChange={setFilters} onClearFilters={clearFilters} />
-                )}
-
-                {/* Products Grid/List */}
-                <div className="flex-1">
-                    <div className="mb-4 flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground">
-                            Showing {filteredProducts.length} of {mockProducts.length} products
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Star className="h-4 w-4 text-yellow-500" />
-                            <span>Quality-tested parts with reliability scores</span>
-                        </div>
-                    </div>
-
-                    <div
-                        className={cn(
-                            viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4",
-                        )}
-                    >
-                        {filteredProducts.map((product) => (
-                            <ProductCard
-                                key={product.id}
-                                product={product}
-                                viewMode={viewMode}
-                                onAddToCart={handleAddToCart}
-                                onToggleWishlist={handleToggleWishlist}
-                                onQuickView={handleQuickView}
-                                isInWishlist={wishlist.includes(product.id)}
-                                cartQuantity={cart[product.id] || 0}
-                            />
-                        ))}
-                    </div>
-
-                    {filteredProducts.length === 0 && (
-                        <div className="text-center py-12">
-                            <p className="text-muted-foreground">No products found matching your criteria.</p>
-                            <Button variant="outline" onClick={clearFilters} className="mt-4 bg-transparent">
-                                Clear Filters
-                            </Button>
-                        </div>
+            {/* Products Grid */}
+            {!isLoading && (
+                <div
+                    className={cn(
+                        'grid gap-6',
+                        viewMode === 'grid'
+                            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                            : 'grid-cols-1'
                     )}
+                >
+                    {filteredProducts.map((product) => (
+                        <ProductCard
+                            key={product.id}
+                            product={product}
+                            viewMode={viewMode}
+                            onAddToCart={handleAddToCart}
+                            onToggleWishlist={handleToggleWishlist}
+                            onQuickView={handleQuickView}
+                            isInWishlist={wishlist.includes(product.id)}
+                        />
+                    ))}
                 </div>
-            </div>
+            )}
+
+            {/* No Results */}
+            {!isLoading && filteredProducts.length === 0 && (
+                <div className="text-center py-12">
+                    <p className="text-muted-foreground mb-4">Aucun produit trouvé</p>
+                    <Button onClick={clearFilters} variant="outline">
+                        Effacer les filtres
+                    </Button>
+                </div>
+            )}
         </div>
-    )
+    );
 }
+
+export default Shop;

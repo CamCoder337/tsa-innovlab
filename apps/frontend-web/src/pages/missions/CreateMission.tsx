@@ -1,74 +1,55 @@
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
-import { CalendarIcon, MapPin, Package, DollarSign, AlertTriangle, Plus, Minus } from "lucide-react"
-import type { Mission, MissionItem, CargoType } from "@/types/mission.types"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+    CalendarIcon,
+    MapPin,
+    Package,
+    DollarSign,
+    Plus,
+    Minus,
+} from 'lucide-react';
+import type { Mission } from '@/types/mission.types';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function CreateMission() {
-    const [date, setDate] = useState<Date>()
-    const [missionItems, setMissionItems] = useState<MissionItem[]>([
-        { id: "1", description: "", weight: "", volume: "", value: "" },
-    ])
+    const [date, setDate] = useState<Date>();
 
     const [formData, setFormData] = useState<Mission>({
-        id: "",
-        status: "brouillon",
-        createdAt: "",
-        title: "",
-        origin: "",
-        destination: "",
-        cargoType: "",
-        urgency: "low",
-        proposedPrice: 0,
-        description: "",
-        specialRequirements: {
-            refrigerated: false,
-            fragile: false,
-            hazardous: false,
-            insurance: false,
-        },
-        deadline: "",
-        bids: 0,
-        distance: 0,
-        weight: 0,
-        missionItems: [],
-    })
+        id: '',
+        affreteurId: '',
+        status: 'draft',
+        titre: '',
+        description: '',
+        adresseDepartId: '',
+        adresseArriveeId: '',
+        typeMarchandise: '',
+        poids: 0,
+        volume: 0,
+        dateDepartEstime: '',
+        dateArriveePrevue: '',
+        budgetMin: 0,
+        budgetMax: 0,
+        createdAt: '',
+        updatedAt: '',
+    });
 
-    const addMissionItem = () => {
-        const newItem: MissionItem = {
-            id: Date.now().toString(),
-            description: "",
-            weight: "",
-            volume: "",
-            value: "",
-        }
-        setMissionItems([...missionItems, newItem])
-    }
-
-    const removeMissionItem = (id: string) => {
-        if (missionItems.length > 1) {
-            setMissionItems(missionItems.filter((item) => item.id !== id))
-        }
-    }
-
-    const updateMissionItem = (id: string, field: keyof MissionItem, value: string) => {
-        setMissionItems(missionItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)))
-    }
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        // Handle form submission
-        console.log("Mission created:", { formData, missionItems, deadline: date })
-    }
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+    };
 
     return (
         <div className="flex-1 max-w-4xl mx-auto">
@@ -93,8 +74,8 @@ export default function CreateMission() {
                             <Input
                                 id="title"
                                 placeholder="ex: Transport Électronique Douala → Yaoundé"
-                                value={formData.title}
-                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                value={formData.titre}
+                                onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                                 required
                             />
                         </div>
@@ -108,8 +89,8 @@ export default function CreateMission() {
                                         id="origin"
                                         placeholder="Ville de départ"
                                         className="pl-10"
-                                        value={formData.origin}
-                                        onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
+                                        value={formData.adresseDepartId}
+                                        onChange={(e) => setFormData({ ...formData, adresseDepartId: e.target.value })}
                                         required
                                     />
                                 </div>
@@ -122,8 +103,8 @@ export default function CreateMission() {
                                         id="destination"
                                         placeholder="Ville d'arrivée"
                                         className="pl-10"
-                                        value={formData.destination}
-                                        onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                                        value={formData.adresseArriveeId}
+                                        onChange={(e) => setFormData({ ...formData, adresseArriveeId: e.target.value })}
                                         required
                                     />
                                 </div>
@@ -134,8 +115,10 @@ export default function CreateMission() {
                             <div>
                                 <Label htmlFor="cargoType">Type de Marchandise</Label>
                                 <Select
-                                    value={formData.cargoType}
-                                    onValueChange={(value) => setFormData({ ...formData, cargoType: value as CargoType })}
+                                    value={formData.typeMarchandise}
+                                    onValueChange={(value) =>
+                                        setFormData({ ...formData, typeMarchandise: value as string })
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Sélectionner le type" />
@@ -151,11 +134,13 @@ export default function CreateMission() {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div>
+                            {/* <div>
                                 <Label htmlFor="urgency">Niveau d'Urgence</Label>
                                 <Select
                                     value={formData.urgency}
-                                    onValueChange={(value) => setFormData({ ...formData, urgency: value as "low" | "medium" | "high" })}
+                                    onValueChange={(value) =>
+                                        setFormData({ ...formData, urgency: value as 'low' | 'medium' | 'high' })
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Sélectionner l'urgence" />
@@ -166,7 +151,7 @@ export default function CreateMission() {
                                         <SelectItem value="high">Élevée - Livraison urgente</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div>
@@ -189,56 +174,53 @@ export default function CreateMission() {
                                 <Package className="h-5 w-5" />
                                 Articles de Marchandise
                             </div>
-                            <Button type="button" variant="outline" size="sm" onClick={addMissionItem}>
+                            <Button type="button" variant="outline" size="sm">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Ajouter Article
                             </Button>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {missionItems.map((item, index) => (
-                            <div key={item.id} className="p-4 border rounded-lg space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h4 className="font-medium">Article {index + 1}</h4>
-                                    {missionItems.length > 1 && (
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeMissionItem(item.id)}>
-                                            <Minus className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
+                        <div className="p-4 border rounded-lg space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h4 className="font-medium">Article 1</h4>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                >
+                                    <Minus className="h-4 w-4" />
+                                </Button>
+                            </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="md:col-span-2">
-                                        <Label>Description</Label>
-                                        <Input
-                                            placeholder="Description de l'article"
-                                            value={item.description}
-                                            onChange={(e) => updateMissionItem(item.id, "description", e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Poids (kg)</Label>
-                                        <Input
-                                            placeholder="0"
-                                            value={item.weight}
-                                            onChange={(e) => updateMissionItem(item.id, "weight", e.target.value)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Volume (m³)</Label>
-                                        <Input
-                                            placeholder="0"
-                                            value={item.volume}
-                                            onChange={(e) => updateMissionItem(item.id, "volume", e.target.value)}
-                                        />
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="md:col-span-2">
+                                    <Label>Description</Label>
+                                    <Input
+                                        placeholder="Description de l'article"
+                                        value="Description de l\'item"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Poids (kg)</Label>
+                                    <Input
+                                        placeholder="0"
+                                        value="0"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Volume (m³)</Label>
+                                    <Input
+                                        placeholder="0"
+                                        value="0"
+                                    />
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card>
+                {/* <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5" />
@@ -313,7 +295,7 @@ export default function CreateMission() {
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </Card> */}
 
                 <Card>
                     <CardHeader>
@@ -332,11 +314,15 @@ export default function CreateMission() {
                                         id="proposedPrice"
                                         placeholder="0"
                                         className="pl-10"
-                                        value={formData.proposedPrice}
-                                        onChange={(e) => setFormData({ ...formData, proposedPrice: parseInt(e.target.value) })}
+                                        value={formData.budgetMin}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, budgetMin: parseInt(e.target.value) })
+                                        }
                                     />
                                 </div>
-                                <p className="text-xs text-gray-500 mt-1">Les transporteurs peuvent négocier ce prix</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Les transporteurs peuvent négocier ce prix
+                                </p>
                             </div>
                             <div>
                                 <Label>Date Limite</Label>
@@ -344,10 +330,13 @@ export default function CreateMission() {
                                     <PopoverTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                                            className={cn(
+                                                'w-full justify-start text-left font-normal',
+                                                !date && 'text-muted-foreground'
+                                            )}
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {date ? format(date, "PPP") : "Choisir une date"}
+                                            {date ? format(date, 'PPP') : 'Choisir une date'}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0">
@@ -360,7 +349,7 @@ export default function CreateMission() {
                 </Card>
 
                 <div className="flex gap-4">
-                    <Button type="submit" className="flex-1" style={{ backgroundColor: "var(--tsa-blue)" }}>
+                    <Button type="submit" className="flex-1" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                         <Package className="h-4 w-4 mr-2" />
                         Créer la Mission
                     </Button>
@@ -370,5 +359,5 @@ export default function CreateMission() {
                 </div>
             </form>
         </div>
-    )
+    );
 }

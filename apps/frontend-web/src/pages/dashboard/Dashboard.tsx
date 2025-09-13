@@ -1,15 +1,13 @@
-import { useAuthStore } from '@/stores/user'
-import AdminDashboard from './AdminDashboard'
-import AffreteurDashboard from './AffreteurDashboard'
-import TransporteurDashboard from './TransporteurDashboard'
+import { useAuthStore } from '@/stores/authStore';
+import AdminDashboard from './AdminDashboard';
+import AffreteurDashboard from './AffreteurDashboard';
+import TransporteurDashboard from './TransporteurDashboard';
 
 export default function Dashboard() {
-    const user = useAuthStore((s) => s.currentUser)
-    const role = user?.role ?? (localStorage.getItem('userRole') as any) ?? 'Admin'
+    const user = useAuthStore((s) => s.currentUser);
+    const role = user?.role ?? (localStorage.getItem('role')) ?? 'admin';
 
-    if (role === 'Admin') return <AdminDashboard />
-    if (role === 'Transporteur') return <TransporteurDashboard />
-    return <AffreteurDashboard />
+    if (role === 'admin') return <AdminDashboard />;
+    if (role === 'transporteur') return <TransporteurDashboard />;
+    return <AffreteurDashboard />;
 }
-
-

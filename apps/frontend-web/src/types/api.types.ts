@@ -2,64 +2,76 @@
 // API REQUEST/RESPONSE TYPES
 // ============================================================================
 
-import type { Mission, MissionItem, SpecialRequirements, CargoType, UrgencyLevel } from './mission.types';
-import type { User, UserRole } from './user.types';
+// import type { Mission, Proposition } from './mission.types';
+// import type { Product } from './product.types';
+// import type { Category } from './category.types';
+// import type { Address } from './address.types';
 
-export interface ApiResponse<T = any> {
+// Base API Response Structure
+export interface ApiResponse<T = unknown> {
+    data?: {
+        success: boolean;
+        message: string;
+        data?: T;
+    };
+    error?: {
+        success: boolean;
+        message: string;
+        status: number;
+        errors?: string[];
+    };
+}
+
+// Pagination Structure
+export interface PaginationMeta {
+    currentPage: number;
+    perPage: number;
+    total: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+}
+
+export interface PaginatedResponse<T> {
     success: boolean;
     message: string;
-    data?: T;
-    error?: string;
+    data: T & {
+        pagination: PaginationMeta;
+    };
+    errors?: string[];
 }
 
-export interface AuthResponse extends ApiResponse {
-    user?: User;
-    token?: string;
+// Common List Parameters
+export interface ListParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
 }
 
-export interface MissionResponse extends ApiResponse {
-    mission?: Mission;
-    missions?: Mission[];
+// Specific Response Types
+// export interface UserResponse extends ApiResponse<{ user: User }> { }
+// export interface UsersResponse extends PaginatedResponse<{ users: User[] }> { }
+
+// export interface MissionResponse extends ApiResponse<{ mission: Mission }> { }
+// export interface MissionsResponse extends PaginatedResponse<{ missions: Mission[] }> { }
+
+// export interface ProductResponse extends ApiResponse<{ product: Product }> { }
+// export interface ProductsResponse extends PaginatedResponse<{ products: Product[] }> { }
+
+// export interface CategoryResponse extends ApiResponse<{ category: Category }> { }
+// export interface CategoriesResponse extends PaginatedResponse<{ categories: Category[] }> { }
+
+// export interface PropositionResponse extends ApiResponse<{ proposition: Proposition }> { }
+// export interface PropositionsResponse extends PaginatedResponse<{ propositions: Proposition[] }> { }
+
+// export interface AddressResponse extends ApiResponse<{ address: Address }> { }
+// export interface AddressesResponse extends PaginatedResponse<{ addresses: Address[] }> { }
+
+// Error Response
+export interface ErrorResponse {
+    success: false;
+    message: string;
+    errors: string[];
 }
-
-// Request payloads
-export interface LoginRequest {
-    email: string;
-    password: string;
-}
-
-export interface RegisterRequest {
-    nom: string;
-    prenom: string;
-    email: string;
-    password: string;
-    role: UserRole;
-}
-
-export interface ForgotPasswordRequest {
-    email: string;
-}
-
-export interface VerifyEmailRequest {
-    email: string;
-    code: string;
-}
-
-export interface CreateMissionRequest {
-    title: string;
-    origin: string;
-    destination: string;
-    cargoType: CargoType;
-    urgency: UrgencyLevel;
-    proposedPrice: number;
-    description: string;
-    specialRequirements: SpecialRequirements;
-    deadline: string;
-    missionItems: Omit<MissionItem, 'id'>[];
-}
-
-export interface UpdateMissionRequest extends Partial<CreateMissionRequest> {
-    id: string;
-}
-
-
