@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Configuration MFA Obligatoire - TSA Logistics
+    </title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+      }
+      
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      
+      .header {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .content {
+        padding: 30px;
+      }
+      
+      .alert {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      
+      .alert-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      
+      .qr-section {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      
+      .qr-code img {
+        max-width: 200px;
+        border: 4px solid white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      
+      .recovery-codes {
+        background: #fffbeb;
+        border: 1px solid #fed7aa;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      
+      .recovery-codes h3 {
+        color: #d97706;
+        margin-top: 0;
+      }
+      
+      .codes-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+      }
+      
+      .code {
+        background: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #fed7aa;
+        text-align: center;
+        font-weight: 600;
+      }
+      
+      .steps {
+        margin: 25px 0;
+      }
+      
+      .step {
+        padding: 15px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      
+      .step:last-child {
+        border-bottom: none;
+      }
+      
+      .step-number {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        background: #3b82f6;
+        color: white;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-weight: 600;
+        margin-right: 15px;
+      }
+      
+      .cta-button {
+        display: inline-block;
+        background: #dc2626;
+        color: white;
+        padding: 15px 30px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin: 20px 0;
+        transition: background-color 0.2s;
+      }
+      
+      .cta-button:hover {
+        background: #b91c1c;
+        color: white;
+      }
+      
+      .footer {
+        background: #f9fafb;
+        padding: 20px;
+        text-align: center;
+        font-size: 14px;
+        color: #6b7280;
+      }
+      
+      .warning {
+        color: #dc2626;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>
+          🔐 Configuration MFA Obligatoire
+        </h1>
+        <p>
+          Compte Administrateur TSA Logistics
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="alert">
+          <div class="alert-title">
+            ⚠️ Action Requise - Configuration Obligatoire
+          </div>
+          Bonjour {{ userName }}, votre compte administrateur nécessite l'activation immédiate de l'authentification à deux facteurs (MFA) pour des raisons de sécurité.
+        </div>
+
+        <h2>
+          📱 Étape 1 : Installer une application d'authentification
+        </h2>
+        <p>
+          Installez une de ces applications sur votre smartphone :
+        </p>
+        <ul>
+          <li>
+            <strong>Google Authenticator</strong>(iOS/Android)
+          </li>
+          <li>
+            <strong>Microsoft Authenticator</strong>(iOS/Android)
+          </li>
+          <li>
+            <strong>Authy</strong>(iOS/Android/Desktop)
+          </li>
+        </ul>
+
+        <h2>
+          ⌨️ Étape 2 : Configuration manuelle
+        </h2>
+        <div class="qr-section">
+          <p>
+            <strong>Dans Google Authenticator :</strong>
+          </p>
+          <ol style="text-align: left; margin: 15px 0; padding-left: 20px;">
+            <li>
+              Ouvrez <strong>Google Authenticator</strong>
+            </li>
+            <li>
+              Appuyez sur <strong>+</strong>puis <strong>"Saisir une clé de configuration"</strong>
+            </li>
+            <li>
+              Saisissez ces informations :
+            </li>
+          </ol>
+
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <p>
+              <strong>📧 Nom du compte :</strong>
+            </p>
+            <code
+              style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace;"
+            >{{ accountName }}</code>
+
+            <p>
+              <strong>🔑 Clé secrète :</strong>
+            </p>
+            <code
+              style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace; font-size: 16px; letter-spacing: 2px;"
+            >{{ manualEntryKey }}</code>
+
+            <p>
+              <strong>🏢 Émetteur :</strong>
+            </p>
+            <code
+              style="background: white; padding: 8px 12px; border-radius: 4px; display: block; margin: 5px 0; font-family: monospace;"
+            >{{ issuer }}</code>
+          </div>
+
+          <p style="color: #059669; font-weight: 600;">
+            ✅ Une fois configuré, Google Authenticator génèrera des codes à 6 chiffres toutes les 30 secondes.
+          </p>
+        </div>
+
+        <h2>
+          🔑 Codes de récupération de secours
+        </h2>
+        <div class="recovery-codes">
+          <h3>
+            ⚠️ Conservez ces codes en sécurité
+          </h3>
+          <p>
+            Ces codes vous permettront d'accéder à votre compte si vous perdez votre téléphone :
+          </p>
+          <div class="codes-grid">
+            @each(code in recoveryCodes)
+              <div class="code">
+                {{ code }}
+              </div>
+            @endeach
+          </div>
+          <p class="warning">
+            ⚠️ Chaque code ne peut être utilisé qu'une seule fois. 
+                    Stockez-les dans un endroit sûr (gestionnaire de mots de passe, coffre-fort, etc.)
+          </p>
+        </div>
+
+        <h2>
+          ✅ Étapes de configuration :
+        </h2>
+        <div class="steps">
+          <div class="step">
+            <span class="step-number">1</span>
+            <strong>Connectez-vous</strong>à votre compte avec vos identifiants habituels
+          </div>
+          <div class="step">
+            <span class="step-number">2</span>
+            <strong>Accédez aux paramètres MFA</strong>via le lien ci-dessous
+          </div>
+          <div class="step">
+            <span class="step-number">3</span>
+            <strong>Activez le MFA</strong>en entrant un code de votre application
+          </div>
+          <div class="step">
+            <span class="step-number">4</span>
+            <strong>Testez la connexion</strong>avec l'authentification à deux facteurs
+          </div>
+        </div>
+
+        <div style="text-align: center;">
+          <a href="{{ mfaUrl }}" class="cta-button">
+            🔐 Activer MFA Maintenant
+                </a>
+        </div>
+
+        <div class="alert" style="margin-top: 30px;">
+          <div class="alert-title">
+            🚨 Important
+          </div>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>
+              Votre compte sera <strong>restreint</strong>tant que le MFA n'est pas activé
+            </li>
+            <li>
+              Cette mesure est obligatoire pour tous les comptes administrateurs
+            </li>
+            <li>
+              En cas de problème, contactez le support technique
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          <strong>Besoin d'aide ?</strong>          <br />
+          Contactez le support : <a href="mailto:{{ supportEmail }}">{{ supportEmail }}</a>
+        </p>
+        <p>
+          TSA Logistics - Plateforme sécurisée de transport et logistique<br />
+          <em>Cet email a été envoyé automatiquement, ne pas répondre directement.</em>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
