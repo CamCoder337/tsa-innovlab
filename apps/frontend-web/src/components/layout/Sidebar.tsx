@@ -1,22 +1,6 @@
-import React from 'react'
-import { Link, useLocation } from "react-router-dom"
-import {
-    LayoutDashboard,
-    Package,
-    MapPin,
-    ShoppingCart,
-    MessageCircle,
-    BarChart3,
-    Settings,
-    Truck,
-    Home,
-    Shield,
-    ChevronDown,
-    Layout,
-    Search,
-    List,
-    Clock,
-} from "lucide-react"
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, Package, ShoppingCart, ChevronDown, Layout } from 'lucide-react';
 import {
     Sidebar as UISidebar,
     SidebarContent,
@@ -28,45 +12,35 @@ import {
     SidebarMenuItem,
     SidebarProvider,
     SidebarSeparator,
-} from "@/components/ui/sidebar"
-import type { UserRole } from '@/types/user.types'
+} from '@/components/ui/sidebar';
+import { useAuth } from '@/hooks/useAuth';
 
 type SidebarItem = {
-    id: string
-    label: string
-    icon: React.ComponentType<{ className?: string }>
-    href?: string
-    children?: SidebarItem[]
-}
-
-function getStoredRole(): UserRole {
-    try {
-        const raw = localStorage.getItem("userRole") || localStorage.getItem("role")
-        if (raw === "Transporteur" || raw === "Admin" || raw === "Affreteur") {
-            return raw === "Affreteur" ? "Affréteur" : (raw as UserRole)
-        }
-    } catch { }
-    return "Affréteur"
-}
+    id: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    href?: string;
+    children?: SidebarItem[];
+};
 
 const affreteurMenu: SidebarItem[] = [
     {
-        id: "dashboard",
-        label: "Tableau de bord",
+        id: 'dashboard',
+        label: 'Tableau de bord',
         icon: Layout,
-        href: "/app"
+        href: '/app',
     },
     {
-        id: "missions",
-        label: "Missions",
+        id: 'missions',
+        label: 'Missions',
         icon: Package,
-        href: "/app/missions"
+        href: '/app/missions',
     },
     {
-        id: "products",
-        label: "Boutique",
+        id: 'products',
+        label: 'Boutique',
         icon: ShoppingCart,
-        href: "/app/shop"
+        href: '/app/shop',
     },
     // {
     //     id: "freight",
@@ -87,26 +61,26 @@ const affreteurMenu: SidebarItem[] = [
     //         { id: "analytics", label: "Analyses", icon: BarChart3, href: "/tracking/analytics" },
     //     ],
     // }
-]
+];
 
 const transporteurMenu: SidebarItem[] = [
     {
-        id: "dashboard",
-        label: "Tableau de bord",
+        id: 'dashboard',
+        label: 'Tableau de bord',
         icon: Layout,
-        href: "/app"
+        href: '/app',
     },
     {
-        id: "missions",
-        label: "Missions",
+        id: 'missions',
+        label: 'Missions',
         icon: Package,
-        href: "/app/missions"
+        href: '/app/missions',
     },
     {
-        id: "products",
-        label: "Boutique",
+        id: 'products',
+        label: 'Boutique',
         icon: ShoppingCart,
-        href: "/app/shop"
+        href: '/app/shop',
     },
     // {
     //     id: "tracking",
@@ -123,15 +97,15 @@ const transporteurMenu: SidebarItem[] = [
     //         { id: "delivery-history", label: "Historique", icon: MapPin, href: "/delivery/history" },
     //     ],
     // },
-]
+];
 
 const adminMenu: SidebarItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/app" },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/app' },
     {
-        id: "products",
-        label: "Boutique",
+        id: 'products',
+        label: 'Boutique',
         icon: ShoppingCart,
-        href: "/app/shop"
+        href: '/app/shop',
     },
     // {
     //     id: "analytics",
@@ -142,18 +116,19 @@ const adminMenu: SidebarItem[] = [
     // { id: "support", label: "Support", icon: MessageCircle, href: "/support" },
     // { id: "admin", label: "Administration", icon: Shield, href: "/admin" },
     // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
-]
+];
 
-function getMenuByRole(role: UserRole): SidebarItem[] {
-    if (role === "Transporteur") return transporteurMenu
-    if (role === "Admin") return adminMenu
-    return affreteurMenu
+function GetMenuByRole(): SidebarItem[] {
+    const { user } = useAuth();
+    if (user?.role === 'transporteur') return transporteurMenu;
+    if (user?.role === 'admin') return adminMenu;
+    return affreteurMenu;
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
-    const { pathname } = useLocation()
+    const { pathname } = useLocation();
     return (
-        <SidebarMenu className='flex flex-col gap-4'>
+        <SidebarMenu className="flex flex-col gap-4">
             {items.map((item) => (
                 <SidebarMenuItem key={item.id}>
                     {item.children && item.children.length ? (
@@ -161,7 +136,7 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
                             <summary className="list-none">
                                 <SidebarMenuButton asChild isActive={item.href ? pathname === item.href : false}>
                                     <div className="flex items-center justify-between">
-                                        <div className='flex items-center gap-3 font-medium'>
+                                        <div className="flex items-center gap-3 font-medium">
                                             <item.icon className="h-5 w-5" />
                                             <span className="text-base">{item.label}</span>
                                         </div>
@@ -211,13 +186,13 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
                 </SidebarMenuItem>
             ))}
         </SidebarMenu>
-    )
+    );
 }
 
 export default function Sidebar() {
-
-    const role = getStoredRole()
-    const menu = getMenuByRole(role)
+    const { user } = useAuth();
+    const role = user && user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1);
+    const menu = GetMenuByRole();
 
     return (
         <SidebarProvider>
@@ -225,7 +200,7 @@ export default function Sidebar() {
                 <SidebarContent>
                     <SidebarGroup className="h-full flex flex-col">
                         <SidebarGroupLabel>
-                            <div className='flex flex-1 justify-center text-base font-bold text-tsa-blue'>
+                            <div className="flex flex-1 justify-center text-base font-bold text-tsa-blue">
                                 Espace {role}
                             </div>
                         </SidebarGroupLabel>
@@ -237,5 +212,5 @@ export default function Sidebar() {
                 </SidebarContent>
             </UISidebar>
         </SidebarProvider>
-    )
+    );
 }

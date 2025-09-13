@@ -1,19 +1,16 @@
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     User,
     Mail,
     Phone,
-    Building,
-    MapPin,
     Calendar,
     Star,
     Package,
@@ -27,142 +24,138 @@ import {
     AlertCircle,
     Clock,
     Shield,
-} from "lucide-react"
-import { useAuth } from '@/hooks/useAuth'
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 function AffreteurProfile() {
-    const { user, updateUser } = useAuth()
-    const [isEditing, setIsEditing] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [kycUploading, setKycUploading] = useState<string | null>(null)
+    const { user } = useAuth();
+    const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [kycUploading, setKycUploading] = useState<string | null>(null);
     const [kycDocuments, setKycDocuments] = useState({
-        identityCard: { status: "verified", fileName: "carte_identite.pdf", uploadDate: "2024-01-15" },
-        businessLicense: { status: "pending", fileName: "licence_commerciale.pdf", uploadDate: "2024-01-20" },
-        taxCertificate: { status: "missing", fileName: null, uploadDate: null },
-        bankStatement: { status: "verified", fileName: "releve_bancaire.pdf", uploadDate: "2024-01-10" },
-    })
+        identityCard: { status: 'verified', fileName: 'carte_identite.pdf', uploadDate: '2024-01-15' },
+        businessLicense: {
+            status: 'pending',
+            fileName: 'licence_commerciale.pdf',
+            uploadDate: '2024-01-20',
+        },
+        taxCertificate: { status: 'missing', fileName: null, uploadDate: null },
+        bankStatement: {
+            status: 'verified',
+            fileName: 'releve_bancaire.pdf',
+            uploadDate: '2024-01-10',
+        },
+    });
 
     const [formData, setFormData] = useState({
-        name: user?.nom || "",
-        surname: user?.prenom || "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-        company: user?.company || "",
-        address: user?.address || "",
-    })
+        name: user?.firstName || '',
+        surname: user?.lastName || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+    });
 
-    if (!user) return null
+    if (!user) return null;
 
-    const handleKycUpload = async (documentType: string, file: File) => {
-        setKycUploading(documentType)
+    const handleKycUpload = async () => {
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 2000))
+            await new Promise((resolve) => setTimeout(resolve, 2000));
 
             setKycDocuments((prev) => ({
                 ...prev,
-                [documentType]: {
-                    status: "pending",
-                    fileName: file.name,
-                    uploadDate: new Date().toISOString().split("T")[0],
+                ['']: {
+                    status: 'pending',
+                    fileName: 'Name',
+                    uploadDate: new Date().toISOString().split('T')[0],
                 },
-            }))
+            }));
 
-            setMessage(`Document ${file.name} téléchargé avec succès. En attente de vérification.`)
-            setTimeout(() => setMessage(""), 3000)
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors du téléchargement du document")
+            console.error(error);
+            setMessage('Erreur lors du téléchargement du document');
         } finally {
-            setKycUploading(null)
+            setKycUploading(null);
         }
-    }
+    };
 
     const handleSave = async () => {
-        setIsLoading(true)
-        setMessage("")
+        setIsLoading(true);
+        setMessage('');
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            updateUser(formData)
-            setIsEditing(false)
-            setMessage("Profil mis à jour avec succès")
+            handleKycUpload();
+            setIsEditing(false);
+            setMessage('Profil mis à jour avec succès');
 
-            setTimeout(() => setMessage(""), 3000)
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors de la mise à jour du profil")
+            console.error(error);
+            setMessage('Erreur lors de la mise à jour du profil');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
-
-    const handleCancel = () => {
-        setFormData({
-            name: user.nom,
-            surname: user?.prenom,
-            email: user.email,
-            phone: user.phone || "",
-            company: user.company || "",
-            address: user.address || "",
-        })
-        setIsEditing(false)
     }
 
     const getKycStatusInfo = (status: string) => {
         switch (status) {
-            case "verified":
+            case 'verified':
                 return {
                     icon: CheckCircle,
-                    color: "text-green-600",
-                    bgColor: "bg-green-50",
-                    borderColor: "border-green-200",
-                    label: "Vérifié",
-                }
-            case "pending":
+                    color: 'text-green-600',
+                    bgColor: 'bg-green-50',
+                    borderColor: 'border-green-200',
+                    label: 'Vérifié',
+                };
+            case 'pending':
                 return {
                     icon: Clock,
-                    color: "text-yellow-600",
-                    bgColor: "bg-yellow-50",
-                    borderColor: "border-yellow-200",
-                    label: "En attente",
-                }
-            case "rejected":
+                    color: 'text-yellow-600',
+                    bgColor: 'bg-yellow-50',
+                    borderColor: 'border-yellow-200',
+                    label: 'En attente',
+                };
+            case 'rejected':
                 return {
                     icon: AlertCircle,
-                    color: "text-red-600",
-                    bgColor: "bg-red-50",
-                    borderColor: "border-red-200",
-                    label: "Rejeté",
-                }
+                    color: 'text-red-600',
+                    bgColor: 'bg-red-50',
+                    borderColor: 'border-red-200',
+                    label: 'Rejeté',
+                };
             default:
                 return {
                     icon: Upload,
-                    color: "text-gray-600",
-                    bgColor: "bg-gray-50",
-                    borderColor: "border-gray-200",
-                    label: "Manquant",
-                }
+                    color: 'text-gray-600',
+                    bgColor: 'bg-gray-50',
+                    borderColor: 'border-gray-200',
+                    label: 'Manquant',
+                };
         }
-    }
+    };
 
     const stats = [
-        { label: "Missions Créées", value: "47", icon: Package },
-        { label: "Missions Terminées", value: "44", icon: TrendingUp },
-        { label: "Note Moyenne", value: "4.8/5", icon: Star },
-        { label: "Membre Depuis", value: "Jan 2024", icon: Calendar },
-    ]
+        { label: 'Missions Créées', value: '47', icon: Package },
+        { label: 'Missions Terminées', value: '44', icon: TrendingUp },
+        { label: 'Note Moyenne', value: '4.8/5', icon: Star },
+        { label: 'Membre Depuis', value: 'Jan 2024', icon: Calendar },
+    ];
 
-    const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === "verified").length
-    const totalKycDocs = Object.keys(kycDocuments).length
-    const kycPercentage = (kycProgress / totalKycDocs) * 100
+    const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === 'verified').length;
+    const totalKycDocs = Object.keys(kycDocuments).length;
+    const kycPercentage = (kycProgress / totalKycDocs) * 100;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-                    <p className="text-muted-foreground">Gérez vos informations personnelles et vos préférences</p>
+                    <p className="text-muted-foreground">
+                        Gérez vos informations personnelles et vos préférences
+                    </p>
                 </div>
                 {!isEditing ? (
                     <Button onClick={() => setIsEditing(true)} className="gap-2">
@@ -173,9 +166,9 @@ function AffreteurProfile() {
                     <div className="flex gap-2">
                         <Button onClick={handleSave} disabled={isLoading} className="gap-2">
                             <Save className="h-4 w-4" />
-                            {isLoading ? "Sauvegarde..." : "Sauvegarder"}
+                            {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
                         </Button>
-                        <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+                        <Button variant="outline" disabled={isLoading}>
                             <X className="h-4 w-4" />
                             Annuler
                         </Button>
@@ -184,8 +177,8 @@ function AffreteurProfile() {
             </div>
 
             {message && (
-                <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : ""}>
-                    <AlertDescription className={message.includes("succès") ? "text-green-800" : ""}>
+                <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
+                    <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
                         {message}
                     </AlertDescription>
                 </Alert>
@@ -202,24 +195,24 @@ function AffreteurProfile() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center gap-4 mb-6">
                             <Avatar className="h-20 w-20">
-                                <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                                <AvatarImage src={'/placeholder.svg'} />
                                 <AvatarFallback
                                     className="text-lg"
-                                    style={{ backgroundColor: "var(--tsa-blue)", color: "white" }}
+                                    style={{ backgroundColor: 'var(--tsa-blue)', color: 'white' }}
                                 >
-                                    {user.nom
-                                        .split(" ")
+                                    {user.firstName
+                                        .split(' ')
                                         .map((n) => n[0])
-                                        .join("")}
+                                        .join('')}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <h3 className="text-lg font-semibold">{user.nom}</h3>
+                                <h3 className="text-lg font-semibold">{user.firstName}</h3>
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                     Affréteur
                                 </Badge>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    Membre depuis {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+                                    Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                                 </p>
                             </div>
                         </div>
@@ -269,7 +262,7 @@ function AffreteurProfile() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="company">Entreprise</Label>
                                 <div className="relative">
                                     <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -281,10 +274,10 @@ function AffreteurProfile() {
                                         className="pl-10"
                                     />
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label htmlFor="address">Adresse</Label>
                             <div className="relative">
                                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -297,7 +290,7 @@ function AffreteurProfile() {
                                     placeholder="Votre adresse complète"
                                 />
                             </div>
-                        </div>
+                        </div> */}
                     </CardContent>
                 </Card>
 
@@ -308,7 +301,7 @@ function AffreteurProfile() {
                             Documents KYC (Know Your Customer)
                             <Badge
                                 variant="outline"
-                                className={`ml-auto ${kycPercentage === 100 ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"}`}
+                                className={`ml-auto ${kycPercentage === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}
                             >
                                 {kycProgress}/{totalKycDocs} Vérifiés
                             </Badge>
@@ -333,8 +326,10 @@ function AffreteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-sm font-medium">{kycDocuments.identityCard.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.identityCard.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.identityCard.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-4 w-4 mr-2" />
@@ -344,9 +339,17 @@ function AffreteurProfile() {
                                     ) : (
                                         <div className="space-y-2">
                                             <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                                            <p className="text-sm text-muted-foreground">Glissez votre carte d'identité ici</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "identityCard"}>
-                                                {kycUploading === "identityCard" ? "Téléchargement..." : "Choisir un fichier"}
+                                            <p className="text-sm text-muted-foreground">
+                                                Glissez votre carte d'identité ici
+                                            </p>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'identityCard'}
+                                            >
+                                                {kycUploading === 'identityCard'
+                                                    ? 'Téléchargement...'
+                                                    : 'Choisir un fichier'}
                                             </Button>
                                         </div>
                                     )}
@@ -370,8 +373,10 @@ function AffreteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-sm font-medium">{kycDocuments.businessLicense.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.businessLicense.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.businessLicense.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-4 w-4 mr-2" />
@@ -381,9 +386,17 @@ function AffreteurProfile() {
                                     ) : (
                                         <div className="space-y-2">
                                             <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                                            <p className="text-sm text-muted-foreground">Licence d'exploitation commerciale</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "businessLicense"}>
-                                                {kycUploading === "businessLicense" ? "Téléchargement..." : "Choisir un fichier"}
+                                            <p className="text-sm text-muted-foreground">
+                                                Licence d'exploitation commerciale
+                                            </p>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'businessLicense'}
+                                            >
+                                                {kycUploading === 'businessLicense'
+                                                    ? 'Téléchargement...'
+                                                    : 'Choisir un fichier'}
                                             </Button>
                                         </div>
                                     )}
@@ -405,8 +418,14 @@ function AffreteurProfile() {
                                     <div className="space-y-2">
                                         <Upload className="h-8 w-8 mx-auto text-gray-400" />
                                         <p className="text-sm text-muted-foreground">Certificat de situation fiscale</p>
-                                        <Button variant="outline" size="sm" disabled={kycUploading === "taxCertificate"}>
-                                            {kycUploading === "taxCertificate" ? "Téléchargement..." : "Choisir un fichier"}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={kycUploading === 'taxCertificate'}
+                                        >
+                                            {kycUploading === 'taxCertificate'
+                                                ? 'Téléchargement...'
+                                                : 'Choisir un fichier'}
                                         </Button>
                                     </div>
                                 </div>
@@ -429,8 +448,10 @@ function AffreteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-sm font-medium">{kycDocuments.bankStatement.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.bankStatement.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.bankStatement.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-4 w-4 mr-2" />
@@ -440,9 +461,17 @@ function AffreteurProfile() {
                                     ) : (
                                         <div className="space-y-2">
                                             <Upload className="h-8 w-8 mx-auto text-gray-400" />
-                                            <p className="text-sm text-muted-foreground">Relevé bancaire récent (3 mois)</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "bankStatement"}>
-                                                {kycUploading === "bankStatement" ? "Téléchargement..." : "Choisir un fichier"}
+                                            <p className="text-sm text-muted-foreground">
+                                                Relevé bancaire récent (3 mois)
+                                            </p>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'bankStatement'}
+                                            >
+                                                {kycUploading === 'bankStatement'
+                                                    ? 'Téléchargement...'
+                                                    : 'Choisir un fichier'}
                                             </Button>
                                         </div>
                                     )}
@@ -459,7 +488,8 @@ function AffreteurProfile() {
                                     <h4 className="text-sm font-medium text-blue-900">Pourquoi ces documents ?</h4>
                                     <p className="text-sm text-blue-700">
                                         La vérification KYC nous permet de sécuriser la plateforme et de respecter les
-                                        réglementations. Vos documents sont traités de manière confidentielle et sécurisée.
+                                        réglementations. Vos documents sont traités de manière confidentielle et
+                                        sécurisée.
                                     </p>
                                     <ul className="text-xs text-blue-600 mt-2 space-y-1">
                                         <li>• Formats acceptés: PDF, JPG, PNG (max 5MB)</li>
@@ -525,7 +555,7 @@ function AffreteurProfile() {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default AffreteurProfile
+export default AffreteurProfile;

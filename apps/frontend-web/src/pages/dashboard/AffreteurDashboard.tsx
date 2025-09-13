@@ -1,70 +1,77 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Plus, FileText, Package, MapPin, Euro, Clock, CheckCircle, TrendingUp, Users } from "lucide-react"
-import { Link } from "react-router-dom"
-import { useAuthStore } from '@/stores/user'
-
-// Mock data spécifique aux affréteurs
-const affreteurKPIData = {
-    totalMissions: 24,
-    activeMissions: 8,
-    pendingQuotes: 5,
-    monthlySpending: 45600,
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import {
+    Plus,
+    FileText,
+    Package,
+    MapPin,
+    Euro,
+    Clock,
+    CheckCircle,
+    TrendingUp,
+    Users,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const affreteurInsights = [
     {
-        title: "Missions Actives",
+        title: 'Missions Actives',
         icon: Package,
         value: 8,
-        change: "+2 cette semaine",
-        color: "blue",
-        href: "/affreteur/missions/active",
+        change: '+2 cette semaine',
+        color: 'blue',
+        href: '/affreteur/missions/active',
     },
     {
-        title: "Coût Moyen",
+        title: 'Coût Moyen',
         icon: Euro,
-        value: "1,900 FCFA",
-        change: "-5% ce mois",
-        color: "green",
-        href: "/affreteur/reports/costs",
+        value: '1,900 FCFA',
+        change: '-5% ce mois',
+        color: 'green',
+        href: '/affreteur/reports/costs',
     },
     {
-        title: "Transporteurs Favoris",
+        title: 'Transporteurs Favoris',
         icon: Users,
         value: 12,
-        change: "+3 nouveaux",
-        color: "purple",
-        href: "/affreteur/marketplace/transporters",
+        change: '+3 nouveaux',
+        color: 'purple',
+        href: '/affreteur/marketplace/transporters',
     },
     {
-        title: "Taux de Réussite",
+        title: 'Taux de Réussite',
         icon: CheckCircle,
-        value: "94%",
-        change: "+2% ce mois",
-        color: "green",
-        href: "/affreteur/reports/missions",
+        value: '94%',
+        change: '+2% ce mois',
+        color: 'green',
+        href: '/affreteur/reports/missions',
     },
-]
+];
 
 function AffreteurDashboard() {
-    const user = useAuthStore((s) => s.currentUser)
-    if (!user) return null
+    const { user } = useAuth();
+    if (!user) return null;
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        Bonjour, {user.prenom} {user.nom}
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Système en ligne" />
+                        Bonjour, {user.fullName}
+                        <div
+                            className="w-2 h-2 bg-green-500 rounded-full animate-pulse"
+                            title="Système en ligne"
+                        />
                     </h1>
-                    <p className="text-muted-foreground">Gérez vos expéditions et suivez vos missions en temps réel.</p>
+                    <p className="text-muted-foreground">
+                        Gérez vos expéditions et suivez vos missions en temps réel.
+                    </p>
                 </div>
                 <div className="flex gap-3">
                     <Link to="/app/missions/create">
-                        <Button className="gap-2" style={{ backgroundColor: "var(--tsa-blue)" }}>
+                        <Button className="gap-2" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                             <Plus className="h-4 w-4" />
                             Créer Mission
                         </Button>
@@ -124,41 +131,41 @@ function AffreteurDashboard() {
                         <div className="space-y-4">
                             {[
                                 {
-                                    id: "TSA-AF-001",
-                                    route: "Douala → Yaoundé",
-                                    transporteur: "Paul Transport",
-                                    status: "En Transit",
-                                    eta: "2h 30m",
+                                    id: 'TSA-AF-001',
+                                    route: 'Douala → Yaoundé',
+                                    transporteur: 'Paul Transport',
+                                    status: 'En Transit',
+                                    eta: '2h 30m',
                                     progress: 65,
-                                    cost: "2,500 FCFA",
+                                    cost: '2,500 FCFA',
                                 },
                                 {
-                                    id: "TSA-AF-002",
-                                    route: "Yaoundé → Bafoussam",
-                                    transporteur: "Express Nord",
-                                    status: "Livré",
-                                    eta: "Terminé",
+                                    id: 'TSA-AF-002',
+                                    route: 'Yaoundé → Bafoussam',
+                                    transporteur: 'Express Nord',
+                                    status: 'Livré',
+                                    eta: 'Terminé',
                                     progress: 100,
-                                    cost: "1,800 FCFA",
+                                    cost: '1,800 FCFA',
                                 },
                                 {
-                                    id: "TSA-AF-003",
-                                    route: "Douala → Bamenda",
-                                    transporteur: "Camions Rapides",
-                                    status: "Chargement",
-                                    eta: "4h 15m",
+                                    id: 'TSA-AF-003',
+                                    route: 'Douala → Bamenda',
+                                    transporteur: 'Camions Rapides',
+                                    status: 'Chargement',
+                                    eta: '4h 15m',
                                     progress: 15,
-                                    cost: "3,200 FCFA",
+                                    cost: '3,200 FCFA',
                                 },
                             ].map((mission, i) => (
                                 <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
                                     <div className="flex items-center gap-3">
                                         <div
-                                            className={`w-2 h-2 rounded-full ${mission.status === "Livré"
-                                                ? "bg-green-500"
-                                                : mission.status === "En Transit"
-                                                    ? "bg-blue-500 animate-pulse"
-                                                    : "bg-orange-500"
+                                            className={`w-2 h-2 rounded-full ${mission.status === 'Livré'
+                                                ? 'bg-green-500'
+                                                : mission.status === 'En Transit'
+                                                    ? 'bg-blue-500 animate-pulse'
+                                                    : 'bg-orange-500'
                                                 }`}
                                         ></div>
                                         <div>
@@ -231,21 +238,27 @@ function AffreteurDashboard() {
                                     <Euro className="h-4 w-4 text-blue-600" />
                                     <p className="text-sm font-medium text-blue-800">Optimisation Coûts</p>
                                 </div>
-                                <p className="text-xs text-blue-600">Groupez vos missions Douala-Yaoundé pour économiser 15%</p>
+                                <p className="text-xs text-blue-600">
+                                    Groupez vos missions Douala-Yaoundé pour économiser 15%
+                                </p>
                             </div>
                             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Users className="h-4 w-4 text-green-600" />
                                     <p className="text-sm font-medium text-green-800">Nouveau Transporteur</p>
                                 </div>
-                                <p className="text-xs text-green-600">"Express Logistics" disponible sur votre route préférée</p>
+                                <p className="text-xs text-green-600">
+                                    "Express Logistics" disponible sur votre route préférée
+                                </p>
                             </div>
                             <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Clock className="h-4 w-4 text-orange-600" />
                                     <p className="text-sm font-medium text-orange-800">Planification</p>
                                 </div>
-                                <p className="text-xs text-orange-600">Évitez les heures de pointe demain 14h-17h sur Douala</p>
+                                <p className="text-xs text-orange-600">
+                                    Évitez les heures de pointe demain 14h-17h sur Douala
+                                </p>
                             </div>
                         </div>
                     </CardContent>
@@ -276,12 +289,14 @@ function AffreteurDashboard() {
                             <span className="font-semibold text-green-600">2,300 FCFA</span>
                         </div>
                         <Progress value={92} className="w-full" />
-                        <p className="text-xs text-muted-foreground text-center">92% de vos missions livrées à temps</p>
+                        <p className="text-xs text-muted-foreground text-center">
+                            92% de vos missions livrées à temps
+                        </p>
                     </CardContent>
                 </Card>
             </div>
         </div>
-    )
+    );
 }
 
-export default AffreteurDashboard
+export default AffreteurDashboard;

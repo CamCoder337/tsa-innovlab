@@ -1,21 +1,38 @@
-import { useState } from 'react'
-import { useAuth } from "@/hooks/useAuth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
-import { Bell, Shield, Eye, EyeOff, Save, Smartphone, Mail, MapPin, Truck, Clock } from "lucide-react"
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import {
+    Bell,
+    Shield,
+    Eye,
+    EyeOff,
+    Save,
+    Smartphone,
+    Mail,
+    MapPin,
+    Truck,
+    Clock,
+} from 'lucide-react';
 
 function TransporteurSettings() {
-    const { user } = useAuth()
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-    const [showNewPassword, setShowNewPassword] = useState(false)
+    const { user } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     const [notifications, setNotifications] = useState({
         email: true,
@@ -24,77 +41,81 @@ function TransporteurSettings() {
         newMissions: true,
         routeUpdates: true,
         paymentAlerts: true,
-    })
+    });
 
     const [preferences, setPreferences] = useState({
-        language: "fr",
-        currency: "FCFA",
-        timezone: "Africa/Douala",
+        language: 'fr',
+        currency: 'FCFA',
+        timezone: 'Africa/Douala',
         autoAccept: false,
         maxDistance: 500,
-        workingHours: { start: "06:00", end: "20:00" },
-    })
+        workingHours: { start: '06:00', end: '20:00' },
+    });
 
     const [passwordData, setPasswordData] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-    })
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
 
-    if (!user) return null
+    if (!user) return null;
 
     const handleSaveSettings = async () => {
-        setIsLoading(true)
-        setMessage("")
+        setIsLoading(true);
+        setMessage('');
 
         try {
             // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setMessage("Paramètres sauvegardés avec succès")
-            setTimeout(() => setMessage(""), 3000)
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setMessage('Paramètres sauvegardés avec succès');
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors de la sauvegarde")
+            console.error(error);
+            setMessage('Erreur lors de la sauvegarde');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
     const handlePasswordChange = async () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage("Les mots de passe ne correspondent pas")
-            return
+            setMessage('Les mots de passe ne correspondent pas');
+            return;
         }
 
-        setIsLoading(true)
+        setIsLoading(true);
         try {
             // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setMessage("Mot de passe modifié avec succès")
-            setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
-            setTimeout(() => setMessage(""), 3000)
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setMessage('Mot de passe modifié avec succès');
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors du changement de mot de passe")
+            console.error(error);
+            setMessage('Erreur lors du changement de mot de passe');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-                    <p className="text-muted-foreground">Configurez vos préférences de travail et paramètres de compte</p>
+                    <p className="text-muted-foreground">
+                        Configurez vos préférences de travail et paramètres de compte
+                    </p>
                 </div>
                 <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
                     <Save className="h-4 w-4" />
-                    {isLoading ? "Sauvegarde..." : "Sauvegarder"}
+                    {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
                 </Button>
             </div>
 
             {message && (
-                <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : ""}>
-                    <AlertDescription className={message.includes("succès") ? "text-green-800" : ""}>
+                <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
+                    <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
                         {message}
                     </AlertDescription>
                 </Alert>
@@ -116,7 +137,9 @@ function TransporteurSettings() {
                             </div>
                             <Switch
                                 checked={notifications.email}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, email: checked })
+                                }
                             />
                         </div>
 
@@ -148,7 +171,9 @@ function TransporteurSettings() {
                             <span className="text-sm">Nouvelles missions</span>
                             <Switch
                                 checked={notifications.newMissions}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, newMissions: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, newMissions: checked })
+                                }
                             />
                         </div>
 
@@ -156,7 +181,9 @@ function TransporteurSettings() {
                             <span className="text-sm">Mises à jour d'itinéraire</span>
                             <Switch
                                 checked={notifications.routeUpdates}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, routeUpdates: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, routeUpdates: checked })
+                                }
                             />
                         </div>
 
@@ -164,7 +191,9 @@ function TransporteurSettings() {
                             <span className="text-sm">Alertes de paiement</span>
                             <Switch
                                 checked={notifications.paymentAlerts}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, paymentAlerts: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, paymentAlerts: checked })
+                                }
                             />
                         </div>
                     </CardContent>
@@ -201,7 +230,9 @@ function TransporteurSettings() {
                                 <Input
                                     type="number"
                                     value={preferences.maxDistance}
-                                    onChange={(e) => setPreferences({ ...preferences, maxDistance: Number(e.target.value) })}
+                                    onChange={(e) =>
+                                        setPreferences({ ...preferences, maxDistance: Number(e.target.value) })
+                                    }
                                     className="pl-10"
                                 />
                             </div>
@@ -247,7 +278,9 @@ function TransporteurSettings() {
                             <span className="text-sm">Acceptation automatique</span>
                             <Switch
                                 checked={preferences.autoAccept}
-                                onCheckedChange={(checked) => setPreferences({ ...preferences, autoAccept: checked })}
+                                onCheckedChange={(checked) =>
+                                    setPreferences({ ...preferences, autoAccept: checked })
+                                }
                             />
                         </div>
                     </CardContent>
@@ -267,9 +300,11 @@ function TransporteurSettings() {
                                 <div className="relative">
                                     <Input
                                         id="currentPassword"
-                                        type={showCurrentPassword ? "text" : "password"}
+                                        type={showCurrentPassword ? 'text' : 'password'}
                                         value={passwordData.currentPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                        onChange={(e) =>
+                                            setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                                        }
                                         placeholder="Mot de passe actuel"
                                     />
                                     <Button
@@ -279,7 +314,11 @@ function TransporteurSettings() {
                                         className="absolute right-0 top-0 h-full px-3"
                                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                     >
-                                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        {showCurrentPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
@@ -289,9 +328,11 @@ function TransporteurSettings() {
                                 <div className="relative">
                                     <Input
                                         id="newPassword"
-                                        type={showNewPassword ? "text" : "password"}
+                                        type={showNewPassword ? 'text' : 'password'}
                                         value={passwordData.newPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                        onChange={(e) =>
+                                            setPasswordData({ ...passwordData, newPassword: e.target.value })
+                                        }
                                         placeholder="Nouveau mot de passe"
                                     />
                                     <Button
@@ -312,7 +353,9 @@ function TransporteurSettings() {
                                     id="confirmPassword"
                                     type="password"
                                     value={passwordData.confirmPassword}
-                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                    onChange={(e) =>
+                                        setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                                    }
                                     placeholder="Confirmer le mot de passe"
                                 />
                             </div>
@@ -326,8 +369,7 @@ function TransporteurSettings() {
                 </Card>
             </div>
         </div>
-
-    )
+    );
 }
 
-export default TransporteurSettings
+export default TransporteurSettings;

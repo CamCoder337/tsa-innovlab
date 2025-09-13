@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Users,
     Package,
@@ -14,75 +14,14 @@ import {
     BarChart3,
     PieChart,
     Activity,
-} from "lucide-react"
+} from 'lucide-react';
+import { useDashboard } from '@/hooks/useDashboard';
 
 export default function AdminDashboard() {
-    const [activeTab, setActiveTab] = useState("overview")
+    const [activeTab, setActiveTab] = useState('overview');
 
-    // Données de démonstration
-    const stats = {
-        totalUsers: 1247,
-        activeShippers: 342,
-        activeCarriers: 189,
-        totalMissions: 2856,
-        activeMissions: 127,
-        completedMissions: 2634,
-        totalRevenue: 45680000,
-        monthlyRevenue: 3240000,
-        pendingIssues: 8,
-    }
-
-    const recentMissions = [
-        {
-            id: "TSA-001",
-            title: "Transport Électronique Douala → Yaoundé",
-            shipper: "Tech Solutions SARL",
-            carrier: "Jean-Paul Mbarga",
-            status: "en_transit",
-            value: 420000,
-        },
-        {
-            id: "TSA-002",
-            title: "Matériaux Construction Bafoussam → Bamenda",
-            shipper: "BTP Cameroun",
-            carrier: "Marie Fotso Transport",
-            status: "en_negociation",
-            value: 280000,
-        },
-        {
-            id: "TSA-003",
-            title: "Produits Alimentaires Garoua → N'Djamena",
-            shipper: "Agro-Export SARL",
-            carrier: "Non assigné",
-            status: "ouverte",
-            value: 680000,
-        },
-    ]
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "en_transit":
-                return "bg-yellow-100 text-yellow-800"
-            case "en_negociation":
-                return "bg-orange-100 text-orange-800"
-            case "ouverte":
-                return "bg-blue-100 text-blue-800"
-            case "terminee":
-                return "bg-green-100 text-green-800"
-            default:
-                return "bg-gray-100 text-gray-800"
-        }
-    }
-
-    const getStatusLabel = (status: string) => {
-        const labels = {
-            en_transit: "EN TRANSIT",
-            en_negociation: "EN NÉGOCIATION",
-            ouverte: "OUVERTE",
-            terminee: "TERMINÉE",
-        }
-        return labels[status as keyof typeof labels] || status.toUpperCase()
-    }
+    // Store hooks
+    const { stats, recentActivities } = useDashboard();
 
     return (
         <div className="flex-1">
@@ -109,7 +48,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Utilisateurs Total</p>
-                                        <p className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.overview.totalUsers.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -123,7 +64,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Missions Total</p>
-                                        <p className="text-2xl font-bold">{stats.totalMissions.toLocaleString()}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.overview.totalMissions.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -137,7 +80,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Revenus Total</p>
-                                        <p className="text-2xl font-bold">{(stats.totalRevenue / 1000000).toFixed(1)}M FCFA</p>
+                                        <p className="text-2xl font-bold">
+                                            {((stats?.overview.totalRevenue || 0) / 1000000).toFixed(1)}M FCFA
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -151,7 +96,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Problèmes en Attente</p>
-                                        <p className="text-2xl font-bold">{stats.pendingIssues}</p>
+                                        <p className="text-2xl font-bold">8</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -219,7 +164,7 @@ export default function AdminDashboard() {
                                     <div className="flex justify-between items-center">
                                         <span className="text-sm text-gray-600">Revenus ce mois</span>
                                         <span className="font-medium text-green-600">
-                                            {(stats.monthlyRevenue / 1000000).toFixed(1)}M FCFA
+                                            {((stats?.revenue.thisMonth || 0) / 1000000).toFixed(1)}M FCFA
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center">
@@ -237,19 +182,26 @@ export default function AdminDashboard() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {recentMissions.map((mission) => (
-                                    <div key={mission.id} className="flex items-center justify-between p-4 border rounded-lg">
+                                {(recentActivities || []).slice(0, 3).map((activity) => (
+                                    <div
+                                        key={activity.id}
+                                        className="flex items-center justify-between p-4 border rounded-lg"
+                                    >
                                         <div className="flex-1">
-                                            <h4 className="font-medium text-gray-900">{mission.title}</h4>
+                                            <h4 className="font-medium text-gray-900">{activity.title}</h4>
                                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                                                <span>Affréteur: {mission.shipper}</span>
+                                                <span>Type: {activity.type}</span>
                                                 <span>•</span>
-                                                <span>Transporteur: {mission.carrier}</span>
+                                                <span>Utilisateur: {activity.userId}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <span className="font-medium">{mission.value.toLocaleString()} FCFA</span>
-                                            <Badge className={getStatusColor(mission.status)}>{getStatusLabel(mission.status)}</Badge>
+                                            <span className="font-medium">
+                                                {new Date(activity.timestamp).toLocaleDateString()}
+                                            </span>
+                                            <Badge className="bg-blue-100 text-blue-800">
+                                                {activity.type.toUpperCase()}
+                                            </Badge>
                                         </div>
                                     </div>
                                 ))}
@@ -268,7 +220,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Affréteurs Actifs</p>
-                                        <p className="text-2xl font-bold">{stats.activeShippers}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.overview.activeAffreteurs.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -282,7 +236,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Transporteurs Actifs</p>
-                                        <p className="text-2xl font-bold">{stats.activeCarriers}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.overview.activeTransporteurs.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -308,7 +264,9 @@ export default function AdminDashboard() {
                             <CardTitle>Gestion des Utilisateurs</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-600">Interface de gestion des utilisateurs à implémenter...</p>
+                            <p className="text-gray-600">
+                                Interface de gestion des utilisateurs à implémenter...
+                            </p>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -323,7 +281,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Missions Actives</p>
-                                        <p className="text-2xl font-bold">{stats.activeMissions}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.missions.inProgress.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -337,7 +297,9 @@ export default function AdminDashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600">Missions Terminées</p>
-                                        <p className="text-2xl font-bold">{stats.completedMissions}</p>
+                                        <p className="text-2xl font-bold">
+                                            {stats?.missions.completed.toLocaleString() || '0'}
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -363,7 +325,9 @@ export default function AdminDashboard() {
                             <CardTitle>Supervision des Missions</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-600">Interface de supervision des missions à implémenter...</p>
+                            <p className="text-gray-600">
+                                Interface de supervision des missions à implémenter...
+                            </p>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -397,5 +361,5 @@ export default function AdminDashboard() {
                 </TabsContent>
             </Tabs>
         </div>
-    )
+    );
 }

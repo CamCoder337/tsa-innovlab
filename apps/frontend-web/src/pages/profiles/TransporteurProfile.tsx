@@ -1,21 +1,18 @@
-import { useState } from 'react'
-import { useAuth } from "@/hooks/useAuth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import {
     User,
     Mail,
     Phone,
-    Building,
-    MapPin,
     Calendar,
     Star,
     Truck,
@@ -30,152 +27,150 @@ import {
     CheckCircle,
     AlertCircle,
     Clock,
-} from "lucide-react"
+} from 'lucide-react';
 
 function TransporteurProfile() {
-    const { user, updateUser } = useAuth()
-    const [isEditing, setIsEditing] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [kycUploading, setKycUploading] = useState<string | null>(null)
+    const { user } = useAuth();
+    const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [kycUploading, setKycUploading] = useState<string | null>(null);
     const [kycDocuments, setKycDocuments] = useState({
-        identityCard: { status: "verified", fileName: "carte_identite.pdf", uploadDate: "2024-01-15" },
-        drivingLicense: { status: "verified", fileName: "permis_conduire.pdf", uploadDate: "2024-01-12" },
-        vehicleRegistration: { status: "pending", fileName: "carte_grise.pdf", uploadDate: "2024-01-20" },
-        insurance: { status: "verified", fileName: "assurance_vehicule.pdf", uploadDate: "2024-01-10" },
-        technicalControl: { status: "missing", fileName: null, uploadDate: null },
-        professionalLicense: { status: "verified", fileName: "licence_transport.pdf", uploadDate: "2024-01-08" },
-    })
+        identityCard: { status: 'verified', fileName: 'carte_identite.pdf', uploadDate: '2024-01-15' },
+        drivingLicense: {
+            status: 'verified',
+            fileName: 'permis_conduire.pdf',
+            uploadDate: '2024-01-12',
+        },
+        vehicleRegistration: {
+            status: 'pending',
+            fileName: 'carte_grise.pdf',
+            uploadDate: '2024-01-20',
+        },
+        insurance: { status: 'verified', fileName: 'assurance_vehicule.pdf', uploadDate: '2024-01-10' },
+        technicalControl: { status: 'missing', fileName: null, uploadDate: null },
+        professionalLicense: {
+            status: 'verified',
+            fileName: 'licence_transport.pdf',
+            uploadDate: '2024-01-08',
+        },
+    });
 
     const [formData, setFormData] = useState({
-        name: user?.nom || "",
-        surname: user?.prenom || "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-        company: user?.company || "",
-        address: user?.address || "",
-    })
+        name: user?.firstName || '',
+        surname: user?.lastName || '',
+        email: user?.email || '',
+        phone: user?.phone || ''
+    });
 
-    if (!user) return null
+    if (!user) return null;
 
-    const handleKycUpload = async (documentType: string, file: File) => {
-        setKycUploading(documentType)
+    const handleKycUpload = async () => {
 
         try {
-            // Simulation d'upload
-            await new Promise((resolve) => setTimeout(resolve, 2000))
+            await new Promise((resolve) => setTimeout(resolve, 2000));
 
             setKycDocuments((prev) => ({
                 ...prev,
-                [documentType]: {
-                    status: "pending",
-                    fileName: file.name,
-                    uploadDate: new Date().toISOString().split("T")[0],
+                ['']: {
+                    status: 'pending',
+                    fileName: 'Name',
+                    uploadDate: new Date().toISOString().split('T')[0],
                 },
-            }))
+            }));
 
-            setMessage(`Document ${file.name} téléchargé avec succès. En attente de vérification.`)
-            setTimeout(() => setMessage(""), 3000)
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors du téléchargement du document")
+            console.error(error);
+            setMessage('Erreur lors du téléchargement du document');
         } finally {
-            setKycUploading(null)
+            setKycUploading(null);
         }
-    }
+    };
 
     const handleSave = async () => {
-        setIsLoading(true)
-        setMessage("")
+        setIsLoading(true);
+        setMessage('');
 
         try {
-            // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            updateUser(formData)
-            setIsEditing(false)
-            setMessage("Profil mis à jour avec succès")
+            handleKycUpload();
+            setIsEditing(false);
+            setMessage('Profil mis à jour avec succès');
 
-            setTimeout(() => setMessage(""), 3000)
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors de la mise à jour du profil")
+            console.error(error);
+            setMessage('Erreur lors de la mise à jour du profil');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
-
-    const handleCancel = () => {
-        setFormData({
-            name: user.nom,
-            surname: user?.prenom,
-            email: user.email,
-            phone: user.phone || "",
-            company: user.company || "",
-            address: user.address || "",
-        })
-        setIsEditing(false)
     }
 
     const getKycStatusInfo = (status: string) => {
         switch (status) {
-            case "verified":
+            case 'verified':
                 return {
                     icon: CheckCircle,
-                    color: "text-green-600",
-                    bgColor: "bg-green-50",
-                    borderColor: "border-green-200",
-                    label: "Vérifié",
-                }
-            case "pending":
+                    color: 'text-green-600',
+                    bgColor: 'bg-green-50',
+                    borderColor: 'border-green-200',
+                    label: 'Vérifié',
+                };
+            case 'pending':
                 return {
                     icon: Clock,
-                    color: "text-yellow-600",
-                    bgColor: "bg-yellow-50",
-                    borderColor: "border-yellow-200",
-                    label: "En attente",
-                }
-            case "rejected":
+                    color: 'text-yellow-600',
+                    bgColor: 'bg-yellow-50',
+                    borderColor: 'border-yellow-200',
+                    label: 'En attente',
+                };
+            case 'rejected':
                 return {
                     icon: AlertCircle,
-                    color: "text-red-600",
-                    bgColor: "bg-red-50",
-                    borderColor: "border-red-200",
-                    label: "Rejeté",
-                }
+                    color: 'text-red-600',
+                    bgColor: 'bg-red-50',
+                    borderColor: 'border-red-200',
+                    label: 'Rejeté',
+                };
             default:
                 return {
                     icon: Upload,
-                    color: "text-gray-600",
-                    bgColor: "bg-gray-50",
-                    borderColor: "border-gray-200",
-                    label: "Manquant",
-                }
+                    color: 'text-gray-600',
+                    bgColor: 'bg-gray-50',
+                    borderColor: 'border-gray-200',
+                    label: 'Manquant',
+                };
         }
-    }
+    };
 
     const stats = [
-        { label: "Missions Terminées", value: "89", icon: Truck },
-        { label: "Note Moyenne", value: "4.9/5", icon: Star },
-        { label: "Taux de Réussite", value: "98%", icon: Award },
-        { label: "Membre Depuis", value: "Jan 2024", icon: Calendar },
-    ]
+        { label: 'Missions Terminées', value: '89', icon: Truck },
+        { label: 'Note Moyenne', value: '4.9/5', icon: Star },
+        { label: 'Taux de Réussite', value: '98%', icon: Award },
+        { label: 'Membre Depuis', value: 'Jan 2024', icon: Calendar },
+    ];
 
     const vehicleInfo = {
-        model: "Mercedes Actros",
-        plate: "CM-123-AB",
-        capacity: "25 tonnes",
-        mileage: "45,230 km",
-    }
+        model: 'Mercedes Actros',
+        plate: 'CM-123-AB',
+        capacity: '25 tonnes',
+        mileage: '45,230 km',
+    };
 
-    const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === "verified").length
-    const totalKycDocs = Object.keys(kycDocuments).length
-    const kycPercentage = (kycProgress / totalKycDocs) * 100
+    const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === 'verified').length;
+    const totalKycDocs = Object.keys(kycDocuments).length;
+    const kycPercentage = (kycProgress / totalKycDocs) * 100;
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-                    <p className="text-muted-foreground">Gérez vos informations personnelles et votre véhicule</p>
+                    <p className="text-muted-foreground">
+                        Gérez vos informations personnelles et votre véhicule
+                    </p>
                 </div>
                 {!isEditing ? (
                     <Button onClick={() => setIsEditing(true)} className="gap-2">
@@ -186,9 +181,9 @@ function TransporteurProfile() {
                     <div className="flex gap-2">
                         <Button onClick={handleSave} disabled={isLoading} className="gap-2">
                             <Save className="h-4 w-4" />
-                            {isLoading ? "Sauvegarde..." : "Sauvegarder"}
+                            {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
                         </Button>
-                        <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
+                        <Button variant="outline" disabled={isLoading}>
                             <X className="h-4 w-4" />
                             Annuler
                         </Button>
@@ -197,8 +192,8 @@ function TransporteurProfile() {
             </div>
 
             {message && (
-                <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : ""}>
-                    <AlertDescription className={message.includes("succès") ? "text-green-800" : ""}>
+                <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
+                    <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
                         {message}
                     </AlertDescription>
                 </Alert>
@@ -215,19 +210,19 @@ function TransporteurProfile() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center gap-4 mb-6">
                             <Avatar className="h-20 w-20">
-                                <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                                <AvatarImage src={'/placeholder.svg'} />
                                 <AvatarFallback
                                     className="text-lg"
-                                    style={{ backgroundColor: "var(--tsa-blue)", color: "white" }}
+                                    style={{ backgroundColor: 'var(--tsa-blue)', color: 'white' }}
                                 >
-                                    {user.nom
-                                        .split(" ")
+                                    {user.firstName
+                                        .split(' ')
                                         .map((n) => n[0])
-                                        .join("")}
+                                        .join('')}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
-                                <h3 className="text-lg font-semibold">{user.nom}</h3>
+                                <h3 className="text-lg font-semibold">{user.firstName}</h3>
                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                     Transporteur
                                 </Badge>
@@ -283,7 +278,7 @@ function TransporteurProfile() {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
+                            {/* <div className="space-y-2">
                                 <Label htmlFor="company">Entreprise</Label>
                                 <div className="relative">
                                     <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -295,10 +290,10 @@ function TransporteurProfile() {
                                         className="pl-10"
                                     />
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label htmlFor="address">Adresse</Label>
                             <div className="relative">
                                 <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -311,7 +306,7 @@ function TransporteurProfile() {
                                     placeholder="Votre adresse complète"
                                 />
                             </div>
-                        </div>
+                        </div> */}
                     </CardContent>
                 </Card>
 
@@ -322,7 +317,7 @@ function TransporteurProfile() {
                             Documents KYC & Certifications Transport
                             <Badge
                                 variant="outline"
-                                className={`ml-auto ${kycPercentage === 100 ? "bg-green-50 text-green-700 border-green-200" : "bg-yellow-50 text-yellow-700 border-yellow-200"}`}
+                                className={`ml-auto ${kycPercentage === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}
                             >
                                 {kycProgress}/{totalKycDocs} Vérifiés
                             </Badge>
@@ -347,8 +342,10 @@ function TransporteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-xs font-medium">{kycDocuments.identityCard.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.identityCard.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.identityCard.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-3 w-3 mr-1" />
@@ -359,8 +356,12 @@ function TransporteurProfile() {
                                         <div className="space-y-2">
                                             <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                             <p className="text-xs text-muted-foreground">Carte d'identité</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "identityCard"}>
-                                                {kycUploading === "identityCard" ? "Upload..." : "Choisir"}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'identityCard'}
+                                            >
+                                                {kycUploading === 'identityCard' ? 'Upload...' : 'Choisir'}
                                             </Button>
                                         </div>
                                     )}
@@ -384,8 +385,10 @@ function TransporteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-xs font-medium">{kycDocuments.drivingLicense.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.drivingLicense.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.drivingLicense.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-3 w-3 mr-1" />
@@ -396,8 +399,12 @@ function TransporteurProfile() {
                                         <div className="space-y-2">
                                             <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                             <p className="text-xs text-muted-foreground">Permis poids lourd</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "drivingLicense"}>
-                                                {kycUploading === "drivingLicense" ? "Upload..." : "Choisir"}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'drivingLicense'}
+                                            >
+                                                {kycUploading === 'drivingLicense' ? 'Upload...' : 'Choisir'}
                                             </Button>
                                         </div>
                                     )}
@@ -419,10 +426,14 @@ function TransporteurProfile() {
                                     {kycDocuments.vehicleRegistration.fileName ? (
                                         <div className="space-y-2">
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
-                                            <p className="text-xs font-medium">{kycDocuments.vehicleRegistration.fileName}</p>
+                                            <p className="text-xs font-medium">
+                                                {kycDocuments.vehicleRegistration.fileName}
+                                            </p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.vehicleRegistration.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.vehicleRegistration.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-3 w-3 mr-1" />
@@ -433,8 +444,12 @@ function TransporteurProfile() {
                                         <div className="space-y-2">
                                             <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                             <p className="text-xs text-muted-foreground">Immatriculation véhicule</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "vehicleRegistration"}>
-                                                {kycUploading === "vehicleRegistration" ? "Upload..." : "Choisir"}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'vehicleRegistration'}
+                                            >
+                                                {kycUploading === 'vehicleRegistration' ? 'Upload...' : 'Choisir'}
                                             </Button>
                                         </div>
                                     )}
@@ -458,7 +473,8 @@ function TransporteurProfile() {
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
                                             <p className="text-xs font-medium">{kycDocuments.insurance.fileName}</p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le {new Date(kycDocuments.insurance.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.insurance.uploadDate!).toLocaleDateString('fr-FR')}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-3 w-3 mr-1" />
@@ -469,8 +485,8 @@ function TransporteurProfile() {
                                         <div className="space-y-2">
                                             <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                             <p className="text-xs text-muted-foreground">Attestation assurance</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "insurance"}>
-                                                {kycUploading === "insurance" ? "Upload..." : "Choisir"}
+                                            <Button variant="outline" size="sm" disabled={kycUploading === 'insurance'}>
+                                                {kycUploading === 'insurance' ? 'Upload...' : 'Choisir'}
                                             </Button>
                                         </div>
                                     )}
@@ -492,8 +508,12 @@ function TransporteurProfile() {
                                     <div className="space-y-2">
                                         <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                         <p className="text-xs text-muted-foreground">Certificat contrôle technique</p>
-                                        <Button variant="outline" size="sm" disabled={kycUploading === "technicalControl"}>
-                                            {kycUploading === "technicalControl" ? "Upload..." : "Choisir"}
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={kycUploading === 'technicalControl'}
+                                        >
+                                            {kycUploading === 'technicalControl' ? 'Upload...' : 'Choisir'}
                                         </Button>
                                     </div>
                                 </div>
@@ -514,10 +534,14 @@ function TransporteurProfile() {
                                     {kycDocuments.professionalLicense.fileName ? (
                                         <div className="space-y-2">
                                             <FileText className="h-8 w-8 mx-auto text-blue-600" />
-                                            <p className="text-xs font-medium">{kycDocuments.professionalLicense.fileName}</p>
+                                            <p className="text-xs font-medium">
+                                                {kycDocuments.professionalLicense.fileName}
+                                            </p>
                                             <p className="text-xs text-muted-foreground">
-                                                Téléchargé le{" "}
-                                                {new Date(kycDocuments.professionalLicense.uploadDate!).toLocaleDateString("fr-FR")}
+                                                Téléchargé le{' '}
+                                                {new Date(kycDocuments.professionalLicense.uploadDate!).toLocaleDateString(
+                                                    'fr-FR'
+                                                )}
                                             </p>
                                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                                                 <Upload className="h-3 w-3 mr-1" />
@@ -528,8 +552,12 @@ function TransporteurProfile() {
                                         <div className="space-y-2">
                                             <Upload className="h-6 w-6 mx-auto text-gray-400" />
                                             <p className="text-xs text-muted-foreground">Licence professionnelle</p>
-                                            <Button variant="outline" size="sm" disabled={kycUploading === "professionalLicense"}>
-                                                {kycUploading === "professionalLicense" ? "Upload..." : "Choisir"}
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={kycUploading === 'professionalLicense'}
+                                            >
+                                                {kycUploading === 'professionalLicense' ? 'Upload...' : 'Choisir'}
                                             </Button>
                                         </div>
                                     )}
@@ -545,8 +573,9 @@ function TransporteurProfile() {
                                 <div className="space-y-1">
                                     <h4 className="text-sm font-medium text-green-900">Certification Transporteur</h4>
                                     <p className="text-sm text-green-700">
-                                        Ces documents sont essentiels pour valider votre statut de transporteur professionnel et
-                                        garantir la sécurité des missions sur la plateforme TSA Logistics.
+                                        Ces documents sont essentiels pour valider votre statut de transporteur
+                                        professionnel et garantir la sécurité des missions sur la plateforme TSA
+                                        Logistics.
                                     </p>
                                     <ul className="text-xs text-green-600 mt-2 space-y-1">
                                         <li>• Formats acceptés: PDF, JPG, PNG (max 5MB)</li>
@@ -647,8 +676,7 @@ function TransporteurProfile() {
                 </div>
             </div>
         </div>
-
-    )
+    );
 }
 
-export default TransporteurProfile
+export default TransporteurProfile;

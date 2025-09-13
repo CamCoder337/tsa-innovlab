@@ -1,21 +1,27 @@
-import { useState } from 'react'
-import { useAuth } from "@/hooks/useAuth"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
-import { Settings, Bell, Shield, Eye, EyeOff, Save, Smartphone, Mail, Euro } from "lucide-react"
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Settings, Bell, Shield, Eye, EyeOff, Save, Smartphone, Mail, Euro } from 'lucide-react';
 
 function AffreteurSettings() {
-    const { user } = useAuth()
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-    const [showNewPassword, setShowNewPassword] = useState(false)
+    const { user } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     const [notifications, setNotifications] = useState({
         email: true,
@@ -24,76 +30,80 @@ function AffreteurSettings() {
         missionUpdates: true,
         priceAlerts: false,
         weeklyReports: true,
-    })
+    });
 
     const [preferences, setPreferences] = useState({
-        language: "fr",
-        currency: "FCFA",
-        timezone: "Africa/Douala",
+        language: 'fr',
+        currency: 'FCFA',
+        timezone: 'Africa/Douala',
         autoAssign: false,
         priceRange: { min: 1000, max: 10000 },
-    })
+    });
 
     const [passwordData, setPasswordData] = useState({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-    })
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
 
-    if (!user) return null
+    if (!user) return null;
 
     const handleSaveSettings = async () => {
-        setIsLoading(true)
-        setMessage("")
+        setIsLoading(true);
+        setMessage('');
 
         try {
             // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setMessage("Paramètres sauvegardés avec succès")
-            setTimeout(() => setMessage(""), 3000)
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setMessage('Paramètres sauvegardés avec succès');
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors de la sauvegarde")
+            console.error(error);
+            setMessage('Erreur lors de la sauvegarde');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
     const handlePasswordChange = async () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage("Les mots de passe ne correspondent pas")
-            return
+            setMessage('Les mots de passe ne correspondent pas');
+            return;
         }
 
-        setIsLoading(true)
+        setIsLoading(true);
         try {
             // Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setMessage("Mot de passe modifié avec succès")
-            setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
-            setTimeout(() => setMessage(""), 3000)
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            setMessage('Mot de passe modifié avec succès');
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
-            setMessage("Erreur lors du changement de mot de passe")
+            console.error(error);
+            setMessage('Erreur lors du changement de mot de passe');
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-                    <p className="text-muted-foreground">Configurez vos préférences et paramètres de compte</p>
+                    <p className="text-muted-foreground">
+                        Configurez vos préférences et paramètres de compte
+                    </p>
                 </div>
                 <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
                     <Save className="h-4 w-4" />
-                    {isLoading ? "Sauvegarde..." : "Sauvegarder"}
+                    {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
                 </Button>
             </div>
 
             {message && (
-                <Alert className={message.includes("succès") ? "border-green-200 bg-green-50" : ""}>
-                    <AlertDescription className={message.includes("succès") ? "text-green-800" : ""}>
+                <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
+                    <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
                         {message}
                     </AlertDescription>
                 </Alert>
@@ -115,7 +125,9 @@ function AffreteurSettings() {
                             </div>
                             <Switch
                                 checked={notifications.email}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, email: checked })
+                                }
                             />
                         </div>
 
@@ -147,7 +159,9 @@ function AffreteurSettings() {
                             <span className="text-sm">Mises à jour de missions</span>
                             <Switch
                                 checked={notifications.missionUpdates}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, missionUpdates: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, missionUpdates: checked })
+                                }
                             />
                         </div>
 
@@ -155,7 +169,9 @@ function AffreteurSettings() {
                             <span className="text-sm">Alertes de prix</span>
                             <Switch
                                 checked={notifications.priceAlerts}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, priceAlerts: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, priceAlerts: checked })
+                                }
                             />
                         </div>
 
@@ -163,7 +179,9 @@ function AffreteurSettings() {
                             <span className="text-sm">Rapports hebdomadaires</span>
                             <Switch
                                 checked={notifications.weeklyReports}
-                                onCheckedChange={(checked) => setNotifications({ ...notifications, weeklyReports: checked })}
+                                onCheckedChange={(checked) =>
+                                    setNotifications({ ...notifications, weeklyReports: checked })
+                                }
                             />
                         </div>
                     </CardContent>
@@ -232,7 +250,9 @@ function AffreteurSettings() {
                             <span className="text-sm">Attribution automatique</span>
                             <Switch
                                 checked={preferences.autoAssign}
-                                onCheckedChange={(checked) => setPreferences({ ...preferences, autoAssign: checked })}
+                                onCheckedChange={(checked) =>
+                                    setPreferences({ ...preferences, autoAssign: checked })
+                                }
                             />
                         </div>
 
@@ -288,9 +308,11 @@ function AffreteurSettings() {
                                 <div className="relative">
                                     <Input
                                         id="currentPassword"
-                                        type={showCurrentPassword ? "text" : "password"}
+                                        type={showCurrentPassword ? 'text' : 'password'}
                                         value={passwordData.currentPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                        onChange={(e) =>
+                                            setPasswordData({ ...passwordData, currentPassword: e.target.value })
+                                        }
                                         placeholder="Mot de passe actuel"
                                     />
                                     <Button
@@ -300,7 +322,11 @@ function AffreteurSettings() {
                                         className="absolute right-0 top-0 h-full px-3"
                                         onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                     >
-                                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        {showCurrentPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
                                     </Button>
                                 </div>
                             </div>
@@ -310,9 +336,11 @@ function AffreteurSettings() {
                                 <div className="relative">
                                     <Input
                                         id="newPassword"
-                                        type={showNewPassword ? "text" : "password"}
+                                        type={showNewPassword ? 'text' : 'password'}
                                         value={passwordData.newPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                        onChange={(e) =>
+                                            setPasswordData({ ...passwordData, newPassword: e.target.value })
+                                        }
                                         placeholder="Nouveau mot de passe"
                                     />
                                     <Button
@@ -333,7 +361,9 @@ function AffreteurSettings() {
                                     id="confirmPassword"
                                     type="password"
                                     value={passwordData.confirmPassword}
-                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                    onChange={(e) =>
+                                        setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                                    }
                                     placeholder="Confirmer le mot de passe"
                                 />
                             </div>
@@ -347,8 +377,7 @@ function AffreteurSettings() {
                 </Card>
             </div>
         </div>
-
-    )
+    );
 }
 
-export default AffreteurSettings
+export default AffreteurSettings;
