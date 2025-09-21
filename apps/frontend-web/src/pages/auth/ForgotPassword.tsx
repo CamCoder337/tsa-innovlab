@@ -5,18 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { VALIDATION_MESSAGES } from '@/utils/validation';
+import { VALIDATION_MESSAGES } from '@/lib/validation';
 import bg from '@/assets/login-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
-import { useAuth } from '@/hooks/useAuth';
 
 const INITIAL_VALUES = {
   email: '',
 };
 
 const ForgotPassword: React.FC = () => {
-  const { forgotPassword } = useAuth();
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   return (
@@ -42,11 +40,9 @@ const ForgotPassword: React.FC = () => {
                   })}
                   onSubmit={async (data, { setSubmitting }) => {
                     try {
-                      setSubmitting(true);
-                      await forgotPassword({ email: data.email.trim() });
                       setIsSubmitted(true);
+                      console.log(data);
                     } catch (error) {
-                      // Error handling is done in the useAuth hook
                       console.error('Forgot password failed:', error);
                     } finally {
                       setSubmitting(false);
@@ -56,7 +52,7 @@ const ForgotPassword: React.FC = () => {
                   validateOnChange={true}
                 >
                   {({ values, errors, touched, handleChange, handleBlur, isSubmitting }) =>
-                    isSubmitted ? (
+                    isSubmitted || isSubmitting ? (
                       <>
                         <p className="text-gray-600 mb-6">
                           Un lien de réinitialisation a été envoyé à <strong>{values.email}</strong>

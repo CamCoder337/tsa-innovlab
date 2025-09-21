@@ -96,15 +96,19 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <Link to="/app/profile">Profil</Link>
-            </DropdownMenuItem>
+            <Link to="/app/profile">
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                Profil
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <Link to="/app/settings">Paramètres</Link>
-            </DropdownMenuItem>
+            <Link to="/app/settings">
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                Paramètres
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuItem>
               <Headset className="mr-2 h-4 w-4" />
               Support

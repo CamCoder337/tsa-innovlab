@@ -3,131 +3,197 @@
 // ============================================================================
 
 import { BaseApi } from './api';
+import type { ApiResponse } from '@/types/common.types';
 import type {
-    ProductListParams,
-    CreateProductRequest,
-    UpdateProductRequest
-} from '../types/product.types';
+  Category,
+  CreateCategory,
+  UpdateCategory,
+  CategoryFilterParams,
+  CategoryWithStats,
+  PaginatedResponse as PaginatedCategory,
+} from '@/types/category.types';
 import type {
-    CategoryListParams,
-    CreateCategoryRequest,
-    UpdateCategoryRequest
-} from '../types/category.types';
-import type { ApiResponse } from '../types/api.types';
+  Product,
+  CreateProduct,
+  UpdateProduct,
+  ProductFilterParams,
+  ProductStats,
+  PaginatedResponse as PaginatedProduct,
+} from '@/types/product.types';
+import type { AxiosError } from 'axios';
 
 export class ShopService extends BaseApi {
-    // ====================================
-    // Product Operations
-    // ====================================
+  private isAxiosError(
+    error: unknown
+  ): error is AxiosError<{ message?: string; errors?: unknown[] }> {
+    return (error as AxiosError).isAxiosError === true;
+  }
 
-    /**
-     * Get a list of products with optional filters
-     */
-    async getProducts(params?: ProductListParams): Promise<ApiResponse> {
-        const response = await this.axiosInstance.get('/api/shop/products', { params });
-        return response.data;
+  private getErrorMessage(error: AxiosError<{ message?: string; errors?: unknown[] }>): string {
+    return error.response?.data?.message || error.message || 'An error occurred';
+  }
+
+  private getErrorResponse(error: unknown): {
+    success: false;
+    status: number;
+    message: string;
+    errors: string[];
+  } {
+    if (this.isAxiosError(error)) {
+      const errors = error.response?.data?.errors || [];
+      const stringErrors = errors.map((err) =>
+        typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err)
+      );
+
+      return {
+        success: false,
+        status: error.response?.status || 500,
+        message: this.getErrorMessage(error),
+        errors: stringErrors,
+      };
     }
+    return {
+      success: false,
+      status: 500,
+      message: 'An unexpected error occurred',
+      errors: [],
+    };
+  }
 
-    /**
-     * Get a single product by ID
-     */
-    async getProduct(id: string): Promise<ApiResponse> {
-        const response = await this.axiosInstance.get(`/api/shop/products/${id}`);
-        return response.data;
+  // Product Operations
+  async getProducts(params?: ProductFilterParams): Promise<ApiResponse<PaginatedProduct>> {
+    try {
+      const response = await this.insertToken().get('/api/shop/products', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Create a new product
-     */
-    async createProduct(data: CreateProductRequest): Promise<ApiResponse> {
-        const response = await this.axiosInstance.post('/api/shop/products', data);
-        return response.data;
+  async adminGetProducts(params?: ProductFilterParams): Promise<ApiResponse<PaginatedProduct>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/products', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Update an existing product
-     */
-    async updateProduct(id: string, data: UpdateProductRequest): Promise<ApiResponse> {
-        const response = await this.axiosInstance.put(`/api/shop/products/${id}`, data);
-        return response.data;
+  async getProduct(id: string): Promise<ApiResponse<Product>> {
+    try {
+      const response = await this.insertToken().get(`/api/shop/products/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Delete a product
-     */
-    async deleteProduct(id: string): Promise<ApiResponse> {
-        const response = await this.axiosInstance.delete(`/api/shop/products/${id}`);
-        return response.data;
+  async adminGetProduct(id: string): Promise<ApiResponse<Product>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/products/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    // ====================================
-    // Category Operations
-    // ====================================
-
-    /**
-     * Get a list of categories with optional filters
-     */
-    async getCategories(params?: CategoryListParams): Promise<ApiResponse> {
-        const response = await this.axiosInstance.get('/api/shop/categories', { params });
-        return response.data;
+  async getProductStats(): Promise<ApiResponse<ProductStats>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/stats/products`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Get a single category by ID
-     */
-    async getCategory(id: string): Promise<ApiResponse> {
-        const response = await this.axiosInstance.get(`/api/shop/categories/${id}`);
-        return response.data;
+  async createProduct(data: CreateProduct): Promise<ApiResponse<Record<string, Product>>> {
+    try {
+      const response = await this.insertToken().post('/api/admin/products', data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Update an existing category
-     */
-    async updateCategory(id: string, data: UpdateCategoryRequest): Promise<ApiResponse> {
-        const response = await this.axiosInstance.put(`/api/shop/categories/${id}`, data);
-        return response.data;
+  async updateProduct(
+    id: string,
+    data: UpdateProduct
+  ): Promise<ApiResponse<Record<string, Product>>> {
+    try {
+      const response = await this.insertToken().put(`/api/admin/products/${id}`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Create a new category
-     */
-    async createCategory(data: CreateCategoryRequest): Promise<ApiResponse> {
-        const response = await this.axiosInstance.post('/api/shop/categories', data);
-        return response.data;
+  async deleteProduct(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    try {
+      const response = await this.insertToken().delete(`/api/admin/products/${id}`);
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    /**
-     * Delete a category
-     */
-    async deleteCategory(id: string): Promise<ApiResponse> {
-        const response = await this.axiosInstance.delete(`/api/shop/categories/${id}`);
-        return response.data;
+  // Category Operations
+
+  async getCategories(params?: CategoryFilterParams): Promise<ApiResponse<PaginatedCategory>> {
+    try {
+      const response = await this.insertToken().get('/api/shop/categories', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
 
-    // ====================================
-    // Search Operations
-    // ====================================
-
-    /**
-     * Search products with a query and optional filters
-     */
-    async searchProducts(
-        query: string,
-        params?: {
-            page?: number;
-            limit?: number;
-            categoryId?: string;
-            minPrice?: number;
-            maxPrice?: number;
-            sortBy?: string;
-            sortOrder?: 'asc' | 'desc';
-        }
-    ): Promise<ApiResponse> {
-        const response = await this.axiosInstance.get('/api/shop/search', {
-            params: { q: query, ...params },
-        });
-        return response.data;
+  async adminGetCategories(params?: CategoryFilterParams): Promise<ApiResponse<PaginatedCategory>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/categories', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
     }
+  }
+
+  async getCategory(id: string): Promise<ApiResponse<CategoryWithStats>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/categories/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async createCategory(data: CreateCategory): Promise<ApiResponse<Record<string, Category>>> {
+    try {
+      const response = await this.insertToken().post('/api/admin/categories', data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async updateCategory(
+    id: string,
+    data: UpdateCategory
+  ): Promise<ApiResponse<Record<string, Category>>> {
+    try {
+      const response = await this.insertToken().put(`/api/admin/categories/${id}`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async deleteCategory(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    try {
+      const response = await this.insertToken().delete(`/api/admin/categories/${id}`);
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
 }
 
 export const shopService = new ShopService();

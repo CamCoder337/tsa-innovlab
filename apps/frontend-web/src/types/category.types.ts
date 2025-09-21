@@ -1,56 +1,116 @@
-// ============================================================================
-// CATEGORY TYPES - TSA Monolith API Compatible
-// ============================================================================
+import type { Timestamps } from './common.types';
+import type { Product } from './product.types';
 
-import type { Product } from "./product.types";
-
-export interface Category {
-    id: string;
-    name: string;
-    description: string | null;
-    parentId: string | null;
-    slug: string;
-    imageUrl: string | null;
-    isActive: boolean;
-    displayOrder: number;
-    createdAt: string;
-    updatedAt: string;
-    // Relations (using any to avoid circular imports)
-    products?: Product[];
-    children?: Category[];
-    parent?: Category;
+export interface Category extends Timestamps {
+  id: string;
+  name: string;
+  description: string | null;
+  parentId: string | null;
+  slug: string;
+  products: Product[];
+  imageUrl: string | null;
+  isActive: boolean;
+  displayOrder: number;
 }
 
-export interface CreateCategoryRequest {
-    name: string;
-    description?: string;
-    parentId?: string | null;
-    slug?: string;
-    imageUrl?: string | null;
-    isActive?: boolean;
-    displayOrder?: number;
+export interface CreateCategory {
+  name: string;
+  description?: string | null;
+  parentId?: string | null;
+  slug?: string; // Auto-generated if not provided
+  imageUrl?: string | null;
+  isActive?: boolean;
+  displayOrder?: number;
 }
 
-export interface UpdateCategoryRequest extends Partial<Omit<CreateCategoryRequest, 'id'>> {
-    id: string;
+export interface UpdateCategory {
+  id: string;
+  name?: string;
+  description?: string | null;
+  parentId?: string | null;
+  slug?: string;
+  imageUrl?: string | null;
+  isActive?: boolean;
+  displayOrder?: number;
 }
 
-export interface CategoryTreeNode extends Category {
-    children: CategoryTreeNode[];
-    level: number;
-    productCount?: number;
+export interface CategoryTreeItem extends Category {
+  children: CategoryTreeItem[];
+  parent: CategoryTreeItem | null;
+  expanded?: boolean;
+  level?: number; // For UI purposes
 }
 
-export interface CategoryFilters {
-    parentId?: string;
-    isActive?: boolean;
+export interface CategoryFilterParams {
+  search?: string;
+  parentId?: string | null;
+  isActive?: boolean;
+  sortBy?: 'name' | 'displayOrder' | 'createdAt' | 'updatedAt';
+  order?: 'asc' | 'desc';
+  limit?: number;
+  page?: number;
 }
 
-export interface CategoryListParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    filters?: CategoryFilters;
+export interface BulkCategoryActionDto {
+  categoryIds: string[];
+  action: 'activate' | 'deactivate' | 'move' | 'delete';
+  parentId?: string | null;
 }
+
+export interface CategoryWithStats {
+  category: Category;
+  products: Record<string, number>;
+}
+
+export interface PaginationMeta {
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
+  firstPage: number;
+  firstPageUrl: string | null;
+  lastPageUrl: string | null;
+  nextPageUrl: string | null;
+  previousPageUrl: string | null;
+}
+
+export interface PaginatedResponse {
+  categories: {
+    data: Category[];
+    meta: PaginationMeta;
+  };
+  pagination: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface CategoryState {
+  categories: Category[];
+  currentCategory: Category | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface CategoryActions {
+  setCategories: (categories: Category[]) => void;
+  addCategory: (category: Category) => void;
+  updateCategory: (id: string, updates: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
+  setCurrentCategory: (category: Category | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+}
+
+export interface CategoryStoreExtended extends CategoryState, CategoryActions {
+  // Utility methods
+  filterCategories: (filters: CategoryFilterParams) => Category[];
+  searchCategories: (query: string) => Category[];
+  getCategoryPath: (categoryId: string) => Category[];
+}
+
+export type CategoriesResponse = PaginatedResponse;

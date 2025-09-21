@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { ForgotPasswordFormData } from '@/types';
+import type { ForgotPasswordRequest } from '@/types/auth.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { VALIDATION_MESSAGES } from '@/utils/validation';
+import { VALIDATION_MESSAGES } from '@/lib/validation';
 
-const INITIAL_VALUES: ForgotPasswordFormData = {
+const INITIAL_VALUES: ForgotPasswordRequest = {
   email: '',
 };
 
@@ -17,7 +17,7 @@ const validationSchema = Yup.object({
 });
 
 interface ForgotPasswordFormProps {
-  onSubmit: (data: ForgotPasswordFormData) => Promise<void>;
+  onSubmit: (data: ForgotPasswordRequest) => Promise<void>;
   isSubmitting?: boolean;
   isSubmitted?: boolean;
 }
@@ -28,7 +28,7 @@ export default function ForgotPasswordForm({
   isSubmitted = false,
 }: ForgotPasswordFormProps) {
   return (
-    <Formik<ForgotPasswordFormData>
+    <Formik<ForgotPasswordRequest>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
