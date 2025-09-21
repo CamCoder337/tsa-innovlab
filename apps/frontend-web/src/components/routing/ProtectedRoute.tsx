@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import type { UserRole } from '@/types/user.types';
+import type { UserRole } from '@/types/auth.types';
 import { useAuth } from '@/hooks/useAuth';
 import type { ReactElement } from 'react';
 

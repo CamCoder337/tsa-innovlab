@@ -1,101 +1,75 @@
-// ============================================================================
-// MISSION TYPES
-// ============================================================================
-
-import type { User } from './user.types';
-import type { Address } from './address.types';
+import type { Timestamps } from './common.types';
 
 export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
 
-export interface Mission {
-    id: string;
-    affreteurId: string;
-    titre: string;
-    description: string;
-    typeMarchandise: string;
-    poids: number;
-    volume: number;
-    dateDepartEstime: string;
-    dateArriveePrevue: string;
-    adresseDepartId: string;
-    adresseArriveeId: string;
-    budgetMin: number;
-    budgetMax: number;
-    status: MissionStatus;
-    createdAt: string;
-    updatedAt: string;
-    // Relations
-    affreteur?: User;
-    adresseDepart?: Address;
-    adresseArrivee?: Address;
-    propositions?: Proposition[];
+export interface Mission extends Timestamps {
+  id: string;
+  affreteurId: string;
+  titre: string;
+  description: string | null;
+  typeMarchandise: string | null;
+  poids: number | null;
+  volume: number | null;
+  dateDepartEstime: string | null;
+  dateArriveePrevue: string | null;
+  adresseDepartId: string | null;
+  adresseArriveeId: string | null;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  status: MissionStatus;
+  isFlexibleDates: boolean;
+  isFlexibleRoute: boolean;
+  notesComplementaires: string | null;
+  documents: string[];
+  transporteurId: string | null;
+  dateDebutReelle: string | null;
+  dateFinReelle: string | null;
+  ratingAffreteur: number | null;
+  commentaireAffreteur: string | null;
+  ratingTransporteur: number | null;
+  commentaireTransporteur: string | null;
 }
 
-export interface CreateMissionRequest {
-    titre: string;
-    description?: string;
-    typeMarchandise?: string;
-    poids?: number;
-    volume?: number;
-    dateDepartEstime?: string;
-    dateArriveePrevue?: string;
-    adresseDepartId?: string;
-    adresseArriveeId?: string;
-    budgetMin?: number;
-    budgetMax?: number;
+export interface CreateMissionDto {
+  titre: string;
+  description?: string;
+  typeMarchandise?: string;
+  poids?: number;
+  volume?: number;
+  dateDepartEstime?: string;
+  dateArriveePrevue?: string;
+  adresseDepartId?: string;
+  adresseArriveeId?: string;
+  budgetMin?: number;
+  budgetMax?: number;
+  isFlexibleDates?: boolean;
+  isFlexibleRoute?: boolean;
+  notesComplementaires?: string;
+  documents?: File[];
 }
 
-export interface UpdateMissionRequest extends Partial<CreateMissionRequest> {
-    status?: MissionStatus;
+export interface UpdateMissionDto {
+  status?: MissionStatus;
+  transporteurId?: string | null;
+  dateDebutReelle?: string | null;
+  dateFinReelle?: string | null;
+  ratingAffreteur?: number | null;
+  commentaireAffreteur?: string | null;
+  ratingTransporteur?: number | null;
+  commentaireTransporteur?: string | null;
 }
 
-export interface MissionFilters {
-    status?: MissionStatus[];
-    affreteurId?: string;
-    typeMarchandise?: string[];
-    budgetMin?: number;
-    budgetMax?: number;
-    dateDepartEstime?: string;
-    dateArriveePrevue?: string;
-}
-
-export interface MissionListParams {
-    page?: number;
-    limit?: number;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-    filters?: MissionFilters;
-}
-
-// Proposition types
-export type PropositionStatus = 'pending' | 'accepted' | 'rejected';
-
-export interface Proposition {
-    id: string;
-    missionId: string;
-    transporteurId: string;
-    prixPropose: number;
-    delaiPropose: number;
-    commentaire: string | null;
-    status: PropositionStatus;
-    createdAt: string;
-    updatedAt: string;
-    // Relations
-    mission?: Mission;
-    transporteur?: User;
-}
-
-export interface CreatePropositionRequest {
-    missionId: string;
-    prixPropose: number;
-    delaiPropose: number;
-    commentaire?: string;
-}
-
-export interface UpdatePropositionRequest {
-    prixPropose?: number;
-    delaiPropose?: number;
-    commentaire?: string;
-    status?: PropositionStatus;
+export interface MissionFilterParams {
+  status?: MissionStatus[];
+  affreteurId?: string;
+  transporteurId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  minBudget?: number;
+  maxBudget?: number;
+  typeMarchandise?: string;
+  sortBy?: 'createdAt' | 'dateDepartEstime' | 'budgetMin';
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }

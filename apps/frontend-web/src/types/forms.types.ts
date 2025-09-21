@@ -2,23 +2,24 @@
 // FORM TYPES
 // ============================================================================
 
-import type { UserRole } from './user.types';
+import type { UserRole } from './auth.types';
 
 // Auth Forms
 export interface LoginFormData {
   email: string;
   password: string;
+  mfaCode?: string;
 }
 
 export interface RegisterFormData {
-  nom: string;
-  prenom: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  confirmPassword: string;
+  confirmPassword?: string;
   phone: string;
-  country: string;
-  role: UserRole | '';
+  country?: string;
+  role: UserRole;
 }
 
 export interface ForgotPasswordFormData {

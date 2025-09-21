@@ -1,27 +1,53 @@
-// ============================================================================
-// ADDRESS TYPES - TSA Monolith API Compatible
-// ============================================================================
+import type { Timestamps } from './common.types';
 
-export interface Address {
+export interface Address extends Timestamps {
   id: string;
-  label: string | null;
-  street: string;
+  line1: string;
+  line2: string | null;
   city: string;
-  region: string | null;
+  state: string;
+  postalCode: string;
   country: string;
-  postalCode: string | null;
   latitude: number | null;
   longitude: number | null;
-  createdAt: string;
+  isDefault: boolean;
+  type: 'shipping' | 'billing' | 'both';
+  company: string | null;
+  phone: string | null;
+  notes: string | null;
+  userId: string;
+  formattedAddress: string;
 }
 
-export interface CreateAddressRequest {
-  label?: string;
-  street: string;
+export interface CreateAddressDto {
+  line1: string;
+  line2?: string | null;
   city: string;
-  region?: string;
+  state: string;
+  postalCode: string;
   country: string;
-  postalCode?: string;
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  isDefault?: boolean;
+  type?: 'shipping' | 'billing' | 'both';
+  company?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface UpdateAddressDto extends Partial<CreateAddressDto> {
+  id: string;
+}
+
+export interface AddressSuggestion {
+  placeId: string;
+  formattedAddress: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  latitude: number;
+  longitude: number;
 }
