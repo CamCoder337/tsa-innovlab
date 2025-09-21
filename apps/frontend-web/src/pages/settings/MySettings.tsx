@@ -2,7 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import AffreteurSettings from './AffreteurSettings';
 import TransporteurSettings from './TransporteurSettings';
-import AdminSettings from './AdminSettings';
+import AdminSettings from '../admin/AdminSettings';
 
 export default function MySettings() {
   const { user } = useAuth();

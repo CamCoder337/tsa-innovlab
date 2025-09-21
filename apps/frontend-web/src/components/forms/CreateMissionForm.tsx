@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,71 +13,74 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  CalendarIcon,
-  MapPin,
-  Package,
-  DollarSign,
-  AlertTriangle,
-  Plus,
-  Minus,
-} from 'lucide-react';
-import type { CreateMissionFormData, MissionItem } from '@/types';
-import { Formik, Form, FieldArray } from 'formik';
+import { CalendarIcon, MapPin, Package, DollarSign, Minus, Clock, FileText } from 'lucide-react';
+import type { CreateMissionDto } from '@/types/mission.types';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const INITIAL_VALUES: CreateMissionFormData = {
-  title: '',
-  origin: '',
-  destination: '',
-  cargoType: '',
-  urgency: 'low',
-  proposedPrice: '',
+const INITIAL_VALUES: CreateMissionDto = {
+  titre: '',
   description: '',
-  specialRequirements: {
-    refrigerated: false,
-    fragile: false,
-    hazardous: false,
-    insurance: false,
-  },
-  deadline: undefined,
-  missionItems: [{ id: '1', description: '', weight: '', volume: '', value: '' }] as MissionItem[],
+  typeMarchandise: '',
+  poids: 0,
+  volume: 0,
+  dateDepartEstime: '',
+  dateArriveePrevue: '',
+  adresseDepartId: '',
+  adresseArriveeId: '',
+  budgetMin: 0,
+  budgetMax: 0,
+  isFlexibleDates: false,
+  isFlexibleRoute: false,
+  notesComplementaires: '',
+  documents: [],
 };
 
 const validationSchema = Yup.object({
-  title: Yup.string().required('Le titre est requis'),
-  origin: Yup.string().required("L'origine est requise"),
-  destination: Yup.string().required('La destination est requise'),
-  cargoType: Yup.string().required('Le type de marchandise est requis'),
-  urgency: Yup.string().required("Le niveau d'urgence est requis"),
-  proposedPrice: Yup.string().required('Le prix proposé est requis'),
+  titre: Yup.string().required('Le titre est requis'),
   description: Yup.string().required('La description est requise'),
-  deadline: Yup.date().required('La date limite est requise'),
-  missionItems: Yup.array()
+  typeMarchandise: Yup.string().required('Le type de marchandise est requis'),
+  poids: Yup.number().nullable().min(0, 'Le poids doit être positif'),
+  volume: Yup.number().nullable().min(0, 'Le volume doit être positif'),
+  dateDepartEstime: Yup.date().required('La date de départ est requise'),
+  dateArriveePrevue: Yup.date()
+    .required("La date d'arrivée prévue est requise")
+    .min(Yup.ref('dateDepartEstime'), "La date d'arrivée doit être après la date de départ"),
+  adresseDepartId: Yup.string().required("L'adresse de départ est requise"),
+  adresseArriveeId: Yup.string().required("L'adresse d'arrivée est requise"),
+  budgetMin: Yup.number().nullable().min(0, 'Le budget minimum doit être positif'),
+  budgetMax: Yup.number()
+    .nullable()
+    .min(Yup.ref('budgetMin'), 'Le budget maximum doit être supérieur ou égal au budget minimum'),
+  isFlexibleDates: Yup.boolean(),
+  isFlexibleRoute: Yup.boolean(),
+  notesComplementaires: Yup.string().nullable(),
+  documents: Yup.array()
     .of(
       Yup.object({
-        description: Yup.string().required("La description de l'article est requise"),
-        weight: Yup.string().required('Le poids est requis'),
-        volume: Yup.string().required('Le volume est requis'),
-        value: Yup.string().required('La valeur est requise'),
+        name: Yup.string().required(),
+        size: Yup.number().required(),
+        type: Yup.string().required(),
       })
     )
-    .min(1, 'Au moins un article est requis'),
+    .nullable(),
 });
 
 interface CreateMissionFormProps {
-  onSubmit: (data: CreateMissionFormData) => Promise<void>;
+  onSubmit: (data: CreateMissionDto) => Promise<void>;
   isSubmitting?: boolean;
+  addresses: Array<{ id: string; label: string }>; // Assuming we'll pass addresses from parent
 }
 
 export default function CreateMissionForm({
   onSubmit,
   isSubmitting = false,
+  addresses = [],
 }: CreateMissionFormProps) {
   return (
-    <Formik<CreateMissionFormData>
+    <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
@@ -96,111 +98,149 @@ export default function CreateMissionForm({
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Titre de la Mission</Label>
+                <Label htmlFor="titre">Titre de la Mission</Label>
                 <Input
-                  id="title"
-                  name="title"
+                  id="titre"
+                  name="titre"
                   placeholder="ex: Transport Électronique Douala → Yaoundé"
-                  value={values.title}
+                  value={values.titre}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={cn(touched.title && errors.title && 'border-red-500')}
+                  className={cn(touched.titre && errors.titre && 'border-red-500')}
                   required
                 />
-                {touched.title && errors.title && (
-                  <div className="text-sm text-red-600 mt-1">{errors.title}</div>
+                {touched.titre && errors.titre && (
+                  <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="origin">Origine</Label>
+                  <Label htmlFor="adresseDepartId">Adresse de Départ</Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="origin"
-                      name="origin"
-                      placeholder="Ville de départ"
-                      className={cn('pl-10', touched.origin && errors.origin && 'border-red-500')}
-                      value={values.origin}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                    />
+                    <Select
+                      value={values.adresseDepartId || ''}
+                      onValueChange={(value) => setFieldValue('adresseDepartId', value)}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          'pl-10',
+                          touched.adresseDepartId && errors.adresseDepartId && 'border-red-500'
+                        )}
+                      >
+                        <SelectValue placeholder="Sélectionner une adresse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {addresses.map((address) => (
+                          <SelectItem key={address.id} value={address.id}>
+                            {address.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {touched.origin && errors.origin && (
-                    <div className="text-sm text-red-600 mt-1">{errors.origin}</div>
+                  {touched.adresseDepartId && errors.adresseDepartId && (
+                    <div className="text-sm text-red-600 mt-1">{errors.adresseDepartId}</div>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="destination">Destination</Label>
+                  <Label htmlFor="adresseArriveeId">Adresse d'Arrivée</Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="destination"
-                      name="destination"
-                      placeholder="Ville d'arrivée"
-                      className={cn(
-                        'pl-10',
-                        touched.destination && errors.destination && 'border-red-500'
-                      )}
-                      value={values.destination}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                    />
+                    <Select
+                      value={values.adresseArriveeId || ''}
+                      onValueChange={(value) => setFieldValue('adresseArriveeId', value)}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          'pl-10',
+                          touched.adresseArriveeId && errors.adresseArriveeId && 'border-red-500'
+                        )}
+                      >
+                        <SelectValue placeholder="Sélectionner une adresse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {addresses.map((address) => (
+                          <SelectItem key={address.id} value={address.id}>
+                            {address.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  {touched.destination && errors.destination && (
-                    <div className="text-sm text-red-600 mt-1">{errors.destination}</div>
+                  {touched.adresseArriveeId && errors.adresseArriveeId && (
+                    <div className="text-sm text-red-600 mt-1">{errors.adresseArriveeId}</div>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="cargoType">Type de Marchandise</Label>
+                  <Label htmlFor="typeMarchandise">Type de Marchandise</Label>
                   <Select
-                    value={values.cargoType}
-                    onValueChange={(value) => setFieldValue('cargoType', value)}
+                    value={values.typeMarchandise || ''}
+                    onValueChange={(value) => setFieldValue('typeMarchandise', value)}
                   >
                     <SelectTrigger
-                      className={cn(touched.cargoType && errors.cargoType && 'border-red-500')}
+                      className={cn(
+                        touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
+                      )}
                     >
                       <SelectValue placeholder="Sélectionner le type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="electronics">Électronique</SelectItem>
+                      <SelectItem value="electronique">Électronique</SelectItem>
                       <SelectItem value="construction">Matériaux de Construction</SelectItem>
-                      <SelectItem value="food">Produits Alimentaires</SelectItem>
-                      <SelectItem value="textiles">Textiles</SelectItem>
-                      <SelectItem value="machinery">Machines</SelectItem>
-                      <SelectItem value="chemicals">Produits Chimiques</SelectItem>
-                      <SelectItem value="other">Autre</SelectItem>
+                      <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
+                      <SelectItem value="textile">Textiles</SelectItem>
+                      <SelectItem value="machines">Machines</SelectItem>
+                      <SelectItem value="chimique">Produits Chimiques</SelectItem>
+                      <SelectItem value="autre">Autre</SelectItem>
                     </SelectContent>
                   </Select>
-                  {touched.cargoType && errors.cargoType && (
-                    <div className="text-sm text-red-600 mt-1">{errors.cargoType}</div>
+                  {touched.typeMarchandise && errors.typeMarchandise && (
+                    <div className="text-sm text-red-600 mt-1">{errors.typeMarchandise}</div>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="urgency">Niveau d'Urgence</Label>
-                  <Select
-                    value={values.urgency}
-                    onValueChange={(value) => setFieldValue('urgency', value)}
-                  >
-                    <SelectTrigger
-                      className={cn(touched.urgency && errors.urgency && 'border-red-500')}
-                    >
-                      <SelectValue placeholder="Sélectionner l'urgence" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Faible - Livraison standard</SelectItem>
-                      <SelectItem value="medium">Moyenne - Livraison prioritaire</SelectItem>
-                      <SelectItem value="high">Élevée - Livraison urgente</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {touched.urgency && errors.urgency && (
-                    <div className="text-sm text-red-600 mt-1">{errors.urgency}</div>
+                  <Label htmlFor="poids">Poids (kg)</Label>
+                  <Input
+                    id="poids"
+                    name="poids"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={values.poids || ''}
+                    onChange={(e) =>
+                      setFieldValue('poids', e.target.value ? parseFloat(e.target.value) : null)
+                    }
+                    onBlur={handleBlur}
+                    className={cn(touched.poids && errors.poids && 'border-red-500')}
+                  />
+                  {touched.poids && errors.poids && (
+                    <div className="text-sm text-red-600 mt-1">{errors.poids}</div>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="volume">Volume (m³)</Label>
+                  <Input
+                    id="volume"
+                    name="volume"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={values.volume || ''}
+                    onChange={(e) =>
+                      setFieldValue('volume', e.target.value ? parseFloat(e.target.value) : null)
+                    }
+                    onBlur={handleBlur}
+                    className={cn(touched.volume && errors.volume && 'border-red-500')}
+                  />
+                  {touched.volume && errors.volume && (
+                    <div className="text-sm text-red-600 mt-1">{errors.volume}</div>
                   )}
                 </div>
               </div>
@@ -226,149 +266,98 @@ export default function CreateMissionForm({
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Articles de Marchandise
-                </div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Dates de la Mission
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <FieldArray name="missionItems">
-                {({ push, remove }) => (
-                  <>
-                    {values.missionItems.map((item, index) => (
-                      <div key={item.id} className="p-4 border rounded-lg space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium">Article {index + 1}</h4>
-                          {values.missionItems.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => remove(index)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="md:col-span-2">
-                            <Label>Description</Label>
-                            <Input
-                              name={`missionItems.${index}.description`}
-                              placeholder="Description de l'article"
-                              value={item.description}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              // className={cn(
-                              //     touched.missionItems?.[index]?.description &&
-                              //     errors.missionItems?.[index]?.description &&
-                              //     "border-red-500"
-                              // )}
-                            />
-                            {/* {touched.missionItems?.[index]?.description &&
-                                                            errors.missionItems?.[index]?.description && (
-                                                                <div className="text-sm text-red-600 mt-1">
-                                                                    {errors.missionItems[index]?.description}
-                                                                </div>
-                                                            )} */}
-                          </div>
-                          <div>
-                            <Label>Poids (kg)</Label>
-                            <Input
-                              name={`missionItems.${index}.weight`}
-                              placeholder="0"
-                              value={item.weight}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              // className={cn(
-                              //     touched.missionItems?.[index]?.weight &&
-                              //     errors.missionItems?.[index]?.weight &&
-                              //     "border-red-500"
-                              // )}
-                            />
-                            {/* {touched.missionItems?.[index]?.weight &&
-                                                            errors.missionItems?.[index]?.weight && (
-                                                                <div className="text-sm text-red-600 mt-1">
-                                                                    {errors.missionItems[index]?.weight}
-                                                                </div>
-                                                            )} */}
-                          </div>
-                          <div>
-                            <Label>Volume (m³)</Label>
-                            <Input
-                              name={`missionItems.${index}.volume`}
-                              placeholder="0"
-                              value={item.volume}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              // className={cn(
-                              //     touched.missionItems?.[index]?.volume &&
-                              //     errors.missionItems?.[index]?.volume &&
-                              //     "border-red-500"
-                              // )}
-                            />
-                            {/* {touched.missionItems?.[index]?.volume &&
-                                                            errors.missionItems?.[index]?.volume && (
-                                                                <div className="text-sm text-red-600 mt-1">
-                                                                    {errors.missionItems[index]?.volume}
-                                                                </div>
-                                                            )} */}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        push({
-                          id: Date.now().toString(),
-                          description: '',
-                          weight: '',
-                          volume: '',
-                          value: '',
-                        })
-                      }
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter Article
-                    </Button>
-                  </>
-                )}
-              </FieldArray>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Exigences Spéciales
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(values.specialRequirements).map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={key}
-                      checked={value}
-                      onCheckedChange={(checked) =>
-                        setFieldValue(`specialRequirements.${key}`, checked as boolean)
-                      }
-                    />
-                    <Label htmlFor={key} className="capitalize">
-                      {key === 'refrigerated' && 'Réfrigéré'}
-                      {key === 'fragile' && 'Fragile'}
-                      {key === 'hazardous' && 'Dangereux'}
-                      {key === 'insurance' && 'Assurance Requise'}
-                    </Label>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Date de Départ Estimée</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !values.dateDepartEstime && 'text-muted-foreground',
+                          touched.dateDepartEstime && errors.dateDepartEstime && 'border-red-500'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {values.dateDepartEstime
+                          ? format(new Date(values.dateDepartEstime), 'PPP')
+                          : 'Sélectionner une date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined
+                        }
+                        onSelect={(date) => setFieldValue('dateDepartEstime', date?.toISOString())}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {touched.dateDepartEstime && errors.dateDepartEstime && (
+                    <div className="text-sm text-red-600 mt-1">{errors.dateDepartEstime}</div>
+                  )}
+                </div>
+                <div>
+                  <Label>Date d'Arrivée Prévue</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !values.dateArriveePrevue && 'text-muted-foreground',
+                          touched.dateArriveePrevue && errors.dateArriveePrevue && 'border-red-500'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {values.dateArriveePrevue
+                          ? format(new Date(values.dateArriveePrevue), 'PPP')
+                          : 'Sélectionner une date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined
+                        }
+                        onSelect={(date) => setFieldValue('dateArriveePrevue', date?.toISOString())}
+                        initialFocus
+                        disabled={(date) =>
+                          values.dateDepartEstime ? date < new Date(values.dateDepartEstime) : false
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {touched.dateArriveePrevue && errors.dateArriveePrevue && (
+                    <div className="text-sm text-red-600 mt-1">{errors.dateArriveePrevue}</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="isFlexibleDates"
+                  checked={values.isFlexibleDates}
+                  onCheckedChange={(checked) => setFieldValue('isFlexibleDates', checked)}
+                />
+                <Label htmlFor="isFlexibleDates">Dates flexibles</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isFlexibleRoute"
+                  checked={values.isFlexibleRoute}
+                  onCheckedChange={(checked) => setFieldValue('isFlexibleRoute', checked)}
+                />
+                <Label htmlFor="isFlexibleRoute">Itinéraire flexible</Label>
               </div>
             </CardContent>
           </Card>
@@ -377,64 +366,153 @@ export default function CreateMissionForm({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Prix et Délais
+                Budget
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="proposedPrice">Prix Proposé (FCFA)</Label>
+                  <Label htmlFor="budgetMin">Budget Minimum (FCFA)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      id="proposedPrice"
-                      name="proposedPrice"
+                      id="budgetMin"
+                      name="budgetMin"
+                      type="number"
+                      min="0"
+                      step="1000"
                       placeholder="0"
+                      value={values.budgetMin || ''}
+                      onChange={(e) =>
+                        setFieldValue(
+                          'budgetMin',
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                      onBlur={handleBlur}
                       className={cn(
                         'pl-10',
-                        touched.proposedPrice && errors.proposedPrice && 'border-red-500'
+                        touched.budgetMin && errors.budgetMin && 'border-red-500'
                       )}
-                      value={values.proposedPrice}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
                     />
                   </div>
-                  {touched.proposedPrice && errors.proposedPrice && (
-                    <div className="text-sm text-red-600 mt-1">{errors.proposedPrice}</div>
+                  {touched.budgetMin && errors.budgetMin && (
+                    <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
                   )}
                   <p className="text-xs text-gray-500 mt-1">
                     Les transporteurs peuvent négocier ce prix
                   </p>
                 </div>
                 <div>
-                  <Label>Date Limite</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !values.deadline && 'text-muted-foreground',
-                          touched.deadline && errors.deadline && 'border-red-500'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {values.deadline ? format(values.deadline, 'PPP') : 'Choisir une date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={values.deadline}
-                        onSelect={(date) => setFieldValue('deadline', date)}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {touched.deadline && errors.deadline && (
-                    <div className="text-sm text-red-600 mt-1">{errors.deadline}</div>
+                  <Label htmlFor="budgetMax">Budget Maximum (FCFA)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="budgetMax"
+                      name="budgetMax"
+                      type="number"
+                      min={values.budgetMin || 0}
+                      step="1000"
+                      placeholder="0"
+                      value={values.budgetMax || ''}
+                      onChange={(e) =>
+                        setFieldValue(
+                          'budgetMax',
+                          e.target.value ? parseFloat(e.target.value) : null
+                        )
+                      }
+                      onBlur={handleBlur}
+                      className={cn(
+                        'pl-10',
+                        touched.budgetMax && errors.budgetMax && 'border-red-500'
+                      )}
+                    />
+                  </div>
+                  {touched.budgetMax && errors.budgetMax && (
+                    <div className="text-sm text-red-600 mt-1">{errors.budgetMax}</div>
                   )}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Informations Complémentaires
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="notesComplementaires">Notes Complémentaires</Label>
+                <Textarea
+                  id="notesComplementaires"
+                  name="notesComplementaires"
+                  placeholder="Ajoutez des informations supplémentaires ou des instructions spéciales..."
+                  value={values.notesComplementaires || ''}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={cn(
+                    touched.notesComplementaires && errors.notesComplementaires && 'border-red-500'
+                  )}
+                  rows={3}
+                />
+                {touched.notesComplementaires && errors.notesComplementaires && (
+                  <div className="text-sm text-red-600 mt-1">{errors.notesComplementaires}</div>
+                )}
+              </div>
+
+              <div>
+                <Label>Documents (optionnel)</Label>
+                <div className="mt-2 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary"
+                      >
+                        <span>Télécharger un fichier</span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          multiple
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setFieldValue('documents', [...(values.documents || []), ...files]);
+                          }}
+                        />
+                      </label>
+                      <p className="pl-1">ou glisser-déposer</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PDF, DOC, JPG, PNG jusqu'à 10MB</p>
+                  </div>
+                </div>
+                {values.documents && values.documents.length > 0 && (
+                  <div className="mt-2 space-y-2">
+                    {values.documents.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
+                        <span className="text-sm text-gray-700 truncate max-w-xs">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => {
+                            const newFiles = [...(values.documents || [])];
+                            newFiles.splice(index, 1);
+                            setFieldValue('documents', newFiles);
+                          }}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -447,10 +525,18 @@ export default function CreateMissionForm({
               disabled={isSubmitting}
             >
               <Package className="h-4 w-4 mr-2" />
-              Créer la Mission
+              {isSubmitting ? 'Création en cours...' : 'Créer la Mission'}
             </Button>
-            <Button type="button" variant="outline">
-              Sauvegarder comme Brouillon
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                // Set status to 'draft' and submit
+                onSubmit({ ...values });
+              }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder comme Brouillon'}
             </Button>
           </div>
         </Form>

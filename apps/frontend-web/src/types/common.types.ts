@@ -1,32 +1,28 @@
-// Common component props
-export interface BaseComponentProps {
-  className?: string;
-  children?: React.ReactNode;
-}
+// Common types
+export type Timestamps = {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+};
 
-// Form component props
-export interface FormComponentProps extends BaseComponentProps {
-  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
-}
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+};
 
-// Input component props
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  required?: boolean;
-}
-
-// Button component props
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
-  loading?: boolean;
-  asChild?: boolean;
-}
-
-// Navigation link props
-export interface NavLinkProps {
-  to: string;
-  children: React.ReactNode;
-  className?: string;
-}
+export type ApiResponse<T> = {
+  data?: T;
+  error?: {
+    success: false;
+    status: number;
+    message: string;
+    errors: string[];
+  };
+};

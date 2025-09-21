@@ -1,6 +1,6 @@
-# 🌐 Frontend Web - TSA-Logistique
+# 🌐 TSA Logistique - Frontend
 
-> Application web moderne pour la plateforme logistique TSA - Interface utilisateur principale
+> Interface utilisateur moderne pour la plateforme logistique TSA
 
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
@@ -53,31 +53,31 @@ L'application web frontend de TSA-Logistique est l'interface principale pour les
 
 ```
 apps/frontend-web/
-├── public/                          # Assets statiques
-│   ├── favicon.ico
-│   ├── manifest.json               # PWA manifest
-│   └── icons/                      # Icônes PWA diverses tailles
+├── public/                # Fichiers statiques
 ├── src/
+│   ├── assets/                    # Images et assets
 │   ├── components/                 # Composants réutilisables
+│   │   ├── forms/                 # Composants formulaires
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── RegisterForm.tsx
+│   │   │   └── KYCForm.tsx
+│   │   │   └── ...
+│   │   ├── layout/                # Composants layout
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── Layout.tsx
 │   │   ├── ui/                    # Composants shadcn/ui
 │   │   │   ├── button.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── card.tsx
 │   │   │   └── ...
-│   │   ├── forms/                 # Composants formulaires
-│   │   │   ├── LoginForm.tsx
-│   │   │   ├── RegisterForm.tsx
-│   │   │   └── KYCForm.tsx
-│   │   ├── layout/                # Composants layout
-│   │   │   ├── Header.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Layout.tsx
-│   │   ├── charts/                # Graphiques analytics
-│   │   │   ├── AnalyticsChart.tsx
-│   │   │   └── RevenueChart.tsx
-│   │   └── maps/                  # Composants cartes
-│   │       ├── TrackingMap.tsx
-│   │       └── RoutePlanner.tsx
+│   ├── hooks/                     # Hooks React personnalisés
+│   │   ├── useAuth.ts
+│   │   ├── useCategories.ts
+│   │   ├── useMissions.ts
+│   │   └── useProducts.ts
+│   ├── lib/                       # Bibliothèques et configurations
+│   │   └── utils.tsx               # Utilitaires shadcn/ui
 │   ├── pages/                     # Pages application
 │   │   ├── auth/                  # Authentification
 │   │   │   ├── Login.tsx
@@ -101,11 +101,6 @@ apps/frontend-web/
 │   │   └── profile/               # Gestion profil
 │   │       ├── UserProfile.tsx
 │   │       └── Settings.tsx
-│   ├── hooks/                     # Hooks React personnalisés
-│   │   ├── useAuth.ts
-│   │   ├── useApi.ts
-│   │   ├── useWebSocket.ts
-│   │   └── useKYC.ts
 │   ├── services/                  # Services API
 │   │   ├── api.ts                 # Configuration API
 │   │   ├── auth.service.ts
@@ -126,11 +121,6 @@ apps/frontend-web/
 │   │   ├── user.types.ts
 │   │   ├── mission.types.ts
 │   │   └── api.types.ts
-│   ├── lib/                       # Bibliothèques et configurations
-│   │   └── utils.ts               # Utilitaires shadcn/ui
-│   ├── styles/                    # Styles
-│   │   ├── globals.css
-│   │   └── components.css
 │   ├── App.tsx                    # Composant racine
 │   ├── main.tsx                   # Point d'entrée
 │   └── index.css                  # Styles globaux avec shadcn/ui
