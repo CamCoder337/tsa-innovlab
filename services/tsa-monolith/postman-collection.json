@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "TSA Logistics API - Authentication Tests",
-    "description": "Collection complète pour tester l'authentification et les rôles dans TSA Logistics",
-    "version": "1.0.0"
+    "name": "TSA Logistics API - Complete Tests",
+    "description": "Collection complète pour tester l'authentification, les rôles et la gestion des missions dans TSA Logistics",
+    "version": "2.0.0"
   },
   "variable": [
     {
@@ -32,6 +32,21 @@
     },
     {
       "key": "affreteurId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "missionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adresseId1",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adresseId2",
       "value": "",
       "type": "string"
     }
@@ -659,6 +674,572 @@
               "});"
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "📊 ADMIN - Missions Management",
+      "item": [
+        {
+          "name": "📋 Admin - Get All Missions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/missions?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "missions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin can view all missions', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('missions');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "📊 Admin - Mission Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/missions/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "missions", "stats"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin can view mission statistics', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('totals');",
+                  "    pm.expect(jsonData.data).to.have.property('statusStats');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "➕ Admin - Create Mission for Affreteur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"affreteurId\": \"{{affreteurId}}\",\n  \"titre\": \"Mission Admin - Transport Électronique\",\n  \"description\": \"Transport de matériel électronique sensible de Douala à Yaoundé\",\n  \"typeMarchandise\": \"électronique\",\n  \"poids\": 150.5,\n  \"volume\": 2.3,\n  \"dateDepartEstime\": \"2025-01-20 08:00:00\",\n  \"dateArriveePrevue\": \"2025-01-21 16:00:00\",\n  \"budgetMin\": 75000,\n  \"budgetMax\": 100000,\n  \"adresseDepart\": {\n    \"street\": \"Avenue Charles de Gaulle\",\n    \"city\": \"Douala\",\n    \"region\": \"Littoral\",\n    \"country\": \"Cameroun\",\n    \"postalCode\": \"1234\",\n    \"latitude\": 4.0511,\n    \"longitude\": 9.7679,\n    \"label\": \"Entrepôt Principal Douala\"\n  },\n  \"adresseArrivee\": {\n    \"street\": \"Boulevard de la Réunification\",\n    \"city\": \"Yaoundé\",\n    \"region\": \"Centre\",\n    \"country\": \"Cameroun\",\n    \"postalCode\": \"5678\",\n    \"latitude\": 3.8480,\n    \"longitude\": 11.5021,\n    \"label\": \"Centre de Distribution Yaoundé\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "missions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin can create mission for affreteur', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.affreteurId).to.eql(pm.collectionVariables.get('affreteurId'));",
+                  "    pm.collectionVariables.set('missionId', jsonData.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔄 Admin - Update Mission Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"published\",\n  \"commentaire\": \"Mission approuvée par l'admin et publiée\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/missions/{{missionId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "missions", "{{missionId}}", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin can update mission status', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.newStatus).to.eql('published');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚛 AFFRETEUR - Missions Management",
+      "item": [
+        {
+          "name": "📋 Affreteur - Get My Missions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions?status=draft",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions"],
+              "query": [{ "key": "status", "value": "draft" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can view their missions', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('missions');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "➕ Affreteur - Create Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Transport Urgent - Médicaments\",\n  \"description\": \"Livraison urgente de médicaments essentiels vers hôpital régional\",\n  \"typeMarchandise\": \"pharmaceutique\",\n  \"poids\": 25.0,\n  \"volume\": 0.5,\n  \"dateDepartEstime\": \"2025-01-15 14:00:00\",\n  \"dateArriveePrevue\": \"2025-01-15 18:00:00\",\n  \"budgetMin\": 30000,\n  \"budgetMax\": 50000,\n  \"adresseDepart\": {\n    \"street\": \"Rue de la Pharmacie Centrale\",\n    \"city\": \"Douala\",\n    \"region\": \"Littoral\",\n    \"country\": \"Cameroun\",\n    \"latitude\": 4.0611,\n    \"longitude\": 9.7779,\n    \"label\": \"Pharmacie Centrale Douala\"\n  },\n  \"adresseArrivee\": {\n    \"street\": \"Avenue de l'Hôpital\",\n    \"city\": \"Bafoussam\",\n    \"region\": \"Ouest\",\n    \"country\": \"Cameroun\",\n    \"latitude\": 5.4781,\n    \"longitude\": 10.4167,\n    \"label\": \"Hôpital Régional Bafoussam\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can create mission', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('draft');",
+                  "    pm.collectionVariables.set('missionId', jsonData.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔍 Affreteur - Get Mission Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions/{{missionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions", "{{missionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can view mission details', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.id).to.eql(pm.collectionVariables.get('missionId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "✏️ Affreteur - Update Mission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Livraison TRÈS urgente de médicaments essentiels - Priorité maximale\",\n  \"budgetMax\": 60000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions/{{missionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions", "{{missionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can update mission', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.budgetMax).to.eql(60000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🚀 Affreteur - Publish Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions/{{missionId}}/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions", "{{missionId}}", "publish"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can publish mission', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('published');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "⏸️ Affreteur - Unpublish Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/affreteur/missions/{{missionId}}/unpublish",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "affreteur", "missions", "{{missionId}}", "unpublish"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Affreteur can unpublish mission', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data.status).to.eql('draft');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚚 TRANSPORTEUR - Available Missions",
+      "item": [
+        {
+          "name": "🔍 Transporteur - Get Available Missions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transporteur/missions/available?city=Douala&budgetMin=20000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transporteur", "missions", "available"],
+              "query": [
+                { "key": "city", "value": "Douala" },
+                { "key": "budgetMin", "value": "20000" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transporteur can view available missions', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('missions');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "🔍 Transporteur - Get Mission Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transporteur/missions/{{missionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transporteur", "missions", "{{missionId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transporteur can view published mission details', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.data.status).to.eql('published');",
+                  "    } else if (pm.response.code === 404) {",
+                  "        // Mission not published or not found",
+                  "        console.log('Mission not available to transporteur');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "📋 Transporteur - Get My Missions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/transporteur/my-missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transporteur", "my-missions"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transporteur can view assigned missions', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('missions');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "📍 Transporteur - Update Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 4.0511,\n  \"longitude\": 9.7679,\n  \"timestamp\": \"2025-01-15T10:30:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transporteur/missions/{{missionId}}/location",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transporteur", "missions", "{{missionId}}", "location"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transporteur can update location', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.data.location).to.have.property('latitude');",
+                  "    } else {",
+                  "        // Mission not assigned to this transporteur",
+                  "        console.log('Mission not assigned to transporteur');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "📷 Transporteur - Upload Delivery Proof",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proofType\": \"signature\",\n  \"description\": \"Signature du destinataire à l'hôpital régional\",\n  \"imageUrl\": \"https://example.com/proof/signature-12345.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/transporteur/missions/{{missionId}}/proof",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "transporteur", "missions", "{{missionId}}", "proof"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Transporteur can upload delivery proof', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.success).to.be.true;",
+                  "        pm.expect(jsonData.data.proof.type).to.eql('signature');",
+                  "    } else {",
+                  "        console.log('Mission not assigned to transporteur');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

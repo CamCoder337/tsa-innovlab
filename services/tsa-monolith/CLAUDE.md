@@ -9,7 +9,7 @@
 - **Framework**: AdonisJS v6
 - **Runtime**: Node.js v22+
 - **Language**: TypeScript (strict mode)
-- **Base de données**: PostgreSQL (prod) / SQLite (dev optionnel)
+- **Base de données**: PostgreSQL (prod) /
 - **Cache**: Redis avec ioredis
 - **ORM**: Lucid ORM
 - **Authentification**: JWT + Sessions + MFA/TOTP
@@ -18,15 +18,20 @@
 
 ## 📁 Structure Actuelle du Projet
 
-### ✅ Contrôleurs Implémentés (3/20+)
+### ✅ Contrôleurs Implémentés (6/20+)
 
 ```
 app/controllers/http/
 ├── Auth/
 │   └── auth_controller.ts           # ✅ Authentification complète + MFA
-└── Admin/
-    ├── categories_controller.ts     # ✅ Gestion catégories CRUD
-    └── products_controller.ts       # ✅ Gestion produits CRUD
+├── Admin/
+│   ├── categories_controller.ts     # ✅ Gestion catégories CRUD
+│   ├── products_controller.ts       # ✅ Gestion produits CRUD
+│   └── missions_controller.ts       # ✅ Gestion missions admin CRUD + stats
+├── Affreteur/
+│   └── missions_controller.ts       # ✅ Gestion missions affreteur + publication
+└── Transporteur/
+    └── missions_controller.ts       # ✅ Missions disponibles + suivi
 ```
 
 ### ❌ Contrôleurs Manquants (Routes définies mais pas d'implémentation)
@@ -36,16 +41,13 @@ app/controllers/http/
 ├── Admin/                          # Partiellement implémenté
 │   ├── dashboard_controller.ts     # ❌ Dashboard admin
 │   ├── users_controller.ts         # ❌ Gestion utilisateurs
-│   ├── missions_controller.ts      # ❌ Gestion missions
 │   ├── audit_logs_controller.ts    # ❌ Logs d'audit
-│   └── stats_controller.ts         # ❌ Statistiques
-├── Affreteur/                      # ❌ Dossier vide - 0% implémenté
-│   ├── missions_controller.ts      # ❌ Missions affreteur
-│   ├── propositions_controller.ts  # ❌ Propositions
-│   └── shipments_controller.ts     # ❌ Expéditions
-├── Transporteur/                   # ❌ Dossier manquant - 0% implémenté
-│   ├── missions_controller.ts      # ❌ Missions transporteur
-│   └── propositions_controller.ts  # ❌ Candidatures
+│   └── stats_controller.ts         # ❌ Statistiques globales
+├── Affreteur/                      # Partiellement implémenté
+│   ├── propositions_controller.ts  # ❌ Propositions reçues
+│   └── shipments_controller.ts     # ❌ Expéditions/suivi
+├── Transporteur/                   # Partiellement implémenté
+│   └── propositions_controller.ts  # ❌ Candidatures/postulations
 ├── Shop/                          # ❌ Dossier manquant - 0% implémenté
 │   ├── products_controller.ts     # ❌ Boutique produits
 │   └── categories_controller.ts   # ❌ Boutique catégories
@@ -92,13 +94,14 @@ app/middleware/
 └── force_json_response_middleware.ts # Forcer réponses JSON
 ```
 
-### ✅ Validateurs (3)
+### ✅ Validateurs (4)
 
 ```
 app/validators/
 ├── auth_validator.ts           # Validation authentification
 ├── category_validator.ts       # Validation catégories
-└── product_validator.ts        # Validation produits
+├── product_validator.ts        # Validation produits
+└── mission_validator.ts        # Validation missions
 ```
 
 ### ✅ Commandes Ace (8)
@@ -233,7 +236,18 @@ PUT    /api/admin/categories/:id        # Modifier catégorie
 DELETE /api/admin/categories/:id        # Supprimer catégorie
 ```
 
-### ❌ Admin - Fonctionnalités Manquantes (0% Implémenté)
+### ✅ Admin - Missions (100% Implémenté)
+
+```
+# Gestion Missions Admin
+GET    /api/admin/missions            # ✅ Liste toutes les missions avec filtres
+POST   /api/admin/missions            # ✅ Créer mission pour affreteur
+GET    /api/admin/missions/stats      # ✅ Statistiques missions globales
+GET    /api/admin/missions/:id        # ✅ Détails mission
+PUT    /api/admin/missions/:id/status # ✅ Changer statut mission
+```
+
+### ❌ Admin - Fonctionnalités Manquantes
 
 ```
 GET    /api/admin/dashboard            # ❌ Dashboard admin
@@ -241,19 +255,26 @@ GET    /api/admin/users               # ❌ Gestion utilisateurs
 GET    /api/admin/users/:id           # ❌ Détails utilisateur
 PUT    /api/admin/users/:id           # ❌ Modifier utilisateur
 DELETE /api/admin/users/:id           # ❌ Supprimer utilisateur
-GET    /api/admin/missions            # ❌ Gestion missions
 GET    /api/admin/audit-logs          # ❌ Logs d'audit
 GET    /api/admin/stats/*             # ❌ Statistiques globales
 ```
 
-### ❌ Routes Affreteur (0% Implémenté)
+### ✅ Routes Affreteur - Missions (100% Implémenté)
 
 ```
-GET    /api/affreteur/missions                    # ❌ Mes missions
-POST   /api/affreteur/missions                    # ❌ Créer mission
-GET    /api/affreteur/missions/:id               # ❌ Détails mission
-PUT    /api/affreteur/missions/:id               # ❌ Modifier mission
-DELETE /api/affreteur/missions/:id               # ❌ Supprimer mission
+# Gestion Missions Affreteur
+GET    /api/affreteur/missions                    # ✅ Mes missions avec filtres
+POST   /api/affreteur/missions                    # ✅ Créer mission (statut DRAFT)
+GET    /api/affreteur/missions/:id               # ✅ Détails mission
+PUT    /api/affreteur/missions/:id               # ✅ Modifier mission
+DELETE /api/affreteur/missions/:id               # ✅ Supprimer mission
+POST   /api/affreteur/missions/:id/publish       # ✅ Publier mission (DRAFT→PUBLISHED)
+POST   /api/affreteur/missions/:id/unpublish     # ✅ Dépublier mission (PUBLISHED→DRAFT)
+```
+
+### ❌ Routes Affreteur - Fonctionnalités Manquantes
+
+```
 GET    /api/affreteur/missions/:id/propositions  # ❌ Propositions reçues
 POST   /api/affreteur/missions/:missionId/propositions/:id/accept # ❌ Accepter
 POST   /api/affreteur/missions/:missionId/propositions/:id/reject # ❌ Rejeter
@@ -261,17 +282,23 @@ GET    /api/affreteur/shipments                  # ❌ Mes expéditions
 GET    /api/affreteur/shipments/:id/tracking     # ❌ Suivi expédition
 ```
 
-### ❌ Routes Transporteur (0% Implémenté)
+### ✅ Routes Transporteur - Missions (100% Implémenté)
 
 ```
-GET    /api/transporteur/missions/available      # ❌ Missions disponibles
-GET    /api/transporteur/missions/:id            # ❌ Détails mission
-GET    /api/transporteur/my-missions             # ❌ Mes missions
-POST   /api/transporteur/missions/:id/apply     # ❌ Postuler mission
+# Missions Disponibles et Suivi
+GET    /api/transporteur/missions/available      # ✅ Missions PUBLISHED uniquement
+GET    /api/transporteur/missions/:id            # ✅ Détails mission publique
+GET    /api/transporteur/my-missions             # ✅ Mes missions assignées
+PUT    /api/transporteur/missions/:id/status    # ✅ Mettre à jour statut mission
+POST   /api/transporteur/missions/:id/location  # ✅ Localisation GPS temps réel
+POST   /api/transporteur/missions/:id/proof     # ✅ Preuve de livraison
+```
+
+### ❌ Routes Transporteur - Fonctionnalités Manquantes
+
+```
+POST   /api/transporteur/missions/:id/apply     # ❌ Postuler/candidater mission
 GET    /api/transporteur/my-propositions        # ❌ Mes candidatures
-PUT    /api/transporteur/missions/:id/status    # ❌ Mettre à jour statut
-POST   /api/transporteur/missions/:id/location  # ❌ Localisation GPS
-POST   /api/transporteur/missions/:id/proof     # ❌ Preuve livraison
 ```
 
 ### ❌ Routes Boutique (0% Implémenté)
@@ -314,16 +341,17 @@ PUT    /api/common/notifications/read-all # ❌ Tout marquer lu
 - **Services métier** : 100% ✅ (5/5 implémentés)
 - **Configuration** : 100% ✅ (9/9 configs)
 - **Templates emails** : 100% ✅ (10 templates)
-- **Contrôleurs API** : ~15% ❌ (3/20+ selon routes définies)
-- **Tests** : ~30% ⚠️ (seulement pour parties implémentées)
+- **Système de missions** : 90% ✅ (CRUD + publication + suivi implémentés)
+- **Contrôleurs API** : ~40% ✅ (6/15+ contrôleurs principaux)
+- **Tests** : ~35% ⚠️ (seulement pour parties implémentées)
 
 ### 🚨 Contrôleurs à Implémenter en Priorité
 
-1. **Admin Dashboard** - `admin/dashboard_controller.ts`
+1. **Système de Propositions** - `affreteur/propositions_controller.ts` + `transporteur/propositions_controller.ts`
 2. **Admin Users** - `admin/users_controller.ts`
-3. **Admin Missions** - `admin/missions_controller.ts`
-4. **Affreteur Missions** - `affreteur/missions_controller.ts`
-5. **Transporteur Missions** - `transporteur/missions_controller.ts`
+3. **Admin Dashboard** - `admin/dashboard_controller.ts`
+4. **Suivi Expéditions** - `affreteur/shipments_controller.ts`
+5. **Boutique E-commerce** - `shop/products_controller.ts` + `shop/categories_controller.ts`
 
 ## 🗄️ Base de Données
 
@@ -583,18 +611,26 @@ Toutes les actions critiques sont loggées dans `audit_logs`:
 
 ## 🚀 Prochaines Étapes
 
-### Priorité 1 - Compléter l'Administration
+### Priorité 1 - Système de Missions Complet ✅
+
+- [x] Implémenter `admin/missions_controller.ts` ✅
+- [x] Implémenter `affreteur/missions_controller.ts` ✅
+- [x] Implémenter `transporteur/missions_controller.ts` ✅
+- [x] Système de publication des missions ✅
+- [x] Filtrage et recherche avancée ✅
+
+### Priorité 2 - Système de Propositions
+
+- [ ] Implémenter `affreteur/propositions_controller.ts`
+- [ ] Implémenter `transporteur/propositions_controller.ts`
+- [ ] Workflow complet de candidature/acceptation
+- [ ] Système de notifications automatiques
+
+### Priorité 3 - Administration Complète
 
 - [ ] Implémenter `admin/dashboard_controller.ts`
 - [ ] Implémenter `admin/users_controller.ts`
-- [ ] Implémenter `admin/missions_controller.ts`
 - [ ] Implémenter `admin/audit_logs_controller.ts`
-
-### Priorité 2 - Core Business Logic
-
-- [ ] Implémenter `affreteur/missions_controller.ts`
-- [ ] Implémenter `transporteur/missions_controller.ts`
-- [ ] Implémenter `common/notifications_controller.ts`
 
 ### Priorité 3 - E-commerce
 
@@ -604,4 +640,45 @@ Toutes les actions critiques sont loggées dans `audit_logs`:
 ---
 
 _Ce service fait partie de l'écosystème TSA Logistics pour le concours TSA Contest 2025._
-_État : MVP en développement - Authentification et gestion produits complètes._
+_État : Core Business Ready - Authentification, gestion produits et système de missions complets._
+
+## 🎯 Système de Missions - Fonctionnalités Implémentées
+
+### ✅ Flux Complet des Missions
+
+1. **DRAFT** : Affreteur crée une mission en brouillon
+2. **PUBLISHED** : Affreteur publie la mission (visible aux transporteurs)
+3. **ASSIGNED** : Transporteur assigné à la mission (via système de propositions)
+4. **COMPLETED** : Mission terminée avec preuves de livraison
+5. **CANCELLED** : Mission annulée
+
+### ✅ Rôles et Permissions Implémentés
+
+**ADMIN** 🔑
+
+- Voir toutes les missions de tous les affreteurs
+- Créer des missions au nom d'affreteurs
+- Forcer n'importe quel changement de statut
+- Statistiques globales par statut
+
+**AFFRETEUR** 🚛
+
+- CRUD complet de ses missions
+- Publier/dépublier missions (DRAFT ↔ PUBLISHED)
+- Validation métier (budgets, dates, adresses requises)
+
+**TRANSPORTEUR** 🚚
+
+- Voir uniquement les missions PUBLISHED avec filtres
+- Suivi temps réel (localisation GPS)
+- Upload de preuves de livraison
+- Mise à jour des statuts de mission
+
+### ✅ Validations & Sécurité Implémentées
+
+- Isolation des données par rôle et utilisateur
+- Validation des transitions de statut autorisées
+- Validation métier (budgets min/max, dates cohérentes)
+- Gestion complète des adresses géographiques
+- Filtrage avancé par ville, budget, type de marchandise
+- Pagination et tri pour toutes les listes

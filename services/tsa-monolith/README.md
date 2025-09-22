@@ -6,11 +6,12 @@ API principale pour le concours TSA Contest 2025. Ce service gère l'authentific
 
 Monolithe AdonisJS qui fournit :
 
-- **Authentification & autorisation** : JWT, sessions utilisateurs
-- **Gestion des utilisateurs** : Profils, rôles, permissions
-- **API métier** : Logique principale de l'application
+- **Authentification & autorisation** : JWT, sessions, MFA/TOTP
+- **Gestion des utilisateurs** : Profils, rôles (Admin/Transporteur/Affreteur)
+- **Système de missions** : CRUD, publication, suivi en temps réel
+- **API métier** : Logique complète de la plateforme de transport
 - **Intégration AI** : Communication avec le service FastAPI
-- **Base de données** : Migrations, modèles, relations
+- **Base de données** : Migrations, modèles, relations complètes
 
 ## 🏗️ Architecture
 
@@ -110,12 +111,30 @@ FASTAPI_BASE_URL=http://localhost:8000
 - `POST /api/auth/logout` - Déconnexion
 - `GET /api/auth/me` - Profil utilisateur courant
 
-### Utilisateurs
+### Missions (Affreteur)
 
-- `GET /api/users` - Liste des utilisateurs
-- `GET /api/users/:id` - Détails utilisateur
-- `PUT /api/users/:id` - Mise à jour profil
-- `DELETE /api/users/:id` - Suppression utilisateur
+- `GET /api/affreteur/missions` - Mes missions avec filtres
+- `POST /api/affreteur/missions` - Créer mission (DRAFT)
+- `GET /api/affreteur/missions/:id` - Détails mission
+- `PUT /api/affreteur/missions/:id` - Modifier mission
+- `POST /api/affreteur/missions/:id/publish` - Publier mission
+- `DELETE /api/affreteur/missions/:id` - Supprimer mission
+
+### Missions (Transporteur)
+
+- `GET /api/transporteur/missions/available` - Missions PUBLISHED
+- `GET /api/transporteur/missions/:id` - Détails mission publique
+- `GET /api/transporteur/my-missions` - Mes missions assignées
+- `PUT /api/transporteur/missions/:id/status` - Mettre à jour statut
+- `POST /api/transporteur/missions/:id/location` - Localisation GPS
+- `POST /api/transporteur/missions/:id/proof` - Preuve livraison
+
+### Missions (Admin)
+
+- `GET /api/admin/missions` - Toutes les missions avec filtres
+- `POST /api/admin/missions` - Créer mission pour affreteur
+- `GET /api/admin/missions/stats` - Statistiques globales
+- `PUT /api/admin/missions/:id/status` - Changer statut mission
 
 ### Health Check
 
