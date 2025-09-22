@@ -10,6 +10,8 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import { UserRole } from '#models/user'
+import AutoSwagger from 'adonis-autoswagger'
+import swagger from '#config/swagger'
 
 // Helper function pour créer un middleware de rôle
 function roleGuard(role: UserRole) {
@@ -250,3 +252,14 @@ router
   })
   .prefix('/api/common')
   .middleware(middleware.auth())
+
+// ===== ROUTES SWAGGER =====
+// Documentation API auto-générée
+router.get('/docs', async ({ response }) => {
+  return response.send(AutoSwagger.default.docs(router.toJSON(), swagger))
+})
+
+// Spec JSON pour Swagger UI  
+router.get('/swagger.json', async ({ response }) => {
+  return response.json(AutoSwagger.default.writeFile(router.toJSON(), swagger))
+})

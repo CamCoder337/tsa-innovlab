@@ -17,12 +17,24 @@ import {
   verifyMFAValidator,
 } from '#validators/auth_validator'
 
+/**
+ * @tags Auth
+ */
 @inject()
 export default class AuthController {
   constructor(private authService: AuthService) {}
 
-  /**
-   * Authentification utilisateur avec gestion MFA
+  /*
+   * @login
+   * @summary Connexion utilisateur
+   * @description Authentifie un utilisateur avec email/mot de passe et code MFA optionnel
+   * @requestBody email - Email utilisateur - @required @type(string)
+   * @requestBody password - Mot de passe - @required @type(string)
+   * @requestBody mfaCode - Code MFA 6 chiffres - @type(string)
+   * @responseBody 200 - Connexion réussie avec tokens JWT
+   * @responseBody 401 - Identifiants invalides
+   * @responseBody 403 - MFA requis ou compte bloqué
+   * @responseBody 422 - Erreur de validation
    */
   async login({ request, response }: HttpContext) {
     const { email, password, mfaCode } = await request.validateUsing(loginValidator)

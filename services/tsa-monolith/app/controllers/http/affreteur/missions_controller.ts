@@ -9,7 +9,23 @@ import {
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
 
+/**
+ * Contrôleur pour la gestion des missions par les affréteurs
+ * @fileoverview CRUD complet des missions avec publication/dépublication
+ * @tags Affreteur-Missions
+ */
 export default class MissionsController {
+  /*
+   * @index
+   * @summary Récupérer mes missions
+   * @description Liste paginée des missions de l'affréteur connecté avec filtres de recherche
+   * @paramQuery page - Page actuelle - @default(1) @type(number)
+   * @paramQuery limit - Nombre d'éléments par page - @default(15) @type(number)  
+   * @paramQuery status - Filtre par statut - @enum(draft,published,assigned,completed,cancelled)
+   * @paramQuery search - Recherche dans titre, description, type marchandise
+   * @responseBody 200 - Liste des missions récupérée avec succès
+   * @responseBody 500 - Erreur serveur
+   */
   async index({ request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
@@ -69,6 +85,23 @@ export default class MissionsController {
     }
   }
 
+  /*
+   * @store  
+   * @summary Créer une nouvelle mission
+   * @description Crée une mission avec statut DRAFT. L'affréteur peut ensuite la publier
+   * @requestBody titre - Titre de la mission - @required @type(string)
+   * @requestBody description - Description détaillée - @type(string)
+   * @requestBody typeMarchandise - Type de marchandise - @required @type(string)
+   * @requestBody poids - Poids en kg - @type(number)
+   * @requestBody volume - Volume en m3 - @type(number)
+   * @requestBody dateDepartEstime - Date départ estimée - @type(string)
+   * @requestBody dateArriveePrevue - Date arrivée prévue - @type(string)  
+   * @requestBody budgetMin - Budget minimum en FCFA - @type(number)
+   * @requestBody budgetMax - Budget maximum en FCFA - @type(number)
+   * @responseBody 201 - Mission créée avec succès
+   * @responseBody 422 - Erreur de validation
+   * @responseBody 500 - Erreur serveur
+   */
   async store({ request, auth, response }: HttpContext) {
     const trx = await db.transaction()
 
@@ -372,6 +405,16 @@ export default class MissionsController {
     }
   }
 
+  /*
+   * @publish
+   * @summary Publier une mission
+   * @description Publie une mission DRAFT pour la rendre visible aux transporteurs
+   * @paramPath id - ID de la mission - @required @type(string)
+   * @responseBody 200 - Mission publiée avec succès
+   * @responseBody 404 - Mission non trouvée
+   * @responseBody 422 - Mission ne peut pas être publiée
+   * @responseBody 500 - Erreur serveur
+   */
   async publish({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
