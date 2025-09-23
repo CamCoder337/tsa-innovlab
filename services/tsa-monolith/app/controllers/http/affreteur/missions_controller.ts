@@ -20,7 +20,7 @@ export default class MissionsController {
    * @summary Récupérer mes missions
    * @description Liste paginée des missions de l'affréteur connecté avec filtres de recherche
    * @paramQuery page - Page actuelle - @default(1) @type(number)
-   * @paramQuery limit - Nombre d'éléments par page - @default(15) @type(number)  
+   * @paramQuery limit - Nombre d'éléments par page - @default(15) @type(number)
    * @paramQuery status - Filtre par statut - @enum(draft,published,assigned,completed,cancelled)
    * @paramQuery search - Recherche dans titre, description, type marchandise
    * @responseBody 200 - Liste des missions récupérée avec succès
@@ -86,7 +86,7 @@ export default class MissionsController {
   }
 
   /*
-   * @store  
+   * @store
    * @summary Créer une nouvelle mission
    * @description Crée une mission avec statut DRAFT. L'affréteur peut ensuite la publier
    * @requestBody titre - Titre de la mission - @required @type(string)
@@ -95,7 +95,7 @@ export default class MissionsController {
    * @requestBody poids - Poids en kg - @type(number)
    * @requestBody volume - Volume en m3 - @type(number)
    * @requestBody dateDepartEstime - Date départ estimée - @type(string)
-   * @requestBody dateArriveePrevue - Date arrivée prévue - @type(string)  
+   * @requestBody dateArriveePrevue - Date arrivée prévue - @type(string)
    * @requestBody budgetMin - Budget minimum en FCFA - @type(number)
    * @requestBody budgetMax - Budget maximum en FCFA - @type(number)
    * @responseBody 201 - Mission créée avec succès
@@ -380,10 +380,10 @@ export default class MissionsController {
           : undefined,
         budgetMin: validatedData.budgetMin,
         budgetMax: validatedData.budgetMax,
-        status: validatedData.status,
+        status: validatedData.status as MissionStatus,
       })
 
-      await mission.save({ client: trx })
+      await mission.save()
       await trx.commit()
 
       await mission.load('affreteur')

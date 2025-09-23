@@ -259,7 +259,7 @@ router.get('/docs', async ({ response }) => {
   return response.send(AutoSwagger.default.docs(router.toJSON(), swagger))
 })
 
-// Spec JSON pour Swagger UI  
+// Spec JSON pour Swagger UI
 router.get('/swagger.json', async ({ response }) => {
   return response.json(AutoSwagger.default.writeFile(router.toJSON(), swagger))
 })
