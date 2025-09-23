@@ -1,6 +1,6 @@
-# 🌐 Frontend Web - TSA-Logistique
+# 🌐 TSA Logistique - Frontend
 
-> Application web moderne pour la plateforme logistique TSA - Interface utilisateur principale
+> Interface utilisateur moderne pour la plateforme logistique TSA
 
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
@@ -15,30 +15,35 @@ L'application web frontend de TSA-Logistique est l'interface principale pour les
 ## ✨ Fonctionnalités Principales
 
 ### 🏠 **Dashboard Intelligent**
+
 - Vue d'ensemble missions actives
 - Analytics temps réel et KPIs
 - Notifications et alertes importantes
 - Widgets personnalisables par rôle
 
 ### 🚚 **Marketplace Logistique**
+
 - Création et gestion de missions
 - Système d'enchères en temps réel
 - Matching intelligent transporteurs/affréteurs
 - Tracking GPS temps réel des livraisons
 
 ### 🛒 **E-commerce Intégré**
+
 - Catalogue produits avec recherche avancée
 - Panier intelligent avec calcul frais transport
 - Checkout optimisé et paiements sécurisés
 - Historique commandes et factures
 
 ### 👤 **Gestion de Profil**
+
 - Profils utilisateurs détaillés
 - Processus KYC avec upload documents
 - Vérification biométrique via Smile Identity
 - Gestion permissions et préférences
 
 ### 💬 **Communication Temps Réel**
+
 - Chat intégré entre acteurs
 - Support client avec tickets
 - Notifications push web
@@ -48,31 +53,31 @@ L'application web frontend de TSA-Logistique est l'interface principale pour les
 
 ```
 apps/frontend-web/
-├── public/                          # Assets statiques
-│   ├── favicon.ico
-│   ├── manifest.json               # PWA manifest
-│   └── icons/                      # Icônes PWA diverses tailles
+├── public/                # Fichiers statiques
 ├── src/
+│   ├── assets/                    # Images et assets
 │   ├── components/                 # Composants réutilisables
+│   │   ├── forms/                 # Composants formulaires
+│   │   │   ├── LoginForm.tsx
+│   │   │   ├── RegisterForm.tsx
+│   │   │   └── KYCForm.tsx
+│   │   │   └── ...
+│   │   ├── layout/                # Composants layout
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── Layout.tsx
 │   │   ├── ui/                    # Composants shadcn/ui
 │   │   │   ├── button.tsx
 │   │   │   ├── input.tsx
 │   │   │   ├── card.tsx
 │   │   │   └── ...
-│   │   ├── forms/                 # Composants formulaires
-│   │   │   ├── LoginForm.tsx
-│   │   │   ├── RegisterForm.tsx
-│   │   │   └── KYCForm.tsx
-│   │   ├── layout/                # Composants layout
-│   │   │   ├── Header.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Layout.tsx
-│   │   ├── charts/                # Graphiques analytics
-│   │   │   ├── AnalyticsChart.tsx
-│   │   │   └── RevenueChart.tsx
-│   │   └── maps/                  # Composants cartes
-│   │       ├── TrackingMap.tsx
-│   │       └── RoutePlanner.tsx
+│   ├── hooks/                     # Hooks React personnalisés
+│   │   ├── useAuth.ts
+│   │   ├── useCategories.ts
+│   │   ├── useMissions.ts
+│   │   └── useProducts.ts
+│   ├── lib/                       # Bibliothèques et configurations
+│   │   └── utils.tsx               # Utilitaires shadcn/ui
 │   ├── pages/                     # Pages application
 │   │   ├── auth/                  # Authentification
 │   │   │   ├── Login.tsx
@@ -96,11 +101,6 @@ apps/frontend-web/
 │   │   └── profile/               # Gestion profil
 │   │       ├── UserProfile.tsx
 │   │       └── Settings.tsx
-│   ├── hooks/                     # Hooks React personnalisés
-│   │   ├── useAuth.ts
-│   │   ├── useApi.ts
-│   │   ├── useWebSocket.ts
-│   │   └── useKYC.ts
 │   ├── services/                  # Services API
 │   │   ├── api.ts                 # Configuration API
 │   │   ├── auth.service.ts
@@ -121,11 +121,6 @@ apps/frontend-web/
 │   │   ├── user.types.ts
 │   │   ├── mission.types.ts
 │   │   └── api.types.ts
-│   ├── lib/                       # Bibliothèques et configurations
-│   │   └── utils.ts               # Utilitaires shadcn/ui
-│   ├── styles/                    # Styles
-│   │   ├── globals.css
-│   │   └── components.css
 │   ├── App.tsx                    # Composant racine
 │   ├── main.tsx                   # Point d'entrée
 │   └── index.css                  # Styles globaux avec shadcn/ui
@@ -154,6 +149,7 @@ apps/frontend-web/
 ## 🚀 Quick Start
 
 ### Prérequis
+
 - **Node.js** 18+ ([Download](https://nodejs.org/))
 - **Yarn** 1.22+ (`npm install -g yarn`)
 - **Git** ([Download](https://git-scm.com/))
@@ -179,6 +175,7 @@ L'application sera disponible sur **http://localhost:3000**
 ## 🛠️ Scripts Disponibles
 
 ### Développement
+
 ```bash
 yarn dev              # Serveur de développement avec HMR
 yarn dev:host         # Serveur accessible depuis le réseau
@@ -186,6 +183,7 @@ yarn preview          # Aperçu du build de production
 ```
 
 ### Build & Test
+
 ```bash
 yarn build            # Build optimisé pour production
 yarn test             # Tests unitaires (Jest + Testing Library)
@@ -195,6 +193,7 @@ yarn test:e2e         # Tests E2E avec Playwright
 ```
 
 ### Qualité du Code
+
 ```bash
 yarn lint             # ESLint + Prettier
 yarn lint:fix         # Auto-fix des erreurs ESLint/Prettier
@@ -203,6 +202,7 @@ yarn type-check:watch # Vérification TypeScript en mode watch
 ```
 
 ### shadcn/ui Components
+
 ```bash
 yarn ui:add <component>    # Ajouter un composant shadcn/ui
 yarn ui:list              # Lister tous les composants disponibles
@@ -216,6 +216,7 @@ yarn ui:update            # Mettre à jour tous les composants
 L'application utilise **shadcn/ui** pour un design system moderne et accessible.
 
 #### Installation initiale (déjà fait)
+
 ```bash
 # Déjà exécuté dans le projet
 yarn add shadcn@latest
@@ -315,13 +316,13 @@ export function MissionCard({ mission }) {
 @layer base {
   :root {
     /* Couleurs TSA-Logistique */
-    --primary: 221 83% 53%;          /* Bleu TSA #3B82F6 */
+    --primary: 221 83% 53%; /* Bleu TSA #3B82F6 */
     --primary-foreground: 210 40% 98%;
-    --secondary: 160 84% 39%;        /* Vert transport #10B981 */
+    --secondary: 160 84% 39%; /* Vert transport #10B981 */
     --secondary-foreground: 0 0% 9%;
-    --accent: 38 92% 50%;            /* Orange accent #F59E0B */
+    --accent: 38 92% 50%; /* Orange accent #F59E0B */
     --accent-foreground: 0 0% 9%;
-    
+
     /* Couleurs système */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -371,9 +372,9 @@ VITE_DEBUG_MODE=true
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -406,12 +407,13 @@ export default defineConfig({
       },
     },
   },
-})
+});
 ```
 
 ## 🎯 Structure des Composants
 
 ### Composants UI de Base (shadcn/ui)
+
 ```typescript
 // Importation standardisée
 import { Button } from "@/components/ui/button"
@@ -425,6 +427,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 ```
 
 ### Composants Métier TSA
+
 ```typescript
 // components/forms/MissionForm.tsx
 import { useForm } from "react-hook-form"
@@ -464,16 +467,17 @@ export function MissionForm() {
 ## 🔄 Gestion d'État
 
 ### Zustand Stores
+
 ```typescript
 // stores/authStore.ts
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface AuthState {
-  user: User | null
-  token: string | null
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -482,8 +486,8 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       login: async (email, password) => {
-        const response = await authService.login(email, password)
-        set({ user: response.user, token: response.token })
+        const response = await authService.login(email, password);
+        set({ user: response.user, token: response.token });
       },
       logout: () => set({ user: null, token: null }),
     }),
@@ -491,24 +495,25 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
     }
   )
-)
+);
 ```
 
 ### Custom Hooks
+
 ```typescript
 // hooks/useAuth.ts
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore } from '@/stores/authStore';
 
 export function useAuth() {
-  const { user, token, login, logout } = useAuthStore()
-  
+  const { user, token, login, logout } = useAuthStore();
+
   return {
     user,
     token,
     isAuthenticated: !!user && !!token,
     login,
     logout,
-  }
+  };
 }
 ```
 
@@ -521,7 +526,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
-  return isAuthenticated ? children : <Navigate to="/login" />
+  return isAuthenticated ? children : <Navigate to="/" />
 }
 
 function App() {
@@ -529,9 +534,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Routes publiques */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        
+
         {/* Routes protégées */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
@@ -543,7 +548,7 @@ function App() {
             <MissionsList />
           </ProtectedRoute>
         } />
-        
+
         {/* Redirection par défaut */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
@@ -555,64 +560,66 @@ function App() {
 ## 🔌 Communication API
 
 ### Configuration Axios
+
 ```typescript
 // services/api.ts
-import axios from 'axios'
-import { useAuthStore } from '@/stores/authStore'
+import axios from 'axios';
+import { useAuthStore } from '@/stores/authStore';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
-})
+});
 
 // Intercepteur pour ajouter le token
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
+  const token = useAuthStore.getState().token;
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  return config
-})
+  return config;
+});
 
 // Intercepteur pour gérer les erreurs
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default api
+export default api;
 ```
 
 ### Services API
+
 ```typescript
 // services/missions.service.ts
-import api from './api'
-import type { Mission, CreateMissionDto } from '@/types/mission.types'
+import api from './api';
+import type { Mission, CreateMissionDto } from '@/types/mission.types';
 
 export const missionsService = {
-  getAll: (filters?: object): Promise<Mission[]> => 
-    api.get('/missions', { params: filters }).then(res => res.data),
-    
+  getAll: (filters?: object): Promise<Mission[]> =>
+    api.get('/missions', { params: filters }).then((res) => res.data),
+
   create: (mission: CreateMissionDto): Promise<Mission> =>
-    api.post('/missions', mission).then(res => res.data),
-    
-  getById: (id: string): Promise<Mission> =>
-    api.get(`/missions/${id}`).then(res => res.data),
-    
+    api.post('/missions', mission).then((res) => res.data),
+
+  getById: (id: string): Promise<Mission> => api.get(`/missions/${id}`).then((res) => res.data),
+
   update: (id: string, updates: Partial<Mission>): Promise<Mission> =>
-    api.put(`/missions/${id}`, updates).then(res => res.data),
-}
+    api.put(`/missions/${id}`, updates).then((res) => res.data),
+};
 ```
 
 ## 🧪 Tests
 
 ### Configuration Jest
+
 ```javascript
 // jest.config.js
 module.exports = {
@@ -622,11 +629,7 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/main.tsx',
-  ],
+  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/main.tsx'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -635,10 +638,11 @@ module.exports = {
       statements: 80,
     },
   },
-}
+};
 ```
 
 ### Tests de Composants
+
 ```typescript
 // tests/components/Button.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react'
@@ -653,7 +657,7 @@ describe('Button', () => {
   it('calls onClick when clicked', () => {
     const handleClick = jest.fn()
     render(<Button onClick={handleClick}>Click me</Button>)
-    
+
     fireEvent.click(screen.getByRole('button'))
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
@@ -669,6 +673,7 @@ describe('Button', () => {
 ## 🚀 Build & Déploiement
 
 ### Build de Production
+
 ```bash
 # Build optimisé
 yarn build
@@ -681,6 +686,7 @@ yarn preview
 ```
 
 ### Déploiement Vercel
+
 ```bash
 # Installation Vercel CLI
 npm i -g vercel
@@ -693,6 +699,7 @@ vercel --prod
 ```
 
 ### Variables d'Environnement Vercel
+
 ```bash
 # Configurer les variables sur Vercel
 vercel env add VITE_API_URL
@@ -703,6 +710,7 @@ vercel env add VITE_GOOGLE_MAPS_API_KEY
 ## 📊 Performance
 
 ### Optimisations Incluses
+
 - **Code Splitting** : Lazy loading des routes
 - **Tree Shaking** : Élimination du code mort
 - **Bundle Optimization** : Chunks optimisés par Vite
@@ -710,15 +718,17 @@ vercel env add VITE_GOOGLE_MAPS_API_KEY
 - **PWA Ready** : Service worker et cache intelligent
 
 ### Métriques Objectifs
+
 - **Lighthouse Score** : 95+ (Performance, Accessibilité, SEO)
 - **Core Web Vitals** :
-    - LCP (Largest Contentful Paint) : < 2.5s
-    - FID (First Input Delay) : < 100ms
-    - CLS (Cumulative Layout Shift) : < 0.1
+  - LCP (Largest Contentful Paint) : < 2.5s
+  - FID (First Input Delay) : < 100ms
+  - CLS (Cumulative Layout Shift) : < 0.1
 
 ## 🔐 Sécurité
 
 ### Mesures Implémentées
+
 - **Content Security Policy** : Headers sécurisés
 - **Input Validation** : Validation côté client avec Zod
 - **XSS Protection** : Sanitisation des données
@@ -726,19 +736,20 @@ vercel env add VITE_GOOGLE_MAPS_API_KEY
 - **Environment Variables** : Secrets sécurisés
 
 ### Authentification
+
 ```typescript
 // Protection des routes sensibles
 function ProtectedRoute({ children, requiredRole }) {
   const { user, isAuthenticated } = useAuth()
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />
   }
-  
+
   if (requiredRole && user?.role !== requiredRole) {
     return <div>Accès non autorisé</div>
   }
-  
+
   return children
 }
 ```
@@ -748,6 +759,7 @@ function ProtectedRoute({ children, requiredRole }) {
 ### Problèmes Courants
 
 #### shadcn/ui components ne s'affichent pas correctement
+
 ```bash
 # Vérifier que Tailwind CSS est bien configuré
 yarn dev
@@ -755,6 +767,7 @@ yarn dev
 ```
 
 #### Erreurs TypeScript avec shadcn/ui
+
 ```bash
 # Mettre à jour les types
 yarn type-check
@@ -762,6 +775,7 @@ yarn type-check
 ```
 
 #### Build échoue
+
 ```bash
 # Nettoyer et rebuilder
 rm -rf node_modules dist
@@ -770,6 +784,7 @@ yarn build
 ```
 
 #### Variables d'environnement non reconnues
+
 ```bash
 # Vérifier que les variables commencent par VITE_
 # et redémarrer le serveur de développement
@@ -778,6 +793,7 @@ yarn build
 ## 📚 Ressources
 
 ### Documentation
+
 - [React Documentation](https://react.dev/)
 - [Vite Guide](https://vitejs.dev/guide/)
 - [shadcn/ui Components](https://ui.shadcn.com/docs/components)
@@ -785,6 +801,7 @@ yarn build
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
 ### Tools & Extensions VSCode
+
 - **ES7+ React/Redux/React-Native snippets**
 - **Auto Rename Tag**
 - **Tailwind CSS IntelliSense**
@@ -794,6 +811,7 @@ yarn build
 ## 🤝 Contribution
 
 ### Guidelines Frontend
+
 1. **Suivre les conventions** React et TypeScript
 2. **Utiliser shadcn/ui** pour les composants UI
 3. **Écrire des tests** pour les nouvelles fonctionnalités
@@ -801,6 +819,7 @@ yarn build
 5. **Respecter l'accessibilité** (a11y)
 
 ### Workflow Git
+
 ```bash
 # Créer une branche feature
 git checkout integration

@@ -1,23 +1,26 @@
-import { useAuthStore } from '@/stores/user'
+import { useAuthStore } from '@/stores/authStore';
+import { useEffect } from 'react';
 
 export function useAuth() {
-    const user = useAuthStore((s) => s.currentUser)
-    const token = useAuthStore((s) => s.token)
-    const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-    const login = useAuthStore((s) => s.login)
-    const logout = useAuthStore((s) => s.logout)
-    const updateUser = useAuthStore((s) => s.updateUser)
-    const setRole = useAuthStore((s) => s.setRole)
+  const user = useAuthStore((s) => s.currentUser);
+  const token = useAuthStore((s) => s.token);
+  const refreshToken = useAuthStore((s) => s.refreshToken);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const login = useAuthStore((s) => s.login);
+  const logout = useAuthStore((s) => s.logout);
+  const setToken = useAuthStore((s) => s.setToken);
 
-    return {
-        user,
-        token,
-        isAuthenticated,
-        login,
-        logout,
-        updateUser,
-        setRole,
-    }
+  useEffect(() => {
+    if (!token) logout();
+  }, [token, logout]);
+
+  return {
+    user,
+    token,
+    refreshToken,
+    isAuthenticated,
+    login,
+    logout,
+    setToken,
+  };
 }
-
-

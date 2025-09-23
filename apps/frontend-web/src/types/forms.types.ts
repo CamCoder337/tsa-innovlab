@@ -2,53 +2,49 @@
 // FORM TYPES
 // ============================================================================
 
-import type { UserRole } from './user.types';
-import type { MissionItem, SpecialRequirements, CargoType, UrgencyLevel } from './mission.types';
+import type { UserRole } from './auth.types';
 
 // Auth Forms
 export interface LoginFormData {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
+  mfaCode?: string;
 }
 
 export interface RegisterFormData {
-    nom: string;
-    prenom: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    role: UserRole | '';
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+  phone: string;
+  country?: string;
+  role: UserRole;
 }
 
 export interface ForgotPasswordFormData {
-    email: string;
+  email: string;
 }
 
 export interface VerifyEmailFormData {
-    email: string;
-    code: string;
+  email: string;
+  token: string;
 }
 
 // Mission Forms
 export interface CreateMissionFormData {
-    title: string;
-    origin: string;
-    destination: string;
-    cargoType: CargoType | '';
-    urgency: UrgencyLevel | '';
-    proposedPrice: string;
-    description: string;
-    specialRequirements: SpecialRequirements;
-    deadline: Date | undefined;
-    missionItems: MissionItem[];
+  title: string;
+  origin: string;
+  destination: string;
+  proposedPrice: string;
+  description: string;
+  deadline: Date | undefined;
 }
 
 export interface UpdateMissionFormData extends Partial<CreateMissionFormData> {
-    id: string;
+  id: string;
 }
 
 export interface FormErrors {
-    [key: string]: string;
+  [key: string]: string;
 }
-
-

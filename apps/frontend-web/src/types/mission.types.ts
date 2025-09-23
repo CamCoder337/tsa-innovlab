@@ -1,72 +1,114 @@
-// ============================================================================
-// MISSION TYPES
-// ============================================================================
+import type { Timestamps } from './common.types';
+import type { Address } from './address.types';
 
-export type MissionStatus = "brouillon" | "ouverte" | "en_negociation" | "assignee" | "en_transit" | "terminee" | "annulee";
-export type UrgencyLevel = "low" | "medium" | "high";
-export type CargoType = "" | "electronics" | "construction" | "food" | "medical" | "textiles" | "machinery" | "chemicals" | "other";
+export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
 
-export interface MissionItem {
-    id: string;
-    description: string;
-    weight: string;
-    volume: string;
-    value: string;
+export interface Mission extends Timestamps {
+  id: string;
+  affreteurId: string;
+  titre: string;
+  description: string;
+  typeMarchandise: string;
+  poids: number;
+  volume: number;
+  dateDepartEstime: string;
+  dateArriveePrevue: string;
+  adresseDepartId: string;
+  adresseDepart?: Address;
+  adresseArriveeId: string;
+  adresseArrivee?: Address;
+  budgetMin: number;
+  budgetMax: number;
+  status: MissionStatus;
+  isFlexibleDates?: boolean;
+  isFlexibleRoute?: boolean;
+  notesComplementaires?: string;
+  documents?: string[];
+  transporteurId?: string;
+  dateDebutReelle?: string;
+  dateFinReelle?: string;
+  ratingAffreteur?: number;
+  commentaireAffreteur?: string;
+  ratingTransporteur?: number;
+  commentaireTransporteur?: string;
 }
 
-export interface SpecialRequirements {
-    refrigerated: boolean;
-    fragile: boolean;
-    hazardous: boolean;
-    insurance: boolean;
+export interface CreateMissionDto {
+  titre: string;
+  description?: string;
+  typeMarchandise?: string;
+  poids?: number;
+  volume?: number;
+  dateDepartEstime?: string;
+  dateArriveePrevue?: string;
+  adresseDepart?: Address;
+  adresseArrivee?: Address;
+  budgetMin?: number;
+  budgetMax?: number;
 }
 
-export interface Shipper {
-    id: string;
-    name: string;
-    rating: number;
-    phone: string;
-    company: string;
+export interface UpdateMissionDto {
+  status?: MissionStatus;
+  transporteurId?: string | null;
+  dateDebutReelle?: string | null;
+  dateFinReelle?: string | null;
+  ratingAffreteur?: number | null;
+  commentaireAffreteur?: string | null;
+  ratingTransporteur?: number | null;
+  commentaireTransporteur?: string | null;
 }
 
-export interface Mission {
+export interface MissionStats {
+  totals: {
+    missions: number;
+    affreteurs: number;
+    transporteurs: number;
+  };
+  statusStats: Record<string, number>;
+  recentMissions: Array<{
     id: string;
-    title: string;
-    description: string;
-    origin: string;
-    destination: string;
-    cargoType: CargoType;
-    proposedPrice: number;
-    finalPrice?: number;
-    deadline: string;
-    bids: number;
-    distance?: number;
-    weight?: number;
-    urgency?: UrgencyLevel;
-    specialRequirements: SpecialRequirements;
-    missionItems: MissionItem[];
-    shipper?: Shipper;
+    titre: string;
     status: MissionStatus;
+    affreteur: string | null;
     createdAt: string;
-    updatedAt?: string;
+  }>;
 }
 
-export interface SelectOption {
-    value: string;
-    label: string;
+export interface MissionFilterParams {
+  search?: string;
+  status?: MissionStatus[];
+  affreteurId?: string;
+  transporteurId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  budgetMin?: number;
+  budgetMax?: number;
+  typeMarchandise?: string;
+  city?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'titre' | 'budgetMin' | 'budgetMax';
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
-export interface FilterOptions {
-    status?: MissionStatus[];
-    urgency?: UrgencyLevel[];
-    cargoType?: CargoType[];
-    origin?: string[];
-    destination?: string[];
+export interface MissionState {
+  missions: Mission[];
+  myMissions: Mission[];
+  currentMission: Mission | null;
+  isLoading: boolean;
+  error: string | null;
+  stats: MissionStats;
 }
 
-export interface SortOptions {
-    field: keyof Mission;
-    direction: 'asc' | 'desc';
+export interface MissionActions {
+  setMissions: (missions: Mission[]) => void;
+  addMission: (mission: Mission) => void;
+  updateMission: (id: string, updates: Partial<Mission>) => void;
+  deleteMission: (id: string) => void;
+  setCurrentMission: (mission: Mission | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 }
 
-
+// Extended store interface with API and utility methods
+export type MissionStoreExtended = MissionState & MissionActions;

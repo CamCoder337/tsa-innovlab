@@ -1,32 +1,56 @@
-// Common component props
-export interface BaseComponentProps {
-    className?: string;
-    children?: React.ReactNode;
+// Common types
+export type Timestamps = {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+};
+
+export type PaginatedResponse<T> = {
+  data: T[];
+  pagination: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+};
+
+export type ApiResponse<T> = {
+  data?: T;
+  error?: {
+    success: false;
+    status: number;
+    message: string;
+    errors: string[];
+  };
+};
+
+export interface PaginationMeta {
+  total: number;
+  perPage: number;
+  currentPage: number;
+  lastPage: number;
+  firstPage: number;
+  firstPageUrl: string | null;
+  lastPageUrl: string | null;
+  nextPageUrl: string | null;
+  previousPageUrl: string | null;
 }
 
-// Form component props
-export interface FormComponentProps extends BaseComponentProps {
-    onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
-}
-
-// Input component props
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-    label?: string;
-    error?: string;
-    required?: boolean;
-}
-
-// Button component props
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
-    size?: 'default' | 'sm' | 'lg' | 'icon';
-    loading?: boolean;
-    asChild?: boolean;
-}
-
-// Navigation link props
-export interface NavLinkProps {
-    to: string;
-    children: React.ReactNode;
-    className?: string;
-}
+export type PaginatedMetaResponse<T, K extends string> = {
+  [key in K]: {
+    data: T[];
+    meta: PaginationMeta;
+  };
+} & {
+  pagination: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+};
