@@ -878,9 +878,7 @@
         "summary": "Connexion utilisateur (login)",
         "description": "Authentifie un utilisateur avec email/mot de passe et code MFA optionnel\n\n _app/controllers/http/auth/auth_controller.ts_ - **login**",
         "parameters": [],
-        "tags": [
-          "LOGIN"
-        ],
+        "tags": ["LOGIN"],
         "responses": {
           "200": {
             "content": {
@@ -930,9 +928,7 @@
         "summary": " (register)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **register**",
         "parameters": [],
-        "tags": [
-          "REGISTER"
-        ],
+        "tags": ["REGISTER"],
         "responses": {
           "201": {
             "description": "Created",
@@ -954,9 +950,7 @@
         "summary": " (verifyEmail)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **verifyEmail**",
         "parameters": [],
-        "tags": [
-          "VERIFY-EMAIL"
-        ],
+        "tags": ["VERIFY-EMAIL"],
         "responses": {
           "201": {
             "description": "Created",
@@ -978,9 +972,7 @@
         "summary": " (forgotPassword)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **forgotPassword**",
         "parameters": [],
-        "tags": [
-          "FORGOT-PASSWORD"
-        ],
+        "tags": ["FORGOT-PASSWORD"],
         "responses": {
           "201": {
             "description": "Created",
@@ -1002,9 +994,7 @@
         "summary": " (resetPassword)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **resetPassword**",
         "parameters": [],
-        "tags": [
-          "RESET-PASSWORD"
-        ],
+        "tags": ["RESET-PASSWORD"],
         "responses": {
           "201": {
             "description": "Created",
@@ -1026,9 +1016,7 @@
         "summary": " (refreshToken)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **refreshToken**",
         "parameters": [],
-        "tags": [
-          "REFRESH-TOKEN"
-        ],
+        "tags": ["REFRESH-TOKEN"],
         "responses": {
           "201": {
             "description": "Created",
@@ -1050,9 +1038,7 @@
         "summary": " (debugToken)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **debugToken**",
         "parameters": [],
-        "tags": [
-          "DEBUG-TOKEN"
-        ],
+        "tags": ["DEBUG-TOKEN"],
         "responses": {
           "201": {
             "description": "Created",
@@ -1074,9 +1060,7 @@
         "summary": " (me)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **me**",
         "parameters": [],
-        "tags": [
-          "ME"
-        ],
+        "tags": ["ME"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1087,9 +1071,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1099,9 +1081,7 @@
         "summary": " (updateProfile)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **updateProfile**",
         "parameters": [],
-        "tags": [
-          "PROFILE"
-        ],
+        "tags": ["PROFILE"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1112,9 +1092,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1129,9 +1107,7 @@
         "summary": " (changePassword)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **changePassword**",
         "parameters": [],
-        "tags": [
-          "CHANGE-PASSWORD"
-        ],
+        "tags": ["CHANGE-PASSWORD"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1142,9 +1118,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1159,9 +1133,7 @@
         "summary": " (logout)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **logout**",
         "parameters": [],
-        "tags": [
-          "LOGOUT"
-        ],
+        "tags": ["LOGOUT"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1172,9 +1144,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1189,9 +1159,7 @@
         "summary": " (mfaStatus)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **mfaStatus**",
         "parameters": [],
-        "tags": [
-          "MFA"
-        ],
+        "tags": ["MFA"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1202,9 +1170,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1214,9 +1180,7 @@
         "summary": " (initializeMFA)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **initializeMFA**",
         "parameters": [],
-        "tags": [
-          "MFA"
-        ],
+        "tags": ["MFA"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1227,9 +1191,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1244,9 +1206,7 @@
         "summary": " (enableMFA)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **enableMFA**",
         "parameters": [],
-        "tags": [
-          "MFA"
-        ],
+        "tags": ["MFA"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1257,9 +1217,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1274,9 +1232,7 @@
         "summary": " (disableMFA)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **disableMFA**",
         "parameters": [],
-        "tags": [
-          "MFA"
-        ],
+        "tags": ["MFA"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1287,9 +1243,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1304,9 +1258,7 @@
         "summary": " (regenerateRecoveryCodes)",
         "description": "\n\n _app/controllers/http/auth/auth_controller.ts_ - **regenerateRecoveryCodes**",
         "parameters": [],
-        "tags": [
-          "MFA"
-        ],
+        "tags": ["MFA"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1317,9 +1269,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1334,9 +1284,7 @@
         "summary": "Get a list of dashboard (index)",
         "description": "\n\n _app/controllers/http/admin/dashboard_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "DASHBOARD"
-        ],
+        "tags": ["DASHBOARD"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1347,9 +1295,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1359,9 +1305,7 @@
         "summary": "Get a list of users (index)",
         "description": "\n\n _app/controllers/http/admin/users_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "USERS"
-        ],
+        "tags": ["USERS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1372,9 +1316,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1393,9 +1335,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "USERS"
-        ],
+        "tags": ["USERS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1406,9 +1346,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1425,9 +1363,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "USERS"
-        ],
+        "tags": ["USERS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1438,9 +1374,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1462,9 +1396,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "USERS"
-        ],
+        "tags": ["USERS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1475,9 +1407,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1487,9 +1417,7 @@
         "summary": "Get a list of products (index)",
         "description": "\n\n _app/controllers/http/admin/products_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1500,9 +1428,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1510,9 +1436,7 @@
         "summary": "Create products (store)",
         "description": "\n\n _app/controllers/http/admin/products_controller.ts_ - **store**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1523,9 +1447,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1540,9 +1462,7 @@
         "summary": " (stats)",
         "description": "\n\n _app/controllers/http/admin/products_controller.ts_ - **stats**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1553,9 +1473,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1565,9 +1483,7 @@
         "summary": " (lowStock)",
         "description": "\n\n _app/controllers/http/admin/products_controller.ts_ - **lowStock**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1578,9 +1494,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1590,9 +1504,7 @@
         "summary": " (bulk)",
         "description": "\n\n _app/controllers/http/admin/products_controller.ts_ - **bulk**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1603,9 +1515,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1629,9 +1539,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1642,9 +1550,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1661,9 +1567,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1674,9 +1578,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1698,9 +1600,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1711,9 +1611,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1723,9 +1621,7 @@
         "summary": "Get a list of categories (index)",
         "description": "\n\n _app/controllers/http/admin/categories_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1736,9 +1632,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1746,9 +1640,7 @@
         "summary": "Create categories (store)",
         "description": "\n\n _app/controllers/http/admin/categories_controller.ts_ - **store**",
         "parameters": [],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1759,9 +1651,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1776,9 +1666,7 @@
         "summary": " (tree)",
         "description": "\n\n _app/controllers/http/admin/categories_controller.ts_ - **tree**",
         "parameters": [],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1789,9 +1677,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1810,9 +1696,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1823,9 +1707,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1842,9 +1724,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1855,9 +1735,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1879,9 +1757,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1892,9 +1768,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1904,9 +1778,7 @@
         "summary": "Get a list of missions (index)",
         "description": "\n\n _app/controllers/http/admin/missions_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1917,9 +1789,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -1927,9 +1797,7 @@
         "summary": "Create missions (store)",
         "description": "\n\n _app/controllers/http/admin/missions_controller.ts_ - **store**",
         "parameters": [],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1940,9 +1808,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -1957,9 +1823,7 @@
         "summary": " (stats)",
         "description": "\n\n _app/controllers/http/admin/missions_controller.ts_ - **stats**",
         "parameters": [],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -1970,9 +1834,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -1991,9 +1853,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2004,9 +1864,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2025,9 +1883,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2038,9 +1894,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2055,9 +1909,7 @@
         "summary": "Get a list of audit-logs (index)",
         "description": "\n\n _app/controllers/http/admin/audit_logs_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "AUDIT-LOGS"
-        ],
+        "tags": ["AUDIT-LOGS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2068,9 +1920,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2080,9 +1930,7 @@
         "summary": " (overview)",
         "description": "\n\n _app/controllers/http/admin/stats_controller.ts_ - **overview**",
         "parameters": [],
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2093,9 +1941,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2105,9 +1951,7 @@
         "summary": " (users)",
         "description": "\n\n _app/controllers/http/admin/stats_controller.ts_ - **users**",
         "parameters": [],
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2118,9 +1962,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2130,9 +1972,7 @@
         "summary": " (missions)",
         "description": "\n\n _app/controllers/http/admin/stats_controller.ts_ - **missions**",
         "parameters": [],
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2143,9 +1983,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2155,9 +1993,7 @@
         "summary": " (products)",
         "description": "\n\n _app/controllers/http/admin/stats_controller.ts_ - **products**",
         "parameters": [],
-        "tags": [
-          "STATS"
-        ],
+        "tags": ["STATS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2168,9 +2004,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2207,13 +2041,7 @@
             "schema": {
               "example": "draft",
               "type": "string",
-              "enum": [
-                "draft",
-                "published",
-                "assigned",
-                "completed",
-                "cancelled"
-              ]
+              "enum": ["draft", "published", "assigned", "completed", "cancelled"]
             },
             "required": false
           },
@@ -2228,9 +2056,7 @@
             "required": false
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "200": {
             "content": {
@@ -2257,9 +2083,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -2267,9 +2091,7 @@
         "summary": "Créer une nouvelle mission (store)",
         "description": "Returns **201** (Created) as **text/plain**\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **store**",
         "parameters": [],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "201": {
             "content": {
@@ -2304,9 +2126,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2332,9 +2152,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2345,9 +2163,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -2364,9 +2180,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2377,9 +2191,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2401,9 +2213,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2414,9 +2224,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2437,9 +2245,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "200": {
             "content": {
@@ -2482,9 +2288,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2503,9 +2307,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2516,9 +2318,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2542,9 +2342,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2555,9 +2353,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2584,9 +2380,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2597,9 +2391,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2631,9 +2423,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2644,9 +2434,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2661,9 +2449,7 @@
         "summary": "Get a list of shipments (index)",
         "description": "\n\n _app/controllers/http/affreteur/shipments_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "SHIPMENTS"
-        ],
+        "tags": ["SHIPMENTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2674,9 +2460,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2695,9 +2479,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "SHIPMENTS"
-        ],
+        "tags": ["SHIPMENTS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2708,9 +2490,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2720,9 +2500,7 @@
         "summary": " (available)",
         "description": "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **available**",
         "parameters": [],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2733,9 +2511,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2754,9 +2530,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2767,9 +2541,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2779,9 +2551,7 @@
         "summary": " (myMissions)",
         "description": "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **myMissions**",
         "parameters": [],
-        "tags": [
-          "MY-MISSIONS"
-        ],
+        "tags": ["MY-MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2792,9 +2562,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2813,9 +2581,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2826,9 +2592,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2843,9 +2607,7 @@
         "summary": " (myPropositions)",
         "description": "\n\n _app/controllers/http/transporteur/propositions_controller.ts_ - **myPropositions**",
         "parameters": [],
-        "tags": [
-          "MY-PROPOSITIONS"
-        ],
+        "tags": ["MY-PROPOSITIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2856,9 +2618,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -2877,9 +2637,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2890,9 +2648,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2916,9 +2672,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2929,9 +2683,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2955,9 +2707,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MISSIONS"
-        ],
+        "tags": ["MISSIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -2968,9 +2718,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -2985,9 +2733,7 @@
         "summary": "Get a list of products (index)",
         "description": "\n\n _app/controllers/http/shop/products_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3013,9 +2759,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "PRODUCTS"
-        ],
+        "tags": ["PRODUCTS"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3032,9 +2776,7 @@
         "summary": "Get a list of categories (index)",
         "description": "\n\n _app/controllers/http/shop/categories_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "CATEGORIES"
-        ],
+        "tags": ["CATEGORIES"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3051,9 +2793,7 @@
         "summary": "Get a list of search (index)",
         "description": "\n\n _app/controllers/http/shop/search_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "SEARCH"
-        ],
+        "tags": ["SEARCH"],
         "responses": {
           "200": {
             "description": "OK",
@@ -3070,9 +2810,7 @@
         "summary": "Get a list of messages (index)",
         "description": "\n\n _app/controllers/http/common/messages_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "MESSAGES"
-        ],
+        "tags": ["MESSAGES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3083,9 +2821,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       },
@@ -3093,9 +2829,7 @@
         "summary": "Create messages (store)",
         "description": "\n\n _app/controllers/http/common/messages_controller.ts_ - **store**",
         "parameters": [],
-        "tags": [
-          "MESSAGES"
-        ],
+        "tags": ["MESSAGES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3106,9 +2840,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -3132,9 +2864,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "MESSAGES"
-        ],
+        "tags": ["MESSAGES"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3145,9 +2875,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -3162,9 +2890,7 @@
         "summary": "Get a list of notifications (index)",
         "description": "\n\n _app/controllers/http/common/notifications_controller.ts_ - **index**",
         "parameters": [],
-        "tags": [
-          "NOTIFICATIONS"
-        ],
+        "tags": ["NOTIFICATIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3175,9 +2901,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ]
       }
@@ -3196,9 +2920,7 @@
             "required": true
           }
         ],
-        "tags": [
-          "NOTIFICATIONS"
-        ],
+        "tags": ["NOTIFICATIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3209,9 +2931,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
@@ -3226,9 +2946,7 @@
         "summary": " (markAllAsRead)",
         "description": "\n\n _app/controllers/http/common/notifications_controller.ts_ - **markAllAsRead**",
         "parameters": [],
-        "tags": [
-          "NOTIFICATIONS"
-        ],
+        "tags": ["NOTIFICATIONS"],
         "responses": {
           "401": {
             "description": "Returns **401** (Unauthorized)"
@@ -3239,9 +2957,7 @@
         },
         "security": [
           {
-            "BearerAuth": [
-              "access"
-            ]
+            "BearerAuth": ["access"]
           }
         ],
         "requestBody": {
