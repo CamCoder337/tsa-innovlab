@@ -82,7 +82,12 @@ export default function Header() {
         {/* User Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="max-sm:p-2">
-            <Button variant="ghost" className="md:gap-2 h-auto px-6">
+            <Button
+              variant="ghost"
+              className="md:gap-2 h-auto px-6"
+              aria-label="User menu"
+              data-testid="user-menu-button"
+            >
               <Avatar className="h-8 w-8">
                 <UserCircle2 className="h-8 w-8" />
               </Avatar>
@@ -114,7 +119,7 @@ export default function Header() {
               Support
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleLogout} data-testid="logout-button" role="menuitem">
               <LogOut className="mr-2 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>

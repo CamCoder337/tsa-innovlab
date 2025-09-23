@@ -3,14 +3,13 @@
 // ============================================================================
 
 import { BaseApi } from './api';
-import type { ApiResponse } from '@/types/common.types';
+import type { ApiResponse, PaginatedMetaResponse } from '@/types/common.types';
 import type {
   Category,
   CreateCategory,
   UpdateCategory,
   CategoryFilterParams,
   CategoryWithStats,
-  PaginatedResponse as PaginatedCategory,
 } from '@/types/category.types';
 import type {
   Product,
@@ -18,7 +17,6 @@ import type {
   UpdateProduct,
   ProductFilterParams,
   ProductStats,
-  PaginatedResponse as PaginatedProduct,
 } from '@/types/product.types';
 import type { AxiosError } from 'axios';
 
@@ -61,7 +59,9 @@ export class ShopService extends BaseApi {
   }
 
   // Product Operations
-  async getProducts(params?: ProductFilterParams): Promise<ApiResponse<PaginatedProduct>> {
+  async getProducts(
+    params?: ProductFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Product, 'products'>>> {
     try {
       const response = await this.insertToken().get('/api/shop/products', { params });
       return { data: response.data.data };
@@ -70,7 +70,9 @@ export class ShopService extends BaseApi {
     }
   }
 
-  async adminGetProducts(params?: ProductFilterParams): Promise<ApiResponse<PaginatedProduct>> {
+  async adminGetProducts(
+    params?: ProductFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Product, 'products'>>> {
     try {
       const response = await this.insertToken().get('/api/admin/products', { params });
       return { data: response.data.data };
@@ -138,7 +140,9 @@ export class ShopService extends BaseApi {
 
   // Category Operations
 
-  async getCategories(params?: CategoryFilterParams): Promise<ApiResponse<PaginatedCategory>> {
+  async getCategories(
+    params?: CategoryFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Category, 'categories'>>> {
     try {
       const response = await this.insertToken().get('/api/shop/categories', { params });
       return { data: response.data.data };
@@ -147,7 +151,9 @@ export class ShopService extends BaseApi {
     }
   }
 
-  async adminGetCategories(params?: CategoryFilterParams): Promise<ApiResponse<PaginatedCategory>> {
+  async adminGetCategories(
+    params?: CategoryFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Category, 'categories'>>> {
     try {
       const response = await this.insertToken().get('/api/admin/categories', { params });
       return { data: response.data.data };

@@ -2,36 +2,28 @@ import type { Timestamps } from './common.types';
 
 export interface Address extends Timestamps {
   id: string;
-  line1: string;
-  line2: string | null;
+  street: string;
   city: string;
-  state: string;
-  postalCode: string;
+  region: string;
   country: string;
-  latitude: number | null;
-  longitude: number | null;
-  isDefault: boolean;
-  type: 'shipping' | 'billing' | 'both';
-  company: string | null;
-  phone: string | null;
-  notes: string | null;
-  userId: string;
-  formattedAddress: string;
+  postalCode: string;
+  latitude: number;
+  longitude: number;
+  label: string;
 }
 
 export interface CreateAddressDto {
-  line1: string;
-  line2?: string | null;
+  street: string;
   city: string;
   state: string;
   postalCode: string;
   country: string;
-  latitude?: number | null;
-  longitude?: number | null;
+  latitude?: number;
+  longitude?: number;
   isDefault?: boolean;
   type?: 'shipping' | 'billing' | 'both';
-  company?: string | null;
-  phone?: string | null;
+  company?: string;
+  phone?: string;
   notes?: string | null;
 }
 

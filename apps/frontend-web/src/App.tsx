@@ -13,6 +13,7 @@ const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const Layout = lazy(() => import('./components/layout/Layout'));
 const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
 const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
+const Mission = lazy(() => import('./pages/missions/[id]'))
 const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
 const Shop = lazy(() => import('./pages/shop/Shop'));
@@ -42,6 +43,7 @@ function App() {
           <Route path="missions">
             <Route path="" element={<MyMissions />} />
             <Route path="create" element={<CreateMission />} />
+            <Route path=":id" element={<Mission />} />
           </Route>
 
           <Route path="shop" element={<Shop />} />
