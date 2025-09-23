@@ -17,7 +17,7 @@ export interface Product extends Timestamps {
   stock: number;
   stockAlert: number;
   unit: string;
-  imageUrl: string;
+  imageUrl: string | null;
   images: string[];
   specifications: Record<string, string | number | boolean | null>;
   isActive: boolean;
@@ -36,7 +36,7 @@ export interface CreateProduct {
   reference?: string;
   stockAlert?: number;
   unit?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   images?: string[];
   specifications?: Record<string, string | number | boolean | null>;
   isActive?: boolean;
@@ -52,7 +52,7 @@ export interface UpdateProduct {
   reference?: string;
   stockAlert?: number;
   unit?: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   images?: string[];
   specifications?: Record<string, string | number | boolean | null>;
   isActive?: boolean;
@@ -122,37 +122,4 @@ export interface ProductActions {
   setStats: (stats: ProductStats) => void;
 }
 
-export interface ProductStoreExtended extends ProductState, ProductActions {
-  // Filter methods
-  // filterProducts: (filters: ProductFilterParams) => Product[];
-  // searchProducts: (query: string) => Product[];
-}
-
-export interface PaginationMeta {
-  total: number;
-  perPage: number;
-  currentPage: number;
-  lastPage: number;
-  firstPage: number;
-  firstPageUrl: string | null;
-  lastPageUrl: string | null;
-  nextPageUrl: string | null;
-  previousPageUrl: string | null;
-}
-
-export interface PaginatedResponse {
-  pagination: {
-    total: number;
-    perPage: number;
-    currentPage: number;
-    lastPage: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-  products: {
-    data: Product[];
-    meta: PaginationMeta;
-  };
-}
-
-export type ProductsResponse = PaginatedResponse;
+export type ProductStoreExtended = ProductState & ProductActions;

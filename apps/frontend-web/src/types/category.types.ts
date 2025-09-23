@@ -1,5 +1,4 @@
 import type { Timestamps } from './common.types';
-import type { Product } from './product.types';
 
 export interface Category extends Timestamps {
   id: string;
@@ -7,7 +6,11 @@ export interface Category extends Timestamps {
   description: string | null;
   parentId: string | null;
   slug: string;
-  products: Product[];
+  products?: Array<{
+    id: string;
+    name: string;
+    categoryId: string;
+  }>;
   imageUrl: string | null;
   isActive: boolean;
   displayOrder: number;
@@ -62,33 +65,6 @@ export interface CategoryWithStats {
   products: Record<string, number>;
 }
 
-export interface PaginationMeta {
-  total: number;
-  perPage: number;
-  currentPage: number;
-  lastPage: number;
-  firstPage: number;
-  firstPageUrl: string | null;
-  lastPageUrl: string | null;
-  nextPageUrl: string | null;
-  previousPageUrl: string | null;
-}
-
-export interface PaginatedResponse {
-  categories: {
-    data: Category[];
-    meta: PaginationMeta;
-  };
-  pagination: {
-    total: number;
-    perPage: number;
-    currentPage: number;
-    lastPage: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
-
 export interface CategoryState {
   categories: Category[];
   currentCategory: Category | null;
@@ -112,5 +88,3 @@ export interface CategoryStoreExtended extends CategoryState, CategoryActions {
   searchCategories: (query: string) => Category[];
   getCategoryPath: (categoryId: string) => Category[];
 }
-
-export type CategoriesResponse = PaginatedResponse;

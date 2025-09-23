@@ -53,6 +53,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               value={values.email}
               onChange={handleChange}
               onBlur={handleBlur}
+              aria-label="email"
               aria-invalid={touched.email && !!errors.email}
               className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
               required
@@ -71,6 +72,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               value={values.password}
               onChange={handleChange}
               onBlur={handleBlur}
+              aria-label="password"
               aria-invalid={touched.password && !!errors.password}
               className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
               required
@@ -98,6 +100,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               </div>
               <OTPInput
                 length={6}
+                aria-label="mfaCode"
                 value={values.mfaCode || ''}
                 onChange={(value) => {
                   handleChange({
@@ -130,6 +133,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           )}
 
           <Button
+            name="login"
             type="submit"
             className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 text-white font-semibold text-2xl p-10"
             disabled={isSubmitting}
