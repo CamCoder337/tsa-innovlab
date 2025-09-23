@@ -300,9 +300,9 @@ export default class MissionsController {
       }
 
       const oldStatus = mission.status
-      mission.status = validatedData.status
+      mission.status = validatedData.status as MissionStatus
 
-      await mission.save({ client: trx })
+      await mission.save()
       await trx.commit()
 
       await mission.load('affreteur')
@@ -343,7 +343,7 @@ export default class MissionsController {
 
       const statusStats = stats.reduce(
         (acc, item) => {
-          acc[item.status] = parseInt(item.total)
+          acc[item.status] = Number.parseInt(item.total)
           return acc
         },
         {} as Record<string, number>
@@ -361,9 +361,9 @@ export default class MissionsController {
         message: 'Mission statistics retrieved successfully',
         data: {
           totals: {
-            missions: parseInt(totalMissions[0].$extras.total),
-            affreteurs: parseInt(totalAffreteurs[0].$extras.total),
-            transporteurs: parseInt(totalTransporteurs[0].$extras.total),
+            missions: Number.parseInt(totalMissions[0].$extras.total),
+            affreteurs: Number.parseInt(totalAffreteurs[0].$extras.total),
+            transporteurs: Number.parseInt(totalTransporteurs[0].$extras.total),
           },
           statusStats,
           recentMissions: recentMissions.map((mission) => ({

@@ -15,7 +15,7 @@ D'abord, utilisez l'endpoint `/api/auth/login` dans Swagger pour vous authentifi
 
 ```json
 {
-  "email": "admin@tsa-logistics.com", 
+  "email": "admin@tsa-logistics.com",
   "password": "Admin123!",
   "mfaCode": "123456"
 }
@@ -163,7 +163,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
  *           properties:
  *             success: { type: boolean, example: false }
  *             message: { type: string }
- *             errors: 
+ *             errors:
  *               type: array
  *               items: { type: string }
  *         example:

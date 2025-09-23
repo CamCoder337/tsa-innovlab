@@ -123,9 +123,8 @@ export default class MissionsController {
     }
   }
 
-  async myMissions({ request, auth, response }: HttpContext) {
+  async myMissions({ request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -186,9 +185,8 @@ export default class MissionsController {
     }
   }
 
-  async updateStatus({ params, request, auth, response }: HttpContext) {
+  async updateStatus({ params, request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(updateStatusValidator)
 
       const mission = await Mission.query()
@@ -204,9 +202,9 @@ export default class MissionsController {
       }
 
       // Vérifier les transitions de statut autorisées pour les transporteurs
-      const allowedTransitions = {
+      const allowedTransitions: Record<MissionStatus, MissionStatus[]> = {
         [MissionStatus.ASSIGNED]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
-      }
+      } as Record<MissionStatus, MissionStatus[]>
 
       const currentAllowedStatuses = allowedTransitions[mission.status] || []
 
@@ -219,7 +217,7 @@ export default class MissionsController {
       }
 
       const oldStatus = mission.status
-      mission.status = validatedData.status
+      mission.status = validatedData.status as MissionStatus
 
       await mission.save()
 
@@ -246,9 +244,8 @@ export default class MissionsController {
     }
   }
 
-  async updateLocation({ params, request, auth, response }: HttpContext) {
+  async updateLocation({ params, request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
       const { latitude, longitude, timestamp } = request.only([
         'latitude',
         'longitude',
@@ -299,9 +296,8 @@ export default class MissionsController {
     }
   }
 
-  async uploadProof({ params, request, auth, response }: HttpContext) {
+  async uploadProof({ params, request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
       const { proofType, description, imageUrl } = request.only([
         'proofType',
         'description',
