@@ -73,7 +73,7 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async createMission(data: CreateMissionDto): Promise<ApiResponse<Record<string, Mission>>> {
+  async createMission(data: CreateMissionDto): Promise<ApiResponse<Mission>> {
     try {
       const response = await this.insertToken().post('/api/affreteur/missions', data);
       return { data: response.data.data };
@@ -82,10 +82,7 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async updateMission(
-    id: string,
-    data: Partial<UpdateMissionDto>
-  ): Promise<ApiResponse<Record<string, Mission>>> {
+  async updateMission(id: string, data: Partial<UpdateMissionDto>): Promise<ApiResponse<Mission>> {
     try {
       const response = await this.insertToken().put(`/api/affreteur/missions/${id}`, data);
       return { data: response.data.data };

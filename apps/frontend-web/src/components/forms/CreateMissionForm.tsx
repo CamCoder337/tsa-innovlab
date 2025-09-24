@@ -19,34 +19,67 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import type { Address } from '@/types/address.types';
+import { useMissions } from '@/hooks/useMissions';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
+// Lazy load MapPicker with Suspense for client-side rendering
+const MapPicker = lazy(() => import('@/components/maps/MapPicker'));
+
+// Loading component for Suspense fallback
+const MapLoading = () => (
+  <div className="h-64 w-full bg-gray-100 flex items-center justify-center">
+    <div className="animate-pulse">Chargement de la carte...</div>
+  </div>
+);
+
+// Define props type for ClientSideMapPicker
+interface MapPickerProps {
+  position: [number, number];
+  onPositionChange: (lat: number, lng: number) => void;
+  className?: string;
+}
+
+// Client-side only wrapper for MapPicker
+const ClientSideMapPicker = ({ position, onPositionChange, className }: MapPickerProps) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <MapLoading />;
+  }
+
+  return (
+    <Suspense fallback={<MapLoading />}>
+      <MapPicker position={position} onPositionChange={onPositionChange} className={className} />
+    </Suspense>
+  );
+};
 
 // Initialize country list with French labels
 const countryOptions = countryList().getData();
 
-const INITIAL_VALUES: CreateMissionDto = {
-  titre: '',
-  description: '',
-  typeMarchandise: '',
-  poids: 0,
-  volume: 0,
-  dateDepartEstime: '',
-  dateArriveePrevue: '',
-  adresseDepart: undefined,
-  adresseArrivee: undefined,
-  budgetMin: 0,
-  budgetMax: 0,
-};
-
 const validationSchema = Yup.object({
   titre: Yup.string().required('Le titre est requis'),
+  affreteurId: Yup.string().when('$isAdmin', {
+    is: true,
+    then: (schema) => schema.required("L'ID de l'affréteur est requis"),
+    otherwise: (schema) => schema.optional(),
+  }),
   description: Yup.string(),
   typeMarchandise: Yup.string(),
   poids: Yup.number().min(0, 'Le poids doit être positif'),
   volume: Yup.number().min(0, 'Le volume doit être positif'),
-  dateDepartEstime: Yup.string(),
-  dateArriveePrevue: Yup.string(),
+  dateDepartEstime: Yup.date()
+    .required('La date de départ est requise')
+    .typeError('La date de départ doit être une date valide'),
+  dateArriveePrevue: Yup.date().typeError("La date d'arrivée doit être une date valide"),
   adresseDepart: Yup.object({
     street: Yup.string().required('La rue est requise'),
     city: Yup.string().required('La ville est requise'),
@@ -54,6 +87,8 @@ const validationSchema = Yup.object({
     country: Yup.string().required('Le pays est requis'),
     label: Yup.string().required('Le nom est requis'),
     region: Yup.string().required('La région est requise'),
+    latitude: Yup.number().required('La latitude est requise'),
+    longitude: Yup.number().required('La longitude est requise'),
   }).required("L'adresse de départ est requise"),
   adresseArrivee: Yup.object({
     street: Yup.string().required('La rue est requise'),
@@ -62,16 +97,18 @@ const validationSchema = Yup.object({
     country: Yup.string().required('Le pays est requis'),
     label: Yup.string().required('Le nom est requis'),
     region: Yup.string().required('La région est requise'),
+    latitude: Yup.number().required('La latitude est requise'),
+    longitude: Yup.number().required('La longitude est requise'),
   }).required("L'adresse d'arrivée est requise"),
   budgetMin: Yup.number().min(0, 'Le budget minimum doit être positif'),
   budgetMax: Yup.number().min(
     Yup.ref('budgetMin'),
-    'Le budget maximum doit être supérieur ou égal au budget minimum'
+    'Le budget maximum doit être supérieur au minimum'
   ),
 });
 
-interface CreateMissionFormProps {
-  onSubmit: (data: CreateMissionDto) => Promise<void>;
+export interface CreateMissionFormProps {
+  onSubmit: (data: CreateMissionDto, action: string, publish: boolean) => Promise<void>;
   isSubmitting?: boolean;
   addresses: Address[];
 }
@@ -84,19 +121,73 @@ export default function CreateMissionForm({
   isSubmitting = false,
   addresses = [],
 }: CreateMissionFormProps) {
+  const { user } = useAuth();
+  const { id } = useParams();
+  const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  const fetchMission = useCallback(async () => {
+    if (!id) {
+      navigate('/app/missions');
+      return;
+    }
+    setLoading(true);
+    const foundMission =
+      missions.find((mission) => mission.id === id) ||
+      myMissions.find((mission) => mission.id === id);
+    if (!foundMission) {
+      setCurrentMission(null);
+    }
+    if (foundMission) {
+      setCurrentMission(foundMission);
+    }
+    setLoading(false);
+  }, [id, missions, myMissions, navigate, setCurrentMission]);
+
   const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
     null
   );
   const [newAddress, setNewAddress] = useState<NewAddressFormData>({
+    label: '',
     street: '',
     city: '',
     region: '',
     country: 'Cameroun',
     postalCode: '',
-    label: '',
-    latitude: 0,
-    longitude: 0,
+    latitude: 3.848, // Default to Yaoundé, Cameroon
+    longitude: 11.5021,
   });
+
+  useEffect(() => {
+    if (id) {
+      fetchMission();
+    }
+  }, [fetchMission, id]);
+
+  if (id && loading) {
+    return <div className="container mx-auto py-8">Loading mission details...</div>;
+  }
+
+  if (id && !currentMission) {
+    toast.error('Mission introuvable', { duration: 5000 });
+    return <Navigate to="/app/missions" />;
+  }
+
+  const INITIAL_VALUES: CreateMissionDto = {
+    titre: currentMission?.titre || '',
+    affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
+    description: currentMission?.description || '',
+    typeMarchandise: currentMission?.typeMarchandise || '',
+    poids: currentMission?.poids || 0,
+    volume: currentMission?.volume || 0,
+    dateDepartEstime: currentMission?.dateDepartEstime || '',
+    dateArriveePrevue: currentMission?.dateArriveePrevue || '',
+    adresseDepart: currentMission?.adresseDepart || undefined,
+    adresseArrivee: currentMission?.adresseArrivee || undefined,
+    budgetMin: currentMission?.budgetMin || 0,
+    budgetMax: currentMission?.budgetMax || 0,
+  };
 
   const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -134,8 +225,8 @@ export default function CreateMissionForm({
       country: 'Cameroun',
       postalCode: '',
       label: '',
-      latitude: 0,
-      longitude: 0,
+      latitude: 3.848,
+      longitude: 11.5021,
     });
   };
 
@@ -143,7 +234,13 @@ export default function CreateMissionForm({
     <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values) =>
+        onSubmit(
+          values,
+          id ? 'update' : 'create',
+          id && currentMission ? currentMission.status === 'draft' : true
+        )
+      }
       validateOnBlur={true}
       validateOnChange={true}
     >
@@ -157,20 +254,46 @@ export default function CreateMissionForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="titre">Titre de la Mission</Label>
-                <Input
-                  id="titre"
-                  name="titre"
-                  placeholder="ex: Transport Électronique Douala → Yaoundé"
-                  value={values.titre}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={cn(touched.titre && errors.titre && 'border-red-500')}
-                  required
-                />
-                {touched.titre && errors.titre && (
-                  <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+              <div
+                className={cn('grid gap-4', {
+                  'grid-cols-1 md:grid-cols-2': user?.role === 'admin',
+                })}
+              >
+                <div>
+                  <Label htmlFor="titre">Titre de la Mission</Label>
+                  <Input
+                    id="titre"
+                    name="titre"
+                    placeholder="ex: Transport Électronique Douala → Yaoundé"
+                    value={values.titre}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={cn('w-full', touched.titre && errors.titre && 'border-red-500')}
+                    required
+                  />
+                  {touched.titre && errors.titre && (
+                    <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+                  )}
+                </div>
+                {user?.role === 'admin' && (
+                  <div>
+                    <Label htmlFor="affreteurId">Affréteur (ID)</Label>
+                    <Input
+                      id="affreteurId"
+                      name="affreteurId"
+                      placeholder="ID de l'affréteur"
+                      value={values.affreteurId || ''}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={cn(
+                        'w-full',
+                        touched.affreteurId && errors.affreteurId && 'border-red-500'
+                      )}
+                    />
+                    {touched.affreteurId && errors.affreteurId && (
+                      <div className="text-sm text-red-600 mt-1">{errors.affreteurId}</div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -260,23 +383,65 @@ export default function CreateMissionForm({
                           </select>
                         </div>
                       </div>
-                      <div className="flex justify-end space-x-2 pt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowNewAddressForm(null)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => saveNewAddress('departure', setFieldValue)}
-                          disabled={
-                            !newAddress.street || !newAddress.city || !newAddress.postalCode
-                          }
-                        >
-                          Enregistrer
-                        </Button>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Position sur la carte</Label>
+                          <div className="mt-2 border rounded-md overflow-hidden">
+                            <ClientSideMapPicker
+                              position={[newAddress.latitude, newAddress.longitude]}
+                              onPositionChange={(lat, lng) => {
+                                setNewAddress((prev) => ({
+                                  ...prev,
+                                  latitude: lat,
+                                  longitude: lng,
+                                }));
+                              }}
+                              className="h-64 w-full"
+                            />
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="latitude">Latitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="latitude"
+                                value={newAddress.latitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="3.8480"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="longitude">Longitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="longitude"
+                                value={newAddress.longitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="11.5021"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowNewAddressForm(null)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('departure', setFieldValue)}
+                            disabled={
+                              !newAddress.street || !newAddress.city || !newAddress.postalCode
+                            }
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -290,7 +455,11 @@ export default function CreateMissionForm({
                               setShowNewAddressForm('departure');
                             } else {
                               const selectedAddress = addresses.find((addr) => addr.id === value);
-                              setFieldValue('adresseDepart', selectedAddress);
+                              if (selectedAddress) {
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                const { id, ...addressWithoutId } = selectedAddress;
+                                setFieldValue('adresseDepart', addressWithoutId);
+                              }
                             }
                           }}
                         >
@@ -300,13 +469,16 @@ export default function CreateMissionForm({
                               touched.adresseDepart && errors.adresseDepart && 'border-red-500'
                             )}
                           >
-                            <SelectValue placeholder="Sélectionner une adresse" />
+                            <SelectValue
+                              placeholder={
+                                values.adresseDepart?.label || 'Sélectionner une adresse'
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {addresses.map((address) => (
                               <SelectItem key={address.id} value={address.id}>
-                                {address.label} - {address.street}, {address.postalCode}{' '}
-                                {address.city}
+                                {address.label}
                               </SelectItem>
                             ))}
                             <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
@@ -331,6 +503,10 @@ export default function CreateMissionForm({
                           </p>
                           {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
                           <p>{values.adresseDepart.country}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordonnées: {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
+                            {Number(values.adresseDepart.longitude)?.toFixed(6)}
+                          </p>
                         </div>
                       )}
                       {touched.adresseDepart && errors.adresseDepart && (
@@ -428,23 +604,64 @@ export default function CreateMissionForm({
                           </select>
                         </div>
                       </div>
-                      <div className="flex justify-end space-x-2 pt-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowNewAddressForm(null)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => saveNewAddress('arrival', setFieldValue)}
-                          disabled={
-                            !newAddress.street || !newAddress.city || !newAddress.postalCode
-                          }
-                        >
-                          Enregistrer
-                        </Button>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Position sur la carte</Label>
+                          <div className="mt-2 border rounded-md overflow-hidden">
+                            <MapPicker
+                              position={[newAddress.latitude, newAddress.longitude]}
+                              onPositionChange={(lat, lng) => {
+                                setNewAddress((prev) => ({
+                                  ...prev,
+                                  latitude: lat,
+                                  longitude: lng,
+                                }));
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="latitude">Latitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="latitude"
+                                value={newAddress.latitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="3.8480"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="longitude">Longitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="longitude"
+                                value={newAddress.longitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="11.5021"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowNewAddressForm(null)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('arrival', setFieldValue)}
+                            disabled={
+                              !newAddress.street || !newAddress.city || !newAddress.postalCode
+                            }
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -458,7 +675,11 @@ export default function CreateMissionForm({
                               setShowNewAddressForm('arrival');
                             } else {
                               const selectedAddress = addresses.find((addr) => addr.id === value);
-                              setFieldValue('adresseArrivee', selectedAddress);
+                              if (selectedAddress) {
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                const { id, ...addressWithoutId } = selectedAddress;
+                                setFieldValue('adresseArrivee', addressWithoutId);
+                              }
                             }
                           }}
                         >
@@ -468,13 +689,16 @@ export default function CreateMissionForm({
                               touched.adresseArrivee && errors.adresseArrivee && 'border-red-500'
                             )}
                           >
-                            <SelectValue placeholder="Sélectionner une adresse" />
+                            <SelectValue
+                              placeholder={
+                                values.adresseArrivee?.label || 'Sélectionner une adresse'
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {addresses.map((address) => (
                               <SelectItem key={address.id} value={address.id}>
-                                {address.label} - {address.street}, {address.postalCode}{' '}
-                                {address.city}
+                                {address.label}
                               </SelectItem>
                             ))}
                             <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
@@ -499,6 +723,10 @@ export default function CreateMissionForm({
                           </p>
                           {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
                           <p>{values.adresseArrivee.country}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordonnées: {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
+                            {Number(values.adresseArrivee.longitude)?.toFixed(6)}
+                          </p>
                         </div>
                       )}
                       {touched.adresseArrivee && errors.adresseArrivee && (
@@ -516,27 +744,18 @@ export default function CreateMissionForm({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="typeMarchandise">Type de Marchandise</Label>
-                  <Select
+                  <Input
+                    id="typeMarchandise"
+                    name="typeMarchandise"
+                    type="text"
+                    placeholder="Type de Marchandise"
                     value={values.typeMarchandise || ''}
-                    onValueChange={(value) => setFieldValue('typeMarchandise', value)}
-                  >
-                    <SelectTrigger
-                      className={cn(
-                        touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
-                      )}
-                    >
-                      <SelectValue placeholder="Sélectionner le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="electronique">Électronique</SelectItem>
-                      <SelectItem value="construction">Matériaux de Construction</SelectItem>
-                      <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
-                      <SelectItem value="textile">Textiles</SelectItem>
-                      <SelectItem value="machines">Machines</SelectItem>
-                      <SelectItem value="chimique">Produits Chimiques</SelectItem>
-                      <SelectItem value="autre">Autre</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={cn(
+                      touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
+                    )}
+                  />
                   {touched.typeMarchandise && errors.typeMarchandise && (
                     <div className="text-sm text-red-600 mt-1">{errors.typeMarchandise}</div>
                   )}
@@ -625,7 +844,7 @@ export default function CreateMissionForm({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateDepartEstime
-                          ? format(new Date(values.dateDepartEstime), 'PPP')
+                          ? format(new Date(values.dateDepartEstime), 'dd MMM yyyy')
                           : 'Sélectionner une date'}
                       </Button>
                     </PopoverTrigger>
@@ -635,7 +854,17 @@ export default function CreateMissionForm({
                         selected={
                           values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined
                         }
-                        onSelect={(date) => setFieldValue('dateDepartEstime', date?.toISOString())}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFieldValue('dateDepartEstime', date);
+                            if (
+                              values.dateArriveePrevue &&
+                              date > new Date(values.dateArriveePrevue)
+                            ) {
+                              setFieldValue('dateArriveePrevue', date);
+                            }
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -658,7 +887,7 @@ export default function CreateMissionForm({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateArriveePrevue
-                          ? format(new Date(values.dateArriveePrevue), 'PPP')
+                          ? format(new Date(values.dateArriveePrevue), 'dd MMM yyyy')
                           : 'Sélectionner une date'}
                       </Button>
                     </PopoverTrigger>
@@ -668,7 +897,11 @@ export default function CreateMissionForm({
                         selected={
                           values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined
                         }
-                        onSelect={(date) => setFieldValue('dateArriveePrevue', date?.toISOString())}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFieldValue('dateArriveePrevue', date);
+                          }
+                        }}
                         initialFocus
                         disabled={(date) =>
                           values.dateDepartEstime ? date < new Date(values.dateDepartEstime) : false
@@ -759,26 +992,62 @@ export default function CreateMissionForm({
           </Card>
 
           <div className="flex gap-4">
-            <Button
-              type="submit"
-              className="flex-1"
-              style={{ backgroundColor: 'var(--tsa-blue)' }}
-              disabled={isSubmitting}
-            >
-              <Package className="h-4 w-4 mr-2" />
-              {isSubmitting ? 'Création en cours...' : 'Créer la Mission'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // Set status to 'draft' and submit
-                onSubmit({ ...values });
-              }}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder comme Brouillon'}
-            </Button>
+            {!id && (
+              <>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  style={{ backgroundColor: 'var(--tsa-blue)' }}
+                  disabled={isSubmitting}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {isSubmitting ? 'Publication en cours...' : 'Publier la Mission'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'create', false);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder comme Brouillon'}
+                </Button>
+              </>
+            )}
+            {id && (
+              <>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  style={{ backgroundColor: 'var(--tsa-blue)' }}
+                  disabled={isSubmitting}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {isSubmitting
+                    ? currentMission?.status === 'draft'
+                      ? 'Modification & Publication en cours...'
+                      : 'Modification en cours...'
+                    : currentMission?.status === 'draft'
+                      ? 'Modifier et publier la Mission'
+                      : 'Modifier la Mission'}
+                </Button>
+                {currentMission?.status === 'draft' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      // Set status to 'draft' and submit
+                      onSubmit({ ...values }, 'update', false);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Modification...' : 'Modifier le Brouillon'}
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </Form>
       )}

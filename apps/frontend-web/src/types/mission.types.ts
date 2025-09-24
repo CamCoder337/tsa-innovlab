@@ -35,6 +35,7 @@ export interface Mission extends Timestamps {
 
 export interface CreateMissionDto {
   titre: string;
+  affreteurId: string;
   description?: string;
   typeMarchandise?: string;
   poids?: number;
@@ -47,7 +48,7 @@ export interface CreateMissionDto {
   budgetMax?: number;
 }
 
-export interface UpdateMissionDto {
+export interface UpdateMissionDto extends Partial<CreateMissionDto> {
   status?: MissionStatus;
   transporteurId?: string | null;
   dateDebutReelle?: string | null;
@@ -102,8 +103,9 @@ export interface MissionState {
 
 export interface MissionActions {
   setMissions: (missions: Mission[]) => void;
+  setMyMissions: (missions: Mission[]) => void;
   addMission: (mission: Mission) => void;
-  updateMission: (id: string, updates: Partial<Mission>) => void;
+  updateMission: (id: string, update: Mission) => void;
   deleteMission: (id: string) => void;
   setCurrentMission: (mission: Mission | null) => void;
   setLoading: (loading: boolean) => void;

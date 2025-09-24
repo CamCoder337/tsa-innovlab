@@ -165,15 +165,29 @@ export function MissionActions({
           Actualiser
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">{getStatusActions()}</DropdownMenuContent>
-        </DropdownMenu>
+        {mission.status === 'draft' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleAction('publish', 'Publier la mission')}
+            className="h-8 bg-tsa-blue text-white"
+          >
+            <Send className="mr-2 h-4 w-4" />
+            <span>Publier</span>
+          </Button>
+        )}
+
+        {mission.status !== 'draft' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">{getStatusActions()}</DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
