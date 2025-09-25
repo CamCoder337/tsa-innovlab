@@ -2,7 +2,8 @@ import { useProductStore } from '@/stores/productStore';
 import { useCallback, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { shopService } from '@/services/shop.service';
-import type { PaginatedResponse, ProductFilterParams } from '@/types/product.types';
+import type { Product, ProductFilterParams } from '@/types/product.types';
+import type { PaginatedMetaResponse } from '@/types/common.types';
 
 export function useProducts() {
   const { isAuthenticated, user } = useAuth();
@@ -26,7 +27,7 @@ export function useProducts() {
   const handleGetAllProducts = useCallback(async () => {
     let page: number = 1;
     let next: boolean = true;
-    let productsList: PaginatedResponse = {
+    let productsList: PaginatedMetaResponse<Product, 'products'> = {
       products: {
         data: [],
         meta: {
@@ -136,7 +137,6 @@ export function useProducts() {
     setError,
     setStats,
     filterProducts,
-    handleGetAllProducts,
   };
 }
 

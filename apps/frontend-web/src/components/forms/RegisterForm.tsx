@@ -94,6 +94,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               <div className="flex flex-col gap-4">
                 <Input
                   name="firstName"
+                  id="firstName"
+                  aria-label="firstName"
                   type="text"
                   placeholder="Entrez votre Nom"
                   value={values.firstName}
@@ -109,6 +111,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               <div className="flex flex-col gap-2">
                 <Input
                   name="lastName"
+                  id="lastName"
+                  aria-label="lastName"
                   type="text"
                   placeholder="Entrez votre Prénom"
                   value={values.lastName}
@@ -126,6 +130,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
             <div className="flex flex-col gap-2">
               <Input
                 name="email"
+                id="email"
+                aria-label="email"
                 type="email"
                 placeholder="Entrez votre Email"
                 value={values.email}
@@ -142,6 +148,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
             <div className="flex flex-col gap-2">
               <Input
                 name="password"
+                id="password"
+                aria-label="password"
                 type="password"
                 placeholder="Entrez votre Mot de passe"
                 value={values.password}
@@ -158,6 +166,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
             <div className="flex flex-col gap-2">
               <Input
                 name="confirmPassword"
+                id="confirmPassword"
+                aria-label="confirmPassword"
                 type="password"
                 placeholder="Confirmez votre Mot de passe"
                 value={values.confirmPassword}
@@ -173,6 +183,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
 
             <div className="flex flex-col gap-2">
               <PhoneInput
+                aria-label="phone"
                 specialLabel=""
                 placeholder="237 6 55 55 55 55"
                 country={'cm'}

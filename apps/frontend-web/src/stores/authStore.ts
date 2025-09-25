@@ -1,8 +1,5 @@
 import { create } from 'zustand';
-import type { User } from '@/types/auth.types';
-import type { AuthState, AuthActions } from '@/types/store.types';
-
-export type AuthStore = AuthState & AuthActions;
+import type { User, AuthStore } from '@/types/auth.types';
 
 interface CookieOptions {
   days?: number;

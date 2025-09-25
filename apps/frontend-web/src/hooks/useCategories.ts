@@ -1,8 +1,10 @@
 import { useCategoryStore } from '@/stores/categoryStore';
-import type { CategoryFilterParams, PaginatedResponse } from '@/types/category.types';
+import type { CategoryFilterParams } from '@/types/category.types';
+import type { PaginatedMetaResponse } from '@/types/common.types';
 import { useAuth } from './useAuth';
 import { useCallback, useEffect } from 'react';
 import { shopService } from '@/services/shop.service';
+import type { Category } from '@/types/category.types';
 
 export function useCategories() {
   const { isAuthenticated, user } = useAuth();
@@ -29,7 +31,7 @@ export function useCategories() {
   const handleGetAllProducts = useCallback(async () => {
     let page: number = 1;
     let next: boolean = true;
-    let categoriesList: PaginatedResponse = {
+    let categoriesList: PaginatedMetaResponse<Category, 'categories'> = {
       categories: {
         data: [],
         meta: {

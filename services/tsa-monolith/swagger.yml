@@ -1,0 +1,2175 @@
+openapi: '3.0.0'
+info:
+  title: 'TSA Logistics API'
+  version: '1.0.0'
+  description: 'API de la plateforme de logistique TSA Contest 2025 - Uber pour la logistique'
+  contact:
+    name: 'TSA InnovLab'
+    email: 'support@tsa-logistics.com'
+components:
+  responses:
+    Forbidden:
+      description: 'Access token is missing or invalid'
+    Accepted:
+      description: 'The request was accepted'
+    Created:
+      description: 'The resource has been created'
+    NotFound:
+      description: 'The resource has been created'
+    NotAcceptable:
+      description: 'The resource has been created'
+  securitySchemes:
+    BearerAuth:
+      type: 'http'
+      scheme: 'bearer'
+    BasicAuth:
+      type: 'http'
+      scheme: 'basic'
+    ApiKeyAuth:
+      type: 'apiKey'
+      in: 'header'
+      name: 'X-API-Key'
+    bearerAuth:
+      type: 'http'
+      scheme: 'bearer'
+      bearerFormat: 'JWT'
+  schemas:
+    Any:
+      description: 'Any JSON object not defined as schema'
+    PaginationMeta:
+      type: 'object'
+      properties:
+        total:
+          type: 'number'
+          example: 100
+          nullable: false
+        page:
+          type: 'number'
+          example: 2
+          nullable: false
+        perPage:
+          type: 'number'
+          example: 10
+          nullable: false
+        currentPage:
+          type: 'number'
+          example: 3
+          nullable: false
+        lastPage:
+          type: 'number'
+          example: 10
+          nullable: false
+        firstPage:
+          type: 'number'
+          example: 1
+          nullable: false
+        lastPageUrl:
+          type: 'string'
+          example: '/?page=10'
+          nullable: false
+        firstPageUrl:
+          type: 'string'
+          example: '/?page=1'
+          nullable: false
+        nextPageUrl:
+          type: 'string'
+          example: '/?page=6'
+          nullable: false
+        previousPageUrl:
+          type: 'string'
+          example: '/?page=5'
+          nullable: false
+    AccessToken:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        tokenable_type:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        tokenable_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        type:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        name:
+          type: 'string'
+          example: 'John Doe'
+        hash:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        abilities:
+          type: 'array'
+          items:
+            type: 'string'
+            example: 'Lorem Ipsum'
+        last_used_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        expires_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        user:
+          $ref: '#/components/schemas/User'
+          example: null
+        is_expired:
+          type: 'boolean'
+          example: true
+        is_valid:
+          type: 'boolean'
+          example: true
+        async_verify_plain_token:
+          $ref: '#/components/schemas/string)'
+          example: null
+        has_ability_ability:
+          $ref: '#/components/schemas/string)'
+          example: null
+        async_touch:
+          $ref: '#/components/schemas/Promise<void>'
+          example: null
+        async_revoke:
+          $ref: '#/components/schemas/Promise<void>'
+          example: null
+      description: 'AccessToken (Model)'
+    Address:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        label:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        street:
+          type: 'string'
+          example: '1028 Farland Street'
+        city:
+          type: 'string'
+          example: 'Chicago'
+        region:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        country:
+          type: 'string'
+          example: 'United States of America'
+        postal_code:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        latitude:
+          type: 'number'
+          example: 702
+        longitude:
+          type: 'number'
+          example: 54
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+      description: 'Address (Model)'
+    AuditLog:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        user_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        action:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        entity_type:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        entity_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        old_values:
+          $ref: '#/components/schemas/Record<string, any>'
+          example: null
+        new_values:
+          $ref: '#/components/schemas/Record<string, any>'
+          example: null
+        ip_address:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        user_agent:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        user:
+          $ref: '#/components/schemas/User'
+          example: null
+      description: 'AuditLog (Model)'
+    Category:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        name:
+          type: 'string'
+          example: 'John Doe'
+        description:
+          type: 'string'
+          example: 'Lorem ipsum dolor sit amet'
+        parent_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        slug:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        image_url:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        is_active:
+          type: 'boolean'
+          example: true
+        display_order:
+          type: 'number'
+          example: 200
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        products:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/Product'
+            example: null
+      description: 'Category (Model)'
+    MfaRecoveryCode:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        user_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        code_hash:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        used_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        user:
+          $ref: '#/components/schemas/User'
+          example: null
+      description: 'MfaRecoveryCode (Model)'
+    Mission:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        affreteur_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        titre:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        description:
+          type: 'string'
+          example: 'Lorem ipsum dolor sit amet'
+        type_marchandise:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        poids:
+          type: 'number'
+          example: 38
+        volume:
+          type: 'number'
+          example: 875
+        date_depart_estime:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        date_arrivee_prevue:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        adresse_depart_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        adresse_arrivee_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        budget_min:
+          type: 'number'
+          example: 212
+        budget_max:
+          type: 'number'
+          example: 551
+        status:
+          $ref: '#/components/schemas/MissionStatus'
+          example: null
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        affreteur:
+          $ref: '#/components/schemas/User'
+          example: null
+        adresse_depart:
+          $ref: '#/components/schemas/Address'
+          example: null
+        adresse_arrivee:
+          $ref: '#/components/schemas/Address'
+          example: null
+        budget_range:
+          type: 'string'
+          example: 'Lorem Ipsum'
+      description: 'Mission (Model)'
+    Product:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        name:
+          type: 'string'
+          example: 'John Doe'
+        description:
+          type: 'string'
+          example: 'Lorem ipsum dolor sit amet'
+        reference:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        price:
+          type: 'number'
+          example: 10.5
+        stock:
+          type: 'number'
+          example: 144
+        stock_alert:
+          type: 'number'
+          example: 323
+        unit:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        image_url:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        images:
+          $ref: '#/components/schemas/Any'
+          example: null
+        specifications:
+          $ref: '#/components/schemas/Any'
+          example: null
+        is_active:
+          type: 'boolean'
+          example: true
+        category_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        created_by:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        category:
+          $ref: '#/components/schemas/Category'
+          example: null
+        creator:
+          $ref: '#/components/schemas/User'
+          example: null
+      description: 'Product (Model)'
+    Proposition:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        mission_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        transporteur_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        prix_propose:
+          type: 'number'
+          example: 211
+        delai_propose:
+          type: 'number'
+          example: 965
+        commentaire:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        status:
+          $ref: '#/components/schemas/PropositionStatus'
+          example: null
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        mission:
+          $ref: '#/components/schemas/Mission'
+          example: null
+        transporteur:
+          $ref: '#/components/schemas/User'
+          example: null
+      description: 'Proposition (Model)'
+    RefreshToken:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        user_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        token_hash:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        device_info:
+          $ref: '#/components/schemas/Record<string, any>'
+          example: null
+        expires_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        revoked_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        user:
+          $ref: '#/components/schemas/User'
+          example: null
+        is_expired:
+          type: 'boolean'
+          example: true
+        is_revoked:
+          type: 'boolean'
+          example: true
+        is_valid:
+          type: 'boolean'
+          example: true
+        async_verify_plain_token:
+          $ref: '#/components/schemas/string)'
+          example: null
+        async_revoke:
+          $ref: '#/components/schemas/Promise<void>'
+          example: null
+        async_rotate:
+          $ref: '#/components/schemas/Promise< token'
+          example: null
+      description: 'RefreshToken (Model)'
+    StockMovement:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        product_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        type:
+          $ref: "#/components/schemas/'in'"
+          example: null
+        quantity:
+          type: 'number'
+          example: 499
+        quantity_before:
+          type: 'number'
+          example: 608
+        quantity_after:
+          type: 'number'
+          example: 491
+        reason:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        reference_type:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        reference_id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        created_by:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        product:
+          $ref: '#/components/schemas/Product'
+          example: null
+        creator:
+          $ref: '#/components/schemas/User'
+          example: null
+      description: 'StockMovement (Model)'
+    User:
+      type: 'object'
+      required: []
+      properties:
+        id:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        email:
+          type: 'string'
+          example: 'johndoe@example.com'
+          format: 'email'
+        first_name:
+          type: 'string'
+          example: 'John'
+        last_name:
+          type: 'string'
+          example: 'Doe'
+        phone:
+          type: 'string'
+          example: 'Lorem Ipsum'
+        role:
+          $ref: '#/components/schemas/UserRole'
+          example: null
+        status:
+          $ref: '#/components/schemas/UserStatus'
+          example: null
+        email_verified_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        mfa_enabled:
+          type: 'boolean'
+          example: true
+        last_login_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        failed_login_attempts:
+          type: 'number'
+          example: 250
+        locked_until:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        created_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          example: '2021-03-23T16:13:08.489+01:00'
+          format: 'date-time'
+        access_tokens:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/AccessToken'
+            example: null
+        refresh_tokens:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/RefreshToken'
+            example: null
+        missions:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/Mission'
+            example: null
+        propositions:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/Proposition'
+            example: null
+        audit_logs:
+          type: 'array'
+          items:
+            $ref: '#/components/schemas/AuditLog'
+            example: null
+      description: 'User (Model)'
+paths:
+  /:
+    get:
+      summary: 'route'
+      description: "\n\n __ - ****"
+      parameters: []
+      tags: []
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /health:
+    get:
+      summary: 'route'
+      description: "\n\n __ - ****"
+      parameters: []
+      tags: []
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /api/auth/login:
+    post:
+      summary: 'Connexion utilisateur (login)'
+      description: "Authentifie un utilisateur avec email/mot de passe et code MFA optionnel\n\n _app/controllers/http/auth/auth_controller.ts_ - **login**"
+      parameters: []
+      tags:
+        - 'LOGIN'
+      responses:
+        200:
+          content:
+            text/plain:
+              example: 'Connexion réussie avec tokens JWT'
+          description: 'Returns **200** (OK) as **text/plain**'
+        401:
+          content:
+            text/plain:
+              example: 'Identifiants invalides'
+          description: 'Returns **401** (Unauthorized) as **text/plain**'
+        403:
+          content:
+            text/plain:
+              example: 'MFA requis ou compte bloqué'
+          description: 'Returns **403** (Forbidden) as **text/plain**'
+        422:
+          content:
+            text/plain:
+              example: 'Erreur de validation'
+          description: 'Returns **422** (Unprocessable Entity) as **text/plain**'
+      security: []
+      requestBody:
+        content:
+          text/plain:
+            example: 'mfaCode - Code MFA 6 chiffres - @type(string)'
+  /api/auth/register:
+    post:
+      summary: ' (register)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **register**"
+      parameters: []
+      tags:
+        - 'REGISTER'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/verify-email:
+    post:
+      summary: ' (verifyEmail)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **verifyEmail**"
+      parameters: []
+      tags:
+        - 'VERIFY-EMAIL'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/forgot-password:
+    post:
+      summary: ' (forgotPassword)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **forgotPassword**"
+      parameters: []
+      tags:
+        - 'FORGOT-PASSWORD'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/reset-password:
+    post:
+      summary: ' (resetPassword)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **resetPassword**"
+      parameters: []
+      tags:
+        - 'RESET-PASSWORD'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/refresh-token:
+    post:
+      summary: ' (refreshToken)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **refreshToken**"
+      parameters: []
+      tags:
+        - 'REFRESH-TOKEN'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/debug-token:
+    post:
+      summary: ' (debugToken)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **debugToken**"
+      parameters: []
+      tags:
+        - 'DEBUG-TOKEN'
+      responses:
+        201:
+          description: 'Created'
+          content:
+            application/json: {}
+      security: []
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/me:
+    get:
+      summary: ' (me)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **me**"
+      parameters: []
+      tags:
+        - 'ME'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/auth/profile:
+    put:
+      summary: ' (updateProfile)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **updateProfile**"
+      parameters: []
+      tags:
+        - 'PROFILE'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/change-password:
+    put:
+      summary: ' (changePassword)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **changePassword**"
+      parameters: []
+      tags:
+        - 'CHANGE-PASSWORD'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/logout:
+    post:
+      summary: ' (logout)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **logout**"
+      parameters: []
+      tags:
+        - 'LOGOUT'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/mfa/status:
+    get:
+      summary: ' (mfaStatus)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **mfaStatus**"
+      parameters: []
+      tags:
+        - 'MFA'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/auth/mfa/initialize:
+    post:
+      summary: ' (initializeMFA)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **initializeMFA**"
+      parameters: []
+      tags:
+        - 'MFA'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/mfa/enable:
+    post:
+      summary: ' (enableMFA)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **enableMFA**"
+      parameters: []
+      tags:
+        - 'MFA'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/mfa/disable:
+    post:
+      summary: ' (disableMFA)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **disableMFA**"
+      parameters: []
+      tags:
+        - 'MFA'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/auth/mfa/regenerate-codes:
+    post:
+      summary: ' (regenerateRecoveryCodes)'
+      description: "\n\n _app/controllers/http/auth/auth_controller.ts_ - **regenerateRecoveryCodes**"
+      parameters: []
+      tags:
+        - 'MFA'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/dashboard:
+    get:
+      summary: 'Get a list of dashboard (index)'
+      description: "\n\n _app/controllers/http/admin/dashboard_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'DASHBOARD'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/users:
+    get:
+      summary: 'Get a list of users (index)'
+      description: "\n\n _app/controllers/http/admin/users_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'USERS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/users/{id}:
+    get:
+      summary: 'Get a single instance of users (show)'
+      description: "\n\n _app/controllers/http/admin/users_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'USERS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    put:
+      summary: 'Update users (update)'
+      description: "\n\n _app/controllers/http/admin/users_controller.ts_ - **update**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'USERS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+    delete:
+      summary: 'Delete users (destroy)'
+      description: "\n\n _app/controllers/http/admin/users_controller.ts_ - **destroy**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'USERS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/products:
+    get:
+      summary: 'Get a list of products (index)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    post:
+      summary: 'Create products (store)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **store**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/products/stats:
+    get:
+      summary: ' (stats)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **stats**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/products/low-stock:
+    get:
+      summary: ' (lowStock)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **lowStock**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/products/bulk:
+    post:
+      summary: ' (bulk)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **bulk**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/products/{id}:
+    get:
+      summary: 'Get a single instance of products (show)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    put:
+      summary: 'Update products (update)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **update**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+    delete:
+      summary: 'Delete products (destroy)'
+      description: "\n\n _app/controllers/http/admin/products_controller.ts_ - **destroy**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'PRODUCTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/categories:
+    get:
+      summary: 'Get a list of categories (index)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    post:
+      summary: 'Create categories (store)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **store**"
+      parameters: []
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/categories/tree:
+    get:
+      summary: ' (tree)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **tree**"
+      parameters: []
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/categories/{id}:
+    get:
+      summary: 'Get a single instance of categories (show)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    put:
+      summary: 'Update categories (update)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **update**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+    delete:
+      summary: 'Delete categories (destroy)'
+      description: "\n\n _app/controllers/http/admin/categories_controller.ts_ - **destroy**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'CATEGORIES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/missions:
+    get:
+      summary: 'Get a list of missions (index)'
+      description: "\n\n _app/controllers/http/admin/missions_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    post:
+      summary: 'Create missions (store)'
+      description: "\n\n _app/controllers/http/admin/missions_controller.ts_ - **store**"
+      parameters: []
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/missions/stats:
+    get:
+      summary: ' (stats)'
+      description: "\n\n _app/controllers/http/admin/missions_controller.ts_ - **stats**"
+      parameters: []
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/missions/{id}:
+    get:
+      summary: 'Get a single instance of missions (show)'
+      description: "\n\n _app/controllers/http/admin/missions_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/missions/{id}/status:
+    put:
+      summary: ' (updateStatus)'
+      description: "\n\n _app/controllers/http/admin/missions_controller.ts_ - **updateStatus**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/admin/audit-logs:
+    get:
+      summary: 'Get a list of audit-logs (index)'
+      description: "\n\n _app/controllers/http/admin/audit_logs_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'AUDIT-LOGS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/stats/overview:
+    get:
+      summary: ' (overview)'
+      description: "\n\n _app/controllers/http/admin/stats_controller.ts_ - **overview**"
+      parameters: []
+      tags:
+        - 'STATS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/stats/users:
+    get:
+      summary: ' (users)'
+      description: "\n\n _app/controllers/http/admin/stats_controller.ts_ - **users**"
+      parameters: []
+      tags:
+        - 'STATS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/stats/missions:
+    get:
+      summary: ' (missions)'
+      description: "\n\n _app/controllers/http/admin/stats_controller.ts_ - **missions**"
+      parameters: []
+      tags:
+        - 'STATS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/admin/stats/products:
+    get:
+      summary: ' (products)'
+      description: "\n\n _app/controllers/http/admin/stats_controller.ts_ - **products**"
+      parameters: []
+      tags:
+        - 'STATS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/affreteur/missions:
+    get:
+      summary: 'Récupérer mes missions (index)'
+      description: "Returns **200** (OK) as **text/plain**\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **index**"
+      parameters:
+        - in: 'query'
+          name: 'page'
+          description: 'Page actuelle'
+          schema:
+            example: ''
+            type: 'number'
+          required: false
+        - in: 'query'
+          name: 'limit'
+          description: "Nombre d'éléments par page"
+          schema:
+            example: ''
+            type: 'number'
+          required: false
+        - in: 'query'
+          name: 'status'
+          description: 'Filtre par statut'
+          schema:
+            example: 'draft'
+            type: 'string'
+            enum:
+              - 'draft'
+              - 'published'
+              - 'assigned'
+              - 'completed'
+              - 'cancelled'
+          required: false
+        - in: 'query'
+          name: 'search'
+          description: 'Recherche dans titre, description, type marchandise'
+          schema:
+            example: null
+            type: 'string'
+          required: false
+      tags:
+        - 'MISSIONS'
+      responses:
+        200:
+          content:
+            text/plain:
+              example: 'Liste des missions récupérée avec succès'
+          description: 'Returns **200** (OK) as **text/plain**'
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+        500:
+          content:
+            text/plain:
+              example: 'Erreur serveur'
+          description: 'Returns **500** (Internal Server Error) as **text/plain**'
+      security:
+        - BearerAuth:
+            - 'access'
+    post:
+      summary: 'Créer une nouvelle mission (store)'
+      description: "Returns **201** (Created) as **text/plain**\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **store**"
+      parameters: []
+      tags:
+        - 'MISSIONS'
+      responses:
+        201:
+          content:
+            text/plain:
+              example: 'Mission créée avec succès'
+          description: 'Returns **201** (Created) as **text/plain**'
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+        422:
+          content:
+            text/plain:
+              example: 'Erreur de validation'
+          description: 'Returns **422** (Unprocessable Entity) as **text/plain**'
+        500:
+          content:
+            text/plain:
+              example: 'Erreur serveur'
+          description: 'Returns **500** (Internal Server Error) as **text/plain**'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          text/plain:
+            example: 'budgetMax - Budget maximum en FCFA - @type(number)'
+  /api/affreteur/missions/{id}:
+    get:
+      summary: 'Get a single instance of missions (show)'
+      description: "\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    put:
+      summary: 'Update missions (update)'
+      description: "\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **update**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+    delete:
+      summary: 'Delete missions (destroy)'
+      description: "\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **destroy**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/affreteur/missions/{id}/publish:
+    post:
+      summary: 'Publier une mission (publish)'
+      description: "Publie une mission DRAFT pour la rendre visible aux transporteurs\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **publish**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          description: 'ID de la mission'
+          schema:
+            example: ''
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        200:
+          content:
+            text/plain:
+              example: 'Mission publiée avec succès'
+          description: 'Returns **200** (OK) as **text/plain**'
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+        404:
+          content:
+            text/plain:
+              example: 'Mission non trouvée'
+          description: 'Returns **404** (Not Found) as **text/plain**'
+        422:
+          content:
+            text/plain:
+              example: 'Mission ne peut pas être publiée'
+          description: 'Returns **422** (Unprocessable Entity) as **text/plain**'
+        500:
+          content:
+            text/plain:
+              example: 'Erreur serveur'
+          description: 'Returns **500** (Internal Server Error) as **text/plain**'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/affreteur/missions/{id}/unpublish:
+    post:
+      summary: ' (unpublish)'
+      description: "\n\n _app/controllers/http/affreteur/missions_controller.ts_ - **unpublish**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/affreteur/missions/{id}/propositions:
+    get:
+      summary: 'Get a list of missions (index)'
+      description: "\n\n _app/controllers/http/affreteur/propositions_controller.ts_ - **index**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/affreteur/missions/{missionId}/propositions/{id}/accept:
+    post:
+      summary: ' (accept)'
+      description: "\n\n _app/controllers/http/affreteur/propositions_controller.ts_ - **accept**"
+      parameters:
+        - in: 'path'
+          name: 'missionId'
+          schema:
+            type: 'string'
+          required: true
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/affreteur/missions/{missionId}/propositions/{id}/reject:
+    post:
+      summary: ' (reject)'
+      description: "\n\n _app/controllers/http/affreteur/propositions_controller.ts_ - **reject**"
+      parameters:
+        - in: 'path'
+          name: 'missionId'
+          schema:
+            type: 'string'
+          required: true
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/affreteur/shipments:
+    get:
+      summary: 'Get a list of shipments (index)'
+      description: "\n\n _app/controllers/http/affreteur/shipments_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'SHIPMENTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/affreteur/shipments/{id}/tracking:
+    get:
+      summary: ' (tracking)'
+      description: "\n\n _app/controllers/http/affreteur/shipments_controller.ts_ - **tracking**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'SHIPMENTS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/transporteur/missions/available:
+    get:
+      summary: ' (available)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **available**"
+      parameters: []
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/transporteur/missions/{id}:
+    get:
+      summary: 'Get a single instance of missions (show)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/transporteur/my-missions:
+    get:
+      summary: ' (myMissions)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **myMissions**"
+      parameters: []
+      tags:
+        - 'MY-MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/transporteur/missions/{id}/apply:
+    post:
+      summary: ' (apply)'
+      description: "\n\n _app/controllers/http/transporteur/propositions_controller.ts_ - **apply**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/transporteur/my-propositions:
+    get:
+      summary: ' (myPropositions)'
+      description: "\n\n _app/controllers/http/transporteur/propositions_controller.ts_ - **myPropositions**"
+      parameters: []
+      tags:
+        - 'MY-PROPOSITIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/transporteur/missions/{id}/status:
+    put:
+      summary: ' (updateStatus)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **updateStatus**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/transporteur/missions/{id}/location:
+    post:
+      summary: ' (updateLocation)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **updateLocation**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/transporteur/missions/{id}/proof:
+    post:
+      summary: ' (uploadProof)'
+      description: "\n\n _app/controllers/http/transporteur/missions_controller.ts_ - **uploadProof**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MISSIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/shop/products:
+    get:
+      summary: 'Get a list of products (index)'
+      description: "\n\n _app/controllers/http/shop/products_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'PRODUCTS'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /api/shop/products/{id}:
+    get:
+      summary: 'Get a single instance of products (show)'
+      description: "\n\n _app/controllers/http/shop/products_controller.ts_ - **show**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'PRODUCTS'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /api/shop/categories:
+    get:
+      summary: 'Get a list of categories (index)'
+      description: "\n\n _app/controllers/http/shop/categories_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'CATEGORIES'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /api/shop/search:
+    get:
+      summary: 'Get a list of search (index)'
+      description: "\n\n _app/controllers/http/shop/search_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'SEARCH'
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /api/common/messages:
+    get:
+      summary: 'Get a list of messages (index)'
+      description: "\n\n _app/controllers/http/common/messages_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'MESSAGES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+    post:
+      summary: 'Create messages (store)'
+      description: "\n\n _app/controllers/http/common/messages_controller.ts_ - **store**"
+      parameters: []
+      tags:
+        - 'MESSAGES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/common/messages/{id}/read:
+    put:
+      summary: ' (markAsRead)'
+      description: "\n\n _app/controllers/http/common/messages_controller.ts_ - **markAsRead**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'MESSAGES'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/common/notifications:
+    get:
+      summary: 'Get a list of notifications (index)'
+      description: "\n\n _app/controllers/http/common/notifications_controller.ts_ - **index**"
+      parameters: []
+      tags:
+        - 'NOTIFICATIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+  /api/common/notifications/{id}/read:
+    put:
+      summary: ' (markAsRead)'
+      description: "\n\n _app/controllers/http/common/notifications_controller.ts_ - **markAsRead**"
+      parameters:
+        - in: 'path'
+          name: 'id'
+          schema:
+            type: 'string'
+          required: true
+      tags:
+        - 'NOTIFICATIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /api/common/notifications/read-all:
+    put:
+      summary: ' (markAllAsRead)'
+      description: "\n\n _app/controllers/http/common/notifications_controller.ts_ - **markAllAsRead**"
+      parameters: []
+      tags:
+        - 'NOTIFICATIONS'
+      responses:
+        401:
+          description: 'Returns **401** (Unauthorized)'
+        403:
+          description: 'Returns **403** (Forbidden)'
+      security:
+        - BearerAuth:
+            - 'access'
+      requestBody:
+        content:
+          application/json: {}
+  /docs:
+    get:
+      summary: 'route'
+      description: "\n\n __ - ****"
+      parameters: []
+      tags: []
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+  /swagger.json:
+    get:
+      summary: 'route'
+      description: "\n\n __ - ****"
+      parameters: []
+      tags: []
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json: {}
+      security: []
+tags:
+  - name: 'LOGIN'
+    description: 'Everything related to LOGIN'
+  - name: 'REGISTER'
+    description: 'Everything related to REGISTER'
+  - name: 'VERIFY-EMAIL'
+    description: 'Everything related to VERIFY-EMAIL'
+  - name: 'FORGOT-PASSWORD'
+    description: 'Everything related to FORGOT-PASSWORD'
+  - name: 'RESET-PASSWORD'
+    description: 'Everything related to RESET-PASSWORD'
+  - name: 'REFRESH-TOKEN'
+    description: 'Everything related to REFRESH-TOKEN'
+  - name: 'DEBUG-TOKEN'
+    description: 'Everything related to DEBUG-TOKEN'
+  - name: 'ME'
+    description: 'Everything related to ME'
+  - name: 'PROFILE'
+    description: 'Everything related to PROFILE'
+  - name: 'CHANGE-PASSWORD'
+    description: 'Everything related to CHANGE-PASSWORD'
+  - name: 'LOGOUT'
+    description: 'Everything related to LOGOUT'
+  - name: 'MFA'
+    description: 'Everything related to MFA'
+  - name: 'DASHBOARD'
+    description: 'Everything related to DASHBOARD'
+  - name: 'USERS'
+    description: 'Everything related to USERS'
+  - name: 'PRODUCTS'
+    description: 'Everything related to PRODUCTS'
+  - name: 'CATEGORIES'
+    description: 'Everything related to CATEGORIES'
+  - name: 'MISSIONS'
+    description: 'Everything related to MISSIONS'
+  - name: 'AUDIT-LOGS'
+    description: 'Everything related to AUDIT-LOGS'
+  - name: 'STATS'
+    description: 'Everything related to STATS'
+  - name: 'SHIPMENTS'
+    description: 'Everything related to SHIPMENTS'
+  - name: 'MY-MISSIONS'
+    description: 'Everything related to MY-MISSIONS'
+  - name: 'MY-PROPOSITIONS'
+    description: 'Everything related to MY-PROPOSITIONS'
+  - name: 'SEARCH'
+    description: 'Everything related to SEARCH'
+  - name: 'MESSAGES'
+    description: 'Everything related to MESSAGES'
+  - name: 'NOTIFICATIONS'
+    description: 'Everything related to NOTIFICATIONS'

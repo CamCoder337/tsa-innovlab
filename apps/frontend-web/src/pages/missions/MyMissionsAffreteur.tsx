@@ -17,14 +17,31 @@ import {
 } from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
 import { useMissions } from '@/hooks/useMissions';
+import { missionService } from '@/services/mission.service';
+import { toast } from 'react-hot-toast';
 
 export default function MyMissionsAffreteur() {
-  const { missions } = useMissions();
-  // const [searchTerm, setSearchTerm] = useState('');
-  // const [statusFilter, setStatusFilter] = useState('all');
+  const { myMissions, updateMission } = useMissions();
   const [activeTab, setActiveTab] = useState('all');
 
-  const filteredMissions = missions.filter((mission) => {
+  const handlePublish = async (id: string) => {
+    const response = await missionService.publishMission(id);
+    console.log(response);
+
+    if (response.error) {
+      toast.error(response.error.message);
+    }
+
+    if (response.data) {
+      updateMission(id, response.data);
+      toast.success('Mission publiée avec succès');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2500);
+    }
+  };
+
+  const filteredMissions = myMissions.filter((mission) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'actives') return ['published', 'assigned'].includes(mission.status);
     if (activeTab === 'completed') return mission.status === 'completed';
@@ -56,7 +73,7 @@ export default function MyMissionsAffreteur() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Missions</p>
-                <p className="text-2xl font-bold">{missions.length}</p>
+                <p className="text-2xl font-bold">{myMissions.length}</p>
               </div>
             </div>
           </CardContent>
@@ -70,7 +87,7 @@ export default function MyMissionsAffreteur() {
               <div>
                 <p className="text-sm text-gray-600">En Cours</p>
                 <p className="text-2xl font-bold">
-                  {missions.filter((m) => ['published', 'assigned'].includes(m.status)).length}
+                  {myMissions.filter((m) => ['published', 'assigned'].includes(m.status)).length}
                 </p>
               </div>
             </div>
@@ -85,7 +102,7 @@ export default function MyMissionsAffreteur() {
               <div>
                 <p className="text-sm text-gray-600">Terminées</p>
                 <p className="text-2xl font-bold">
-                  {missions.filter((m) => m.status === 'completed').length}
+                  {myMissions.filter((m) => m.status === 'completed').length}
                 </p>
               </div>
             </div>
@@ -122,78 +139,80 @@ export default function MyMissionsAffreteur() {
             <TabsContent value={activeTab} className="mt-6">
               <div className="space-y-4">
                 {filteredMissions.map((mission) => (
-                  <Card key={mission.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                {mission.titre}
-                              </h3>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>
-                                    {mission.adresseDepartId} → {mission.adresseArriveeId}
-                                  </span>
-                                </div>
-                                <span>•</span>
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  <span>
-                                    Crée le{' '}
-                                    {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <Badge className={getStatusColor(mission.status)}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(mission.status)}
-                                {getStatusLabel(mission.status)}
-                              </div>
-                            </Badge>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                            <div>
-                              <span className="text-gray-500">Proposé:</span>
-                              <span className="ml-1 font-medium">
-                                {mission.budgetMin?.toLocaleString() || 0} FCFA
-                              </span>
-                            </div>
-                            {mission.budgetMax && (
+                  <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.titre}`}>
+                    <Card key={mission.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
                               <div>
-                                <span className="text-gray-500">Final:</span>
-                                <span className="ml-1 font-medium text-green-600">
-                                  {mission.budgetMax?.toLocaleString() || 0} FCFA
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                  {mission.titre}
+                                </h3>
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    <span>
+                                      {mission.adresseDepart?.label} →{' '}
+                                      {mission.adresseArrivee?.label}
+                                    </span>
+                                  </div>
+                                  <span>•</span>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>
+                                      Crée le{' '}
+                                      {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <Badge className={getStatusColor(mission.status)}>
+                                <div className="flex items-center gap-1">
+                                  {getStatusIcon(mission.status)}
+                                  {getStatusLabel(mission.status)}
+                                </div>
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                              <div>
+                                <span className="text-gray-500">Budget Min.:</span>
+                                <span className="ml-1 font-medium">
+                                  {mission.budgetMin?.toLocaleString() || 0} FCFA
                                 </span>
                               </div>
-                            )}
-                            <div>
-                              <span className="text-gray-500">Départ:</span>
-                              <span className="ml-1 font-medium">
-                                {mission.dateDepartEstime
-                                  ? new Date(mission.dateDepartEstime).toLocaleDateString('fr-FR')
-                                  : 'Non spécifiée'}
-                              </span>
-                            </div>
-                            {mission.dateArriveePrevue && (
+                              {mission.budgetMax && (
+                                <div>
+                                  <span className="text-gray-500">Budget Max.:</span>
+                                  <span className="ml-1 font-medium text-green-600">
+                                    {mission.budgetMax?.toLocaleString() || 0} FCFA
+                                  </span>
+                                </div>
+                              )}
                               <div>
-                                <span className="text-gray-500">Arrivée:</span>
+                                <span className="text-gray-500">Départ:</span>
                                 <span className="ml-1 font-medium">
-                                  {mission.dateArriveePrevue
-                                    ? new Date(mission.dateArriveePrevue).toLocaleDateString(
-                                        'fr-FR'
-                                      )
+                                  {mission.dateDepartEstime
+                                    ? new Date(mission.dateDepartEstime).toLocaleDateString('fr-FR')
                                     : 'Non spécifiée'}
                                 </span>
                               </div>
-                            )}
-                          </div>
+                              {mission.dateArriveePrevue && (
+                                <div>
+                                  <span className="text-gray-500">Arrivée:</span>
+                                  <span className="ml-1 font-medium">
+                                    {mission.dateArriveePrevue
+                                      ? new Date(mission.dateArriveePrevue).toLocaleDateString(
+                                          'fr-FR'
+                                        )
+                                      : 'Non spécifiée'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
 
-                          {/* {mission?.shipper && (
+                            {/* {mission?.shipper && (
                                                         <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
                                                             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                                                                 <span className="text-xs font-medium text-green-600">
@@ -213,41 +232,51 @@ export default function MyMissionsAffreteur() {
                                                             </div>
                                                         </div>
                                                     )} */}
-                        </div>
+                          </div>
 
-                        <div className="flex flex-col gap-2 lg:w-48">
-                          <Button variant="outline" className="gap-2 bg-transparent">
-                            <Eye className="h-4 w-4" />
-                            Voir Détails
-                          </Button>
-                          {mission.status === 'draft' && (
-                            <Button variant="outline" className="gap-2 bg-transparent">
-                              <Edit className="h-4 w-4" />
-                              Modifier
-                            </Button>
-                          )}
-                          {mission.status === 'published' && (
-                            <Button
-                              className="gap-2"
-                              style={{ backgroundColor: 'var(--tsa-blue)' }}
+                          <div className="flex flex-col gap-2 lg:w-48">
+                            <Link
+                              to={`/app/missions/${mission.id}`}
+                              aria-label={`Voir ${mission.titre}`}
                             >
-                              <MessageSquare className="h-4 w-4" />
-                              Voir Offres ({mission.volume})
-                            </Button>
-                          )}
-                          {mission.status === 'assigned' && (
-                            <Button
-                              className="gap-2"
-                              style={{ backgroundColor: 'var(--tsa-blue)' }}
-                            >
-                              <MapPin className="h-4 w-4" />
-                              Suivre Expédition
-                            </Button>
-                          )}
+                              <Button variant="outline" className="gap-2 bg-transparent w-full">
+                                <Eye className="h-4 w-4" />
+                                Voir Détails
+                              </Button>
+                            </Link>
+                            {mission.status === 'draft' && (
+                              <Button
+                                variant="outline"
+                                className="gap-2 bg-tsa-blue text-white"
+                                onClick={() => handlePublish(mission.id)}
+                              >
+                                <Edit className="h-4 w-4" />
+                                Publier
+                              </Button>
+                            )}
+                            {mission.status === 'published' && (
+                              <Button
+                                className="gap-2"
+                                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                Voir Offres ({mission.volume})
+                              </Button>
+                            )}
+                            {mission.status === 'assigned' && (
+                              <Button
+                                className="gap-2"
+                                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                              >
+                                <MapPin className="h-4 w-4" />
+                                Suivre Expédition
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
 

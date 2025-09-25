@@ -10,80 +10,237 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import countryList from 'react-select-country-list';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CalendarIcon, MapPin, Package, DollarSign, Minus, Clock, FileText } from 'lucide-react';
+import { CalendarIcon, MapPin, Package, DollarSign, Clock, Plus, X } from 'lucide-react';
 import type { CreateMissionDto } from '@/types/mission.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import type { Address } from '@/types/address.types';
+import { useMissions } from '@/hooks/useMissions';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
-const INITIAL_VALUES: CreateMissionDto = {
-  titre: '',
-  description: '',
-  typeMarchandise: '',
-  poids: 0,
-  volume: 0,
-  dateDepartEstime: '',
-  dateArriveePrevue: '',
-  adresseDepartId: '',
-  adresseArriveeId: '',
-  budgetMin: 0,
-  budgetMax: 0,
-  isFlexibleDates: false,
-  isFlexibleRoute: false,
-  notesComplementaires: '',
-  documents: [],
+// Lazy load MapPicker with Suspense for client-side rendering
+const MapPicker = lazy(() => import('@/components/maps/MapPicker'));
+
+// Loading component for Suspense fallback
+const MapLoading = () => (
+  <div className="h-64 w-full bg-gray-100 flex items-center justify-center">
+    <div className="animate-pulse">Chargement de la carte...</div>
+  </div>
+);
+
+// Define props type for ClientSideMapPicker
+interface MapPickerProps {
+  position: [number, number];
+  onPositionChange: (lat: number, lng: number) => void;
+  className?: string;
+}
+
+// Client-side only wrapper for MapPicker
+const ClientSideMapPicker = ({ position, onPositionChange, className }: MapPickerProps) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <MapLoading />;
+  }
+
+  return (
+    <Suspense fallback={<MapLoading />}>
+      <MapPicker position={position} onPositionChange={onPositionChange} className={className} />
+    </Suspense>
+  );
 };
+
+// Initialize country list with French labels
+const countryOptions = countryList().getData();
 
 const validationSchema = Yup.object({
   titre: Yup.string().required('Le titre est requis'),
-  description: Yup.string().required('La description est requise'),
-  typeMarchandise: Yup.string().required('Le type de marchandise est requis'),
-  poids: Yup.number().nullable().min(0, 'Le poids doit être positif'),
-  volume: Yup.number().nullable().min(0, 'Le volume doit être positif'),
-  dateDepartEstime: Yup.date().required('La date de départ est requise'),
-  dateArriveePrevue: Yup.date()
-    .required("La date d'arrivée prévue est requise")
-    .min(Yup.ref('dateDepartEstime'), "La date d'arrivée doit être après la date de départ"),
-  adresseDepartId: Yup.string().required("L'adresse de départ est requise"),
-  adresseArriveeId: Yup.string().required("L'adresse d'arrivée est requise"),
-  budgetMin: Yup.number().nullable().min(0, 'Le budget minimum doit être positif'),
-  budgetMax: Yup.number()
-    .nullable()
-    .min(Yup.ref('budgetMin'), 'Le budget maximum doit être supérieur ou égal au budget minimum'),
-  isFlexibleDates: Yup.boolean(),
-  isFlexibleRoute: Yup.boolean(),
-  notesComplementaires: Yup.string().nullable(),
-  documents: Yup.array()
-    .of(
-      Yup.object({
-        name: Yup.string().required(),
-        size: Yup.number().required(),
-        type: Yup.string().required(),
-      })
-    )
-    .nullable(),
+  affreteurId: Yup.string().when('$isAdmin', {
+    is: true,
+    then: (schema) => schema.required("L'ID de l'affréteur est requis"),
+    otherwise: (schema) => schema.optional(),
+  }),
+  description: Yup.string(),
+  typeMarchandise: Yup.string(),
+  poids: Yup.number().min(0, 'Le poids doit être positif'),
+  volume: Yup.number().min(0, 'Le volume doit être positif'),
+  dateDepartEstime: Yup.date()
+    .required('La date de départ est requise')
+    .typeError('La date de départ doit être une date valide'),
+  dateArriveePrevue: Yup.date().typeError("La date d'arrivée doit être une date valide"),
+  adresseDepart: Yup.object({
+    street: Yup.string().required('La rue est requise'),
+    city: Yup.string().required('La ville est requise'),
+    postalCode: Yup.string().required('Le code postal est requis'),
+    country: Yup.string().required('Le pays est requis'),
+    label: Yup.string().required('Le nom est requis'),
+    region: Yup.string().required('La région est requise'),
+    latitude: Yup.number().required('La latitude est requise'),
+    longitude: Yup.number().required('La longitude est requise'),
+  }).required("L'adresse de départ est requise"),
+  adresseArrivee: Yup.object({
+    street: Yup.string().required('La rue est requise'),
+    city: Yup.string().required('La ville est requise'),
+    postalCode: Yup.string().required('Le code postal est requis'),
+    country: Yup.string().required('Le pays est requis'),
+    label: Yup.string().required('Le nom est requis'),
+    region: Yup.string().required('La région est requise'),
+    latitude: Yup.number().required('La latitude est requise'),
+    longitude: Yup.number().required('La longitude est requise'),
+  }).required("L'adresse d'arrivée est requise"),
+  budgetMin: Yup.number().min(0, 'Le budget minimum doit être positif'),
+  budgetMax: Yup.number().min(
+    Yup.ref('budgetMin'),
+    'Le budget maximum doit être supérieur au minimum'
+  ),
 });
 
-interface CreateMissionFormProps {
-  onSubmit: (data: CreateMissionDto) => Promise<void>;
+export interface CreateMissionFormProps {
+  onSubmit: (data: CreateMissionDto, action: string, publish: boolean) => Promise<void>;
   isSubmitting?: boolean;
-  addresses: Array<{ id: string; label: string }>; // Assuming we'll pass addresses from parent
+  addresses: Address[];
 }
+
+// Type for the form data when creating a new address
+type NewAddressFormData = Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
 
 export default function CreateMissionForm({
   onSubmit,
   isSubmitting = false,
   addresses = [],
 }: CreateMissionFormProps) {
+  const { user } = useAuth();
+  const { id } = useParams();
+  const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
+  const fetchMission = useCallback(async () => {
+    if (!id) {
+      navigate('/app/missions');
+      return;
+    }
+    setLoading(true);
+    const foundMission =
+      missions.find((mission) => mission.id === id) ||
+      myMissions.find((mission) => mission.id === id);
+    if (!foundMission) {
+      setCurrentMission(null);
+    }
+    if (foundMission) {
+      setCurrentMission(foundMission);
+    }
+    setLoading(false);
+  }, [id, missions, myMissions, navigate, setCurrentMission]);
+
+  const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
+    null
+  );
+  const [newAddress, setNewAddress] = useState<NewAddressFormData>({
+    label: '',
+    street: '',
+    city: '',
+    region: '',
+    country: 'Cameroun',
+    postalCode: '',
+    latitude: 3.848, // Default to Yaoundé, Cameroon
+    longitude: 11.5021,
+  });
+
+  useEffect(() => {
+    if (id) {
+      fetchMission();
+    }
+  }, [fetchMission, id]);
+
+  if (id && loading) {
+    return <div className="container mx-auto py-8">Loading mission details...</div>;
+  }
+
+  if (id && !currentMission) {
+    toast.error('Mission introuvable', { duration: 5000 });
+    return <Navigate to="/app/missions" />;
+  }
+
+  const INITIAL_VALUES: CreateMissionDto = {
+    titre: currentMission?.titre || '',
+    affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
+    description: currentMission?.description || '',
+    typeMarchandise: currentMission?.typeMarchandise || '',
+    poids: currentMission?.poids || 0,
+    volume: currentMission?.volume || 0,
+    dateDepartEstime: currentMission?.dateDepartEstime || '',
+    dateArriveePrevue: currentMission?.dateArriveePrevue || '',
+    adresseDepart: currentMission?.adresseDepart || undefined,
+    adresseArrivee: currentMission?.adresseArrivee || undefined,
+    budgetMin: currentMission?.budgetMin || 0,
+    budgetMax: currentMission?.budgetMax || 0,
+  };
+
+  const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewAddress((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const saveNewAddress = (
+    type: 'departure' | 'arrival',
+    setFieldValue: (field: string, value: NewAddressFormData) => void
+  ) => {
+    // Create a new address object with all required fields
+    const newAddressData: NewAddressFormData = {
+      street: newAddress.street,
+      city: newAddress.city,
+      region: newAddress.region,
+      country: newAddress.country,
+      postalCode: newAddress.postalCode,
+      label: newAddress.label,
+      latitude: newAddress.latitude,
+      longitude: newAddress.longitude,
+    };
+
+    // Set the selected address in the form
+    setFieldValue(type === 'departure' ? 'adresseDepart' : 'adresseArrivee', newAddressData);
+
+    // Reset the form
+    setShowNewAddressForm(null);
+    setNewAddress({
+      street: '',
+      city: '',
+      region: '',
+      country: 'Cameroun',
+      postalCode: '',
+      label: '',
+      latitude: 3.848,
+      longitude: 11.5021,
+    });
+  };
+
   return (
     <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values) =>
+        onSubmit(
+          values,
+          id ? 'update' : 'create',
+          id && currentMission ? currentMission.status === 'draft' : true
+        )
+      }
       validateOnBlur={true}
       validateOnChange={true}
     >
@@ -97,80 +254,489 @@ export default function CreateMissionForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="titre">Titre de la Mission</Label>
-                <Input
-                  id="titre"
-                  name="titre"
-                  placeholder="ex: Transport Électronique Douala → Yaoundé"
-                  value={values.titre}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={cn(touched.titre && errors.titre && 'border-red-500')}
-                  required
-                />
-                {touched.titre && errors.titre && (
-                  <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+              <div
+                className={cn('grid gap-4', {
+                  'grid-cols-1 md:grid-cols-2': user?.role === 'admin',
+                })}
+              >
+                <div>
+                  <Label htmlFor="titre">Titre de la Mission</Label>
+                  <Input
+                    id="titre"
+                    name="titre"
+                    placeholder="ex: Transport Électronique Douala → Yaoundé"
+                    value={values.titre}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={cn('w-full', touched.titre && errors.titre && 'border-red-500')}
+                    required
+                  />
+                  {touched.titre && errors.titre && (
+                    <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+                  )}
+                </div>
+                {user?.role === 'admin' && (
+                  <div>
+                    <Label htmlFor="affreteurId">Affréteur (ID)</Label>
+                    <Input
+                      id="affreteurId"
+                      name="affreteurId"
+                      placeholder="ID de l'affréteur"
+                      value={values.affreteurId || ''}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={cn(
+                        'w-full',
+                        touched.affreteurId && errors.affreteurId && 'border-red-500'
+                      )}
+                    />
+                    {touched.affreteurId && errors.affreteurId && (
+                      <div className="text-sm text-red-600 mt-1">{errors.affreteurId}</div>
+                    )}
+                  </div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="adresseDepartId">Adresse de Départ</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Select
-                      value={values.adresseDepartId || ''}
-                      onValueChange={(value) => setFieldValue('adresseDepartId', value)}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          'pl-10',
-                          touched.adresseDepartId && errors.adresseDepartId && 'border-red-500'
-                        )}
-                      >
-                        <SelectValue placeholder="Sélectionner une adresse" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {addresses.map((address) => (
-                          <SelectItem key={address.id} value={address.id}>
-                            {address.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {touched.adresseDepartId && errors.adresseDepartId && (
-                    <div className="text-sm text-red-600 mt-1">{errors.adresseDepartId}</div>
+                  <Label htmlFor="adresseDepart">Adresse de Départ</Label>
+                  {showNewAddressForm === 'departure' ? (
+                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-medium">Nouvelle adresse</h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowNewAddressForm(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="label">Nom</Label>
+                          <Input
+                            name="label"
+                            value={newAddress.label}
+                            onChange={handleNewAddressChange}
+                            placeholder="Ex: Domicile, Travail"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="street">Rue *</Label>
+                          <Input
+                            name="street"
+                            value={newAddress.street}
+                            onChange={handleNewAddressChange}
+                            placeholder="123 Rue de l'Exemple"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Code postal *</Label>
+                          <Input
+                            name="postalCode"
+                            value={newAddress.postalCode}
+                            onChange={handleNewAddressChange}
+                            placeholder="75000"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="city">Ville *</Label>
+                          <Input
+                            name="city"
+                            value={newAddress.city}
+                            onChange={handleNewAddressChange}
+                            placeholder="Yaoundé"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="region">Région</Label>
+                          <Input
+                            name="region"
+                            value={newAddress.region}
+                            onChange={handleNewAddressChange}
+                            placeholder="Centre"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="country">Pays *</Label>
+                          <select
+                            name="country"
+                            value={newAddress.country}
+                            onChange={handleNewAddressChange}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Sélectionner un pays</option>
+                            {countryOptions.map((country) => (
+                              <option key={country.value} value={country.label}>
+                                {country.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Position sur la carte</Label>
+                          <div className="mt-2 border rounded-md overflow-hidden">
+                            <ClientSideMapPicker
+                              position={[newAddress.latitude, newAddress.longitude]}
+                              onPositionChange={(lat, lng) => {
+                                setNewAddress((prev) => ({
+                                  ...prev,
+                                  latitude: lat,
+                                  longitude: lng,
+                                }));
+                              }}
+                              className="h-64 w-full"
+                            />
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="latitude">Latitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="latitude"
+                                value={newAddress.latitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="3.8480"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="longitude">Longitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="longitude"
+                                value={newAddress.longitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="11.5021"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowNewAddressForm(null)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('departure', setFieldValue)}
+                            disabled={
+                              !newAddress.street || !newAddress.city || !newAddress.postalCode
+                            }
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Select
+                          value={values.adresseDepart?.id || ''}
+                          onValueChange={(value) => {
+                            if (value === 'new') {
+                              setShowNewAddressForm('departure');
+                            } else {
+                              const selectedAddress = addresses.find((addr) => addr.id === value);
+                              if (selectedAddress) {
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                const { id, ...addressWithoutId } = selectedAddress;
+                                setFieldValue('adresseDepart', addressWithoutId);
+                              }
+                            }
+                          }}
+                        >
+                          <SelectTrigger
+                            className={cn(
+                              'pl-10',
+                              touched.adresseDepart && errors.adresseDepart && 'border-red-500'
+                            )}
+                          >
+                            <SelectValue
+                              placeholder={
+                                values.adresseDepart?.label || 'Sélectionner une adresse'
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {addresses.map((address) => (
+                              <SelectItem key={address.id} value={address.id}>
+                                {address.label}
+                              </SelectItem>
+                            ))}
+                            <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 text-primary"
+                                onClick={() => setShowNewAddressForm('departure')}
+                              >
+                                <Plus className="h-4 w-4" />
+                                <span>Nouvelle adresse</span>
+                              </button>
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {values.adresseDepart && (
+                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                          <p className="font-medium">{values.adresseDepart.label}</p>
+                          <p>{values.adresseDepart.street}</p>
+                          <p>
+                            {values.adresseDepart.postalCode} {values.adresseDepart.city}
+                          </p>
+                          {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
+                          <p>{values.adresseDepart.country}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordonnées: {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
+                            {Number(values.adresseDepart.longitude)?.toFixed(6)}
+                          </p>
+                        </div>
+                      )}
+                      {touched.adresseDepart && errors.adresseDepart && (
+                        <div className="text-sm text-red-600 mt-1">
+                          {typeof errors.adresseDepart === 'string'
+                            ? errors.adresseDepart
+                            : 'Adresse de départ requise'}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="adresseArriveeId">Adresse d'Arrivée</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Select
-                      value={values.adresseArriveeId || ''}
-                      onValueChange={(value) => setFieldValue('adresseArriveeId', value)}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          'pl-10',
-                          touched.adresseArriveeId && errors.adresseArriveeId && 'border-red-500'
-                        )}
-                      >
-                        <SelectValue placeholder="Sélectionner une adresse" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {addresses.map((address) => (
-                          <SelectItem key={address.id} value={address.id}>
-                            {address.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {touched.adresseArriveeId && errors.adresseArriveeId && (
-                    <div className="text-sm text-red-600 mt-1">{errors.adresseArriveeId}</div>
+                  <Label htmlFor="adresseArrivee">Adresse d'Arrivée</Label>
+                  {showNewAddressForm === 'arrival' ? (
+                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-medium">Nouvelle adresse</h4>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowNewAddressForm(null)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="label">Libellé</Label>
+                          <Input
+                            name="label"
+                            value={newAddress.label}
+                            onChange={handleNewAddressChange}
+                            placeholder="Ex: Domicile, Travail"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="street">Rue *</Label>
+                          <Input
+                            name="street"
+                            value={newAddress.street}
+                            onChange={handleNewAddressChange}
+                            placeholder="123 Rue de l'Exemple"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Code postal *</Label>
+                          <Input
+                            name="postalCode"
+                            value={newAddress.postalCode}
+                            onChange={handleNewAddressChange}
+                            placeholder="75000"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="city">Ville *</Label>
+                          <Input
+                            name="city"
+                            value={newAddress.city}
+                            onChange={handleNewAddressChange}
+                            placeholder="Yaoundé"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="region">Région</Label>
+                          <Input
+                            name="region"
+                            value={newAddress.region}
+                            onChange={handleNewAddressChange}
+                            placeholder="Centre"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="country">Pays *</Label>
+                          <select
+                            name="country"
+                            value={newAddress.country}
+                            onChange={handleNewAddressChange}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Sélectionner un pays</option>
+                            {countryOptions.map((country) => (
+                              <option key={country.value} value={country.label}>
+                                {country.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Position sur la carte</Label>
+                          <div className="mt-2 border rounded-md overflow-hidden">
+                            <MapPicker
+                              position={[newAddress.latitude, newAddress.longitude]}
+                              onPositionChange={(lat, lng) => {
+                                setNewAddress((prev) => ({
+                                  ...prev,
+                                  latitude: lat,
+                                  longitude: lng,
+                                }));
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="latitude">Latitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="latitude"
+                                value={newAddress.latitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="3.8480"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="longitude">Longitude</Label>
+                              <Input
+                                type="number"
+                                step="0.000001"
+                                name="longitude"
+                                value={newAddress.longitude}
+                                onChange={handleNewAddressChange}
+                                placeholder="11.5021"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowNewAddressForm(null)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('arrival', setFieldValue)}
+                            disabled={
+                              !newAddress.street || !newAddress.city || !newAddress.postalCode
+                            }
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Select
+                          value={values.adresseArrivee?.id || ''}
+                          onValueChange={(value) => {
+                            if (value === 'new') {
+                              setShowNewAddressForm('arrival');
+                            } else {
+                              const selectedAddress = addresses.find((addr) => addr.id === value);
+                              if (selectedAddress) {
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                const { id, ...addressWithoutId } = selectedAddress;
+                                setFieldValue('adresseArrivee', addressWithoutId);
+                              }
+                            }
+                          }}
+                        >
+                          <SelectTrigger
+                            className={cn(
+                              'pl-10',
+                              touched.adresseArrivee && errors.adresseArrivee && 'border-red-500'
+                            )}
+                          >
+                            <SelectValue
+                              placeholder={
+                                values.adresseArrivee?.label || 'Sélectionner une adresse'
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {addresses.map((address) => (
+                              <SelectItem key={address.id} value={address.id}>
+                                {address.label}
+                              </SelectItem>
+                            ))}
+                            <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 text-primary"
+                                onClick={() => setShowNewAddressForm('arrival')}
+                              >
+                                <Plus className="h-4 w-4" />
+                                <span>Nouvelle adresse</span>
+                              </button>
+                            </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {values.adresseArrivee && (
+                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                          <p className="font-medium">{values.adresseArrivee.label}</p>
+                          <p>{values.adresseArrivee.street}</p>
+                          <p>
+                            {values.adresseArrivee.postalCode} {values.adresseArrivee.city}
+                          </p>
+                          {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
+                          <p>{values.adresseArrivee.country}</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordonnées: {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
+                            {Number(values.adresseArrivee.longitude)?.toFixed(6)}
+                          </p>
+                        </div>
+                      )}
+                      {touched.adresseArrivee && errors.adresseArrivee && (
+                        <div className="text-sm text-red-600 mt-1">
+                          {typeof errors.adresseArrivee === 'string'
+                            ? errors.adresseArrivee
+                            : "Adresse d'arrivée requise"}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -178,27 +744,18 @@ export default function CreateMissionForm({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="typeMarchandise">Type de Marchandise</Label>
-                  <Select
+                  <Input
+                    id="typeMarchandise"
+                    name="typeMarchandise"
+                    type="text"
+                    placeholder="Type de Marchandise"
                     value={values.typeMarchandise || ''}
-                    onValueChange={(value) => setFieldValue('typeMarchandise', value)}
-                  >
-                    <SelectTrigger
-                      className={cn(
-                        touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
-                      )}
-                    >
-                      <SelectValue placeholder="Sélectionner le type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="electronique">Électronique</SelectItem>
-                      <SelectItem value="construction">Matériaux de Construction</SelectItem>
-                      <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
-                      <SelectItem value="textile">Textiles</SelectItem>
-                      <SelectItem value="machines">Machines</SelectItem>
-                      <SelectItem value="chimique">Produits Chimiques</SelectItem>
-                      <SelectItem value="autre">Autre</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={cn(
+                      touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
+                    )}
+                  />
                   {touched.typeMarchandise && errors.typeMarchandise && (
                     <div className="text-sm text-red-600 mt-1">{errors.typeMarchandise}</div>
                   )}
@@ -287,7 +844,7 @@ export default function CreateMissionForm({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateDepartEstime
-                          ? format(new Date(values.dateDepartEstime), 'PPP')
+                          ? format(new Date(values.dateDepartEstime), 'dd MMM yyyy')
                           : 'Sélectionner une date'}
                       </Button>
                     </PopoverTrigger>
@@ -297,7 +854,17 @@ export default function CreateMissionForm({
                         selected={
                           values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined
                         }
-                        onSelect={(date) => setFieldValue('dateDepartEstime', date?.toISOString())}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFieldValue('dateDepartEstime', date);
+                            if (
+                              values.dateArriveePrevue &&
+                              date > new Date(values.dateArriveePrevue)
+                            ) {
+                              setFieldValue('dateArriveePrevue', date);
+                            }
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -320,7 +887,7 @@ export default function CreateMissionForm({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateArriveePrevue
-                          ? format(new Date(values.dateArriveePrevue), 'PPP')
+                          ? format(new Date(values.dateArriveePrevue), 'dd MMM yyyy')
                           : 'Sélectionner une date'}
                       </Button>
                     </PopoverTrigger>
@@ -330,7 +897,11 @@ export default function CreateMissionForm({
                         selected={
                           values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined
                         }
-                        onSelect={(date) => setFieldValue('dateArriveePrevue', date?.toISOString())}
+                        onSelect={(date) => {
+                          if (date) {
+                            setFieldValue('dateArriveePrevue', date);
+                          }
+                        }}
                         initialFocus
                         disabled={(date) =>
                           values.dateDepartEstime ? date < new Date(values.dateDepartEstime) : false
@@ -342,22 +913,6 @@ export default function CreateMissionForm({
                     <div className="text-sm text-red-600 mt-1">{errors.dateArriveePrevue}</div>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox
-                  id="isFlexibleDates"
-                  checked={values.isFlexibleDates}
-                  onCheckedChange={(checked) => setFieldValue('isFlexibleDates', checked)}
-                />
-                <Label htmlFor="isFlexibleDates">Dates flexibles</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isFlexibleRoute"
-                  checked={values.isFlexibleRoute}
-                  onCheckedChange={(checked) => setFieldValue('isFlexibleRoute', checked)}
-                />
-                <Label htmlFor="isFlexibleRoute">Itinéraire flexible</Label>
               </div>
             </CardContent>
           </Card>
@@ -436,108 +991,63 @@ export default function CreateMissionForm({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Informations Complémentaires
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="notesComplementaires">Notes Complémentaires</Label>
-                <Textarea
-                  id="notesComplementaires"
-                  name="notesComplementaires"
-                  placeholder="Ajoutez des informations supplémentaires ou des instructions spéciales..."
-                  value={values.notesComplementaires || ''}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={cn(
-                    touched.notesComplementaires && errors.notesComplementaires && 'border-red-500'
-                  )}
-                  rows={3}
-                />
-                {touched.notesComplementaires && errors.notesComplementaires && (
-                  <div className="text-sm text-red-600 mt-1">{errors.notesComplementaires}</div>
-                )}
-              </div>
-
-              <div>
-                <Label>Documents (optionnel)</Label>
-                <div className="mt-2 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md">
-                  <div className="space-y-1 text-center">
-                    <div className="flex text-sm text-gray-600">
-                      <label
-                        htmlFor="file-upload"
-                        className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary"
-                      >
-                        <span>Télécharger un fichier</span>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          className="sr-only"
-                          multiple
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            setFieldValue('documents', [...(values.documents || []), ...files]);
-                          }}
-                        />
-                      </label>
-                      <p className="pl-1">ou glisser-déposer</p>
-                    </div>
-                    <p className="text-xs text-gray-500">PDF, DOC, JPG, PNG jusqu'à 10MB</p>
-                  </div>
-                </div>
-                {values.documents && values.documents.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {values.documents.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                      >
-                        <span className="text-sm text-gray-700 truncate max-w-xs">{file.name}</span>
-                        <button
-                          type="button"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            const newFiles = [...(values.documents || [])];
-                            newFiles.splice(index, 1);
-                            setFieldValue('documents', newFiles);
-                          }}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           <div className="flex gap-4">
-            <Button
-              type="submit"
-              className="flex-1"
-              style={{ backgroundColor: 'var(--tsa-blue)' }}
-              disabled={isSubmitting}
-            >
-              <Package className="h-4 w-4 mr-2" />
-              {isSubmitting ? 'Création en cours...' : 'Créer la Mission'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                // Set status to 'draft' and submit
-                onSubmit({ ...values });
-              }}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder comme Brouillon'}
-            </Button>
+            {!id && (
+              <>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  style={{ backgroundColor: 'var(--tsa-blue)' }}
+                  disabled={isSubmitting}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {isSubmitting ? 'Publication en cours...' : 'Publier la Mission'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'create', false);
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder comme Brouillon'}
+                </Button>
+              </>
+            )}
+            {id && (
+              <>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  style={{ backgroundColor: 'var(--tsa-blue)' }}
+                  disabled={isSubmitting}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {isSubmitting
+                    ? currentMission?.status === 'draft'
+                      ? 'Modification & Publication en cours...'
+                      : 'Modification en cours...'
+                    : currentMission?.status === 'draft'
+                      ? 'Modifier et publier la Mission'
+                      : 'Modifier la Mission'}
+                </Button>
+                {currentMission?.status === 'draft' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      // Set status to 'draft' and submit
+                      onSubmit({ ...values }, 'update', false);
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Modification...' : 'Modifier le Brouillon'}
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </Form>
       )}

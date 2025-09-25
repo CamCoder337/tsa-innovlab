@@ -10,6 +10,8 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import { UserRole } from '#models/user'
+import AutoSwagger from 'adonis-autoswagger'
+import swagger from '#config/swagger'
 
 // Helper function pour créer un middleware de rôle
 function roleGuard(role: UserRole) {
@@ -120,6 +122,8 @@ router
 
     // Gestion des missions
     router.get('/missions', '#controllers/http/admin/missions_controller.index')
+    router.post('/missions', '#controllers/http/admin/missions_controller.store')
+    router.get('/missions/stats', '#controllers/http/admin/missions_controller.stats')
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
 
@@ -143,6 +147,11 @@ router
     router.post('/missions', '#controllers/http/affreteur/missions_controller.store')
     router.get('/missions/:id', '#controllers/http/affreteur/missions_controller.show')
     router.put('/missions/:id', '#controllers/http/affreteur/missions_controller.update')
+    router.post('/missions/:id/publish', '#controllers/http/affreteur/missions_controller.publish')
+    router.post(
+      '/missions/:id/unpublish',
+      '#controllers/http/affreteur/missions_controller.unpublish'
+    )
     router.delete('/missions/:id', '#controllers/http/affreteur/missions_controller.destroy')
 
     // Gestion des propositions reçues
@@ -243,3 +252,14 @@ router
   })
   .prefix('/api/common')
   .middleware(middleware.auth())
+
+// ===== ROUTES SWAGGER =====
+// Documentation API auto-générée
+router.get('/docs', async ({ response }) => {
+  return response.send(AutoSwagger.default.docs(router.toJSON(), swagger))
+})
+
+// Spec JSON pour Swagger UI
+router.get('/swagger.json', async ({ response }) => {
+  return response.json(AutoSwagger.default.writeFile(router.toJSON(), swagger))
+})

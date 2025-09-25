@@ -1,6 +1,100 @@
 import { create } from 'zustand';
 import type { Category, CategoryFilterParams, CategoryStoreExtended } from '@/types/category.types';
 
+const mockCategories: Category[] = [
+  {
+    id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+    name: 'Électronique',
+    description: 'Produits électroniques et informatiques',
+    parentId: null,
+    slug: 'electronique',
+    imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
+    isActive: true,
+    displayOrder: 1,
+    createdAt: '2025-09-11T00:42:40.671+01:00',
+    updatedAt: '2025-09-11T00:42:40.671+01:00',
+    products: [
+      {
+        id: '7ae4dacf-7533-4914-959b-bffbafd44908',
+        name: 'Ordinateur Portable Dell XPS 15',
+        categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+      },
+      {
+        id: 'dcc3908f-4986-40e6-a3d4-94539f14b258',
+        name: 'iPhone 14 Pro',
+        categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+      },
+      {
+        id: '117a566f-4a0c-465f-85a2-21ab8f83af57',
+        name: 'Écran Samsung 27" 4K',
+        categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+      },
+      {
+        id: '5da92b2b-cc27-4892-b936-67a30c9bdf0a',
+        name: 'Imprimante Laser HP LaserJet Pro',
+        categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+      },
+      {
+        id: 'f010eed4-5627-4fa6-b21d-e42922a6166c',
+        name: 'Clavier Mécanique Logitech MX',
+        categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
+      },
+    ],
+  },
+  {
+    id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
+    name: 'Mobilier',
+    description: 'Meubles et équipements de bureau',
+    parentId: null,
+    slug: 'mobilier',
+    imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
+    isActive: true,
+    displayOrder: 2,
+    createdAt: '2025-09-11T00:42:40.676+01:00',
+    updatedAt: '2025-09-11T00:42:40.676+01:00',
+    products: [],
+  },
+  {
+    id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
+    name: 'Fournitures de Bureau',
+    description: 'Papeterie et accessoires de bureau',
+    parentId: null,
+    slug: 'fournitures-de-bureau',
+    imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
+    isActive: true,
+    displayOrder: 3,
+    createdAt: '2025-09-11T00:42:40.681+01:00',
+    updatedAt: '2025-09-21T10:32:42.387+01:00',
+    products: [],
+  },
+  {
+    id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
+    name: 'Équipements Industriels',
+    description: "Machines et équipements pour l'industrie",
+    parentId: null,
+    slug: 'equipements-industriels',
+    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
+    isActive: true,
+    displayOrder: 4,
+    createdAt: '2025-09-11T00:42:40.684+01:00',
+    updatedAt: '2025-09-11T00:42:40.684+01:00',
+    products: [],
+  },
+  {
+    id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
+    name: 'Véhicules et Transport',
+    description: 'Véhicules de transport et logistique',
+    parentId: null,
+    slug: 'vehicules-et-transport',
+    imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
+    isActive: true,
+    displayOrder: 5,
+    createdAt: '2025-09-11T00:42:40.768+01:00',
+    updatedAt: '2025-09-11T00:42:40.768+01:00',
+    products: [],
+  },
+];
+
 function persistCategoriesToLocalStorage(categories: Category[]) {
   try {
     localStorage.setItem('tsa_categories', JSON.stringify(categories));
@@ -18,7 +112,7 @@ function loadCategoriesFromLocalStorage(): Category[] {
   } catch (error) {
     console.error('Failed to load categories from localStorage:', error);
   }
-  return [];
+  return mockCategories;
 }
 
 export const useCategoryStore = create<CategoryStoreExtended>((set, get) => ({
