@@ -1,10 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Mission, { MissionStatus } from '#models/mission'
 import { missionQueryValidator, updateStatusValidator } from '#validators/mission_validator'
+import { deliveryProofValidator, locationUpdateValidator } from '#validators/proposition_validator'
 
 export default class MissionsController {
-  async available({ request, response }: HttpContext) {
+  async available({ request, auth, response }: HttpContext) {
     try {
+      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -21,6 +23,10 @@ export default class MissionsController {
 
       const query = Mission.query()
         .where('status', MissionStatus.PUBLISHED)
+        // Exclure les missions où ce transporteur a déjà une proposition en attente
+        .whereDoesntHave('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'pending')
+        })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
@@ -123,8 +129,9 @@ export default class MissionsController {
     }
   }
 
-  async myMissions({ request, response }: HttpContext) {
+  async myMissions({ request, auth, response }: HttpContext) {
     try {
+      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -136,15 +143,20 @@ export default class MissionsController {
         sortOrder = 'desc',
       } = validatedData
 
-      // Pour l'instant, on liste les missions assignées (quand le système de propositions sera implémenté)
-      // Temporairement, on filtre par les missions où le transporteur pourrait être assigné
+      // Récupérer les missions où ce transporteur a une proposition acceptée
       const query = Mission.query()
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
+        .whereHas('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
         .preload('adresseDepart')
         .preload('adresseArrivee')
+        .preload('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
 
       if (status) {
         query.where('status', status)
@@ -246,19 +258,8 @@ export default class MissionsController {
 
   async updateLocation({ params, request, response }: HttpContext) {
     try {
-      const { latitude, longitude, timestamp } = request.only([
-        'latitude',
-        'longitude',
-        'timestamp',
-      ])
-
-      if (!latitude || !longitude) {
-        return response.status(422).json({
-          success: false,
-          message: 'Latitude and longitude are required',
-          errors: ['latitude et longitude sont requis'],
-        })
-      }
+      // const user = auth.getUserOrFail()
+      const validatedData = await request.validateUsing(locationUpdateValidator)
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -281,9 +282,9 @@ export default class MissionsController {
         data: {
           missionId: mission.id,
           location: {
-            latitude: Number.parseFloat(latitude),
-            longitude: Number.parseFloat(longitude),
-            timestamp: timestamp || new Date().toISOString(),
+            latitude: validatedData.latitude,
+            longitude: validatedData.longitude,
+            timestamp: validatedData.timestamp || new Date().toISOString(),
           },
         },
       })
@@ -296,25 +297,18 @@ export default class MissionsController {
     }
   }
 
-  async uploadProof({ params, request, response }: HttpContext) {
+  async uploadProof({ params, request, auth, response }: HttpContext) {
     try {
-      const { proofType, description, imageUrl } = request.only([
-        'proofType',
-        'description',
-        'imageUrl',
-      ])
+      const user = auth.getUserOrFail()
+      const validatedData = await request.validateUsing(deliveryProofValidator)
 
-      if (!proofType) {
-        return response.status(422).json({
-          success: false,
-          message: 'Proof type is required',
-          errors: ['Type de preuve requis'],
-        })
-      }
-
+      // Vérifier que la mission existe et est assignée à ce transporteur
       const mission = await Mission.query()
         .where('id', params.id)
-        .where('status', MissionStatus.ASSIGNED)
+        .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
+        .whereHas('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
         .first()
 
       if (!mission) {
@@ -333,9 +327,9 @@ export default class MissionsController {
         data: {
           missionId: mission.id,
           proof: {
-            type: proofType,
-            description: description || null,
-            imageUrl: imageUrl || null,
+            type: validatedData.proofType,
+            description: validatedData.description,
+            imageUrl: validatedData.imageUrl || null,
             timestamp: new Date().toISOString(),
           },
         },
