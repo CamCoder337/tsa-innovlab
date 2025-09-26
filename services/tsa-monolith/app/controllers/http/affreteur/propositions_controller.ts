@@ -1,7 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Mission, { MissionStatus } from '#models/mission'
 import Proposition, { PropositionStatus } from '#models/proposition'
-import { propositionQueryValidator, propositionActionValidator } from '#validators/proposition_validator'
+import {
+  propositionActionValidator,
+  propositionQueryValidator,
+} from '#validators/proposition_validator'
 import db from '@adonisjs/lucid/services/db'
 
 export default class PropositionsController {

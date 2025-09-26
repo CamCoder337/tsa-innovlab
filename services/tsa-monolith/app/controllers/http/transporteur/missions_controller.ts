@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Mission, { MissionStatus } from '#models/mission'
 import { missionQueryValidator, updateStatusValidator } from '#validators/mission_validator'
-import { locationUpdateValidator, deliveryProofValidator } from '#validators/proposition_validator'
+import { deliveryProofValidator, locationUpdateValidator } from '#validators/proposition_validator'
 
 export default class MissionsController {
   async available({ request, auth, response }: HttpContext) {
@@ -25,9 +25,7 @@ export default class MissionsController {
         .where('status', MissionStatus.PUBLISHED)
         // Exclure les missions où ce transporteur a déjà une proposition en attente
         .whereDoesntHave('propositions', (propositionQuery) => {
-          propositionQuery
-            .where('transporteurId', user.id)
-            .where('status', 'pending')
+          propositionQuery.where('transporteurId', user.id).where('status', 'pending')
         })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
@@ -149,9 +147,7 @@ export default class MissionsController {
       const query = Mission.query()
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
         .whereHas('propositions', (propositionQuery) => {
-          propositionQuery
-            .where('transporteurId', user.id)
-            .where('status', 'accepted')
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
         })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
@@ -159,9 +155,7 @@ export default class MissionsController {
         .preload('adresseDepart')
         .preload('adresseArrivee')
         .preload('propositions', (propositionQuery) => {
-          propositionQuery
-            .where('transporteurId', user.id)
-            .where('status', 'accepted')
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
         })
 
       if (status) {
@@ -313,9 +307,7 @@ export default class MissionsController {
         .where('id', params.id)
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
         .whereHas('propositions', (propositionQuery) => {
-          propositionQuery
-            .where('transporteurId', user.id)
-            .where('status', 'accepted')
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
         })
         .first()
 

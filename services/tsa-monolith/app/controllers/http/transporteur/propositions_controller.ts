@@ -1,13 +1,16 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Mission, { MissionStatus } from '#models/mission'
 import Proposition, { PropositionStatus } from '#models/proposition'
-import { createPropositionValidator, propositionQueryValidator } from '#validators/proposition_validator'
+import {
+  createPropositionValidator,
+  propositionQueryValidator,
+} from '#validators/proposition_validator'
 import db from '@adonisjs/lucid/services/db'
 
 export default class PropositionsController {
   async apply({ params, request, auth, response }: HttpContext) {
     const trx = await db.transaction()
-    
+
     try {
       const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(createPropositionValidator)
@@ -43,14 +46,17 @@ export default class PropositionsController {
       }
 
       // Créer la nouvelle proposition
-      const proposition = await Proposition.create({
-        missionId: params.id,
-        transporteurId: user.id,
-        prixPropose: validatedData.prixPropose,
-        delaiPropose: validatedData.delaiPropose,
-        commentaire: validatedData.commentaire || null,
-        status: PropositionStatus.PENDING,
-      }, { client: trx })
+      const proposition = await Proposition.create(
+        {
+          missionId: params.id,
+          transporteurId: user.id,
+          prixPropose: validatedData.prixPropose,
+          delaiPropose: validatedData.delaiPropose,
+          commentaire: validatedData.commentaire || null,
+          status: PropositionStatus.PENDING,
+        },
+        { client: trx }
+      )
 
       await trx.commit()
 
@@ -96,7 +102,18 @@ export default class PropositionsController {
         .where('transporteurId', user.id)
         .preload('mission', (missionQuery) => {
           missionQuery
-            .select('id', 'titre', 'description', 'budgetMin', 'budgetMax', 'status', 'createdAt', 'affreteurId', 'adresseDepartId', 'adresseArriveeId')
+            .select(
+              'id',
+              'titre',
+              'description',
+              'budgetMin',
+              'budgetMax',
+              'status',
+              'createdAt',
+              'affreteurId',
+              'adresseDepartId',
+              'adresseArriveeId'
+            )
             .preload('affreteur', (userQuery) => {
               userQuery.select('id', 'firstName', 'lastName', 'phone')
             })
