@@ -1,39 +1,47 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
+import { Button } from '../ui/button';
+import { Link, useNavigate } from 'react-router-dom';
+import { getStatusColor } from '@/lib/functions';
+import { getStatusLabel } from '@/lib/functions';
+import { missionService } from '@/services/mission.service';
+import toast from 'react-hot-toast';
+import { useMissions } from '@/hooks/useMissions';
+import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
 
 interface MissionDetailsProps {
   mission: Mission;
 }
 
 export function MissionDetails({ mission }: MissionDetailsProps) {
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'outline';
-      case 'published':
-        return 'secondary';
-      case 'assigned':
-        return 'default';
-      case 'completed':
-        return 'default';
-      case 'cancelled':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
+  const { user } = useAuth();
+  const { deleteMission } = useMissions();
+  const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      draft: 'Brouillon',
-      published: 'Publiée',
-      assigned: 'Assignée',
-      completed: 'Terminée',
-      cancelled: 'Annulée',
-    };
-    return labels[status] || status;
+  const handleDelete = async (id: string) => {
+    console.log(id);
+
+    setIsLoading(true);
+
+    const response = await missionService.deleteMission(id);
+
+    if (response.error) {
+      console.log(response.error);
+      toast.error('Une erreur est survenue');
+    }
+    if (response.data) {
+      deleteMission(id);
+      toast.success('Mission supprimée avec succès');
+      setTimeout(() => {
+        navigate('/app/missions');
+      }, 2500);
+    }
   };
 
   return (
@@ -44,7 +52,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
             <div>
               <CardTitle className="text-2xl flex items-center gap-2">
                 {mission.titre}
-                <Badge variant={getStatusBadgeVariant(mission.status)}>
+                <Badge className={getStatusColor(mission.status)}>
                   {getStatusLabel(mission.status)}
                 </Badge>
                 {mission.isFlexibleDates && (
@@ -62,6 +70,20 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                 #{mission.id} • {mission.typeMarchandise || 'Type non spécifié'}
               </p>
             </div>
+            {user?.role !== 'transporteur' && (
+              <div className="space-x-4">
+                <Link to={`/app/missions/${mission.id}/edit`}>
+                  <Button variant="outline">Modifier la Mission</Button>
+                </Link>
+                <Button
+                  variant="destructive"
+                  className="text-white"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  Supprimer la Mission
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -180,6 +202,37 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer la Mission</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p>Êtes-vous sûr de vouloir supprimer la mission ?</p>
+
+            <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
+              <p className="font-medium">Attention : Cette action est irréversible</p>
+              <p>La mission et toutes les données associées seront définitivement supprimées.</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isLoading}>
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDelete(mission.id)}
+              className="text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Suppression en cours...' : 'Confirmer'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
