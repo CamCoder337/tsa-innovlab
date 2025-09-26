@@ -256,9 +256,9 @@ export default class MissionsController {
     }
   }
 
-  async updateLocation({ params, request, auth, response }: HttpContext) {
+  async updateLocation({ params, request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
+      // const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(locationUpdateValidator)
 
       const mission = await Mission.query()
