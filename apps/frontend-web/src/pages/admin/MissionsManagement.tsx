@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+// import {
+//     Select,
+//     SelectContent,
+//     SelectItem,
+//     SelectTrigger,
+//     SelectValue,
+// } from '@/components/ui/select';
 import {
   Search,
   Download,
@@ -23,36 +23,18 @@ import {
   Package,
   Eye,
   MessageCircle,
-  DollarSign,
   Plus,
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-
-const statusBadgeVariant: Record<
-  MissionStatus,
-  'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-  draft: 'outline',
-  published: 'secondary',
-  assigned: 'default',
-  completed: 'default',
-  cancelled: 'destructive',
-};
-
-const statusBadgeLabel: Record<MissionStatus, string> = {
-  draft: 'Brouillon',
-  published: 'Publiée',
-  assigned: 'Assignée',
-  completed: 'Terminée',
-  cancelled: 'Annulée',
-};
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
+import { Link } from 'react-router-dom';
 
 export default function MissionsManagement() {
   const { missions = [], isLoading, error } = useMissions();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // const [typeFilter, setTypeFilter] = useState<string>('all');
+  // const [statusFilter, setStatusFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<MissionStatus | 'all'>('all');
 
   const filteredMissions = missions.filter((mission: Mission) => {
@@ -61,15 +43,14 @@ export default function MissionsManagement() {
       mission.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (mission.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
 
-    const matchesType = typeFilter === 'all' || mission.typeMarchandise === typeFilter;
-    const matchesStatus = statusFilter === 'all' || mission.status === statusFilter;
+    // const matchesType = typeFilter === 'all' || mission.typeMarchandise === typeFilter;
+    // const matchesStatus = statusFilter === 'all' || mission.status === statusFilter;
     const matchesTab = activeTab === 'all' || mission.status === activeTab;
 
-    return matchesSearch && matchesType && matchesStatus && matchesTab;
+    return matchesSearch && matchesTab;
   });
 
   const exportToCSV = (): void => {
-    // TODO: Implement CSV export
     console.log('Exporting to CSV');
   };
 
@@ -92,11 +73,6 @@ export default function MissionsManagement() {
     } as Record<MissionStatus | 'all' | 'total', number>
   );
 
-  const getAddressLabel = (addressId: string | null | undefined): string => {
-    // TODO: Replace with actual address lookup
-    return addressId ? `Adresse #${addressId}` : 'Non spécifiée';
-  };
-
   if (isLoading) {
     return <div>Chargement des missions...</div>;
   }
@@ -109,10 +85,12 @@ export default function MissionsManagement() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Gestion des Missions</h1>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle Mission
-        </Button>
+        <Link to="/app/missions/create">
+          <Button className="bg-tsa-blue hover:bg-tsa-blue/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Mission
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-5 mb-6">
@@ -187,33 +165,33 @@ export default function MissionsManagement() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="draft">Brouillon</SelectItem>
-                  <SelectItem value="published">Publiée</SelectItem>
-                  <SelectItem value="assigned">Assignée</SelectItem>
-                  <SelectItem value="completed">Terminée</SelectItem>
-                  <SelectItem value="cancelled">Annulée</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Type de marchandise" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="electronique">Électronique</SelectItem>
-                  <SelectItem value="construction">Matériaux de Construction</SelectItem>
-                  <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
-                  <SelectItem value="textile">Textiles</SelectItem>
-                  <SelectItem value="machines">Machines</SelectItem>
-                  <SelectItem value="chimique">Produits Chimiques</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Statut" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Tous les statuts</SelectItem>
+                                    <SelectItem value="draft">Brouillon</SelectItem>
+                                    <SelectItem value="published">Publiée</SelectItem>
+                                    <SelectItem value="assigned">Assignée</SelectItem>
+                                    <SelectItem value="completed">Terminée</SelectItem>
+                                    <SelectItem value="cancelled">Annulée</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Type de marchandise" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Tous les types</SelectItem>
+                                    <SelectItem value="electronique">Électronique</SelectItem>
+                                    <SelectItem value="construction">Matériaux de Construction</SelectItem>
+                                    <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
+                                    <SelectItem value="textile">Textiles</SelectItem>
+                                    <SelectItem value="machines">Machines</SelectItem>
+                                    <SelectItem value="chimique">Produits Chimiques</SelectItem>
+                                </SelectContent>
+                            </Select> */}
               <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
                 Exporter
@@ -255,110 +233,128 @@ export default function MissionsManagement() {
             <CardContent className="p-0">
               {filteredMissions.length > 0 ? (
                 filteredMissions.map((mission) => (
-                  <div
-                    key={mission.id}
-                    className="p-6 border-b hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{mission.titre}</h3>
-                        <Badge variant={statusBadgeVariant[mission.status]}>
-                          {statusBadgeLabel[mission.status]}
-                        </Badge>
-                        {mission.isFlexibleDates && (
-                          <Badge variant="outline" className="text-xs">
-                            Dates flexibles
-                          </Badge>
-                        )}
-                        {mission.isFlexibleRoute && (
-                          <Badge variant="outline" className="text-xs">
-                            Itinéraire flexible
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        #{mission.id} • {mission.typeMarchandise || 'Type non spécifié'}
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Eye className="h-4 w-4" />
-                        Voir
-                      </Button>
-                      {mission.status === 'published' && (
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <Truck className="h-4 w-4" />
-                          Assigner
-                        </Button>
-                      )}
-                      {mission.status === 'assigned' && (
-                        <Button variant="outline" size="sm" className="gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          Contacter
-                        </Button>
-                      )}
-                    </div>
+                  <Card key={mission.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                {mission.titre}
+                              </h3>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-4 w-4" />
+                                  <span>
+                                    {mission.adresseDepartId} → {mission.adresseArriveeId}
+                                  </span>
+                                </div>
+                                <span>•</span>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>
+                                    Crée le{' '}
+                                    {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
 
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Itinéraire</p>
-                          <p className="text-sm text-muted-foreground">
-                            {getAddressLabel(mission.adresseDepartId)} →{' '}
-                            {getAddressLabel(mission.adresseArriveeId)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Calendar className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Dates</p>
-                          <p className="text-sm text-muted-foreground">
-                            {mission.dateDepartEstime
-                              ? new Date(mission.dateDepartEstime).toLocaleDateString()
-                              : 'Non définie'}{' '}
-                            -{' '}
-                            {mission.dateArriveePrevue
-                              ? new Date(mission.dateArriveePrevue).toLocaleDateString()
-                              : 'Non définie'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <DollarSign className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                        <div>
-                          <p className="text-sm font-medium">Budget</p>
-                          <p className="text-sm text-muted-foreground">
-                            {mission.budgetMin?.toLocaleString() || 'N/A'} -{' '}
-                            {mission.budgetMax?.toLocaleString() || 'N/A'} FCFA
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {mission.notesComplementaires && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium mb-1">Notes complémentaires</p>
-                        <p className="text-sm text-muted-foreground">
-                          {mission.notesComplementaires}
-                        </p>
-                      </div>
-                    )}
-
-                    {mission.documents && mission.documents.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium mb-1">Documents</p>
-                        <div className="flex flex-wrap gap-2">
-                          {mission.documents.map((doc, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              Document {index + 1} {doc}
+                            <Badge className={getStatusColor(mission.status)}>
+                              <div className="flex items-center gap-1">
+                                {getStatusIcon(mission.status)}
+                                {getStatusLabel(mission.status)}
+                              </div>
                             </Badge>
-                          ))}
+                          </div>
+
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                            <div>
+                              <span className="text-gray-500">Prix:</span>
+                              <span className="ml-1 font-medium text-green-600">
+                                {mission.budgetMax || mission.budgetMin} FCFA
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Type:</span>
+                              <span className="ml-1 font-medium">{mission.typeMarchandise}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Échéance:</span>
+                              <span className="ml-1 font-medium">
+                                {mission.dateArriveePrevue
+                                  ? new Date(mission.dateArriveePrevue).toLocaleDateString('fr-FR')
+                                  : 'Non spécifiée'}
+                              </span>
+                            </div>
+                            {/* <div>
+                                                                                                    <span className="text-gray-500">Prix/km:</span>
+                                                                                                    <span className="ml-1 font-medium">
+                                                                                                        {Math.round(
+                                                                                                            (mission.budgetMax || mission.budgetMin)
+                                                                                                        )}{' '}
+                                                                                                        FCFA
+                                                                                                    </span>
+                                                                                                </div> */}
+                          </div>
+
+                          {/* {mission?.shipper && (
+                                                                                                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                                                                                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                                                        <span className="text-xs font-medium text-blue-600">
+                                                                                                            {mission.shipper.name.charAt(0)}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <div>
+                                                                                                        <p className="text-sm font-medium text-blue-800">
+                                                                                                            {mission.shipper.company}
+                                                                                                        </p>
+                                                                                                        <div className="flex items-center gap-2 text-xs text-blue-600">
+                                                                                                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                                                                                            <span>{mission.shipper.rating}</span>
+                                                                                                            <span>•</span>
+                                                                                                            <span>
+                                                                                                                Publié le{' '}
+                                                                                                                {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            )} */}
+                        </div>
+
+                        <div className="flex flex-col gap-2 lg:w-48">
+                          <Link
+                            to={`/app/missions/${mission.id}`}
+                            aria-label={`Voir ${mission.titre}`}
+                          >
+                            <Button variant="outline" className="gap-2 bg-transparent w-full">
+                              <Eye className="h-4 w-4" />
+                              Voir Détails
+                            </Button>
+                          </Link>
+                          {mission.status === 'published' && (
+                            <Button
+                              className="gap-2"
+                              style={{ backgroundColor: 'var(--tsa-blue)' }}
+                            >
+                              <Truck className="h-4 w-4" />
+                              Assigner
+                            </Button>
+                          )}
+                          {mission.status === 'assigned' && (
+                            <Button
+                              className="gap-2"
+                              style={{ backgroundColor: 'var(--tsa-blue)' }}
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                              Contacter
+                            </Button>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))
               ) : (
                 <div className="text-center py-8">

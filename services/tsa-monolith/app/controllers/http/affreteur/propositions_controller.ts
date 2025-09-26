@@ -143,11 +143,13 @@ export default class PropositionsController {
       if (validatedData.commentaire) {
         proposition.commentaire = validatedData.commentaire
       }
-      await proposition.save({ client: trx })
+      proposition.useTransaction(trx)
+      await proposition.save()
 
       // Assigner la mission au transporteur (PUBLISHED → ASSIGNED)
       mission.status = MissionStatus.ASSIGNED
-      await mission.save({ client: trx })
+      mission.useTransaction(trx)
+      await mission.save()
 
       // Rejeter automatiquement toutes les autres propositions en attente
       await Proposition.query({ client: trx })
@@ -226,7 +228,8 @@ export default class PropositionsController {
       if (validatedData.commentaire) {
         proposition.commentaire = validatedData.commentaire
       }
-      await proposition.save({ client: trx })
+      proposition.useTransaction(trx)
+      await proposition.save()
 
       await trx.commit()
 
