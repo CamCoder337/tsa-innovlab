@@ -8,10 +8,11 @@ import env from '#start/env'
 import redis from '@adonisjs/redis/services/main'
 import { EmailData } from '../types/email.js'
 import EmailFilterService from './email_filter_service.js'
+import ResendService from './resend_service.js'
 
 @inject()
 export default class EmailService {
-  private from = `TSA Logistics <${env.get('MAIL_FROM')}>`
+  constructor(private resendService: ResendService) {}
 
   async sendVerificationEmail(user: User, token: string) {
     console.log('🔍 ENVOI EMAIL VERIFICATION POUR:', user.email) // DEBUG
@@ -204,15 +205,65 @@ export default class EmailService {
       return
     }
 
+    // Domaine vérifié : pas de limitation d'emails
+    const mailDomain = env.get('MAIL_DOMAIN') || 'onboarding.cam-coder.com'
+    console.log(`📧 Domaine vérifié ${mailDomain} - Email autorisé: ${to}`)
+
     console.log(`📧 Envoi email autorisé: ${to} - ${subject}`)
 
     if (queue) {
       // Utiliser notre queue Redis personnalisée
       await this.sendViaQueue(to, subject, view, data)
     } else {
-      // Envoi direct
+      // Envoi direct selon l'environnement
+      await this.sendDirect(to, subject, view, data)
+    }
+  }
+
+  /**
+   * Envoi direct selon l'environnement (production = Resend, dev = SMTP)
+   */
+  private async sendDirect(to: string, subject: string, view: string, data: Record<string, any>) {
+    // Toujours utiliser Gmail SMTP en développement
+    // En production, utiliser Resend seulement si configuré
+    if (env.get('NODE_ENV') === 'production' && this.resendService.isConfigured()) {
+      // Production: utiliser Resend via API HTTPS
+      console.log(`📮 [PRODUCTION] Envoi via Resend API: ${subject} → ${to}`)
+
+      // Créer un HTML simple avec les données
+      const simpleHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #2c3e50;">TSA Logistics</h1>
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h2>${subject}</h2>
+            <p>Bonjour ${data.userName || 'Utilisateur'},</p>
+            ${data.verificationUrl ? `<p><a href="${data.verificationUrl}" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Vérifier mon email</a></p>` : ''}
+            ${data.resetUrl ? `<p><a href="${data.resetUrl}" style="background: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Réinitialiser mon mot de passe</a></p>` : ''}
+            ${data.dashboardUrl ? `<p><a href="${data.dashboardUrl}" style="background: #27ae60; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Accéder au tableau de bord</a></p>` : ''}
+          </div>
+          <hr style="margin: 20px 0;">
+          <p style="color: #666; text-align: center;">TSA Logistics - Solutions logistiques au Cameroun</p>
+        </div>
+      `
+
+      await this.resendService.send({
+        to,
+        subject,
+        html: simpleHtml,
+        // Utiliser le domaine configuré via variable d'environnement
+        from: `TSA Logistics <contact@${env.get('MAIL_DOMAIN') || 'onboarding.cam-coder.com'}>`,
+      })
+    } else {
+      // Développement: utiliser Gmail SMTP
+      console.log(`📮 [DEVELOPMENT] Envoi via Gmail SMTP: ${subject} → ${to}`)
+
+      // Utiliser votre email Gmail comme expéditeur
       await mail.send((message) => {
-        message.from(this.from).to(to).subject(subject).htmlView(view, data)
+        message
+          .from(`TSA Logistics <${env.get('MAIL_FROM')}>`) // Votre Gmail
+          .to(to)
+          .subject(subject)
+          .htmlView(view, data)
       })
     }
   }
