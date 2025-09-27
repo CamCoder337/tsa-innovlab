@@ -2,11 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Mission, { MissionStatus } from '#models/mission'
 import Address from '#models/address'
-import {
-  createMissionValidator,
-  missionQueryValidator,
-  updateMissionValidator,
-} from '#validators/mission_validator'
+import { createMissionValidator, missionQueryValidator, updateMissionValidator } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
 
 /**
