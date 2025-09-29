@@ -15,10 +15,7 @@ export default defineConfig({
   timeout: 60000, // Timeout plus long pour les démonstrations
 
   /* Configuration des rapports */
-  reporter: [
-    ['html', { open: 'never' }],
-    ['list'],
-  ],
+  reporter: [['html', { open: 'never' }], ['list']],
 
   /* Configuration globale pour tous les projets */
   use: {
@@ -33,9 +30,6 @@ export default defineConfig({
     /* Configuration optimisée pour les vidéos de démonstration */
     actionTimeout: 10000, // Timeout pour les actions individuelles
     navigationTimeout: 30000, // Timeout pour les navigations
-
-    /* Ralentissement pour des vidéos plus visibles */
-    slowMo: 800, // Ralentissement de 800ms entre les actions
 
     /* Configuration du viewport pour des vidéos HD */
     viewport: { width: 1280, height: 720 },

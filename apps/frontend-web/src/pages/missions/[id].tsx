@@ -1,4 +1,4 @@
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
@@ -16,10 +16,11 @@ import { useMissions } from '@/hooks/useMissions';
 export default function MissionDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
 
   const fetchMission = useCallback(async () => {
     if (!id) {
@@ -45,11 +46,15 @@ export default function MissionDetailsPage() {
     }
   }, [fetchMission, id]);
 
-  const handleStatusUpdate = async (status: MissionStatus, comment?: string) => {
+  const handleStatusUpdate = async (status: MissionStatus, commentaire?: string) => {
     if (!currentMission) return;
 
     try {
-      const response = await missionService.updateMissionStatus(currentMission.id, status, comment);
+      const response = await missionService.updateMissionStatus(
+        currentMission.id,
+        status,
+        commentaire || ''
+      );
       if (response.data) {
         toast.success(`Mission ${status} successfully`);
       }

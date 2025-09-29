@@ -4,9 +4,11 @@ import Sidebar from './Sidebar';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useMissions } from '@/hooks/useMissions';
+import { usePropositions } from '@/hooks/usePropositions';
 
 export default function Layout() {
   useMissions();
+  usePropositions();
   useProducts();
   useCategories();
 

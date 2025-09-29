@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { loginAsUser, logout } from './utils/auth.test-utils';
 
 /**
@@ -7,7 +7,6 @@ import { loginAsUser, logout } from './utils/auth.test-utils';
  * avec enregistrement vidéo pour démonstration
  */
 test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
-
   test.afterEach(async ({ page }) => {
     console.log('🚪 Déconnexion après le test');
     await logout(page);
@@ -15,14 +14,14 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
   });
 
   test('📋 Workflow Affreteur - Création de mission complète', async ({ page }) => {
-    console.log('📹 Démonstration : Workflow complet d\'un Affreteur');
+    console.log("📹 Démonstration : Workflow complet d'un Affreteur");
 
     // Étape 1: Connexion en tant qu'Affreteur
     console.log('🔐 Connexion utilisateur Affreteur');
     await page.goto('/');
     await loginAsUser(page, {
       email: 'mishitouchiwa14@gmail.com',
-      password: 'TSAG12025'
+      password: 'TSAG12025',
     });
     await page.waitForURL(/\/app/, { timeout: 30000 });
     await page.waitForTimeout(2000);
@@ -36,7 +35,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       page.getByText(/Nouvelle mission/i),
       page.getByText(/Create Mission/i),
       page.getByText(/New Mission/i),
-      page.locator('[data-testid="create-mission"]')
+      page.locator('[data-testid="create-mission"]'),
     ];
 
     let missionCreateFound = false;
@@ -63,7 +62,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           page.locator('input[name="title"]'),
           page.locator('input[name="pickup"]'),
           page.locator('form'),
-          page.getByText(/Créer la mission/i)
+          page.getByText(/Créer la mission/i),
         ];
 
         for (const element of formElements) {
@@ -81,7 +80,8 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
     if (missionCreateFound) {
       console.log('📝 Remplissage du formulaire de mission');
 
-      const titleInput = page.locator('input[name="title"]')
+      const titleInput = page
+        .locator('input[name="title"]')
         .or(page.locator('input[placeholder*="titre"]'))
         .or(page.locator('input[placeholder*="nom"]'));
 
@@ -90,30 +90,31 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         await page.waitForTimeout(2000);
 
         // Adresse de départ
-        const pickupInput = page.locator('input[name="pickup"]')
+        const pickupInput = page
+          .locator('input[name="pickup"]')
           .or(page.locator('input[placeholder*="départ"]'))
           .or(page.locator('input[placeholder*="pickup"]'));
 
         if (await pickupInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-          console.log('📍 Saisie de l\'adresse de départ');
+          console.log("📍 Saisie de l'adresse de départ");
           await pickupInput.fill('Paris, France');
           await page.waitForTimeout(2000);
         }
 
         // Adresse de destination
-        const deliveryInput = page.locator('input[name="delivery"]')
+        const deliveryInput = page
+          .locator('input[name="delivery"]')
           .or(page.locator('input[name="destination"]'))
           .or(page.locator('input[placeholder*="destination"]'));
 
         if (await deliveryInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-          console.log('🎯 Saisie de l\'adresse de destination');
+          console.log("🎯 Saisie de l'adresse de destination");
           await deliveryInput.fill('Lyon, France');
           await page.waitForTimeout(2000);
         }
 
         // Date de départ
-        const dateInput = page.locator('input[type="date"]')
-          .or(page.locator('input[name="date"]'));
+        const dateInput = page.locator('input[type="date"]').or(page.locator('input[name="date"]'));
 
         if (await dateInput.isVisible({ timeout: 3000 }).catch(() => false)) {
           console.log('📅 Sélection de la date de départ');
@@ -125,17 +126,21 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         }
 
         // Description/détails
-        const descriptionInput = page.locator('textarea[name="description"]')
+        const descriptionInput = page
+          .locator('textarea[name="description"]')
           .or(page.locator('input[name="details"]'));
 
         if (await descriptionInput.isVisible({ timeout: 3000 }).catch(() => false)) {
           console.log('📄 Ajout de la description');
-          await descriptionInput.fill('Transport de marchandises fragiles - Manipulation délicate requise');
+          await descriptionInput.fill(
+            'Transport de marchandises fragiles - Manipulation délicate requise'
+          );
           await page.waitForTimeout(2000);
         }
 
         // Budget/prix
-        const budgetInput = page.locator('input[name="budget"]')
+        const budgetInput = page
+          .locator('input[name="budget"]')
           .or(page.locator('input[name="price"]'))
           .or(page.locator('input[placeholder*="prix"]'));
 
@@ -146,7 +151,8 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         }
 
         // Soumission du formulaire
-        const submitButton = page.getByText(/Créer la mission/i)
+        const submitButton = page
+          .getByText(/Créer la mission/i)
           .or(page.getByText(/Publier/i))
           .or(page.getByText(/Enregistrer/i))
           .or(page.locator('button[type="submit"]'));
@@ -160,7 +166,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           const successIndicators = [
             page.getByText(/Mission créée/i),
             page.getByText(/Mission publiée/i),
-            page.getByText(/Success/i)
+            page.getByText(/Success/i),
           ];
 
           for (const indicator of successIndicators) {
@@ -180,14 +186,14 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
   });
 
   test('🚛 Workflow Transporteur - Recherche et proposition', async ({ page }) => {
-    console.log('📹 Démonstration : Workflow d\'un Transporteur');
+    console.log("📹 Démonstration : Workflow d'un Transporteur");
 
     // Étape 1: Connexion en tant que Transporteur
     console.log('🔐 Connexion utilisateur Transporteur');
     await page.goto('/');
     await loginAsUser(page, {
       email: 'transporteur@test.com',
-      password: 'password123'
+      password: 'password123',
     });
 
     // Si la connexion échoue, utiliser le compte par défaut
@@ -196,7 +202,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       console.log('🔄 Utilisation du compte par défaut pour la démonstration');
       await loginAsUser(page, {
         email: 'mishitouchiwa14@gmail.com',
-        password: 'TSAG12025'
+        password: 'TSAG12025',
       });
     }
 
@@ -210,7 +216,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       page.getByText(/Missions disponibles/i),
       page.getByText(/Available Missions/i),
       page.getByText(/Missions/i),
-      page.getByText(/Offres/i)
+      page.getByText(/Offres/i),
     ];
 
     let missionListFound = false;
@@ -238,7 +244,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           page.locator('.mission-item'),
           page.getByText(/Paris/i),
           page.getByText(/Lyon/i),
-          page.locator('table')
+          page.locator('table'),
         ];
 
         for (const element of listElements) {
@@ -257,7 +263,8 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       console.log('🎯 Exploration des missions disponibles');
 
       // Tester les filtres de recherche
-      const searchInput = page.locator('input[placeholder*="recherch"]')
+      const searchInput = page
+        .locator('input[placeholder*="recherch"]')
         .or(page.locator('input[placeholder*="search"]'));
 
       if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -269,8 +276,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       }
 
       // Tester les filtres par ville/région
-      const locationFilter = page.locator('select')
-        .or(page.getByText(/Filtrer/i));
+      const locationFilter = page.locator('select').or(page.getByText(/Filtrer/i));
 
       if (await locationFilter.isVisible({ timeout: 3000 }).catch(() => false)) {
         console.log('📍 Test des filtres géographiques');
@@ -283,34 +289,37 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         page.locator('[data-testid="mission-card"]'),
         page.locator('.mission-item'),
         page.getByText(/Mission Transport/i).first(),
-        page.locator('table tr').first()
+        page.locator('table tr').first(),
       ];
 
       for (const card of missionCards) {
         if (await card.isVisible({ timeout: 5000 }).catch(() => false)) {
-          console.log('📋 Sélection d\'une mission');
+          console.log("📋 Sélection d'une mission");
           await card.click();
           await page.waitForTimeout(3000);
 
           // Tester la soumission d'une proposition
-          const proposeButton = page.getByText(/Proposer/i)
+          const proposeButton = page
+            .getByText(/Proposer/i)
             .or(page.getByText(/Faire une offre/i))
             .or(page.getByText(/Submit Offer/i));
 
           if (await proposeButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-            console.log('💼 Soumission d\'une proposition');
+            console.log("💼 Soumission d'une proposition");
             await proposeButton.click();
             await page.waitForTimeout(3000);
 
             // Remplir le formulaire de proposition
-            const priceInput = page.locator('input[name="price"]')
+            const priceInput = page
+              .locator('input[name="price"]')
               .or(page.locator('input[placeholder*="prix"]'));
 
             if (await priceInput.isVisible({ timeout: 3000 }).catch(() => false)) {
               await priceInput.fill('450');
               await page.waitForTimeout(2000);
 
-              const submitOfferButton = page.getByText(/Envoyer/i)
+              const submitOfferButton = page
+                .getByText(/Envoyer/i)
                 .or(page.getByText(/Submit/i))
                 .or(page.locator('button[type="submit"]'));
 
@@ -340,7 +349,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
     await page.goto('/');
     await loginAsUser(page, {
       email: 'mishitouchiwa14@gmail.com',
-      password: 'TSAG12025'
+      password: 'TSAG12025',
     });
     await page.waitForURL(/\/app/, { timeout: 30000 });
     await page.waitForTimeout(2000);
@@ -353,7 +362,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       page.getByText(/Dashboard/i),
       page.getByText(/Mes missions/i),
       page.getByText(/My Missions/i),
-      page.getByText(/Suivi/i)
+      page.getByText(/Suivi/i),
     ];
 
     let dashboardFound = false;
@@ -381,7 +390,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           page.getByText(/Active Missions/i),
           page.locator('[data-testid="mission-status"]'),
           page.getByText(/Statut/i),
-          page.locator('.status-indicator')
+          page.locator('.status-indicator'),
         ];
 
         for (const element of dashboardElements) {
@@ -405,7 +414,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         page.getByText(/En cours/i),
         page.getByText(/In Progress/i),
         page.getByText(/Terminé/i),
-        page.getByText(/Completed/i)
+        page.getByText(/Completed/i),
       ];
 
       for (const element of statusElements) {
@@ -420,7 +429,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       const missionDetails = [
         page.locator('[data-testid="mission-details"]'),
         page.getByText(/Voir détails/i),
-        page.getByText(/View Details/i)
+        page.getByText(/View Details/i),
       ];
 
       for (const detail of missionDetails) {
@@ -430,7 +439,8 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           await page.waitForTimeout(3000);
 
           // Tester la mise à jour du statut
-          const updateStatusButton = page.getByText(/Mettre à jour/i)
+          const updateStatusButton = page
+            .getByText(/Mettre à jour/i)
             .or(page.getByText(/Update Status/i));
 
           if (await updateStatusButton.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -446,7 +456,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       const notificationElements = [
         page.locator('[data-testid="notification"]'),
         page.getByText(/Notification/i),
-        page.getByText(/Message/i)
+        page.getByText(/Message/i),
       ];
 
       for (const notification of notificationElements) {
@@ -461,7 +471,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       console.log('ℹ️ Interface de suivi en cours de développement');
 
       // Démonstration alternative - navigation générale
-      console.log('🖱️ Exploration générale de l\'interface');
+      console.log("🖱️ Exploration générale de l'interface");
       await page.waitForTimeout(3000);
     }
 
@@ -477,7 +487,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
     await page.goto('/');
     await loginAsUser(page, {
       email: 'mishitouchiwa14@gmail.com',
-      password: 'TSAG12025'
+      password: 'TSAG12025',
     });
     await page.waitForURL(/\/app/, { timeout: 30000 });
     await page.waitForTimeout(2000);
@@ -489,7 +499,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       page.getByText(/Propositions/i),
       page.getByText(/Offres reçues/i),
       page.getByText(/Offers/i),
-      page.getByText(/Negotiations/i)
+      page.getByText(/Negotiations/i),
     ];
 
     let proposalsFound = false;
@@ -517,7 +527,7 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
           page.getByText(/Proposé par/i),
           page.getByText(/Prix proposé/i),
           page.getByText(/Accepter/i),
-          page.getByText(/Refuser/i)
+          page.getByText(/Refuser/i),
         ];
 
         for (const element of proposalElements) {
@@ -536,28 +546,29 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       console.log('🤝 Traitement des propositions');
 
       // Test d'acceptation d'une proposition
-      const acceptButton = page.getByText(/Accepter/i)
+      const acceptButton = page
+        .getByText(/Accepter/i)
         .or(page.getByText(/Accept/i))
         .or(page.locator('[data-testid="accept-proposal"]'));
 
       if (await acceptButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-        console.log('✅ Test d\'acceptation de proposition');
+        console.log("✅ Test d'acceptation de proposition");
         await acceptButton.first().click();
         await page.waitForTimeout(3000);
 
         // Confirmation si nécessaire
-        const confirmButton = page.getByText(/Confirmer/i)
-          .or(page.getByText(/Confirm/i));
+        const confirmButton = page.getByText(/Confirmer/i).or(page.getByText(/Confirm/i));
 
         if (await confirmButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-          console.log('✔️ Confirmation de l\'acceptation');
+          console.log("✔️ Confirmation de l'acceptation");
           await confirmButton.click();
           await page.waitForTimeout(2000);
         }
       }
 
       // Test de négociation
-      const negotiateButton = page.getByText(/Négocier/i)
+      const negotiateButton = page
+        .getByText(/Négocier/i)
         .or(page.getByText(/Negotiate/i))
         .or(page.getByText(/Contre-offre/i));
 
@@ -566,15 +577,15 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
         await negotiateButton.first().click();
         await page.waitForTimeout(3000);
 
-        const counterOfferInput = page.locator('input[name="counter_price"]')
+        const counterOfferInput = page
+          .locator('input[name="counter_price"]')
           .or(page.locator('input[placeholder*="prix"]'));
 
         if (await counterOfferInput.isVisible({ timeout: 3000 }).catch(() => false)) {
           await counterOfferInput.fill('475');
           await page.waitForTimeout(2000);
 
-          const sendCounterButton = page.getByText(/Envoyer/i)
-            .or(page.getByText(/Send/i));
+          const sendCounterButton = page.getByText(/Envoyer/i).or(page.getByText(/Send/i));
 
           if (await sendCounterButton.isVisible({ timeout: 3000 }).catch(() => false)) {
             console.log('📤 Envoi de contre-offre');
@@ -585,7 +596,8 @@ test.describe('🚛 Gestion des Missions TSA InnovLab', () => {
       }
 
       // Test de refus
-      const rejectButton = page.getByText(/Refuser/i)
+      const rejectButton = page
+        .getByText(/Refuser/i)
         .or(page.getByText(/Reject/i))
         .or(page.locator('[data-testid="reject-proposal"]'));
 
