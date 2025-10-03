@@ -3,13 +3,14 @@ import type {
   RoadCheckpoint,
   GoogleMapsTrafficResponse,
 } from '@/types/tracking.types';
+import { getGoogleMapsApiKey } from '@/config/env';
 
 /**
  * Traffic Service - Integrates traffic conditions, road incidents, and checkpoints
  * Uses Google Maps Traffic API for real-time traffic data
  */
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
 
 if (!GOOGLE_MAPS_API_KEY) {
   console.warn('Google Maps API key is not set. Traffic data will be mocked.');

@@ -1,3 +1,5 @@
+import { getGoogleMapsApiKey } from '@/config/env';
+
 export interface MapConfig {
   center: { lat: number; lng: number };
   zoom: number;
@@ -32,7 +34,7 @@ export class GoogleMapsService {
 
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places,geometry,routes&v=weekly`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${getGoogleMapsApiKey()}&libraries=places,geometry,routes&v=weekly`;
       script.async = true;
       script.defer = true;
       script.onload = () => {

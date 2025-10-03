@@ -1,11 +1,6 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
-
-// Get API URL from runtime environment (Docker) or fallback to build-time env
-const getApiUrl = (): string => {
-  // Priority: runtime env (window._env_) > build-time env (import.meta.env)
-  return window._env_?.VITE_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:3333';
-};
+import { getApiUrl } from '@/config/env';
 
 function createAxiosInstance(): AxiosInstance {
   const instance = axios.create({
