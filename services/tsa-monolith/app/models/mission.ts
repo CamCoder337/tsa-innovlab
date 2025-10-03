@@ -21,6 +21,9 @@ export default class Mission extends BaseModel {
   declare affreteurId: string
 
   @column()
+  declare transporteurId: string | null
+
+  @column()
   declare titre: string
 
   @column()
@@ -65,6 +68,9 @@ export default class Mission extends BaseModel {
   // Relations
   @belongsTo(() => User, { foreignKey: 'affreteurId' })
   declare affreteur: BelongsTo<typeof User>
+
+  @belongsTo(() => User, { foreignKey: 'transporteurId' })
+  declare transporteur: BelongsTo<typeof User>
 
   @belongsTo(() => Address, { foreignKey: 'adresseDepartId' })
   declare adresseDepart: BelongsTo<typeof Address>

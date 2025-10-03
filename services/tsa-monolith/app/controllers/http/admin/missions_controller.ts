@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
 import { DateTime } from 'luxon'
 import Mission, { MissionStatus } from '#models/mission'
 import User, { UserRole } from '#models/user'
@@ -9,8 +10,12 @@ import {
   updateStatusValidator,
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
+import MissionNotificationService from '#services/mission_notification_service'
 
+@inject()
 export default class MissionsController {
+  constructor(private missionNotificationService: MissionNotificationService) {}
+
   async index({ request, response }: HttpContext) {
     try {
       const validatedData = await request.validateUsing(missionQueryValidator)
@@ -299,6 +304,24 @@ export default class MissionsController {
         })
       }
 
+      // Si on assigne un transporteur
+      if (validatedData.transporteurId) {
+        const transporteur = await User.query({ client: trx })
+          .where('id', validatedData.transporteurId)
+          .where('role', UserRole.TRANSPORTEUR)
+          .first()
+
+        if (!transporteur) {
+          await trx.rollback()
+          return response.status(404).json({
+            success: false,
+            message: 'Transporteur not found or invalid role',
+          })
+        }
+
+        mission.transporteurId = validatedData.transporteurId
+      }
+
       const oldStatus = mission.status
       mission.status = validatedData.status as MissionStatus
 
@@ -308,6 +331,30 @@ export default class MissionsController {
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+
+      // Notification si mission assignée à un transporteur
+      if (
+        validatedData.status === MissionStatus.ASSIGNED &&
+        mission.transporteurId &&
+        oldStatus !== MissionStatus.ASSIGNED
+      ) {
+        console.log(
+          `✅ Envoi notification d'assignation pour mission ${mission.id} → transporteur ${mission.transporteurId}`
+        )
+        await this.missionNotificationService.notifyMissionAssigned(mission, mission.transporteurId)
+      }
+
+      // Notification de changement de statut (pour affreteur et transporteur)
+      if (oldStatus !== mission.status) {
+        console.log(
+          `✅ Envoi notification changement statut pour mission ${mission.id}: ${oldStatus} → ${mission.status}`
+        )
+        await this.missionNotificationService.notifyMissionStatusChanged(
+          mission,
+          oldStatus,
+          mission.status
+        )
+      }
 
       return response.json({
         success: true,

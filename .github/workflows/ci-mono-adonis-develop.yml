@@ -39,7 +39,7 @@ jobs:
 
       - name: Display result and debug
         run: |
-          echo "🔍 DEBUG: Checking tj-actions outputs..."
+          echo "🔍 DEBUG: Checking tj-actions outputs..."  
           echo "any_changed value: '${{ steps.changes.outputs.any_changed }}'"
           echo "all_changed_files: '${{ steps.changes.outputs.all_changed_files }}'"
           echo "changed_files: '${{ steps.changes.outputs.changed_files }}'"
