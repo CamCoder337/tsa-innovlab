@@ -23,8 +23,13 @@ const redisConfig = defineConfig({
       db: 0,
       keyPrefix: '',
       retryStrategy(times) {
-        return times > 10 ? null : times * 50
+        // Stop retrying after 3 attempts for migrations/commands
+        return times > 3 ? null : times * 50
       },
+      // Fail faster for commands that don't need Redis
+      lazyConnect: true,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: 3,
     },
   },
 })

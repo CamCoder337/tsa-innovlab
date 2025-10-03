@@ -98,6 +98,7 @@ const updateMissionSchema = vine.object({
 const updateStatusSchema = vine.object({
   status: vine.enum(['draft', 'published', 'assigned', 'completed', 'cancelled']),
   commentaire: vine.string().trim().maxLength(500).optional(),
+  transporteurId: vine.string().uuid().optional(), // Pour assigner un transporteur
 })
 
 const missionQuerySchema = vine.object({
