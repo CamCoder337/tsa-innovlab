@@ -27,3 +27,4 @@ dist-ssr
 #Environments
 .env.local
 .env
+.env.docker
