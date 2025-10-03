@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { loginAsUser, logout } from './utils/auth.test-utils';
 
 /**
@@ -7,13 +7,12 @@ import { loginAsUser, logout } from './utils/auth.test-utils';
  * avec enregistrement vidéo pour démonstration
  */
 test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
-
   test.beforeEach(async ({ page }) => {
     console.log('🔐 Connexion préalable pour accéder aux fonctionnalités');
     await page.goto('/');
     await loginAsUser(page, {
       email: 'mishitouchiwa14@gmail.com',
-      password: 'TSAG12025'
+      password: 'TSAG12025',
     });
     await page.waitForURL(/\/app/, { timeout: 30000 });
     await page.waitForTimeout(2000);
@@ -32,7 +31,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
     console.log('🛒 Accès à la section boutique');
 
     // Chercher le lien boutique dans la navigation
-    const shopLink = page.getByText(/Shop/i)
+    const shopLink = page
+      .getByText(/Shop/i)
       .or(page.getByText(/Boutique/i))
       .or(page.getByText(/Produits/i));
 
@@ -46,7 +46,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
     }
 
     // Étape 2: Explorer l'interface de la boutique
-    console.log('🔍 Exploration de l\'interface produits');
+    console.log("🔍 Exploration de l'interface produits");
 
     // Chercher les éléments de la boutique
     const productElements = [
@@ -54,7 +54,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
       page.getByText(/Produits/i),
       page.locator('[data-testid="product-card"]'),
       page.locator('.product-item'),
-      page.getByText(/Catégories/i)
+      page.getByText(/Catégories/i),
     ];
 
     // Vérifier la présence d'éléments de la boutique
@@ -96,23 +96,23 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
   });
 
   test('📋 Gestion administrative des produits', async ({ page }) => {
-    console.log('📹 Démonstration : Interface d\'administration des produits');
+    console.log("📹 Démonstration : Interface d'administration des produits");
 
     // Étape 1: Tentative d'accès à l'interface admin
-    console.log('⚙️ Accès à l\'interface d\'administration');
+    console.log("⚙️ Accès à l'interface d'administration");
 
     // Chercher les liens d'administration
     const adminLinks = [
       page.getByText(/Administration/i),
       page.getByText(/Admin/i),
       page.getByText(/Gestion/i),
-      page.getByText(/Products/i)
+      page.getByText(/Products/i),
     ];
 
     let adminFound = false;
     for (const link of adminLinks) {
       if (await link.isVisible({ timeout: 3000 }).catch(() => false)) {
-        console.log('🔗 Lien d\'administration trouvé');
+        console.log("🔗 Lien d'administration trouvé");
         await link.click();
         await page.waitForTimeout(2000);
         adminFound = true;
@@ -135,12 +135,12 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
           page.getByText(/Product Management/i),
           page.getByText(/Administration/i),
           page.getByRole('table'),
-          page.getByText(/Créer/i).and(page.getByText(/produit/i))
+          page.getByText(/Créer/i).and(page.getByText(/produit/i)),
         ];
 
         for (const element of adminElements) {
           if (await element.isVisible({ timeout: 5000 }).catch(() => false)) {
-            console.log('✅ Interface d\'administration détectée');
+            console.log("✅ Interface d'administration détectée");
             adminFound = true;
             await page.waitForTimeout(3000);
             break;
@@ -153,10 +153,11 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
 
     // Étape 2: Test des fonctionnalités d'administration si disponibles
     if (adminFound) {
-      console.log('🛠️ Test des fonctionnalités d\'administration');
+      console.log("🛠️ Test des fonctionnalités d'administration");
 
       // Test de création de produit
-      const createButton = page.getByText(/Créer/i)
+      const createButton = page
+        .getByText(/Créer/i)
         .or(page.getByText(/Nouveau/i))
         .or(page.getByText(/Ajouter/i));
 
@@ -166,7 +167,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
         await page.waitForTimeout(3000);
 
         // Remplir le formulaire si disponible
-        const nameInput = page.locator('input[name="name"]')
+        const nameInput = page
+          .locator('input[name="name"]')
           .or(page.locator('input[placeholder*="nom"]'));
 
         if (await nameInput.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -174,7 +176,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
           await nameInput.fill(`Produit Test ${Date.now()}`);
           await page.waitForTimeout(2000);
 
-          const descriptionInput = page.locator('textarea[name="description"]')
+          const descriptionInput = page
+            .locator('textarea[name="description"]')
             .or(page.locator('input[name="description"]'));
 
           if (await descriptionInput.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -182,7 +185,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
             await page.waitForTimeout(2000);
           }
 
-          const priceInput = page.locator('input[name="price"]')
+          const priceInput = page
+            .locator('input[name="price"]')
             .or(page.locator('input[placeholder*="prix"]'));
 
           if (await priceInput.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -191,7 +195,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
           }
 
           // Tentative de soumission
-          const submitButton = page.getByText(/Enregistrer/i)
+          const submitButton = page
+            .getByText(/Enregistrer/i)
             .or(page.getByText(/Créer/i))
             .or(page.getByText(/Sauvegarder/i));
 
@@ -203,7 +208,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
         }
       }
     } else {
-      console.log('ℹ️ Interface d\'administration en cours de développement');
+      console.log("ℹ️ Interface d'administration en cours de développement");
     }
 
     // Pause finale pour la démonstration
@@ -229,7 +234,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
         page.locator('input[placeholder*="search"]'),
         page.locator('select').first(),
         page.getByText(/Filtrer/i),
-        page.getByText(/Catégories/i)
+        page.getByText(/Catégories/i),
       ];
 
       for (const element of searchElements) {
@@ -246,7 +251,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
     if (productsPageFound) {
       console.log('🔎 Test de la fonction de recherche');
 
-      const searchInput = page.locator('input[placeholder*="recherch"]')
+      const searchInput = page
+        .locator('input[placeholder*="recherch"]')
         .or(page.locator('input[placeholder*="search"]'));
 
       if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -274,7 +280,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
       }
 
       // Test des filtres de prix si disponibles
-      const priceFilter = page.locator('input[name="price"]')
+      const priceFilter = page
+        .locator('input[name="price"]')
         .or(page.locator('input[placeholder*="prix"]'));
 
       if (await priceFilter.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -290,8 +297,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
     await page.waitForTimeout(3000);
   });
 
-  test('🛍️ Simulation d\'achat et panier', async ({ page }) => {
-    console.log('📹 Démonstration : Processus d\'achat et gestion du panier');
+  test("🛍️ Simulation d'achat et panier", async ({ page }) => {
+    console.log("📹 Démonstration : Processus d'achat et gestion du panier");
 
     // Étape 1: Navigation vers la boutique
     console.log('🛒 Accès à la boutique pour simuler un achat');
@@ -306,7 +313,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
       page.locator('.product-item'),
       page.locator('.product'),
       page.getByText(/Ajouter au panier/i),
-      page.getByText(/Add to cart/i)
+      page.getByText(/Add to cart/i),
     ];
 
     let productFound = false;
@@ -325,9 +332,10 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
 
     // Étape 3: Test d'ajout au panier si des produits sont disponibles
     if (productFound) {
-      console.log('🛒 Tentative d\'ajout au panier');
+      console.log("🛒 Tentative d'ajout au panier");
 
-      const addToCartButton = page.getByText(/Ajouter/i)
+      const addToCartButton = page
+        .getByText(/Ajouter/i)
         .or(page.getByText(/Add to cart/i))
         .or(page.locator('[data-testid="add-to-cart"]'));
 
@@ -339,7 +347,7 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
         const successIndicators = [
           page.getByText(/Ajouté/i),
           page.getByText(/Added/i),
-          page.locator('[data-testid="cart-count"]')
+          page.locator('[data-testid="cart-count"]'),
         ];
 
         for (const indicator of successIndicators) {
@@ -352,7 +360,8 @@ test.describe('🛒 Gestion des Produits TSA InnovLab', () => {
 
       // Test d'accès au panier
       console.log('🛒 Accès au panier');
-      const cartButton = page.getByText(/Panier/i)
+      const cartButton = page
+        .getByText(/Panier/i)
         .or(page.getByText(/Cart/i))
         .or(page.locator('[data-testid="cart-button"]'));
 

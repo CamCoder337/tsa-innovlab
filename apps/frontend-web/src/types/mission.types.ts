@@ -1,11 +1,13 @@
 import type { Timestamps } from './common.types';
 import type { Address } from './address.types';
+import type { User } from './auth.types';
 
 export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
 
 export interface Mission extends Timestamps {
   id: string;
   affreteurId: string;
+  affreteur?: User;
   titre: string;
   description: string;
   typeMarchandise: string;
@@ -25,6 +27,7 @@ export interface Mission extends Timestamps {
   notesComplementaires?: string;
   documents?: string[];
   transporteurId?: string;
+  transporteur?: User;
   dateDebutReelle?: string;
   dateFinReelle?: string;
   ratingAffreteur?: number;

@@ -197,6 +197,7 @@ export function useMissions() {
 
     // Actions
     setMissions,
+    setMyMissions,
     addMission,
     updateMission,
     deleteMission,

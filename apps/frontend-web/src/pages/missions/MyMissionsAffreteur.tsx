@@ -139,10 +139,13 @@ export default function MyMissionsAffreteur() {
             <TabsContent value={activeTab} className="mt-6">
               <div className="space-y-4">
                 {filteredMissions.map((mission) => (
-                  <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.titre}`}>
-                    <Card key={mission.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <Card key={mission.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <Link
+                          to={`/app/missions/${mission.id}`}
+                          aria-label={`Voir ${mission.titre}`}
+                        >
                           <div className="flex-1">
                             <div className="flex items-start justify-between mb-3">
                               <div>
@@ -182,14 +185,6 @@ export default function MyMissionsAffreteur() {
                                   {mission.budgetMin?.toLocaleString() || 0} FCFA
                                 </span>
                               </div>
-                              {mission.budgetMax && (
-                                <div>
-                                  <span className="text-gray-500">Budget Max.:</span>
-                                  <span className="ml-1 font-medium text-green-600">
-                                    {mission.budgetMax?.toLocaleString() || 0} FCFA
-                                  </span>
-                                </div>
-                              )}
                               <div>
                                 <span className="text-gray-500">Départ:</span>
                                 <span className="ml-1 font-medium">
@@ -233,28 +228,33 @@ export default function MyMissionsAffreteur() {
                                                         </div>
                                                     )} */}
                           </div>
+                        </Link>
 
-                          <div className="flex flex-col gap-2 lg:w-48">
+                        <div className="flex flex-col gap-2 lg:w-48">
+                          <Link
+                            to={`/app/missions/${mission.id}`}
+                            aria-label={`Voir ${mission.titre}`}
+                          >
+                            <Button variant="outline" className="gap-2 bg-transparent w-full">
+                              <Eye className="h-4 w-4" />
+                              Voir Détails
+                            </Button>
+                          </Link>
+                          {mission.status === 'draft' && (
+                            <Button
+                              variant="outline"
+                              className="gap-2 bg-tsa-blue text-white"
+                              onClick={() => handlePublish(mission.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                              Publier
+                            </Button>
+                          )}
+                          {mission.status === 'published' && (
                             <Link
-                              to={`/app/missions/${mission.id}`}
+                              to={`/app/missions/${mission.id}?tab=offers`}
                               aria-label={`Voir ${mission.titre}`}
                             >
-                              <Button variant="outline" className="gap-2 bg-transparent w-full">
-                                <Eye className="h-4 w-4" />
-                                Voir Détails
-                              </Button>
-                            </Link>
-                            {mission.status === 'draft' && (
-                              <Button
-                                variant="outline"
-                                className="gap-2 bg-tsa-blue text-white"
-                                onClick={() => handlePublish(mission.id)}
-                              >
-                                <Edit className="h-4 w-4" />
-                                Publier
-                              </Button>
-                            )}
-                            {mission.status === 'published' && (
                               <Button
                                 className="gap-2"
                                 style={{ backgroundColor: 'var(--tsa-blue)' }}
@@ -262,21 +262,21 @@ export default function MyMissionsAffreteur() {
                                 <MessageSquare className="h-4 w-4" />
                                 Voir Offres ({mission.volume})
                               </Button>
-                            )}
-                            {mission.status === 'assigned' && (
-                              <Button
-                                className="gap-2"
-                                style={{ backgroundColor: 'var(--tsa-blue)' }}
-                              >
-                                <MapPin className="h-4 w-4" />
-                                Suivre Expédition
-                              </Button>
-                            )}
-                          </div>
+                            </Link>
+                          )}
+                          {mission.status === 'assigned' && (
+                            <Button
+                              className="gap-2"
+                              style={{ backgroundColor: 'var(--tsa-blue)' }}
+                            >
+                              <MapPin className="h-4 w-4" />
+                              Suivre Expédition
+                            </Button>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
 

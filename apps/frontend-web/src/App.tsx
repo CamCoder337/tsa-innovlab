@@ -18,6 +18,11 @@ const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
 const Shop = lazy(() => import('./pages/shop/Shop'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
+const Chat = lazy(() => import('./pages/ChatPage'));
+const Payment = lazy(() => import('./pages/PaymentPage'));
+const Transactions = lazy(() => import('./pages/BillingPage'));
+const Users = lazy(() => import('./pages/admin/UsersManagement'));
+const TrackingPage = lazy(() => import('./pages/tracking/ShipmentTrackingPage'));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -49,7 +54,13 @@ function App() {
 
           <Route path="shop" element={<Shop />} />
 
+          <Route path="users" element={<Users />} />
+
           <Route path="products" element={<ProductsManagement />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="tracking/:trackingNumber" element={<TrackingPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/app" replace />} />
