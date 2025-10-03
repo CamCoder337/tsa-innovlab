@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
+import { getApiUrl } from '@/config/env';
 
 type EventCallback<T = unknown> = (data: T) => void;
 
@@ -27,7 +28,7 @@ class WebSocketService {
     }
 
     this.token = accessToken;
-    this.socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3333', {
+    this.socket = io(getApiUrl(), {
       path: '/socket.io',
       auth: { token: this.token },
       reconnection: true,

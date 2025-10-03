@@ -3,6 +3,7 @@ import GoogleMapsService, { type MarkerData } from '@/services/google-maps.servi
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import { MOCK_VEHICLES, MOCK_DESTINATIONS, DEFAULT_MAP_CONFIG } from '@/data/mock-tracking';
 import type { PositionUpdate } from '@/services/tracking.service';
+import { getGoogleMapsApiKey } from '@/config/env';
 
 interface TrackingMapProps {
   className?: string;
@@ -56,7 +57,7 @@ export default function TrackingMap({
       setError(null);
 
       // Vérifier si la clé API est configurée
-      if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+      if (!getGoogleMapsApiKey()) {
         throw new Error(
           'Clé API Google Maps non configurée. Ajoutez VITE_GOOGLE_MAPS_API_KEY dans votre fichier .env'
         );

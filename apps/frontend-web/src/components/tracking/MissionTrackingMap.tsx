@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import GoogleMapsService, { type MarkerData } from '@/services/google-maps.service';
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
+import { getGoogleMapsApiKey } from '@/config/env';
 // Badge supprimé - plus utilisé
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Package, AlertTriangle } from 'lucide-react';
@@ -67,7 +68,7 @@ export default function MissionTrackingMap({
       setError(null);
 
       // Vérifier si la clé API est configurée
-      if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+      if (!getGoogleMapsApiKey()) {
         throw new Error(
           'Clé API Google Maps non configurée. Ajoutez VITE_GOOGLE_MAPS_API_KEY dans votre fichier .env'
         );

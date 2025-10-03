@@ -3,6 +3,7 @@ import TrackingDashboard from './TrackingDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { getGoogleMapsApiKey } from '@/config/env';
 
 /**
  * Composant d'exemple montrant comment utiliser le système de tracking
@@ -11,11 +12,11 @@ import { Badge } from '@/components/ui/badge';
 export default function TrackingExample() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [apiKeyConfigured, setApiKeyConfigured] = useState(
-    !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    !!getGoogleMapsApiKey()
   );
 
   const checkApiKey = () => {
-    const hasKey = !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const hasKey = !!getGoogleMapsApiKey();
     setApiKeyConfigured(hasKey);
 
     if (!hasKey) {
