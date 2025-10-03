@@ -8,6 +8,7 @@ import {
   Layout,
   Users,
   ShoppingBag,
+  MapPin,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -50,6 +51,12 @@ const affreteurMenu: SidebarItem[] = [
     icon: ShoppingCart,
     href: '/app/shop',
   },
+  {
+    id: 'tracking',
+    label: 'Suivi Temps Réel',
+    icon: MapPin,
+    href: '/app/tracking-dashboard',
+  },
   // {
   //     id: "freight",
   //     label: "Réseau de fret",
@@ -89,6 +96,12 @@ const transporteurMenu: SidebarItem[] = [
     label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
+  },
+  {
+    id: 'tracking',
+    label: 'Suivi Temps Réel',
+    icon: MapPin,
+    href: '/app/tracking-dashboard',
   },
   // {
   //     id: "tracking",
@@ -131,6 +144,12 @@ const adminMenu: SidebarItem[] = [
     label: 'Utilisateurs',
     icon: Users,
     href: '/app/users',
+  },
+  {
+    id: 'tracking',
+    label: 'Suivi Temps Réel',
+    icon: MapPin,
+    href: '/app/tracking-dashboard',
   },
   // {
   //     id: "analytics",

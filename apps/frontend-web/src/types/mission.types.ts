@@ -34,6 +34,9 @@ export interface Mission extends Timestamps {
   commentaireAffreteur?: string;
   ratingTransporteur?: number;
   commentaireTransporteur?: string;
+  // Position actuelle du transporteur pour le tracking en temps réel
+  currentPosition?: { lat: number; lng: number };
+  lastPositionUpdate?: string;
 }
 
 export interface CreateMissionDto {
