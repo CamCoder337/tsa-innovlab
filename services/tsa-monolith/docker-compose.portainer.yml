@@ -71,10 +71,18 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
 
+      # Email Resend (Alternative)
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      MAIL_DOMAIN: ${MAIL_DOMAIN}
+
       # URLs
       FRONTEND_URL: ${FRONTEND_URL}
       MAIL_FROM: ${MAIL_FROM}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+
+      # Admin par défaut
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
     depends_on:
       postgres:

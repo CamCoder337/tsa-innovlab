@@ -102,9 +102,13 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=noreply@tsa-logistics.com
 SMTP_PASSWORD=<votre_app_password_gmail>
+RESEND_API_KEY=<votre_cle_resend>
+MAIL_DOMAIN=onboarding.tsa-logistics.com
 FRONTEND_URL=https://app.tsa-logistics.com
 MAIL_FROM=noreply@tsa-logistics.com
 SUPPORT_EMAIL=support@tsa-logistics.com
+ADMIN_EMAIL=admin@tsa-logistics.com
+ADMIN_PASSWORD=Admin123!
 BACKEND_PORT=3333
 ```
 
@@ -154,9 +158,13 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=noreply@tsa-logistics.com
 SMTP_PASSWORD=abcd efgh ijkl mnop
+RESEND_API_KEY=re_votre_cle_resend
+MAIL_DOMAIN=onboarding.tsa-logistics.com
 FRONTEND_URL=https://app.tsa-logistics.com
 MAIL_FROM=noreply@tsa-logistics.com
 SUPPORT_EMAIL=support@tsa-logistics.com
+ADMIN_EMAIL=admin@tsa-logistics.com
+ADMIN_PASSWORD=Admin123!
 BACKEND_PORT=3333
 ```
 
