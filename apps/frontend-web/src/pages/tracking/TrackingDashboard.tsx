@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import TrackingMap from './TrackingMap';
+import TrackingMap from '../../components/tracking/TrackingMap';
 import { trackingService, type PositionUpdate } from '@/services/tracking.service';
 import { MOCK_TRACKING_DATA, generateMockPositionUpdate } from '@/data/mock-tracking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
