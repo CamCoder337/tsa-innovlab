@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database avec PostGIS 17
+  postgres:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: tsa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - InnovLabG1
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: tsa-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - InnovLabG1
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # AdonisJS Backend API (port interne uniquement)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tsa-backend
+    restart: unless-stopped
+    environment:
+      # Application
+      TZ: Africa/Douala
+      PORT: 3333
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      APP_KEY: ${APP_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Database PostgreSQL
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # Email SMTP
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+
+      # URLs
+      FRONTEND_URL: ${FRONTEND_URL}
+      MAIL_FROM: ${MAIL_FROM}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - InnovLabG1
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy pour Backend
+  nginx-backend:
+    image: nginx:alpine
+    container_name: tsa-nginx-backend
+    restart: unless-stopped
+    volumes:
+      - ./nginx-backend.conf:/etc/nginx/nginx.conf:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "${BACKEND_PORT:-3333}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - InnovLabG1
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Volumes pour persistance des données
+volumes:
+  postgres_data:
+    name: tsa_postgres_data
+  redis_data:
+    name: tsa_redis_data
+  nginx_logs:
+    name: tsa_nginx_logs
+
+# Réseau externe assigné par Portainer
+networks:
+  InnovlabG1:
+    external: true
