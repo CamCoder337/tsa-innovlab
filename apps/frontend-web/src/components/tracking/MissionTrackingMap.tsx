@@ -5,6 +5,7 @@ import type { Mission } from '@/types/mission.types';
 // Badge supprimé - plus utilisé
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Package, AlertTriangle } from 'lucide-react';
+import MapLegend from './MapLegend';
 
 interface MissionTrackingMapProps {
   className?: string;
@@ -55,7 +56,7 @@ export default function MissionTrackingMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
-  
+
   // Pas de filtrage par statut - afficher toutes les missions
   const filteredMissions = missions;
 
@@ -97,7 +98,7 @@ export default function MissionTrackingMap({
             status: mission.status,
             typeMarchandise: mission.typeMarchandise,
             poids: mission.poids,
-            budgetMax: mission.budgetMax,
+            price: mission.budgetMin,
           },
         };
 
@@ -297,54 +298,8 @@ export default function MissionTrackingMap({
         )}
       </div>
 
-      {/* Légende */}
-      {showLegend && (
-        <div className="absolute bottom-4 left-4">
-          <Card className="bg-white/95 backdrop-blur">
-            <CardContent className="p-3">
-              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Légende des Missions
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <h5 className="text-xs font-medium text-gray-600 mb-2">Types de marqueurs</h5>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-green-600 rounded" title="Lieu de départ"></div>
-                      <span className="text-xs">Lieu de départ</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 bg-red-600 rounded" title="Lieu d'arrivée"></div>
-                      <span className="text-xs">Lieu d'arrivée</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-4 h-4 bg-blue-600 rounded"
-                        title="Position transporteur"
-                      ></div>
-                      <span className="text-xs">Position transporteur</span>
-                    </div>
-                    {showUserLocation && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                        <span className="text-xs">Votre position</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h5 className="text-xs font-medium text-gray-600 mb-2">Itinéraires</h5>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-1 bg-blue-500 rounded"></div>
-                    <span className="text-xs">Tracé de l'itinéraire</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Légende avec vraies icônes Google Maps */}
+      {showLegend && <MapLegend showUserLocation={showUserLocation} />}
 
       {/* Détails de mission supprimés - affichage uniquement au survol des marqueurs */}
     </div>

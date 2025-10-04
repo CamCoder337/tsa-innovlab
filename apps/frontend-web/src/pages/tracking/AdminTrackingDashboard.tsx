@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import MissionTrackingMap from './MissionTrackingMap';
+import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { MOCK_MISSIONS } from '@/data/mock-missions';
 import {
   Truck,

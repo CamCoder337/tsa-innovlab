@@ -1,30 +1,13 @@
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import MissionTrackingMap from './MissionTrackingMap';
+import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import type { Mission } from '@/types/mission.types';
-import { MOCK_MISSIONS, getActiveMissions, getCompletedMissions } from '@/data/mock-missions';
-
-const getStatusColor = (status: Mission['status']) => {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-500';
-    case 'assigned':
-      return 'bg-blue-500';
-    case 'published':
-      return 'bg-yellow-500';
-    case 'draft':
-      return 'bg-gray-500';
-    case 'cancelled':
-      return 'bg-red-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
+import { getStatusColor } from '@/lib/functions';
+import { useNavigate } from 'react-router-dom';
+import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
 const getPriorityColor = (budgetMax: number) => {
   if (budgetMax > 200000) return 'bg-red-100 text-red-800'; // Urgent/High value
@@ -34,14 +17,18 @@ const getPriorityColor = (budgetMax: number) => {
 };
 
 export default function AffréteurTrackingDashboard() {
-  const { setCurrentMission } = useMissions();
-  const [missions] = useState<Mission[]>(MOCK_MISSIONS);
+  const { myMissions: missions, currentMission, setCurrentMission } = useMissions();
+  const navigate = useNavigate();
 
   // Calculs des KPIs
   const totalMissions = missions.length;
-  const activeMissions = getActiveMissions().length;
-  const completedMissions = getCompletedMissions().length;
-  const totalRevenue = missions.reduce((sum, m) => sum + m.budgetMax, 0);
+  const activeMissions = missions?.filter((mission) =>
+    ['assigned', 'published'].includes(mission.status)
+  ).length;
+  const completedMissions = missions?.filter((mission) =>
+    ['completed'].includes(mission.status)
+  ).length;
+  const totalRevenue = missions.reduce((sum, m) => sum + Number(m.budgetMin), 0);
   const avgDeliveryTime = '2.3 jours'; // Calculé dynamiquement en production
 
   return (
@@ -77,7 +64,7 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">En Transit</p>
+                  <p className="text-sm font-medium text-gray-600">En Cours</p>
                   <p className="text-2xl font-bold text-blue-600">{activeMissions}</p>
                 </div>
                 <Truck className="w-8 h-8 text-blue-500" />
@@ -148,7 +135,9 @@ export default function AffréteurTrackingDashboard() {
                     <MissionTrackingMap
                       className="h-[400px]"
                       missions={missions}
-                      selectedMission={missions.find((m) => m.status === 'assigned') || null}
+                      selectedMission={
+                        currentMission || missions.find((m) => m.status === 'assigned')
+                      }
                       onMissionClick={(mission) => setCurrentMission(mission)}
                       showUserLocation={false}
                       showRoutes={true}
@@ -171,7 +160,11 @@ export default function AffréteurTrackingDashboard() {
                     {missions
                       .filter((m) => m.budgetMax > 200000 || m.status === 'assigned')
                       .map((mission) => (
-                        <div key={mission.id} className="p-3 border rounded-lg bg-red-50">
+                        <div
+                          key={mission.id}
+                          className="p-3 border rounded-lg bg-red-50 hover:bg-red-100 cursor-pointer transition-colors"
+                          onClick={() => navigate(`/app/mission/${mission.id}/tracking`)}
+                        >
                           <div className="flex justify-between items-start mb-2">
                             <span className="font-medium text-sm">{mission.titre}</span>
                             <Badge className={getPriorityColor(mission.budgetMax)}>
@@ -181,11 +174,14 @@ export default function AffréteurTrackingDashboard() {
                           <p className="text-sm text-gray-600">
                             {mission.typeMarchandise} - {mission.poids}kg
                           </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <div
-                              className={`w-2 h-2 rounded-full ${getStatusColor(mission.status)}`}
-                            />
-                            <span className="text-xs text-gray-500">{mission.status}</span>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-2 h-2 rounded-full ${getStatusColor(mission.status)}`}
+                              />
+                              <span className="text-xs text-gray-500">{mission.status}</span>
+                            </div>
+                            <MissionTrackingButton missionId={mission.id} />
                           </div>
                         </div>
                       ))}
@@ -230,11 +226,11 @@ export default function AffréteurTrackingDashboard() {
                   {missions.map((mission) => (
                     <div
                       key={mission.id}
-                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                      onClick={() => setCurrentMission(mission)}
+                      className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/app/mission/${mission.id}/tracking`)}
                     >
                       <div className="flex justify-between items-start">
-                        <div className="space-y-2">
+                        <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-3">
                             <span className="font-medium">{mission.titre}</span>
                             <Badge className={getPriorityColor(mission.budgetMax)}>
@@ -256,11 +252,14 @@ export default function AffréteurTrackingDashboard() {
                             {mission.transporteurId && <span>👤 Assigné</span>}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">Livraison prévue</p>
-                          <p className="font-medium">
-                            {new Date(mission.dateArriveePrevue).toLocaleDateString()}
-                          </p>
+                        <div className="text-right flex flex-col items-end gap-2">
+                          <div>
+                            <p className="text-sm text-gray-500">Livraison prévue</p>
+                            <p className="font-medium">
+                              {new Date(mission.dateArriveePrevue).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <MissionTrackingButton missionId={mission.id} className="text-xs" />
                         </div>
                       </div>
                     </div>

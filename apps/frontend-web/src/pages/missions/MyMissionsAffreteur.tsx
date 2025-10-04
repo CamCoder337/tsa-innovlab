@@ -265,13 +265,18 @@ export default function MyMissionsAffreteur() {
                             </Link>
                           )}
                           {mission.status === 'assigned' && (
-                            <Button
-                              className="gap-2"
-                              style={{ backgroundColor: 'var(--tsa-blue)' }}
+                            <Link
+                              to={`/app/missions/${mission.id}/tracking`}
+                              aria-label={`Suivre ${mission.titre}`}
                             >
-                              <MapPin className="h-4 w-4" />
-                              Suivre Expédition
-                            </Button>
+                              <Button
+                                className="gap-2"
+                                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                              >
+                                <MapPin className="h-4 w-4" />
+                                Suivre Expédition
+                              </Button>
+                            </Link>
                           )}
                         </div>
                       </div>

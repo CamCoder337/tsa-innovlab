@@ -24,6 +24,8 @@ const Transactions = lazy(() => import('./pages/BillingPage'));
 const Users = lazy(() => import('./pages/admin/UsersManagement'));
 const TrackingPage = lazy(() => import('./pages/tracking/ShipmentTrackingPage'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
+const ShipmentPage = lazy(() => import('./pages/tracking/ShipmentTrackingPage'));
+const MissionTrackingPage = lazy(() => import('./pages/tracking/MissionTrackingPage'));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -63,6 +65,8 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="tracking/:trackingNumber" element={<TrackingPage />} />
           <Route path="tracking-dashboard" element={<TrackingDashboardPage />} />
+          <Route path="shipment/:trackingNumber" element={<ShipmentPage />} />
+          <Route path="mission/:id/tracking" element={<MissionTrackingPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/app" replace />} />

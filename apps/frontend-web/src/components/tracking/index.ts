@@ -1,12 +1,11 @@
 // Export des composants de tracking
-export { default as TrackingDashboard } from './TrackingDashboard';
+export { default as TrackingDashboard } from '../../pages/tracking/TrackingDashboard';
 export { default as TrackingMap } from './TrackingMap';
 export { default as MissionTrackingMap } from './MissionTrackingMap';
 export { default as TrackingExample } from './TrackingExample';
-export { default as RoleBasedTrackingDashboard } from './RoleBasedTrackingDashboard';
-export { default as AffréteurTrackingDashboard } from './AffréteurTrackingDashboard';
-export { default as TransporteurTrackingDashboard } from './TransporteurTrackingDashboard';
-export { default as AdminTrackingDashboard } from './AdminTrackingDashboard';
+export { default as AffréteurTrackingDashboard } from '../../pages/tracking/AffréteurTrackingDashboard';
+export { default as TransporteurTrackingDashboard } from '../../pages/tracking/TransporteurTrackingDashboard';
+export { default as AdminTrackingDashboard } from '../../pages/tracking/AdminTrackingDashboard';
 
 // Export des services
 export { default as GoogleMapsService } from '@/services/google-maps.service';

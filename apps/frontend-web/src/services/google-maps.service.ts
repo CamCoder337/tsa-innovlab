@@ -242,7 +242,7 @@ export class GoogleMapsService {
         };
       case 'origin':
         return {
-          url: iconBase + 'placemark_square.png',
+          url: 'https://maps.google.com/mapfiles/kml/paddle/go.png',
           scaledSize: new google.maps.Size(32, 32),
           origin: new google.maps.Point(0, 0),
           anchor: new google.maps.Point(16, 32),
