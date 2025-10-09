@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '../services/supabase';
 
 export const uploadFile = async (file: File, path: string, bucket: string): Promise<string> => {
   const { data, error } = await supabase.storage

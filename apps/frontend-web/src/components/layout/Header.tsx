@@ -7,6 +7,9 @@ import {
   Settings,
   Headset,
   LogOut,
+  ShoppingCart,
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,11 +26,15 @@ import logo from '@/assets/logo_white_bg.png';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
+import { useCart } from '@/hooks/useCart';
+import CartDrawer from '@/components/shop/CartDrawer';
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const { cart } = useCart();
   const displayName = user ? `${user.fullName}` : 'Invité';
   const displayRole = user?.role ?? '';
+  const isInvite = !user;
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -72,14 +79,26 @@ export default function Header() {
         </DropdownMenu>
 
         {/* Real-time Notifications */}
-        <Button variant="ghost" size="sm" className="relative max-sm:p-0">
-          <Bell className="h-7 w-7" />
-          <Badge className="absolute -top-1 right-2 w-6 h-6 rounded-full p-2 text-xs bg-tsa-blue/90">
-            21
-          </Badge>
-        </Button>
+        {isInvite ? null : (
+          <Button variant="ghost" size="sm" className="relative max-sm:p-0">
+            <Bell className="h-7 w-7" />
+            <Badge className="absolute -top-1 right-2 w-6 h-6 rounded-full p-2 text-xs bg-tsa-blue/90">
+              21
+            </Badge>
+          </Button>
+        )}
+
+        <CartDrawer>
+          <Button variant="ghost" size="sm" className="relative max-sm:p-0">
+            <ShoppingCart className="h-7 w-7" />
+            <Badge className="absolute -top-1 right-2 w-6 h-6 rounded-full p-2 text-xs bg-tsa-blue/90">
+              {cart.itemsCount}
+            </Badge>
+          </Button>
+        </CartDrawer>
 
         {/* User Profile */}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="max-sm:p-2">
             <Button
@@ -101,6 +120,19 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
+            <Link to="/app/profile">
+              <DropdownMenuItem>
+                <LogIn className="mr-2 h-4 w-4" />
+                Se connecter
+              </DropdownMenuItem>
+            </Link>
+            <Link to="/app/profile">
+              <DropdownMenuItem>
+                <UserPlus className="mr-2 h-4 w-4" />
+                S'inscrire
+              </DropdownMenuItem>
+            </Link>
+
             <Link to="/app/profile">
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />

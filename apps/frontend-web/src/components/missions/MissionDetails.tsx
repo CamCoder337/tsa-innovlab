@@ -5,8 +5,8 @@ import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react'
 import type { Mission } from '@/types/mission.types';
 import { Button } from '../ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { getStatusColor } from '@/lib/functions';
-import { getStatusLabel } from '@/lib/functions';
+import { getStatusColor } from '@/lib/mission-utils';
+import { getStatusLabel } from '@/lib/mission-utils';
 import { missionService } from '@/services/mission.service';
 import toast from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';

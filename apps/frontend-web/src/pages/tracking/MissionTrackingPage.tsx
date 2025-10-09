@@ -20,7 +20,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { getStatusColor } from '@/lib/functions';
+import { getStatusColor } from '@/lib/mission-utils';
 import { useState } from 'react';
 
 const getPriorityColor = (budgetMax: number) => {
@@ -67,7 +67,7 @@ const getStatusLabel = (status: string) => {
 export default function MissionTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { missions } = useMissions();
+  const { myMissions: missions } = useMissions();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const mission = missions.find((m) => m.id === id);
@@ -241,7 +241,6 @@ export default function MissionTrackingPage() {
                   missions={[mission]}
                   selectedMission={mission}
                   onMissionClick={() => {}}
-                  showUserLocation={true}
                   showRoutes={true}
                   showLegend={true}
                 />

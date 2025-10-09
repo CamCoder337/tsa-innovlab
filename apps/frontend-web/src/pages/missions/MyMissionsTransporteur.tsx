@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { PropositionForm } from '@/components/forms/PropositionForm';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import {
   Calendar,
   MapPin,

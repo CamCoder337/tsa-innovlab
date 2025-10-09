@@ -26,25 +26,38 @@ import { useMissions } from '@/hooks/useMissions';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-// Lazy load MapPicker with Suspense for client-side rendering
-const MapPicker = lazy(() => import('@/components/maps/MapPicker'));
+// Lazy load AddressPicker with Suspense for client-side rendering
+const AddressPicker = lazy(() => import('@/components/maps/AddressPicker'));
 
 // Loading component for Suspense fallback
-const MapLoading = () => (
+const AddressPickerLoading = () => (
   <div className="h-64 w-full bg-gray-100 flex items-center justify-center">
-    <div className="animate-pulse">Chargement de la carte...</div>
+    <div className="animate-pulse">Chargement du sélecteur d'adresse...</div>
   </div>
 );
 
-// Define props type for ClientSideMapPicker
-interface MapPickerProps {
-  position: [number, number];
-  onPositionChange: (lat: number, lng: number) => void;
+// Import AddressDetails type
+import type { AddressDetails } from '@/components/maps/AddressPicker';
+
+// Define props type for ClientSideAddressPicker
+interface AddressPickerProps {
+  onAddressSelect: (address: AddressDetails) => void;
+  onClear?: () => void;
+  placeholder?: string;
+  value?: string;
   className?: string;
+  showMap?: boolean;
 }
 
-// Client-side only wrapper for MapPicker
-const ClientSideMapPicker = ({ position, onPositionChange, className }: MapPickerProps) => {
+// Client-side only wrapper for AddressPicker
+const ClientSideAddressPicker = ({
+  onAddressSelect,
+  onClear,
+  placeholder,
+  value,
+  className,
+  showMap,
+}: AddressPickerProps) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -52,12 +65,19 @@ const ClientSideMapPicker = ({ position, onPositionChange, className }: MapPicke
   }, []);
 
   if (!isClient) {
-    return <MapLoading />;
+    return <AddressPickerLoading />;
   }
 
   return (
-    <Suspense fallback={<MapLoading />}>
-      <MapPicker position={position} onPositionChange={onPositionChange} className={className} />
+    <Suspense fallback={<AddressPickerLoading />}>
+      <AddressPicker
+        onAddressSelect={onAddressSelect}
+        onClear={onClear}
+        placeholder={placeholder}
+        value={value}
+        className={className}
+        showMap={showMap}
+      />
     </Suspense>
   );
 };
@@ -115,6 +135,26 @@ export interface CreateMissionFormProps {
 
 // Type for the form data when creating a new address
 type NewAddressFormData = Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Helper function to convert AddressDetails to Address format
+const convertAddressDetailsToAddress = (addressDetails: AddressDetails): NewAddressFormData => {
+  return {
+    label:
+      addressDetails.locality ||
+      addressDetails.formatted_address.split(',')[0] ||
+      'Nouvelle adresse',
+    street:
+      `${addressDetails.street_number || ''} ${addressDetails.route || ''}`.trim() ||
+      addressDetails.formatted_address.split(',')[0] ||
+      '',
+    city: addressDetails.locality || '',
+    region: addressDetails.administrative_area_level_1 || '',
+    country: addressDetails.country || '',
+    postalCode: addressDetails.postal_code || '',
+    latitude: addressDetails.latitude,
+    longitude: addressDetails.longitude,
+  };
+};
 
 export default function CreateMissionForm({
   onSubmit,
@@ -385,18 +425,29 @@ export default function CreateMissionForm({
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <Label>Position sur la carte</Label>
-                          <div className="mt-2 border rounded-md overflow-hidden">
-                            <ClientSideMapPicker
-                              position={[newAddress.latitude, newAddress.longitude]}
-                              onPositionChange={(lat, lng) => {
-                                setNewAddress((prev) => ({
-                                  ...prev,
-                                  latitude: lat,
-                                  longitude: lng,
-                                }));
+                          <Label>Sélectionner l'adresse avec Google Maps</Label>
+                          <div className="mt-2">
+                            <ClientSideAddressPicker
+                              onAddressSelect={(addressDetails) => {
+                                const convertedAddress =
+                                  convertAddressDetailsToAddress(addressDetails);
+                                setNewAddress(convertedAddress);
                               }}
-                              className="h-64 w-full"
+                              onClear={() => {
+                                setNewAddress({
+                                  label: '',
+                                  street: '',
+                                  city: '',
+                                  region: '',
+                                  country: 'Cameroun',
+                                  postalCode: '',
+                                  latitude: 3.848,
+                                  longitude: 11.5021,
+                                });
+                              }}
+                              placeholder="Rechercher l'adresse de départ..."
+                              showMap={true}
+                              className="w-full"
                             />
                           </div>
                           <div className="mt-2 grid grid-cols-2 gap-4">
@@ -606,17 +657,29 @@ export default function CreateMissionForm({
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <Label>Position sur la carte</Label>
-                          <div className="mt-2 border rounded-md overflow-hidden">
-                            <MapPicker
-                              position={[newAddress.latitude, newAddress.longitude]}
-                              onPositionChange={(lat, lng) => {
-                                setNewAddress((prev) => ({
-                                  ...prev,
-                                  latitude: lat,
-                                  longitude: lng,
-                                }));
+                          <Label>Sélectionner l'adresse avec Google Maps</Label>
+                          <div className="mt-2">
+                            <ClientSideAddressPicker
+                              onAddressSelect={(addressDetails) => {
+                                const convertedAddress =
+                                  convertAddressDetailsToAddress(addressDetails);
+                                setNewAddress(convertedAddress);
                               }}
+                              onClear={() => {
+                                setNewAddress({
+                                  label: '',
+                                  street: '',
+                                  city: '',
+                                  region: '',
+                                  country: 'Cameroun',
+                                  postalCode: '',
+                                  latitude: 3.848,
+                                  longitude: 11.5021,
+                                });
+                              }}
+                              placeholder="Rechercher l'adresse d'arrivée..."
+                              showMap={true}
+                              className="w-full"
                             />
                           </div>
                           <div className="mt-2 grid grid-cols-2 gap-4">

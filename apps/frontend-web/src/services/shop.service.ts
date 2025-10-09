@@ -108,6 +108,34 @@ export class ShopService extends BaseApi {
     }
   }
 
+  async getAdminProductStats(): Promise<
+    ApiResponse<{
+      stats: {
+        products: {
+          total: number;
+          active: number;
+          inactive: number;
+          lowStock: number;
+          outOfStock: number;
+        };
+        inventory: {
+          totalValue: number;
+        };
+        topCategories: Array<{
+          name: string;
+          productCount: number;
+        }>;
+      };
+    }>
+  > {
+    try {
+      const response = await this.insertToken().get('/api/admin/products/stats');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
   async createProduct(data: CreateProduct): Promise<ApiResponse<Record<string, Product>>> {
     try {
       const response = await this.insertToken().post('/api/admin/products', data);
