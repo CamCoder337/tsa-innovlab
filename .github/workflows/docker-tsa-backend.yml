@@ -5,7 +5,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'services/tsa-monolith/**'
-      - 'docker-tsa-backend.yml'
+      - '.github/workflows/docker-tsa-backend.yml'
   workflow_dispatch:
     inputs:
       custom_tag:
