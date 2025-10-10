@@ -237,8 +237,21 @@ router
 
     // Recherche
     router.get('/search', '#controllers/http/shop/search_controller.index')
+
+    // Recommandations (public access)
+    router.get('/recommendations/popular', '#controllers/http/shop/recommendations_controller.popular')
   })
   .prefix('/api/shop')
+
+// ===== ROUTES RECOMMANDATIONS (AUTHENTIFIÉES) =====
+router
+  .group(() => {
+    // Recommandations personnalisées
+    router.get('/recommendations', '#controllers/http/shop/recommendations_controller.index')
+    router.get('/recommendations/similar/:id', '#controllers/http/shop/recommendations_controller.similar')
+  })
+  .prefix('/api/shop')
+  .middleware(middleware.auth())
 
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
