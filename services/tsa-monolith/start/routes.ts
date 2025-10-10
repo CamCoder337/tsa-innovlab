@@ -240,6 +240,25 @@ router
   })
   .prefix('/api/shop')
 
+// ===== ROUTES PANIER & COMMANDES (PROTÉGÉES) =====
+router
+  .group(() => {
+    // Panier
+    router.get('/cart', '#controllers/http/shop/cart_controller.index')
+    router.post('/cart/items', '#controllers/http/shop/cart_controller.addItem')
+    router.put('/cart/items/:id', '#controllers/http/shop/cart_controller.updateItem')
+    router.delete('/cart/items/:id', '#controllers/http/shop/cart_controller.removeItem')
+    router.delete('/cart', '#controllers/http/shop/cart_controller.clear')
+
+    // Commandes
+    router.get('/orders', '#controllers/http/shop/orders_controller.index')
+    router.post('/orders', '#controllers/http/shop/orders_controller.store')
+    router.get('/orders/:id', '#controllers/http/shop/orders_controller.show')
+    router.post('/orders/:id/cancel', '#controllers/http/shop/orders_controller.cancel')
+  })
+  .prefix('/api/shop')
+  .middleware(middleware.auth())
+
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
   .group(() => {
