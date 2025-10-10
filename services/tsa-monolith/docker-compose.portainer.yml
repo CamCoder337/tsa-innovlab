@@ -117,11 +117,12 @@ services:
 
   # Nginx Reverse Proxy pour Backend
   nginx-backend:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: tsa-nginx
     restart: unless-stopped
     volumes:
-      - ./nginx-backend.conf:/etc/nginx/nginx.conf:ro
       - nginx_logs:/var/log/nginx
     ports:
       - "${BACKEND_PORT:-30000}:80"
