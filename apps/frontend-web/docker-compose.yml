@@ -1,0 +1,53 @@
+services:
+  # ========================================
+  # TSA Frontend Web (React + Vite + Nginx)
+  # ========================================
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:30000}
+
+    restart: unless-stopped
+
+    # Environment variables (runtime injection via entrypoint)
+    # IMPORTANT: VITE_API_URL doit pointer vers l'adresse EXTERNE du VPS
+    # car le frontend s'exécute dans le navigateur du client
+    # Exemple: http://votre-vps-ip:30000 ou https://api.votre-domaine.com
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:30000}
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY:-}
+      - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY:-}
+
+    # Ports mapping - expose port 80 du container sur le port hôte (défaut: 30005)
+    ports:
+      - "${FRONTEND_HOST_PORT:-30005}:80"
+
+    # Networks - utilisation du réseau Innovlab1
+    networks:
+      - Innovlab1
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+    # Portainer labels
+    labels:
+      - "com.tsa.service=frontend"
+      - "com.tsa.description=TSA Frontend Web Application (React + Vite)"
+      - "com.tsa.version=1.0.0"
+
+# ========================================
+# Networks
+# ========================================
+networks:
+  Innovlab1:
+    external: true
