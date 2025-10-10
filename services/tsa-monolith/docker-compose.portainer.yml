@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database avec PostGIS 17
   postgres:
@@ -26,13 +24,30 @@ services:
     image: redis:7-alpine
     container_name: tsa-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    # Si REDIS_PASSWORD est vide, Redis démarre sans authentification
+    command: >
+      sh -c '
+      if [ -n "$$REDIS_PASSWORD" ]; then
+        redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+      else
+        redis-server --appendonly yes
+      fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
     networks:
       - InnovlabG1
     healthcheck:
-      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: >
+        sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping
+        else
+          redis-cli ping
+        fi
+        '
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +109,7 @@ services:
       - InnovlabG1
 
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3333/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3333/health"]
       interval: 30s
       timeout: 10s
       retries: 3
