@@ -27,9 +27,9 @@ services:
     ports:
       - "${FRONTEND_HOST_PORT:-30005}:80"
 
-    # Networks - utilisation du réseau Innovlab1
+    # Networks - utilisation du réseau InnovlabG1
     networks:
-      - Innovlab1
+      - InnovlabG1
 
     # Health check
     healthcheck:
