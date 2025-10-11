@@ -1,0 +1,27 @@
+name: Deploy Backend to Portainer
+
+on:
+  push:
+    branches:
+      - develop  # Déploiement automatique sur develop
+    paths:
+      - 'services/tsa-monolith/**'  # Seulement si des fichiers du backend changent
+
+  workflow_dispatch:  # Permet de déclencher manuellement
+
+jobs:
+  trigger-portainer-webhook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Portainer Webhook
+        run: |
+          curl -X POST "${{ secrets.PORTAINER_BACKEND_WEBHOOK_URL }}"
+
+      - name: Wait for deployment
+        run: sleep 10
+
+      - name: Deployment triggered
+        run: |
+          echo "✅ Portainer webhook triggered successfully!"
+          echo "🚀 Check Portainer for deployment status"

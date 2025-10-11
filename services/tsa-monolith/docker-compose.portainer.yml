@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database avec PostGIS 17
   postgres:
@@ -31,6 +29,8 @@ services:
       sh -c '
       if [ -n "$REDIS_PASSWORD" ]; then
         redis-server --appendonly yes --requirepass "$REDIS_PASSWORD"
+      if [ -n "$$REDIS_PASSWORD" ]; then
+        redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
       else
         redis-server --appendonly yes
       fi
@@ -46,6 +46,8 @@ services:
         sh -c '
         if [ -n "$REDIS_PASSWORD" ]; then
           redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping
         else
           redis-cli ping
         fi
