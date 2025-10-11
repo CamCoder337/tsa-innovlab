@@ -39,11 +39,18 @@ export const updateOrderStatusValidator = vine.compile(
 
 /**
  * Validator pour lister les commandes avec filtres
+ * Note: Query params arrive en tant que strings
  */
 export const listOrdersValidator = vine.compile(
   vine.object({
-    page: vine.number().min(1).optional(),
-    limit: vine.number().min(1).max(100).optional(),
+    page: vine
+      .string()
+      .transform((value) => Number(value))
+      .optional(),
+    limit: vine
+      .string()
+      .transform((value) => Number(value))
+      .optional(),
     status: vine
       .enum([
         OrderStatus.PENDING,
