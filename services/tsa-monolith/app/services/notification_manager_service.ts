@@ -2,16 +2,18 @@ import { inject } from '@adonisjs/core'
 import Notification, { NotificationType, NotificationPriority } from '#models/notification'
 import Mission from '#models/mission'
 import User from '#models/user'
-import TransmitService from './transmit_service.js'
+import WebSocketService from './websocket_service.js'
 import EmailService from './email_service.js'
 import env from '#start/env'
 
 @inject()
 export default class NotificationManagerService {
-  constructor(
-    private transmitService: TransmitService,
-    private emailService: EmailService
-  ) {}
+  private websocketService: WebSocketService
+
+  constructor(private emailService: EmailService) {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
 
   /**
    * Notifie les transporteurs d'une nouvelle mission
@@ -39,10 +41,16 @@ export default class NotificationManagerService {
         })
 
         // Diffuser en temps réel via WebSocket
-        await this.transmitService.broadcastNotification(transporteur.id, notification.serialize())
+        await this.websocketService.sendToUser(transporteur.id, {
+          type: 'notification:new',
+          data: notification.serialize(),
+        })
 
         // Diffuser aussi sur le channel global des transporteurs
-        await this.transmitService.broadcastNewMission(mission.serialize())
+        await this.websocketService.broadcastToTransporteurs({
+          type: 'mission:new',
+          data: mission.serialize(),
+        })
 
         // Envoyer l'email (en arrière-plan)
         this.sendMissionEmailNotification(transporteur, mission, notification).catch((error) => {
@@ -77,7 +85,10 @@ export default class NotificationManagerService {
       })
 
       // Diffuser en temps réel
-      await this.transmitService.broadcastNotification(transporteur.id, notification.serialize())
+      await this.websocketService.sendToUser(transporteur.id, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
 
       // Email de confirmation d'assignation
       this.sendAssignmentEmailNotification(transporteur, mission, notification).catch((error) => {
@@ -120,15 +131,20 @@ export default class NotificationManagerService {
       })
 
       // Diffuser en temps réel à l'affreteur
-      await this.transmitService.broadcastNotification(affreteur.id, notification.serialize())
+      await this.websocketService.sendToUser(affreteur.id, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
 
       // Diffuser aussi sur le channel de tracking de la mission
-      await this.transmitService.broadcastMissionUpdate(mission.id, {
-        type: 'status_change',
-        oldStatus,
-        newStatus,
-        transporteur: transporteur.fullName,
-        timestamp: new Date().toISOString(),
+      await this.websocketService.broadcastToMission(mission.id, {
+        type: 'mission:status_change',
+        data: {
+          oldStatus,
+          newStatus,
+          transporteur: transporteur.fullName,
+          timestamp: new Date().toISOString(),
+        },
       })
 
       // Email à l'affreteur
@@ -174,7 +190,10 @@ export default class NotificationManagerService {
       })
 
       // Diffuser en temps réel
-      await this.transmitService.broadcastNotification(receiverId, notification.serialize())
+      await this.websocketService.sendToUser(receiverId, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
 
       console.log(`✅ Utilisateur ${receiverId} notifié du nouveau message de ${sender.email}`)
     } catch (error) {
@@ -205,7 +224,10 @@ export default class NotificationManagerService {
       })
 
       // Diffuser en temps réel
-      await this.transmitService.broadcastNotification(userId, notification.serialize())
+      await this.websocketService.sendToUser(userId, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
 
       console.log(`✅ Notification système envoyée à l'utilisateur ${userId}`)
     } catch (error) {

@@ -3,7 +3,6 @@ import { inject } from '@adonisjs/core'
 import Conversation, { ConversationType } from '#models/conversation'
 import User from '#models/user'
 import Mission from '#models/mission'
-import TransmitService from '#services/transmit_service'
 import {
   createDirectConversationValidator,
   createMissionConversationValidator,
@@ -13,9 +12,7 @@ import {
 
 @inject()
 export default class ConversationsController {
-  constructor(_transmitService: TransmitService) {
-    // TransmitService will be used for future real-time features when needed
-  }
+  constructor() {}
 
   /**
    * Liste les conversations de l'utilisateur connecté

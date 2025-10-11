@@ -2,12 +2,17 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import Message, { MessageType } from '#models/message'
 import Conversation from '#models/conversation'
-import TransmitService from '#services/transmit_service'
+import WebSocketService from '#services/websocket_service'
 import { messageValidator } from '#validators/message'
 
 @inject()
 export default class MessagesController {
-  constructor(private transmitService: TransmitService) {}
+  private websocketService: WebSocketService
+
+  constructor() {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
 
   /**
    * Liste les messages d'une conversation
@@ -100,12 +105,18 @@ export default class MessagesController {
         query.select('id', 'firstName', 'lastName', 'email', 'role')
       })
 
-      // Diffuser le message en temps réel via Transmit (conversation partagée)
-      await this.transmitService.broadcastChatMessage(
-        conversation.id,
-        Number(user.id),
-        message.serialize()
-      )
+      // Diffuser le message en temps réel via WebSocket
+      // Envoyer le message à tous les participants de la conversation
+      const participants = await conversation.getParticipantIds()
+      for (const participantId of participants) {
+        await this.websocketService.sendToUser(participantId, {
+          type: 'chat:message',
+          data: {
+            conversationId: conversation.id,
+            message: message.serialize(),
+          },
+        })
+      }
 
       return response.created({
         success: true,

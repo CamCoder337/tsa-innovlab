@@ -1,12 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import Notification, { NotificationType, NotificationPriority } from '#models/notification'
-import TransmitService from '#services/transmit_service'
+import WebSocketService from '#services/websocket_service'
 import { notificationValidator } from '#validators/notification'
 
 @inject()
 export default class NotificationsController {
-  constructor(private transmitService: TransmitService) {}
+  private websocketService: WebSocketService
+
+  constructor() {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
 
   /**
    * Liste les notifications de l'utilisateur connecté
@@ -218,7 +223,10 @@ export default class NotificationsController {
       })
 
       // Diffuser en temps réel
-      await this.transmitService.broadcastNotification(user.id, notification.serialize())
+      await this.websocketService.sendToUser(user.id, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
 
       return response.created({
         success: true,

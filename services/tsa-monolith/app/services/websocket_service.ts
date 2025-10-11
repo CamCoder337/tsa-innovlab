@@ -1,0 +1,327 @@
+import { WebSocket } from 'ws'
+
+/**
+ * Interface pour représenter une connexion utilisateur active
+ */
+export interface ConnectedUser {
+  userId: string
+  role: string
+  ws: WebSocket
+  connectedAt: Date
+}
+
+/**
+ * Interface pour les messages WebSocket
+ */
+export interface WebSocketMessage {
+  type: string
+  data: any
+  timestamp: string
+  userId?: string
+}
+
+/**
+ * Service de gestion des connexions WebSocket (SINGLETON)
+ * Gère les connexions actives, le broadcasting par rôle et par utilisateur
+ */
+class WebSocketService {
+  /**
+   * Map pour tracker toutes les connexions actives
+   * Key: userId, Value: ConnectedUser
+   */
+  private connections: Map<string, ConnectedUser> = new Map()
+
+  /**
+   * Instance singleton
+   */
+  private static instance: WebSocketService
+
+  /**
+   * Constructeur privé pour pattern singleton
+   */
+  private constructor() {
+    console.log('🔧 WebSocketService: Instance créée (singleton)')
+  }
+
+  /**
+   * Obtenir l'instance unique du service
+   */
+  public static getInstance(): WebSocketService {
+    if (!WebSocketService.instance) {
+      WebSocketService.instance = new WebSocketService()
+    }
+    return WebSocketService.instance
+  }
+
+  /**
+   * Enregistrer une nouvelle connexion utilisateur
+   */
+  registerConnection(userId: string, role: string, ws: WebSocket): void {
+    const connection: ConnectedUser = {
+      userId,
+      role,
+      ws,
+      connectedAt: new Date(),
+    }
+
+    this.connections.set(userId, connection)
+
+    console.log(
+      `✅ WebSocket: Utilisateur ${userId} (${role}) enregistré. Total connexions: ${this.connections.size}`
+    )
+  }
+
+  /**
+   * Désenregistrer une connexion
+   */
+  unregisterConnection(userId: string): void {
+    const removed = this.connections.delete(userId)
+
+    if (removed) {
+      console.log(
+        `❌ WebSocket: Utilisateur ${userId} déconnecté. Connexions restantes: ${this.connections.size}`
+      )
+    }
+  }
+
+  /**
+   * Broadcaster un message à tous les transporteurs connectés
+   */
+  async broadcastToTransporteurs(message: object): Promise<void> {
+    let count = 0
+
+    const transporteurConnections = Array.from(this.connections.values()).filter(
+      (conn) => conn.role === 'transporteur'
+    )
+
+    console.log(
+      `📡 WebSocket: Broadcasting aux transporteurs (${transporteurConnections.length} connectés)`
+    )
+
+    for (const connection of transporteurConnections) {
+      try {
+        if (connection.ws.readyState === WebSocket.OPEN) {
+          let wsMessage: any
+
+          // Si le message est déjà structuré avec type/data, l'envoyer tel quel
+          if ((message as any).type && (message as any).data !== undefined) {
+            wsMessage = message
+          } else {
+            // Sinon, créer la structure complète
+            wsMessage = {
+              type: (message as any).type || 'broadcast',
+              data: message,
+              timestamp: new Date().toISOString(),
+            }
+          }
+
+          connection.ws.send(JSON.stringify(wsMessage))
+          count++
+        }
+      } catch (error) {
+        console.error(
+          `❌ WebSocket: Erreur envoi à transporteur ${connection.userId}:`,
+          error.message
+        )
+      }
+    }
+
+    console.log(`✅ WebSocket: Message envoyé à ${count} transporteurs`)
+  }
+
+  /**
+   * Envoyer un message à un utilisateur spécifique
+   */
+  async sendToUser(userId: string, message: object): Promise<void> {
+    const connection = this.connections.get(userId)
+
+    if (!connection) {
+      console.log(`⚠️  WebSocket: Utilisateur ${userId} non connecté, message non envoyé`)
+      return
+    }
+
+    try {
+      if (connection.ws.readyState === WebSocket.OPEN) {
+        let wsMessage: any
+
+        // Si le message est déjà structuré avec type/data, l'envoyer tel quel avec userId
+        if ((message as any).type && (message as any).data !== undefined) {
+          wsMessage = {
+            ...message,
+            userId, // Ajouter userId au message existant
+          }
+        } else {
+          // Sinon, créer la structure complète
+          wsMessage = {
+            type: (message as any).type || 'notification',
+            data: message,
+            timestamp: new Date().toISOString(),
+            userId,
+          }
+        }
+
+        connection.ws.send(JSON.stringify(wsMessage))
+        console.log(`✅ WebSocket: Message envoyé à l'utilisateur ${userId}`)
+      } else {
+        console.log(
+          `⚠️  WebSocket: WebSocket fermé pour utilisateur ${userId}, impossible d'envoyer`
+        )
+      }
+    } catch (error) {
+      console.error(`❌ WebSocket: Erreur envoi à utilisateur ${userId}:`, error.message)
+    }
+  }
+
+  /**
+   * Broadcaster à tous les utilisateurs d'une mission spécifique
+   */
+  async broadcastToMission(missionId: string, message: object): Promise<void> {
+    // Import Mission pour éviter les dépendances circulaires
+    const { default: Mission } = await import('#models/mission')
+
+    const mission = await Mission.find(missionId)
+
+    if (!mission) {
+      console.error(`❌ WebSocket: Mission ${missionId} non trouvée`)
+      return
+    }
+
+    const userIds: string[] = []
+
+    // Affreteur propriétaire
+    if (mission.affreteurId) {
+      userIds.push(mission.affreteurId)
+    }
+
+    // Transporteur assigné (si existe)
+    if (mission.transporteurId) {
+      userIds.push(mission.transporteurId)
+    }
+
+    console.log(`📡 WebSocket: Broadcasting à la mission ${missionId} (${userIds.length} users)`)
+
+    for (const userId of userIds) {
+      await this.sendToUser(userId, message)
+    }
+  }
+
+  /**
+   * Obtenir le nombre d'utilisateurs connectés par rôle
+   */
+  getConnectionStats(): {
+    total: number
+    transporteurs: number
+    affreteurs: number
+    admins: number
+  } {
+    const connections = Array.from(this.connections.values())
+
+    return {
+      total: connections.length,
+      transporteurs: connections.filter((c) => c.role === 'transporteur').length,
+      affreteurs: connections.filter((c) => c.role === 'affreteur').length,
+      admins: connections.filter((c) => c.role === 'admin').length,
+    }
+  }
+
+  /**
+   * Vérifier si un utilisateur est connecté
+   */
+  isUserConnected(userId: string): boolean {
+    return this.connections.has(userId)
+  }
+
+  /**
+   * Obtenir toutes les connexions actives (pour debug)
+   */
+  getActiveConnections(): ConnectedUser[] {
+    return Array.from(this.connections.values())
+  }
+
+  /**
+   * Broadcaster à tous les affreteurs connectés
+   */
+  async broadcastToAffreteurs(message: object): Promise<void> {
+    let count = 0
+
+    const affreteurConnections = Array.from(this.connections.values()).filter(
+      (conn) => conn.role === 'affreteur'
+    )
+
+    console.log(
+      `📡 WebSocket: Broadcasting aux affreteurs (${affreteurConnections.length} connectés)`
+    )
+
+    for (const connection of affreteurConnections) {
+      try {
+        if (connection.ws.readyState === WebSocket.OPEN) {
+          let wsMessage: any
+
+          // Si le message est déjà structuré avec type/data, l'envoyer tel quel
+          if ((message as any).type && (message as any).data !== undefined) {
+            wsMessage = message
+          } else {
+            // Sinon, créer la structure complète
+            wsMessage = {
+              type: (message as any).type || 'broadcast',
+              data: message,
+              timestamp: new Date().toISOString(),
+            }
+          }
+
+          connection.ws.send(JSON.stringify(wsMessage))
+          count++
+        }
+      } catch (error) {
+        console.error(
+          `❌ WebSocket: Erreur envoi à affreteur ${connection.userId}:`,
+          error.message
+        )
+      }
+    }
+
+    console.log(`✅ WebSocket: Message envoyé à ${count} affreteurs`)
+  }
+
+  /**
+   * Broadcaster à tous les utilisateurs connectés (tous rôles)
+   */
+  async broadcastToAll(message: object): Promise<void> {
+    let count = 0
+
+    console.log(`📡 WebSocket: Broadcasting à tous (${this.connections.size} connectés)`)
+
+    for (const connection of this.connections.values()) {
+      try {
+        if (connection.ws.readyState === WebSocket.OPEN) {
+          let wsMessage: any
+
+          // Si le message est déjà structuré avec type/data, l'envoyer tel quel
+          if ((message as any).type && (message as any).data !== undefined) {
+            wsMessage = message
+          } else {
+            // Sinon, créer la structure complète
+            wsMessage = {
+              type: (message as any).type || 'broadcast',
+              data: message,
+              timestamp: new Date().toISOString(),
+            }
+          }
+
+          connection.ws.send(JSON.stringify(wsMessage))
+          count++
+        }
+      } catch (error) {
+        console.error(
+          `❌ WebSocket: Erreur envoi à utilisateur ${connection.userId}:`,
+          error.message
+        )
+      }
+    }
+
+    console.log(`✅ WebSocket: Message envoyé à ${count} utilisateurs`)
+  }
+}
+
+// Export l'instance singleton
+export default WebSocketService

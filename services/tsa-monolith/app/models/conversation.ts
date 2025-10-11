@@ -65,6 +65,10 @@ export default class Conversation extends BaseModel {
     return this.user1Id === userId ? this.user2Id : this.user1Id
   }
 
+  public getParticipantIds(): string[] {
+    return [this.user1Id, this.user2Id]
+  }
+
   // Factory methods
   public static async findOrCreateDirectConversation(
     user1Id: string,

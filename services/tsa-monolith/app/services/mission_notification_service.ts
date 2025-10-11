@@ -1,7 +1,7 @@
 import User from '#models/user'
 import Mission from '#models/mission'
 import Notification, { NotificationType, NotificationPriority } from '#models/notification'
-import transmit from '@adonisjs/transmit/services/main'
+import WebSocketService from './websocket_service.js'
 
 export interface MissionNotificationData {
   mission: Mission
@@ -11,6 +11,12 @@ export interface MissionNotificationData {
 }
 
 export default class MissionNotificationService {
+  private websocketService: WebSocketService
+
+  constructor() {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
   /**
    * Notifie les transporteurs d'une nouvelle mission disponible
    */
@@ -23,7 +29,7 @@ export default class MissionNotificationService {
       await mission.load('adresseArrivee')
 
       // 1. Récupérer tous les transporteurs actifs
-      const transporteurs = await User.query().where('role', 'transporteur').where('isActive', true)
+      const transporteurs = await User.query().where('role', 'transporteur').where('status', 'active')
 
       console.log(`👥 ${transporteurs.length} transporteurs trouvés`)
 
@@ -237,15 +243,23 @@ export default class MissionNotificationService {
   }
 
   /**
-   * Diffuse un message sur un channel via Transmit
+   * Diffuse un message via WebSocket
    */
   private async broadcastToChannel(channel: string, data: any): Promise<void> {
     try {
-      // Utiliser uniquement Transmit (plus de système SSE manuel)
-      await transmit.broadcast(channel, data)
-      console.log(`📡 Transmit broadcast envoyé sur ${channel}`)
+      // Broadcaster selon le type de channel
+      if (channel === 'missions:new:transporteurs') {
+        await this.websocketService.broadcastToTransporteurs(data)
+      } else if (channel.startsWith('notifications:user:')) {
+        const userId = channel.split(':')[2]
+        await this.websocketService.sendToUser(userId, data)
+      } else {
+        console.log(`⚠️  WebSocket: Channel ${channel} non géré`)
+      }
+
+      console.log(`📡 WebSocket broadcast envoyé sur ${channel}`)
     } catch (error) {
-      console.error(`❌ Erreur broadcast Transmit channel ${channel}:`, error)
+      console.error(`❌ Erreur broadcast WebSocket channel ${channel}:`, error)
       throw error
     }
   }
