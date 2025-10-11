@@ -21,9 +21,10 @@ test.group('Shop Orders Controller', (group) => {
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
 
-    // Créer un utilisateur de test
+    // Créer un utilisateur de test avec email unique
+    const uniqueId = Date.now() + Math.random().toString(36).substring(7)
     testUser = await User.create({
-      email: 'orders-user@example.com',
+      email: `orders-user-${uniqueId}@example.com`,
       passwordHash: 'password123',
       firstName: 'Orders',
       lastName: 'User',
@@ -39,7 +40,7 @@ test.group('Shop Orders Controller', (group) => {
     // Créer les adresses
     shippingAddress = await Address.create({
       userId: testUser.id,
-      addressLine1: '123 Shipping Street',
+      street: '123 Shipping Street',
       city: 'Douala',
       country: 'Cameroon',
       postalCode: '00237',
@@ -48,7 +49,7 @@ test.group('Shop Orders Controller', (group) => {
 
     billingAddress = await Address.create({
       userId: testUser.id,
-      addressLine1: '456 Billing Avenue',
+      street: '456 Billing Avenue',
       city: 'Yaoundé',
       country: 'Cameroon',
       postalCode: '00237',
@@ -272,9 +273,9 @@ test.group('Shop Orders Controller', (group) => {
   })
 
   test('should not show order of another user', async ({ client }) => {
-    // Créer un autre utilisateur
+    // Créer un autre utilisateur avec email unique
     const otherUser = await User.create({
-      email: 'other-user@example.com',
+      email: `other-user-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,
       passwordHash: 'password123',
       firstName: 'Other',
       lastName: 'User',
@@ -475,10 +476,10 @@ test.group('Shop Orders Controller', (group) => {
     const order = body.data.order
 
     assert.equal(order.customerName, 'Orders User')
-    assert.equal(order.customerEmail, 'orders-user@example.com')
+    assert.equal(order.customerEmail, testUser.email)
     assert.equal(order.customerPhone, '+237600000000')
     assert.equal(order.notes, 'Urgent delivery')
     assert.exists(order.orderNumber)
-    assert.match(order.orderNumber, /^ORD-\d{8}-\d{4}$/)
+    assert.match(order.orderNumber, /^ORD-\d{8}-\d{11}$/)
   })
 })

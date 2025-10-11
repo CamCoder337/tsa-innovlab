@@ -80,8 +80,8 @@ test.group('Order Model', (group) => {
     })
 
     assert.notEqual(orderNumber1, orderNumber2)
-    assert.match(orderNumber1, /^ORD-\d{8}-\d{4}$/)
-    assert.match(orderNumber2, /^ORD-\d{8}-\d{4}$/)
+    assert.match(orderNumber1, /^ORD-\d{8}-\d{11}$/)
+    assert.match(orderNumber2, /^ORD-\d{8}-\d{11}$/)
   })
 
   test('should have relationship with user', async ({ assert }) => {
@@ -287,7 +287,7 @@ test.group('Order Model', (group) => {
 
     const shippingAddress = await Address.create({
       userId: user.id,
-      addressLine1: '123 Shipping Street',
+      street: '123 Shipping Street',
       city: 'Douala',
       country: 'Cameroon',
       postalCode: '00237',
@@ -296,7 +296,7 @@ test.group('Order Model', (group) => {
 
     const billingAddress = await Address.create({
       userId: user.id,
-      addressLine1: '456 Billing Avenue',
+      street: '456 Billing Avenue',
       city: 'Yaoundé',
       country: 'Cameroon',
       postalCode: '00237',

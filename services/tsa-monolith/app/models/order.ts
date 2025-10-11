@@ -129,16 +129,13 @@ export default class Order extends BaseModel {
     const now = DateTime.now()
     const dateStr = now.toFormat('yyyyMMdd')
 
-    // Compter les commandes du jour
-    const todayOrders = await Order.query()
-      .where('orderNumber', 'like', `ORD-${dateStr}-%`)
-      .count('* as total')
+    // Utiliser l'heure + millisecondes pour garantir l'unicité même lors d'appels rapides
+    const timeStr = now.toFormat('HHmmssSSS') // HH:mm:ss.SSS
+    const randomSuffix = Math.floor(Math.random() * 100)
+      .toString()
+      .padStart(2, '0')
 
-    const total = todayOrders[0]?.$extras?.total || 0
-    const count = Number(total) + 1
-    const paddedCount = count.toString().padStart(4, '0')
-
-    return `ORD-${dateStr}-${paddedCount}`
+    return `ORD-${dateStr}-${timeStr}${randomSuffix}`
   }
 
   /**

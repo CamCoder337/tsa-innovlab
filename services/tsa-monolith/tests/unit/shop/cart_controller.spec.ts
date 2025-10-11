@@ -224,7 +224,7 @@ test.group('Shop Cart Controller', (group) => {
   test('should not update cart item of another user', async ({ client }) => {
     // Créer un autre utilisateur avec son panier
     const otherUser = await User.create({
-      email: 'other-user@example.com',
+      email: `other-user-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,
       passwordHash: 'password123',
       firstName: 'Other',
       lastName: 'User',
@@ -292,7 +292,7 @@ test.group('Shop Cart Controller', (group) => {
   test('should not remove cart item of another user', async ({ client }) => {
     // Créer un autre utilisateur avec son panier
     const otherUser = await User.create({
-      email: 'other-user@example.com',
+      email: `other-user-remove-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,
       passwordHash: 'password123',
       firstName: 'Other',
       lastName: 'User',
