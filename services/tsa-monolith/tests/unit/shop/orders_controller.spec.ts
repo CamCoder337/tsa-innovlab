@@ -137,13 +137,13 @@ test.group('Shop Orders Controller', (group) => {
         cartId: cart.id,
         productId: testProduct1.id,
         quantity: 2,
-        unitPrice: testProduct1.price,
+        unitPrice: testProduct1.price.toString(),
       },
       {
         cartId: cart.id,
         productId: testProduct2.id,
         quantity: 1,
-        unitPrice: testProduct2.price,
+        unitPrice: testProduct2.price.toString(),
       },
     ])
 
@@ -207,7 +207,7 @@ test.group('Shop Orders Controller', (group) => {
       cartId: cart.id,
       productId: testProduct1.id,
       quantity: 100, // Stock = 50
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     const response = await client.post('/api/shop/orders').bearerToken(userToken).json({
@@ -245,7 +245,7 @@ test.group('Shop Orders Controller', (group) => {
       productId: testProduct1.id,
       productName: testProduct1.name,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
       subtotal: '200.00',
     })
 
@@ -322,7 +322,7 @@ test.group('Shop Orders Controller', (group) => {
       productId: testProduct1.id,
       productName: testProduct1.name,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
       subtotal: '200.00',
     })
 
@@ -442,7 +442,7 @@ test.group('Shop Orders Controller', (group) => {
       cartId: cart.id,
       productId: testProduct1.id,
       quantity: 1,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     const response = await client.post('/api/shop/orders').bearerToken(userToken).json({

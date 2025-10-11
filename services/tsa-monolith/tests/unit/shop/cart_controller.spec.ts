@@ -156,7 +156,7 @@ test.group('Shop Cart Controller', (group) => {
       cartId: cart.id,
       productId: testProduct1.id,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     // Mettre à jour la quantité
@@ -188,7 +188,7 @@ test.group('Shop Cart Controller', (group) => {
       cartId: cart.id,
       productId: testProduct1.id,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     // Tenter de mettre à jour avec une quantité trop élevée
@@ -227,7 +227,7 @@ test.group('Shop Cart Controller', (group) => {
       cartId: otherCart.id,
       productId: testProduct1.id,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     // Essayer de mettre à jour l'item d'un autre utilisateur
@@ -256,7 +256,7 @@ test.group('Shop Cart Controller', (group) => {
       cartId: cart.id,
       productId: testProduct1.id,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     const response = await client
@@ -295,7 +295,7 @@ test.group('Shop Cart Controller', (group) => {
       cartId: otherCart.id,
       productId: testProduct1.id,
       quantity: 2,
-      unitPrice: testProduct1.price,
+      unitPrice: testProduct1.price.toString(),
     })
 
     // Essayer de supprimer l'item d'un autre utilisateur
@@ -322,13 +322,13 @@ test.group('Shop Cart Controller', (group) => {
         cartId: cart.id,
         productId: testProduct1.id,
         quantity: 2,
-        unitPrice: testProduct1.price,
+        unitPrice: testProduct1.price.toString(),
       },
       {
         cartId: cart.id,
         productId: testProduct2.id,
         quantity: 3,
-        unitPrice: testProduct2.price,
+        unitPrice: testProduct2.price.toString(),
       },
     ])
 
@@ -357,13 +357,13 @@ test.group('Shop Cart Controller', (group) => {
         cartId: cart.id,
         productId: testProduct1.id,
         quantity: 2, // 2 * 100 = 200
-        unitPrice: testProduct1.price,
+        unitPrice: testProduct1.price.toString(),
       },
       {
         cartId: cart.id,
         productId: testProduct2.id,
         quantity: 3, // 3 * 200 = 600
-        unitPrice: testProduct2.price,
+        unitPrice: testProduct2.price.toString(),
       },
     ])
 

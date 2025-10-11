@@ -111,7 +111,7 @@ export default class CartController {
           cartId: cart.id,
           productId: product.id,
           quantity,
-          unitPrice: product.price,
+          unitPrice: product.price.toString(),
         })
       }
 

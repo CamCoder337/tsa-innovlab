@@ -96,7 +96,7 @@ test.group('Cart Model', (group) => {
       cartId: cart.id,
       productId: product.id,
       quantity: 2,
-      unitPrice: product.price,
+      unitPrice: product.price.toString(),
     })
 
     await cart.load('items')
@@ -151,13 +151,13 @@ test.group('Cart Model', (group) => {
         cartId: cart.id,
         productId: product1.id,
         quantity: 2, // 2 * 100 = 200
-        unitPrice: product1.price,
+        unitPrice: product1.price.toString(),
       },
       {
         cartId: cart.id,
         productId: product2.id,
         quantity: 3, // 3 * 200 = 600
-        unitPrice: product2.price,
+        unitPrice: product2.price.toString(),
       },
     ])
 
@@ -211,13 +211,13 @@ test.group('Cart Model', (group) => {
         cartId: cart.id,
         productId: product1.id,
         quantity: 2,
-        unitPrice: product1.price,
+        unitPrice: product1.price.toString(),
       },
       {
         cartId: cart.id,
         productId: product2.id,
         quantity: 3,
-        unitPrice: product2.price,
+        unitPrice: product2.price.toString(),
       },
     ])
 

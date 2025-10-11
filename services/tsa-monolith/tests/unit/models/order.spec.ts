@@ -165,7 +165,7 @@ test.group('Order Model', (group) => {
       productId: product.id,
       productName: product.name,
       quantity: 2,
-      unitPrice: product.price,
+      unitPrice: product.price.toString(),
       subtotal: '200.00',
     })
 

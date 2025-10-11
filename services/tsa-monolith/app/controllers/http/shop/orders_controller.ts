@@ -36,7 +36,7 @@ export default class OrdersController {
       }
 
       // Tri
-      query.orderBy(sortBy, sortOrder)
+      query.orderBy(sortBy, sortOrder as 'asc' | 'desc')
 
       // Pagination
       const orders = await query.paginate(page, limit)
