@@ -33,9 +33,7 @@ export default class SearchController {
         limit = 20,
       } = filters
 
-      const productsQuery = Product.query()
-        .where('isActive', true)
-        .preload('category')
+      const productsQuery = Product.query().where('isActive', true).preload('category')
 
       // Recherche textuelle
       if (searchQuery) {

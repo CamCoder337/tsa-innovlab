@@ -24,6 +24,7 @@ Internet / Frontend React
 ```
 
 **Services déployés :**
+
 - ✅ Nginx Backend (Alpine) - Reverse proxy optimisé
 - ✅ AdonisJS API - Backend principal
 - ✅ PostgreSQL PostGIS 17 Alpine - Base de données avec extensions géospatiales
@@ -32,6 +33,7 @@ Internet / Frontend React
 **Réseau :** `InnovLabG1` (externe, déjà créé)
 
 **Volumes persistants :**
+
 - `tsa_postgres_data` - Données PostgreSQL
 - `tsa_redis_data` - Données Redis
 - `tsa_nginx_logs` - Logs Nginx
@@ -73,6 +75,7 @@ Exemple : `https://github.com/CamCoder337/tsa-innovlab.git`
 ### 2.1 Générer l'APP_KEY
 
 Sur votre machine locale :
+
 ```bash
 cd services/tsa-monolith
 node ace generate:key
@@ -147,6 +150,7 @@ BACKEND_PORT=3333
 4. **IMPORTANT :** Ne pas inclure les commentaires `#`
 
 **Exemple (sans commentaires) :**
+
 ```
 APP_KEY=-upkrBdXc9P19O8oq2bm6PGygS--Toqv
 LOG_LEVEL=info
@@ -198,23 +202,27 @@ Dans Portainer → **Stacks** → `tsa-backend-prod` :
 ### 4.2 Vérifier les Health Checks
 
 Cliquer sur chaque service et vérifier :
+
 - **Health status :** `healthy` (après 30-60 secondes)
 
 ### 4.3 Tester l'API
 
 **Health check Nginx :**
+
 ```bash
 curl http://votre-serveur:3333/nginx-health
 # Réponse attendue: OK
 ```
 
 **Health check Backend :**
+
 ```bash
 curl http://votre-serveur:3333/health
 # Réponse attendue: {"status":"ok"}
 ```
 
 **Test API :**
+
 ```bash
 curl http://votre-serveur:3333/api/auth/login
 # Réponse attendue: erreur 422 (validation) = API fonctionne
@@ -225,22 +233,26 @@ curl http://votre-serveur:3333/api/auth/login
 Dans Portainer, cliquer sur chaque service → **Logs** :
 
 **PostgreSQL :**
+
 ```
 database system is ready to accept connections
 ```
 
 **Redis :**
+
 ```
 Ready to accept connections
 ```
 
 **AdonisJS :**
+
 ```
 Server started on port 3333
 Email worker started successfully
 ```
 
 **Nginx :**
+
 ```
 start worker processes
 ```
@@ -258,10 +270,10 @@ Si vous avez Traefik comme reverse proxy :
 ```yaml
 nginx-backend:
   labels:
-    - "traefik.enable=true"
-    - "traefik.http.routers.tsa-api.rule=Host(`api.tsa-logistics.com`)"
-    - "traefik.http.routers.tsa-api.entrypoints=websecure"
-    - "traefik.http.routers.tsa-api.tls.certresolver=letsencrypt"
+    - 'traefik.enable=true'
+    - 'traefik.http.routers.tsa-api.rule=Host(`api.tsa-logistics.com`)'
+    - 'traefik.http.routers.tsa-api.entrypoints=websecure'
+    - 'traefik.http.routers.tsa-api.tls.certresolver=letsencrypt'
 ```
 
 ### Option B : Certificat SSL manuel
@@ -280,6 +292,7 @@ nginx-backend:
 
 1. Faire vos modifications dans le code
 2. Commit et push sur GitHub :
+
    ```bash
    git add .
    git commit -m "feat: nouvelle fonctionnalité"
@@ -341,11 +354,13 @@ docker logs -f tsa-redis
 ### Problème : Services ne démarrent pas
 
 **Vérifier :**
+
 1. Réseau `InnovLabG1` existe bien
 2. Variables d'environnement renseignées correctement
 3. Image Docker accessible depuis le registre
 
 **Solution :**
+
 ```bash
 # Dans Portainer, vérifier les logs de chaque service
 # Erreur commune : APP_KEY manquante ou invalide
@@ -354,11 +369,13 @@ docker logs -f tsa-redis
 ### Problème : Backend ne répond pas
 
 **Vérifier :**
+
 1. Health check du backend : `curl http://localhost:3333/health`
 2. Connexion PostgreSQL réussie
 3. Connexion Redis réussie
 
 **Solution :**
+
 ```bash
 # Diagnostiquer depuis le conteneur
 docker exec -it tsa-backend node ace diagnose
@@ -367,11 +384,13 @@ docker exec -it tsa-backend node ace diagnose
 ### Problème : Emails ne partent pas
 
 **Vérifier :**
+
 1. SMTP_USERNAME et SMTP_PASSWORD corrects
 2. Gmail App Password valide (16 caractères)
 3. Worker d'emails démarré
 
 **Solution :**
+
 ```bash
 # Tester l'envoi d'email
 docker exec -it tsa-backend node ace test:email
@@ -381,6 +400,7 @@ docker exec -it tsa-backend node ace test:email
 
 **Solution :**
 Modifier `nginx-backend.conf` :
+
 ```nginx
 # Augmenter les limites
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=200r/s;  # Au lieu de 100r/s
@@ -436,6 +456,7 @@ Redéployer la stack.
 **🎉 Déploiement terminé avec succès !**
 
 Votre backend TSA Monolith est maintenant en production sur Portainer avec :
+
 - ✅ Nginx reverse proxy optimisé (gzip, rate limiting, security headers)
 - ✅ AdonisJS API avec worker d'emails
 - ✅ PostgreSQL PostGIS 17 avec volumes persistants

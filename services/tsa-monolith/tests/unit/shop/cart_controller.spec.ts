@@ -82,13 +82,10 @@ test.group('Shop Cart Controller', (group) => {
   })
 
   test('should add item to cart', async ({ client, assert }) => {
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 2,
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 2,
+    })
 
     response.assertStatus(201)
     response.assertBodyContains({
@@ -105,22 +102,16 @@ test.group('Shop Cart Controller', (group) => {
 
   test('should update quantity when adding existing product', async ({ client, assert }) => {
     // Ajouter le produit une première fois
-    await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 2,
-      })
+    await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 2,
+    })
 
     // Ajouter le même produit encore
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 3,
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 3,
+    })
 
     response.assertStatus(201)
 
@@ -129,13 +120,10 @@ test.group('Shop Cart Controller', (group) => {
   })
 
   test('should not add product with insufficient stock', async ({ client }) => {
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 100, // Stock = 50, demande 100
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 100, // Stock = 50, demande 100
+    })
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -149,13 +137,10 @@ test.group('Shop Cart Controller', (group) => {
     testProduct1.isActive = false
     await testProduct1.save()
 
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 1,
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 1,
+    })
 
     response.assertStatus(400)
   })
@@ -398,37 +383,28 @@ test.group('Shop Cart Controller', (group) => {
   })
 
   test('should validate product id format', async ({ client }) => {
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: 'invalid-uuid',
-        quantity: 1,
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: 'invalid-uuid',
+      quantity: 1,
+    })
 
     response.assertStatus(400)
   })
 
   test('should validate quantity is positive', async ({ client }) => {
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 0,
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 0,
+    })
 
     response.assertStatus(400)
   })
 
   test('should validate quantity maximum', async ({ client }) => {
-    const response = await client
-      .post('/api/shop/cart/items')
-      .bearerToken(userToken)
-      .json({
-        productId: testProduct1.id,
-        quantity: 101, // Max = 100
-      })
+    const response = await client.post('/api/shop/cart/items').bearerToken(userToken).json({
+      productId: testProduct1.id,
+      quantity: 101, // Max = 100
+    })
 
     response.assertStatus(400)
   })

@@ -76,10 +76,7 @@ export default class CartController {
       }
 
       // Récupérer ou créer le panier actif
-      let cart = await Cart.query()
-        .where('userId', user.id)
-        .where('status', 'active')
-        .first()
+      let cart = await Cart.query().where('userId', user.id).where('status', 'active').first()
 
       if (!cart) {
         cart = await Cart.create({
@@ -189,10 +186,7 @@ export default class CartController {
     try {
       const user = auth.getUserOrFail()
 
-      const cartItem = await CartItem.query()
-        .where('id', params.id)
-        .preload('cart')
-        .firstOrFail()
+      const cartItem = await CartItem.query().where('id', params.id).preload('cart').firstOrFail()
 
       // Vérifier que le panier appartient à l'utilisateur
       if (cartItem.cart.userId !== user.id) {

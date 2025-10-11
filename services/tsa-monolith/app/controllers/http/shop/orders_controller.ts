@@ -13,8 +13,13 @@ export default class OrdersController {
   async index({ auth, request, response }: HttpContext) {
     // Validation séparée pour permettre les erreurs de validation (400/422)
     const user = auth.getUserOrFail()
-    const { page = 1, limit = 20, status, sortBy = 'createdAt', sortOrder = 'desc' } =
-      await request.validateUsing(listOrdersValidator)
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = await request.validateUsing(listOrdersValidator)
 
     try {
       const query = Order.query()
@@ -135,7 +140,7 @@ export default class OrdersController {
 
       // Calculer les totaux
       const subtotal = cart.items.reduce(
-        (sum, item) => sum + item.quantity * parseFloat(item.unitPrice),
+        (sum, item) => sum + item.quantity * Number.parseFloat(item.unitPrice),
         0
       )
       const shippingCost = 5000 // Frais de livraison fixes (à personnaliser)
@@ -177,7 +182,7 @@ export default class OrdersController {
             productReference: item.product.reference,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            subtotal: (item.quantity * parseFloat(item.unitPrice)).toString(),
+            subtotal: (item.quantity * Number.parseFloat(item.unitPrice)).toString(),
             productImageUrl: item.product.imageUrl,
           },
           { client: trx }
@@ -234,9 +239,7 @@ export default class OrdersController {
         .firstOrFail()
 
       // Vérifier que la commande peut être annulée
-      if (
-        ![OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.PROCESSING].includes(order.status)
-      ) {
+      if (![OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.PROCESSING].includes(order.status)) {
         await trx.rollback()
         return response.status(422).json({
           success: false,

@@ -147,15 +147,12 @@ test.group('Shop Orders Controller', (group) => {
       },
     ])
 
-    const response = await client
-      .post('/api/shop/orders')
-      .bearerToken(userToken)
-      .json({
-        shippingAddressId: shippingAddress.id,
-        billingAddressId: billingAddress.id,
-        paymentMethod: PaymentMethod.ORANGE_MONEY,
-        notes: 'Test order',
-      })
+    const response = await client.post('/api/shop/orders').bearerToken(userToken).json({
+      shippingAddressId: shippingAddress.id,
+      billingAddressId: billingAddress.id,
+      paymentMethod: PaymentMethod.ORANGE_MONEY,
+      notes: 'Test order',
+    })
 
     response.assertStatus(201)
     response.assertBodyContains({
@@ -187,13 +184,10 @@ test.group('Shop Orders Controller', (group) => {
       status: 'active',
     })
 
-    const response = await client
-      .post('/api/shop/orders')
-      .bearerToken(userToken)
-      .json({
-        shippingAddressId: shippingAddress.id,
-        paymentMethod: PaymentMethod.ORANGE_MONEY,
-      })
+    const response = await client.post('/api/shop/orders').bearerToken(userToken).json({
+      shippingAddressId: shippingAddress.id,
+      paymentMethod: PaymentMethod.ORANGE_MONEY,
+    })
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -216,13 +210,10 @@ test.group('Shop Orders Controller', (group) => {
       unitPrice: testProduct1.price,
     })
 
-    const response = await client
-      .post('/api/shop/orders')
-      .bearerToken(userToken)
-      .json({
-        shippingAddressId: shippingAddress.id,
-        paymentMethod: PaymentMethod.ORANGE_MONEY,
-      })
+    const response = await client.post('/api/shop/orders').bearerToken(userToken).json({
+      shippingAddressId: shippingAddress.id,
+      paymentMethod: PaymentMethod.ORANGE_MONEY,
+    })
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -339,9 +330,7 @@ test.group('Shop Orders Controller', (group) => {
     testProduct1.stock -= 2
     await testProduct1.save()
 
-    const response = await client
-      .post(`/api/shop/orders/${order.id}/cancel`)
-      .bearerToken(userToken)
+    const response = await client.post(`/api/shop/orders/${order.id}/cancel`).bearerToken(userToken)
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -376,9 +365,7 @@ test.group('Shop Orders Controller', (group) => {
       customerPhone: '+237600000000',
     })
 
-    const response = await client
-      .post(`/api/shop/orders/${order.id}/cancel`)
-      .bearerToken(userToken)
+    const response = await client.post(`/api/shop/orders/${order.id}/cancel`).bearerToken(userToken)
 
     response.assertStatus(422)
     response.assertBodyContains({
@@ -427,9 +414,7 @@ test.group('Shop Orders Controller', (group) => {
     response.assertStatus(200)
 
     const body = response.body()
-    assert.isTrue(
-      body.data.orders.data.every((order: any) => order.status === OrderStatus.PENDING)
-    )
+    assert.isTrue(body.data.orders.data.every((order: any) => order.status === OrderStatus.PENDING))
   })
 
   test('should require authentication for listing orders', async ({ client }) => {
@@ -460,15 +445,12 @@ test.group('Shop Orders Controller', (group) => {
       unitPrice: testProduct1.price,
     })
 
-    const response = await client
-      .post('/api/shop/orders')
-      .bearerToken(userToken)
-      .json({
-        shippingAddressId: shippingAddress.id,
-        billingAddressId: billingAddress.id,
-        paymentMethod: PaymentMethod.MTN_MOMO,
-        notes: 'Urgent delivery',
-      })
+    const response = await client.post('/api/shop/orders').bearerToken(userToken).json({
+      shippingAddressId: shippingAddress.id,
+      billingAddressId: billingAddress.id,
+      paymentMethod: PaymentMethod.MTN_MOMO,
+      notes: 'Urgent delivery',
+    })
 
     response.assertStatus(201)
 

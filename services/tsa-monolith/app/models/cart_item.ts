@@ -40,6 +40,6 @@ export default class CartItem extends BaseModel {
    * Calculer le total de cet item (quantité × prix unitaire)
    */
   get total(): number {
-    return this.quantity * parseFloat(this.unitPrice)
+    return this.quantity * Number.parseFloat(this.unitPrice)
   }
 }

@@ -258,8 +258,14 @@ router
 
     // Recommandations
     router.get('/recommendations', '#controllers/http/shop/recommendations_controller.index')
-    router.get('/recommendations/popular', '#controllers/http/shop/recommendations_controller.popular')
-    router.get('/recommendations/similar/:id', '#controllers/http/shop/recommendations_controller.similar')
+    router.get(
+      '/recommendations/popular',
+      '#controllers/http/shop/recommendations_controller.popular'
+    )
+    router.get(
+      '/recommendations/similar/:id',
+      '#controllers/http/shop/recommendations_controller.similar'
+    )
   })
   .prefix('/api/shop')
   .middleware(middleware.auth())

@@ -37,7 +37,7 @@ export default class Cart extends BaseModel {
     })
 
     return this.items.reduce((total, item) => {
-      return total + item.quantity * parseFloat(item.unitPrice)
+      return total + item.quantity * Number.parseFloat(item.unitPrice)
     }, 0)
   }
 
