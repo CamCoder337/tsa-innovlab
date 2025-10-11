@@ -255,6 +255,11 @@ router
     router.post('/orders', '#controllers/http/shop/orders_controller.store')
     router.get('/orders/:id', '#controllers/http/shop/orders_controller.show')
     router.post('/orders/:id/cancel', '#controllers/http/shop/orders_controller.cancel')
+
+    // Recommandations
+    router.get('/recommendations', '#controllers/http/shop/recommendations_controller.index')
+    router.get('/recommendations/popular', '#controllers/http/shop/recommendations_controller.popular')
+    router.get('/recommendations/similar/:id', '#controllers/http/shop/recommendations_controller.similar')
   })
   .prefix('/api/shop')
   .middleware(middleware.auth())

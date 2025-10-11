@@ -134,7 +134,8 @@ export default class Order extends BaseModel {
       .where('orderNumber', 'like', `ORD-${dateStr}-%`)
       .count('* as total')
 
-    const count = Number(todayOrders[0].$extras.total) + 1
+    const total = todayOrders[0]?.$extras?.total || 0
+    const count = Number(total) + 1
     const paddedCount = count.toString().padStart(4, '0')
 
     return `ORD-${dateStr}-${paddedCount}`

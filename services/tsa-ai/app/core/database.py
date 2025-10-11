@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = get_database_url()
 
 # SQLAlchemy engine
-if settings.environment == "test":
-    # Use in-memory SQLite for tests
+if settings.environment == "test" or DATABASE_URL.startswith("sqlite"):
+    # Use SQLite for tests and local development
     engine = create_engine(
-        "sqlite:///./test.db",
+        DATABASE_URL if not settings.environment == "test" else "sqlite:///./test.db",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
 else:
-    # PostgreSQL for development/production
+    # PostgreSQL for production
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,

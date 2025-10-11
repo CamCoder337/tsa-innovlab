@@ -11,11 +11,12 @@ export default class OrdersController {
    * Lister les commandes de l'utilisateur
    */
   async index({ auth, request, response }: HttpContext) {
-    try {
-      const user = auth.getUserOrFail()
-      const { page = 1, limit = 20, status, sortBy = 'createdAt', sortOrder = 'desc' } =
-        await request.validateUsing(listOrdersValidator)
+    // Validation séparée pour permettre les erreurs de validation (400/422)
+    const user = auth.getUserOrFail()
+    const { page = 1, limit = 20, status, sortBy = 'createdAt', sortOrder = 'desc' } =
+      await request.validateUsing(listOrdersValidator)
 
+    try {
       const query = Order.query()
         .where('userId', user.id)
         .preload('items', (itemsQuery) => {
