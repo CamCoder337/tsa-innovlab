@@ -145,7 +145,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
     // Cette méthode sera appelée par le système d'auth d'AdonisJS
     // On utilise notre EmailService via l'IoC container
     const { default: EmailService } = await import('#services/email_service')
-    const emailService = new EmailService()
+    const { default: ResendService } = await import('#services/resend_service')
+    const resendService = new ResendService()
+    const emailService = new EmailService(resendService)
 
     await emailService.sendPasswordResetEmail(this, token)
   }

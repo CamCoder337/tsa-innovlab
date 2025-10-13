@@ -52,8 +52,15 @@ export default defineConfig({
     () => import('@adonisjs/cors/cors_provider'),
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
-    () => import('@adonisjs/redis/redis_provider'),
+    {
+      file: () => import('@adonisjs/redis/redis_provider'),
+      environment: ['web', 'console', 'test'],
+    },
     () => import('@adonisjs/mail/mail_provider'),
+    {
+      file: () => import('@adonisjs/transmit/transmit_provider'),
+      environment: ['web', 'console', 'test'],
+    },
   ],
 
   /*
@@ -64,7 +71,13 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
+  preloads: [
+    {
+      file: () => import('#start/routes'),
+      environment: ['web', 'console', 'test'],
+    },
+    () => import('#start/kernel'),
+  ],
 
   /*
   |--------------------------------------------------------------------------

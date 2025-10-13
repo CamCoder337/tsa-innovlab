@@ -18,7 +18,9 @@ export default class NotificationService {
   private emailService: EmailService
 
   constructor() {
-    this.emailService = new EmailService()
+    const ResendService = require('#services/resend_service').default
+    const resendService = new ResendService()
+    this.emailService = new EmailService(resendService)
   }
 
   async notify(user: User, type: string, data: any): Promise<void> {

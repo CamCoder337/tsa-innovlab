@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Address from '#models/address'
+import Proposition from '#models/proposition'
 
 export enum MissionStatus {
   DRAFT = 'draft',
@@ -18,6 +19,9 @@ export default class Mission extends BaseModel {
 
   @column()
   declare affreteurId: string
+
+  @column()
+  declare transporteurId: string | null
 
   @column()
   declare titre: string
@@ -65,11 +69,17 @@ export default class Mission extends BaseModel {
   @belongsTo(() => User, { foreignKey: 'affreteurId' })
   declare affreteur: BelongsTo<typeof User>
 
+  @belongsTo(() => User, { foreignKey: 'transporteurId' })
+  declare transporteur: BelongsTo<typeof User>
+
   @belongsTo(() => Address, { foreignKey: 'adresseDepartId' })
   declare adresseDepart: BelongsTo<typeof Address>
 
   @belongsTo(() => Address, { foreignKey: 'adresseArriveeId' })
   declare adresseArrivee: BelongsTo<typeof Address>
+
+  @hasMany(() => Proposition)
+  declare propositions: HasMany<typeof Proposition>
 
   public getBudgetRange(): string {
     if (this.budgetMin && this.budgetMax) {

@@ -44,7 +44,10 @@ export default class AdminUserSeeder extends BaseSeeder {
       await adminUser.save()
 
       // Envoyer l'email avec les informations MFA
-      const emailService = new EmailService()
+      const resendServiceModule = await import('#services/resend_service')
+      const ResendService = resendServiceModule.default
+      const resendService = new ResendService()
+      const emailService = new EmailService(resendService)
       await emailService.sendAdminMFASetupEmail(
         adminUser,
         mfaData.manualEntryKey,

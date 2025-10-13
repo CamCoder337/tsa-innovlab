@@ -161,3 +161,4 @@ Access:
 - Database migrations should be run through AdonisJS (`node ace migration:run`)
 - AI models are loaded on FastAPI startup - check logs for ML model status
 - Safe deployment scripts available in `tools/` directory
+- N'oublies jamais qu'on passe par Transmit Client pour le SSE RealTime

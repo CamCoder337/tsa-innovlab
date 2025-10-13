@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { Link } from 'react-router-dom';
 
 export default function MissionsManagement() {

@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/stores/authStore';
 import { useEffect } from 'react';
 
-export function useAuth() {
+export const useAuth = () => {
   const user = useAuthStore((s) => s.currentUser);
   const token = useAuthStore((s) => s.token);
   const refreshToken = useAuthStore((s) => s.refreshToken);
@@ -23,4 +23,4 @@ export function useAuth() {
     logout,
     setToken,
   };
-}
+};

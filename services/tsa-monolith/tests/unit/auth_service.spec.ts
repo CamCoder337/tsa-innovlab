@@ -17,7 +17,10 @@ test.group('AuthService', (group) => {
 
     // Mock services
     mfaService = new MFAService()
-    emailService = new EmailService()
+    const resendServiceModule = await import('#services/resend_service')
+    const ResendService = resendServiceModule.default
+    const resendService = new ResendService()
+    emailService = new EmailService(resendService)
     cacheService = new CacheService()
     authService = new AuthService(cacheService, mfaService, emailService)
   })

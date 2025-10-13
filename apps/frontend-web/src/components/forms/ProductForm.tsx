@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import type { FormikProps } from 'formik';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Upload, X } from 'lucide-react';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { handleSupabaseError } from '@/services/supabase';
 import type { CreateProduct, UpdateProduct } from '@/types/product.types';
 import type { Category } from '@/types/category.types';
+import { toast } from 'react-hot-toast';
+
 interface ProductFormProps {
   formik: FormikProps<CreateProduct | UpdateProduct>;
   categories: Category[];
@@ -26,12 +31,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isSubmitting,
   onCancel,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { upload, isUploading } = useFileUpload();
   const [imagePreview, setImagePreview] = useState<string | null>(
-    'imageUrl' in formik.values && formik.values.imageUrl ? formik.values.imageUrl : null
+    'imageUrl' in formik.values ? formik.values.imageUrl || null : null
   );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+  // Clean up object URLs on unmount
   useEffect(() => {
-    // Clean up the object URL when the component unmounts
     return () => {
       if (imagePreview && imagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
@@ -41,22 +49,139 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      formik.setFieldValue('images', [
-        ...(formik.values.images || []),
-        previewUrl.replace('blob:', ''),
-      ]);
-      // if (formik.values.images?.length === 0) formik.setFieldValue('imageUrl', previewUrl);
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image valide');
+      return;
+    }
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La taille du fichier ne doit pas dépasser 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    setSelectedFile(null);
+    formik.setFieldValue('imageUrl', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (productId: string): Promise<string | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${productId}.${fileExt}`;
+
+      const imageUrl = await upload(selectedFile, fileName, 'tsa_products');
+
+      // Update form with the new image URL
+      formik.setFieldValue('imageUrl', imageUrl);
+      formik.setFieldValue('images', [...(formik.values.images || []), imageUrl]);
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Erreur lors du téléchargement de l'image");
+      throw error;
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      // If we have a new image to upload
+      if (selectedFile) {
+        // If editing existing product, use its ID, otherwise generate a temporary ID
+        const productId =
+          'id' in formik.values && formik.values.id ? formik.values.id : `temp-${Date.now()}`;
+
+        // Upload the image and wait for it to complete
+        console.log('Before upload - form values:', formik.values);
+        const imageUrl = await uploadImage(productId);
+        console.log('After upload - imageUrl:', imageUrl);
+        console.log('After update - form values:', formik.values);
+
+        // Update form values with the new image URL
+        if (imageUrl) {
+          formik.setFieldValue('imageUrl', imageUrl);
+          formik.setFieldValue('images', [...(formik.values.images || []), imageUrl]);
+        }
+      }
+
+      // Submit the form with updated values
+      formik.handleSubmit(e);
+    } catch (error) {
+      handleSupabaseError(error as Error);
     }
   };
 
   return (
-    <form onSubmit={formik.handleSubmit} className="space-y-4">
+    <form onSubmit={handleFormSubmit} className="space-y-4">
+      {/* Image Upload */}
+      <div className="space-y-2">
+        <Label>Image du produit</Label>
+        <div className="flex justify-center items-center gap-4">
+          <div className="relative">
+            {imagePreview ? (
+              <div className="relative group">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="h-32 w-32 rounded-md object-cover border border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="h-32 w-32 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <Upload className="h-8 w-8 text-gray-400" />
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isUploading}
+            />
+          </div>
+          <div className="text-sm text-gray-500">
+            <p>Format: JPG, PNG (max 5MB)</p>
+            <p>Recommandé: 800x800px</p>
+          </div>
+        </div>
+        {isUploading && (
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Téléchargement de l'image...
+          </div>
+        )}
+      </div>
+
       {/* Basic Information */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2">
           <Label htmlFor="name">
             Nom du produit <span className="text-red-700">*</span>
           </Label>
@@ -70,10 +195,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
           {formik.touched.name && formik.errors.name && (
-            <p className="text-red-600 text-sm">{formik.errors.name}</p>
+            <p className="text-sm text-red-500">{formik.errors.name}</p>
           )}
         </div>
-        <div className="flex flex-col gap-1.5">
+
+        <div className="space-y-2">
           <Label htmlFor="reference">
             Code Référence <span className="text-red-700">*</span>
           </Label>
@@ -83,17 +209,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={formik.values.reference}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="Réf. produit"
+            placeholder="Référence du produit"
             required
           />
           {formik.touched.reference && formik.errors.reference && (
-            <p className="text-red-600 text-sm">{formik.errors.reference}</p>
+            <p className="text-sm text-red-500">{formik.errors.reference}</p>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2">
           <Label htmlFor="categoryId">
             Catégorie<span className="text-red-700">*</span>
           </Label>
@@ -118,7 +244,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <p className="text-red-600 text-sm">{formik.errors.categoryId}</p>
           )}
         </div>
-        <div className="flex flex-col gap-1.5">
+
+        <div className="space-y-2">
           <Label htmlFor="price">
             Prix (FCFA) <span className="text-red-700">*</span>
           </Label>
@@ -126,8 +253,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             id="price"
             name="price"
             type="number"
-            min="0"
             step="0.01"
+            min="0"
             value={formik.values.price}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -135,14 +262,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             required
           />
           {formik.touched.price && formik.errors.price && (
-            <p className="text-red-600 text-sm">{formik.errors.price}</p>
+            <p className="text-sm text-red-500">{formik.errors.price}</p>
           )}
         </div>
       </div>
 
-      {/* Pricing, Units and Stock */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-2">
           <Label htmlFor="unit">
             Unité <span className="text-red-700">*</span>
           </Label>
@@ -170,7 +296,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <p className="text-red-600 text-sm">{formik.errors.unit}</p>
           )}
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="space-y-2">
           <Label htmlFor="stock">
             Stock disponible <span className="text-red-700">*</span>
           </Label>
@@ -179,18 +305,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             name="stock"
             type="number"
             min="0"
-            step="1"
             value={formik.values.stock}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
+            placeholder="0"
             required
           />
           {formik.touched.stock && formik.errors.stock && (
-            <p className="text-red-600 text-sm">{formik.errors.stock}</p>
+            <p className="text-sm text-red-500">{formik.errors.stock}</p>
           )}
         </div>
-
-        <div className="flex flex-col gap-1.5">
+        <div className="space-y-2">
           <Label htmlFor="stockAlert">
             Alerte stock <span className="text-red-700">*</span>
           </Label>
@@ -211,8 +336,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
       </div>
 
-      {/* Description */}
-      <div className="flex flex-col gap-1.5">
+      <div className="space-y-2">
         <Label htmlFor="description">
           Description <span className="text-red-700">*</span>
         </Label>
@@ -231,60 +355,28 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         )}
       </div>
 
-      {/* Image Upload */}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="image">Image du produit</Label>
-        <div className="flex items-center gap-4">
-          <Input
-            id="image"
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="flex-1"
-          />
-          {imagePreview && (
-            <img
-              src={imagePreview}
-              alt="Aperçu"
-              className="h-20 w-20 rounded object-cover border"
-            />
-          )}
-        </div>
-      </div>
-
       {/* Form Actions */}
-      <div className="flex justify-end space-x-4 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+      <div className="flex justify-end space-x-4 pt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting || isUploading}
+        >
           Annuler
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="min-w-40" variant="default">
-          {isSubmitting ? (
+        <Button
+          type="submit"
+          disabled={isSubmitting || isUploading}
+          className="bg-tsa-blue/90 hover:bg-tsa-blue"
+        >
+          {isSubmitting || isUploading ? (
             <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Enregistrement...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isUploading ? 'Téléchargement...' : 'Enregistrement...'}
             </>
           ) : (
-            'Enregistrer le produit'
+            'Enregistrer'
           )}
         </Button>
       </div>

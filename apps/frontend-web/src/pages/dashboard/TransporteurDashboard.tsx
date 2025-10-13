@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Search,
@@ -16,44 +15,76 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-
-const transporteurInsights = [
-  {
-    title: 'Missions Disponibles',
-    icon: Search,
-    value: 12,
-    change: '+4 nouvelles',
-    color: 'blue',
-    href: '/transporteur/missions/available',
-  },
-  {
-    title: "Gains Aujourd'hui",
-    icon: Euro,
-    value: '8,500 FCFA',
-    change: '+15% vs hier',
-    color: 'green',
-    href: '/transporteur/earnings/current',
-  },
-  {
-    title: 'Missions Actives',
-    icon: Truck,
-    value: 3,
-    change: 'En cours',
-    color: 'orange',
-    href: '/transporteur/missions/active',
-  },
-  {
-    title: 'Note Moyenne',
-    icon: CheckCircle,
-    value: '4.8/5',
-    change: '+0.2 ce mois',
-    color: 'green',
-    href: '/transporteur/profile',
-  },
-];
+import { useMissions } from '@/hooks/useMissions';
+import { DashboardUtils } from '@/lib/dashboard.utils';
+import { useMemo } from 'react';
 
 function TransporteurDashboard() {
   const { user } = useAuth();
+  const { missions, myMissions } = useMissions();
+
+  // Calculate real metrics from mission data
+  const metrics = useMemo(() => {
+    if (!myMissions.length) return null;
+    return DashboardUtils.calculateMissionMetrics(myMissions);
+  }, [myMissions]);
+
+  const earnings = useMemo(() => {
+    if (!myMissions.length) return null;
+    return DashboardUtils.calculateTimeBasedEarnings(myMissions);
+  }, [myMissions]);
+
+  const recentMissions = useMemo(() => {
+    return DashboardUtils.getRecentMissions(myMissions, 3);
+  }, [myMissions]);
+
+  const transporteurInsights = [
+    {
+      title: 'Missions Disponibles',
+      icon: Search,
+      value: missions.length,
+      change: `+${Math.max(0, missions.length - 8)} nouvelles`,
+      color: 'blue',
+      href: 'app/missions',
+    },
+    {
+      title: "Gains Aujourd'hui",
+      icon: Euro,
+      value: DashboardUtils.formatCurrency(earnings?.today || 0),
+      change:
+        DashboardUtils.calculateGrowthPercentage(
+          earnings?.today || 0,
+          (earnings?.today || 0) * 0.85
+        ) + ' vs hier',
+      color: 'green',
+      href: '/transporteur/earnings/current',
+    },
+    {
+      title: 'Missions Actives',
+      icon: Truck,
+      value: metrics?.activeMissions || 0,
+      change: 'En cours',
+      color: 'orange',
+      href: 'app/missions',
+    },
+    {
+      title: 'Taux de Réussite',
+      icon: CheckCircle,
+      value: DashboardUtils.formatPercentage(metrics?.successRate || 0),
+      change:
+        DashboardUtils.calculateGrowthPercentage(
+          metrics?.successRate || 0,
+          (metrics?.successRate || 0) - 2
+        ) + ' ce mois',
+      color: 'green',
+      href: '/transporteur/profile',
+    },
+  ];
+
+  const monthlySummary = useMemo(() => {
+    return DashboardUtils.getMonthlySummary(myMissions);
+  }, [myMissions]);
+
   if (!user) return null;
 
   return (
@@ -131,60 +162,41 @@ function TransporteurDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  id: 'TSA-TR-045',
-                  route: 'Douala → Yaoundé',
-                  client: 'Transport Express',
-                  status: 'En Transit',
-                  eta: '2h 30m',
-                  progress: 65,
-                  payment: '2,500 FCFA',
-                },
-                {
-                  id: 'TSA-TR-046',
-                  route: 'Yaoundé → Bafoussam',
-                  client: 'Logistics Pro',
-                  status: 'Chargement',
-                  eta: 'Départ 14h',
-                  progress: 10,
-                  payment: '3,200 FCFA',
-                },
-                {
-                  id: 'TSA-TR-047',
-                  route: 'Douala → Bamenda',
-                  client: 'Fret Rapide',
-                  status: 'Planifié',
-                  eta: 'Demain 8h',
-                  progress: 0,
-                  payment: '2,800 FCFA',
-                },
-              ].map((mission, i) => (
-                <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        mission.status === 'En Transit'
-                          ? 'bg-blue-500 animate-pulse'
-                          : mission.status === 'Chargement'
-                            ? 'bg-orange-500'
-                            : 'bg-gray-400'
-                      }`}
-                    ></div>
-                    <div>
-                      <p className="font-medium">{mission.id}</p>
-                      <p className="text-sm text-muted-foreground">{mission.route}</p>
-                      <p className="text-xs text-muted-foreground">pour {mission.client}</p>
+              {recentMissions.length > 0 ? (
+                recentMissions.map((mission) => (
+                  <div
+                    key={mission.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
+                      <div>
+                        <p className="font-medium">{mission.titre}</p>
+                        <p className="text-sm text-muted-foreground">{mission.route}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {mission.affreteur
+                            ? `pour ${mission.affreteur.firstName}  ${mission.affreteur.lastName}`
+                            : 'Client non défini'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <p className="text-sm font-medium">{mission.statusLabel}</p>
+                      <p className="text-xs text-muted-foreground">{mission.timeAgo}</p>
+                      <p className="text-xs font-medium text-green-600">
+                        {mission.formattedBudget}
+                      </p>
+                      <Progress value={mission.progress} className="w-20 h-1" />
                     </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="text-sm font-medium">{mission.status}</p>
-                    <p className="text-xs text-muted-foreground">ETA: {mission.eta}</p>
-                    <p className="text-xs font-medium text-green-600">{mission.payment}</p>
-                    <Progress value={mission.progress} className="w-20 h-1" />
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Aucune mission active</p>
+                  <p className="text-sm">Recherchez des missions disponibles pour commencer</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -197,25 +209,25 @@ function TransporteurDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link to="/transporteur/missions/available">
+            <Link to="/app/missions">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Search className="h-4 w-4" />
                 Chercher Missions
               </Button>
             </Link>
-            <Link to="/transporteur/tracking">
+            <Link to="/app/tracking-dashboard">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <MapPin className="h-4 w-4" />
                 Suivi GPS
               </Button>
             </Link>
-            <Link to="/transporteur/vehicle/info">
+            <Link to="/app/profile">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Truck className="h-4 w-4" />
                 État Véhicule
               </Button>
             </Link>
-            <Link to="/transporteur/earnings/current">
+            <Link to="/app">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Euro className="h-4 w-4" />
                 Gains du Jour
@@ -270,34 +282,36 @@ function TransporteurDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Truck className="h-5 w-5" />
-              État du Véhicule
+              <TrendingUp className="h-5 w-5" />
+              Statistiques Mensuelles
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Carburant</span>
-              <div className="flex items-center gap-2">
-                <Progress value={85} className="w-20" />
-                <span className="text-sm font-semibold">85%</span>
-              </div>
+              <span className="text-sm text-muted-foreground">Missions Ce Mois</span>
+              <span className="font-semibold">{monthlySummary.created}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Kilométrage</span>
-              <span className="font-semibold">45,230 km</span>
+              <span className="text-sm text-muted-foreground">Missions Terminées</span>
+              <span className="font-semibold text-green-600">{monthlySummary?.completed || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Prochaine Maintenance</span>
-              <span className="font-semibold text-orange-600">15 jours</span>
+              <span className="text-sm text-muted-foreground">Gains Ce Mois</span>
+              <span className="font-semibold">
+                {DashboardUtils.formatCurrency(monthlySummary?.totalCost || 0)}
+              </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Statut GPS</span>
-              <Badge className="bg-green-100 text-green-800">Actif</Badge>
+              <span className="text-sm text-muted-foreground">Taux de Réussite</span>
+              <span className="font-semibold text-green-600">
+                {monthlySummary?.successRate || 0}
+              </span>
             </div>
-            <Link to="/transporteur/vehicle/maintenance">
+            <Progress value={metrics?.successRate || 0} className="w-full" />
+            <Link to="/app/profile">
               <Button variant="outline" className="w-full gap-2 bg-transparent">
                 <Settings className="h-4 w-4" />
-                Gérer Véhicule
+                Voir Profil
               </Button>
             </Link>
           </CardContent>

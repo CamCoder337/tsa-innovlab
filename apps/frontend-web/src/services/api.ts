@@ -1,11 +1,10 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
-
-const TestEnvAPI = import.meta.env.VITE_API_URL;
+import { getApiUrl } from '@/config/env';
 
 function createAxiosInstance(): AxiosInstance {
   const instance = axios.create({
-    baseURL: TestEnvAPI,
+    baseURL: getApiUrl(),
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',

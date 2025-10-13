@@ -1,0 +1,104 @@
+name: Docker Build & Push - TSA Monolith
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'services/tsa-monolith/**'
+      - '.github/workflows/docker-tsa-backend.yml'
+  workflow_dispatch:
+    inputs:
+      custom_tag:
+        description: 'Custom Docker tag (optional, e.g., hotfix-v1.2.3)'
+        required: false
+        type: string
+
+jobs:
+  docker-build-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract package version
+        id: package
+        run: |
+          VERSION=$(jq -r '.version' services/tsa-monolith/package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate Docker tags
+        id: tags
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          COMMIT_SHA=${GITHUB_SHA::7}
+          VERSION=${{ steps.package.outputs.version }}
+
+          # Base image name
+          IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/tsa-backend"
+
+          # Generate tags based on trigger
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.custom_tag }}" ]; then
+            # Manual trigger with custom tag
+            TAGS="${IMAGE_NAME}:${{ github.event.inputs.custom_tag }}"
+          elif [ "$BRANCH_NAME" == "main" ]; then
+            # Main branch: version, latest, commit sha
+            TAGS="${IMAGE_NAME}:${VERSION},${IMAGE_NAME}:latest,${IMAGE_NAME}:${COMMIT_SHA}"
+          elif [ "$BRANCH_NAME" == "develop" ]; then
+            # Develop branch: version-dev, develop, commit sha
+            TAGS="${IMAGE_NAME}:${VERSION}-dev,${IMAGE_NAME}:develop,${IMAGE_NAME}:${COMMIT_SHA}"
+          else
+            # Other branches: branch name + commit sha
+            TAGS="${IMAGE_NAME}:${BRANCH_NAME},${IMAGE_NAME}:${COMMIT_SHA}"
+          fi
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "primary_tag=$(echo $TAGS | cut -d',' -f1)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/tsa-monolith
+          file: ./services/tsa-monolith/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.version=${{ steps.package.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.package.outputs.version }}
+
+      - name: Summary
+        run: |
+          echo "### ✅ Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${GITHUB_REF#refs/heads/}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.package.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${GITHUB_SHA::7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags pushed:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Pull command:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ steps.tags.outputs.primary_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

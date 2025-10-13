@@ -1,0 +1,12 @@
+FROM nginx:alpine
+
+# Copier la configuration nginx personnalisée
+COPY nginx-backend.conf /etc/nginx/nginx.conf
+
+# Installer curl pour le healthcheck
+RUN apk add --no-cache curl
+
+# Exposer le port 80
+EXPOSE 80
+
+# Nginx démarre automatiquement avec la commande par défaut de l'image

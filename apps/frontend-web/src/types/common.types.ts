@@ -54,3 +54,10 @@ export type PaginatedMetaResponse<T, K extends string> = {
     hasPrev: boolean;
   };
 };
+
+// Simple Lucid paginator shape: { data: T[]; meta: PaginationMeta }
+// Used by endpoints that return paginator.serialize() directly without an extra wrapper
+export type Paginator<T> = {
+  data: T[];
+  meta: PaginationMeta;
+};

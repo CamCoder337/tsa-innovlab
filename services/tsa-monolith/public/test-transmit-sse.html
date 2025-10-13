@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Transmit Real-Time - TSA Logistics</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+      .content {
+        padding: 30px;
+      }
+      .section {
+        margin-bottom: 30px;
+      }
+      .section h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+      }
+      .input-group {
+        margin: 15px 0;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      .button-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      button {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: white;
+      }
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .btn-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      }
+      .btn-danger {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+      }
+      .btn-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+      .btn-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+      .status {
+        padding: 15px;
+        border-radius: 6px;
+        margin: 15px 0;
+        font-weight: 600;
+        text-align: center;
+      }
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+        border: 2px solid #c3e6cb;
+      }
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+        border: 2px solid #f5c6cb;
+      }
+      .status.connecting {
+        background: #fff3cd;
+        color: #856404;
+        border: 2px solid #ffeaa7;
+      }
+      .messages-container {
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 20px;
+        background: #f8f9fa;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+      .message {
+        margin: 10px 0;
+        padding: 12px;
+        border-radius: 6px;
+        background: white;
+        border-left: 4px solid #667eea;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+      .message .time {
+        font-size: 0.85em;
+        color: #666;
+        margin-bottom: 5px;
+      }
+      .message .type {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.8em;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      .message.notification {
+        border-left-color: #4facfe;
+      }
+      .message.mission {
+        border-left-color: #11998e;
+      }
+      .message.chat {
+        border-left-color: #f093fb;
+      }
+      .message.error {
+        border-left-color: #eb3349;
+        background: #fff5f5;
+      }
+      .message.system {
+        border-left-color: #ffa502;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .stat-card {
+        padding: 20px;
+        background: white;
+        border-radius: 6px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+      .stat-card .value {
+        font-size: 2em;
+        font-weight: bold;
+        color: #667eea;
+      }
+      .stat-card .label {
+        font-size: 0.9em;
+        color: #666;
+        margin-top: 5px;
+      }
+      .instructions {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 20px;
+        border-radius: 6px;
+        margin-top: 30px;
+      }
+      .instructions h3 {
+        color: #333;
+        margin-bottom: 15px;
+      }
+      .instructions ol {
+        margin-left: 20px;
+      }
+      .instructions li {
+        margin: 10px 0;
+        line-height: 1.6;
+      }
+      .log {
+        font-family: 'Courier New', monospace;
+        font-size: 0.85em;
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🚀 Test Transmit Real-Time SSE</h1>
+        <p>TSA Logistics - Système de communication temps réel</p>
+      </div>
+
+      <div class="content">
+        <!-- Configuration -->
+        <div class="section">
+          <h2>⚙️ Configuration</h2>
+          <div class="input-group">
+            <label for="token">Token JWT (Bearer):</label>
+            <input type="text" id="token" placeholder="Coller votre token JWT ici..." />
+            <small style="color: #666">Obtenu après login via /api/auth/login</small>
+          </div>
+          <div class="input-group">
+            <label for="channelType">Type de canal:</label>
+            <select id="channelType" onchange="updateChannelInput()">
+              <option value="global">🌍 Global (test)</option>
+              <option value="missions">🚛 Missions Transporteurs</option>
+              <option value="notifications">🔔 Notifications Utilisateur</option>
+              <option value="mission">📦 Mission Spécifique</option>
+              <option value="conversation">💬 Conversation</option>
+              <option value="custom">✏️ Personnalisé</option>
+            </select>
+          </div>
+          <div class="input-group" id="channelIdGroup" style="display: none">
+            <label for="channelId">ID (Mission/Conversation/User):</label>
+            <input type="text" id="channelId" placeholder="Ex: 1, 123, uuid..." />
+          </div>
+          <div class="input-group" id="customChannelGroup" style="display: none">
+            <label for="customChannel">Canal personnalisé:</label>
+            <input type="text" id="customChannel" placeholder="Ex: test:channel" />
+          </div>
+          <div class="input-group">
+            <label
+              >Canal actuel: <strong><span id="currentChannel">global</span></strong></label
+            >
+          </div>
+        </div>
+
+        <!-- État de connexion -->
+        <div id="status" class="status disconnected">❌ Déconnecté</div>
+
+        <!-- Statistiques -->
+        <div class="stats">
+          <div class="stat-card">
+            <div class="value" id="statMessages">0</div>
+            <div class="label">Messages reçus</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="statNotifications">0</div>
+            <div class="label">Notifications</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="statMissions">0</div>
+            <div class="label">Missions</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="statErrors">0</div>
+            <div class="label">Erreurs</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="section">
+          <h2>🎮 Actions</h2>
+          <div class="button-grid">
+            <button id="connectBtn" class="btn-primary" onclick="connect()">🔌 Se connecter</button>
+            <button id="disconnectBtn" class="btn-danger" onclick="disconnect()" disabled>
+              ❌ Se déconnecter
+            </button>
+            <button id="testNotifBtn" class="btn-info" onclick="testNotification()" disabled>
+              🔔 Test Notification
+            </button>
+            <button id="testMissionBtn" class="btn-success" onclick="testMission()" disabled>
+              🚛 Test Mission
+            </button>
+            <button id="testBroadcastBtn" class="btn-warning" onclick="testBroadcast()" disabled>
+              📡 Test Broadcast
+            </button>
+            <button class="btn-info" onclick="clearMessages()">🗑️ Vider</button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="section">
+          <h2>📨 Messages en temps réel</h2>
+          <div id="messages" class="messages-container">
+            <p style="color: #999; text-align: center">Aucun message pour le moment...</p>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+          <h3>📖 Instructions</h3>
+          <ol>
+            <li>
+              <strong>Obtenir un token:</strong> Connectez-vous via
+              <code>POST /api/auth/login</code>
+            </li>
+            <li><strong>Coller le token</strong> dans le champ ci-dessus</li>
+            <li><strong>Choisir un canal</strong> à écouter</li>
+            <li><strong>Se connecter</strong> via le bouton</li>
+            <li><strong>Tester</strong> avec les boutons de test</li>
+          </ol>
+          <p style="margin-top: 15px">
+            <strong>Note:</strong> Ouvrez la console (F12) pour les logs détaillés.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Transmit Client SDK -->
+    <script type="module">
+      import { Transmit } from 'https://cdn.jsdelivr.net/npm/@adonisjs/transmit-client/build/index.js'
+
+      let transmit = null
+      let subscription = null
+      let isConnected = false
+      let stats = { messages: 0, notifications: 0, missions: 0, errors: 0 }
+
+      function updateChannelInput() {
+        const type = document.getElementById('channelType').value
+        const idGroup = document.getElementById('channelIdGroup')
+        const customGroup = document.getElementById('customChannelGroup')
+        idGroup.style.display = 'none'
+        customGroup.style.display = 'none'
+        if (['mission', 'notifications', 'conversation'].includes(type)) {
+          idGroup.style.display = 'block'
+        } else if (type === 'custom') {
+          customGroup.style.display = 'block'
+        }
+        updateCurrentChannel()
+      }
+
+      function updateCurrentChannel() {
+        const type = document.getElementById('channelType').value
+        const id = document.getElementById('channelId').value
+        const custom = document.getElementById('customChannel').value
+        let channel = 'global'
+        if (type === 'missions') channel = 'missions:new:transporteurs'
+        else if (type === 'notifications' && id) channel = `notifications:user:${id}`
+        else if (type === 'mission' && id) channel = `mission:${id}:tracking`
+        else if (type === 'conversation' && id) channel = `chat:conversation:${id}`
+        else if (type === 'custom' && custom) channel = custom
+        document.getElementById('currentChannel').textContent = channel
+        return channel
+      }
+
+      function updateStatus(message, type = 'disconnected') {
+        const status = document.getElementById('status')
+        status.textContent = message
+        status.className = `status ${type}`
+      }
+
+      function addMessage(content, type = 'normal', data = null) {
+        const messages = document.getElementById('messages')
+        if (messages.querySelector('p')) messages.innerHTML = ''
+        const messageDiv = document.createElement('div')
+        messageDiv.className = `message ${type}`
+        const timestamp = new Date().toLocaleTimeString('fr-FR')
+        const typeLabel = type.toUpperCase()
+        let html = `
+                <div class="time">⏰ ${timestamp}</div>
+                <div class="type" style="background: ${getTypeColor(type)}; color: white;">${typeLabel}</div>
+                <div class="log">${content}</div>
+            `
+        if (data) {
+          html += `<pre style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>`
+        }
+        messageDiv.innerHTML = html
+        messages.insertBefore(messageDiv, messages.firstChild)
+        while (messages.children.length > 50) messages.removeChild(messages.lastChild)
+        updateStats(type)
+      }
+
+      function getTypeColor(type) {
+        const colors = {
+          notification: '#4facfe',
+          mission: '#11998e',
+          chat: '#f093fb',
+          error: '#eb3349',
+          system: '#ffa502',
+          normal: '#667eea',
+        }
+        return colors[type] || colors.normal
+      }
+
+      function updateStats(type) {
+        stats.messages++
+        if (type === 'notification') stats.notifications++
+        if (type === 'mission') stats.missions++
+        if (type === 'error') stats.errors++
+        document.getElementById('statMessages').textContent = stats.messages
+        document.getElementById('statNotifications').textContent = stats.notifications
+        document.getElementById('statMissions').textContent = stats.missions
+        document.getElementById('statErrors').textContent = stats.errors
+      }
+
+      async function connect() {
+        const token = document.getElementById('token').value.trim()
+        const channel = updateCurrentChannel()
+        if (!token) {
+          alert('⚠️ Token JWT requis')
+          return
+        }
+        disconnect()
+        updateStatus('🔄 Connexion...', 'connecting')
+        addMessage('🔄 Connexion au serveur Transmit...', 'system')
+
+        try {
+          // Créer l'instance Transmit SANS auth d'abord
+          transmit = new Transmit({
+            baseUrl: 'http://localhost:3333',
+            uidGenerator: () => `web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            onAuthorize: async (request) => {
+              // Ajouter le token à chaque requête
+              request.url +=
+                (request.url.includes('?') ? '&' : '?') + `token=${encodeURIComponent(token)}`
+              return request
+            },
+          })
+
+          console.log('📡 Transmit Client créé, channel:', channel)
+          addMessage(`🔌 Création de l'abonnement sur ${channel}...`, 'system')
+
+          // Créer la souscription au canal
+          subscription = transmit.subscription(channel)
+
+          // Debug: afficher les méthodes disponibles
+          console.log(
+            '🔍 Méthodes disponibles sur subscription:',
+            Object.getOwnPropertyNames(Object.getPrototypeOf(subscription))
+          )
+
+          // S'abonner côté serveur
+          await subscription.create()
+
+          console.log('✅ Abonnement créé pour le channel:', channel)
+          isConnected = true
+          updateStatus('✅ Connecté: ' + channel, 'connected')
+          addMessage(`✅ Abonné à ${channel}`, 'system')
+
+          // Activer les boutons
+          document.getElementById('connectBtn').disabled = true
+          document.getElementById('disconnectBtn').disabled = false
+          document.getElementById('testNotifBtn').disabled = false
+          document.getElementById('testMissionBtn').disabled = false
+          document.getElementById('testBroadcastBtn').disabled = false
+
+          // Écouter les messages avec la VRAIE méthode onMessage
+          subscription.onMessage((data) => {
+            console.log('📨 Message Transmit reçu:', data)
+
+            let messageType = 'normal'
+            let displayContent = JSON.stringify(data)
+
+            if (data.type) {
+              if (data.type.includes('notification')) messageType = 'notification'
+              else if (data.type.includes('mission')) messageType = 'mission'
+              else if (data.type.includes('chat')) messageType = 'chat'
+              else if (data.type === 'error') messageType = 'error'
+
+              displayContent = `Type: ${data.type}`
+              if (data.message) displayContent += `\nMessage: ${data.message}`
+              if (data.data) displayContent += `\nData: ${JSON.stringify(data.data)}`
+            }
+
+            addMessage(displayContent, messageType, data)
+          })
+
+          console.log('✅ Listener onMessage configuré, en attente de messages...')
+        } catch (error) {
+          console.error('❌ Erreur connexion Transmit:', error)
+          addMessage(`❌ Erreur: ${error.message}`, 'error')
+          updateStatus('❌ Erreur de connexion', 'disconnected')
+          isConnected = false
+        }
+      }
+
+      async function disconnect() {
+        if (subscription) {
+          try {
+            await subscription.delete()
+            console.log('🔌 Abonnement supprimé')
+          } catch (error) {
+            console.error('❌ Erreur suppression abonnement:', error)
+          }
+          subscription = null
+        }
+        transmit = null
+        isConnected = false
+        updateStatus('❌ Déconnecté', 'disconnected')
+        addMessage('🔌 Déconnecté', 'system')
+        document.getElementById('connectBtn').disabled = false
+        document.getElementById('disconnectBtn').disabled = true
+        document.getElementById('testNotifBtn').disabled = true
+        document.getElementById('testMissionBtn').disabled = true
+        document.getElementById('testBroadcastBtn').disabled = true
+      }
+
+      async function testNotification() {
+        const token = document.getElementById('token').value.trim()
+        try {
+          addMessage('🔔 Test notification...', 'system')
+          const res = await fetch('http://localhost:3333/api/common/notifications/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              title: 'Test',
+              message: 'Test notification',
+              priority: 'normal',
+            }),
+          })
+          const result = await res.json()
+          if (result.success) addMessage('✅ Test envoyé!', 'system')
+          else addMessage(`❌ ${result.message}`, 'error')
+        } catch (err) {
+          addMessage(`❌ ${err.message}`, 'error')
+        }
+      }
+
+      async function testMission() {
+        try {
+          addMessage('🚛 Test mission...', 'system')
+          const res = await fetch('http://localhost:3333/transmit/test-mission', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          })
+          const result = await res.json()
+          if (result.success) addMessage('✅ Test mission!', 'system')
+          else addMessage(`❌ ${result.message}`, 'error')
+        } catch (err) {
+          addMessage(`❌ ${err.message}`, 'error')
+        }
+      }
+
+      async function testBroadcast() {
+        const channel = updateCurrentChannel()
+        try {
+          addMessage('📡 Test broadcast...', 'system')
+          const res = await fetch('http://localhost:3333/transmit/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              channel,
+              message: {
+                test: true,
+                content: 'Test broadcast',
+                timestamp: new Date().toISOString(),
+              },
+            }),
+          })
+          const result = await res.json()
+          if (result.success)
+            addMessage(`✅ Broadcast à ${result.connections} connexion(s)`, 'system')
+          else addMessage(`❌ ${result.message}`, 'error')
+        } catch (err) {
+          addMessage(`❌ ${err.message}`, 'error')
+        }
+      }
+
+      function clearMessages() {
+        document.getElementById('messages').innerHTML =
+          '<p style="color: #999; text-align: center;">Aucun message...</p>'
+        stats = { messages: 0, notifications: 0, missions: 0, errors: 0 }
+        ;['statMessages', 'statNotifications', 'statMissions', 'statErrors'].forEach(
+          (id) => (document.getElementById(id).textContent = '0')
+        )
+      }
+
+      document.getElementById('channelId').addEventListener('input', updateCurrentChannel)
+      document.getElementById('customChannel').addEventListener('input', updateCurrentChannel)
+
+      // Exposer les fonctions globalement pour les boutons onclick
+      window.connect = connect
+      window.disconnect = disconnect
+      window.testNotification = testNotification
+      window.testMission = testMission
+      window.testBroadcast = testBroadcast
+      window.clearMessages = clearMessages
+      window.updateChannelInput = updateChannelInput
+    </script>
+  </body>
+</html>

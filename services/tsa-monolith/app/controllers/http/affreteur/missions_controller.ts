@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
+import { inject } from '@adonisjs/core'
 import Mission, { MissionStatus } from '#models/mission'
 import Address from '#models/address'
 import {
@@ -8,13 +9,16 @@ import {
   updateMissionValidator,
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
+import MissionNotificationService from '#services/mission_notification_service'
 
 /**
  * Contrôleur pour la gestion des missions par les affréteurs
  * @fileoverview CRUD complet des missions avec publication/dépublication
  * @tags Affreteur-Missions
  */
+@inject()
 export default class MissionsController {
+  constructor(private missionNotificationService: MissionNotificationService) {}
   /*
    * @index
    * @summary Récupérer mes missions
@@ -458,6 +462,15 @@ export default class MissionsController {
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+
+      // 🔔 Notifier tous les transporteurs de la nouvelle mission par EMAIL + SSE
+      try {
+        await this.missionNotificationService.notifyNewMissionToTransporteurs(mission)
+        console.log(`✅ Notifications EMAIL + SSE envoyées pour la mission ${mission.id}`)
+      } catch (notificationError) {
+        console.error('❌ Erreur envoi notifications nouvelle mission:', notificationError)
+        // Ne pas faire échouer la publication si les notifications échouent
+      }
 
       return response.json({
         success: true,

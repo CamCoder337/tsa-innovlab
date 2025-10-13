@@ -19,10 +19,13 @@ export default class MainSeeder extends BaseSeeder {
     // 1. Créer l'utilisateur admin en premier
     await this.runSeeder('./admin_user_seeder.js')
 
-    // 2. Seeder les catégories
+    // 2. Créer les utilisateurs par défaut (affreteur + transporteur)
+    await this.runSeeder('./default_users_seeder.js')
+
+    // 3. Seeder les catégories
     await this.runSeeder('./category_seeder.js')
 
-    // 3. Puis les produits qui dépendent des catégories et de l'admin
+    // 4. Puis les produits qui dépendent des catégories et de l'admin
     await this.runSeeder('./product_seeder.js')
 
     console.log('🌱 Database seeding completed!')

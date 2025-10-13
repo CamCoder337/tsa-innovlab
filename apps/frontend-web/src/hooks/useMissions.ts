@@ -11,10 +11,12 @@ export function useMissions() {
   const missions = useMissionStore((s) => s.missions);
   const myMissions = useMissionStore((s) => s.myMissions);
   const currentMission = useMissionStore((s) => s.currentMission);
+  const stats = useMissionStore((s) => s.stats);
   const isLoading = useMissionStore((s) => s.isLoading);
   const error = useMissionStore((s) => s.error);
   const setMissions = useMissionStore((s) => s.setMissions);
   const setMyMissions = useMissionStore((s) => s.setMyMissions);
+  const setStats = useMissionStore((s) => s.setStats);
   const addMission = useMissionStore((s) => s.addMission);
   const updateMission = useMissionStore((s) => s.updateMission);
   const deleteMission = useMissionStore((s) => s.deleteMission);
@@ -151,6 +153,28 @@ export function useMissions() {
     }
   }, [setMyMissions]);
 
+  const handleGetMissionsStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await missionService.getMissionStats();
+
+      if (response.error) {
+        setError(response.error.message);
+        return;
+      }
+
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch mission stats');
+    } finally {
+      setLoading(false);
+    }
+  }, [setStats, setError, setLoading]);
+
   const filterMissions = (filters: MissionFilterParams) => {
     return missions.filter((mission) => {
       const searchTerm = filters.search?.toLowerCase();
@@ -184,19 +208,29 @@ export function useMissions() {
     if (isAuthenticated) {
       handleGetAllMissions();
       if (user?.role === 'transporteur') handleGetMyMissions();
+      if (user?.role === 'admin') handleGetMissionsStats();
     }
-  }, [handleGetAllMissions, handleGetMyMissions, isAuthenticated, user?.role]);
+  }, [
+    handleGetAllMissions,
+    handleGetMyMissions,
+    handleGetMissionsStats,
+    isAuthenticated,
+    user?.role,
+  ]);
 
   return {
     // State
     missions,
     myMissions,
     currentMission,
+    stats,
     isLoading,
     error,
 
     // Actions
     setMissions,
+    setMyMissions,
+    setStats,
     addMission,
     updateMission,
     deleteMission,

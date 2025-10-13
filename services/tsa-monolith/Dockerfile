@@ -108,6 +108,6 @@ HEALTHCHECK --interval=30s --timeout=15s --start-period=40s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start with migrations, seeds, email worker and main app
-CMD ["sh", "-c", "echo 'Running migrations...' && node build/bin/console.js migration:run --force && echo 'Running seeds...' && node build/bin/console.js db:seed && echo 'Starting email worker...' && node build/bin/console.js email:worker & echo 'Starting main application...' && node build/bin/server.js"]
+CMD ["sh", "-c", "echo 'Running migrations...' && node build/bin/console.js migration:run --force && echo 'Running seeds...' && node build/bin/console.js db:seed && echo 'Starting email worker...' && node build/bin/console.js email:worker-resend & echo 'Starting main application...' && node build/bin/server.js"]
 
 

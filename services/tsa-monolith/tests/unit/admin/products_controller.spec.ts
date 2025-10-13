@@ -81,6 +81,9 @@ test.group('Admin Products Controller', (group) => {
   })
 
   test('should search products by name and description', async ({ client, assert }) => {
+    // Clear existing products first to ensure test isolation
+    await Database.rawQuery('DELETE FROM products')
+
     await Product.create({
       name: 'Gaming Laptop',
       description: 'High-performance gaming laptop',
@@ -143,6 +146,9 @@ test.group('Admin Products Controller', (group) => {
   })
 
   test('should filter products by price range', async ({ client, assert }) => {
+    // Clear existing products first to ensure test isolation
+    await Database.rawQuery('DELETE FROM products')
+
     await Product.createMany([
       {
         name: 'Cheap Product',

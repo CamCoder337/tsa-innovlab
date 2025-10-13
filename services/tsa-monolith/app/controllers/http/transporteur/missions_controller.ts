@@ -1,10 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { inject } from '@adonisjs/core'
 import Mission, { MissionStatus } from '#models/mission'
+import MissionUpdate from '#models/mission_update'
 import { missionQueryValidator, updateStatusValidator } from '#validators/mission_validator'
+import { deliveryProofValidator, locationUpdateValidator } from '#validators/proposition_validator'
+import NotificationManagerService from '#services/notification_manager_service'
 
+@inject()
 export default class MissionsController {
-  async available({ request, response }: HttpContext) {
+  constructor(private notificationManager: NotificationManagerService) {}
+  async available({ request, auth, response }: HttpContext) {
     try {
+      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -21,6 +28,10 @@ export default class MissionsController {
 
       const query = Mission.query()
         .where('status', MissionStatus.PUBLISHED)
+        // Exclure les missions où ce transporteur a déjà une proposition en attente
+        .whereDoesntHave('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'pending')
+        })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
@@ -123,8 +134,9 @@ export default class MissionsController {
     }
   }
 
-  async myMissions({ request, response }: HttpContext) {
+  async myMissions({ request, auth, response }: HttpContext) {
     try {
+      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -136,15 +148,20 @@ export default class MissionsController {
         sortOrder = 'desc',
       } = validatedData
 
-      // Pour l'instant, on liste les missions assignées (quand le système de propositions sera implémenté)
-      // Temporairement, on filtre par les missions où le transporteur pourrait être assigné
+      // Récupérer les missions où ce transporteur a une proposition acceptée
       const query = Mission.query()
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
+        .whereHas('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
         .preload('adresseDepart')
         .preload('adresseArrivee')
+        .preload('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
 
       if (status) {
         query.where('status', status)
@@ -185,7 +202,7 @@ export default class MissionsController {
     }
   }
 
-  async updateStatus({ params, request, response }: HttpContext) {
+  async updateStatus({ params, request, auth, response }: HttpContext) {
     try {
       const validatedData = await request.validateUsing(updateStatusValidator)
 
@@ -216,6 +233,7 @@ export default class MissionsController {
         })
       }
 
+      const user = auth.getUserOrFail()
       const oldStatus = mission.status
       mission.status = validatedData.status as MissionStatus
 
@@ -224,6 +242,33 @@ export default class MissionsController {
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+
+      // 📍 Créer un MissionUpdate pour le tracking
+      try {
+        await MissionUpdate.createStatusUpdate(
+          mission.id,
+          user.id,
+          oldStatus,
+          validatedData.status as MissionStatus,
+          validatedData.commentaire || 'Mise à jour de statut par le transporteur'
+        )
+      } catch (updateError) {
+        console.error('❌ Erreur création MissionUpdate:', updateError)
+      }
+
+      // 🔔 Notifier l'affreteur du changement de statut
+      try {
+        await this.notificationManager.notifyMissionStatusChanged(
+          mission,
+          oldStatus,
+          validatedData.status as MissionStatus,
+          user
+        )
+        console.log(`✅ Affreteur notifié du changement de statut mission ${mission.id}`)
+      } catch (notificationError) {
+        console.error('❌ Erreur notification changement statut:', notificationError)
+        // Ne pas faire échouer la mise à jour si les notifications échouent
+      }
 
       return response.json({
         success: true,
@@ -244,21 +289,10 @@ export default class MissionsController {
     }
   }
 
-  async updateLocation({ params, request, response }: HttpContext) {
+  async updateLocation({ params, request, auth, response }: HttpContext) {
     try {
-      const { latitude, longitude, timestamp } = request.only([
-        'latitude',
-        'longitude',
-        'timestamp',
-      ])
-
-      if (!latitude || !longitude) {
-        return response.status(422).json({
-          success: false,
-          message: 'Latitude and longitude are required',
-          errors: ['latitude et longitude sont requis'],
-        })
-      }
+      const user = auth.getUserOrFail()
+      const validatedData = await request.validateUsing(locationUpdateValidator)
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -272,19 +306,51 @@ export default class MissionsController {
         })
       }
 
-      // TODO: Implémenter le système de suivi de localisation en temps réel
-      // Pour l'instant, on confirme la réception des coordonnées
+      // 📍 Créer un MissionUpdate avec la nouvelle position
+      try {
+        await MissionUpdate.createLocationUpdate(
+          mission.id,
+          user.id,
+          validatedData.latitude,
+          validatedData.longitude,
+          undefined // No address field in validator
+        )
+      } catch (updateError) {
+        console.error('❌ Erreur création MissionUpdate localisation:', updateError)
+      }
+
+      // 🔔 Diffuser la mise à jour de position en temps réel
+      try {
+        // Import transmit service directly for broadcasting
+        const { default: TransmitService } = await import('#services/transmit_service')
+        const transmitService = new TransmitService()
+
+        await transmitService.broadcastMissionUpdate(mission.id, {
+          type: 'location_update',
+          location: {
+            latitude: validatedData.latitude,
+            longitude: validatedData.longitude,
+            timestamp: new Date().toISOString(),
+          },
+          transporteur: user.fullName,
+          missionId: mission.id,
+        })
+        console.log(`✅ Position mise à jour en temps réel pour mission ${mission.id}`)
+      } catch (broadcastError) {
+        console.error('❌ Erreur diffusion position temps réel:', broadcastError)
+      }
 
       return response.json({
         success: true,
-        message: 'Location updated successfully',
+        message: 'Location updated successfully and broadcasted in real-time',
         data: {
           missionId: mission.id,
           location: {
-            latitude: Number.parseFloat(latitude),
-            longitude: Number.parseFloat(longitude),
-            timestamp: timestamp || new Date().toISOString(),
+            latitude: validatedData.latitude,
+            longitude: validatedData.longitude,
+            timestamp: new Date().toISOString(),
           },
+          realTimeBroadcast: true,
         },
       })
     } catch (error) {
@@ -296,25 +362,18 @@ export default class MissionsController {
     }
   }
 
-  async uploadProof({ params, request, response }: HttpContext) {
+  async uploadProof({ params, request, auth, response }: HttpContext) {
     try {
-      const { proofType, description, imageUrl } = request.only([
-        'proofType',
-        'description',
-        'imageUrl',
-      ])
+      const user = auth.getUserOrFail()
+      const validatedData = await request.validateUsing(deliveryProofValidator)
 
-      if (!proofType) {
-        return response.status(422).json({
-          success: false,
-          message: 'Proof type is required',
-          errors: ['Type de preuve requis'],
-        })
-      }
-
+      // Vérifier que la mission existe et est assignée à ce transporteur
       const mission = await Mission.query()
         .where('id', params.id)
-        .where('status', MissionStatus.ASSIGNED)
+        .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
+        .whereHas('propositions', (propositionQuery) => {
+          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
+        })
         .first()
 
       if (!mission) {
@@ -333,9 +392,9 @@ export default class MissionsController {
         data: {
           missionId: mission.id,
           proof: {
-            type: proofType,
-            description: description || null,
-            imageUrl: imageUrl || null,
+            type: validatedData.proofType,
+            description: validatedData.description,
+            imageUrl: validatedData.imageUrl || null,
             timestamp: new Date().toISOString(),
           },
         },

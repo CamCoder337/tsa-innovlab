@@ -1,11 +1,13 @@
 import type { Timestamps } from './common.types';
 import type { Address } from './address.types';
+import type { User } from './auth.types';
 
 export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
 
 export interface Mission extends Timestamps {
   id: string;
   affreteurId: string;
+  affreteur?: User;
   titre: string;
   description: string;
   typeMarchandise: string;
@@ -25,12 +27,16 @@ export interface Mission extends Timestamps {
   notesComplementaires?: string;
   documents?: string[];
   transporteurId?: string;
+  transporteur?: User;
   dateDebutReelle?: string;
   dateFinReelle?: string;
   ratingAffreteur?: number;
   commentaireAffreteur?: string;
   ratingTransporteur?: number;
   commentaireTransporteur?: string;
+  // Position actuelle du transporteur pour le tracking en temps réel
+  currentPosition?: { lat: number; lng: number };
+  lastPositionUpdate?: string;
 }
 
 export interface CreateMissionDto {
@@ -104,6 +110,7 @@ export interface MissionState {
 export interface MissionActions {
   setMissions: (missions: Mission[]) => void;
   setMyMissions: (missions: Mission[]) => void;
+  setStats: (stats: MissionStats) => void;
   addMission: (mission: Mission) => void;
   updateMission: (id: string, update: Mission) => void;
   deleteMission: (id: string) => void;

@@ -68,6 +68,25 @@ export default class Diagnose extends BaseCommand {
       this.logger.error('❌ Configuration Mail: Erreur', error.message)
     }
 
+    // Configuration Resend
+    try {
+      this.logger.info(`📮 Configuration Resend:`)
+      this.logger.info(`  - RESEND_API_KEY: ${env.get('RESEND_API_KEY') ? '[DÉFINI]' : '[VIDE]'}`)
+      this.logger.info(`  - NODE_ENV: ${env.get('NODE_ENV')}`)
+
+      if (env.get('NODE_ENV') === 'production') {
+        if (env.get('RESEND_API_KEY')) {
+          this.logger.info(`  ✅ Resend configuré pour la production`)
+        } else {
+          this.logger.info(`  ⚠️  Resend non configuré en production`)
+        }
+      } else {
+        this.logger.info(`  ℹ️  Mode développement - Gmail SMTP utilisé`)
+      }
+    } catch (error) {
+      this.logger.error('❌ Configuration Resend: Erreur', error.message)
+    }
+
     // Test queue email
     try {
       const redis = new Redis({
