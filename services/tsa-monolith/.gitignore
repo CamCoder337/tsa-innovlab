@@ -22,6 +22,7 @@ yarn-error.log
 .idea
 .vscode
 .qodo
+.claude
 
 # Platform specific
 .DS_Store

@@ -228,6 +228,7 @@ jobs:
           # Redis
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          REDIS_PASSWORD: ""
           # Email (dummy values for tests)
           SMTP_HOST: smtp.example.com
           SMTP_PORT: 587
@@ -236,6 +237,8 @@ jobs:
           MAIL_FROM: test@example.com
           # Frontend
           FRONTEND_URL: http://localhost:5173
+          SUPPORT_EMAIL: support@test.com
+          FASTAPI_BASE_URL: http://localhost:8000
         run: |
           echo "🗄️ Running database migrations..."
           node ace migration:run --force
@@ -258,6 +261,7 @@ jobs:
           # Redis
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          REDIS_PASSWORD: ""
           # Email (dummy values for tests)
           SMTP_HOST: smtp.example.com
           SMTP_PORT: 587
@@ -266,6 +270,8 @@ jobs:
           MAIL_FROM: test@example.com
           # Frontend
           FRONTEND_URL: http://localhost:5173
+          SUPPORT_EMAIL: support@test.com
+          FASTAPI_BASE_URL: http://localhost:8000
         run: |
           echo "🧪 Running AdonisJS tests with Japa framework..."
           
