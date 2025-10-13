@@ -3,6 +3,7 @@ import { inject } from '@adonisjs/core'
 import Conversation, { ConversationType } from '#models/conversation'
 import User from '#models/user'
 import Mission from '#models/mission'
+import ConversationAuthorizationService from '#services/conversation_authorization_service'
 import {
   createDirectConversationValidator,
   createMissionConversationValidator,
@@ -150,6 +151,21 @@ export default class ConversationsController {
       // Vérifier que l'utilisateur cible existe
       const targetUser = await User.findOrFail(userId)
 
+      // Vérifier les autorisations de conversation directe
+      const isAuthorized = ConversationAuthorizationService.canConverseDirect(user, targetUser)
+
+      if (!isAuthorized) {
+        const denialReason = ConversationAuthorizationService.getDirectConversationDenialReason(
+          user,
+          targetUser
+        )
+        return response.forbidden({
+          success: false,
+          message: denialReason,
+          hint: 'Utilisez une conversation liée à une mission pour communiquer',
+        })
+      }
+
       // Créer ou récupérer la conversation
       const conversation = await Conversation.findOrCreateDirectConversation(user.id, targetUser.id)
 
@@ -197,24 +213,32 @@ export default class ConversationsController {
         })
       }
 
-      // Vérifier que la mission existe et que l'utilisateur y a accès
-      const mission = await Mission.findOrFail(missionId)
-
-      // Vérifier les permissions d'accès à la mission
-      const canAccess =
-        user.role === 'admin' ||
-        (user.role === 'affreteur' && mission.affreteurId === user.id) ||
-        user.role === 'transporteur' // Pour l'instant, tous les transporteurs peuvent créer des conversations sur missions
-
-      if (!canAccess) {
-        return response.forbidden({
+      if (Number(userId) === Number(user.id)) {
+        return response.badRequest({
           success: false,
-          message: 'Accès refusé à cette mission',
+          message: 'Impossible de créer une conversation avec soi-même',
         })
       }
 
+      // Vérifier que la mission existe
+      const mission = await Mission.findOrFail(missionId)
+
       // Vérifier que l'utilisateur cible existe
       const targetUser = await User.findOrFail(userId)
+
+      // Vérifier les autorisations de conversation mission avec validation métier
+      const authorizationResult = await ConversationAuthorizationService.canConverseMission(
+        user,
+        targetUser,
+        mission
+      )
+
+      if (!authorizationResult.authorized) {
+        return response.forbidden({
+          success: false,
+          message: authorizationResult.reason || 'Conversation non autorisée pour cette mission',
+        })
+      }
 
       // Créer ou récupérer la conversation mission
       const conversation = await Conversation.findOrCreateMissionConversation(

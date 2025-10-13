@@ -11,10 +11,33 @@ export interface ConnectedUser {
 }
 
 /**
+ * Types d'événements WebSocket
+ */
+export enum WebSocketEventType {
+  // Événements généraux
+  CONNECTED = 'connected',
+  BROADCAST = 'broadcast',
+  NOTIFICATION = 'notification',
+
+  // Événements de chat
+  CHAT_MESSAGE = 'chat:message',
+  CHAT_MESSAGE_READ = 'chat:read',
+  CHAT_TYPING_START = 'chat:typing:start',
+  CHAT_TYPING_STOP = 'chat:typing:stop',
+  CHAT_CONVERSATION_CREATED = 'chat:conversation:created',
+  CHAT_CONVERSATION_UPDATED = 'chat:conversation:updated',
+
+  // Événements de missions
+  MISSION_NEW = 'mission:new',
+  MISSION_UPDATED = 'mission:updated',
+  MISSION_STATUS_CHANGED = 'mission:status:changed',
+}
+
+/**
  * Interface pour les messages WebSocket
  */
 export interface WebSocketMessage {
-  type: string
+  type: string | WebSocketEventType
   data: any
   timestamp: string
   userId?: string
@@ -273,10 +296,7 @@ class WebSocketService {
           count++
         }
       } catch (error) {
-        console.error(
-          `❌ WebSocket: Erreur envoi à affreteur ${connection.userId}:`,
-          error.message
-        )
+        console.error(`❌ WebSocket: Erreur envoi à affreteur ${connection.userId}:`, error.message)
       }
     }
 
@@ -320,6 +340,90 @@ class WebSocketService {
     }
 
     console.log(`✅ WebSocket: Message envoyé à ${count} utilisateurs`)
+  }
+
+  /**
+   * Envoyer un événement de chat à plusieurs utilisateurs
+   * Utilisé pour les conversations de chat
+   */
+  async sendChatEvent(userIds: string[], eventType: WebSocketEventType, data: any): Promise<void> {
+    const message = {
+      type: eventType,
+      data,
+      timestamp: new Date().toISOString(),
+    }
+
+    for (const userId of userIds) {
+      await this.sendToUser(userId, message)
+    }
+  }
+
+  /**
+   * Envoyer une notification de "typing" (en train d'écrire)
+   * aux participants d'une conversation
+   */
+  async sendTypingIndicator(
+    conversationId: number,
+    senderId: string,
+    recipientIds: string[],
+    isTyping: boolean
+  ): Promise<void> {
+    const eventType = isTyping
+      ? WebSocketEventType.CHAT_TYPING_START
+      : WebSocketEventType.CHAT_TYPING_STOP
+
+    const message = {
+      type: eventType,
+      data: {
+        conversationId,
+        senderId,
+        isTyping,
+      },
+      timestamp: new Date().toISOString(),
+    }
+
+    // Envoyer uniquement aux destinataires (pas à l'expéditeur)
+    for (const recipientId of recipientIds) {
+      if (recipientId !== senderId) {
+        await this.sendToUser(recipientId, message)
+      }
+    }
+  }
+
+  /**
+   * Envoyer une notification de message lu
+   */
+  async sendMessageReadNotification(
+    messageId: number,
+    conversationId: number,
+    readerId: string,
+    senderId: string
+  ): Promise<void> {
+    const message = {
+      type: WebSocketEventType.CHAT_MESSAGE_READ,
+      data: {
+        messageId,
+        conversationId,
+        readerId,
+        readAt: new Date().toISOString(),
+      },
+      timestamp: new Date().toISOString(),
+    }
+
+    // Notifier uniquement l'expéditeur du message
+    await this.sendToUser(senderId, message)
+  }
+
+  /**
+   * Envoyer une notification de nouvelle conversation
+   */
+  async sendConversationCreatedNotification(
+    conversationId: number,
+    participantIds: string[]
+  ): Promise<void> {
+    await this.sendChatEvent(participantIds, WebSocketEventType.CHAT_CONVERSATION_CREATED, {
+      conversationId,
+    })
   }
 }
 

@@ -29,7 +29,9 @@ export default class MissionNotificationService {
       await mission.load('adresseArrivee')
 
       // 1. Récupérer tous les transporteurs actifs
-      const transporteurs = await User.query().where('role', 'transporteur').where('status', 'active')
+      const transporteurs = await User.query()
+        .where('role', 'transporteur')
+        .where('status', 'active')
 
       console.log(`👥 ${transporteurs.length} transporteurs trouvés`)
 

@@ -93,6 +93,7 @@ window.addEventListener('beforeunload', () => {
 **Solutions alternatives :**
 
 #### Option 1 : Token dans l'URL (Déconseillé en production)
+
 ```javascript
 const token = 'eyJhbGciOiJIUzI1NiIs...'
 const ws = new WebSocket(`${WS_URL}?token=${token}`)
@@ -106,18 +107,19 @@ import io from 'socket.io-client'
 
 const socket = io('http://localhost:3333', {
   auth: {
-    token: 'Bearer eyJhbGciOiJIUzI1NiIs...'
-  }
+    token: 'Bearer eyJhbGciOiJIUzI1NiIs...',
+  },
 })
 ```
 
 #### Option 3 : XHR + WebSocket (Solution actuelle)
+
 ```javascript
 // 1. D'abord établir une session HTTP avec le token
 fetch('http://localhost:3333/api/auth/me', {
   headers: {
-    'Authorization': `Bearer ${token}`
-  }
+    Authorization: `Bearer ${token}`,
+  },
 })
 
 // 2. Puis connecter le WebSocket (le cookie de session sera utilisé)
@@ -156,7 +158,7 @@ export const useWebSocket = ({
   onMessage,
   onConnect,
   onDisconnect,
-  reconnectInterval = 5000
+  reconnectInterval = 5000,
 }: UseWebSocketOptions) => {
   const wsRef = useRef<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -361,10 +363,7 @@ export const useWebSocketNative = (token: string) => {
 
       // Afficher notification native
       if (message.type === 'broadcast' && message.data.type === 'mission:new') {
-        showLocalNotification(
-          'Nouvelle Mission',
-          message.data.data.titre
-        )
+        showLocalNotification('Nouvelle Mission', message.data.data.titre)
       }
     }
 
@@ -492,7 +491,7 @@ export function useWebSocket(url: string, token: string) {
   return {
     isConnected,
     messages,
-    ws
+    ws,
   }
 }
 ```
@@ -527,7 +526,7 @@ import { Injectable } from '@angular/core'
 import { Subject, Observable } from 'rxjs'
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class WebSocketService {
   private ws: WebSocket | null = null
@@ -569,7 +568,7 @@ import { AuthService } from '../services/auth.service'
 
 @Component({
   selector: 'app-notifications',
-  templateUrl: './notifications.component.html'
+  templateUrl: './notifications.component.html',
 })
 export class NotificationsComponent implements OnInit {
   isConnected = false
@@ -659,7 +658,9 @@ class WebSocketManager {
     this.reconnectAttempts++
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1) // Exponential backoff
 
-    console.log(`🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+    console.log(
+      `🔄 Reconnexion dans ${delay}ms (tentative ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+    )
 
     setTimeout(() => {
       this.connect()
@@ -708,6 +709,7 @@ wsManager.connect()
 ⚠️ **Le protocole WebSocket natif ne supporte pas les headers personnalisés dans le navigateur.**
 
 **Solutions :**
+
 1. **Cookie de session** (Recommandé) : Établir une session HTTP d'abord, puis le WebSocket utilisera le cookie
 2. **Token dans l'URL** : `ws://localhost:3333/ws/notifications?token=xxx` (Déconseillé en production)
 3. **Bibliothèque tierce** : Utiliser Socket.IO qui supporte les headers
@@ -715,6 +717,7 @@ wsManager.connect()
 ### Reconnexion Automatique
 
 Toujours implémenter la reconnexion automatique avec backoff exponentiel :
+
 ```javascript
 let reconnectDelay = 1000
 const reconnect = () => {
@@ -728,6 +731,7 @@ const reconnect = () => {
 ### Heartbeat
 
 Envoyer un ping toutes les 30 secondes pour maintenir la connexion :
+
 ```javascript
 setInterval(() => {
   if (ws.readyState === WebSocket.OPEN) {

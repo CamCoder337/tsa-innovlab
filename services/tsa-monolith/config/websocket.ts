@@ -19,9 +19,9 @@ const websocketConfig = defineConfig({
    * permettant la communication entre plusieurs serveurs AdonisJS
    */
   redis: {
-    enabled: env.get('WEBSOCKET_REDIS_ENABLED', false),
-    host: env.get('REDIS_HOST', 'localhost'),
-    port: env.get('REDIS_PORT', 6379),
+    enabled: env.get('WEBSOCKET_REDIS_ENABLED') ?? false,
+    host: env.get('REDIS_HOST'),
+    port: env.get('REDIS_PORT'),
     password: env.get('REDIS_PASSWORD'),
   },
 })

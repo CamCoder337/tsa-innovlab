@@ -266,6 +266,10 @@ router
       '#controllers/http/common/messages_controller.markAllAsRead'
     )
     router.get('/messages/unread-count', '#controllers/http/common/messages_controller.unreadCount')
+    router.post(
+      '/conversations/:conversationId/typing',
+      '#controllers/http/common/messages_controller.sendTypingIndicator'
+    )
 
     // Notifications
     router.get('/notifications', '#controllers/http/common/notifications_controller.index')
