@@ -15,7 +15,7 @@ import {
   Edit,
   MessageSquare,
 } from 'lucide-react';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { useMissions } from '@/hooks/useMissions';
 import { missionService } from '@/services/mission.service';
 import { toast } from 'react-hot-toast';

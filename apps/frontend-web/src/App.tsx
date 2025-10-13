@@ -17,14 +17,12 @@ const Mission = lazy(() => import('./pages/missions/[id]'));
 const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
 const Shop = lazy(() => import('./pages/shop/Shop'));
+const CartSummary = lazy(() => import('./pages/shop/CartSummary'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
 const Chat = lazy(() => import('./pages/ChatPage'));
-const Payment = lazy(() => import('./pages/PaymentPage'));
 const Transactions = lazy(() => import('./pages/BillingPage'));
 const Users = lazy(() => import('./pages/admin/UsersManagement'));
-const TrackingPage = lazy(() => import('./pages/tracking/ShipmentTrackingPage'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
-const ShipmentPage = lazy(() => import('./pages/tracking/ShipmentTrackingPage'));
 const MissionTrackingPage = lazy(() => import('./pages/tracking/MissionTrackingPage'));
 
 // Loading component for Suspense fallback
@@ -55,19 +53,19 @@ function App() {
             <Route path=":id/edit" element={<CreateMission />} />
           </Route>
 
-          <Route path="shop" element={<Shop />} />
+          <Route path="cart" element={<CartSummary />} />
+
+          <Route path="transactions" element={<Transactions />} />
 
           <Route path="users" element={<Users />} />
 
           <Route path="products" element={<ProductsManagement />} />
           <Route path="chat" element={<Chat />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="tracking/:trackingNumber" element={<TrackingPage />} />
           <Route path="tracking-dashboard" element={<TrackingDashboardPage />} />
-          <Route path="shipment/:trackingNumber" element={<ShipmentPage />} />
           <Route path="mission/:id/tracking" element={<MissionTrackingPage />} />
         </Route>
+
+        <Route path="shop" element={<Shop />} />
 
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>

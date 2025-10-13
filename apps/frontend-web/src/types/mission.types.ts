@@ -110,6 +110,7 @@ export interface MissionState {
 export interface MissionActions {
   setMissions: (missions: Mission[]) => void;
   setMyMissions: (missions: Mission[]) => void;
+  setStats: (stats: MissionStats) => void;
   addMission: (mission: Mission) => void;
   updateMission: (id: string, update: Mission) => void;
   deleteMission: (id: string) => void;

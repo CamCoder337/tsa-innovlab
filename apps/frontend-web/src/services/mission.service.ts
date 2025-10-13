@@ -11,6 +11,7 @@ import type {
   CreateMissionDto,
   UpdateMissionDto,
   MissionFilterParams,
+  MissionStats,
 } from '@/types/mission.types';
 import type { AffreteurPropositionsResponse, Proposition } from '@/types/proposition.types';
 import type { AxiosError } from 'axios';
@@ -540,6 +541,15 @@ export class MissionService extends BaseApi {
     try {
       await this.insertToken().delete(`/api/admin/missions/${id}`);
       return { data: { success: true } };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getMissionStats(): Promise<ApiResponse<MissionStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/missions/stats');
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

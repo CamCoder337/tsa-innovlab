@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,13 +15,159 @@ import {
   PieChart,
   Activity,
 } from 'lucide-react';
-import { useDashboard } from '@/hooks/useDashboard';
+import { useMissions } from '@/hooks/useMissions';
+import { useProductStats } from '@/hooks/useProductStats';
+import { DashboardUtils } from '@/lib/dashboard.utils';
+import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
+
+interface OverallStats {
+  overview: {
+    totalUsers: number;
+    totalMissions: number;
+    totalProducts: number;
+    totalRevenue: number;
+    activeTransporteurs: number;
+    activeAffreteurs: number;
+  };
+  missions: {
+    published: number;
+    assigned: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+    totalValue: number;
+  };
+  products: {
+    total: number;
+    active: number;
+    lowStock: number;
+    outOfStock: number;
+    totalValue: number;
+  };
+  users: {
+    total: number;
+    admins: number; // This would need to come from a user stats endpoint
+    transporteurs: number;
+    affreteurs: number;
+    activeToday: number; // Mock calculation
+    newThisMonth: number; // Mock calculation
+  };
+  revenue: {
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    thisYear: number;
+    growth: {
+      daily: number; // These would need to come from analytics endpoints
+      weekly: number;
+      monthly: number;
+      yearly: number;
+    };
+  };
+}
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Store hooks
-  const { stats, recentActivities } = useDashboard();
+  const {
+    missions,
+    stats: missionStats,
+    isLoading: missionStatsLoading,
+    error: missionStatsError,
+  } = useMissions();
+  const {
+    stats: productStats,
+    loading: productStatsLoading,
+    error: productStatsError,
+  } = useProductStats();
+
+  const [stats, setStats] = useState<OverallStats>({} as OverallStats);
+
+  // Calculate real statistics from API data
+  useEffect(() => {
+    if (missionStats && productStats) {
+      const calculatedStats = {
+        overview: {
+          totalUsers: missionStats.totals.affreteurs + missionStats.totals.transporteurs || 0,
+          totalMissions: missionStats.totals.missions || 0,
+          totalProducts: productStats.stats.products.total || 0,
+          totalRevenue: productStats.stats.inventory.totalValue || 0,
+          activeTransporteurs: missionStats.totals.transporteurs || 0,
+          activeAffreteurs: missionStats.totals.affreteurs || 0,
+        },
+        missions: {
+          published: missionStats.statusStats.published || 0,
+          assigned: missionStats.statusStats.assigned || 0,
+          inProgress: missionStats.statusStats.in_progress || 0,
+          completed: missionStats.statusStats.completed || 0,
+          cancelled: missionStats.statusStats.cancelled || 0,
+          totalValue: productStats.stats.inventory.totalValue,
+        },
+        products: {
+          total: productStats.stats.products.total,
+          active: productStats.stats.products.active,
+          lowStock: productStats.stats.products.lowStock,
+          outOfStock: productStats.stats.products.outOfStock,
+          totalValue: productStats.stats.inventory.totalValue,
+        },
+        users: {
+          total: missionStats.totals.affreteurs + missionStats.totals.transporteurs,
+          admins: 5, // This would need to come from a user stats endpoint
+          transporteurs: missionStats.totals.transporteurs,
+          affreteurs: missionStats.totals.affreteurs,
+          activeToday: Math.floor(
+            (missionStats.totals.affreteurs + missionStats.totals.transporteurs) * 0.2
+          ), // Mock calculation
+          newThisMonth: Math.floor(
+            (missionStats.totals.affreteurs + missionStats.totals.transporteurs) * 0.05
+          ), // Mock calculation
+        },
+        revenue: {
+          today:
+            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).today : 0,
+          thisWeek:
+            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).week : 0,
+          thisMonth:
+            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).month : 0,
+          thisYear: productStats.stats.inventory.totalValue,
+          growth: {
+            daily: 12.5, // These would need to come from analytics endpoints
+            weekly: 8.3,
+            monthly: 15.7,
+            yearly: 23.4,
+          },
+        },
+      };
+
+      setStats(calculatedStats);
+    }
+  }, [missionStats, productStats, missions, setStats]);
+
+  // Show loading state
+  if (missionStatsLoading || productStatsLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des statistiques...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (missionStatsError || productStatsError) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
+          <p className="text-gray-600 text-sm">{missionStatsError || productStatsError}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1">
@@ -49,7 +195,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Utilisateurs Total</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview.totalUsers.toLocaleString() || '0'}
+                      {stats?.overview?.totalUsers.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -65,7 +211,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Total</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview.totalMissions.toLocaleString() || '0'}
+                      {stats?.overview?.totalMissions.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -81,7 +227,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Revenus Total</p>
                     <p className="text-2xl font-bold">
-                      {((stats?.overview.totalRevenue || 0) / 1000000).toFixed(1)}M FCFA
+                      {((stats?.overview?.totalRevenue || 0) / 1000000).toFixed(1)}M FCFA
                     </p>
                   </div>
                 </div>
@@ -164,7 +310,7 @@ export default function AdminDashboard() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Revenus ce mois</span>
                     <span className="font-medium text-green-600">
-                      {((stats?.revenue.thisMonth || 0) / 1000000).toFixed(1)}M FCFA
+                      {((stats?.revenue?.thisMonth || 0) / 1000000).toFixed(1)}M FCFA
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -182,25 +328,26 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(recentActivities || []).slice(0, 3).map((activity) => (
+                {(missionStats.recentMissions || []).slice(0, 3).map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{activity.title}</h4>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                        <span>Type: {activity.type}</span>
-                        <span>•</span>
-                        <span>Utilisateur: {activity.userId}</span>
+                      <h4 className="font-medium text-gray-900">{activity.titre}</h4>
+                      <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                        {activity.affreteur && (
+                          <>
+                            <span>Par: {activity.affreteur}</span>
+                            <span>•</span>
+                          </>
+                        )}
+                        <span>{DashboardUtils.getTimeAgo(activity.createdAt)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-medium">
-                        {new Date(activity.timestamp).toLocaleDateString()}
-                      </span>
-                      <Badge className="bg-blue-100 text-blue-800">
-                        {activity.type.toUpperCase()}
+                      <Badge className={getStatusColor(activity.status)}>
+                        {getStatusLabel(activity.status)}
                       </Badge>
                     </div>
                   </div>
@@ -221,7 +368,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Affréteurs Actifs</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview.activeAffreteurs.toLocaleString() || '0'}
+                      {stats?.overview?.activeAffreteurs.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -237,7 +384,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Transporteurs Actifs</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview.activeTransporteurs.toLocaleString() || '0'}
+                      {stats?.overview?.activeTransporteurs.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -282,7 +429,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Actives</p>
                     <p className="text-2xl font-bold">
-                      {stats?.missions.inProgress.toLocaleString() || '0'}
+                      {stats?.missions?.inProgress.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>
@@ -298,7 +445,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Terminées</p>
                     <p className="text-2xl font-bold">
-                      {stats?.missions.completed.toLocaleString() || '0'}
+                      {stats?.missions?.completed.toLocaleString() || '0'}
                     </p>
                   </div>
                 </div>

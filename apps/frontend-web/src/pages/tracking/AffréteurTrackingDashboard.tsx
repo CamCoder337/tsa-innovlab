@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { getStatusColor } from '@/lib/functions';
+import { getStatusColor } from '@/lib/mission-utils';
 import { useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
