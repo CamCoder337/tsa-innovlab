@@ -14,13 +14,13 @@ export default class Message extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column({ columnName: 'conversation_id' })
   declare conversationId: number
 
-  @column()
+  @column({ columnName: 'sender_id' })
   declare senderId: string
 
-  @column()
+  @column({ columnName: 'mission_id' })
   declare missionId: string | null
 
   @column()
@@ -29,13 +29,13 @@ export default class Message extends BaseModel {
   @column()
   declare type: MessageType
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'read_at' })
   declare readAt: DateTime | null
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime
 
   // Relations

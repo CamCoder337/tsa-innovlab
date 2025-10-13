@@ -17,22 +17,22 @@ export default class Conversation extends BaseModel {
   @column()
   declare type: ConversationType
 
-  @column()
+  @column({ columnName: 'user1_id' })
   declare user1Id: string // Premier participant
 
-  @column()
+  @column({ columnName: 'user2_id' })
   declare user2Id: string // Deuxième participant
 
-  @column()
+  @column({ columnName: 'mission_id' })
   declare missionId: string | null // Mission liée (optionnel)
 
-  @column.dateTime()
+  @column.dateTime({ columnName: 'last_activity_at' })
   declare lastActivityAt: DateTime
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime
 
   // Relations

@@ -35,7 +35,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+          missionQuery.select('id', 'titre', 'status')
         })
         .withCount('messages')
         .withCount('messages', (messagesQuery) => {
@@ -52,20 +52,26 @@ export default class ConversationsController {
 
       const conversations = await query.paginate(page, limit)
 
-      // Enrichir avec les informations de l'autre participant
-      const enrichedConversations = conversations.serialize()
-      enrichedConversations.data = enrichedConversations.data.map((conversation: any) => {
+      // Enrichir avec les informations de l'autre participant AVANT la sérialisation
+      const enrichedData = conversations.all().map((conversation) => {
         const otherParticipant =
           conversation.user1.id === user.id ? conversation.user2 : conversation.user1
         return {
-          ...conversation,
-          otherParticipant,
+          ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
+          otherParticipant: otherParticipant.serialize(),
         }
       })
 
+      const serialized = conversations.serialize()
       return response.ok({
         success: true,
-        data: enrichedConversations,
+        data: {
+          data: enrichedData,
+          meta: serialized.meta,
+        },
       })
     } catch (error) {
       console.error('❌ Erreur récupération conversations:', error)
@@ -94,7 +100,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+          missionQuery.select('id', 'titre', 'status')
         })
         .firstOrFail()
 
@@ -112,6 +118,9 @@ export default class ConversationsController {
         success: true,
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })
@@ -141,7 +150,7 @@ export default class ConversationsController {
         })
       }
 
-      if (Number(userId) === Number(user.id)) {
+      if (userId === user.id) {
         return response.badRequest({
           success: false,
           message: 'Impossible de créer une conversation avec soi-même',
@@ -184,6 +193,8 @@ export default class ConversationsController {
         message: 'Conversation créée ou récupérée avec succès',
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })
@@ -213,7 +224,7 @@ export default class ConversationsController {
         })
       }
 
-      if (Number(userId) === Number(user.id)) {
+      if (userId === user.id) {
         return response.badRequest({
           success: false,
           message: 'Impossible de créer une conversation avec soi-même',
@@ -254,7 +265,7 @@ export default class ConversationsController {
         userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
       })
       await conversation.load('mission', (missionQuery) => {
-        missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+        missionQuery.select('id', 'titre', 'status')
       })
 
       const otherParticipant =
@@ -265,6 +276,9 @@ export default class ConversationsController {
         message: 'Conversation mission créée ou récupérée avec succès',
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })

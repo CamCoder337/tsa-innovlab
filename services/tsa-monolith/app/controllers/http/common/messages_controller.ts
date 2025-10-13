@@ -70,13 +70,13 @@ export default class MessagesController {
    * Envoie un nouveau message
    */
   async store({ request, response, auth }: HttpContext) {
+    const user = auth.user!
+    const { conversationId } = request.params()
+
+    // Validation (en dehors du try-catch pour que les erreurs 422 soient retournées correctement)
+    const payload = await request.validateUsing(messageValidator)
+
     try {
-      const user = auth.user!
-      const { conversationId } = request.params()
-
-      // Validation
-      const payload = await request.validateUsing(messageValidator)
-
       // Vérifier l'accès à la conversation
       const conversation = await Conversation.findOrFail(conversationId)
 

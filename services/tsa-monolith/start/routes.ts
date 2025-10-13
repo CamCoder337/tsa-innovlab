@@ -298,63 +298,68 @@ router.get('/swagger.json', async ({ response }) => {
 
 // ===== ROUTES WEBSOCKET =====
 // Route principale pour les notifications temps réel
-router.ws(
-  '/ws/notifications',
-  async (ctx) => {
-    try {
-      const { ws, auth } = ctx
-      // Authentification requise
-      const user = auth.getUserOrFail()
+// Conditionnée pour ne charger que si le provider WebSocket est disponible
+if (typeof router.ws === 'function') {
+  router.ws(
+    '/ws/notifications',
+    async (ctx) => {
+      try {
+        const { ws, auth } = ctx
+        // Authentification requise
+        const user = auth.getUserOrFail()
 
-      // Obtenir l'instance singleton du service WebSocket
-      const { default: WebSocketService } = await import('#services/websocket_service')
-      const websocketService = WebSocketService.getInstance()
+        // Obtenir l'instance singleton du service WebSocket
+        const { default: WebSocketService } = await import('#services/websocket_service')
+        const websocketService = WebSocketService.getInstance()
 
-      console.log(`✅ WebSocket: ${user.email} (${user.role}) connecté`)
+        console.log(`✅ WebSocket: ${user.email} (${user.role}) connecté`)
 
-      // Enregistrer la connexion
-      websocketService.registerConnection(user.id, user.role, ws)
+        // Enregistrer la connexion
+        websocketService.registerConnection(user.id, user.role, ws)
 
-      // Message de bienvenue
-      ws.send(
-        JSON.stringify({
-          type: 'connected',
-          message: 'Connexion WebSocket établie',
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-          },
-          timestamp: new Date().toISOString(),
+        // Message de bienvenue
+        ws.send(
+          JSON.stringify({
+            type: 'connected',
+            message: 'Connexion WebSocket établie',
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+            },
+            timestamp: new Date().toISOString(),
+          })
+        )
+
+        // Gérer les messages entrants (heartbeat)
+        ws.on('message', (message: Buffer) => {
+          const msg = message.toString()
+
+          if (msg === 'ping') {
+            ws.send('pong')
+          }
         })
-      )
 
-      // Gérer les messages entrants (heartbeat)
-      ws.on('message', (message: Buffer) => {
-        const msg = message.toString()
+        // Gérer la déconnexion
+        ws.on('close', () => {
+          console.log(`❌ WebSocket: ${user.email} déconnecté`)
+          websocketService.unregisterConnection(user.id)
+        })
 
-        if (msg === 'ping') {
-          ws.send('pong')
-        }
-      })
+        // Gérer les erreurs
+        ws.on('error', (error: Error) => {
+          console.error(`❌ WebSocket error for ${user.email}:`, error.message)
+          websocketService.unregisterConnection(user.id)
+        })
+      } catch (error: any) {
+        console.error('❌ WebSocket authentication failed:', error.message)
+        ctx.ws.close()
+      }
+    },
+    [middleware.auth()]
+  )
 
-      // Gérer la déconnexion
-      ws.on('close', () => {
-        console.log(`❌ WebSocket: ${user.email} déconnecté`)
-        websocketService.unregisterConnection(user.id)
-      })
-
-      // Gérer les erreurs
-      ws.on('error', (error: Error) => {
-        console.error(`❌ WebSocket error for ${user.email}:`, error.message)
-        websocketService.unregisterConnection(user.id)
-      })
-    } catch (error: any) {
-      console.error('❌ WebSocket authentication failed:', error.message)
-      ctx.ws.close()
-    }
-  },
-  [middleware.auth()]
-)
-
-console.log('✅ WebSocket routes registered on /ws/*')
+  console.log('✅ WebSocket routes registered on /ws/*')
+} else {
+  console.log('ℹ️  WebSocket provider not loaded (test environment)')
+}
