@@ -51,5 +51,4 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   FRONTEND_URL: Env.schema.string(),
   SUPPORT_EMAIL: Env.schema.string.optional(),
-  FASTAPI_BASE_URL: Env.schema.string.optional(),
 })

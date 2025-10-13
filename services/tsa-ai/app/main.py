@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta, recommendations
+from app.endpoints import health, eta
 
 # Configure logging
 logging.basicConfig(
@@ -152,14 +152,9 @@ app.include_router(
     tags=["ETA Prediction"]
 )
 
-app.include_router(
-    recommendations.router,
-    prefix="/api/ai/recommendations",
-    tags=["Product Recommendations"]
-)
-
 # TODO: Add other AI routers
 # app.include_router(predictions.router, prefix="/api/ai/predictions", tags=["Predictions"])
+# app.include_router(recommendations.router, prefix="/api/ai/recommendations", tags=["Recommendations"])
 # app.include_router(anomalies.router, prefix="/api/ai/anomalies", tags=["Anomaly Detection"])
 
 
@@ -188,14 +183,14 @@ async def ai_root():
         "available_endpoints": [
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
-            "/api/ai/recommendations - Product recommendations ✅",
             "/api/ai/predictions - General predictions (TODO)",
+            "/api/ai/recommendations - Product recommendations (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
         "auth_note": "User authentication handled by Adonis service via Nginx headers",
         "ml_models": {
             "eta": "✅ Operational",
-            "recommendation": "✅ Operational",
-            "anomaly": "🚧 In development"
+            "anomaly": "🚧 In development",
+            "recommendation": "🚧 In development"
         }
     }
