@@ -88,6 +88,28 @@ export function useProducts() {
     }
   }, [user?.role, setProducts]);
 
+  const handleFetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await shopService.getAdminProductStats();
+
+      if (response.error) {
+        setError(response.error.message);
+        return;
+      }
+
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch product stats');
+    } finally {
+      setLoading(false);
+    }
+  }, [setError, setLoading, setStats]);
+
   const filterProducts = (filters: ProductFilterParams) => {
     return products.filter((product) => {
       const searchTerm = filters.search?.toLowerCase();
@@ -116,8 +138,11 @@ export function useProducts() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) handleGetAllProducts();
-  }, [handleGetAllProducts, isAuthenticated]);
+    if (isAuthenticated) {
+      handleGetAllProducts();
+      if (user?.role === 'admin') handleFetchStats();
+    }
+  }, [isAuthenticated, handleFetchStats, handleGetAllProducts, user?.role]);
 
   return {
     // State

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useCartStore } from '@/stores/cartStore';
 import type { Product } from '@/types/product.types';
-import type { Cart } from '@/types/cart.types';
 
 /**
  * Custom hook for cart operations
@@ -18,9 +17,11 @@ export const useCart = () => {
     removeItem,
     updateItemQuantity,
     clearCart,
-    syncWithServer,
+    fetchCart,
     getItemByProductId,
     getItemQuantity,
+    getTotalItems: getStoreTotalItems,
+    getTotalPrice: getStoreTotalPrice,
     setLoading,
     setError,
     reset,
@@ -44,20 +45,20 @@ export const useCart = () => {
     }
   };
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (itemId: string) => {
     try {
       setError(null);
-      removeItem(productId);
+      removeItem(itemId);
     } catch (error) {
       setError('Failed to remove item from cart');
       console.error('Error removing item from cart:', error);
     }
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     try {
       setError(null);
-      updateItemQuantity(productId, quantity);
+      updateItemQuantity(itemId, quantity);
     } catch (error) {
       setError('Failed to update item quantity');
       console.error('Error updating item quantity:', error);
@@ -74,21 +75,32 @@ export const useCart = () => {
     }
   };
 
+  // Fetch cart from server
+  const loadCart = async () => {
+    try {
+      setError(null);
+      await fetchCart();
+    } catch (error) {
+      setError('Failed to load cart');
+      console.error('Error loading cart:', error);
+    }
+  };
+
   // Helper methods
   const isInCart = (productId: string): boolean => {
     return getItemQuantity(productId) > 0;
   };
 
   const getTotalItems = (): number => {
-    return cart.totalQuantity;
+    return getStoreTotalItems();
   };
 
   const getTotalPrice = (): number => {
-    return cart.totalPrice;
+    return getStoreTotalPrice();
   };
 
   const getFormattedTotalPrice = (): string => {
-    return `${cart.totalPrice.toLocaleString()} FCFA`;
+    return `${getTotalPrice().toLocaleString()} FCFA`;
   };
 
   const isEmpty = (): boolean => {
@@ -96,19 +108,11 @@ export const useCart = () => {
   };
 
   // For authenticated users - sync local cart with server
-  const syncCartWithServer = async (serverCart: Cart) => {
+  const syncCartWithServer = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // If cart has no ID but has items, we need to add them to server cart
-      if (!cart.id && cart.items.length > 0) {
-        // This would be implemented when Cart API is available
-        console.log('Would sync local items to server:', cart.items);
-        // TODO: Implement API calls to add local items to server cart
-      }
-
-      syncWithServer(serverCart);
+      await loadCart();
     } catch (error) {
       setError('Failed to sync cart with server');
       console.error('Error syncing cart with server:', error);
@@ -129,6 +133,7 @@ export const useCart = () => {
     removeFromCart,
     updateQuantity,
     clearAllItems,
+    loadCart,
     syncCartWithServer,
     reset,
 
@@ -166,16 +171,16 @@ export const useCartError = () => {
  * Hook for cart items count
  */
 export const useCartItemsCount = () => {
-  const totalQuantity = useCartStore((state) => state.cart.totalQuantity);
-  return totalQuantity;
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
+  return getTotalItems();
 };
 
 /**
  * Hook for cart total price
  */
 export const useCartTotalPrice = () => {
-  const totalPrice = useCartStore((state) => state.cart.totalPrice);
-  return totalPrice;
+  const getTotalPrice = useCartStore((state) => state.getTotalPrice);
+  return getTotalPrice();
 };
 
 /**

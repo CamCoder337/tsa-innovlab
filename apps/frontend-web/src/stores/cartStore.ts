@@ -1,25 +1,25 @@
 import { create } from 'zustand';
-import type { Cart, CartItem, CartStore, LocalCartData } from '@/types/cart.types';
+import type { Cart, CartItem, CartStore } from '@/types/cart.types';
 import type { Product } from '@/types/product.types';
+import { useAuthStore } from '@/stores/authStore';
+import { useProductStore } from '@/stores/productStore';
 
 const CART_STORAGE_KEY = 'tsa_cart';
 
 // Initial empty cart state
-const createEmptyCart = (): Cart => ({
-  items: [],
-  itemsCount: 0,
-  totalPrice: 0,
-  totalQuantity: 0,
-});
+const createEmptyCart = (): Cart => {
+  const currentUser = useAuthStore.getState().currentUser;
+  return {
+    userId: currentUser?.id || '',
+    status: 'active',
+    items: [],
+  };
+};
 
 // localStorage utilities
 function persistCartToLocalStorage(cart: Cart): void {
   try {
-    const cartData: LocalCartData = {
-      cart,
-      lastUpdated: new Date().toISOString(),
-    };
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   } catch (error) {
     console.error('Failed to persist cart to localStorage:', error);
   }
@@ -29,8 +29,20 @@ function loadCartFromLocalStorage(): Cart {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
     if (raw) {
-      const cartData: LocalCartData = JSON.parse(raw);
-      return cartData.cart;
+      const cartData: Cart = JSON.parse(raw);
+      // Populate missing product fields for cart items
+      cartData.items = cartData.items.map((item) => {
+        if (!item.product) {
+          // Find the product from the product store
+          const products = useProductStore.getState().products;
+          const product = products.find((p: Product) => p.id === item.productId);
+          if (product) {
+            return { ...item, product };
+          }
+        }
+        return item;
+      });
+      return cartData;
     }
   } catch (error) {
     console.error('Failed to load cart from localStorage:', error);
@@ -53,7 +65,7 @@ function calculateCartTotals(items: CartItem[]): {
   totalQuantity: number;
 } {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.priceAtTime * item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + parseInt(item.unitPrice) * item.quantity, 0);
   const itemsCount = items.length;
 
   return { itemsCount, totalPrice, totalQuantity };
@@ -75,7 +87,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   isInitialized: false,
 
   // Initialize cart from localStorage
-  initializeCart: () => {
+  initializeCart: async () => {
     const savedCart = loadCartFromLocalStorage();
     const updatedCart = updateCartTotals(savedCart);
 
@@ -87,25 +99,24 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Add item to cart
-  addItem: (product: Product, quantity: number = 1) => {
+  addItem: async (product: Product, quantity: number = 1) => {
     const { cart } = get();
     const existingItemIndex = cart.items.findIndex((item) => item.productId === product.id);
 
     let updatedItems: CartItem[];
 
     if (existingItemIndex >= 0) {
-      // Update existing item quantity
       updatedItems = cart.items.map((item, index) =>
         index === existingItemIndex ? { ...item, quantity: item.quantity + quantity } : item
       );
     } else {
-      // Add new item
       const newItem: CartItem = {
+        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        cartId: cart.id || '',
         productId: product.id,
-        product,
+        product, // Include the full product object
         quantity,
-        priceAtTime: parseFloat(product.price),
-        addedAt: new Date().toISOString(),
+        unitPrice: product.price,
       };
       updatedItems = [...cart.items, newItem];
     }
@@ -121,9 +132,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Remove item from cart
-  removeItem: (productId: string) => {
+  removeItem: async (itemId: string) => {
     const { cart } = get();
-    const updatedItems = cart.items.filter((item) => item.productId !== productId);
+    const updatedItems = cart.items.filter((item) => item.id !== itemId);
     const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
 
     // For unauthenticated users, persist to localStorage
@@ -135,15 +146,15 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Update item quantity
-  updateItemQuantity: (productId: string, quantity: number) => {
+  updateItemQuantity: async (itemId: string, quantity: number) => {
     if (quantity <= 0) {
-      get().removeItem(productId);
+      await get().removeItem(itemId);
       return;
     }
 
     const { cart } = get();
     const updatedItems = cart.items.map((item) =>
-      item.productId === productId ? { ...item, quantity } : item
+      item.id === itemId ? { ...item, quantity } : item
     );
 
     const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
@@ -157,10 +168,32 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Clear cart
-  clearCart: () => {
+  clearCart: async () => {
     const emptyCart = createEmptyCart();
     clearCartFromLocalStorage();
     set({ cart: emptyCart, error: null });
+  },
+
+  // Fetch cart from server
+  fetchCart: async () => {
+    try {
+      set({ isLoading: true, error: null });
+
+      // TODO: Implement API call to fetch cart from server
+      // const cartData = await cartService.getCart();
+      // const updatedCart = updateCartTotals(cartData);
+      // set({ cart: updatedCart, isLoading: false });
+
+      // For now, just load from localStorage
+      const savedCart = loadCartFromLocalStorage();
+      const updatedCart = updateCartTotals(savedCart);
+      set({ cart: updatedCart, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch cart',
+        isLoading: false,
+      });
+    }
   },
 
   // Sync with server cart (for authenticated users)
@@ -189,6 +222,18 @@ export const useCartStore = create<CartStore>((set, get) => ({
   getItemQuantity: (productId: string) => {
     const item = get().getItemByProductId(productId);
     return item ? item.quantity : 0;
+  },
+
+  // Get total number of items in cart
+  getTotalItems: () => {
+    const { cart } = get();
+    return cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  },
+
+  // Get total price of all items in cart
+  getTotalPrice: () => {
+    const { cart } = get();
+    return cart.items.reduce((sum, item) => sum + parseInt(item.unitPrice) * item.quantity, 0);
   },
 
   // Utility actions

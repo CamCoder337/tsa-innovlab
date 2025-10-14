@@ -53,7 +53,7 @@ export const Facture: React.FC<FactureProps> = ({
   onEmailSend,
   onClose,
 }) => {
-  const subtotal = items.reduce((sum, item) => sum + item.priceAtTime * item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + parseFloat(item.unitPrice) * item.quantity, 0);
   const total = subtotal + deliveryFee;
 
   const formatDate = (date: Date) => {
@@ -228,9 +228,11 @@ export const Facture: React.FC<FactureProps> = ({
                     <tr key={index} className="border-b border-gray-100">
                       <td className="py-4 px-2">
                         <div>
-                          <p className="font-medium text-gray-900">{item.product.name}</p>
-                          {item.product.description && (
-                            <p className="text-sm text-gray-500 mt-1">{item.product.description}</p>
+                          <p className="font-medium text-gray-900">{item.product?.name}</p>
+                          {item.product?.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {item.product?.description}
+                            </p>
                           )}
                         </div>
                       </td>
@@ -240,10 +242,10 @@ export const Facture: React.FC<FactureProps> = ({
                         </span>
                       </td>
                       <td className="py-4 px-2 text-right font-medium">
-                        {item.priceAtTime.toLocaleString()} FCFA
+                        {item.unitPrice.toLocaleString()} FCFA
                       </td>
                       <td className="py-4 px-2 text-right font-bold">
-                        {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                        {(parseFloat(item.unitPrice) * item.quantity).toLocaleString()} FCFA
                       </td>
                     </tr>
                   ))}

@@ -41,12 +41,10 @@ export interface ForgotPasswordRequest {
 }
 
 export interface AuthTokens {
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  };
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
 }
 
 export interface MFARequiredResponse {
@@ -69,6 +67,7 @@ export interface AuthActions {
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   setToken: (token: string, expiresIn?: number, refreshToken?: string) => void;
+  initializeTokenManagement: () => void;
 }
 
 export type AuthStore = AuthState & AuthActions;
