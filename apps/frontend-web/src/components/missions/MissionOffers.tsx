@@ -24,7 +24,7 @@ import type { Mission } from '@/types/mission.types';
 import type { Proposition } from '@/types/proposition.types';
 import { missionService } from '@/services/mission.service';
 import { usePropositions } from '@/hooks/usePropositions';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/functions';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { PropositionForm } from '../forms/PropositionForm';
 import { useMissions } from '@/hooks/useMissions';
 

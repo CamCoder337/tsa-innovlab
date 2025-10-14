@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Package, Calendar, DollarSign } from 'lucide-react';
-import { getStatusColor } from '@/lib/functions';
+import { getStatusColor } from '@/lib/mission-utils';
 import MissionTrackingButton from './MissionTrackingButton';
 import type { Mission } from '@/types/mission.types';
 

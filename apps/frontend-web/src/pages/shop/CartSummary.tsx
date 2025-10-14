@@ -1,0 +1,671 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingCart,
+  CreditCard,
+  Truck,
+  Shield,
+  ArrowLeft,
+  MapPin,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useCart } from '@/hooks/useCart';
+import Header from '@/components/layout/Header';
+import { Label } from '@/components/ui/label';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import AddressPicker from '@/components/maps/AddressPicker';
+import { useAddressSelection } from '@/hooks/useAddressSelection';
+import PaymentForm from '@/components/forms/PaymentForm';
+import Facture from '@/components/invoice/Facture';
+import type { Payment } from '@/types/payment.types';
+
+const OrderSchema = Yup.object().shape({
+  deliveryAddress: Yup.string().required("L'adresse de livraison est requise"),
+  deliveryCity: Yup.string().required('La ville est requise'),
+  deliveryPostalCode: Yup.string().required('Le code postal est requis'),
+  deliveryNotes: Yup.string().max(200, 'Les notes ne peuvent pas dépasser 200 caractères'),
+  // Google Maps coordinates
+  latitude: Yup.number(),
+  longitude: Yup.number(),
+  placeId: Yup.string(),
+});
+
+export default function CartSummaryPage() {
+  const [promoCode, setPromoCode] = useState('');
+  const [deliveryOption, setDeliveryOption] = useState('standard');
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [completedPayment, setCompletedPayment] = useState<Payment | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string>('');
+  const [useManualAddress, setUseManualAddress] = useState(true);
+
+  const {
+    cart,
+    updateQuantity,
+    removeFromCart,
+    getTotalPrice,
+    getTotalItems,
+    isEmpty,
+    isLoading,
+    error,
+  } = useCart();
+
+  const {
+    selectedAddress,
+    isAddressSelected,
+    selectAddress,
+    clearAddress,
+    getFormattedAddress,
+    getAddressComponents,
+  } = useAddressSelection();
+
+  const formik = useFormik({
+    initialValues: {
+      deliveryAddress: '',
+      deliveryCity: '',
+      deliveryPostalCode: '',
+      deliveryNotes: '',
+      latitude: 0,
+      longitude: 0,
+      placeId: '',
+    },
+    validationSchema: OrderSchema,
+    onSubmit: async (values) => {
+      console.log('Order submission:', {
+        ...values,
+        selectedAddress,
+        coordinates: selectedAddress
+          ? {
+              lat: selectedAddress.latitude,
+              lng: selectedAddress.longitude,
+            }
+          : null,
+      });
+      setShowPayment(true);
+    },
+  });
+
+  // Update form when address is selected from Google Maps
+  useEffect(() => {
+    if (selectedAddress && !useManualAddress) {
+      const components = getAddressComponents();
+      formik.setValues({
+        ...formik.values,
+        deliveryAddress: getFormattedAddress(),
+        deliveryCity: components.city,
+        deliveryPostalCode: components.postal_code,
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude,
+        placeId: selectedAddress.place_id,
+      });
+    }
+  }, [formik, getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    updateQuantity(productId, newQuantity);
+  };
+
+  const handleRemoveItem = (productId: string) => {
+    removeFromCart(productId);
+  };
+
+  const subtotal = getTotalPrice();
+  const totalWeight = cart.items.reduce((sum, item) => {
+    const weight = item.product.specifications?.weight;
+    const weightValue = weight ? parseFloat(String(weight)) : 0.5;
+    return sum + (isNaN(weightValue) ? 0.5 : weightValue) * item.quantity;
+  }, 0);
+  const deliveryFee =
+    deliveryOption === 'express' ? 5000 : deliveryOption === 'same-day' ? 10000 : 2000;
+  const total = subtotal + deliveryFee;
+
+  if (paymentSuccess && completedPayment) {
+    return (
+      <div className="flex h-screen flex-1 flex-col">
+        <Header />
+        {/* <main className="flex"> */}
+        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <Facture
+            payment={completedPayment}
+            orderNumber={orderNumber}
+            items={cart.items}
+            deliveryAddress={{
+              address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
+              city: formik.values.deliveryCity,
+              postalCode: formik.values.deliveryPostalCode,
+              country: 'Cameroun',
+            }}
+            deliveryOption={deliveryOption}
+            deliveryFee={deliveryFee}
+            customerInfo={{
+              name: 'Client TSA', // You can get this from auth context
+              email: 'client@example.com', // You can get this from auth context
+              phone: '+237 6XX XXX XXX', // You can get this from form or auth context
+            }}
+            onDownload={() => {
+              console.log('Download PDF');
+              // Implement PDF download functionality
+            }}
+            onPrint={() => {
+              window.print();
+            }}
+            onEmailSend={() => {
+              console.log('Send email');
+              // Implement email sending functionality
+            }}
+            onClose={() => {
+              setPaymentSuccess(false);
+              setCompletedPayment(null);
+              setOrderNumber('');
+              // Optionally clear cart after successful order
+              // clearCart()
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-50 flex-1 flex-col">
+      <div className="w-full">
+        <div className="container mx-auto px-4">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <Link to="/shop">
+                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                  <ArrowLeft className="h-4 w-4" />
+                  Continue Shopping
+                </Button>
+              </Link>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
+            <p className="text-gray-600">Review your selected parts before checkout</p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600">
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-4">
+              {isEmpty() ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+                    <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
+                    <Link to="/shop">
+                      <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
+                        Browse Products
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {cart.items.map((item) => (
+                    <Card key={item.productId}>
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={item.product.images[0] || item.product.imageUrl || ''}
+                            alt={item.product.name}
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className="bg-green-100 text-green-800">
+                                Ref: {item.product.reference}
+                              </Badge>
+                              <Badge variant="outline">{item.product.unit}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleUpdateQuantity(item.productId, item.quantity - 1)
+                                  }
+                                  disabled={item.quantity <= 1 || isLoading}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    handleUpdateQuantity(
+                                      item.productId,
+                                      Number.parseInt(e.target.value) || 1
+                                    )
+                                  }
+                                  className="w-16 text-center"
+                                  min="1"
+                                  max={item.product.stock}
+                                  disabled={isLoading}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleUpdateQuantity(item.productId, item.quantity + 1)
+                                  }
+                                  disabled={item.quantity >= item.product.stock || isLoading}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              {/* <p className="text-sm text-gray-500">{item.product.stock} available</p> */}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex flex-col items-end gap-1">
+                              <p className="text-lg font-bold">
+                                {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {item.priceAtTime.toLocaleString()} FCFA each
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveItem(item.productId)}
+                              className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              disabled={isLoading}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {/* Adresse de livraison */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Truck className="h-5 w-5" />
+                          Livraison
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setUseManualAddress(!useManualAddress);
+                            if (!useManualAddress) {
+                              clearAddress();
+                              formik.setValues({
+                                ...formik.values,
+                                deliveryAddress: '',
+                                deliveryCity: '',
+                                deliveryPostalCode: '',
+                                latitude: 0,
+                                longitude: 0,
+                                placeId: '',
+                              });
+                            }
+                          }}
+                          className="text-xs"
+                        >
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {useManualAddress ? 'Utiliser Google Maps' : 'Saisie manuelle'}
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {!useManualAddress ? (
+                        <>
+                          <div>
+                            <Label>Rechercher votre adresse de livraison *</Label>
+                            <AddressPicker
+                              onAddressSelect={selectAddress}
+                              onClear={clearAddress}
+                              placeholder="Tapez votre adresse ou utilisez votre position..."
+                              value={getFormattedAddress()}
+                              showMap={true}
+                              className="mt-2"
+                            />
+                            {formik.touched.deliveryAddress &&
+                              formik.errors.deliveryAddress &&
+                              !isAddressSelected && (
+                                <p className="text-sm text-red-600 mt-1">
+                                  {formik.errors.deliveryAddress}
+                                </p>
+                              )}
+                          </div>
+
+                          {isAddressSelected && (
+                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-green-800">
+                                    Adresse sélectionnée
+                                  </p>
+                                  <p className="text-sm text-green-700">{getFormattedAddress()}</p>
+                                  <div className="mt-1 text-xs text-green-600">
+                                    Coordonnées: {selectedAddress?.latitude.toFixed(6)},{' '}
+                                    {selectedAddress?.longitude.toFixed(6)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <Label htmlFor="deliveryAddress">Adresse de livraison *</Label>
+                            <Textarea
+                              id="deliveryAddress"
+                              name="deliveryAddress"
+                              placeholder="Votre adresse complète..."
+                              value={formik.values.deliveryAddress}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              rows={3}
+                              className={
+                                formik.touched.deliveryAddress && formik.errors.deliveryAddress
+                                  ? 'border-red-500'
+                                  : ''
+                              }
+                            />
+                            {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
+                              <p className="text-sm text-red-600 mt-1">
+                                {formik.errors.deliveryAddress}
+                              </p>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="deliveryCity">Ville *</Label>
+                              <Input
+                                id="deliveryCity"
+                                name="deliveryCity"
+                                placeholder="Votre ville"
+                                value={formik.values.deliveryCity}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                className={
+                                  formik.touched.deliveryCity && formik.errors.deliveryCity
+                                    ? 'border-red-500'
+                                    : ''
+                                }
+                              />
+                              {formik.touched.deliveryCity && formik.errors.deliveryCity && (
+                                <p className="text-sm text-red-600 mt-1">
+                                  {formik.errors.deliveryCity}
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="deliveryPostalCode">Code postal *</Label>
+                              <Input
+                                id="deliveryPostalCode"
+                                name="deliveryPostalCode"
+                                placeholder="Code postal"
+                                value={formik.values.deliveryPostalCode}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                className={
+                                  formik.touched.deliveryPostalCode &&
+                                  formik.errors.deliveryPostalCode
+                                    ? 'border-red-500'
+                                    : ''
+                                }
+                              />
+                              {formik.touched.deliveryPostalCode &&
+                                formik.errors.deliveryPostalCode && (
+                                  <p className="text-sm text-red-600 mt-1">
+                                    {formik.errors.deliveryPostalCode}
+                                  </p>
+                                )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      <div>
+                        <Label htmlFor="deliveryNotes">Instructions de livraison</Label>
+                        <Input
+                          id="deliveryNotes"
+                          name="deliveryNotes"
+                          placeholder="Code d'accès, étage, etc."
+                          value={formik.values.deliveryNotes}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={
+                            formik.touched.deliveryNotes && formik.errors.deliveryNotes
+                              ? 'border-red-500'
+                              : ''
+                          }
+                        />
+                        {formik.touched.deliveryNotes && formik.errors.deliveryNotes && (
+                          <p className="text-sm text-red-600 mt-1">{formik.errors.deliveryNotes}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            {/* Order Summary */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between">
+                    <span>Subtotal ({getTotalItems()} items)</span>
+                    <span>{subtotal.toLocaleString()} FCFA</span>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Delivery Option</label>
+                    <Select value={deliveryOption} onValueChange={setDeliveryOption}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard (3-5 days) - 2,000 FCFA</SelectItem>
+                        <SelectItem value="express">Express (1-2 days) - 5,000 FCFA</SelectItem>
+                        <SelectItem value="same-day">Same Day - 10,000 FCFA</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>Delivery</span>
+                    <span>{deliveryFee.toLocaleString()} FCFA</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Total Weight</span>
+                    <span>{totalWeight.toFixed(1)} kg</span>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>{total.toLocaleString()} FCFA</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                      />
+                      <Button variant="outline">Apply</Button>
+                    </div>
+
+                    <Button
+                      className="w-full gap-2"
+                      type="button"
+                      style={{ backgroundColor: 'var(--tsa-blue)' }}
+                      disabled={isEmpty() || isLoading || (!useManualAddress && !isAddressSelected)}
+                      onClick={() => {
+                        const validationErrors = formik.validateForm();
+                        if (Object.keys(validationErrors).length === 0) {
+                          formik.handleSubmit();
+                        } else {
+                          formik.setTouched({
+                            deliveryAddress: true,
+                            deliveryCity: true,
+                            deliveryPostalCode: true,
+                          });
+                        }
+                      }}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Proceed to Checkout
+                    </Button>
+                    {!useManualAddress && !isAddressSelected && (
+                      <p className="text-xs text-amber-600 text-center mt-1">
+                        Veuillez sélectionner une adresse de livraison
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Delivery Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Truck className="h-5 w-5" />
+                    Delivery Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Shield className="h-4 w-4 text-green-600" />
+                    <span>All parts quality-tested and guaranteed</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Truck className="h-4 w-4 text-blue-600" />
+                    <span>Free returns within 30 days</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <CreditCard className="h-4 w-4 text-purple-600" />
+                    <span>Secure payment processing</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recommended Parts */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>You might also need</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-2 border rounded-lg">
+                      <img
+                        src="/air-filter.png"
+                        alt="Air Filter"
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Air Filter</p>
+                        <p className="text-xs text-gray-500">8,500 FCFA</p>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Finaliser le paiement
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Order Summary in Dialog */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="font-semibold text-lg mb-3">Résumé de la commande</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Sous-total ({getTotalItems()} articles)</span>
+                  <span>{subtotal.toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Livraison ({deliveryOption})</span>
+                  <span>{deliveryFee.toLocaleString()} FCFA</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-semibold text-base">
+                  <span>Total</span>
+                  <span>{total.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Form */}
+            <PaymentForm
+              amount={total}
+              currency="fcfa"
+              onSuccess={(payment) => {
+                console.log('Payment successful:', payment);
+                // Generate order number
+                const orderNum = `TSA-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+                setOrderNumber(orderNum);
+                setCompletedPayment(payment);
+                setPaymentSuccess(true);
+                setShowPayment(false);
+              }}
+              onError={(error) => {
+                console.error('Payment error:', error);
+                setShowPayment(false);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

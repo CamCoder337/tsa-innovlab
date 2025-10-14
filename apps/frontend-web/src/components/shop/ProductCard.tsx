@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, ShoppingCart, Eye } from 'lucide-react';
+import { Heart, ShoppingCart, Eye, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProductCardProps } from '@/types/product.types';
+import { Input } from '../ui/input';
 
 export function ProductCard({
   product,
@@ -15,6 +16,7 @@ export function ProductCard({
   isInWishlist = false,
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [qty, setQty] = useState(1);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -76,7 +78,7 @@ export function ProductCard({
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => onAddToCart?.(product.id)}
+                    onClick={() => onAddToCart?.(product, qty)}
                     disabled={!product.stock}
                     style={{ backgroundColor: product.stock ? 'var(--tsa-blue)' : undefined }}
                   >
@@ -144,40 +146,74 @@ export function ProductCard({
           )}
         </div>
 
-        <div className="p-4 space-y-3">
-          <div className="space-y-1">
+        <div className="p-2 space-y-4">
+          <div className="space-y-1 h-12">
             <h3 className="font-semibold line-clamp-2">{product.name}</h3>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-end gap-2">
               <span className="text-lg font-bold">{product.price.toLocaleString()} FCFA</span>
-              {product.price && (
-                <span className="text-sm text-muted-foreground line-through">
-                  {product.price.toLocaleString()} FCFA
-                </span>
-              )}
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
+          <div className="flex gap-2 justify-between">
+            {/* <Button
               variant="outline"
               size="sm"
-              className="flex-1 bg-transparent"
+              className="w-fit bg-transparent"
               onClick={() => onQuickView?.(product)}
             >
               <Eye className="h-4 w-4" />
-            </Button>
+            </Button> */}
+            <div className="flex items-center justify-end gap-2 w-2/3">
+              <Button
+                variant="outline"
+                className="w-fit h-auto has-[>svg]:px-1"
+                aria-label="Diminuer la quantité"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQty(qty - 1);
+                }}
+                disabled={qty <= 1}
+              >
+                <Minus className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Input
+                aria-label="Quantité"
+                className="w-fit text-center h-auto"
+                type="number"
+                min={1}
+                max={product.stock}
+                value={qty}
+                onChange={(e) => {
+                  e.stopPropagation(); // Prevent change event from bubbling
+                  const value = e.target.value;
+                  if (Number(value) <= product.stock) setQty(Number(value));
+                  else setQty(product.stock);
+                }}
+              />
+              <Button
+                className="w-fit h-auto has-[>svg]:px-1 "
+                variant="outline"
+                aria-label="Augmenter la quantité"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQty(qty + 1);
+                }}
+                disabled={qty >= product.stock}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
             <Button
               size="sm"
-              className="flex-1"
-              onClick={() => onAddToCart?.(product.id)}
+              className="w-fit"
+              onClick={() => onAddToCart?.(product, qty)}
               disabled={!product.stock}
               style={{ backgroundColor: product.stock ? 'var(--tsa-blue)' : undefined }}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Ajouter au Panier
+              <ShoppingCart className="h-4 w-4" />
             </Button>
           </div>
         </div>

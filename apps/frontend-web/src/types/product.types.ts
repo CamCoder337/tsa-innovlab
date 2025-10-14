@@ -75,7 +75,7 @@ export interface ProductFilterParams {
 export interface ProductCardProps {
   product: Product;
   viewMode?: 'grid' | 'list';
-  onAddToCart?: (productId: string) => void;
+  onAddToCart?: (product: Product, quantity: number) => void;
   onToggleWishlist?: (productId: string) => void;
   onQuickView?: (product: Product) => void;
   isInWishlist?: boolean;

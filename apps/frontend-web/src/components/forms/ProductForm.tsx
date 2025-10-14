@@ -13,7 +13,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Upload, X } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { handleSupabaseError } from '@/lib/supabase';
+import { handleSupabaseError } from '@/services/supabase';
 import type { CreateProduct, UpdateProduct } from '@/types/product.types';
 import type { Category } from '@/types/category.types';
 import { toast } from 'react-hot-toast';

@@ -49,7 +49,7 @@ const affreteurMenu: SidebarItem[] = [
     id: 'products',
     label: 'Boutique',
     icon: ShoppingCart,
-    href: '/app/shop',
+    href: '/shop',
   },
   {
     id: 'tracking',
@@ -95,7 +95,7 @@ const transporteurMenu: SidebarItem[] = [
     id: 'products',
     label: 'Boutique',
     icon: ShoppingCart,
-    href: '/app/shop',
+    href: '/shop',
   },
   {
     id: 'tracking',

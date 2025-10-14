@@ -6,13 +6,17 @@ export type PaymentStatus =
   | 'refunded'
   | 'cancelled';
 
+export type PaymentMethodType = 'card' | 'mobile' | 'cash';
+
+export type MobileMoneyProvider = 'orange_money' | 'mtn_mobile_money';
+
 export interface Payment {
   id: string;
-  missionId: string;
+  // missionId: string;
   amount: number;
   currency: string;
   status: PaymentStatus;
-  paymentMethod: string;
+  paymentMethod: PaymentMethodType;
   paymentIntentId?: string;
   receiptUrl?: string;
   paidAt?: Date;
@@ -20,8 +24,22 @@ export interface Payment {
   updatedAt: Date;
 }
 
+export interface MobileMoneyDetails {
+  provider: MobileMoneyProvider;
+  phoneNumber: string;
+  receiverName: string;
+}
+
+export interface CardDetails {
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
+  cardholderName: string;
+  saveCard?: boolean;
+}
+
 export interface CreatePaymentIntentDto {
-  missionId: string;
+  // missionId: string;
   amount: number;
   currency?: string;
   paymentMethodId?: string;
