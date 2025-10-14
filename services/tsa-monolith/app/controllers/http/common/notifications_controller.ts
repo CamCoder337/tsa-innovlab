@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
-import Notification, { NotificationType, NotificationPriority } from '#models/notification'
+import Notification, { NotificationPriority, NotificationType } from '#models/notification'
 import WebSocketService from '#services/websocket_service'
 import { notificationValidator } from '#validators/notification'
 

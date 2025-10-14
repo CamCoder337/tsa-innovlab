@@ -1,9 +1,8 @@
 import { test } from '@japa/runner'
 import User, { UserRole, UserStatus } from '#models/user'
-import Mission from '#models/mission'
-import Conversation from '#models/conversation'
+import Mission, { MissionStatus } from '#models/mission'
+import Conversation, { ConversationType } from '#models/conversation'
 import Database from '@adonisjs/lucid/services/db'
-import testUtils from '@adonisjs/core/services/test_utils'
 import { DateTime } from 'luxon'
 
 test.group('Conversations API', (group) => {
@@ -81,8 +80,8 @@ test.group('Conversations API', (group) => {
 
   test('should list user conversations', async ({ client, assert }) => {
     // Créer une conversation de test
-    const conversation = await Conversation.create({
-      type: 'direct',
+    await Conversation.create({
+      type: ConversationType.DIRECT,
       user1Id: admin.id,
       user2Id: affreteur.id,
       lastActivityAt: DateTime.now(),
@@ -132,7 +131,7 @@ test.group('Conversations API', (group) => {
 
   test('should get conversation details', async ({ client, assert }) => {
     const conversation = await Conversation.create({
-      type: 'direct',
+      type: ConversationType.DIRECT,
       user1Id: admin.id,
       user2Id: affreteur.id,
       lastActivityAt: DateTime.now(),
@@ -149,7 +148,7 @@ test.group('Conversations API', (group) => {
 
   test('should return 403 if user is not participant', async ({ client }) => {
     const conversation = await Conversation.create({
-      type: 'direct',
+      type: ConversationType.DIRECT,
       user1Id: admin.id,
       user2Id: affreteur.id,
       lastActivityAt: DateTime.now(),
@@ -181,10 +180,7 @@ test.group('Conversations API', (group) => {
     assert.equal(response.body().data.type, 'direct')
   })
 
-  test('Admin should create direct conversation with Transporteur', async ({
-    client,
-    assert,
-  }) => {
+  test('Admin should create direct conversation with Transporteur', async ({ client, assert }) => {
     const response = await client
       .post('/api/common/conversations/direct')
       .bearerToken(adminToken)
@@ -216,9 +212,7 @@ test.group('Conversations API', (group) => {
     )
   })
 
-  test('Transporteur should NOT create direct conversation with Affreteur', async ({
-    client,
-  }) => {
+  test('Transporteur should NOT create direct conversation with Affreteur', async ({ client }) => {
     const response = await client
       .post('/api/common/conversations/direct')
       .bearerToken(transporteurToken)
@@ -278,14 +272,14 @@ test.group('Conversations API', (group) => {
 
   test('Should create mission conversation when users are linked', async ({ client, assert }) => {
     const mission = await Mission.create({
-      titre: 'Test Mission Conv',
+      title: 'Test Mission Conv',
       description: 'Test',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: transporteur.id,
     })
@@ -307,14 +301,14 @@ test.group('Conversations API', (group) => {
 
   test('Should reject mission conversation if users not linked', async ({ client }) => {
     const mission = await Mission.create({
-      titre: 'Test Mission Conv 2',
+      title: 'Test Mission Conv 2',
       description: 'Test',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: null, // Pas de transporteur
     })
@@ -334,14 +328,14 @@ test.group('Conversations API', (group) => {
 
   test('Admin should create mission conversation regardless', async ({ client, assert }) => {
     const mission = await Mission.create({
-      titre: 'Test Mission Conv 3',
+      title: 'Test Mission Conv 3',
       description: 'Test',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: transporteur.id,
     })

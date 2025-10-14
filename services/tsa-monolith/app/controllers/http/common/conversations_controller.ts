@@ -5,10 +5,10 @@ import User from '#models/user'
 import Mission from '#models/mission'
 import ConversationAuthorizationService from '#services/conversation_authorization_service'
 import {
+  conversationIndexValidator,
   createDirectConversationValidator,
   createMissionConversationValidator,
   searchUsersValidator,
-  conversationIndexValidator,
 } from '#validators/conversation'
 
 @inject()
@@ -35,7 +35,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'titre', 'status')
+          missionQuery.select('id', 'title', 'status')
         })
         .withCount('messages')
         .withCount('messages', (messagesQuery) => {
@@ -100,7 +100,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'titre', 'status')
+          missionQuery.select('id', 'title', 'status')
         })
         .firstOrFail()
 

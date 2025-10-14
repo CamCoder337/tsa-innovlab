@@ -49,15 +49,14 @@ export interface WebSocketMessage {
  */
 class WebSocketService {
   /**
+   * Instance singleton
+   */
+  private static instance: WebSocketService
+  /**
    * Map pour tracker toutes les connexions actives
    * Key: userId, Value: ConnectedUser
    */
   private connections: Map<string, ConnectedUser> = new Map()
-
-  /**
-   * Instance singleton
-   */
-  private static instance: WebSocketService
 
   /**
    * Constructeur privé pour pattern singleton

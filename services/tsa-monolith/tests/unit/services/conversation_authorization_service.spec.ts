@@ -1,7 +1,7 @@
 import { test } from '@japa/runner'
 import ConversationAuthorizationService from '#services/conversation_authorization_service'
 import User, { UserRole } from '#models/user'
-import Mission from '#models/mission'
+import Mission, { MissionStatus } from '#models/mission'
 import Database from '@adonisjs/lucid/services/db'
 
 test.group('ConversationAuthorizationService', (group) => {
@@ -189,14 +189,14 @@ test.group('ConversationAuthorizationService', (group) => {
     })
 
     const mission = await Mission.create({
-      titre: 'Test Mission',
+      title: 'Test Mission',
       description: 'Test Description',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: transporteur.id,
     })
@@ -211,9 +211,7 @@ test.group('ConversationAuthorizationService', (group) => {
     assert.isUndefined(result.reason)
   })
 
-  test('Should reject conversation when Affreteur is not linked to mission', async ({
-    assert,
-  }) => {
+  test('Should reject conversation when Affreteur is not linked to mission', async ({ assert }) => {
     const affreteur = await User.create({
       email: 'affreteur8@test.com',
       passwordHash: 'hash',
@@ -242,14 +240,14 @@ test.group('ConversationAuthorizationService', (group) => {
     })
 
     const mission = await Mission.create({
-      titre: 'Test Mission 2',
+      title: 'Test Mission 2',
       description: 'Test Description',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: otherAffreteur.id,
       transporteurId: transporteur.id,
     })
@@ -287,14 +285,14 @@ test.group('ConversationAuthorizationService', (group) => {
     })
 
     const mission = await Mission.create({
-      titre: 'Test Mission 3',
+      title: 'Test Mission 3',
       description: 'Test Description',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: null, // Pas de transporteur assigné
     })
@@ -339,14 +337,14 @@ test.group('ConversationAuthorizationService', (group) => {
     })
 
     const mission = await Mission.create({
-      titre: 'Test Mission 4',
+      title: 'Test Mission 4',
       description: 'Test Description',
       typeMarchandise: 'Electronics',
       poids: 100,
       volume: 50,
       budgetMin: 50000,
       budgetMax: 100000,
-      status: 'published',
+      status: MissionStatus.PUBLISHED,
       affreteurId: affreteur.id,
       transporteurId: transporteur.id,
     })
@@ -366,10 +364,7 @@ test.group('ConversationAuthorizationService', (group) => {
     const userId = 'user-123'
     const participantIds = ['user-123', 'user-456']
 
-    const canAccess = ConversationAuthorizationService.canAccessConversation(
-      userId,
-      participantIds
-    )
+    const canAccess = ConversationAuthorizationService.canAccessConversation(userId, participantIds)
 
     assert.isTrue(canAccess)
   })
@@ -378,10 +373,7 @@ test.group('ConversationAuthorizationService', (group) => {
     const userId = 'user-789'
     const participantIds = ['user-123', 'user-456']
 
-    const canAccess = ConversationAuthorizationService.canAccessConversation(
-      userId,
-      participantIds
-    )
+    const canAccess = ConversationAuthorizationService.canAccessConversation(userId, participantIds)
 
     assert.isFalse(canAccess)
   })

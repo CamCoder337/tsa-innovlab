@@ -1,6 +1,6 @@
 import { test } from '@japa/runner'
 import User, { UserRole, UserStatus } from '#models/user'
-import Conversation from '#models/conversation'
+import Conversation, { ConversationType } from '#models/conversation'
 import Message, { MessageType } from '#models/message'
 import Database from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
@@ -11,7 +11,6 @@ test.group('Messages API', (group) => {
   let user3: User
   let conversation: Conversation
   let user1Token: string
-  let user2Token: string
   let user3Token: string
 
   group.setup(async () => {
@@ -61,12 +60,12 @@ test.group('Messages API', (group) => {
 
     // Générer tokens JWT réels
     user1Token = await user1.generateAccessToken('test-token')
-    user2Token = await user2.generateAccessToken('test-token')
+    await user2.generateAccessToken('test-token')
     user3Token = await user3.generateAccessToken('test-token')
 
     // Créer conversation de test
     conversation = await Conversation.create({
-      type: 'direct',
+      type: ConversationType.DIRECT,
       user1Id: user1.id,
       user2Id: user2.id,
       lastActivityAt: DateTime.now(),
@@ -124,10 +123,7 @@ test.group('Messages API', (group) => {
     assert.isAtMost(body.data.messages.data.length, 10)
   })
 
-  test('should automatically mark messages as read when retrieved', async ({
-    client,
-    assert,
-  }) => {
+  test('should automatically mark messages as read when retrieved', async ({ client, assert }) => {
     // Créer message non lu
     const message = await Message.create({
       conversationId: conversation.id,
@@ -230,10 +226,7 @@ test.group('Messages API', (group) => {
       .header('Accept', 'application/json')
 
     await conversation.refresh()
-    assert.notEqual(
-      conversation.lastActivityAt.toMillis(),
-      initialLastActivity.toMillis()
-    )
+    assert.notEqual(conversation.lastActivityAt.toMillis(), initialLastActivity.toMillis())
   })
 
   test('should return 403 if user is not participant when sending', async ({ client }) => {
@@ -295,9 +288,7 @@ test.group('Messages API', (group) => {
     })
   })
 
-  test('should return 403 if user is not participant when marking read', async ({
-    client,
-  }) => {
+  test('should return 403 if user is not participant when marking read', async ({ client }) => {
     const message = await Message.create({
       conversationId: conversation.id,
       senderId: user2.id,
@@ -453,9 +444,7 @@ test.group('Messages API', (group) => {
     response.assertBodyContains({ success: true })
   })
 
-  test('should return 403 if user is not participant when sending typing', async ({
-    client,
-  }) => {
+  test('should return 403 if user is not participant when sending typing', async ({ client }) => {
     const response = await client
       .post(`/api/common/conversations/${conversation.id}/typing`)
       .bearerToken(user3Token) // user3 n'est pas participant

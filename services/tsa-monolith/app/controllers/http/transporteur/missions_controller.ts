@@ -9,6 +9,7 @@ import NotificationManagerService from '#services/notification_manager_service'
 @inject()
 export default class MissionsController {
   constructor(private notificationManager: NotificationManagerService) {}
+
   async available({ request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()

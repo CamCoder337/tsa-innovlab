@@ -1,5 +1,5 @@
 import { inject } from '@adonisjs/core'
-import Notification, { NotificationType, NotificationPriority } from '#models/notification'
+import Notification, { NotificationPriority, NotificationType } from '#models/notification'
 import Mission from '#models/mission'
 import User from '#models/user'
 import WebSocketService from './websocket_service.js'
@@ -20,7 +20,7 @@ export default class NotificationManagerService {
    */
   async notifyNewMission(mission: Mission): Promise<void> {
     try {
-      console.log(`🔔 Notification nouvelle mission: ${mission.titre}`)
+      console.log(`🔔 Notification nouvelle mission: ${mission.title}`)
 
       // Récupérer tous les transporteurs actifs
       const transporteurs = await User.query()
@@ -32,7 +32,7 @@ export default class NotificationManagerService {
         const notification = await Notification.create({
           userId: transporteur.id,
           type: NotificationType.MISSION_NEW,
-          title: `Nouvelle mission disponible: ${mission.titre}`,
+          title: `Nouvelle mission disponible: ${mission.title}`,
           message: `Mission de ${mission.adresseDepart?.city} vers ${mission.adresseArrivee?.city}. Budget: ${mission.getBudgetRange()}`,
           priority: NotificationPriority.NORMAL,
           missionId: mission.id,
@@ -70,14 +70,14 @@ export default class NotificationManagerService {
    */
   async notifyMissionAssigned(mission: Mission, transporteur: User): Promise<void> {
     try {
-      console.log(`🔔 Notification mission assignée: ${mission.titre} → ${transporteur.email}`)
+      console.log(`🔔 Notification mission assignée: ${mission.title} → ${transporteur.email}`)
 
       // Créer la notification
       const notification = await Notification.create({
         userId: transporteur.id,
         type: NotificationType.MISSION_ASSIGNED,
-        title: `Mission assignée: ${mission.titre}`,
-        message: `Vous avez été assigné à la mission "${mission.titre}". Préparez-vous pour le transport.`,
+        title: `Mission assignée: ${mission.title}`,
+        message: `Vous avez été assigné à la mission "${mission.title}". Préparez-vous pour le transport.`,
         priority: NotificationPriority.HIGH,
         missionId: mission.id,
         actionUrl: `${env.get('FRONTEND_URL')}/my-missions/${mission.id}`,
@@ -114,7 +114,7 @@ export default class NotificationManagerService {
     transporteur: User
   ): Promise<void> {
     try {
-      console.log(`🔔 Notification changement statut: ${mission.titre} ${oldStatus} → ${newStatus}`)
+      console.log(`🔔 Notification changement statut: ${mission.title} ${oldStatus} → ${newStatus}`)
 
       // Notifier l'affreteur du changement de statut
       const affreteur = await User.findOrFail(mission.affreteurId)
@@ -122,7 +122,7 @@ export default class NotificationManagerService {
       const notification = await Notification.create({
         userId: affreteur.id,
         type: NotificationType.MISSION_STATUS_CHANGED,
-        title: `Mission ${mission.titre} - Statut mis à jour`,
+        title: `Mission ${mission.title} - Statut mis à jour`,
         message: `Le statut de votre mission est passé de "${oldStatus}" à "${newStatus}" par ${transporteur.fullName}.`,
         priority: this.getStatusChangePriority(newStatus),
         missionId: mission.id,

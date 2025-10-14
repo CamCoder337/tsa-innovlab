@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, belongsTo } from '@adonisjs/lucid/orm'
-import type { HasMany, BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Message from './message.js'
 import User from './user.js'
 import Mission from './mission.js'
@@ -51,23 +51,6 @@ export default class Conversation extends BaseModel {
 
   @belongsTo(() => Mission)
   declare mission: BelongsTo<typeof Mission>
-
-  // Helpers
-  public updateLastActivity(): void {
-    this.lastActivityAt = DateTime.now()
-  }
-
-  public isParticipant(userId: string): boolean {
-    return this.user1Id === userId || this.user2Id === userId
-  }
-
-  public getOtherParticipant(userId: string): string {
-    return this.user1Id === userId ? this.user2Id : this.user1Id
-  }
-
-  public getParticipantIds(): string[] {
-    return [this.user1Id, this.user2Id]
-  }
 
   // Factory methods
   public static async findOrCreateDirectConversation(
@@ -121,6 +104,23 @@ export default class Conversation extends BaseModel {
     }
 
     return conversation
+  }
+
+  // Helpers
+  public updateLastActivity(): void {
+    this.lastActivityAt = DateTime.now()
+  }
+
+  public isParticipant(userId: string): boolean {
+    return this.user1Id === userId || this.user2Id === userId
+  }
+
+  public getOtherParticipant(userId: string): string {
+    return this.user1Id === userId ? this.user2Id : this.user1Id
+  }
+
+  public getParticipantIds(): string[] {
+    return [this.user1Id, this.user2Id]
   }
 
   // Serializer pour l'API

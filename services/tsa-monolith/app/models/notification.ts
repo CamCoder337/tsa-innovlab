@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
 import Mission from './mission.js'
@@ -71,10 +71,6 @@ export default class Notification extends BaseModel {
     return !!this.readAt
   }
 
-  public markAsRead(): void {
-    this.readAt = DateTime.now()
-  }
-
   public get isUrgent(): boolean {
     return this.priority === NotificationPriority.URGENT
   }
@@ -113,6 +109,10 @@ export default class Notification extends BaseModel {
       priority,
       emailSent: false,
     })
+  }
+
+  public markAsRead(): void {
+    this.readAt = DateTime.now()
   }
 
   // Serializer pour l'API
