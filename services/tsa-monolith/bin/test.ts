@@ -51,7 +51,16 @@ new Ignitor(APP_ROOT, { importer: IMPORTER })
       ...config,
       ...{
         setup: runnerHooks.setup,
-        teardown: runnerHooks.teardown.concat([() => app.terminate()]),
+        teardown: runnerHooks.teardown.concat([
+          async () => {
+            try {
+              await app.terminate()
+            } catch (error) {
+              // Ignorer les erreurs de fermeture en environnement de test
+              // forceExit: true gérera la fermeture du processus
+            }
+          },
+        ]),
       },
     })
   })
