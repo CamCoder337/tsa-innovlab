@@ -1,0 +1,49 @@
+services:
+  # FastAPI AI Service - Se connecte à PostgreSQL et Redis locaux
+  tsa-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tsa-ai-backend
+    restart: unless-stopped
+    environment:
+      # Application
+      APP_NAME: ${APP_NAME:-TSA Contest AI API}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # Database PostgreSQL (connexion vers la machine hôte)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Redis (connexion vers la machine hôte)
+      REDIS_URL: ${REDIS_URL}
+
+      # CORS Origins
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-["http://localhost:3000", "http://localhost:5173", "http://localhost:3333"]}
+
+      # ML Models
+      MODELS_PATH: ${MODELS_PATH:-ml_models}
+      PREDICTION_BATCH_SIZE: ${PREDICTION_BATCH_SIZE:-100}
+      MODEL_RELOAD_INTERVAL: ${MODEL_RELOAD_INTERVAL:-3600}
+
+      # Cache
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-300}
+
+      # Internal service communication
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key-change-in-production}
+
+    ports:
+      - "${AI_PORT:-8000}:8000"
+
+    # Permet l'accès aux services de l'hôte
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/ai/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

@@ -1,2 +1,9 @@
 .idea
 .qodo
+
+# Claude Code
+.claude/
+
+# Playwright test results
+playwright-report/
+test-results/

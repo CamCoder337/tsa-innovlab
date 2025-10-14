@@ -36,16 +36,48 @@ fastapi-monolith/
 
 ### Setup rapide avec Docker
 
+**Prérequis** : PostgreSQL et Redis doivent déjà être installés et en cours d'exécution sur votre machine.
+
 ```bash
-# Cloner le projet
-git clone <repo-url>
+# Aller dans le répertoire du service
 cd services/tsa-ai
 
-# Lancer avec Docker Compose
+# Copier le fichier d'environnement Docker
+cp .env.docker .env
+
+# IMPORTANT: Vérifier que DATABASE_URL et REDIS_URL correspondent à votre configuration locale
+# Éditer .env si nécessaire
+
+# Lancer FastAPI dans Docker (se connecte à PostgreSQL et Redis locaux)
 docker-compose up -d
 
-# Vérifier le service
+# Vérifier que le service est en cours d'exécution
+docker-compose ps
+
+# Vérifier le service AI
 curl http://localhost:8000/api/ai/health
+
+# Accéder à la documentation Swagger
+# Ouvrir http://localhost:8000/docs dans votre navigateur
+```
+
+**Note** : Le service FastAPI tourne dans Docker sur le port `8000` et se connecte à :
+- PostgreSQL local : `host.docker.internal:5432`
+- Redis local : `host.docker.internal:6379`
+
+**Commandes utiles** :
+```bash
+# Voir les logs
+docker-compose logs -f tsa-ai
+
+# Arrêter le service
+docker-compose down
+
+# Rebuild après modification du code
+docker-compose up -d --build
+
+# Redémarrer le service
+docker-compose restart tsa-ai
 ```
 
 ### Setup développement local
@@ -222,6 +254,64 @@ Flow typique:
 4. Adonis → Frontend (Response finale)
 ```
 
+### Utilisation avec tsa-monolith
+
+Les deux services partagent la même base PostgreSQL et Redis. Vous pouvez les lancer en parallèle :
+
+**Configuration recommandée (Docker + Dev)** :
+```bash
+# Terminal 1 : Lancer tsa-ai avec Docker
+cd services/tsa-ai
+cp .env.docker .env  # Si pas encore fait
+docker-compose up -d
+
+# Terminal 2 : Lancer tsa-monolith en mode dev
+cd services/tsa-monolith
+npm run dev
+```
+
+**Option alternative - Sans Docker (développement pur Python)** :
+```bash
+# Terminal 1 : Lancer tsa-ai avec uvicorn
+cd services/tsa-ai
+source venv/bin/activate  # ou venv\Scripts\activate sur Windows
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 : Lancer tsa-monolith
+cd services/tsa-monolith
+npm run dev
+```
+
+**Architecture locale** :
+```
+┌─────────────────┐
+│  PostgreSQL     │ ← Partagée par les 2 services
+│  localhost:5432 │
+└─────────────────┘
+         ↑
+    ┌────┴────┐
+    │         │
+┌───┴────┐  ┌─┴────────┐
+│tsa-ai  │  │tsa-mono  │
+│:8000   │  │:3333     │
+└────────┘  └──────────┘
+```
+
+Configuration AdonisJS pour appeler tsa-ai :
+```env
+# Dans services/tsa-monolith/.env
+FASTAPI_BASE_URL=http://localhost:8000
+```
+
+Les endpoints AI seront alors accessibles depuis AdonisJS via :
+```typescript
+// Dans services/tsa-monolith/app/services/ai_service.ts
+const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/personalized`, {
+  method: 'POST',
+  // ...
+})
+```
+
 ## 📈 Performance
 
 - **Réponse ETA** : < 200ms (moyenne)
@@ -233,13 +323,19 @@ Flow typique:
 
 ```bash
 # Logs en temps réel
-docker-compose logs -f fastapi-ai
+docker-compose logs -f tsa-ai
+
+# Logs de tous les services
+docker-compose logs -f
 
 # Debug modèles ML
 python -c "from app.services.ml_service import ml_service; print(ml_service.get_models_status())"
 
 # Test connexion DB
 python -c "from app.core.database import test_connection; print(test_connection())"
+
+# Accéder au conteneur pour debug
+docker-compose exec tsa-ai bash
 ```
 
 ## 📚 Documentation
