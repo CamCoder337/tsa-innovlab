@@ -92,7 +92,7 @@ export default function Header() {
           <Button variant="ghost" size="sm" className="relative max-sm:p-0">
             <ShoppingCart className="h-7 w-7" />
             <Badge className="absolute -top-1 right-2 w-6 h-6 rounded-full p-2 text-xs bg-tsa-blue/90">
-              {cart.itemsCount}
+              {cart.items.length}
             </Badge>
           </Button>
         </CartDrawer>
@@ -120,41 +120,51 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
-            <Link to="/app/profile">
-              <DropdownMenuItem>
-                <LogIn className="mr-2 h-4 w-4" />
-                Se connecter
-              </DropdownMenuItem>
-            </Link>
-            <Link to="/app/profile">
-              <DropdownMenuItem>
-                <UserPlus className="mr-2 h-4 w-4" />
-                S'inscrire
-              </DropdownMenuItem>
-            </Link>
-
-            <Link to="/app/profile">
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profil
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuSeparator />
-            <Link to="/app/settings">
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Paramètres
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem>
-              <Headset className="mr-2 h-4 w-4" />
-              Support
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} data-testid="logout-button" role="menuitem">
-              <LogOut className="mr-2 h-4 w-4" />
-              Déconnexion
-            </DropdownMenuItem>
+            {isInvite ? (
+              <>
+                <Link to="/">
+                  <DropdownMenuItem>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Se connecter
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/register">
+                  <DropdownMenuItem>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    S'inscrire
+                  </DropdownMenuItem>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/app/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    Profil
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <Link to="/app/settings">
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Paramètres
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem>
+                  <Headset className="mr-2 h-4 w-4" />
+                  Support
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  data-testid="logout-button"
+                  role="menuitem"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Déconnexion
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

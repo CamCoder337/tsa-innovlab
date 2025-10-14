@@ -53,7 +53,7 @@ export class AuthService extends BaseApi {
   ): Promise<ApiResponse<AuthTokens | MFARequiredResponse>> {
     try {
       const response = await this.axiosInstance.post('/api/auth/login', credentials);
-      return { data: response.data };
+      return { data: response.data.data || response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
@@ -62,7 +62,7 @@ export class AuthService extends BaseApi {
   async register(userData: CreateUserRequest): Promise<ApiResponse<User>> {
     try {
       const response = await this.axiosInstance.post('/api/auth/register', userData);
-      return { data: response.data };
+      return { data: response.data.data || response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
@@ -80,7 +80,7 @@ export class AuthService extends BaseApi {
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthTokens>> {
     try {
       const response = await this.axiosInstance.post('/api/auth/refresh-token', { refreshToken });
-      return { data: response.data.data };
+      return { data: response.data.data || response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

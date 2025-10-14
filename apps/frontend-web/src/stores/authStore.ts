@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { User, AuthStore } from '@/types/auth.types';
+import { tokenManager } from '@/services/token-manager.service';
 
 interface CookieOptions {
   days?: number;
@@ -68,14 +69,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       token: token ?? get().token ?? null,
       isAuthenticated: true,
     });
+
+    // Démarrer la gestion automatique des tokens
+    tokenManager.startTokenManagement();
   },
 
   logout: () => {
+    // Arrêter la gestion automatique des tokens
+    tokenManager.stopTokenManagement();
+
     persistToLocalStorage(null);
     removeCookie('tsa_access_token');
+    removeCookie('tsa_refresh_token');
     set({
       currentUser: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
     });
   },
@@ -98,5 +107,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     setCookie('tsa_access_token', token, {}, expiresIn);
     if (refreshToken) setCookie('tsa_refresh_token', refreshToken);
     set({ token: token, refreshToken: refreshToken ?? get().refreshToken });
+
+    // S'assurer que la gestion des tokens est active si l'utilisateur est connecté
+    if (get().isAuthenticated) {
+      tokenManager.startTokenManagement();
+    }
+  },
+
+  // Nouvelle méthode pour initialiser la gestion des tokens au démarrage
+  initializeTokenManagement: () => {
+    const state = get();
+    if (state.isAuthenticated && state.token && state.refreshToken) {
+      tokenManager.startTokenManagement();
+    }
   },
 }));

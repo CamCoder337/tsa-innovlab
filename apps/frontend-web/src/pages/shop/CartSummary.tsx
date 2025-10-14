@@ -116,7 +116,8 @@ export default function CartSummaryPage() {
         placeId: selectedAddress.place_id,
       });
     }
-  }, [formik, getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -128,7 +129,7 @@ export default function CartSummaryPage() {
 
   const subtotal = getTotalPrice();
   const totalWeight = cart.items.reduce((sum, item) => {
-    const weight = item.product.specifications?.weight;
+    const weight = item.product?.specifications?.weight;
     const weightValue = weight ? parseFloat(String(weight)) : 0.5;
     return sum + (isNaN(weightValue) ? 0.5 : weightValue) * item.quantity;
   }, 0);
@@ -230,17 +231,19 @@ export default function CartSummaryPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center gap-4">
                           <img
-                            src={item.product.images[0] || item.product.imageUrl || ''}
-                            alt={item.product.name}
+                            src={item.product?.images[0] || item.product?.imageUrl || ''}
+                            alt={item.product?.name || ''}
                             className="w-20 h-20 object-cover rounded-lg"
                           />
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
+                            <h3 className="font-semibold text-lg mb-1">
+                              {item.product?.name || ''}
+                            </h3>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className="bg-green-100 text-green-800">
-                                Ref: {item.product.reference}
+                                Ref: {item.product?.reference || ''}
                               </Badge>
-                              <Badge variant="outline">{item.product.unit}</Badge>
+                              <Badge variant="outline">{item.product?.unit || ''}</Badge>
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
@@ -265,7 +268,7 @@ export default function CartSummaryPage() {
                                   }
                                   className="w-16 text-center"
                                   min="1"
-                                  max={item.product.stock}
+                                  max={item.product?.stock || 0}
                                   disabled={isLoading}
                                 />
                                 <Button
@@ -274,7 +277,9 @@ export default function CartSummaryPage() {
                                   onClick={() =>
                                     handleUpdateQuantity(item.productId, item.quantity + 1)
                                   }
-                                  disabled={item.quantity >= item.product.stock || isLoading}
+                                  disabled={
+                                    item.quantity >= (item.product?.stock || 0) || isLoading
+                                  }
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
@@ -285,10 +290,10 @@ export default function CartSummaryPage() {
                           <div className="text-right">
                             <div className="flex flex-col items-end gap-1">
                               <p className="text-lg font-bold">
-                                {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                                {(parseFloat(item.unitPrice) * item.quantity).toLocaleString()} FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.priceAtTime.toLocaleString()} FCFA each
+                                {item.unitPrice.toLocaleString()} FCFA each
                               </p>
                             </div>
                             <Button
