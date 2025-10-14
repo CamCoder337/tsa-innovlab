@@ -13,15 +13,6 @@ import { UserRole } from '#models/user'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
 
-// Lazy load Transmit to avoid Redis connection errors during migrations
-let transmit: any = null
-try {
-  const transmitModule = await import('@adonisjs/transmit/services/main')
-  transmit = transmitModule.default
-} catch (error) {
-  console.warn('⚠️  Transmit service not available (Redis might be down)')
-}
-
 // Helper function pour créer un middleware de rôle
 function roleGuard(role: UserRole) {
   return async (ctx: any, next: any) => {
@@ -275,6 +266,10 @@ router
       '#controllers/http/common/messages_controller.markAllAsRead'
     )
     router.get('/messages/unread-count', '#controllers/http/common/messages_controller.unreadCount')
+    router.post(
+      '/conversations/:conversationId/typing',
+      '#controllers/http/common/messages_controller.sendTypingIndicator'
+    )
 
     // Notifications
     router.get('/notifications', '#controllers/http/common/notifications_controller.index')
@@ -301,113 +296,70 @@ router.get('/swagger.json', async ({ response }) => {
   return response.json(AutoSwagger.default.writeFile(router.toJSON(), swagger))
 })
 
-// ===== ROUTES TRANSMIT =====
-// Configuration Transmit avec authentification sécurisée
-// Les routes sont automatiquement enregistrées par Transmit sur /__transmit/events
-if (transmit) {
-  transmit.registerRoutes((route: any) => {
-    // Middleware pour extraire le token JWT du query string
-    // Nécessaire car EventSource ne supporte pas les headers Authorization
-    route.middleware([middleware.transmitAuthQuery()])
-  })
-  console.log('✅ Transmit routes registered on /__transmit/* with auth middleware')
+// ===== ROUTES WEBSOCKET =====
+// Route principale pour les notifications temps réel
+// Conditionnée pour ne charger que si le provider WebSocket est disponible
+if (typeof router.ws === 'function') {
+  router.ws(
+    '/ws/notifications',
+    async (ctx) => {
+      try {
+        const { ws, auth } = ctx
+        // Authentification requise
+        const user = auth.getUserOrFail()
+
+        // Obtenir l'instance singleton du service WebSocket
+        const { default: WebSocketService } = await import('#services/websocket_service')
+        const websocketService = WebSocketService.getInstance()
+
+        console.log(`✅ WebSocket: ${user.email} (${user.role}) connecté`)
+
+        // Enregistrer la connexion
+        websocketService.registerConnection(user.id, user.role, ws)
+
+        // Message de bienvenue
+        ws.send(
+          JSON.stringify({
+            type: 'connected',
+            message: 'Connexion WebSocket établie',
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+            },
+            timestamp: new Date().toISOString(),
+          })
+        )
+
+        // Gérer les messages entrants (heartbeat)
+        ws.on('message', (message: Buffer) => {
+          const msg = message.toString()
+
+          if (msg === 'ping') {
+            ws.send('pong')
+          }
+        })
+
+        // Gérer la déconnexion
+        ws.on('close', () => {
+          console.log(`❌ WebSocket: ${user.email} déconnecté`)
+          websocketService.unregisterConnection(user.id)
+        })
+
+        // Gérer les erreurs
+        ws.on('error', (error: Error) => {
+          console.error(`❌ WebSocket error for ${user.email}:`, error.message)
+          websocketService.unregisterConnection(user.id)
+        })
+      } catch (error: any) {
+        console.error('❌ WebSocket authentication failed:', error.message)
+        ctx.ws.close()
+      }
+    },
+    [middleware.auth()]
+  )
+
+  console.log('✅ WebSocket routes registered on /ws/*')
 } else {
-  console.warn('⚠️  Transmit not available - real-time features disabled')
+  console.log('ℹ️  WebSocket provider not loaded (test environment)')
 }
-
-// Route de test pour broadcaster un message via Transmit (pour développement)
-router.post('/transmit/broadcast', async ({ request, response }) => {
-  try {
-    if (!transmit) {
-      return response.serviceUnavailable({
-        success: false,
-        message: 'Transmit service not available',
-      })
-    }
-
-    const { channel, message } = request.only(['channel', 'message'])
-
-    if (!channel || !message) {
-      return response.badRequest({
-        success: false,
-        message: 'Channel and message required',
-      })
-    }
-
-    const broadcastData = {
-      type: 'broadcast',
-      data: message,
-      timestamp: new Date().toISOString(),
-    }
-
-    console.log(`📡 TRANSMIT BROADCAST:`, { channel, message, broadcastData })
-
-    // Utiliser l'API Transmit pour broadcaster
-    await transmit.broadcast(channel, broadcastData)
-
-    console.log(`✅ TRANSMIT BROADCAST SENT: channel=${channel}`)
-
-    return response.ok({
-      success: true,
-      message: `Message broadcasted to channel: ${channel}`,
-      channel,
-      data: broadcastData,
-    })
-  } catch (error) {
-    console.error('❌ Erreur broadcast Transmit:', error)
-    return response.internalServerError({
-      success: false,
-      message: 'Erreur envoi broadcast',
-      error: error.message,
-    })
-  }
-})
-
-// Route de test pour simuler une nouvelle mission
-router.post('/transmit/test-mission', async ({ response }) => {
-  try {
-    if (!transmit) {
-      return response.serviceUnavailable({
-        success: false,
-        message: 'Transmit service not available',
-      })
-    }
-
-    const missionData = {
-      type: 'mission:new',
-      data: {
-        id: 'test-123',
-        titre: 'Mission test de Douala vers Yaoundé',
-        departureCity: 'Douala',
-        arrivalCity: 'Yaoundé',
-        budget: 50000,
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        description: 'Transport de marchandises diverses',
-        status: 'published',
-      },
-      timestamp: new Date().toISOString(),
-      message: 'Nouvelle mission disponible!',
-    }
-
-    console.log(`🚛 SIMULATION NOUVELLE MISSION:`, missionData)
-
-    // Broadcaster sur le channel officiel des transporteurs
-    await transmit.broadcast('missions:new:transporteurs', missionData)
-
-    // Aussi sur global pour les tests
-    await transmit.broadcast('global', missionData)
-
-    return response.ok({
-      success: true,
-      message: 'Simulation nouvelle mission envoyée via Transmit',
-      channels: ['missions:new:transporteurs', 'global'],
-    })
-  } catch (error) {
-    console.error('❌ Erreur simulation mission:', error)
-    return response.internalServerError({
-      success: false,
-      message: 'Erreur simulation mission',
-      error: error.message,
-    })
-  }
-})

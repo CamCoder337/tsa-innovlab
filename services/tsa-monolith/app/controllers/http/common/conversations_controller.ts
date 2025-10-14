@@ -3,19 +3,17 @@ import { inject } from '@adonisjs/core'
 import Conversation, { ConversationType } from '#models/conversation'
 import User from '#models/user'
 import Mission from '#models/mission'
-import TransmitService from '#services/transmit_service'
+import ConversationAuthorizationService from '#services/conversation_authorization_service'
 import {
+  conversationIndexValidator,
   createDirectConversationValidator,
   createMissionConversationValidator,
   searchUsersValidator,
-  conversationIndexValidator,
 } from '#validators/conversation'
 
 @inject()
 export default class ConversationsController {
-  constructor(_transmitService: TransmitService) {
-    // TransmitService will be used for future real-time features when needed
-  }
+  constructor() {}
 
   /**
    * Liste les conversations de l'utilisateur connecté
@@ -37,7 +35,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+          missionQuery.select('id', 'title', 'status')
         })
         .withCount('messages')
         .withCount('messages', (messagesQuery) => {
@@ -54,20 +52,26 @@ export default class ConversationsController {
 
       const conversations = await query.paginate(page, limit)
 
-      // Enrichir avec les informations de l'autre participant
-      const enrichedConversations = conversations.serialize()
-      enrichedConversations.data = enrichedConversations.data.map((conversation: any) => {
+      // Enrichir avec les informations de l'autre participant AVANT la sérialisation
+      const enrichedData = conversations.all().map((conversation) => {
         const otherParticipant =
           conversation.user1.id === user.id ? conversation.user2 : conversation.user1
         return {
-          ...conversation,
-          otherParticipant,
+          ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
+          otherParticipant: otherParticipant.serialize(),
         }
       })
 
+      const serialized = conversations.serialize()
       return response.ok({
         success: true,
-        data: enrichedConversations,
+        data: {
+          data: enrichedData,
+          meta: serialized.meta,
+        },
       })
     } catch (error) {
       console.error('❌ Erreur récupération conversations:', error)
@@ -96,7 +100,7 @@ export default class ConversationsController {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
         })
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+          missionQuery.select('id', 'title', 'status')
         })
         .firstOrFail()
 
@@ -114,6 +118,9 @@ export default class ConversationsController {
         success: true,
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })
@@ -143,7 +150,7 @@ export default class ConversationsController {
         })
       }
 
-      if (Number(userId) === Number(user.id)) {
+      if (userId === user.id) {
         return response.badRequest({
           success: false,
           message: 'Impossible de créer une conversation avec soi-même',
@@ -152,6 +159,21 @@ export default class ConversationsController {
 
       // Vérifier que l'utilisateur cible existe
       const targetUser = await User.findOrFail(userId)
+
+      // Vérifier les autorisations de conversation directe
+      const isAuthorized = ConversationAuthorizationService.canConverseDirect(user, targetUser)
+
+      if (!isAuthorized) {
+        const denialReason = ConversationAuthorizationService.getDirectConversationDenialReason(
+          user,
+          targetUser
+        )
+        return response.forbidden({
+          success: false,
+          message: denialReason,
+          hint: 'Utilisez une conversation liée à une mission pour communiquer',
+        })
+      }
 
       // Créer ou récupérer la conversation
       const conversation = await Conversation.findOrCreateDirectConversation(user.id, targetUser.id)
@@ -171,6 +193,8 @@ export default class ConversationsController {
         message: 'Conversation créée ou récupérée avec succès',
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })
@@ -200,24 +224,32 @@ export default class ConversationsController {
         })
       }
 
-      // Vérifier que la mission existe et que l'utilisateur y a accès
-      const mission = await Mission.findOrFail(missionId)
-
-      // Vérifier les permissions d'accès à la mission
-      const canAccess =
-        user.role === 'admin' ||
-        (user.role === 'affreteur' && mission.affreteurId === user.id) ||
-        user.role === 'transporteur' // Pour l'instant, tous les transporteurs peuvent créer des conversations sur missions
-
-      if (!canAccess) {
-        return response.forbidden({
+      if (userId === user.id) {
+        return response.badRequest({
           success: false,
-          message: 'Accès refusé à cette mission',
+          message: 'Impossible de créer une conversation avec soi-même',
         })
       }
 
+      // Vérifier que la mission existe
+      const mission = await Mission.findOrFail(missionId)
+
       // Vérifier que l'utilisateur cible existe
       const targetUser = await User.findOrFail(userId)
+
+      // Vérifier les autorisations de conversation mission avec validation métier
+      const authorizationResult = await ConversationAuthorizationService.canConverseMission(
+        user,
+        targetUser,
+        mission
+      )
+
+      if (!authorizationResult.authorized) {
+        return response.forbidden({
+          success: false,
+          message: authorizationResult.reason || 'Conversation non autorisée pour cette mission',
+        })
+      }
 
       // Créer ou récupérer la conversation mission
       const conversation = await Conversation.findOrCreateMissionConversation(
@@ -233,7 +265,7 @@ export default class ConversationsController {
         userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
       })
       await conversation.load('mission', (missionQuery) => {
-        missionQuery.select('id', 'title', 'status', 'departure_address', 'arrival_address')
+        missionQuery.select('id', 'titre', 'status')
       })
 
       const otherParticipant =
@@ -244,6 +276,9 @@ export default class ConversationsController {
         message: 'Conversation mission créée ou récupérée avec succès',
         data: {
           ...conversation.serialize(),
+          user1: conversation.user1?.serialize(),
+          user2: conversation.user2?.serialize(),
+          mission: conversation.mission?.serialize(),
           otherParticipant: otherParticipant.serialize(),
         },
       })

@@ -23,8 +23,8 @@ export default class Mission extends BaseModel {
   @column()
   declare transporteurId: string | null
 
-  @column()
-  declare titre: string
+  @column({ columnName: 'titre' })
+  declare title: string
 
   @column()
   declare description: string | null

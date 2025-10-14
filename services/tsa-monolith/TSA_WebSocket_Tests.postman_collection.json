@@ -1,0 +1,555 @@
+{
+  "info": {
+    "name": "TSA WebSocket Tests",
+    "_postman_id": "tsa-websocket-tests-2025",
+    "description": "Collection complète pour tester le système WebSocket de TSA Logistics",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"Test\",\n  \"phone\": \"+237650000001\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Transporteur 1",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur1@test.com\",\n  \"password\": \"Transport123!\",\n  \"firstName\": \"Jean\",\n  \"lastName\": \"Transporteur\",\n  \"phone\": \"+237650000002\",\n  \"role\": \"transporteur\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Transporteur 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur2@test.com\",\n  \"password\": \"Transport123!\",\n  \"firstName\": \"Paul\",\n  \"lastName\": \"Transporteur\",\n  \"phone\": \"+237650000003\",\n  \"role\": \"transporteur\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Register Affreteur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"affreteur@test.com\",\n  \"password\": \"Affret123!\",\n  \"firstName\": \"Marie\",\n  \"lastName\": \"Affreteur\",\n  \"phone\": \"+237650000004\",\n  \"role\": \"affreteur\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login Transporteur 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('transporteur1_token', response.data.token.token);",
+                  "    pm.environment.set('transporteur1_id', response.data.user.id);",
+                  "    console.log('✅ Token Transporteur 1 saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur1@test.com\",\n  \"password\": \"Transport123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Transporteur 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('transporteur2_token', response.data.token.token);",
+                  "    pm.environment.set('transporteur2_id', response.data.user.id);",
+                  "    console.log('✅ Token Transporteur 2 saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"transporteur2@test.com\",\n  \"password\": \"Transport123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Affreteur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('affreteur_token', response.data.token.token);",
+                  "    pm.environment.set('affreteur_id', response.data.user.id);",
+                  "    console.log('✅ Token Affreteur saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"affreteur@test.com\",\n  \"password\": \"Affret123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('admin_token', response.data.token.token);",
+                  "    pm.environment.set('admin_id', response.data.user.id);",
+                  "    console.log('✅ Token Admin saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Missions",
+      "item": [
+        {
+          "name": "Create Mission (Affreteur)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('mission_id', response.data.mission.id);",
+                  "    console.log('✅ Mission ID saved:', response.data.mission.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{affreteur_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Transport Douala → Yaoundé\",\n  \"description\": \"Livraison de matériel électronique urgent\",\n  \"typeMarchandise\": \"Électronique\",\n  \"poids\": 150,\n  \"volume\": 2.5,\n  \"budgetMin\": 50000,\n  \"budgetMax\": 75000,\n  \"dateDepartEstime\": \"2025-01-15T08:00:00Z\",\n  \"dateArriveeEstime\": \"2025-01-15T12:00:00Z\",\n  \"adresseDepart\": {\n    \"street\": \"Boulevard de la Liberté\",\n    \"city\": \"Douala\",\n    \"postalCode\": \"1234\",\n    \"country\": \"Cameroun\",\n    \"latitude\": 4.0511,\n    \"longitude\": 9.7679\n  },\n  \"adresseArrivee\": {\n    \"street\": \"Avenue Kennedy\",\n    \"city\": \"Yaoundé\",\n    \"postalCode\": \"5678\",\n    \"country\": \"Cameroun\",\n    \"latitude\": 3.8480,\n    \"longitude\": 11.5021\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/affreteur/missions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "affreteur", "missions"]
+            }
+          }
+        },
+        {
+          "name": "Publish Mission (WebSocket Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{affreteur_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/affreteur/missions/{{mission_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["api", "affreteur", "missions", "{{mission_id}}", "publish"]
+            },
+            "description": "⚠️ AVANT D'EXÉCUTER : Connectez vos WebSockets transporteurs !\n\n✅ Résultat attendu : Les 2 transporteurs connectés reçoivent une notification en temps réel"
+          }
+        },
+        {
+          "name": "Get Available Missions (Transporteur)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transporteur/missions/available",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transporteur", "missions", "available"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Chat & Messages",
+      "item": [
+        {
+          "name": "Create Direct Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('conversation_id', response.data.id);",
+                  "    console.log('✅ Conversation ID saved:', response.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{affreteur_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/common/conversations/direct",
+              "host": ["{{base_url}}"],
+              "path": ["api", "common", "conversations", "direct"]
+            }
+          }
+        },
+        {
+          "name": "Send Message (WebSocket Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Bonjour ! Je suis intéressé par la mission Douala → Yaoundé. Pouvez-vous me donner plus de détails ?\",\n  \"type\": \"text\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/common/conversations/{{conversation_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "common", "conversations", "{{conversation_id}}", "messages"]
+            },
+            "description": "⚠️ AVANT D'EXÉCUTER : Connectez le WebSocket de l'affreteur !\n\n✅ Résultat attendu : L'affreteur reçoit le message en temps réel"
+          }
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/common/conversations/{{conversation_id}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "common", "conversations", "{{conversation_id}}", "messages"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/common/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["api", "common", "notifications"]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/common/notifications/:id/read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "common", "notifications", ":id", "read"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "notification-id-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. GPS Tracking",
+      "item": [
+        {
+          "name": "Update Location (WebSocket Test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 3.9000,\n  \"longitude\": 10.5000\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transporteur/missions/{{mission_id}}/location",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transporteur", "missions", "{{mission_id}}", "location"]
+            },
+            "description": "⚠️ AVANT D'EXÉCUTER : Connectez le WebSocket de l'affreteur !\n\n✅ Résultat attendu : L'affreteur reçoit la position GPS en temps réel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. WebSocket Connections",
+      "item": [
+        {
+          "name": "WS - Transporteur 1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur1_token}}"
+              }
+            ],
+            "url": {
+              "raw": "ws://localhost:3333/ws/notifications",
+              "protocol": "ws",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["ws", "notifications"]
+            },
+            "description": "🌐 CONNEXION WEBSOCKET TRANSPORTEUR 1\n\n1. Changez le type de requête en \"WebSocket\"\n2. Cliquez sur \"Connect\"\n3. Vous devriez recevoir un message de bienvenue\n4. Testez ping/pong en envoyant 'ping'"
+          }
+        },
+        {
+          "name": "WS - Transporteur 2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{transporteur2_token}}"
+              }
+            ],
+            "url": {
+              "raw": "ws://localhost:3333/ws/notifications",
+              "protocol": "ws",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["ws", "ml"]
+            }
+          }
+        },
+        {
+          "name": "WS - Affreteur",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{affreteur_token}}"
+              }
+            ],
+            "url": {
+              "raw": "ws://localhost:3333/ws/notifications",
+              "protocol": "ws",
+              "host": ["localhost"],
+              "port": "3333",
+              "path": ["ws", "notifications"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3333",
+      "type": "string"
+    }
+  ]
+}

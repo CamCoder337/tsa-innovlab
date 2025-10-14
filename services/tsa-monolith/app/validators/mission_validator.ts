@@ -1,7 +1,7 @@
 import vine from '@vinejs/vine'
 
 const createMissionSchema = vine.object({
-  titre: vine.string().trim().minLength(5).maxLength(255),
+  title: vine.string().trim().minLength(5).maxLength(255),
   description: vine.string().trim().optional(),
   typeMarchandise: vine.string().trim().maxLength(100).optional(),
   poids: vine.number().min(0).optional(),
@@ -48,7 +48,7 @@ const createMissionSchema = vine.object({
 })
 
 const updateMissionSchema = vine.object({
-  titre: vine.string().trim().minLength(5).maxLength(255).optional(),
+  title: vine.string().trim().minLength(5).maxLength(255).optional(),
   description: vine.string().trim().optional(),
   typeMarchandise: vine.string().trim().maxLength(100).optional(),
   poids: vine.number().min(0).optional(),
@@ -106,7 +106,7 @@ const missionQuerySchema = vine.object({
   limit: vine.number().min(1).max(100).optional(),
   status: vine.enum(['draft', 'published', 'assigned', 'completed', 'cancelled']).optional(),
   search: vine.string().trim().maxLength(255).optional(),
-  sortBy: vine.enum(['created_at', 'updated_at', 'titre', 'budget_min', 'budget_max']).optional(),
+  sortBy: vine.enum(['created_at', 'updated_at', 'title', 'budget_min', 'budget_max']).optional(),
   sortOrder: vine.enum(['asc', 'desc']).optional(),
   city: vine.string().trim().optional(),
   budgetMin: vine.number().min(0).optional(),

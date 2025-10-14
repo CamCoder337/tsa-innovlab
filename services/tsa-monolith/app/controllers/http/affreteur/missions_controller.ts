@@ -19,6 +19,7 @@ import MissionNotificationService from '#services/mission_notification_service'
 @inject()
 export default class MissionsController {
   constructor(private missionNotificationService: MissionNotificationService) {}
+
   /*
    * @index
    * @summary Récupérer mes missions
@@ -57,7 +58,7 @@ export default class MissionsController {
       if (search) {
         query.where((builder) => {
           builder
-            .whereILike('titre', `%${search}%`)
+            .whereILike('title', `%${search}%`)
             .orWhereILike('description', `%${search}%`)
             .orWhereILike('type_marchandise', `%${search}%`)
         })
@@ -93,7 +94,7 @@ export default class MissionsController {
    * @store
    * @summary Créer une nouvelle mission
    * @description Crée une mission avec statut DRAFT. L'affréteur peut ensuite la publier
-   * @requestBody titre - Titre de la mission - @required @type(string)
+   * @requestBody title - Titre de la mission - @required @type(string)
    * @requestBody description - Description détaillée - @type(string)
    * @requestBody typeMarchandise - Type de marchandise - @required @type(string)
    * @requestBody poids - Poids en kg - @type(number)
@@ -199,7 +200,7 @@ export default class MissionsController {
       const mission = await Mission.create(
         {
           affreteurId: user.id,
-          titre: validatedData.titre,
+          title: validatedData.title,
           description: validatedData.description,
           typeMarchandise: validatedData.typeMarchandise,
           poids: validatedData.poids,
@@ -371,7 +372,7 @@ export default class MissionsController {
 
       // Mise à jour des champs
       mission.merge({
-        titre: validatedData.titre,
+        title: validatedData.title,
         description: validatedData.description,
         typeMarchandise: validatedData.typeMarchandise,
         poids: validatedData.poids,
@@ -444,7 +445,7 @@ export default class MissionsController {
 
       // Vérifications avant publication
       const missingFields = []
-      if (!mission.titre) missingFields.push('titre')
+      if (!mission.title) missingFields.push('title')
       if (!mission.adresseDepartId) missingFields.push('adresse de départ')
       if (!mission.adresseArriveeId) missingFields.push("adresse d'arrivée")
 

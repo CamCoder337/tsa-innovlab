@@ -48,7 +48,7 @@ export default class MissionsController {
       if (search) {
         query.where((builder) => {
           builder
-            .whereILike('titre', `%${search}%`)
+            .whereILike('title', `%${search}%`)
             .orWhereILike('description', `%${search}%`)
             .orWhereILike('type_marchandise', `%${search}%`)
             .orWhereHas('affreteur', (affreteurQuery) => {
@@ -247,7 +247,7 @@ export default class MissionsController {
       const mission = await Mission.create(
         {
           affreteurId: validatedData.affreteurId,
-          titre: validatedData.titre,
+          title: validatedData.title,
           description: validatedData.description,
           typeMarchandise: validatedData.typeMarchandise,
           poids: validatedData.poids,
@@ -415,7 +415,7 @@ export default class MissionsController {
           statusStats,
           recentMissions: recentMissions.map((mission) => ({
             id: mission.id,
-            titre: mission.titre,
+            title: mission.title,
             status: mission.status,
             affreteur: mission.affreteur
               ? `${mission.affreteur.firstName} ${mission.affreteur.lastName}`
