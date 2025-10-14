@@ -1,7 +1,7 @@
 import User from '#models/user'
 import Mission from '#models/mission'
-import Notification, { NotificationType, NotificationPriority } from '#models/notification'
-import transmit from '@adonisjs/transmit/services/main'
+import Notification, { NotificationPriority, NotificationType } from '#models/notification'
+import WebSocketService from './websocket_service.js'
 
 export interface MissionNotificationData {
   mission: Mission
@@ -11,11 +11,18 @@ export interface MissionNotificationData {
 }
 
 export default class MissionNotificationService {
+  private websocketService: WebSocketService
+
+  constructor() {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
+
   /**
    * Notifie les transporteurs d'une nouvelle mission disponible
    */
   async notifyNewMissionToTransporteurs(mission: Mission): Promise<void> {
-    console.log(`📢 Notification nouvelle mission: ${mission.titre} (ID: ${mission.id})`)
+    console.log(`📢 Notification nouvelle mission: ${mission.title} (ID: ${mission.id})`)
 
     try {
       // Charger les relations nécessaires
@@ -23,7 +30,9 @@ export default class MissionNotificationService {
       await mission.load('adresseArrivee')
 
       // 1. Récupérer tous les transporteurs actifs
-      const transporteurs = await User.query().where('role', 'transporteur').where('isActive', true)
+      const transporteurs = await User.query()
+        .where('role', 'transporteur')
+        .where('status', 'active')
 
       console.log(`👥 ${transporteurs.length} transporteurs trouvés`)
 
@@ -34,12 +43,12 @@ export default class MissionNotificationService {
             userId: transporteur.id,
             type: NotificationType.MISSION_NEW,
             title: 'Nouvelle mission disponible',
-            message: `Une nouvelle mission "${mission.titre}" est disponible de ${mission.adresseDepart?.city || 'N/A'} vers ${mission.adresseArrivee?.city || 'N/A'}`,
+            message: `Une nouvelle mission "${mission.title}" est disponible de ${mission.adresseDepart?.city || 'N/A'} vers ${mission.adresseArrivee?.city || 'N/A'}`,
             priority: NotificationPriority.NORMAL,
             missionId: mission.id,
             data: {
               missionId: mission.id,
-              title: mission.titre,
+              title: mission.title,
               budgetMin: mission.budgetMin,
               budgetMax: mission.budgetMax,
               departureCity: mission.adresseDepart?.city,
@@ -59,73 +68,10 @@ export default class MissionNotificationService {
       // 4. Envoyer par email
       await this.sendNewMissionEmails(mission, transporteurs)
 
-      console.log(`✅ Notifications nouvelle mission envoyées: ${mission.titre}`)
+      console.log(`✅ Notifications nouvelle mission envoyées: ${mission.title}`)
     } catch (error) {
       console.error(`❌ Erreur notification nouvelle mission:`, error)
       throw error
-    }
-  }
-
-  /**
-   * Diffuse la nouvelle mission via SSE
-   */
-  private async broadcastNewMissionSSE(mission: Mission, transporteurs: User[]): Promise<void> {
-    try {
-      const sseData = {
-        type: 'mission_new',
-        data: {
-          id: mission.id,
-          titre: mission.titre,
-          departureCity: mission.adresseDepart?.city,
-          arrivalCity: mission.adresseArrivee?.city,
-          budgetMin: mission.budgetMin,
-          budgetMax: mission.budgetMax,
-          dateDepartEstime: mission.dateDepartEstime,
-          description: mission.description,
-          status: mission.status,
-          createdAt: mission.createdAt,
-        },
-        timestamp: new Date().toISOString(),
-        message: `Nouvelle mission: ${mission.titre}`,
-      }
-
-      // Broadcast sur le channel global des transporteurs
-      await this.broadcastToChannel('missions:new:transporteurs', sseData)
-
-      // Broadcast sur les channels personnels de chaque transporteur
-      for (const transporteur of transporteurs) {
-        await this.broadcastToChannel(`notifications:user:${transporteur.id}`, {
-          ...sseData,
-          type: 'notification:new',
-          notificationId: `mission_${mission.id}_${Date.now()}`,
-        })
-      }
-
-      console.log(`📡 SSE: Mission broadcastée à ${transporteurs.length} transporteurs`)
-    } catch (error) {
-      console.error('❌ Erreur broadcast SSE nouvelle mission:', error)
-    }
-  }
-
-  /**
-   * Envoie les emails de notification
-   */
-  private async sendNewMissionEmails(mission: Mission, transporteurs: User[]): Promise<void> {
-    try {
-      const emailPromises = transporteurs.map(async (transporteur) => {
-        try {
-          // TODO: Utiliser une méthode d'email appropriée quand disponible
-          console.log(`📧 Email à envoyer à ${transporteur.email} pour mission ${mission.titre}`)
-          console.log(`📧 Email envoyé à ${transporteur.email}`)
-        } catch (emailError) {
-          console.error(`❌ Erreur email pour ${transporteur.email}:`, emailError)
-        }
-      })
-
-      await Promise.allSettled(emailPromises)
-      console.log(`📧 Emails nouvelle mission traités: ${transporteurs.length} destinataires`)
-    } catch (error) {
-      console.error('❌ Erreur envoi emails nouvelle mission:', error)
     }
   }
 
@@ -145,12 +91,12 @@ export default class MissionNotificationService {
         userId: transporteurId,
         type: NotificationType.MISSION_ASSIGNED,
         title: 'Mission assignée',
-        message: `La mission "${mission.titre}" vous a été assignée`,
+        message: `La mission "${mission.title}" vous a été assignée`,
         priority: NotificationPriority.HIGH,
         missionId: mission.id,
         data: {
           missionId: mission.id,
-          title: mission.titre,
+          title: mission.title,
           status: mission.status,
         },
         actionUrl: `/my-missions/${mission.id}`,
@@ -161,7 +107,7 @@ export default class MissionNotificationService {
         type: 'mission_assigned',
         data: {
           missionId: mission.id,
-          title: mission.titre,
+          title: mission.title,
           message: 'Mission assignée',
         },
         timestamp: new Date().toISOString(),
@@ -204,14 +150,14 @@ export default class MissionNotificationService {
           userId: user.id,
           type: NotificationType.MISSION_STATUS_CHANGED,
           title: 'Statut de mission modifié',
-          message: `La mission "${mission.titre}" est passée de ${oldStatus} à ${newStatus}`,
+          message: `La mission "${mission.title}" est passée de ${oldStatus} à ${newStatus}`,
           priority: NotificationPriority.NORMAL,
           missionId: mission.id,
           data: {
             missionId: mission.id,
             oldStatus,
             newStatus,
-            title: mission.titre,
+            title: mission.title,
           },
           actionUrl:
             user.role === 'transporteur' ? `/my-missions/${mission.id}` : `/missions/${mission.id}`,
@@ -224,7 +170,7 @@ export default class MissionNotificationService {
             missionId: mission.id,
             oldStatus,
             newStatus,
-            title: mission.titre,
+            title: mission.title,
           },
           timestamp: new Date().toISOString(),
         })
@@ -233,20 +179,6 @@ export default class MissionNotificationService {
       console.log(`✅ Notifications changement statut envoyées: ${oldStatus} → ${newStatus}`)
     } catch (error) {
       console.error('❌ Erreur notification changement statut:', error)
-    }
-  }
-
-  /**
-   * Diffuse un message sur un channel via Transmit
-   */
-  private async broadcastToChannel(channel: string, data: any): Promise<void> {
-    try {
-      // Utiliser uniquement Transmit (plus de système SSE manuel)
-      await transmit.broadcast(channel, data)
-      console.log(`📡 Transmit broadcast envoyé sur ${channel}`)
-    } catch (error) {
-      console.error(`❌ Erreur broadcast Transmit channel ${channel}:`, error)
-      throw error
     }
   }
 
@@ -267,5 +199,90 @@ export default class MissionNotificationService {
     }
 
     return stats
+  }
+
+  /**
+   * Diffuse la nouvelle mission via SSE
+   */
+  private async broadcastNewMissionSSE(mission: Mission, transporteurs: User[]): Promise<void> {
+    try {
+      const sseData = {
+        type: 'mission_new',
+        data: {
+          id: mission.id,
+          title: mission.title,
+          departureCity: mission.adresseDepart?.city,
+          arrivalCity: mission.adresseArrivee?.city,
+          budgetMin: mission.budgetMin,
+          budgetMax: mission.budgetMax,
+          dateDepartEstime: mission.dateDepartEstime,
+          description: mission.description,
+          status: mission.status,
+          createdAt: mission.createdAt,
+        },
+        timestamp: new Date().toISOString(),
+        message: `Nouvelle mission: ${mission.title}`,
+      }
+
+      // Broadcast sur le channel global des transporteurs
+      await this.broadcastToChannel('missions:new:transporteurs', sseData)
+
+      // Broadcast sur les channels personnels de chaque transporteur
+      for (const transporteur of transporteurs) {
+        await this.broadcastToChannel(`notifications:user:${transporteur.id}`, {
+          ...sseData,
+          type: 'notification:new',
+          notificationId: `mission_${mission.id}_${Date.now()}`,
+        })
+      }
+
+      console.log(`📡 SSE: Mission broadcastée à ${transporteurs.length} transporteurs`)
+    } catch (error) {
+      console.error('❌ Erreur broadcast SSE nouvelle mission:', error)
+    }
+  }
+
+  /**
+   * Envoie les emails de notification
+   */
+  private async sendNewMissionEmails(mission: Mission, transporteurs: User[]): Promise<void> {
+    try {
+      const emailPromises = transporteurs.map(async (transporteur) => {
+        try {
+          // TODO: Utiliser une méthode d'email appropriée quand disponible
+          console.log(`📧 Email à envoyer à ${transporteur.email} pour mission ${mission.title}`)
+          console.log(`📧 Email envoyé à ${transporteur.email}`)
+        } catch (emailError) {
+          console.error(`❌ Erreur email pour ${transporteur.email}:`, emailError)
+        }
+      })
+
+      await Promise.allSettled(emailPromises)
+      console.log(`📧 Emails nouvelle mission traités: ${transporteurs.length} destinataires`)
+    } catch (error) {
+      console.error('❌ Erreur envoi emails nouvelle mission:', error)
+    }
+  }
+
+  /**
+   * Diffuse un message via WebSocket
+   */
+  private async broadcastToChannel(channel: string, data: any): Promise<void> {
+    try {
+      // Broadcaster selon le type de channel
+      if (channel === 'missions:new:transporteurs') {
+        await this.websocketService.broadcastToTransporteurs(data)
+      } else if (channel.startsWith('notifications:user:')) {
+        const userId = channel.split(':')[2]
+        await this.websocketService.sendToUser(userId, data)
+      } else {
+        console.log(`⚠️  WebSocket: Channel ${channel} non géré`)
+      }
+
+      console.log(`📡 WebSocket broadcast envoyé sur ${channel}`)
+    } catch (error) {
+      console.error(`❌ Erreur broadcast WebSocket channel ${channel}:`, error)
+      throw error
+    }
   }
 }

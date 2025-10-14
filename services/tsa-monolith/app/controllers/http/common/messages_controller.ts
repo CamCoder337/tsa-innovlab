@@ -2,12 +2,17 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import Message, { MessageType } from '#models/message'
 import Conversation from '#models/conversation'
-import TransmitService from '#services/transmit_service'
+import WebSocketService, { WebSocketEventType } from '#services/websocket_service'
 import { messageValidator } from '#validators/message'
 
 @inject()
 export default class MessagesController {
-  constructor(private transmitService: TransmitService) {}
+  private websocketService: WebSocketService
+
+  constructor() {
+    // Utiliser l'instance singleton du WebSocketService
+    this.websocketService = WebSocketService.getInstance()
+  }
 
   /**
    * Liste les messages d'une conversation
@@ -65,13 +70,13 @@ export default class MessagesController {
    * Envoie un nouveau message
    */
   async store({ request, response, auth }: HttpContext) {
+    const user = auth.user!
+    const { conversationId } = request.params()
+
+    // Validation (en dehors du try-catch pour que les erreurs 422 soient retournées correctement)
+    const payload = await request.validateUsing(messageValidator)
+
     try {
-      const user = auth.user!
-      const { conversationId } = request.params()
-
-      // Validation
-      const payload = await request.validateUsing(messageValidator)
-
       // Vérifier l'accès à la conversation
       const conversation = await Conversation.findOrFail(conversationId)
 
@@ -100,12 +105,12 @@ export default class MessagesController {
         query.select('id', 'firstName', 'lastName', 'email', 'role')
       })
 
-      // Diffuser le message en temps réel via Transmit (conversation partagée)
-      await this.transmitService.broadcastChatMessage(
-        conversation.id,
-        Number(user.id),
-        message.serialize()
-      )
+      // Diffuser le message en temps réel via WebSocket à tous les participants
+      const participants = conversation.getParticipantIds()
+      await this.websocketService.sendChatEvent(participants, WebSocketEventType.CHAT_MESSAGE, {
+        conversationId: conversation.id,
+        message: message.serialize(),
+      })
 
       return response.created({
         success: true,
@@ -157,6 +162,14 @@ export default class MessagesController {
       message.markAsRead()
       await message.save()
 
+      // Notifier l'expéditeur via WebSocket que son message a été lu
+      await this.websocketService.sendMessageReadNotification(
+        message.id,
+        message.conversationId,
+        user.id, // readerId
+        message.senderId // senderId
+      )
+
       return response.ok({
         success: true,
         message: 'Message marqué comme lu',
@@ -192,12 +205,35 @@ export default class MessagesController {
         })
       }
 
+      // Récupérer les messages non lus avant de les marquer
+      const unreadMessages = await Message.query()
+        .where('conversation_id', conversationId)
+        .whereNot('sender_id', user.id)
+        .whereNull('read_at')
+
       // Marquer tous les messages non lus de cette conversation
       const updatedCount = await Message.query()
         .where('conversation_id', conversationId)
         .whereNot('sender_id', user.id)
         .whereNull('read_at')
         .update({ read_at: new Date() })
+
+      // Notifier les expéditeurs via WebSocket pour chaque message lu
+      // Grouper par expéditeur pour optimiser
+      const senderIds = new Set(unreadMessages.map((msg) => msg.senderId))
+      for (const senderId of senderIds) {
+        const senderMessages = unreadMessages.filter((msg) => msg.senderId === senderId)
+        await this.websocketService.sendToUser(senderId, {
+          type: WebSocketEventType.CHAT_MESSAGE_READ,
+          data: {
+            conversationId,
+            readerId: user.id,
+            messageIds: senderMessages.map((msg) => msg.id),
+            readAt: new Date().toISOString(),
+          },
+          timestamp: new Date().toISOString(),
+        })
+      }
 
       return response.ok({
         success: true,
@@ -211,6 +247,48 @@ export default class MessagesController {
       return response.internalServerError({
         success: false,
         message: 'Erreur lors du marquage des messages',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Envoie un indicateur "en train d'écrire" aux participants de la conversation
+   */
+  async sendTypingIndicator({ request, response, auth }: HttpContext) {
+    try {
+      const user = auth.user!
+      const { conversationId } = request.params()
+      const { isTyping } = request.only(['isTyping'])
+
+      // Vérifier l'accès à la conversation
+      const conversation = await Conversation.findOrFail(conversationId)
+
+      if (!conversation.isParticipant(user.id)) {
+        return response.forbidden({
+          success: false,
+          message: 'Accès refusé à cette conversation',
+        })
+      }
+
+      // Envoyer l'indicateur aux autres participants
+      const participantIds = conversation.getParticipantIds()
+      await this.websocketService.sendTypingIndicator(
+        conversation.id,
+        user.id,
+        participantIds,
+        isTyping
+      )
+
+      return response.ok({
+        success: true,
+        message: 'Indicateur de saisie envoyé',
+      })
+    } catch (error) {
+      console.error('❌ Erreur envoi indicateur typing:', error)
+      return response.internalServerError({
+        success: false,
+        message: "Erreur lors de l'envoi de l'indicateur",
         error: error.message,
       })
     }

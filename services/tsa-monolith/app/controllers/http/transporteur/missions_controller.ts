@@ -9,6 +9,7 @@ import NotificationManagerService from '#services/notification_manager_service'
 @inject()
 export default class MissionsController {
   constructor(private notificationManager: NotificationManagerService) {}
+
   async available({ request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
@@ -321,19 +322,21 @@ export default class MissionsController {
 
       // 🔔 Diffuser la mise à jour de position en temps réel
       try {
-        // Import transmit service directly for broadcasting
-        const { default: TransmitService } = await import('#services/transmit_service')
-        const transmitService = new TransmitService()
+        // Import WebSocket service for broadcasting
+        const { default: WebSocketService } = await import('#services/websocket_service')
+        const websocketService = WebSocketService.getInstance()
 
-        await transmitService.broadcastMissionUpdate(mission.id, {
+        await websocketService.broadcastToMission(mission.id, {
           type: 'location_update',
-          location: {
-            latitude: validatedData.latitude,
-            longitude: validatedData.longitude,
-            timestamp: new Date().toISOString(),
+          data: {
+            location: {
+              latitude: validatedData.latitude,
+              longitude: validatedData.longitude,
+              timestamp: new Date().toISOString(),
+            },
+            transporteur: user.fullName,
+            missionId: mission.id,
           },
-          transporteur: user.fullName,
-          missionId: mission.id,
         })
         console.log(`✅ Position mise à jour en temps réel pour mission ${mission.id}`)
       } catch (broadcastError) {

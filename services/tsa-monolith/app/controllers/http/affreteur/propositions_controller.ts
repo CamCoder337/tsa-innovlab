@@ -68,7 +68,7 @@ export default class PropositionsController {
         data: {
           mission: {
             id: mission.id,
-            titre: mission.titre,
+            title: mission.title,
             status: mission.status,
             budgetMin: mission.budgetMin,
             budgetMax: mission.budgetMax,

@@ -60,11 +60,11 @@ export default class NotificationService {
     // Prepare batch emails
     const emailData = transporteurs.map((transporteur) => ({
       to: transporteur.email,
-      subject: `Nouvelle mission disponible: ${mission.titre}`,
+      subject: `Nouvelle mission disponible: ${mission.title}`,
       template: 'emails/new-mission',
       data: {
         userName: transporteur.fullName || 'Transporteur',
-        missionTitle: mission.titre,
+        missionTitle: mission.title,
         description: mission.description,
         budget: mission.getBudgetRange(),
         departCity: mission.adresseDepart?.city,
@@ -82,10 +82,10 @@ export default class NotificationService {
       userId: t.id,
       type: 'new_mission',
       title: 'Nouvelle mission disponible',
-      message: `Une nouvelle mission "${mission.titre}" est disponible`,
+      message: `Une nouvelle mission "${mission.title}" est disponible`,
       data: {
         missionId: mission.id,
-        titre: mission.titre,
+        title: mission.title,
         budget: mission.getBudgetRange(),
       },
       priority: 'normal' as const,
