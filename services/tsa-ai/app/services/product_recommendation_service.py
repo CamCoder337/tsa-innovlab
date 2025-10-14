@@ -11,17 +11,17 @@ import math
 
 from sqlalchemy import text
 from app.core.database import SessionLocal
-from app.schemas.recommendations import (
-    PersonalizedRecommendationRequest,
+from app.schemas.product_recommendations import (
+    PersonalizedProductRecommendationRequest,
     SimilarProductsRequest,
     ProductRecommendation,
-    RecommendationResponse,
+    ProductRecommendationResponse,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class RecommendationService:
+class ProductRecommendationService:
     """
     Service for product recommendations using multiple strategies
     """
@@ -31,8 +31,8 @@ class RecommendationService:
         self.cache = {}  # Simple in-memory cache for product similarities
 
     async def get_personalized_recommendations(
-        self, request: PersonalizedRecommendationRequest
-    ) -> RecommendationResponse:
+        self, request: PersonalizedProductRecommendationRequest
+    ) -> ProductRecommendationResponse:
         """
         Get personalized recommendations for a user
         Uses multiple strategies based on available data
@@ -69,7 +69,7 @@ class RecommendationService:
 
             processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=True,
                 recommendations=recommendations,
                 strategy_used=strategy,
@@ -78,9 +78,9 @@ class RecommendationService:
             )
 
         except Exception as e:
-            logger.error(f"Personalized recommendations failed: {e}")
+            logger.error(f"Personalized product recommendations failed: {e}")
             # Return empty recommendations on failure
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=False,
                 recommendations=[],
                 strategy_used="fallback_error",
@@ -90,7 +90,7 @@ class RecommendationService:
 
     async def get_similar_products(
         self, request: SimilarProductsRequest
-    ) -> RecommendationResponse:
+    ) -> ProductRecommendationResponse:
         """
         Get products similar to a given product
         """
@@ -104,7 +104,7 @@ class RecommendationService:
 
             if not base_product:
                 db.close()
-                return RecommendationResponse(
+                return ProductRecommendationResponse(
                     success=False,
                     recommendations=[],
                     strategy_used="product_not_found",
@@ -120,7 +120,7 @@ class RecommendationService:
 
             processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=True,
                 recommendations=recommendations,
                 strategy_used="content_similarity",
@@ -130,7 +130,7 @@ class RecommendationService:
 
         except Exception as e:
             logger.error(f"Similar products recommendations failed: {e}")
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=False,
                 recommendations=[],
                 strategy_used="fallback_error",
@@ -139,7 +139,7 @@ class RecommendationService:
 
     async def get_popular_products(
         self, limit: int = 10, time_window_days: int = 30
-    ) -> RecommendationResponse:
+    ) -> ProductRecommendationResponse:
         """
         Get popular/trending products based on recent orders
         """
@@ -157,7 +157,7 @@ class RecommendationService:
 
             processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=True,
                 recommendations=recommendations,
                 strategy_used="popularity",
@@ -167,7 +167,7 @@ class RecommendationService:
 
         except Exception as e:
             logger.error(f"Popular products recommendations failed: {e}")
-            return RecommendationResponse(
+            return ProductRecommendationResponse(
                 success=False,
                 recommendations=[],
                 strategy_used="fallback_error",
@@ -571,4 +571,4 @@ class RecommendationService:
 
 
 # Singleton instance
-recommendation_service = RecommendationService()
+product_recommendation_service = ProductRecommendationService()

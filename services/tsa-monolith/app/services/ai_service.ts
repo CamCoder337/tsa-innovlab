@@ -31,18 +31,18 @@ export default class AIService {
   }
 
   /**
-   * Get personalized recommendations for a user
+   * Get personalized product recommendations for a user
    */
   async getPersonalizedRecommendations(
     request: RecommendationRequest
   ): Promise<RecommendationResponse> {
     try {
-      logger.info('Requesting personalized recommendations', {
+      logger.info('Requesting personalized product recommendations', {
         userId: request.userId,
         context: request.context,
       })
 
-      const response = await fetch(`${this.baseUrl}/api/ai/recommendations/personalized`, {
+      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/personalized`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,10 +59,10 @@ export default class AIService {
         throw new Error(`AI Service responded with status ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as RecommendationResponse
       return data
     } catch (error) {
-      logger.error('Failed to get personalized recommendations from AI service', { error })
+      logger.error('Failed to get personalized product recommendations from AI service', { error })
 
       // Return fallback empty recommendations
       return {
@@ -80,7 +80,7 @@ export default class AIService {
     try {
       logger.info('Requesting similar products', { productId: request.productId })
 
-      const response = await fetch(`${this.baseUrl}/api/ai/recommendations/similar`, {
+      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/similar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export default class AIService {
         throw new Error(`AI Service responded with status ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as RecommendationResponse
       return data
     } catch (error) {
       logger.error('Failed to get similar products from AI service', { error })
@@ -117,7 +117,7 @@ export default class AIService {
       logger.info('Requesting popular products')
 
       const response = await fetch(
-        `${this.baseUrl}/api/ai/recommendations/popular?limit=${limit}`,
+        `${this.baseUrl}/api/ai/product-recommendations/popular?limit=${limit}`,
         {
           method: 'GET',
           headers: {
@@ -131,7 +131,7 @@ export default class AIService {
         throw new Error(`AI Service responded with status ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as RecommendationResponse
       return data
     } catch (error) {
       logger.error('Failed to get popular products from AI service', { error })

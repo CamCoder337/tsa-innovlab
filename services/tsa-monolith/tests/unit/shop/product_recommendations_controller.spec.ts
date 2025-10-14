@@ -4,7 +4,7 @@ import Product from '#models/product'
 import Category from '#models/category'
 import User, { UserRole, UserStatus } from '#models/user'
 
-test.group('Shop Recommendations Controller', (group) => {
+test.group('Shop Product Recommendations Controller', (group) => {
   let testUser: User
   let userToken: string
   let testCategory: Category
@@ -82,19 +82,19 @@ test.group('Shop Recommendations Controller', (group) => {
    * Install sinon for complete mocking: npm install --save-dev sinon @types/sinon
    */
 
-  test('should get personalized recommendations - requires auth', async ({ client }) => {
-    const response = await client.get('/api/shop/recommendations')
+  test('should get personalized product recommendations - requires auth', async ({ client }) => {
+    const response = await client.get('/api/shop/product-recommendations')
 
     response.assertStatus(401)
   })
 
-  test('should get personalized recommendations when authenticated', async ({
+  test('should get personalized product recommendations when authenticated', async ({
     client,
     assert,
   }) => {
     // This test will return fallback recommendations if AI service is not available
     const response = await client
-      .get('/api/shop/recommendations')
+      .get('/api/shop/product-recommendations')
       .bearerToken(userToken)
       .qs({ limit: 10, context: 'homepage' })
 
@@ -110,14 +110,14 @@ test.group('Shop Recommendations Controller', (group) => {
 
     // Should have a strategy (either from AI or fallback)
     assert.exists(body.data.strategy)
-  })
+  }).timeout(15000) // Allow time for AI service timeout + fallback
 
-  test('should respect limit parameter for personalized recommendations', async ({
+  test('should respect limit parameter for personalized product recommendations', async ({
     client,
     assert,
   }) => {
     const response = await client
-      .get('/api/shop/recommendations')
+      .get('/api/shop/product-recommendations')
       .bearerToken(userToken)
       .qs({ limit: 2 })
 
@@ -126,17 +126,19 @@ test.group('Shop Recommendations Controller', (group) => {
     const body = response.body()
     // Fallback might return fewer products if not enough exist
     assert.isAtMost(body.data.products.length, 2)
-  })
+  }).timeout(15000) // Allow time for AI service timeout + fallback
 
   test('should get similar products - requires auth', async ({ client }) => {
-    const response = await client.get(`/api/shop/recommendations/similar/${testProduct1.id}`)
+    const response = await client.get(
+      `/api/shop/product-recommendations/similar/${testProduct1.id}`
+    )
 
     response.assertStatus(401)
   })
 
   test('should get similar products for a valid product', async ({ client, assert }) => {
     const response = await client
-      .get(`/api/shop/recommendations/similar/${testProduct1.id}`)
+      .get(`/api/shop/product-recommendations/similar/${testProduct1.id}`)
       .bearerToken(userToken)
 
     response.assertStatus(200)
@@ -156,7 +158,7 @@ test.group('Shop Recommendations Controller', (group) => {
     const fakeProductId = '00000000-0000-0000-0000-000000000000'
 
     const response = await client
-      .get(`/api/shop/recommendations/similar/${fakeProductId}`)
+      .get(`/api/shop/product-recommendations/similar/${fakeProductId}`)
       .bearerToken(userToken)
 
     response.assertStatus(404)
@@ -167,7 +169,7 @@ test.group('Shop Recommendations Controller', (group) => {
 
   test('should handle invalid product ID for similar products', async ({ client }) => {
     const response = await client
-      .get('/api/shop/recommendations/similar/invalid-uuid')
+      .get('/api/shop/product-recommendations/similar/invalid-uuid')
       .bearerToken(userToken)
 
     response.assertStatus(404)
@@ -175,7 +177,7 @@ test.group('Shop Recommendations Controller', (group) => {
 
   test('should get popular products without authentication', async ({ client, assert }) => {
     // Popular products endpoint is public
-    const response = await client.get('/api/shop/recommendations/popular').qs({ limit: 10 })
+    const response = await client.get('/api/shop/product-recommendations/popular').qs({ limit: 10 })
 
     response.assertStatus(200)
     response.assertBodyContains({
@@ -189,7 +191,7 @@ test.group('Shop Recommendations Controller', (group) => {
   })
 
   test('should respect limit parameter for popular products', async ({ client, assert }) => {
-    const response = await client.get('/api/shop/recommendations/popular').qs({ limit: 2 })
+    const response = await client.get('/api/shop/product-recommendations/popular').qs({ limit: 2 })
 
     response.assertStatus(200)
 
@@ -197,12 +199,12 @@ test.group('Shop Recommendations Controller', (group) => {
     assert.isAtMost(body.data.products.length, 2)
   })
 
-  test('should return fallback recommendations when AI service unavailable', async ({
+  test('should return fallback product recommendations when AI service unavailable', async ({
     client,
     assert,
   }) => {
     // If AI service is not running, controller should fallback to recent products
-    const response = await client.get('/api/shop/recommendations').bearerToken(userToken)
+    const response = await client.get('/api/shop/product-recommendations').bearerToken(userToken)
 
     response.assertStatus(200)
 
@@ -222,7 +224,7 @@ test.group('Shop Recommendations Controller', (group) => {
     testProduct2.isActive = false
     await testProduct2.save()
 
-    const response = await client.get('/api/shop/recommendations').bearerToken(userToken)
+    const response = await client.get('/api/shop/product-recommendations').bearerToken(userToken)
 
     response.assertStatus(200)
 
@@ -241,7 +243,7 @@ test.group('Shop Recommendations Controller', (group) => {
     testProduct3.stock = 0
     await testProduct3.save()
 
-    const response = await client.get('/api/shop/recommendations').bearerToken(userToken)
+    const response = await client.get('/api/shop/product-recommendations').bearerToken(userToken)
 
     response.assertStatus(200)
 
@@ -252,8 +254,11 @@ test.group('Shop Recommendations Controller', (group) => {
     assert.notInclude(productIds, testProduct3.id)
   })
 
-  test('should include category information in recommendations', async ({ client, assert }) => {
-    const response = await client.get('/api/shop/recommendations').bearerToken(userToken)
+  test('should include category information in product recommendations', async ({
+    client,
+    assert,
+  }) => {
+    const response = await client.get('/api/shop/product-recommendations').bearerToken(userToken)
 
     response.assertStatus(200)
 
@@ -272,7 +277,7 @@ test.group('Shop Recommendations Controller', (group) => {
     assert,
   }) => {
     const response = await client
-      .get(`/api/shop/recommendations/similar/${testProduct1.id}`)
+      .get(`/api/shop/product-recommendations/similar/${testProduct1.id}`)
       .bearerToken(userToken)
 
     response.assertStatus(200)
@@ -290,7 +295,7 @@ test.group('Shop Recommendations Controller', (group) => {
   test('should validate limit parameter is within bounds', async ({ client, assert }) => {
     // Test with various limit values
     const response1 = await client
-      .get('/api/shop/recommendations')
+      .get('/api/shop/product-recommendations')
       .bearerToken(userToken)
       .qs({ limit: 1 })
 
@@ -298,7 +303,7 @@ test.group('Shop Recommendations Controller', (group) => {
     assert.isAtMost(response1.body().data.products.length, 1)
 
     const response2 = await client
-      .get('/api/shop/recommendations')
+      .get('/api/shop/product-recommendations')
       .bearerToken(userToken)
       .qs({ limit: 50 })
 
@@ -307,14 +312,14 @@ test.group('Shop Recommendations Controller', (group) => {
     assert.isAtMost(response2.body().data.products.length, 50)
   })
 
-  test('should handle context parameter for personalized recommendations', async ({
+  test('should handle context parameter for personalized product recommendations', async ({
     client,
   }) => {
     const contexts = ['homepage', 'product', 'cart', 'checkout']
 
     for (const context of contexts) {
       const response = await client
-        .get('/api/shop/recommendations')
+        .get('/api/shop/product-recommendations')
         .bearerToken(userToken)
         .qs({ context })
 
@@ -323,7 +328,7 @@ test.group('Shop Recommendations Controller', (group) => {
   })
 
   test('popular products should be sorted by relevance', async ({ client, assert }) => {
-    const response = await client.get('/api/shop/recommendations/popular').qs({ limit: 10 })
+    const response = await client.get('/api/shop/product-recommendations/popular').qs({ limit: 10 })
 
     response.assertStatus(200)
 

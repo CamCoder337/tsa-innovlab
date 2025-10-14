@@ -1,25 +1,25 @@
 """
-Unit tests for recommendation system
-Tests the recommendation service and endpoints
+Unit tests for product recommendation system
+Tests the product recommendation service and endpoints
 """
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from app.services.recommendation_service import RecommendationService
-from app.schemas.recommendations import (
-    PersonalizedRecommendationRequest,
+from app.services.product_recommendation_service import ProductRecommendationService
+from app.schemas.product_recommendations import (
+    PersonalizedProductRecommendationRequest,
     SimilarProductsRequest,
     ProductRecommendation,
-    RecommendationResponse,
+    ProductRecommendationResponse,
 )
 
 
 @pytest.fixture
 def recommendation_service():
-    """Fixture for recommendation service"""
-    return RecommendationService()
+    """Fixture for product recommendation service"""
+    return ProductRecommendationService()
 
 
 @pytest.fixture
@@ -28,15 +28,15 @@ def mock_db_session():
     return Mock(spec=Session)
 
 
-class TestRecommendationService:
-    """Test RecommendationService class"""
+class TestProductRecommendationService:
+    """Test ProductRecommendationService class"""
 
     @pytest.mark.asyncio
     async def test_get_personalized_recommendations_new_user(
         self, recommendation_service, mock_db_session
     ):
-        """Test personalized recommendations for new user (no history)"""
-        request = PersonalizedRecommendationRequest(
+        """Test personalized product recommendations for new user (no history)"""
+        request = PersonalizedProductRecommendationRequest(
             user_id="new-user-123",
             limit=5,
             context="homepage",
@@ -73,8 +73,8 @@ class TestRecommendationService:
     async def test_get_personalized_recommendations_existing_user(
         self, recommendation_service
     ):
-        """Test personalized recommendations for user with history"""
-        request = PersonalizedRecommendationRequest(
+        """Test personalized product recommendations for user with history"""
+        request = PersonalizedProductRecommendationRequest(
             user_id="user-123",
             limit=10,
             context="homepage",
@@ -200,23 +200,23 @@ class TestRecommendationService:
             assert scores == sorted(scores, reverse=True)
 
     def test_personalized_recommendation_request_validation(self):
-        """Test request validation for personalized recommendations"""
+        """Test request validation for personalized product recommendations"""
         # Valid request
-        valid_request = PersonalizedRecommendationRequest(
+        valid_request = PersonalizedProductRecommendationRequest(
             user_id="user-123", limit=10, context="homepage"
         )
         assert valid_request.limit == 10
         assert valid_request.context == "homepage"
 
         # Invalid context should default to homepage
-        request_invalid_context = PersonalizedRecommendationRequest(
+        request_invalid_context = PersonalizedProductRecommendationRequest(
             user_id="user-123", context="invalid_context"
         )
         assert request_invalid_context.context == "homepage"
 
         # Limit should be within bounds
         with pytest.raises(Exception):
-            PersonalizedRecommendationRequest(user_id="user-123", limit=100)  # > 50
+            PersonalizedProductRecommendationRequest(user_id="user-123", limit=100)  # > 50
 
     def test_similar_products_request_validation(self):
         """Test request validation for similar products"""
@@ -356,7 +356,7 @@ class TestRecommendationResponse:
             )
         ]
 
-        response = RecommendationResponse(
+        response = ProductRecommendationResponse(
             success=True,
             recommendations=recommendations,
             strategy_used="collaborative_filtering",
@@ -373,7 +373,7 @@ class TestRecommendationResponse:
 
     def test_empty_recommendation_response(self):
         """Test response with no recommendations"""
-        response = RecommendationResponse(
+        response = ProductRecommendationResponse(
             success=False, recommendations=[], strategy_used="fallback_error", total=0
         )
 

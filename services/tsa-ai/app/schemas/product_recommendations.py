@@ -6,7 +6,7 @@ from typing import Optional, List
 from datetime import datetime
 
 
-class PersonalizedRecommendationRequest(BaseModel):
+class PersonalizedProductRecommendationRequest(BaseModel):
     """Request schema for personalized product recommendations"""
 
     user_id: str = Field(..., description="UUID de l'utilisateur")
@@ -45,8 +45,8 @@ class ProductRecommendation(BaseModel):
     confidence: Optional[float] = Field(None, ge=0, le=1, description="Confiance (0-1)")
 
 
-class RecommendationResponse(BaseModel):
-    """Response schema for recommendations"""
+class ProductRecommendationResponse(BaseModel):
+    """Response schema for product recommendations"""
 
     success: bool = Field(True, description="Statut de la requête")
     recommendations: List[ProductRecommendation] = Field(
@@ -69,8 +69,8 @@ class PopularProductsRequest(BaseModel):
     category_id: Optional[str] = Field(None, description="Filtrer par catégorie")
 
 
-class RecommendationFeedback(BaseModel):
-    """Feedback for improving recommendations"""
+class ProductRecommendationFeedback(BaseModel):
+    """Feedback for improving product recommendations"""
 
     user_id: str = Field(..., description="UUID de l'utilisateur")
     product_id: str = Field(..., description="UUID du produit")
@@ -86,8 +86,8 @@ class RecommendationFeedback(BaseModel):
         return v.lower()
 
 
-class RecommendationStats(BaseModel):
-    """Statistics about recommendation performance"""
+class ProductRecommendationStats(BaseModel):
+    """Statistics about product recommendation performance"""
 
     total_recommendations_served: int
     total_users_recommended: int

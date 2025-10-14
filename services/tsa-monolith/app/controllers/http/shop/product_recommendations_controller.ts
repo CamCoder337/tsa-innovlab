@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import AIService from '#services/ai_service'
 import Product from '#models/product'
 
-export default class RecommendationsController {
+export default class ProductRecommendationsController {
   private aiService: AIService
 
   constructor() {
@@ -10,7 +10,7 @@ export default class RecommendationsController {
   }
 
   /**
-   * Get personalized recommendations for the authenticated user
+   * Get personalized product recommendations for the authenticated user
    */
   async index({ auth, request, response }: HttpContext) {
     try {
@@ -107,6 +107,19 @@ export default class RecommendationsController {
 
       // Fallback: if AI fails, get products from same category
       if (!aiResponse.success || aiResponse.recommendations.length === 0) {
+        // If product has no category, return empty results
+        if (!baseProduct.categoryId) {
+          return response.json({
+            success: true,
+            message: 'Similar products retrieved (no category)',
+            data: {
+              base_product: baseProduct.serialize(),
+              products: [],
+              strategy: 'fallback_no_category',
+            },
+          })
+        }
+
         const similarProducts = await Product.query()
           .where('categoryId', baseProduct.categoryId)
           .where('isActive', true)

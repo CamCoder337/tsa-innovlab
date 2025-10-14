@@ -238,17 +238,26 @@ router
     // Recherche
     router.get('/search', '#controllers/http/shop/search_controller.index')
 
-    // Recommandations (public access)
-    router.get('/recommendations/popular', '#controllers/http/shop/recommendations_controller.popular')
+    // Recommandations de produits (public access)
+    router.get(
+      '/product-recommendations/popular',
+      '#controllers/http/shop/product_recommendations_controller.popular'
+    )
   })
   .prefix('/api/shop')
 
-// ===== ROUTES RECOMMANDATIONS (AUTHENTIFIÉES) =====
+// ===== ROUTES RECOMMANDATIONS DE PRODUITS (AUTHENTIFIÉES) =====
 router
   .group(() => {
-    // Recommandations personnalisées
-    router.get('/recommendations', '#controllers/http/shop/recommendations_controller.index')
-    router.get('/recommendations/similar/:id', '#controllers/http/shop/recommendations_controller.similar')
+    // Recommandations personnalisées de produits
+    router.get(
+      '/product-recommendations',
+      '#controllers/http/shop/product_recommendations_controller.index'
+    )
+    router.get(
+      '/product-recommendations/similar/:id',
+      '#controllers/http/shop/product_recommendations_controller.similar'
+    )
   })
   .prefix('/api/shop')
   .middleware(middleware.auth())

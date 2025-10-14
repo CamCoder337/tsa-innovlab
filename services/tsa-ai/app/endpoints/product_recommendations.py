@@ -8,23 +8,23 @@ import time
 import logging
 
 from app.core.database import get_db
-from app.schemas.recommendations import (
-    PersonalizedRecommendationRequest,
+from app.schemas.product_recommendations import (
+    PersonalizedProductRecommendationRequest,
     SimilarProductsRequest,
-    RecommendationResponse,
+    ProductRecommendationResponse,
     PopularProductsRequest,
-    RecommendationFeedback,
+    ProductRecommendationFeedback,
 )
-from app.services.recommendation_service import recommendation_service
+from app.services.product_recommendation_service import product_recommendation_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.post("/personalized", response_model=RecommendationResponse)
-async def get_personalized_recommendations(
-    request: PersonalizedRecommendationRequest,
+@router.post("/personalized", response_model=ProductRecommendationResponse)
+async def get_personalized_product_recommendations(
+    request: PersonalizedProductRecommendationRequest,
     db: Session = Depends(get_db),
 ):
     """
@@ -43,7 +43,7 @@ async def get_personalized_recommendations(
     try:
         logger.info(f"Personalized recommendations request for user {request.user_id}")
 
-        response = await recommendation_service.get_personalized_recommendations(request)
+        response = await product_recommendation_service.get_personalized_recommendations(request)
 
         logger.info(
             f"Personalized recommendations: {response.total} products "
@@ -66,7 +66,7 @@ async def get_personalized_recommendations(
         )
 
 
-@router.post("/similar", response_model=RecommendationResponse)
+@router.post("/similar", response_model=ProductRecommendationResponse)
 async def get_similar_products(
     request: SimilarProductsRequest,
     db: Session = Depends(get_db),
@@ -86,7 +86,7 @@ async def get_similar_products(
     try:
         logger.info(f"Similar products request for product {request.product_id}")
 
-        response = await recommendation_service.get_similar_products(request)
+        response = await product_recommendation_service.get_similar_products(request)
 
         logger.info(
             f"Similar products: {response.total} products "
@@ -109,7 +109,7 @@ async def get_similar_products(
         )
 
 
-@router.get("/popular", response_model=RecommendationResponse)
+@router.get("/popular", response_model=ProductRecommendationResponse)
 async def get_popular_products(
     limit: int = Query(10, ge=1, le=50, description="Nombre de produits"),
     time_window_days: int = Query(
@@ -129,7 +129,7 @@ async def get_popular_products(
     try:
         logger.info(f"Popular products request (window: {time_window_days} days)")
 
-        response = await recommendation_service.get_popular_products(
+        response = await product_recommendation_service.get_popular_products(
             limit=limit, time_window_days=time_window_days
         )
 
@@ -155,8 +155,8 @@ async def get_popular_products(
 
 
 @router.post("/feedback")
-async def submit_recommendation_feedback(
-    feedback: RecommendationFeedback,
+async def submit_product_recommendation_feedback(
+    feedback: ProductRecommendationFeedback,
     db: Session = Depends(get_db),
 ):
     """
@@ -203,7 +203,7 @@ async def submit_recommendation_feedback(
 
 
 @router.get("/stats")
-async def get_recommendation_stats(db: Session = Depends(get_db)):
+async def get_product_recommendation_stats(db: Session = Depends(get_db)):
     """
     Obtenir les statistiques du système de recommandations
 
@@ -246,13 +246,13 @@ async def get_recommendation_stats(db: Session = Depends(get_db)):
 
 
 @router.get("/health")
-async def health_check():
+async def product_recommendations_health_check():
     """
-    Health check pour le service de recommandations
+    Health check pour le service de recommandations de produits
     """
     return {
         "status": "healthy",
-        "service": "recommendations",
+        "service": "product_recommendations",
         "version": "1.0.0",
         "timestamp": time.time(),
     }
