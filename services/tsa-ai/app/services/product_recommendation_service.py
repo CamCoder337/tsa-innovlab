@@ -30,6 +30,17 @@ class ProductRecommendationService:
         self.model_version = "1.0.0"
         self.cache = {}  # Simple in-memory cache for product similarities
 
+    def _log_error(self, context: str, err: Exception) -> None:
+        """
+        Log errors without leaking SQL statements or parameters.
+        Only the error type is recorded to keep logs clean.
+        """
+        try:
+            err_type = err.__class__.__name__
+        except Exception:
+            err_type = "UnknownError"
+        logger.error(f"{context}: {err_type}")
+
     async def get_personalized_recommendations(
         self, request: PersonalizedProductRecommendationRequest
     ) -> ProductRecommendationResponse:
@@ -78,7 +89,7 @@ class ProductRecommendationService:
             )
 
         except Exception as e:
-            logger.error(f"Personalized product recommendations failed: {e}")
+            self._log_error("Personalized product recommendations failed", e)
             # Return empty recommendations on failure
             return ProductRecommendationResponse(
                 success=False,
@@ -129,7 +140,7 @@ class ProductRecommendationService:
             )
 
         except Exception as e:
-            logger.error(f"Similar products recommendations failed: {e}")
+            self._log_error("Similar products recommendations failed", e)
             return ProductRecommendationResponse(
                 success=False,
                 recommendations=[],
@@ -166,7 +177,7 @@ class ProductRecommendationService:
             )
 
         except Exception as e:
-            logger.error(f"Popular products recommendations failed: {e}")
+            self._log_error("Popular products recommendations failed", e)
             return ProductRecommendationResponse(
                 success=False,
                 recommendations=[],
@@ -210,7 +221,7 @@ class ProductRecommendationService:
             ]
 
         except Exception as e:
-            logger.error(f"Failed to get user history: {e}")
+            self._log_error("Failed to get user history", e)
             return []
 
     async def _get_product_details(self, db, product_id: str) -> Optional[Dict[str, Any]]:
@@ -241,7 +252,7 @@ class ProductRecommendationService:
             }
 
         except Exception as e:
-            logger.error(f"Failed to get product details: {e}")
+            self._log_error("Failed to get product details", e)
             return None
 
     async def _collaborative_filtering_recommendations(
@@ -278,7 +289,7 @@ class ProductRecommendationService:
                 return await self._content_based_recommendations(db, user_history, limit, exclude_ids)
 
             # Get products purchased by similar users but not by current user
-            query = text("""
+            base_sql = """
                 SELECT
                     oi.product_id,
                     p.name,
@@ -289,27 +300,25 @@ class ProductRecommendationService:
                 JOIN products p ON oi.product_id = p.id
                 WHERE o.user_id IN :similar_users
                 AND oi.product_id NOT IN :user_products
-                AND oi.product_id NOT IN :exclude_ids
+            """
+            params = {
+                "similar_users": tuple(similar_users),
+                "user_products": tuple(user_product_ids),
+                "limit": limit,
+            }
+            if exclude_ids:
+                base_sql += "\n                AND oi.product_id NOT IN :exclude_ids"
+                params["exclude_ids"] = tuple(exclude_ids)
+            base_sql += """
                 AND p.is_active = true
                 AND p.stock > 0
                 GROUP BY oi.product_id, p.name
                 ORDER BY purchase_count DESC
                 LIMIT :limit
-            """)
+            """
 
-            exclude_list = exclude_ids + user_product_ids
-            if not exclude_list:
-                exclude_list = [""]
-
-            result = db.execute(
-                query,
-                {
-                    "similar_users": tuple(similar_users),
-                    "user_products": tuple(user_product_ids),
-                    "exclude_ids": tuple(exclude_list),
-                    "limit": limit,
-                },
-            )
+            query = text(base_sql)
+            result = db.execute(query, params)
             rows = result.fetchall()
 
             # Calculate scores based on purchase frequency
@@ -333,7 +342,7 @@ class ProductRecommendationService:
             return recommendations
 
         except Exception as e:
-            logger.error(f"Collaborative filtering failed: {e}")
+            self._log_error("Collaborative filtering failed", e)
             return []
 
     async def _content_based_recommendations(
@@ -363,33 +372,33 @@ class ProductRecommendationService:
             # Get products from purchased history
             purchased_ids = [item["product_id"] for item in user_history]
             exclude_list = exclude_ids + purchased_ids
-            if not exclude_list:
-                exclude_list = [""]
 
             # Find similar products in same categories and price range
-            query = text("""
+            base_sql = """
                 SELECT
                     id, name, category_id, price
                 FROM products
                 WHERE category_id IN :categories
                 AND price BETWEEN :price_min AND :price_max
-                AND id NOT IN :exclude_ids
+            """
+            params = {
+                "categories": tuple(preferred_categories),
+                "price_min": price_min,
+                "price_max": price_max,
+                "limit": limit,
+            }
+            if exclude_list:
+                base_sql += "\n                AND id NOT IN :exclude_ids"
+                params["exclude_ids"] = tuple(exclude_list)
+            base_sql += """
                 AND is_active = true
                 AND stock > 0
                 ORDER BY created_at DESC
                 LIMIT :limit
-            """)
+            """
 
-            result = db.execute(
-                query,
-                {
-                    "categories": tuple(preferred_categories),
-                    "price_min": price_min,
-                    "price_max": price_max,
-                    "exclude_ids": tuple(exclude_list),
-                    "limit": limit,
-                },
-            )
+            query = text(base_sql)
+            result = db.execute(query, params)
             rows = result.fetchall()
 
             recommendations = []
@@ -413,7 +422,7 @@ class ProductRecommendationService:
             return recommendations
 
         except Exception as e:
-            logger.error(f"Content-based recommendations failed: {e}")
+            self._log_error("Content-based recommendations failed", e)
             return []
 
     async def _popularity_based_recommendations(
@@ -424,10 +433,9 @@ class ProductRecommendationService:
         """
         try:
             cutoff_date = datetime.utcnow() - timedelta(days=time_window_days)
-            exclude_list = exclude_ids if exclude_ids else [""]
 
             # Get most ordered products in time window
-            query = text("""
+            base_sql = """
                 SELECT
                     oi.product_id,
                     p.name,
@@ -437,33 +445,42 @@ class ProductRecommendationService:
                 JOIN orders o ON oi.order_id = o.id
                 JOIN products p ON oi.product_id = p.id
                 WHERE o.created_at >= :cutoff_date
-                AND oi.product_id NOT IN :exclude_ids
+            """
+            params = {"cutoff_date": cutoff_date, "limit": limit}
+            if exclude_ids:
+                base_sql += "\n                AND oi.product_id NOT IN :exclude_ids"
+                params["exclude_ids"] = tuple(exclude_ids)
+            base_sql += """
                 AND p.is_active = true
                 AND p.stock > 0
                 GROUP BY oi.product_id, p.name
                 ORDER BY order_count DESC, total_quantity DESC
                 LIMIT :limit
-            """)
+            """
 
-            result = db.execute(
-                query,
-                {"cutoff_date": cutoff_date, "exclude_ids": tuple(exclude_list), "limit": limit},
-            )
+            query = text(base_sql)
+            result = db.execute(query, params)
             rows = result.fetchall()
 
             # If no recent orders, get newest products
             if not rows:
-                query = text("""
+                base_sql = """
                     SELECT id, name
                     FROM products
                     WHERE is_active = true
                     AND stock > 0
-                    AND id NOT IN :exclude_ids
+                """
+                params = {"limit": limit}
+                if exclude_ids:
+                    base_sql += "\n                    AND id NOT IN :exclude_ids"
+                    params["exclude_ids"] = tuple(exclude_ids)
+                base_sql += """
                     ORDER BY created_at DESC
                     LIMIT :limit
-                """)
+                """
 
-                result = db.execute(query, {"exclude_ids": tuple(exclude_list), "limit": limit})
+                query = text(base_sql)
+                result = db.execute(query, params)
                 rows = result.fetchall()
 
                 recommendations = []
@@ -499,7 +516,7 @@ class ProductRecommendationService:
             return recommendations
 
         except Exception as e:
-            logger.error(f"Popularity-based recommendations failed: {e}")
+            self._log_error("Popularity-based recommendations failed", e)
             return []
 
     async def _find_similar_products(
@@ -510,38 +527,38 @@ class ProductRecommendationService:
         """
         try:
             exclude_list = exclude_ids + [base_product["id"]]
-            if not exclude_list:
-                exclude_list = [""]
 
             # Find products in same category with similar price
             price = base_product["price"]
             price_min = price * 0.7
             price_max = price * 1.3
 
-            query = text("""
+            base_sql = """
                 SELECT
                     id, name, price, category_id
                 FROM products
                 WHERE category_id = :category_id
                 AND price BETWEEN :price_min AND :price_max
-                AND id NOT IN :exclude_ids
+            """
+            params = {
+                "category_id": base_product["category_id"],
+                "price_min": price_min,
+                "price_max": price_max,
+                "target_price": price,
+                "limit": limit,
+            }
+            if exclude_list:
+                base_sql += "\n                AND id NOT IN :exclude_ids"
+                params["exclude_ids"] = tuple(exclude_list)
+            base_sql += """
                 AND is_active = true
                 AND stock > 0
                 ORDER BY ABS(price - :target_price)
                 LIMIT :limit
-            """)
+            """
 
-            result = db.execute(
-                query,
-                {
-                    "category_id": base_product["category_id"],
-                    "price_min": price_min,
-                    "price_max": price_max,
-                    "target_price": price,
-                    "exclude_ids": tuple(exclude_list),
-                    "limit": limit,
-                },
-            )
+            query = text(base_sql)
+            result = db.execute(query, params)
             rows = result.fetchall()
 
             recommendations = []
@@ -566,7 +583,7 @@ class ProductRecommendationService:
             return recommendations
 
         except Exception as e:
-            logger.error(f"Find similar products failed: {e}")
+            self._log_error("Find similar products failed", e)
             return []
 
 
