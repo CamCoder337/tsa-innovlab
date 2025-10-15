@@ -21,6 +21,7 @@ export enum UserRole {
   ADMIN = 'admin',
   TRANSPORTEUR = 'transporteur',
   AFFRETEUR = 'affreteur',
+  CLIENT = 'client',
 }
 
 export enum UserStatus {
@@ -241,6 +242,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
       admin: ['manage_users', 'view_reports', 'edit_settings'],
       transporteur: ['view_missions', 'update_status'],
       affreteur: ['create_mission', 'view_status'],
+      client: ['shop', 'manage_cart', 'place_orders', 'view_orders'],
     }
 
     return roleAbilities[this.role] || []
