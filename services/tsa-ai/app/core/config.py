@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     prediction_batch_size: int = Field(default=100, alias="PREDICTION_BATCH_SIZE")
     model_reload_interval: int = Field(default=3600, alias="MODEL_RELOAD_INTERVAL")  # 1 hour
 
+    # Google Cloud Vision API
+    google_application_credentials: Optional[str] = Field(default=None, alias="GOOGLE_APPLICATION_CREDENTIALS")
+
     class Config:
         env_file = ".env"
         case_sensitive = False

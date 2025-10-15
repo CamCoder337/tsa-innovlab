@@ -1,9 +1,118 @@
-.idea
-.qodo
+# ================================
+# IDEs & Editors
+# ================================
+.idea/
+.vscode/
+.qodo/
+*.swp
+*.swo
+*~
+.DS_Store
 
-# Claude Code
-.claude/
+# ================================
+# Environment Variables
+# ================================
+.env
+.env.local
+.env.*.local
+services/tsa-ai/.env
+services/tsa-monolith/.env
 
-# Playwright test results
+# ================================
+# Python
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ================================
+# Node.js / AdonisJS
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+build/
+tmp/
+.cache/
+*.log
+
+# ================================
+# Docker
+# ================================
+docker-compose.override.yml
+*.log
+
+# ================================
+# Database
+# ================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ================================
+# AI / ML Models
+# ================================
+services/tsa-ai/ml_models/*.pkl
+services/tsa-ai/ml_models/*.h5
+services/tsa-ai/ml_models/*.pt
+services/tsa-ai/data/visual_recognition/images/
+services/tsa-ai/data/visual_recognition/*.pkl
+
+# ================================
+# Logs
+# ================================
+logs/
+*.log
+services/tsa-ai/logs/
+services/tsa-monolith/logs/
+
+# ================================
+# Credentials & Secrets
+# ================================
+google-credentials.json
+services/tsa-ai/google-credentials.json
+*.pem
+*.key
+*.crt
+*.p12
+
+# ================================
+# Testing
+# ================================
+.pytest_cache/
+.coverage
+htmlcov/
 playwright-report/
 test-results/
+coverage/
+
+# ================================
+# AI Assistants
+# ================================
+.claude/
+.cursor/
+
+# ================================
+# OS
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini

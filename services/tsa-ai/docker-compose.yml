@@ -1,5 +1,5 @@
 services:
-  # FastAPI AI Service - Se connecte à PostgreSQL et Redis locaux
+  # FastAPI AI Service - Se connecte à PostgreSQL et Redis de l'hôte
   tsa-ai:
     build:
       context: .
@@ -47,3 +47,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+    networks:
+      - tsa-innovlab_tsa-network
+
+networks:
+  tsa-innovlab_tsa-network:
+    external: true
