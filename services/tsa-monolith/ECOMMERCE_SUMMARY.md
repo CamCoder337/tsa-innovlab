@@ -3,12 +3,14 @@
 ## ✅ Ce qui a été implémenté
 
 ### 1. **Rôle CLIENT** ✅
+
 - Enum `UserRole.CLIENT` ajouté au modèle User
 - Migration PostgreSQL exécutée
 - Abilities : `shop`, `manage_cart`, `place_orders`, `view_orders`
 - Protection des routes avec `roleGuard(UserRole.CLIENT)`
 
 ### 2. **Modèles de Données** ✅
+
 - ✅ `Cart` - Paniers avec expiration (7 jours)
 - ✅ `CartItem` - Articles du panier avec prix snapshot
 - ✅ `Order` - Commandes avec numéro auto-généré
@@ -16,6 +18,7 @@
 - ✅ `Payment` - Paiements MTN Mobile Money
 
 ### 3. **Services Métier** ✅
+
 - ✅ `CartService` - Gestion complète du panier
   - Création/récupération automatique
   - Ajout/modification/suppression d'articles
@@ -39,6 +42,7 @@
 ### 4. **Contrôleurs API** ✅
 
 #### Shop (Public - pas d'auth)
+
 - ✅ `ShopProductsController` - Catalogue public
   - Liste paginée avec filtres
   - Détails produit
@@ -53,6 +57,7 @@
   - Support SKU
 
 #### Client (Auth + role CLIENT requis)
+
 - ✅ `CartController` - Panier client
   - GET /cart - Voir le panier
   - POST /cart/items - Ajouter produit
@@ -75,23 +80,27 @@
   - POST /webhooks/mtn/payment-callback - Webhook MTN
 
 ### 5. **Validateurs** ✅
+
 - ✅ `cart_validator.ts` - Validation panier
 - ✅ `order_validator.ts` - Validation commandes
 - ✅ `payment_validator.ts` - Validation paiements MTN (numéro Cameroun)
 
 ### 6. **Routes** ✅
+
 - ✅ Routes Shop publiques (`/api/shop/*`)
 - ✅ Routes Client protégées (`/api/client/*`)
 - ✅ Webhook MTN public (`/api/webhooks/mtn/*`)
 - ✅ Middleware de rôle CLIENT actif
 
 ### 7. **Gestion du Stock** ✅
+
 - ✅ Validation avant ajout au panier
 - ✅ Décrémentation lors de la commande (transactionnel)
 - ✅ Restitution lors de l'annulation (transactionnel)
 - ✅ Vérification temps réel de la disponibilité
 
 ### 8. **Sécurité** ✅
+
 - ✅ Isolation des données par utilisateur
 - ✅ Validation stricte des rôles
 - ✅ Transactions SQL pour l'intégrité
@@ -99,19 +108,20 @@
 
 ## 📊 Statistiques de l'Implémentation
 
-| Composant | Quantité | Status |
-|-----------|----------|--------|
-| Migrations | 6 | ✅ Exécutées |
-| Modèles | 5 | ✅ Complets |
-| Services | 3 | ✅ Complets |
-| Contrôleurs | 6 | ✅ Complets |
-| Validateurs | 3 | ✅ Complets |
-| Routes | 24 | ✅ Enregistrées |
-| Tests TypeScript | ✅ | ✅ Passent |
+| Composant        | Quantité | Status          |
+| ---------------- | -------- | --------------- |
+| Migrations       | 6        | ✅ Exécutées    |
+| Modèles          | 5        | ✅ Complets     |
+| Services         | 3        | ✅ Complets     |
+| Contrôleurs      | 6        | ✅ Complets     |
+| Validateurs      | 3        | ✅ Complets     |
+| Routes           | 24       | ✅ Enregistrées |
+| Tests TypeScript | ✅       | ✅ Passent      |
 
 ## 🎯 Fonctionnalités Clés
 
 ### Panier Intelligent
+
 - ✅ Création automatique à la première utilisation
 - ✅ Expiration après 7 jours (configurable)
 - ✅ Prix snapshot (protection contre les variations)
@@ -119,6 +129,7 @@
 - ✅ Conversion automatique en commande
 
 ### Commandes Robustes
+
 - ✅ Génération automatique de numéros (ORD-202501-0001)
 - ✅ Workflow complet : PENDING → PAID → PROCESSING → SHIPPED → DELIVERED
 - ✅ Annulation avec restitution automatique du stock
@@ -126,6 +137,7 @@
 - ✅ Support multi-adresses (livraison ≠ facturation)
 
 ### Paiement MTN Mobile Money
+
 - ✅ Simulation complète en développement
 - ✅ Architecture prête pour l'API MTN réelle
 - ✅ Webhook endpoint configuré
@@ -135,6 +147,7 @@
 ## 🔧 Configuration Requise
 
 ### Variables d'Environnement (futures)
+
 ```env
 # MTN Mobile Money API (à ajouter)
 MTN_SUBSCRIPTION_KEY=your_key
@@ -144,6 +157,7 @@ MTN_ENVIRONMENT=sandbox  # ou production
 ```
 
 ### Base de Données
+
 - ✅ PostgreSQL avec extensions UUID
 - ✅ 6 nouvelles tables créées
 - ✅ Relations et contraintes configurées
@@ -157,12 +171,14 @@ MTN_ENVIRONMENT=sandbox  # ou production
 ## 🚀 Comment Utiliser
 
 ### 1. Démarrer le serveur
+
 ```bash
 cd services/tsa-monolith
 npm run dev
 ```
 
 ### 2. Créer un client de test
+
 ```bash
 curl -X POST http://localhost:3333/api/auth/register \
   -H "Content-Type: application/json" \
@@ -177,16 +193,19 @@ curl -X POST http://localhost:3333/api/auth/register \
 ```
 
 ### 3. Tester le flux complet
+
 Utilisez le fichier `test-ecommerce.http` avec REST Client (VS Code) ou importez dans Postman.
 
 ## ⚠️ Points d'Attention
 
 ### En Développement
+
 - ✅ Paiements simulés (console logs)
 - ✅ Endpoint `/payments/:id/confirm` pour tester manuellement
 - ✅ Messages détaillés dans la console
 
 ### Pour la Production
+
 - ⏳ Intégrer l'API MTN Mobile Money réelle
 - ⏳ Supprimer l'endpoint `/payments/:id/confirm`
 - ⏳ Configurer le webhook MTN avec validation de signature
@@ -205,11 +224,13 @@ Utilisez le fichier `test-ecommerce.http` avec REST Client (VS Code) ou importez
 ## 📈 Métriques Business
 
 ### Disponibles Maintenant
+
 - ✅ Statistiques client : totalOrders, totalSpent, pendingOrders, completedOrders
 - ✅ Statistiques admin produits : total, actifs, inactifs, stock faible
 - ✅ Résumé panier : nombre d'articles, montant total
 
 ### À Ajouter
+
 - ⏳ Taux de conversion (panier → commande)
 - ⏳ Valeur moyenne du panier
 - ⏳ Produits les plus vendus
@@ -218,17 +239,20 @@ Utilisez le fichier `test-ecommerce.http` avec REST Client (VS Code) ou importez
 ## 🎨 Intégration Frontend
 
 ### Endpoints Publics (pas d'auth)
+
 - `GET /api/shop/products` - Catalogue
 - `GET /api/shop/products/:id` - Détails produit
 - `GET /api/shop/categories` - Catégories
 - `GET /api/shop/search` - Recherche
 
 ### Endpoints Authentifiés (role CLIENT)
+
 - Panier : `/api/client/cart/*`
 - Commandes : `/api/client/orders/*`
 - Paiements : `/api/client/payments/*`
 
 ### Flow Frontend Recommandé
+
 1. Afficher le catalogue sans auth
 2. Demander auth lors de l'ajout au panier
 3. Afficher le panier avec résumé

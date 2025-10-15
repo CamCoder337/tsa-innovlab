@@ -225,6 +225,7 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 ## 📦 Modèles de Données
 
 ### Cart (Panier)
+
 - `id` : UUID
 - `userId` : Propriétaire
 - `status` : ACTIVE, ABANDONED, CONVERTED
@@ -232,6 +233,7 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 - Relation : `items` (CartItem[])
 
 ### CartItem
+
 - `id` : UUID
 - `cartId` : Panier parent
 - `productId` : Produit
@@ -239,6 +241,7 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 - `priceAtAdd` : Prix au moment de l'ajout (snapshot)
 
 ### Order (Commande)
+
 - `id` : UUID
 - `orderNumber` : Généré automatiquement (ORD-YYYYMM-0001)
 - `userId` : Client
@@ -251,6 +254,7 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 - Relations : `items`, `payment`, `shippingAddress`, `billingAddress`
 
 ### OrderItem
+
 - `id` : UUID
 - `orderId` : Commande parent
 - `productId` : Produit
@@ -260,6 +264,7 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 - `totalPrice` : Prix total de cette ligne
 
 ### Payment (Paiement)
+
 - `id` : UUID
 - `orderId` : Commande associée
 - `amount` : Montant
@@ -272,11 +277,13 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 ## 🔐 Sécurité
 
 ### Isolation des Données
+
 - Les clients ne voient QUE leurs propres paniers et commandes
 - Validation stricte du rôle CLIENT sur toutes les routes `/api/client/*`
 - Les admins ont un accès global
 
 ### Validations
+
 - Stock vérifié à chaque ajout au panier et création de commande
 - Produits inactifs non visibles dans la boutique
 - Transitions de statut contrôlées
@@ -284,22 +291,27 @@ REFUNDED     → Paiement remboursé (admin uniquement)
 ## 🎨 Gestion du Stock
 
 ### Décrémentation Automatique
+
 Lors de la création d'une commande, le stock est automatiquement décrémenté de manière transactionnelle.
 
 ### Restitution Automatique
+
 Lors de l'annulation d'une commande, le stock est automatiquement restitué.
 
 ### Validation Temps Réel
+
 Avant chaque opération (ajout panier, création commande), le stock est vérifié.
 
 ## 💳 Intégration MTN Mobile Money
 
 ### État Actuel (Développement)
+
 - Simulation complète du flux de paiement
 - Messages console détaillés
 - Confirmation manuelle via endpoint `/confirm`
 
 ### TODO : Intégration Production
+
 1. Créer un compte développeur MTN : https://momodeveloper.mtn.com/
 2. Obtenir les credentials : `subscriptionKey`, `apiUser`, `apiKey`
 3. Implémenter l'API MTN dans `PaymentService` :
@@ -310,7 +322,9 @@ Avant chaque opération (ajout panier, création commande), le stock est vérifi
 6. Supprimer l'endpoint `/confirm` (dev only)
 
 ### Webhook MTN (Prêt)
+
 Route publique déjà créée :
+
 ```
 POST /api/webhooks/mtn/payment-callback
 ```
@@ -318,6 +332,7 @@ POST /api/webhooks/mtn/payment-callback
 ## 📧 Notifications (À Implémenter)
 
 Suggestions de notifications email :
+
 - ✅ Commande créée
 - ✅ Paiement confirmé
 - ✅ Commande expédiée
@@ -344,12 +359,14 @@ node ace db:seed
 ## 📈 Métriques Disponibles
 
 ### Pour les Clients
+
 ```bash
 GET /api/client/orders/stats
 # Retourne : totalOrders, totalSpent, pendingOrders, completedOrders
 ```
 
 ### Pour les Admins
+
 ```bash
 GET /api/admin/products/stats
 GET /api/admin/products/low-stock

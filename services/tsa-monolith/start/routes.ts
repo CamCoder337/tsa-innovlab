@@ -274,7 +274,10 @@ router
     router.post('/payments/initiate', '#controllers/http/client/payments_controller.initiate')
     router.get('/payments/:id/status', '#controllers/http/client/payments_controller.checkStatus')
     router.post('/payments/:id/confirm', '#controllers/http/client/payments_controller.confirm') // Dev only
-    router.get('/orders/:orderId/payment', '#controllers/http/client/payments_controller.getByOrder')
+    router.get(
+      '/orders/:orderId/payment',
+      '#controllers/http/client/payments_controller.getByOrder'
+    )
   })
   .prefix('/api/client')
   .middleware([middleware.auth(), roleGuard(UserRole.CLIENT)])

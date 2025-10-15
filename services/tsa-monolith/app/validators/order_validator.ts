@@ -28,7 +28,9 @@ export const listOrdersValidator = vine.compile(
   vine.object({
     page: vine.number().min(1).optional(),
     limit: vine.number().min(1).max(100).optional(),
-    status: vine.enum(['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
+    status: vine
+      .enum(['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'])
+      .optional(),
     sortBy: vine.enum(['createdAt', 'totalAmount', 'status']).optional(),
     sortOrder: vine.enum(['asc', 'desc']).optional(),
   })

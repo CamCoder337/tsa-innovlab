@@ -48,10 +48,7 @@ test.group('Client Default Password', (group) => {
 
     // Vérifier que le hash est valide
     const isPasswordValid = await hash.verify(client.passwordHash, defaultPassword)
-    assert.isTrue(
-      isPasswordValid,
-      'Default password Admin123! should match the stored hash'
-    )
+    assert.isTrue(isPasswordValid, 'Default password Admin123! should match the stored hash')
   })
 
   test('should authenticate client with default password', async ({ assert }) => {
@@ -72,10 +69,7 @@ test.group('Client Default Password', (group) => {
     })
 
     // Tester l'authentification avec le mot de passe par défaut
-    const authenticatedUser = await User.verifyCredentials(
-      client.email,
-      defaultPassword
-    )
+    const authenticatedUser = await User.verifyCredentials(client.email, defaultPassword)
 
     assert.isDefined(authenticatedUser, 'User should be authenticated')
     assert.equal(authenticatedUser.id, client.id, 'Should return correct user')
@@ -100,11 +94,9 @@ test.group('Client Default Password', (group) => {
     })
 
     // Tester avec un mauvais mot de passe
-    await assert.rejects(
-      async () => {
-        await User.verifyCredentials('wrong-password-test@example.com', 'WrongPassword123!')
-      }
-    )
+    await assert.rejects(async () => {
+      await User.verifyCredentials('wrong-password-test@example.com', 'WrongPassword123!')
+    })
   })
 
   test('should create multiple clients with same default password', async ({ assert }) => {

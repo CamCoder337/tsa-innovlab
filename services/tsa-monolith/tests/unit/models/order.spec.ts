@@ -154,10 +154,7 @@ test.group('Order Model', (group) => {
       paymentStatus: PaymentStatus.COMPLETED,
     })
 
-    assert.isFalse(
-      processingOrder.canBeCancelled(),
-      'PROCESSING order should NOT be cancellable'
-    )
+    assert.isFalse(processingOrder.canBeCancelled(), 'PROCESSING order should NOT be cancellable')
   })
 
   test('should check if order is paid', async ({ assert }) => {

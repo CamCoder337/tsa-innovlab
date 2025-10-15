@@ -103,17 +103,14 @@ test.group('OrderService', (group) => {
   test('should throw error when creating order from empty cart', async ({ assert }) => {
     // Ne pas ajouter de produits au panier
 
-    await assert.rejects(
-      async () => {
-        await orderService.createOrderFromCart(
-          user.id,
-          shippingAddress.id,
-          billingAddress.id,
-          'mtn_mobile_money'
-        )
-      },
-      'Cart is empty. Cannot create order.'
-    )
+    await assert.rejects(async () => {
+      await orderService.createOrderFromCart(
+        user.id,
+        shippingAddress.id,
+        billingAddress.id,
+        'mtn_mobile_money'
+      )
+    }, 'Cart is empty. Cannot create order.')
   })
 
   test('should decrement stock when creating order', async ({ assert }) => {
@@ -216,12 +213,9 @@ test.group('OrderService', (group) => {
     await order.save()
 
     // Essayer d'annuler
-    await assert.rejects(
-      async () => {
-        await orderService.cancelOrder(order.id, user.id)
-      },
-      'Order cannot be cancelled. Current status: shipped'
-    )
+    await assert.rejects(async () => {
+      await orderService.cancelOrder(order.id, user.id)
+    }, 'Order cannot be cancelled. Current status: shipped')
   })
 
   test('should update order status', async ({ assert }) => {
@@ -243,7 +237,9 @@ test.group('OrderService', (group) => {
     assert.equal(order.status, OrderStatus.PROCESSING, 'Status should be updated to PROCESSING')
   })
 
-  test('should update payment status and order status when payment completed', async ({ assert }) => {
+  test('should update payment status and order status when payment completed', async ({
+    assert,
+  }) => {
     // Créer commande
     await cartService.addItem(user.id, product.id, 2)
     const order = await orderService.createOrderFromCart(

@@ -104,9 +104,7 @@ test.group('E-commerce Complete Flow', (group) => {
     assert.equal(client.role, UserRole.CLIENT, 'User should have CLIENT role')
 
     // ÉTAPE 2 : Récupérer le panier (devrait être vide initialement)
-    const cartResponse = await httpClient
-      .get('/api/client/cart')
-      .bearerToken(accessToken)
+    const cartResponse = await httpClient.get('/api/client/cart').bearerToken(accessToken)
 
     cartResponse.assertStatus(200)
     assert.equal(cartResponse.body().data.itemCount, 0, 'Cart should be empty initially')
@@ -137,9 +135,7 @@ test.group('E-commerce Complete Flow', (group) => {
     assert.isTrue(addProduct2Response.body().success, 'Should add product 2 to cart')
 
     // ÉTAPE 5 : Vérifier le résumé du panier
-    const cartSummaryResponse = await httpClient
-      .get('/api/client/cart')
-      .bearerToken(accessToken)
+    const cartSummaryResponse = await httpClient.get('/api/client/cart').bearerToken(accessToken)
 
     cartSummaryResponse.assertStatus(200)
     assert.equal(cartSummaryResponse.body().data.itemCount, 3, 'Should have 3 items (1+2)')
@@ -169,9 +165,7 @@ test.group('E-commerce Complete Flow', (group) => {
     assert.equal(order.totalAmount, 530000, 'Order total should match cart total')
 
     // ÉTAPE 7 : Vérifier que le panier a été converti (nouveau panier vide)
-    const cartAfterOrderResponse = await httpClient
-      .get('/api/client/cart')
-      .bearerToken(accessToken)
+    const cartAfterOrderResponse = await httpClient.get('/api/client/cart').bearerToken(accessToken)
 
     cartAfterOrderResponse.assertStatus(200)
     // Le panier devrait être vide car l'ancien a été converti
@@ -232,9 +226,7 @@ test.group('E-commerce Complete Flow', (group) => {
     assert.equal(updatedOrder.status, 'paid', 'Order status should be paid')
 
     // ÉTAPE 12 : Vérifier les statistiques du client
-    const statsResponse = await httpClient
-      .get('/api/client/orders/stats')
-      .bearerToken(accessToken)
+    const statsResponse = await httpClient.get('/api/client/orders/stats').bearerToken(accessToken)
 
     statsResponse.assertStatus(200)
     const stats = statsResponse.body().data
@@ -273,13 +265,10 @@ test.group('E-commerce Complete Flow', (group) => {
     const accessToken = clientToken
 
     // Ajouter produit au panier
-    await httpClient
-      .post('/api/client/cart/items')
-      .bearerToken(accessToken)
-      .json({
-        productId: product1.id,
-        quantity: 2,
-      })
+    await httpClient.post('/api/client/cart/items').bearerToken(accessToken).json({
+      productId: product1.id,
+      quantity: 2,
+    })
 
     const initialStock = product1.stock
 
@@ -327,15 +316,11 @@ test.group('E-commerce Complete Flow', (group) => {
     assert.include(abilities, 'view_orders', 'Client should have view_orders ability')
 
     // Vérifier que le client peut accéder aux routes e-commerce
-    const cartAccess = await httpClient
-      .get('/api/client/cart')
-      .bearerToken(clientToken)
+    const cartAccess = await httpClient.get('/api/client/cart').bearerToken(clientToken)
 
     cartAccess.assertStatus(200)
 
-    const ordersAccess = await httpClient
-      .get('/api/client/orders')
-      .bearerToken(clientToken)
+    const ordersAccess = await httpClient.get('/api/client/orders').bearerToken(clientToken)
 
     ordersAccess.assertStatus(200)
   })

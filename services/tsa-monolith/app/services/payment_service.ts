@@ -26,10 +26,7 @@ export default class PaymentService {
    */
   async initiatePayment(orderId: string, phoneNumber: string): Promise<Payment> {
     // Vérifier que la commande existe et est valide
-    const order = await Order.query()
-      .where('id', orderId)
-      .preload('payment')
-      .firstOrFail()
+    const order = await Order.query().where('id', orderId).preload('payment').firstOrFail()
 
     // Vérifier qu'un paiement n'existe pas déjà pour cette commande
     if (order.payment && order.payment.status === PaymentStatus.COMPLETED) {

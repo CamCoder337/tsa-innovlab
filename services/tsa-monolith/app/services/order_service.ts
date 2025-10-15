@@ -41,16 +41,11 @@ export default class OrderService {
       // Valider le stock pour tous les produits
       const stockValidation = await this.cartService.validateStock(cart.id)
       if (!stockValidation.valid) {
-        throw new Error(
-          `Stock validation failed: ${stockValidation.errors.join(', ')}`
-        )
+        throw new Error(`Stock validation failed: ${stockValidation.errors.join(', ')}`)
       }
 
       // Calculer le montant total
-      const totalAmount = cart.items.reduce(
-        (sum, item) => sum + item.priceAtAdd * item.quantity,
-        0
-      )
+      const totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0)
 
       // Créer la commande
       const order = await Order.create(
@@ -151,9 +146,7 @@ export default class OrderService {
     const order = await Order.query().where('id', orderId).where('userId', userId).firstOrFail()
 
     if (!order.canBeCancelled()) {
-      throw new Error(
-        `Order cannot be cancelled. Current status: ${order.status}`
-      )
+      throw new Error(`Order cannot be cancelled. Current status: ${order.status}`)
     }
 
     // Transaction pour restituer le stock

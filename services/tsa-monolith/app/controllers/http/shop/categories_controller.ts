@@ -12,9 +12,7 @@ export default class CategoriesController {
    */
   async index({ response }: HttpContext) {
     try {
-      const categories = await Category.query()
-        .where('isActive', true)
-        .orderBy('name', 'asc')
+      const categories = await Category.query().where('isActive', true).orderBy('name', 'asc')
 
       // Optionnel : Regrouper par parent pour créer une hiérarchie
       const tree = this.buildCategoryTree(categories)

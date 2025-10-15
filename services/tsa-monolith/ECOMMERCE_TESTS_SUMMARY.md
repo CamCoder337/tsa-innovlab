@@ -5,6 +5,7 @@
 ### Points Positifs
 
 #### 1. **Architecture Solide**
+
 - ✅ **Modèles bien structurés** : Cart, CartItem, Order, OrderItem, Payment avec relations Lucid ORM appropriées
 - ✅ **Services métier complets** : CartService, OrderService, PaymentService avec logique transactionnelle
 - ✅ **Contrôleurs bien organisés** : Isolation claire des responsabilités (cart, orders, payments)
@@ -12,6 +13,7 @@
 - ✅ **Migrations propres** : 6 migrations e-commerce avec indexes, contraintes et types ENUM
 
 #### 2. **Fonctionnalités E-commerce Implémentées**
+
 - ✅ Système de panier avec expiration automatique (7 jours)
 - ✅ Gestion de stock en temps réel avec validation avant chaque opération
 - ✅ Création de commandes transactionnelles (rollback automatique en cas d'erreur)
@@ -22,6 +24,7 @@
 - ✅ Isolation stricte des données par utilisateur (sécurité)
 
 #### 3. **Qualité du Code**
+
 - ✅ Code TypeScript strict avec types bien définis
 - ✅ Gestion d'erreurs appropriée
 - ✅ Documentation inline complète
@@ -30,13 +33,16 @@
 ### ⚠️ Problèmes Identifiés
 
 #### 1. **Duplication d'enum PaymentStatus** 🔴
+
 **Fichiers concernés:**
+
 - `app/models/order.ts:18-23`
 - `app/models/payment.ts:10-15`
 
 **Impact:** Risque de divergence et bugs de cohérence
 
 **Solution recommandée:**
+
 ```typescript
 // Créer un fichier partagé : app/types/payment_enums.ts
 export enum PaymentStatus {
@@ -51,9 +57,11 @@ import { PaymentStatus } from '#types/payment_enums'
 ```
 
 #### 2. **Pas de client par défaut dans le seeder** 🟡
+
 **Fichier:** `database/seeders/default_users_seeder.ts`
 
 Le seeder crée des utilisateurs par défaut pour :
+
 - ✅ Affreteur (affreteur@tsa-logistics.com)
 - ✅ Transporteur (transporteur@tsa-logistics.com)
 - ❌ **Client manquant**
@@ -62,6 +70,7 @@ Le seeder crée des utilisateurs par défaut pour :
 
 **Solution recommandée:**
 Ajouter un client de test au seeder :
+
 ```typescript
 {
   email: 'client@tsa-logistics.com',
@@ -73,7 +82,9 @@ Ajouter un client de test au seeder :
 ```
 
 #### 3. **Routes boutique publiques manquantes** 🟡
+
 Routes définies dans `ECOMMERCE_FLOW.md` mais contrôleurs absents :
+
 - ❌ `GET /api/shop/products` - Catalogue public
 - ❌ `GET /api/shop/products/:id` - Détails produit
 - ❌ `GET /api/shop/categories` - Catégories publiques
@@ -82,17 +93,20 @@ Routes définies dans `ECOMMERCE_FLOW.md` mais contrôleurs absents :
 **Impact:** Les clients ne peuvent pas parcourir le catalogue sans authentification
 
 #### 4. **Race condition potentielle dans generateOrderNumber** 🟡
+
 **Fichier:** `app/models/order.ts:88-99`
 
 Le hook `beforeCreate()` fait un COUNT puis incrémente, ce qui peut causer des doublons en cas de création simultanée.
 
 **Solution recommandée:**
+
 ```typescript
 // Utiliser une séquence PostgreSQL ou un UUID avec préfixe
 // Ou ajouter un UNIQUE constraint + retry logic
 ```
 
 #### 5. **Webhook MTN non implémenté** 🟡
+
 **Fichier:** `app/controllers/http/client/payments_controller.ts:172-218`
 
 Le webhook est préparé mais non implémenté (TODO).
@@ -101,29 +115,32 @@ Le webhook est préparé mais non implémenté (TODO).
 
 ### Résumé des Tests
 
-| Type | Fichiers | Nombre de tests | Couverture |
-|------|----------|----------------|------------|
-| **Modèles** | 3 fichiers | ~18 tests | Cart, Order, Payment |
-| **Services** | 3 fichiers | ~36 tests | CartService, OrderService, PaymentService |
-| **Auth** | 1 fichier | **8 tests** | **Mot de passe par défaut client** ⭐ |
-| **Fonctionnels** | 1 fichier | 4 tests | Flux e-commerce complet E2E |
-| **TOTAL** | **8 fichiers** | **~66 tests** | **Couverture complète e-commerce** |
+| Type             | Fichiers       | Nombre de tests | Couverture                                |
+| ---------------- | -------------- | --------------- | ----------------------------------------- |
+| **Modèles**      | 3 fichiers     | ~18 tests       | Cart, Order, Payment                      |
+| **Services**     | 3 fichiers     | ~36 tests       | CartService, OrderService, PaymentService |
+| **Auth**         | 1 fichier      | **8 tests**     | **Mot de passe par défaut client** ⭐     |
+| **Fonctionnels** | 1 fichier      | 4 tests         | Flux e-commerce complet E2E               |
+| **TOTAL**        | **8 fichiers** | **~66 tests**   | **Couverture complète e-commerce**        |
 
 ### Tests des Modèles
 
 #### 1. `tests/unit/models/cart.spec.ts`
+
 - ✅ Vérification expiration du panier
 - ✅ Calcul du total du panier
 - ✅ Comptage des articles
 - ✅ Gestion panier vide
 
 #### 2. `tests/unit/models/order.spec.ts`
+
 - ✅ Génération automatique du numéro de commande unique
 - ✅ Vérification du format `ORD-YYYYMM-XXXX`
 - ✅ Règles d'annulation (PENDING, PAID = annulable)
 - ✅ Vérification statut de paiement (isPaid)
 
 #### 3. `tests/unit/models/payment.spec.ts`
+
 - ✅ Vérification statut complété (isCompleted)
 - ✅ Vérification statut en attente (isPending)
 - ✅ Vérification statut échoué (isFailed)
@@ -133,6 +150,7 @@ Le webhook est préparé mais non implémenté (TODO).
 ### Tests des Services
 
 #### 4. `tests/unit/services/cart_service.spec.ts` (14 tests)
+
 - ✅ Récupération ou création de panier actif
 - ✅ Ajout d'article au panier
 - ✅ Mise à jour de quantité (incrémentation automatique)
@@ -148,6 +166,7 @@ Le webhook est préparé mais non implémenté (TODO).
 - ✅ Création automatique nouveau panier si expiré
 
 #### 5. `tests/unit/services/order_service.spec.ts` (10 tests)
+
 - ✅ Création commande depuis panier
 - ✅ Erreur si panier vide
 - ✅ Décrémentation automatique du stock
@@ -160,6 +179,7 @@ Le webhook est préparé mais non implémenté (TODO).
 - ✅ Statistiques utilisateur
 
 #### 6. `tests/unit/services/payment_service.spec.ts` (12 tests)
+
 - ✅ Initiation paiement MTN Mobile Money
 - ✅ Erreur si commande déjà payée
 - ✅ Confirmation de paiement
@@ -189,6 +209,7 @@ Le webhook est préparé mais non implémenté (TODO).
 - ✅ **Vérification que MFA n'est PAS requis pour les clients (contrairement aux admins)**
 
 **Exemple d'utilisation:**
+
 ```bash
 # Tous les clients créés par défaut utilisent ce mot de passe
 Email: client@example.com
@@ -207,6 +228,7 @@ POST /api/auth/login
 #### 8. `tests/functional/ecommerce/complete_flow.spec.ts` (4 tests)
 
 **Test 1: Flux d'achat complet avec authentification par défaut**
+
 1. ✅ Connexion avec `Admin123!`
 2. ✅ Récupération panier vide
 3. ✅ Ajout produit 1 (Laptop - 500 000 XAF)
@@ -221,23 +243,28 @@ POST /api/auth/login
 12. ✅ Vérification statistiques client
 
 **Test 2: Gestion stock insuffisant**
+
 - ✅ Erreur si quantité > stock disponible
 
 **Test 3: Annulation et restitution de stock**
+
 - ✅ Stock restauré après annulation
 
 **Test 4: Vérification abilities du client**
+
 - ✅ Accès aux routes e-commerce uniquement
 
 ## 🚀 Exécution des Tests
 
 ### Lancer tous les tests
+
 ```bash
 cd services/tsa-monolith
 npm test
 ```
 
 ### Lancer tests e-commerce uniquement
+
 ```bash
 # Tests des modèles
 npm test -- tests/unit/models/cart.spec.ts
@@ -257,6 +284,7 @@ npm test -- tests/functional/ecommerce/complete_flow.spec.ts
 ```
 
 ### Lancer avec couverture
+
 ```bash
 npm test -- --coverage
 ```
@@ -303,21 +331,22 @@ npm test -- --coverage
 
 ## 📊 Métriques de Qualité
 
-| Métrique | Valeur | Statut |
-|----------|--------|--------|
-| **Modèles e-commerce** | 5/5 | ✅ 100% |
-| **Services e-commerce** | 3/3 | ✅ 100% |
-| **Contrôleurs client** | 3/3 | ✅ 100% |
-| **Migrations e-commerce** | 6/6 | ✅ 100% |
-| **Validateurs** | 3/3 | ✅ 100% |
-| **Tests unitaires** | 66 tests | ✅ Complet |
-| **Documentation** | ECOMMERCE_FLOW.md | ✅ Complète |
+| Métrique                  | Valeur            | Statut      |
+| ------------------------- | ----------------- | ----------- |
+| **Modèles e-commerce**    | 5/5               | ✅ 100%     |
+| **Services e-commerce**   | 3/3               | ✅ 100%     |
+| **Contrôleurs client**    | 3/3               | ✅ 100%     |
+| **Migrations e-commerce** | 6/6               | ✅ 100%     |
+| **Validateurs**           | 3/3               | ✅ 100%     |
+| **Tests unitaires**       | 66 tests          | ✅ Complet  |
+| **Documentation**         | ECOMMERCE_FLOW.md | ✅ Complète |
 
 ## ✅ Verdict Final
 
 ### Le code e-commerce est **CORRECT et PRODUCTION-READY** ! ✅
 
 **Points forts:**
+
 - Architecture solide et bien pensée
 - Gestion transactionnelle complète
 - Sécurité et isolation des données
@@ -325,12 +354,14 @@ npm test -- --coverage
 - Tests complets (66 tests couvrant tous les cas)
 
 **Points d'amélioration mineurs:**
+
 - Corriger duplication enum (5 minutes)
 - Ajouter client au seeder (2 minutes)
 - Implémenter routes boutique publiques (1-2 heures)
 - Intégrer API MTN réelle (selon disponibilité)
 
 **Prêt pour:**
+
 - ✅ Tests utilisateurs
 - ✅ Déploiement en staging
 - ✅ Intégration API MTN Mobile Money réelle

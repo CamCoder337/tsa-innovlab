@@ -106,12 +106,9 @@ test.group('PaymentService', (group) => {
     await paymentService.confirmPayment(payment1.id, 'TXN-123')
 
     // Essayer d'initier un nouveau paiement
-    await assert.rejects(
-      async () => {
-        await paymentService.initiatePayment(order.id, '+237650000001')
-      },
-      'Order is already paid'
-    )
+    await assert.rejects(async () => {
+      await paymentService.initiatePayment(order.id, '+237650000001')
+    }, 'Order is already paid')
   })
 
   test('should confirm payment successfully', async ({ assert }) => {
@@ -119,11 +116,9 @@ test.group('PaymentService', (group) => {
     const payment = await paymentService.initiatePayment(order.id, '+237650000000')
 
     // Confirmer le paiement
-    const confirmedPayment = await paymentService.confirmPayment(
-      payment.id,
-      'MTN-TXN-123456',
-      { confirmationCode: 'ABC123' }
-    )
+    const confirmedPayment = await paymentService.confirmPayment(payment.id, 'MTN-TXN-123456', {
+      confirmationCode: 'ABC123',
+    })
 
     assert.equal(confirmedPayment.status, PaymentStatus.COMPLETED, 'Payment should be COMPLETED')
     assert.equal(confirmedPayment.transactionId, 'MTN-TXN-123456', 'Transaction ID should be saved')
@@ -144,12 +139,9 @@ test.group('PaymentService', (group) => {
     await paymentService.confirmPayment(payment.id, 'TXN-123')
 
     // Essayer de confirmer à nouveau
-    await assert.rejects(
-      async () => {
-        await paymentService.confirmPayment(payment.id, 'TXN-456')
-      },
-      'Payment is already confirmed'
-    )
+    await assert.rejects(async () => {
+      await paymentService.confirmPayment(payment.id, 'TXN-456')
+    }, 'Payment is already confirmed')
   })
 
   test('should fail payment successfully', async ({ assert }) => {
@@ -237,12 +229,9 @@ test.group('PaymentService', (group) => {
     const payment = await paymentService.initiatePayment(order.id, '+237650000000')
 
     // Essayer de rembourser
-    await assert.rejects(
-      async () => {
-        await paymentService.refundPayment(payment.id, 'Test refund')
-      },
-      'Only completed payments can be refunded'
-    )
+    await assert.rejects(async () => {
+      await paymentService.refundPayment(payment.id, 'Test refund')
+    }, 'Only completed payments can be refunded')
   })
 
   test('should update payment when initiating for order with existing pending payment', async ({

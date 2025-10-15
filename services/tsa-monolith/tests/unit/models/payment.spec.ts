@@ -55,7 +55,10 @@ test.group('Payment Model', (group) => {
       metadata: {},
     })
 
-    assert.isTrue(completedPayment.isCompleted(), 'Payment with COMPLETED status should be completed')
+    assert.isTrue(
+      completedPayment.isCompleted(),
+      'Payment with COMPLETED status should be completed'
+    )
 
     // Test 2: Paiement en attente
     const order2 = await Order.create({
@@ -77,7 +80,10 @@ test.group('Payment Model', (group) => {
       metadata: {},
     })
 
-    assert.isFalse(pendingPayment.isCompleted(), 'Payment with PENDING status should NOT be completed')
+    assert.isFalse(
+      pendingPayment.isCompleted(),
+      'Payment with PENDING status should NOT be completed'
+    )
 
     // Test 3: Paiement échoué
     const order3 = await Order.create({
@@ -99,7 +105,10 @@ test.group('Payment Model', (group) => {
       metadata: {},
     })
 
-    assert.isFalse(failedPayment.isCompleted(), 'Payment with FAILED status should NOT be completed')
+    assert.isFalse(
+      failedPayment.isCompleted(),
+      'Payment with FAILED status should NOT be completed'
+    )
   })
 
   test('should check if payment is pending', async ({ assert }) => {

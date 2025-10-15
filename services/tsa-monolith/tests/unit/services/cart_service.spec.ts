@@ -88,12 +88,9 @@ test.group('CartService', (group) => {
 
   test('should throw error when adding product with insufficient stock', async ({ assert }) => {
     // Le produit a un stock de 10
-    await assert.rejects(
-      async () => {
-        await cartService.addItem(user.id, product.id, 15)
-      },
-      'Stock insuffisant. Disponible: 10, Demandé: 15'
-    )
+    await assert.rejects(async () => {
+      await cartService.addItem(user.id, product.id, 15)
+    }, 'Stock insuffisant. Disponible: 10, Demandé: 15')
   })
 
   test('should throw error when adding inactive product', async ({ assert }) => {
@@ -101,11 +98,9 @@ test.group('CartService', (group) => {
     product.isActive = false
     await product.save()
 
-    await assert.rejects(
-      async () => {
-        await cartService.addItem(user.id, product.id, 1)
-      }
-    )
+    await assert.rejects(async () => {
+      await cartService.addItem(user.id, product.id, 1)
+    })
   })
 
   test('should update cart item quantity', async ({ assert }) => {

@@ -49,10 +49,7 @@ export default class Cart extends BaseModel {
    * Calcule le total du panier
    */
   async getTotal(): Promise<number> {
-    const cart = await Cart.query()
-      .where('id', this.id)
-      .preload('items')
-      .firstOrFail()
+    const cart = await Cart.query().where('id', this.id).preload('items').firstOrFail()
 
     return cart.items.reduce((total, item) => total + item.priceAtAdd * item.quantity, 0)
   }
@@ -61,10 +58,7 @@ export default class Cart extends BaseModel {
    * Nombre total d'articles dans le panier
    */
   async getItemCount(): Promise<number> {
-    const cart = await Cart.query()
-      .where('id', this.id)
-      .preload('items')
-      .firstOrFail()
+    const cart = await Cart.query().where('id', this.id).preload('items').firstOrFail()
 
     return cart.items.reduce((count, item) => count + item.quantity, 0)
   }
