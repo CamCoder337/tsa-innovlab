@@ -48,7 +48,7 @@ export default class OrderService {
       const totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0)
 
       // Créer la commande
-      const order = await Order.create(
+      const createdOrder = await Order.create(
         {
           userId,
           status: OrderStatus.PENDING,
@@ -66,7 +66,7 @@ export default class OrderService {
       for (const cartItem of cart.items) {
         await OrderItem.create(
           {
-            orderId: order.id,
+            orderId: createdOrder.id,
             productId: cartItem.productId,
             productName: cartItem.product.name, // Snapshot du nom
             quantity: cartItem.quantity,
@@ -86,7 +86,7 @@ export default class OrderService {
       cart.status = CartStatus.CONVERTED
       await cart.save()
 
-      return order
+      return createdOrder
     })
 
     // Charger les relations avant de retourner

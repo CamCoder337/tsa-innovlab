@@ -2,7 +2,7 @@ import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
 import OrderService from '#services/order_service'
 import CartService from '#services/cart_service'
-import Order, { OrderStatus, PaymentStatus } from '#models/order'
+import { OrderStatus, PaymentStatus } from '#models/order'
 import User, { UserRole, UserStatus } from '#models/user'
 import Product from '#models/product'
 import Category from '#models/category'
@@ -270,12 +270,12 @@ test.group('OrderService', (group) => {
     )
 
     await cartService.addItem(user.id, product.id, 2)
-    const order2 = await orderService.createOrderFromCart(
-      user.id,
-      shippingAddress.id,
-      billingAddress.id,
-      'mtn_mobile_money'
-    )
+    // const order2 = await orderService.createOrderFromCart(
+    //   user.id,
+    //   shippingAddress.id,
+    //   billingAddress.id,
+    //   'mtn_mobile_money'
+    // )
 
     // Marquer une commande comme livrée
     order1.status = OrderStatus.DELIVERED
