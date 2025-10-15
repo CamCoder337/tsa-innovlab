@@ -253,6 +253,35 @@ router
   .prefix('/api/shop')
   .middleware(middleware.auth())
 
+// ===== ROUTES CLIENT (E-COMMERCE) =====
+router
+  .group(() => {
+    // Panier (Cart)
+    router.get('/cart', '#controllers/http/client/cart_controller.index')
+    router.post('/cart/items', '#controllers/http/client/cart_controller.addItem')
+    router.put('/cart/items/:id', '#controllers/http/client/cart_controller.updateItem')
+    router.delete('/cart/items/:id', '#controllers/http/client/cart_controller.removeItem')
+    router.delete('/cart', '#controllers/http/client/cart_controller.clear')
+
+    // Commandes (Orders)
+    router.get('/orders/stats', '#controllers/http/client/orders_controller.stats')
+    router.get('/orders', '#controllers/http/client/orders_controller.index')
+    router.post('/orders', '#controllers/http/client/orders_controller.store')
+    router.get('/orders/:id', '#controllers/http/client/orders_controller.show')
+    router.post('/orders/:id/cancel', '#controllers/http/client/orders_controller.cancel')
+
+    // Paiements (Payments)
+    router.post('/payments/initiate', '#controllers/http/client/payments_controller.initiate')
+    router.get('/payments/:id/status', '#controllers/http/client/payments_controller.checkStatus')
+    router.post('/payments/:id/confirm', '#controllers/http/client/payments_controller.confirm') // Dev only
+    router.get(
+      '/orders/:orderId/payment',
+      '#controllers/http/client/payments_controller.getByOrder'
+    )
+  })
+  .prefix('/api/client')
+  .middleware([middleware.auth(), roleGuard(UserRole.CLIENT)])
+
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
   .group(() => {
@@ -306,6 +335,13 @@ router
   })
   .prefix('/api/common')
   .middleware(middleware.auth())
+
+// ===== ROUTES WEBHOOKS =====
+// Webhook MTN Mobile Money (route publique - pas d'auth)
+router.post(
+  '/api/webhooks/mtn/payment-callback',
+  '#controllers/http/client/payments_controller.mtnWebhook'
+)
 
 // ===== ROUTES SWAGGER =====
 // Documentation API auto-générée
