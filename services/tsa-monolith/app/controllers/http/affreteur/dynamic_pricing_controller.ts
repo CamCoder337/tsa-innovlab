@@ -10,7 +10,7 @@ export default class DynamicPricingController {
 
   async calculate({ request, response }: HttpContext) {
     try {
-      const { origin, destination, distance_km, weight_tons, cargo_type, urgency } = request.only([
+      const requestData = request.only([
         'origin',
         'destination',
         'distance_km',
@@ -19,7 +19,11 @@ export default class DynamicPricingController {
         'urgency',
       ])
 
-      if (!origin || !destination || !distance_km || !weight_tons) {
+      const distanceKm = requestData.distance_km
+      const weightTons = requestData.weight_tons
+      const cargoType = requestData.cargo_type
+
+      if (!requestData.origin || !requestData.destination || !distanceKm || !weightTons) {
         return response.status(422).json({
           success: false,
           message: 'Missing required fields',
@@ -28,12 +32,12 @@ export default class DynamicPricingController {
       }
 
       const pricingResult = await this.aiService.calculateDynamicPricing({
-        origin,
-        destination,
-        distance_km: Number(distance_km),
-        weight_tons: Number(weight_tons),
-        cargo_type: cargo_type || 'general',
-        urgency: urgency || 'standard',
+        origin: requestData.origin,
+        destination: requestData.destination,
+        distance_km: Number(distanceKm),
+        weight_tons: Number(weightTons),
+        cargo_type: cargoType || 'general',
+        urgency: requestData.urgency || 'standard',
       })
 
       if (!pricingResult) {
