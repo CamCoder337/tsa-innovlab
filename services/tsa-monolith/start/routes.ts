@@ -169,8 +169,14 @@ router
     )
 
     // Pricing dynamique pour les missions
-    router.post('/pricing/calculate', '#controllers/http/affreteur/dynamic_pricing_controller.calculate')
-    router.get('/pricing/config', '#controllers/http/affreteur/dynamic_pricing_controller.getConfig')
+    router.post(
+      '/pricing/calculate',
+      '#controllers/http/affreteur/dynamic_pricing_controller.calculate'
+    )
+    router.get(
+      '/pricing/config',
+      '#controllers/http/affreteur/dynamic_pricing_controller.getConfig'
+    )
 
     // Suivi des expéditions
     router.get('/shipments', '#controllers/http/affreteur/shipments_controller.index')
@@ -206,8 +212,14 @@ router
     )
 
     // Pricing dynamique (pour estimer avant de proposer)
-    router.post('/pricing/calculate', '#controllers/http/affreteur/dynamic_pricing_controller.calculate')
-    router.get('/pricing/config', '#controllers/http/affreteur/dynamic_pricing_controller.getConfig')
+    router.post(
+      '/pricing/calculate',
+      '#controllers/http/affreteur/dynamic_pricing_controller.calculate'
+    )
+    router.get(
+      '/pricing/config',
+      '#controllers/http/affreteur/dynamic_pricing_controller.getConfig'
+    )
 
     // Suivi des courses
     router.put(
