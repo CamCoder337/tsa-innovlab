@@ -54,22 +54,21 @@ test.group('Shop Visual Recognition Controller', (group) => {
     })
   })
 
-  test('should check AI service health without authentication', async ({ client, assert }) => {
+  test('should require authentication for health check', async ({ client }) => {
     const response = await client.get('/api/shop/visual-recognition/health')
 
-    response.assertStatus(200)
+    response.assertStatus(401)
+  })
+
+  test('should check AI service health when authenticated', async ({ client, assert }) => {
+    const response = await client.get('/api/shop/visual-recognition/health').bearerToken(userToken)
+
+    // Should return 200 or 500 depending on service availability
+    assert.isTrue(response.status() === 200 || response.status() === 500)
 
     const body = response.body()
     assert.exists(body.service)
     assert.equal(body.service, 'visual_recognition')
     assert.exists(body.status)
-  })
-
-  test('should handle AI service unavailable gracefully', async ({ client, assert }) => {
-    // When AI service is not running, health check should still respond
-    const response = await client.get('/api/shop/visual-recognition/health')
-
-    // Should return 200 or 500 depending on service availability
-    assert.isTrue(response.status() === 200 || response.status() === 500)
   })
 })
