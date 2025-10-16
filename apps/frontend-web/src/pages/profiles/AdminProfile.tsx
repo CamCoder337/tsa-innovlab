@@ -4,25 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Users, Settings, Shield, Save, Edit, X, BarChart3, ServerCog } from 'lucide-react';
-import ProfileForm from '@/components/forms/ProfileForm';
+import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
+import { authService } from '@/services/auth.service';
+import toast from 'react-hot-toast';
 
 function AdminProfile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!user) return null;
 
-  const handleSave = async () => {
-    setIsLoading(true);
-
+  const handleSave = async (values: ProfileFormValues) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsEditing(false);
-      console.log('Profil mis à jour avec succès');
+      setIsLoading(true);
+      const response = await authService.updateProfile(values);
+      console.log(response);
+
+      if (response.error) {
+        console.error(response.error);
+        toast.error(response.error.message || 'Erreur lors de la mise à jour du profil');
+      }
+
+      if (response.data) {
+        updateUser(response.data);
+        toast.success('Profil mis à jour avec succès');
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error(error);
-      console.error('Erreur lors de la mise à jour du profil');
+      toast.error('Erreur lors de la mise à jour du profil');
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +47,7 @@ function AdminProfile() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>

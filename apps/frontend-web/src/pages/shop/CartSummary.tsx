@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
-import Header from '@/components/layout/Header';
 import { Label } from '@/components/ui/label';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -116,7 +115,8 @@ export default function CartSummaryPage() {
         placeId: selectedAddress.place_id,
       });
     }
-  }, [formik, getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -128,7 +128,7 @@ export default function CartSummaryPage() {
 
   const subtotal = getTotalPrice();
   const totalWeight = cart.items.reduce((sum, item) => {
-    const weight = item.product.specifications?.weight;
+    const weight = item.product?.specifications?.weight;
     const weightValue = weight ? parseFloat(String(weight)) : 0.5;
     return sum + (isNaN(weightValue) ? 0.5 : weightValue) * item.quantity;
   }, 0);
@@ -138,53 +138,49 @@ export default function CartSummaryPage() {
 
   if (paymentSuccess && completedPayment) {
     return (
-      <div className="flex h-screen flex-1 flex-col">
-        <Header />
-        {/* <main className="flex"> */}
-        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <Facture
-            payment={completedPayment}
-            orderNumber={orderNumber}
-            items={cart.items}
-            deliveryAddress={{
-              address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
-              city: formik.values.deliveryCity,
-              postalCode: formik.values.deliveryPostalCode,
-              country: 'Cameroun',
-            }}
-            deliveryOption={deliveryOption}
-            deliveryFee={deliveryFee}
-            customerInfo={{
-              name: 'Client TSA', // You can get this from auth context
-              email: 'client@example.com', // You can get this from auth context
-              phone: '+237 6XX XXX XXX', // You can get this from form or auth context
-            }}
-            onDownload={() => {
-              console.log('Download PDF');
-              // Implement PDF download functionality
-            }}
-            onPrint={() => {
-              window.print();
-            }}
-            onEmailSend={() => {
-              console.log('Send email');
-              // Implement email sending functionality
-            }}
-            onClose={() => {
-              setPaymentSuccess(false);
-              setCompletedPayment(null);
-              setOrderNumber('');
-              // Optionally clear cart after successful order
-              // clearCart()
-            }}
-          />
-        </main>
-      </div>
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <Facture
+          payment={completedPayment}
+          orderNumber={orderNumber}
+          items={cart.items}
+          deliveryAddress={{
+            address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
+            city: formik.values.deliveryCity,
+            postalCode: formik.values.deliveryPostalCode,
+            country: 'Cameroun',
+          }}
+          deliveryOption={deliveryOption}
+          deliveryFee={deliveryFee}
+          customerInfo={{
+            name: 'Client TSA', // You can get this from auth context
+            email: 'client@example.com', // You can get this from auth context
+            phone: '+237 6XX XXX XXX', // You can get this from form or auth context
+          }}
+          onDownload={() => {
+            console.log('Download PDF');
+            // Implement PDF download functionality
+          }}
+          onPrint={() => {
+            window.print();
+          }}
+          onEmailSend={() => {
+            console.log('Send email');
+            // Implement email sending functionality
+          }}
+          onClose={() => {
+            setPaymentSuccess(false);
+            setCompletedPayment(null);
+            setOrderNumber('');
+            // Optionally clear cart after successful order
+            // clearCart()
+          }}
+        />
+      </main>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-1 flex-col">
+    <div className="flex h-screen bg-gray-50 flex-1 flex-col p-6">
       <div className="w-full">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -216,7 +212,7 @@ export default function CartSummaryPage() {
                     <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                     <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
-                    <Link to="/shop">
+                    <Link to="/app/shop">
                       <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
                         Browse Products
                       </Button>
@@ -230,17 +226,19 @@ export default function CartSummaryPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center gap-4">
                           <img
-                            src={item.product.images[0] || item.product.imageUrl || ''}
-                            alt={item.product.name}
+                            src={item.product?.images[0] || item.product?.imageUrl || ''}
+                            alt={item.product?.name || ''}
                             className="w-20 h-20 object-cover rounded-lg"
                           />
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
+                            <h3 className="font-semibold text-lg mb-1">
+                              {item.product?.name || ''}
+                            </h3>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className="bg-green-100 text-green-800">
-                                Ref: {item.product.reference}
+                                Ref: {item.product?.reference || ''}
                               </Badge>
-                              <Badge variant="outline">{item.product.unit}</Badge>
+                              <Badge variant="outline">{item.product?.unit || ''}</Badge>
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
@@ -265,7 +263,7 @@ export default function CartSummaryPage() {
                                   }
                                   className="w-16 text-center"
                                   min="1"
-                                  max={item.product.stock}
+                                  max={item.product?.stock || 0}
                                   disabled={isLoading}
                                 />
                                 <Button
@@ -274,7 +272,9 @@ export default function CartSummaryPage() {
                                   onClick={() =>
                                     handleUpdateQuantity(item.productId, item.quantity + 1)
                                   }
-                                  disabled={item.quantity >= item.product.stock || isLoading}
+                                  disabled={
+                                    item.quantity >= (item.product?.stock || 0) || isLoading
+                                  }
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
@@ -285,10 +285,10 @@ export default function CartSummaryPage() {
                           <div className="text-right">
                             <div className="flex flex-col items-end gap-1">
                               <p className="text-lg font-bold">
-                                {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                                {(parseFloat(item.unitPrice) * item.quantity).toLocaleString()} FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.priceAtTime.toLocaleString()} FCFA each
+                                {item.unitPrice.toLocaleString()} FCFA each
                               </p>
                             </div>
                             <Button

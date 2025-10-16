@@ -4,31 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// import {
-//     Select,
-//     SelectContent,
-//     SelectItem,
-//     SelectTrigger,
-//     SelectValue,
-// } from '@/components/ui/select';
-import {
-  Search,
-  Download,
-  Calendar,
-  MapPin,
-  Truck,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Package,
-  Eye,
-  MessageCircle,
-  Plus,
-} from 'lucide-react';
+import { Search, Download, Clock, CheckCircle, AlertTriangle, Package, Plus } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { Link } from 'react-router-dom';
+import MissionCard from '@/components/missions/MissionCard';
 
 export default function MissionsManagement() {
   const { missions = [], isLoading, error } = useMissions();
@@ -39,7 +19,7 @@ export default function MissionsManagement() {
 
   const filteredMissions = missions.filter((mission: Mission) => {
     const matchesSearch =
-      mission.titre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       mission.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (mission.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
 
@@ -82,7 +62,7 @@ export default function MissionsManagement() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Gestion des Missions</h1>
         <Link to="/app/missions/create">
@@ -232,130 +212,17 @@ export default function MissionsManagement() {
           <Card>
             <CardContent className="p-0">
               {filteredMissions.length > 0 ? (
-                filteredMissions.map((mission) => (
-                  <Card key={mission.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                {mission.titre}
-                              </h3>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="h-4 w-4" />
-                                  <span>
-                                    {mission.adresseDepartId} → {mission.adresseArriveeId}
-                                  </span>
-                                </div>
-                                <span>•</span>
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  <span>
-                                    Crée le{' '}
-                                    {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <Badge className={getStatusColor(mission.status)}>
-                              <div className="flex items-center gap-1">
-                                {getStatusIcon(mission.status)}
-                                {getStatusLabel(mission.status)}
-                              </div>
-                            </Badge>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                            <div>
-                              <span className="text-gray-500">Prix:</span>
-                              <span className="ml-1 font-medium text-green-600">
-                                {mission.budgetMax || mission.budgetMin} FCFA
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Type:</span>
-                              <span className="ml-1 font-medium">{mission.typeMarchandise}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Échéance:</span>
-                              <span className="ml-1 font-medium">
-                                {mission.dateArriveePrevue
-                                  ? new Date(mission.dateArriveePrevue).toLocaleDateString('fr-FR')
-                                  : 'Non spécifiée'}
-                              </span>
-                            </div>
-                            {/* <div>
-                                                                                                    <span className="text-gray-500">Prix/km:</span>
-                                                                                                    <span className="ml-1 font-medium">
-                                                                                                        {Math.round(
-                                                                                                            (mission.budgetMax || mission.budgetMin)
-                                                                                                        )}{' '}
-                                                                                                        FCFA
-                                                                                                    </span>
-                                                                                                </div> */}
-                          </div>
-
-                          {/* {mission?.shipper && (
-                                                                                                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                                                                                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                                                                        <span className="text-xs font-medium text-blue-600">
-                                                                                                            {mission.shipper.name.charAt(0)}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <p className="text-sm font-medium text-blue-800">
-                                                                                                            {mission.shipper.company}
-                                                                                                        </p>
-                                                                                                        <div className="flex items-center gap-2 text-xs text-blue-600">
-                                                                                                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                                                                            <span>{mission.shipper.rating}</span>
-                                                                                                            <span>•</span>
-                                                                                                            <span>
-                                                                                                                Publié le{' '}
-                                                                                                                {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
-                                                                                                            </span>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            )} */}
-                        </div>
-
-                        <div className="flex flex-col gap-2 lg:w-48">
-                          <Link
-                            to={`/app/missions/${mission.id}`}
-                            aria-label={`Voir ${mission.titre}`}
-                          >
-                            <Button variant="outline" className="gap-2 bg-transparent w-full">
-                              <Eye className="h-4 w-4" />
-                              Voir Détails
-                            </Button>
-                          </Link>
-                          {mission.status === 'published' && (
-                            <Button
-                              className="gap-2"
-                              style={{ backgroundColor: 'var(--tsa-blue)' }}
-                            >
-                              <Truck className="h-4 w-4" />
-                              Assigner
-                            </Button>
-                          )}
-                          {mission.status === 'assigned' && (
-                            <Button
-                              className="gap-2"
-                              style={{ backgroundColor: 'var(--tsa-blue)' }}
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              Contacter
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                <div className="space-y-4 p-4">
+                  {filteredMissions.map((mission) => (
+                    <MissionCard
+                      key={mission.id}
+                      mission={mission}
+                      showApplyButton={false}
+                      showPublishButton={false}
+                      showTrackingButton={false}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Aucune mission trouvée avec ces critères.</p>

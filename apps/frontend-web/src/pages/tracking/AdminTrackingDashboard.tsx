@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
-import { MOCK_MISSIONS } from '@/data/mock-missions';
 import {
   Truck,
   Users,
@@ -21,6 +20,7 @@ import {
   Download,
   RefreshCw,
 } from 'lucide-react';
+import { useMissions } from '@/hooks/useMissions';
 
 interface SystemMetrics {
   totalVehicles: number;
@@ -125,6 +125,7 @@ const getTrendIcon = (trend: Performance['trend']) => {
 };
 
 export default function AdminTrackingDashboard() {
+  const { missions } = useMissions();
   const [alerts] = useState<Alert[]>(ALERTS);
   const [metrics] = useState<SystemMetrics>(SYSTEM_METRICS);
   const [performance] = useState<Performance[]>(PERFORMANCE_METRICS);
@@ -288,7 +289,7 @@ export default function AdminTrackingDashboard() {
                   <CardContent>
                     <MissionTrackingMap
                       className="h-[500px]"
-                      missions={MOCK_MISSIONS}
+                      missions={missions}
                       onMissionClick={(mission) => console.log('Mission sélectionnée:', mission)}
                       showUserLocation={false}
                       showRoutes={true}

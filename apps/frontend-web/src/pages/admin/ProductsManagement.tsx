@@ -417,7 +417,7 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 p-6">
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
           <div>

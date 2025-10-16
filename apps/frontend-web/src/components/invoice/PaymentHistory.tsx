@@ -15,8 +15,8 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
     const fetchPayments = async () => {
       try {
         setLoading(true);
-        const data = await paymentService.getPaymentHistory(missionId);
-        setPayments(data);
+        const data = await paymentService.getPaymentHistory({ missionId });
+        setPayments(data.payments);
       } catch (err) {
         setError("Erreur lors du chargement de l'historique des paiements");
         console.error(err);

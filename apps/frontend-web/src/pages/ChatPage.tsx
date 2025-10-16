@@ -1,85 +1,112 @@
 import React, { useState } from 'react';
+import { Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
-import type { ChatRoom } from '@/types/chat.types';
+import { CreateConversationModal } from '@/components/chat/CreateConversationModal';
+import { useChat } from '@/hooks/useChat';
+import type { ConversationListItem } from '@/types/chat.types';
 
 export const ChatPage: React.FC = () => {
-  const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+  const { currentConversation, setCurrentConversation } = useChat();
   const [showMobileChatList, setShowMobileChatList] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const handleSelectRoom = (room: ChatRoom) => {
-    setSelectedRoom(room);
+  const handleSelectConversation = (conversation: ConversationListItem) => {
+    setCurrentConversation(conversation);
     setShowMobileChatList(false);
   };
 
   const handleBackToList = () => {
     setShowMobileChatList(true);
+    setCurrentConversation(null);
+  };
+
+  const handleCreateConversation = () => {
+    setShowCreateModal(true);
+  };
+
+  const handleConversationCreated = (conversation: ConversationListItem) => {
+    setShowCreateModal(false);
+    handleSelectConversation(conversation);
   };
 
   return (
-    <div className="h-screen bg-gray-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="flex h-[calc(100vh-8rem)]">
-            {/* Chat List - Hidden on mobile when a chat is selected */}
-            <div
-              className={`${
-                showMobileChatList ? 'flex' : 'hidden'
-              } md:flex md:w-1/3 border-r border-gray-200 bg-white flex-col`}
-            >
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Messages</h2>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                <ChatList onSelectRoom={handleSelectRoom} />
-              </div>
-            </div>
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Main Chat Interface */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Chat List */}
+        <div
+          className={`${
+            showMobileChatList ? 'flex' : 'hidden'
+          } md:flex w-full md:w-80 lg:w-96 border-r border-gray-200 bg-white flex-col`}
+        >
+          <ChatList
+            onSelectConversation={handleSelectConversation}
+            onCreateConversation={handleCreateConversation}
+          />
+        </div>
 
-            {/* Chat Window */}
-            <div
-              className={`${
-                !showMobileChatList ? 'flex' : 'hidden'
-              } md:flex md:flex-1 flex-col bg-gray-50`}
-            >
-              {selectedRoom ? (
-                <>
-                  <div className="md:hidden p-4 border-b border-gray-200 bg-white">
-                    <button
-                      onClick={handleBackToList}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      ← Retour
-                    </button>
-                  </div>
-                  <ChatWindow room={selectedRoom} onClose={() => setShowMobileChatList(true)} />
-                </>
-              ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                      />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium">Aucune conversation sélectionnée</h3>
-                    <p className="mt-1 text-sm">
-                      Sélectionnez une conversation ou commencez-en une nouvelle.
-                    </p>
-                  </div>
+        {/* Main Chat Area */}
+        <div
+          className={`${!showMobileChatList ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-white`}
+        >
+          {currentConversation ? (
+            <>
+              {/* Mobile Back Button */}
+              <div className="md:hidden flex items-center p-3 border-b border-gray-200 bg-white">
+                <Button variant="ghost" size="sm" onClick={handleBackToList} className="mr-2">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-medium">Retour aux conversations</span>
+              </div>
+
+              {/* Chat Window */}
+              <div className="flex-1">
+                <ChatWindow conversation={currentConversation} onClose={handleBackToList} />
+              </div>
+            </>
+          ) : (
+            /* Empty State */
+            <div className="flex-1 flex items-center justify-center bg-gray-50">
+              <div className="text-center max-w-md mx-auto p-8">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="h-8 w-8 text-blue-600" />
                 </div>
-              )}
+
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Bienvenue dans TSA Chat
+                </h3>
+
+                <p className="text-gray-600 mb-6">
+                  Communiquez en temps réel avec vos collègues et partenaires. Sélectionnez une
+                  conversation existante ou créez-en une nouvelle.
+                </p>
+
+                <div className="space-y-3">
+                  <Button onClick={handleCreateConversation} className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle conversation
+                  </Button>
+
+                  <p className="text-sm text-gray-500">
+                    Ou sélectionnez une conversation dans la liste de gauche
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Create Conversation Modal */}
+      {showCreateModal && (
+        <CreateConversationModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onConversationCreated={handleConversationCreated}
+        />
+      )}
     </div>
   );
 };

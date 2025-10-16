@@ -102,8 +102,8 @@ function CartDrawer({ children }: CartDrawerProps) {
               {cart.items.map((item) => (
                 <li key={item.productId} className="flex items-center gap-3">
                   <img
-                    src={item.product.images[0]}
-                    alt={`Image de ${item.product.name}`}
+                    src={item.product?.images?.[0] || '/placeholder-product.png'}
+                    alt={`Image de ${item.product?.name || 'produit'}`}
                     className="h-16 w-16 rounded object-cover border"
                     loading="lazy"
                   />
@@ -112,11 +112,9 @@ function CartDrawer({ children }: CartDrawerProps) {
                       className="text-sm font-medium"
                       style={{ fontFamily: 'Rounded, sans-serif' }}
                     >
-                      {item.product.name}
+                      {item.product?.name || 'Produit'}
                     </p>
-                    <p className="text-xs text-zinc-600">
-                      {item.priceAtTime.toLocaleString()} FCFA
-                    </p>
+                    <p className="text-xs text-zinc-600">{item.unitPrice.toLocaleString()} FCFA</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -136,7 +134,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       className="w-12 text-center px-0.5"
                       type="number"
                       min={1}
-                      max={item.product.stock}
+                      max={item.product?.stock || 99}
                       value={item.quantity}
                       onChange={(e) => {
                         e.stopPropagation();
@@ -155,7 +153,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                         e.stopPropagation();
                         handleUpdateQuantity(item.productId, item.quantity + 1);
                       }}
-                      disabled={item.quantity >= item.product.stock || isLoading}
+                      disabled={item.quantity >= (item.product?.stock || 0) || isLoading}
                     >
                       <Plus className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -199,7 +197,7 @@ function CartDrawer({ children }: CartDrawerProps) {
               >
                 Vider
               </Button>
-              <Link to={'/app/cart'}>
+              <Link to={'/cart'}>
                 <Button
                   className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
                   onClick={(e) => e.stopPropagation()}

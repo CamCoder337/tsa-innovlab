@@ -18,7 +18,7 @@ import {
   Star,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
-import { MOCK_MISSIONS, getActiveMissions } from '@/data/mock-missions';
+import { useMissions } from '@/hooks/useMissions';
 
 interface VehicleStatus {
   id: string;
@@ -88,8 +88,9 @@ const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
 };
 
 export default function TransporteurTrackingDashboard() {
+  const { myMissions: missions } = useMissions();
   const [assignments] = useState<Mission[]>(
-    MOCK_MISSIONS.filter((m) => m.transporteurId === 'transporteur-1')
+    missions.filter((m) => m.transporteurId === 'transporteur-1')
   );
   const [vehicleStatus] = useState<VehicleStatus>(VEHICLE_STATUS);
   const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
@@ -97,9 +98,7 @@ export default function TransporteurTrackingDashboard() {
   );
 
   // Calculs des KPIs
-  const activeAssignments = getActiveMissions().filter(
-    (m) => m.transporteurId === 'transporteur-1'
-  ).length;
+  const activeAssignments = missions.filter((m) => m.transporteurId === 'transporteur-1').length;
   const completedToday = 3; // Calculé dynamiquement
   const totalDistance = 525; // Calculé à partir des adresses
   const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMax, 0);
@@ -209,7 +208,7 @@ export default function TransporteurTrackingDashboard() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Navigation className="w-5 h-5" />
-                        Navigation - {currentAssignment.titre}
+                        Navigation - {currentAssignment.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -256,7 +255,7 @@ export default function TransporteurTrackingDashboard() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <h4 className="font-medium text-gray-900">{currentAssignment.titre}</h4>
+                        <h4 className="font-medium text-gray-900">{currentAssignment.title}</h4>
                         <p className="text-sm text-gray-600">{currentAssignment.description}</p>
                       </div>
 
@@ -371,7 +370,7 @@ export default function TransporteurTrackingDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
-                            <span className="font-medium">{assignment.titre}</span>
+                            <span className="font-medium">{assignment.title}</span>
                             {assignment.budgetMax > 200000 && (
                               <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
                             )}

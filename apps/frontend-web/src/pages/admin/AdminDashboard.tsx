@@ -16,7 +16,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { useProductStats } from '@/hooks/useProductStats';
+import { useProducts } from '@/hooks/useProducts';
 import { DashboardUtils } from '@/lib/dashboard.utils';
 import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
 
@@ -78,9 +78,9 @@ export default function AdminDashboard() {
   } = useMissions();
   const {
     stats: productStats,
-    loading: productStatsLoading,
+    isLoading: productStatsLoading,
     error: productStatsError,
-  } = useProductStats();
+  } = useProducts();
 
   const [stats, setStats] = useState<OverallStats>({} as OverallStats);
 
@@ -91,8 +91,8 @@ export default function AdminDashboard() {
         overview: {
           totalUsers: missionStats.totals.affreteurs + missionStats.totals.transporteurs || 0,
           totalMissions: missionStats.totals.missions || 0,
-          totalProducts: productStats.stats.products.total || 0,
-          totalRevenue: productStats.stats.inventory.totalValue || 0,
+          totalProducts: productStats.products.totalProducts || 0,
+          totalRevenue: productStats.inventory.totalValue || 0,
           activeTransporteurs: missionStats.totals.transporteurs || 0,
           activeAffreteurs: missionStats.totals.affreteurs || 0,
         },
@@ -102,14 +102,14 @@ export default function AdminDashboard() {
           inProgress: missionStats.statusStats.in_progress || 0,
           completed: missionStats.statusStats.completed || 0,
           cancelled: missionStats.statusStats.cancelled || 0,
-          totalValue: productStats.stats.inventory.totalValue,
+          totalValue: productStats.inventory.totalValue,
         },
         products: {
-          total: productStats.stats.products.total,
-          active: productStats.stats.products.active,
-          lowStock: productStats.stats.products.lowStock,
-          outOfStock: productStats.stats.products.outOfStock,
-          totalValue: productStats.stats.inventory.totalValue,
+          total: productStats.products.totalProducts,
+          active: productStats.products.activeProducts,
+          lowStock: productStats.products.lowStockProducts,
+          outOfStock: productStats.products.outOfStockProducts,
+          totalValue: productStats.inventory.totalValue,
         },
         users: {
           total: missionStats.totals.affreteurs + missionStats.totals.transporteurs,
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
             missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).week : 0,
           thisMonth:
             missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).month : 0,
-          thisYear: productStats.stats.inventory.totalValue,
+          thisYear: productStats.inventory.totalValue,
           growth: {
             daily: 12.5, // These would need to come from analytics endpoints
             weekly: 8.3,
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Tableau de Bord Administrateur</h1>
         <p className="text-gray-600">Vue d'ensemble de la plateforme TSA Logistics</p>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{activity.titre}</h4>
+                      <h4 className="font-medium text-gray-900">{activity.title}</h4>
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         {activity.affreteur && (
                           <>

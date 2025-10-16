@@ -9,19 +9,26 @@ const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
-const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
-const Layout = lazy(() => import('./components/layout/Layout'));
-const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
-const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
-const Mission = lazy(() => import('./pages/missions/[id]'));
 const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
-const Shop = lazy(() => import('./pages/shop/Shop'));
-const CartSummary = lazy(() => import('./pages/shop/CartSummary'));
+
+const Layout = lazy(() => import('./components/layout/Layout'));
+const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
+const Users = lazy(() => import('./pages/admin/UsersManagement'));
+
+const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
+const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
+const Mission = lazy(() => import('./pages/missions/Mission'));
+
+const Shop = lazy(() => import('./pages/shop/Shop'));
+const Product = lazy(() => import('./pages/shop/Product'));
+const CartSummary = lazy(() => import('./pages/shop/CartSummary'));
+const Orders = lazy(() => import('./pages/shop/Orders'));
+const Order = lazy(() => import('./pages/shop/Order'));
+
 const Chat = lazy(() => import('./pages/ChatPage'));
 const Transactions = lazy(() => import('./pages/BillingPage'));
-const Users = lazy(() => import('./pages/admin/UsersManagement'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
 const MissionTrackingPage = lazy(() => import('./pages/tracking/MissionTrackingPage'));
 
@@ -53,19 +60,23 @@ function App() {
             <Route path=":id/edit" element={<CreateMission />} />
           </Route>
 
-          <Route path="cart" element={<CartSummary />} />
-
           <Route path="transactions" element={<Transactions />} />
 
           <Route path="users" element={<Users />} />
+
+          <Route path="shop">
+            <Route path="" element={<Shop />} />
+            <Route path="product/:id" element={<Product />} />
+            <Route path="cart" element={<CartSummary />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="order/:id" element={<Order />} />
+          </Route>
 
           <Route path="products" element={<ProductsManagement />} />
           <Route path="chat" element={<Chat />} />
           <Route path="tracking-dashboard" element={<TrackingDashboardPage />} />
           <Route path="mission/:id/tracking" element={<MissionTrackingPage />} />
         </Route>
-
-        <Route path="shop" element={<Shop />} />
 
         <Route path="*" element={<Navigate to="/app" replace />} />
       </Routes>

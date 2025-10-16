@@ -8,7 +8,7 @@ export interface Mission extends Timestamps {
   id: string;
   affreteurId: string;
   affreteur?: User;
-  titre: string;
+  title: string;
   description: string;
   typeMarchandise: string;
   poids: number;
@@ -74,7 +74,7 @@ export interface MissionStats {
   statusStats: Record<string, number>;
   recentMissions: Array<{
     id: string;
-    titre: string;
+    title: string;
     status: MissionStatus;
     affreteur: string | null;
     createdAt: string;

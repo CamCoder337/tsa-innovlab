@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,11 +33,13 @@ export function ProductCard({
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="relative w-32 h-32 flex-shrink-0">
-              <img
-                src={product.images[currentImageIndex] || '/placeholder.svg?height=128&width=128'}
-                alt={product.name}
-                className="w-full h-full object-cover rounded-lg"
-              />
+              <Link to={`/app/shop/product/${product.id}`}>
+                <img
+                  src={product.images[currentImageIndex] || '/placeholder.svg?height=128&width=128'}
+                  alt={product.name}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </Link>
               {product.images.length > 1 && (
                 <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
                   {currentImageIndex + 1}/{product.images.length}
@@ -47,7 +50,9 @@ export function ProductCard({
             <div className="flex-1 space-y-2">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                  <Link to={`/app/shop/product/${product.id}`}>
+                    <h3 className="font-semibold text-lg">{product.name}</h3>
+                  </Link>
                 </div>
                 <Button
                   variant="ghost"
@@ -98,11 +103,13 @@ export function ProductCard({
     <Card className="group hover:shadow-lg transition-all duration-300">
       <CardContent className="p-0">
         <div className="relative overflow-hidden">
-          <img
-            src={product.images[currentImageIndex] || '/placeholder.svg?height=200&width=300'}
-            alt={product.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          <Link to={`/app/shop/product/${product.id}`}>
+            <img
+              src={product.images[currentImageIndex] || '/placeholder.svg?height=200&width=300'}
+              alt={product.name}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
 
           {/* Image navigation */}
           {product.images.length > 1 && (
@@ -148,7 +155,9 @@ export function ProductCard({
 
         <div className="p-2 space-y-4">
           <div className="space-y-1 h-12">
-            <h3 className="font-semibold line-clamp-2">{product.name}</h3>
+            <Link to={`/app/shop/product/${product.id}`}>
+              <h3 className="font-semibold line-clamp-2">{product.name}</h3>
+            </Link>
           </div>
 
           <div className="space-y-1">
