@@ -269,16 +269,29 @@ jobs:
         run: |
           set +e  # Don't exit on error
           echo "🧪 Running AdonisJS tests with Japa framework..."
+          echo "📋 Node version: $(node --version)"
+          echo "📋 NPM version: $(npm --version)"
+          echo ""
           
-          # Run tests and capture output
+          # Run tests with verbose output
+          echo "🔍 Starting test execution..."
           npm test 2>&1 | tee test_output.txt
           test_exit_code=${PIPESTATUS[0]}
           
           echo ""
-          echo "Test exit code: $test_exit_code"
+          echo "📊 Test exit code: $test_exit_code"
+          echo "📊 Output file size: $(wc -l < test_output.txt) lines"
+          echo ""
           
           # Read the output
           test_output=$(cat test_output.txt)
+          
+          if [ -z "$test_output" ]; then
+            echo "⚠️ WARNING: Test output is empty!"
+            echo "This usually means the test command crashed immediately."
+            echo "Trying to run test command directly for debugging..."
+            node ace test || true
+          fi
           echo ""
           
           # Analyze test results
