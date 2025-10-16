@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/authStore';
 interface TokenManagerConfig {
   /** Durée d'inactivité avant d'arrêter le refresh automatique (en ms) */
   inactivityTimeout: number;
-  /** Intervalle de vérification des tokens (en ms) */
-  checkInterval: number;
+  /** Durée de vie du token en ms (15 minutes) */
+  tokenLifetime: number;
   /** Temps avant expiration pour déclencher le refresh (en ms) */
   refreshBeforeExpiry: number;
   /** Nombre maximum de tentatives de refresh */
@@ -14,14 +14,16 @@ interface TokenManagerConfig {
 
 export class TokenManagerService {
   private config: TokenManagerConfig = {
-    inactivityTimeout: 30 * 60 * 1000, // 30 minutes
-    checkInterval: 60 * 1000, // 1 minute
-    refreshBeforeExpiry: 5 * 60 * 1000, // 5 minutes avant expiration
+    inactivityTimeout: 15 * 60 * 1000, // 15 minutes (match token expiry)
+    tokenLifetime: 15 * 60 * 1000, // 15 minutes
+    refreshBeforeExpiry: 1 * 60 * 1000, // 1 minute before expiry
     maxRetryAttempts: 3,
   };
 
   private lastActivity: number = Date.now();
-  private checkIntervalId: NodeJS.Timeout | null = null;
+  private tokenStartTime: number | null = null;
+  private checkTimeoutId: NodeJS.Timeout | null = null;
+  private refreshTimeoutId: NodeJS.Timeout | null = null;
   private refreshPromise: Promise<boolean> | null = null;
   private retryCount: number = 0;
   private isRefreshing: boolean = false;
@@ -40,25 +42,50 @@ export class TokenManagerService {
    * Démarre la surveillance automatique des tokens
    */
   public startTokenManagement(): void {
-    if (this.checkIntervalId) {
+    if (this.checkTimeoutId || this.refreshTimeoutId) {
       return; // Déjà démarré
     }
 
-    this.checkIntervalId = setInterval(() => {
-      this.checkAndRefreshToken();
-    }, this.config.checkInterval);
+    // Calculer le temps de fin du token (maintenant + 15 minutes)
+    this.tokenStartTime = Date.now();
+    const tokenEndTime = this.tokenStartTime + this.config.tokenLifetime;
 
-    console.log('Token management started');
+    // Programmer une vérification après 10 minutes
+    const checkTime = 10 * 60 * 1000; // 10 minutes
+    this.checkTimeoutId = setTimeout(() => {
+      this.checkTokenStatus();
+    }, checkTime);
+
+    // Programmer le refresh 1 minute avant la fin calculée
+    const refreshTime = this.config.tokenLifetime - this.config.refreshBeforeExpiry; // 14 minutes
+    this.refreshTimeoutId = setTimeout(() => {
+      this.performScheduledRefresh();
+    }, refreshTime);
+
+    console.log(
+      `Token management started. Token expires at: ${new Date(tokenEndTime).toLocaleTimeString()}`
+    );
+    console.log(
+      `Check scheduled at: ${new Date(this.tokenStartTime + checkTime).toLocaleTimeString()}`
+    );
+    console.log(
+      `Refresh scheduled at: ${new Date(this.tokenStartTime + refreshTime).toLocaleTimeString()}`
+    );
   }
 
   /**
    * Arrête la surveillance automatique des tokens
    */
   public stopTokenManagement(): void {
-    if (this.checkIntervalId) {
-      clearInterval(this.checkIntervalId);
-      this.checkIntervalId = null;
+    if (this.checkTimeoutId) {
+      clearTimeout(this.checkTimeoutId);
+      this.checkTimeoutId = null;
     }
+    if (this.refreshTimeoutId) {
+      clearTimeout(this.refreshTimeoutId);
+      this.refreshTimeoutId = null;
+    }
+    this.tokenStartTime = null;
     this.removeActivityListeners();
     console.log('Token management stopped');
   }
@@ -72,71 +99,61 @@ export class TokenManagerService {
   }
 
   /**
-   * Décode un JWT pour extraire les informations d'expiration
+   * Vérifie le statut du token après 10 minutes
    */
-  private decodeJWT(token: string): { exp?: number; iat?: number } | null {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (error) {
-      console.error('Error decoding JWT:', error);
-      return null;
-    }
-  }
+  private checkTokenStatus(): void {
+    const { token, isAuthenticated } = useAuthStore.getState();
 
-  /**
-   * Vérifie si le token va expirer bientôt
-   */
-  private isTokenExpiringSoon(token: string): boolean {
-    const decoded = this.decodeJWT(token);
-    if (!decoded?.exp) {
-      return true; // Si on ne peut pas décoder, on considère qu'il expire
+    if (!isAuthenticated || !token) {
+      console.log('Token check: User not authenticated or no token');
+      return;
     }
 
-    const expirationTime = decoded.exp * 1000; // Conversion en ms
+    if (!this.isUserActive()) {
+      console.log('Token check: User inactive, stopping token management');
+      this.stopTokenManagement();
+      return;
+    }
+
     const currentTime = Date.now();
-    const timeUntilExpiry = expirationTime - currentTime;
+    const elapsedTime = this.tokenStartTime ? currentTime - this.tokenStartTime : 0;
+    const remainingTime = this.config.tokenLifetime - elapsedTime;
 
-    return timeUntilExpiry <= this.config.refreshBeforeExpiry;
+    console.log(
+      `Token check at 10 minutes: ${Math.round(remainingTime / 1000 / 60)} minutes remaining`
+    );
+    console.log('User is active, refresh will proceed as scheduled');
   }
 
   /**
-   * Vérifie et rafraîchit le token si nécessaire
+   * Effectue le refresh programmé 1 minute avant expiration
    */
-  private async checkAndRefreshToken(): Promise<void> {
+  private async performScheduledRefresh(): Promise<void> {
     const { token, refreshToken, isAuthenticated } = useAuthStore.getState();
 
-    // Vérifications préliminaires
     if (!isAuthenticated || !token || !refreshToken) {
+      console.log('Scheduled refresh: User not authenticated or missing tokens');
       return;
     }
 
-    // Ne pas rafraîchir si l'utilisateur n'est pas actif
     if (!this.isUserActive()) {
-      console.log('User inactive, skipping token refresh');
+      console.log('Scheduled refresh: User inactive, skipping refresh');
       return;
     }
 
-    // Vérifier si le token va expirer
-    if (!this.isTokenExpiringSoon(token)) {
-      this.retryCount = 0; // Reset retry count si tout va bien
-      return;
-    }
-
-    // Éviter les refreshs multiples simultanés
     if (this.isRefreshing) {
+      console.log('Scheduled refresh: Already refreshing, skipping');
       return;
     }
 
-    console.log('Token expiring soon, attempting refresh...');
-    await this.refreshTokens();
+    console.log('Performing scheduled token refresh (1 minute before expiry)...');
+    const success = await this.refreshTokens();
+
+    if (success) {
+      // Redémarrer le cycle de gestion des tokens avec le nouveau token
+      this.stopTokenManagement();
+      this.startTokenManagement();
+    }
   }
 
   /**

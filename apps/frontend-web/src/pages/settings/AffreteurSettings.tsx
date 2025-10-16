@@ -18,20 +18,17 @@ import {
   Settings,
   Bell,
   Shield,
-  Eye,
-  EyeOff,
   Save,
   Smartphone,
   Mail,
-  Euro,
-  Key,
   CheckCircle,
   Copy,
   AlertTriangle,
   RefreshCw,
+  Currency,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { authService } from '@/services/auth.service';
+import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
 
 interface MFAStatus {
   enabled: boolean;
@@ -44,15 +41,11 @@ interface MFAStatus {
 function AffreteurSettings() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
     enabled: user?.mfaEnabled || false,
     setupRequired: false,
     backupCodes: [],
   });
-
   const [notifications, setNotifications] = useState({
     email: true,
     sms: true,
@@ -61,19 +54,12 @@ function AffreteurSettings() {
     priceAlerts: false,
     weeklyReports: true,
   });
-
   const [preferences, setPreferences] = useState({
     language: 'fr',
     currency: 'FCFA',
     timezone: 'Africa/Douala',
     autoAssign: false,
-    priceRange: { min: 1000, max: 10000 },
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    priceRange: { min: 5000, max: 150000 },
   });
 
   if (!user) return null;
@@ -89,40 +75,6 @@ function AffreteurSettings() {
     } catch (error) {
       console.error(error);
       toast.error('Erreur lors de la sauvegarde');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePasswordChange = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Les nouveaux mots de passe ne correspondent pas');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Le mot de passe doit contenir au moins 8 caractères');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const response = await authService.updatePassword(
-        passwordData.currentPassword,
-        passwordData.newPassword
-      );
-
-      if (response.error) {
-        toast.error(response.error.message || 'Erreur lors de la modification du mot de passe');
-      }
-
-      if (response.data) {
-        toast.success('Mot de passe modifié avec succès');
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      }
-    } catch (error) {
-      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -214,10 +166,8 @@ function AffreteurSettings() {
     toast.success('Copié dans le presse-papiers');
   };
 
-  if (!user) return null;
-
   return (
-    <div className="max-w-4xl mx-auto space-y-6 p-6">
+    <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
@@ -317,53 +267,55 @@ function AffreteurSettings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Langue</Label>
-              <Select
-                value={preferences.language}
-                onValueChange={(value) => setPreferences({ ...preferences, language: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="flex justify-between">
+              <div className="space-y-2">
+                <Label>Langue</Label>
+                <Select
+                  value={preferences.language}
+                  onValueChange={(value) => setPreferences({ ...preferences, language: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Devise</Label>
-              <Select
-                value={preferences.currency}
-                onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FCFA">FCFA</SelectItem>
-                  <SelectItem value="EUR">Euro</SelectItem>
-                  <SelectItem value="USD">Dollar US</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <Label>Devise</Label>
+                <Select
+                  value={preferences.currency}
+                  onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FCFA">FCFA</SelectItem>
+                    <SelectItem value="EUR">Euro</SelectItem>
+                    <SelectItem value="USD">Dollar US</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>Fuseau Horaire</Label>
-              <Select
-                value={preferences.timezone}
-                onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Africa/Douala">Afrique/Douala</SelectItem>
-                  <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Label>Fuseau Horaire</Label>
+                <Select
+                  value={preferences.timezone}
+                  onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Africa/Douala">Afrique/Douala</SelectItem>
+                    <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Separator />
@@ -382,7 +334,7 @@ function AffreteurSettings() {
               <Label>Fourchette de prix préférée</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
-                  <Euro className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Currency className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="number"
                     placeholder="Min"
@@ -397,7 +349,7 @@ function AffreteurSettings() {
                   />
                 </div>
                 <div className="relative">
-                  <Euro className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Currency className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="number"
                     placeholder="Max"
@@ -424,105 +376,7 @@ function AffreteurSettings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <h4 className="font-medium flex items-center gap-2">
-                <Key className="h-4 w-4" />
-                Changer le mot de passe
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                  <div className="relative">
-                    <Input
-                      id="currentPassword"
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      value={passwordData.currentPassword}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, currentPassword: e.target.value })
-                      }
-                      placeholder="Mot de passe actuel"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                  <div className="relative">
-                    <Input
-                      id="newPassword"
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={passwordData.newPassword}
-                      onChange={(e) =>
-                        setPasswordData({ ...passwordData, newPassword: e.target.value })
-                      }
-                      placeholder="Nouveau mot de passe"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                      {showNewPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-                    }
-                    placeholder="Confirmer le mot de passe"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                onClick={handlePasswordChange}
-                disabled={isLoading || !passwordData.currentPassword || !passwordData.newPassword}
-                className="w-full md:w-auto"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isLoading ? 'Modification...' : 'Changer le mot de passe'}
-              </Button>
-            </div>
+            <PasswordChangeForm isLoading={isLoading} setIsLoading={setIsLoading} />
 
             <Separator />
 
