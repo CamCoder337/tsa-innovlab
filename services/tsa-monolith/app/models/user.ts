@@ -240,8 +240,22 @@ export default class User extends compose(BaseModel, AuthFinder) {
   getAbilities(): string[] {
     const roleAbilities = {
       admin: ['manage_users', 'view_reports', 'edit_settings'],
-      transporteur: ['view_missions', 'update_status'],
-      affreteur: ['create_mission', 'view_status'],
+      transporteur: [
+        'view_missions',
+        'update_status',
+        'shop',
+        'manage_cart',
+        'place_orders',
+        'view_orders',
+      ],
+      affreteur: [
+        'create_mission',
+        'view_status',
+        'shop',
+        'manage_cart',
+        'place_orders',
+        'view_orders',
+      ],
       client: ['shop', 'manage_cart', 'place_orders', 'view_orders'],
     }
 

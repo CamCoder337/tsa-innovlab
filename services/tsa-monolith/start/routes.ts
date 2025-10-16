@@ -40,6 +40,33 @@ function roleGuard(role: UserRole) {
   }
 }
 
+// Helper function pour créer un middleware multi-rôles
+function multiRoleGuard(allowedRoles: UserRole[]) {
+  return async (ctx: any, next: any) => {
+    const user = ctx.auth.getUserOrFail()
+
+    if (!allowedRoles.includes(user.role)) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'Access forbidden. Insufficient permissions.',
+        allowed_roles: allowedRoles,
+        user_role: user.role,
+      })
+    }
+
+    // Vérifier MFA pour les admins
+    if (user.role === UserRole.ADMIN && user.mustEnableMFA()) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'MFA setup required for admin accounts',
+        action_required: 'enable_mfa',
+      })
+    }
+
+    await next()
+  }
+}
+
 // Route de base
 router.get('/', async () => {
   return {
@@ -256,7 +283,7 @@ router
   .prefix('/api/shop')
   .middleware(middleware.auth())
 
-// ===== ROUTES CLIENT (E-COMMERCE) =====
+// ===== ROUTES E-COMMERCE (CLIENT, AFFRETEUR, TRANSPORTEUR) =====
 router
   .group(() => {
     // Panier (Cart)
@@ -283,7 +310,10 @@ router
     )
   })
   .prefix('/api/client')
-  .middleware([middleware.auth(), roleGuard(UserRole.CLIENT)])
+  .middleware([
+    middleware.auth(),
+    multiRoleGuard([UserRole.CLIENT, UserRole.AFFRETEUR, UserRole.TRANSPORTEUR]),
+  ])
 
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
