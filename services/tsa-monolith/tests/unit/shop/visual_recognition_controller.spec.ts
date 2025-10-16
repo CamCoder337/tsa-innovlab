@@ -1,15 +1,10 @@
 import { test } from '@japa/runner'
 import Database from '@adonisjs/lucid/services/db'
-import Product from '#models/product'
-import Category from '#models/category'
 import User, { UserRole, UserStatus } from '#models/user'
 
 test.group('Shop Visual Recognition Controller', (group) => {
   let testUser: User
   let userToken: string
-  let testCategory: Category
-  let testProduct1: Product
-  let testProduct2: Product
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
@@ -28,34 +23,6 @@ test.group('Shop Visual Recognition Controller', (group) => {
 
     // Generate access token
     userToken = await testUser.generateAccessToken('test-token')
-
-    // Create test category and products
-    testCategory = await Category.create({
-      name: 'Electronics',
-      description: 'Electronic products',
-      isActive: true,
-      displayOrder: 1,
-    })
-
-    testProduct1 = await Product.create({
-      name: 'Laptop',
-      description: 'High-performance laptop',
-      price: 1000.0,
-      stock: 10,
-      categoryId: testCategory.id,
-      createdBy: testUser.id,
-      isActive: true,
-    })
-
-    testProduct2 = await Product.create({
-      name: 'Mouse',
-      description: 'Wireless mouse',
-      price: 50.0,
-      stock: 50,
-      categoryId: testCategory.id,
-      createdBy: testUser.id,
-      isActive: true,
-    })
   })
 
   group.each.teardown(async () => {
@@ -106,3 +73,4 @@ test.group('Shop Visual Recognition Controller', (group) => {
     assert.isTrue(response.status() === 200 || response.status() === 500)
   })
 })
+
