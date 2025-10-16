@@ -134,7 +134,7 @@ export default function MissionTrackingPage() {
               Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{mission.titre}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{mission.title}</h1>
               <p className="text-gray-600">Suivi détaillé de la mission</p>
             </div>
           </div>

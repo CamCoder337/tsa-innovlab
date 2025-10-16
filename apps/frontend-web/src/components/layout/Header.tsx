@@ -2,7 +2,6 @@ import {
   Globe,
   User,
   ChevronDown,
-  Bell,
   UserCircle2,
   Settings,
   Headset,
@@ -28,6 +27,7 @@ import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import { useCart } from '@/hooks/useCart';
 import CartDrawer from '@/components/shop/CartDrawer';
+import { NotificationCenter } from '../notifications/NotificationCenter';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -79,14 +79,7 @@ export default function Header() {
         </DropdownMenu>
 
         {/* Real-time Notifications */}
-        {isInvite ? null : (
-          <Button variant="ghost" size="sm" className="relative max-sm:p-0">
-            <Bell className="h-7 w-7" />
-            <Badge className="absolute -top-1 right-2 w-6 h-6 rounded-full p-2 text-xs bg-tsa-blue/90">
-              21
-            </Badge>
-          </Button>
-        )}
+        {isInvite ? null : <NotificationCenter />}
 
         <CartDrawer>
           <Button variant="ghost" size="sm" className="relative max-sm:p-0">

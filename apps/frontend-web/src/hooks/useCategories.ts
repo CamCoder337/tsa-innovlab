@@ -1,5 +1,5 @@
 import { useCategoryStore } from '@/stores/categoryStore';
-import type { CategoryFilterParams } from '@/types/category.types';
+import type { CategoryFilterParams, CategoryTreeItem } from '@/types/category.types';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { useAuth } from './useAuth';
 import { useCallback, useEffect } from 'react';
@@ -7,7 +7,7 @@ import { shopService } from '@/services/shop.service';
 import type { Category } from '@/types/category.types';
 
 export function useCategories() {
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
 
   const categories = useCategoryStore((s) => s.categories);
   const currentCategory = useCategoryStore((s) => s.currentCategory);
@@ -28,7 +28,7 @@ export function useCategories() {
   const searchCategories = useCategoryStore((s) => s.searchCategories);
   const getCategoryPath = useCategoryStore((s) => s.getCategoryPath);
 
-  const handleGetAllProducts = useCallback(async () => {
+  const handleAdminGetAllCategories = useCallback(async () => {
     let page: number = 1;
     let next: boolean = true;
     let categoriesList: PaginatedMetaResponse<Category, 'categories'> = {
@@ -58,10 +58,7 @@ export function useCategories() {
 
     while (next) {
       try {
-        const response =
-          user?.role === 'admin'
-            ? await shopService.adminGetCategories({ page })
-            : await shopService.getCategories({ page });
+        const response = await shopService.adminGetCategories({ page });
 
         if (response.error) {
           console.error('API error:', response.error);
@@ -90,11 +87,27 @@ export function useCategories() {
         console.error(error);
       }
     }
-  }, [user?.role, setCategories]);
+  }, [setCategories]);
+
+  const handleGetAllCategories = useCallback(async () => {
+    let categoriesList: CategoryTreeItem[] = [];
+
+    try {
+      const response = await shopService.getCategories();
+
+      if (response.data) {
+        categoriesList = response.data.tree;
+        setCategories(categoriesList);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, [setCategories]);
 
   useEffect(() => {
-    if (isAuthenticated) handleGetAllProducts();
-  }, [handleGetAllProducts, isAuthenticated]);
+    if (user && user.role == 'admin') handleAdminGetAllCategories();
+    else handleGetAllCategories();
+  }, [handleGetAllCategories, handleAdminGetAllCategories, user]);
 
   return {
     // State

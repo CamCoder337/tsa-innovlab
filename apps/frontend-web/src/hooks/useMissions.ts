@@ -178,7 +178,7 @@ export function useMissions() {
   const filterMissions = (filters: MissionFilterParams) => {
     return missions.filter((mission) => {
       const searchTerm = filters.search?.toLowerCase();
-      const matchesName = searchTerm ? mission.titre.toLowerCase().includes(searchTerm) : true;
+      const matchesName = searchTerm ? mission.title.toLowerCase().includes(searchTerm) : true;
       const matchesDescription =
         searchTerm && mission.description
           ? mission.description.toLowerCase().includes(searchTerm)

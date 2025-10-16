@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
-import Header from '@/components/layout/Header';
 import { Label } from '@/components/ui/label';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -139,53 +138,49 @@ export default function CartSummaryPage() {
 
   if (paymentSuccess && completedPayment) {
     return (
-      <div className="flex h-screen flex-1 flex-col">
-        <Header />
-        {/* <main className="flex"> */}
-        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <Facture
-            payment={completedPayment}
-            orderNumber={orderNumber}
-            items={cart.items}
-            deliveryAddress={{
-              address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
-              city: formik.values.deliveryCity,
-              postalCode: formik.values.deliveryPostalCode,
-              country: 'Cameroun',
-            }}
-            deliveryOption={deliveryOption}
-            deliveryFee={deliveryFee}
-            customerInfo={{
-              name: 'Client TSA', // You can get this from auth context
-              email: 'client@example.com', // You can get this from auth context
-              phone: '+237 6XX XXX XXX', // You can get this from form or auth context
-            }}
-            onDownload={() => {
-              console.log('Download PDF');
-              // Implement PDF download functionality
-            }}
-            onPrint={() => {
-              window.print();
-            }}
-            onEmailSend={() => {
-              console.log('Send email');
-              // Implement email sending functionality
-            }}
-            onClose={() => {
-              setPaymentSuccess(false);
-              setCompletedPayment(null);
-              setOrderNumber('');
-              // Optionally clear cart after successful order
-              // clearCart()
-            }}
-          />
-        </main>
-      </div>
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <Facture
+          payment={completedPayment}
+          orderNumber={orderNumber}
+          items={cart.items}
+          deliveryAddress={{
+            address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
+            city: formik.values.deliveryCity,
+            postalCode: formik.values.deliveryPostalCode,
+            country: 'Cameroun',
+          }}
+          deliveryOption={deliveryOption}
+          deliveryFee={deliveryFee}
+          customerInfo={{
+            name: 'Client TSA', // You can get this from auth context
+            email: 'client@example.com', // You can get this from auth context
+            phone: '+237 6XX XXX XXX', // You can get this from form or auth context
+          }}
+          onDownload={() => {
+            console.log('Download PDF');
+            // Implement PDF download functionality
+          }}
+          onPrint={() => {
+            window.print();
+          }}
+          onEmailSend={() => {
+            console.log('Send email');
+            // Implement email sending functionality
+          }}
+          onClose={() => {
+            setPaymentSuccess(false);
+            setCompletedPayment(null);
+            setOrderNumber('');
+            // Optionally clear cart after successful order
+            // clearCart()
+          }}
+        />
+      </main>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-1 flex-col">
+    <div className="flex h-screen bg-gray-50 flex-1 flex-col p-6">
       <div className="w-full">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -217,7 +212,7 @@ export default function CartSummaryPage() {
                     <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                     <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
-                    <Link to="/shop">
+                    <Link to="/app/shop">
                       <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
                         Browse Products
                       </Button>

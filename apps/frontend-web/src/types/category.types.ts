@@ -39,9 +39,11 @@ export interface UpdateCategory {
 
 export interface CategoryTreeItem extends Category {
   children: CategoryTreeItem[];
-  parent: CategoryTreeItem | null;
-  expanded?: boolean;
-  level?: number; // For UI purposes
+}
+
+export interface CategoryResponse {
+  categories: Category[];
+  tree: CategoryTreeItem[];
 }
 
 export interface CategoryFilterParams {

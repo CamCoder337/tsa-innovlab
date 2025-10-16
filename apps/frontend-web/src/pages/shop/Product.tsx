@@ -33,6 +33,7 @@ import { useCart } from '@/hooks/useCart';
 import { useProducts } from '@/hooks/useProducts';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
+import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
 function ProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -585,6 +586,13 @@ function ProductPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Similar Products Recommendations */}
+        {product && (
+          <div className="mt-8">
+            <ProductRecommendations type="similar" productId={product.id} limit={4} />
+          </div>
+        )}
       </div>
     </main>
   );

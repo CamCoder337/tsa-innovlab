@@ -1,137 +1,162 @@
+import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Package, Calendar, DollarSign } from 'lucide-react';
-import { getStatusColor } from '@/lib/mission-utils';
-import MissionTrackingButton from './MissionTrackingButton';
+import { MapPin, Calendar, Eye, Edit, MessageSquare } from 'lucide-react';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import type { Mission } from '@/types/mission.types';
+import { useCallback, useEffect, useState } from 'react';
+import type { Proposition } from '@/types/proposition.types';
+import { missionService } from '@/services/mission.service';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MissionCardProps {
   mission: Mission;
-  onClick?: () => void;
+  onPublish?: (id: string) => void;
+  onApply?: (mission: Mission) => void;
+  showApplyButton?: boolean;
+  showPublishButton?: boolean;
   showTrackingButton?: boolean;
   className?: string;
 }
 
-const getPriorityColor = (budgetMax: number) => {
-  if (budgetMax > 200000) return 'bg-red-100 text-red-800';
-  if (budgetMax > 100000) return 'bg-orange-100 text-orange-800';
-  if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800';
-  return 'bg-green-100 text-green-800';
-};
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case 'published':
-      return 'Publiée';
-    case 'assigned':
-      return 'Assignée';
-    case 'completed':
-      return 'Terminée';
-    case 'cancelled':
-      return 'Annulée';
-    default:
-      return status;
-  }
-};
-
 export default function MissionCard({
   mission,
-  onClick,
+  onPublish,
+  onApply,
+  showApplyButton = false,
+  showPublishButton = true,
   showTrackingButton = true,
   className = '',
 }: MissionCardProps) {
+  const { user } = useAuth();
+  const [myPropositions, setMyPropositions] = useState<Proposition[]>([]);
+
+  const fetchPropositions = useCallback(async () => {
+    const response = await missionService.getMissionPropositions(mission.id);
+    if (response.error) {
+      console.error(response.error.message);
+    }
+    if (response.data) {
+      setMyPropositions(response.data.propositions.data);
+    }
+  }, [mission.id]);
+
+  useEffect(() => {
+    if (user && user.role === 'affreteur') fetchPropositions();
+  }, [fetchPropositions, user]);
+
   return (
-    <Card
-      className={`hover:shadow-md transition-shadow cursor-pointer ${className}`}
-      onClick={onClick}
-    >
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="font-semibold text-lg text-gray-900">{mission.titre}</h3>
-              <Badge className={getPriorityColor(mission.budgetMax)}>
-                {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${getStatusColor(mission.status)}`} />
-                <span className="text-sm text-gray-600">{getStatusLabel(mission.status)}</span>
+    <Card className={`hover:shadow-md transition-shadow ${className}`}>
+      <CardContent className="p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
+            <div className="flex-1">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{mission.title}</h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      <span>
+                        {mission.adresseDepart?.label} → {mission.adresseArrivee?.label}
+                      </span>
+                    </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>Crée le {new Date(mission.createdAt).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                  </div>
+                </div>
+                <Badge className={getStatusColor(mission.status)}>
+                  <div className="flex items-center gap-1">
+                    {getStatusIcon(mission.status)}
+                    {getStatusLabel(mission.status)}
+                  </div>
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                <div>
+                  <span className="text-gray-500">Budget Min.:</span>
+                  <span className="ml-1 font-medium">
+                    {mission.budgetMin?.toLocaleString() || 0} FCFA
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Départ:</span>
+                  <span className="ml-1 font-medium">
+                    {mission.dateDepartEstime
+                      ? new Date(mission.dateDepartEstime).toLocaleDateString('fr-FR')
+                      : 'Non spécifiée'}
+                  </span>
+                </div>
+                {mission.dateArriveePrevue && (
+                  <div>
+                    <span className="text-gray-500">Arrivée:</span>
+                    <span className="ml-1 font-medium">
+                      {mission.dateArriveePrevue
+                        ? new Date(mission.dateArriveePrevue).toLocaleDateString('fr-FR')
+                        : 'Non spécifiée'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-            <p className="text-gray-600 text-sm mb-3">{mission.description}</p>
+          </Link>
+
+          <div className="flex flex-col gap-2 lg:w-48">
+            <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
+              <Button variant="outline" className="gap-2 bg-transparent w-full">
+                <Eye className="h-4 w-4" />
+                Voir Détails
+              </Button>
+            </Link>
+            {showPublishButton && mission.status === 'draft' && onPublish && (
+              <Button
+                variant="outline"
+                className="gap-2 bg-tsa-blue text-white w-full"
+                onClick={() => onPublish(mission.id)}
+              >
+                <Edit className="h-4 w-4" />
+                Publier
+              </Button>
+            )}
+            {showApplyButton && mission.status === 'published' && onApply && (
+              <Button
+                className="gap-2 w-full"
+                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                onClick={() => onApply(mission)}
+              >
+                <MessageSquare className="h-4 w-4" />
+                Postuler
+              </Button>
+            )}
+            {!showApplyButton && mission.status === 'published' && (
+              <Link
+                to={`/app/missions/${mission.id}?tab=offers`}
+                aria-label={`Voir ${mission.title}`}
+              >
+                <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
+                  <MessageSquare className="h-4 w-4" />
+                  Voir Offres ({myPropositions.length})
+                </Button>
+              </Link>
+            )}
+            {showTrackingButton && mission.status === 'assigned' && (
+              <Link
+                to={`/app/missions/${mission.id}/tracking`}
+                aria-label={`Suivre ${mission.title}`}
+              >
+                <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
+                  <MapPin className="h-4 w-4" />
+                  Suivre Expédition
+                </Button>
+              </Link>
+            )}
           </div>
-          {showTrackingButton && (
-            <MissionTrackingButton missionId={mission.id} onClick={(e) => e.stopPropagation()} />
-          )}
         </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <Package className="w-4 h-4 text-blue-500" />
-            <div>
-              <p className="text-gray-500">Marchandise</p>
-              <p className="font-medium">{mission.typeMarchandise}</p>
-              <p className="text-xs text-gray-400">{mission.poids} kg</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-green-500" />
-            <div>
-              <p className="text-gray-500">Budget</p>
-              <p className="font-medium">
-                {mission.budgetMin.toLocaleString()}-{mission.budgetMax.toLocaleString()} FCFA
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-orange-500" />
-            <div>
-              <p className="text-gray-500">Départ estimé</p>
-              <p className="font-medium">
-                {new Date(mission.dateDepartEstime).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-red-500" />
-            <div>
-              <p className="text-gray-500">Livraison prévue</p>
-              <p className="font-medium">
-                {new Date(mission.dateArriveePrevue).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {mission.transporteurId && (
-          <div className="mt-3 p-2 bg-blue-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-blue-700 font-medium">
-                Transporteur assigné #{mission.transporteurId}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {mission.currentPosition && (
-          <div className="mt-2 p-2 bg-green-50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-green-700 font-medium">
-                Position en temps réel disponible
-              </span>
-              {mission.lastPositionUpdate && (
-                <span className="text-xs text-green-600">
-                  • MAJ: {new Date(mission.lastPositionUpdate).toLocaleTimeString()}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

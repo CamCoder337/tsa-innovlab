@@ -19,7 +19,7 @@ const Users = lazy(() => import('./pages/admin/UsersManagement'));
 
 const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
 const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
-const Mission = lazy(() => import('./pages/missions/[id]'));
+const Mission = lazy(() => import('./pages/missions/Mission'));
 
 const Shop = lazy(() => import('./pages/shop/Shop'));
 const Product = lazy(() => import('./pages/shop/Product'));

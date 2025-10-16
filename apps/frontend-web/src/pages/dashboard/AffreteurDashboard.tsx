@@ -85,7 +85,7 @@ function AffreteurDashboard() {
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -161,14 +161,15 @@ function AffreteurDashboard() {
             <div className="space-y-4">
               {recentMissions.length > 0 ? (
                 recentMissions.map((mission) => (
-                  <div
+                  <Link
+                    to={`/app/missions/${mission.id}`}
                     key={mission.id}
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
                       <div>
-                        <p className="font-medium">{mission.titre}</p>
+                        <p className="font-medium">{mission.title}</p>
                         <p className="text-sm text-muted-foreground">{mission.route}</p>
                         <p className="text-xs text-muted-foreground">
                           {mission.transporteur
@@ -183,7 +184,7 @@ function AffreteurDashboard() {
                       <p className="text-xs font-medium text-tsa-blue">{mission.formattedBudget}</p>
                       <Progress value={mission.progress} className="w-20 h-1" />
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">

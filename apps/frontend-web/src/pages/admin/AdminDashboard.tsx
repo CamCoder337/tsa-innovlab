@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Tableau de Bord Administrateur</h1>
         <p className="text-gray-600">Vue d'ensemble de la plateforme TSA Logistics</p>
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
                     className="flex items-center justify-between p-4 border rounded-lg"
                   >
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{activity.titre}</h4>
+                      <h4 className="font-medium text-gray-900">{activity.title}</h4>
                       <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                         {activity.affreteur && (
                           <>

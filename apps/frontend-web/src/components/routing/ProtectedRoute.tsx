@@ -13,7 +13,12 @@ export default function ProtectedRoute({
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (!isAuthenticated && location.pathname !== '/app/shop') return <Navigate to="/" replace />;
+  if (
+    !isAuthenticated &&
+    location.pathname !== '/app/shop' &&
+    !location.pathname.startsWith('/app/shop/product')
+  )
+    return <Navigate to="/" replace />;
   if (requiredRole && user?.role !== requiredRole) return <Navigate to="/app" replace />;
   return element;
 }

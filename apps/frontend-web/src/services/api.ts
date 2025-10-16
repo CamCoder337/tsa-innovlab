@@ -85,4 +85,50 @@ export class BaseApi {
       errors: [error.message || 'Network error'],
     };
   }
+
+  // CRUD helper methods
+  protected async get(url: string, config?: AxiosRequestConfig) {
+    try {
+      const response = await this.axiosInstance.get(url, config);
+      return response.data;
+    } catch (error) {
+      this.handleError(error as AxiosError);
+    }
+  }
+
+  protected async post(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    try {
+      const response = await this.axiosInstance.post(url, data, config);
+      return response.data;
+    } catch (error) {
+      this.handleError(error as AxiosError);
+    }
+  }
+
+  protected async put(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    try {
+      const response = await this.axiosInstance.put(url, data, config);
+      return response.data;
+    } catch (error) {
+      this.handleError(error as AxiosError);
+    }
+  }
+
+  protected async patch(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    try {
+      const response = await this.axiosInstance.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      this.handleError(error as AxiosError);
+    }
+  }
+
+  protected async delete(url: string, config?: AxiosRequestConfig) {
+    try {
+      const response = await this.axiosInstance.delete(url, config);
+      return response.data;
+    } catch (error) {
+      this.handleError(error as AxiosError);
+    }
+  }
 }

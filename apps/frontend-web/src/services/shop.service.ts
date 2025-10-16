@@ -3,13 +3,14 @@
 // ============================================================================
 
 import { BaseApi } from './api';
-import type { ApiResponse, PaginatedMetaResponse } from '@/types/common.types';
+import type { ApiResponse, PaginatedMetaResponse, Paginator } from '@/types/common.types';
 import type {
   Category,
   CreateCategory,
   UpdateCategory,
   CategoryFilterParams,
   CategoryWithStats,
+  CategoryResponse,
 } from '@/types/category.types';
 import type {
   Product,
@@ -61,11 +62,9 @@ export class ShopService extends BaseApi {
   }
 
   // Product Operations
-  async getProducts(
-    params?: ProductFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Product, 'products'>>> {
+  async getProducts(params?: ProductFilterParams): Promise<ApiResponse<Paginator<Product>>> {
     try {
-      const response = await this.insertToken().get('/api/shop/products', { params });
+      const response = await this.axiosInstance.get('/api/shop/products', { params });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -83,7 +82,7 @@ export class ShopService extends BaseApi {
     }
   }
 
-  async getProduct(id: string): Promise<ApiResponse<Product>> {
+  async getProduct(id: string): Promise<ApiResponse<Product[]>> {
     try {
       const response = await this.insertToken().get(`/api/shop/products/${id}`);
       return { data: response.data.data };
@@ -151,11 +150,9 @@ export class ShopService extends BaseApi {
 
   // Category Operations
 
-  async getCategories(
-    params?: CategoryFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Category, 'categories'>>> {
+  async getCategories(params?: CategoryFilterParams): Promise<ApiResponse<CategoryResponse>> {
     try {
-      const response = await this.insertToken().get('/api/shop/categories', { params });
+      const response = await this.axiosInstance.get('/api/shop/categories', { params });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

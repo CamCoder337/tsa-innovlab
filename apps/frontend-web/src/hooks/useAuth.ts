@@ -9,6 +9,7 @@ export const useAuth = () => {
   const login = useAuthStore((s) => s.login);
   const logout = useAuthStore((s) => s.logout);
   const setToken = useAuthStore((s) => s.setToken);
+  const updateUser = useAuthStore((s) => s.updateUser);
 
   useEffect(() => {
     if (!token) logout();
@@ -22,5 +23,6 @@ export const useAuth = () => {
     login,
     logout,
     setToken,
+    updateUser,
   };
 };

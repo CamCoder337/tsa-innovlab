@@ -9,6 +9,7 @@ import {
   Users,
   ShoppingBag,
   MapPin,
+  MessagesSquare,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -65,6 +66,12 @@ const affreteurMenu: SidebarItem[] = [
     icon: MapPin,
     href: '/app/tracking-dashboard',
   },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
+  },
   // {
   //     id: "freight",
   //     label: "Réseau de fret",
@@ -110,6 +117,12 @@ const transporteurMenu: SidebarItem[] = [
     label: 'Suivi Temps Réel',
     icon: MapPin,
     href: '/app/tracking-dashboard',
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
   },
   // {
   //     id: "tracking",
@@ -158,6 +171,12 @@ const adminMenu: SidebarItem[] = [
     label: 'Suivi Temps Réel',
     icon: MapPin,
     href: '/app/tracking-dashboard',
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
   },
   // {
   //     id: "analytics",

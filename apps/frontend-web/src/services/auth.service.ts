@@ -126,8 +126,8 @@ export class AuthService extends BaseApi {
 
   async updateProfile(userData: Partial<User>): Promise<ApiResponse<User>> {
     try {
-      const response = await this.insertToken().put('/api/auth/me', userData);
-      return { data: response.data };
+      const response = await this.insertToken().put('/api/auth/profile', userData);
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

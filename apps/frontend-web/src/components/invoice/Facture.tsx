@@ -176,7 +176,8 @@ export const Facture: React.FC<FactureProps> = ({
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>
-                  <span className="font-medium">Date:</span> {formatDate(payment.createdAt)}
+                  <span className="font-medium">Date:</span>{' '}
+                  {formatDate(new Date(payment.createdAt))}
                 </p>
                 <p>
                   <span className="font-medium">ID Paiement:</span> {payment.id}
@@ -299,10 +300,10 @@ export const Facture: React.FC<FactureProps> = ({
               </p>
               <p>
                 <span className="font-medium">Date de paiement:</span>{' '}
-                {formatDate(payment.paidAt || payment.createdAt)}
+                {formatDate(new Date(payment.paidAt || payment.createdAt))}
               </p>
               <p>
-                <span className="font-medium">ID de transaction:</span> {payment.paymentIntentId}
+                <span className="font-medium">ID de transaction:</span> {payment.transactionId}
               </p>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -17,13 +18,15 @@ import type { ProductFilterParams } from '@/types/product.types';
 import { ProductFilters } from '@/components/shop/ProductFilters';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 
 export default function Shop() {
   // Store hooks
   const { products = [], isLoading } = useProducts();
   const { addToCart } = useCart();
-  const lowStockProducts = products.filter((p) => p.stock <= p.stockAlert);
+  const { isAuthenticated } = useAuth();
+  const lowStockProducts = products?.filter((p) => p.stock <= p.stockAlert);
 
   // Local state
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -153,13 +156,18 @@ export default function Shop() {
     filters.lowStock;
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-tsa-blue/90 mb-2">TSA MARKET</h1>
         <p className="text-gray-600">
           Parcourez notre collection de pièces reconditionnées de qualité par tous vos fournisseurs
         </p>
+      </div>
+
+      {/* AI Recommendations */}
+      <div className="mb-8 space-y-6">
+        <ProductRecommendations type={isAuthenticated ? 'personalized' : 'popular'} limit={4} />
       </div>
 
       {/* Low Stock Alert */}

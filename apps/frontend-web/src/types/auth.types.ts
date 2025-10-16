@@ -1,6 +1,6 @@
 import type { Timestamps } from './common.types';
 
-export type UserRole = 'admin' | 'transporteur' | 'affreteur';
+export type UserRole = 'admin' | 'transporteur' | 'affreteur' | 'client';
 
 export type UserStatus = 'pending' | 'active' | 'suspended';
 
@@ -28,6 +28,13 @@ export interface CreateUserRequest {
   lastName: string;
   phone: string;
   role: UserRole;
+}
+
+export interface updateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
 }
 
 export interface LoginCredentials {
