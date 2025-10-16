@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import PaymentService from '#services/payment_service'
 import OrderService from '#services/order_service'
-import { initiatePaymentValidator, confirmPaymentValidator } from '#validators/payment_validator'
+import { confirmPaymentValidator, initiatePaymentValidator } from '#validators/payment_validator'
 
 /**
  * Contrôleur pour la gestion des paiements client

@@ -97,8 +97,11 @@ router
     router.get('/dashboard', '#controllers/http/admin/dashboard_controller.index')
 
     // Gestion des utilisateurs
+    router.get('/users/stats', '#controllers/http/admin/users_controller.stats')
     router.get('/users', '#controllers/http/admin/users_controller.index')
     router.get('/users/:id', '#controllers/http/admin/users_controller.show')
+    router.post('/users/:id/suspend', '#controllers/http/admin/users_controller.suspend')
+    router.post('/users/:id/activate', '#controllers/http/admin/users_controller.activate')
     router.put('/users/:id', '#controllers/http/admin/users_controller.update')
     router.delete('/users/:id', '#controllers/http/admin/users_controller.destroy')
 
