@@ -294,45 +294,51 @@ jobs:
           fi
           echo ""
           
-          # Analyze test results
-          if echo "$test_output" | grep -q "PASSED"; then
-            echo "✅ Test suite completed successfully"
+          # Analyze test results - look for test summary line
+          if echo "$test_output" | grep -q "Tests.*passed"; then
+            # Extract passed and total counts
+            # Format: "Tests  210 passed, 2 failed (212)" or "Tests  72 passed (72)"
+            test_line=$(echo "$test_output" | grep "Tests.*passed" | tail -1)
             
-            # Try to extract test statistics from Japa output
-            # Format example: "Tests  72 passed (72)" or "Tests  70 passed (72)"
-            if echo "$test_output" | grep -q "Tests.*passed"; then
-              # Extract passed and total counts
-              test_line=$(echo "$test_output" | grep "Tests.*passed" | tail -1)
-              passed_tests=$(echo "$test_line" | sed -n 's/.*Tests[[:space:]]\+\([0-9]\+\)[[:space:]]\+passed.*/\1/p')
+            # Try to extract numbers
+            passed_tests=$(echo "$test_line" | sed -n 's/.*Tests[[:space:]]\+\([0-9]\+\)[[:space:]]\+passed.*/\1/p')
+            
+            # Extract total - could be in parentheses or after "failed"
+            if echo "$test_line" | grep -q "failed"; then
+              # Format: "Tests  210 passed, 2 failed (212)"
+              total_tests=$(echo "$test_line" | sed -n 's/.*(\([0-9]\+\)).*/\1/p')
+            else
+              # Format: "Tests  72 passed (72)"
               total_tests=$(echo "$test_line" | sed -n 's/.*passed[[:space:]]*(\([0-9]\+\)).*/\1/p')
+            fi
+            
+            if [ -n "$passed_tests" ] && [ -n "$total_tests" ] && [ "$total_tests" -gt 0 ]; then
+              # Calculate success percentage
+              success_rate=$(echo "scale=2; $passed_tests * 100 / $total_tests" | bc -l)
               
-              if [ -n "$passed_tests" ] && [ -n "$total_tests" ] && [ "$total_tests" -gt 0 ]; then
-                # Calculate success percentage
-                success_rate=$(echo "scale=2; $passed_tests * 100 / $total_tests" | bc -l)
-                
-                echo "📊 Test Results Summary:"
-                echo "  - Passed: $passed_tests/$total_tests tests"
-                echo "  - Success Rate: ${success_rate}%"
-                echo "  - Required Minimum: 70%"
-                
-                # Validate 70% minimum success rate
-                if [ $(echo "$success_rate >= 70" | bc -l) -eq 1 ]; then
-                  echo "✅ PASS: Test success rate meets requirement (≥70%)"
-                else
-                  echo "❌ FAIL: Test success rate below requirement"
-                  echo "Current: ${success_rate}% | Required: ≥70%"
-                  exit 1
-                fi
+              echo "📊 Test Results Summary:"
+              echo "  - Passed: $passed_tests/$total_tests tests"
+              echo "  - Success Rate: ${success_rate}%"
+              echo "  - Required Minimum: 70%"
+              
+              # Validate 70% minimum success rate
+              if [ $(echo "$success_rate >= 70" | bc -l) -eq 1 ]; then
+                echo "✅ PASS: Test success rate meets requirement (≥70%)"
+                exit 0
               else
-                # Fallback: if we can't parse but tests passed, assume 100%
-                echo "📊 Test parsing fallback: All tests appear to have passed"
-                echo "✅ PASS: Test suite completed without failures"
+                echo "❌ FAIL: Test success rate below requirement"
+                echo "Current: ${success_rate}% | Required: ≥70%"
+                exit 1
               fi
             else
-              echo "✅ PASS: Test suite completed successfully (parsing not available)"
+              echo "⚠️ WARNING: Could not parse test results"
+              echo "Test line: $test_line"
+              echo "Passed: $passed_tests, Total: $total_tests"
+              echo "Exit code: $test_exit_code"
+              exit $test_exit_code
             fi
           else
-            echo "❌ FAIL: Test suite failed or encountered errors"
+            echo "❌ FAIL: Could not find test results in output"
             echo "Exit code: $test_exit_code"
             exit $test_exit_code
           fi
