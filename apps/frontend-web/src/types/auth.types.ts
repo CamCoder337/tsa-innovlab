@@ -62,6 +62,24 @@ export interface MFARequiredResponse {
   };
 }
 
+export interface MFAStatus {
+  mfaEnabled: boolean;
+  mfaRequired?: boolean;
+  mustEnableMFA?: boolean;
+}
+
+export interface MFASetupResponse {
+  secret: string;
+  manualEntryKey: string;
+  recoveryCodes: string[];
+  instructions: string;
+}
+
+export interface MFARegenCodes {
+  recoveryCodes: string[];
+  warning: string;
+}
+
 export interface AuthState {
   currentUser: User | null;
   token: string | null;

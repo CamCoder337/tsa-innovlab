@@ -1,8 +1,8 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
-import AffreteurSettings from './AffreteurSettings';
-import TransporteurSettings from './TransporteurSettings';
 import AdminSettings from '../admin/AdminSettings';
+import TransporteurSettings from './TransporteurSettings';
+import AffreteurSettings from './AffreteurSettings';
 import ClientSettings from './ClientSettings';
 
 export default function MySettings() {

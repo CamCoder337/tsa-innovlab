@@ -34,7 +34,12 @@ const validationSchema = Yup.object({
     .trim()
     .required(VALIDATION_MESSAGES.REQUIRED_EMAIL)
     .email(VALIDATION_MESSAGES.INVALID_EMAIL),
-  password: Yup.string().required(VALIDATION_MESSAGES.REQUIRED_PASSWORD),
+  password: Yup.string()
+    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
+      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
+    ),
   confirmPassword: Yup.string()
     .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
     .oneOf([Yup.ref('password')], VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH),

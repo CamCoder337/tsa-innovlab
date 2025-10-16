@@ -6,6 +6,9 @@ import type {
   LoginCredentials,
   AuthTokens,
   MFARequiredResponse,
+  MFASetupResponse,
+  MFARegenCodes,
+  MFAStatus,
 } from '@/types/auth.types';
 import type { ApiResponse } from '@/types/common.types';
 
@@ -133,15 +136,16 @@ export class AuthService extends BaseApi {
     }
   }
 
-  async updatePassword(
+  async changePassword(
     currentPassword: string,
-    newPassword: string
-  ): Promise<ApiResponse<{ message: string }>> {
+    newPassword: string,
+    newPassword_confirmation: string
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
-      const response = await this.insertToken().put('/api/auth/password', {
-        current_password: currentPassword,
-        password: newPassword,
-        password_confirmation: newPassword,
+      const response = await this.insertToken().put('/api/auth/change-password', {
+        currentPassword,
+        newPassword,
+        newPassword_confirmation,
       });
       return { data: response.data };
     } catch (error) {
@@ -159,25 +163,43 @@ export class AuthService extends BaseApi {
   }
 
   // MFA methods
-  async setupMFA(): Promise<ApiResponse<{ secret: string; qrCodeUrl: string }>> {
+  async setupMFA(): Promise<ApiResponse<MFASetupResponse>> {
     try {
-      const response = await this.insertToken().post('/api/auth/mfa/setup');
+      const response = await this.insertToken().post('/api/auth/mfa/initialize');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async statusMFA(): Promise<ApiResponse<MFAStatus>> {
+    try {
+      const response = await this.insertToken().get('/api/auth/mfa/status');
       return { data: response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async verifyMFA(code: string): Promise<ApiResponse<{ recoveryCodes: string[] }>> {
+  async enableMFA(code: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
-      const response = await this.insertToken().post('/api/auth/mfa/verify', { code });
+      const response = await this.insertToken().post('/api/auth/mfa/enable', { code });
       return { data: response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async disableMFA(code: string): Promise<ApiResponse<{ message: string }>> {
+  async regenMFACodes(): Promise<ApiResponse<MFARegenCodes>> {
+    try {
+      const response = await this.insertToken().post('/api/auth/mfa/regenerate-codes');
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async disableMFA(code: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
       const response = await this.insertToken().post('/api/auth/mfa/disable', { code });
       return { data: response.data };

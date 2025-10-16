@@ -16,6 +16,7 @@ import {
   X,
   Shield,
   Award,
+  Settings,
 } from 'lucide-react';
 import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
 import KYCForm from '@/components/forms/KYCForm';
@@ -24,6 +25,8 @@ import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import type { FormikProps } from 'formik';
 import type { updateUserRequest } from '@/types/auth.types';
+import { useMissions } from '@/hooks/useMissions';
+import { Link } from 'react-router-dom';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -37,6 +40,7 @@ interface Document {
 
 function TransporteurProfile() {
   const { user, updateUser } = useAuth();
+  const { myMissions } = useMissions();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
@@ -163,9 +167,19 @@ function TransporteurProfile() {
   };
 
   const stats = [
-    { label: 'Missions Terminées', value: '89', icon: Truck },
+    {
+      label: 'Missions Terminées',
+      value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
+      icon: Truck,
+    },
     { label: 'Note Moyenne', value: '4.9/5', icon: Star },
-    { label: 'Taux de Réussite', value: '98%', icon: Award },
+    {
+      label: 'Taux de Réussite',
+      value:
+        myMissions?.filter((mission) => mission.status === 'completed').length /
+          myMissions?.length || 0,
+      icon: Award,
+    },
     {
       label: 'Membre Depuis',
       value: user ? format(new Date(user.createdAt), 'MMM yyyy') : '',
@@ -196,10 +210,18 @@ function TransporteurProfile() {
           </p>
         </div>
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
-            <Edit className="h-4 w-4" />
-            Modifier
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
+              <Edit className="h-4 w-4" />
+              Modifier
+            </Button>
+            <Link to="/app/settings">
+              <Button variant="outline" className="gap-2 cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Paramètres
+              </Button>
+            </Link>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button
@@ -225,15 +247,15 @@ function TransporteurProfile() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:justify-between gap-6">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               Informations Personnelles
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 lg:grid-cols-2  gap-6 justify-between">
+          <CardContent className="grid grid-cols-1  gap-6 justify-between">
             <ProfileForm
               ref={formikRef}
               user={user}
@@ -272,42 +294,7 @@ function TransporteurProfile() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="h-5 w-5" />
-                    Mon Véhicule
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Modèle</span>
-                    <span className="font-semibold">{vehicleInfo.model}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Plaque</span>
-                    <span className="font-semibold">{vehicleInfo.plate}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Capacité</span>
-                    <span className="font-semibold">{vehicleInfo.capacity}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Kilométrage</span>
-                    <span className="font-semibold">{vehicleInfo.mileage}</span>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>État Général</span>
-                      <span className="text-green-600">Excellent</span>
-                    </div>
-                    <Progress value={92} className="w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Certifications</CardTitle>
                 </CardHeader>
@@ -334,7 +321,42 @@ function TransporteurProfile() {
                     </Badge>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="min-w-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Mon Véhicule
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Modèle</span>
+              <span className="font-semibold">{vehicleInfo.model}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Plaque</span>
+              <span className="font-semibold">{vehicleInfo.plate}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Capacité</span>
+              <span className="font-semibold">{vehicleInfo.capacity}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Kilométrage</span>
+              <span className="font-semibold">{vehicleInfo.mileage}</span>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>État Général</span>
+                <span className="text-green-600">Excellent</span>
+              </div>
+              <Progress value={92} className="w-full" />
             </div>
           </CardContent>
         </Card>

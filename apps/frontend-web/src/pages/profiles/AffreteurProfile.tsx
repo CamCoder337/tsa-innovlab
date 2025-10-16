@@ -3,7 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Calendar, Star, Package, TrendingUp, Edit, Save, X, Shield } from 'lucide-react';
+import {
+  User,
+  Calendar,
+  Star,
+  Package,
+  TrendingUp,
+  Edit,
+  Save,
+  X,
+  Shield,
+  Settings,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
 import type { FormikProps } from 'formik';
@@ -12,6 +23,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 import type { updateUserRequest } from '@/types/auth.types';
+import { Link } from 'react-router-dom';
+import { useMissions } from '@/hooks/useMissions';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -25,6 +38,7 @@ export interface Document {
 
 function AffreteurProfile() {
   const { user, updateUser } = useAuth();
+  const { myMissions } = useMissions();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [kycUploading, setKycUploading] = useState<string | null>(null);
@@ -59,8 +73,6 @@ function AffreteurProfile() {
       placeholder: 'Glissez votre dernier relevé bancaire trimestriel ici',
     },
   });
-
-  if (!user) return null;
 
   const handleKycUpload = async () => {
     try {
@@ -138,9 +150,15 @@ function AffreteurProfile() {
     setIsEditing(false);
   };
 
+  if (!user) return null;
+
   const stats = [
-    { label: 'Missions Créées', value: '47', icon: Package },
-    { label: 'Missions Terminées', value: '44', icon: TrendingUp },
+    { label: 'Missions Créées', value: myMissions?.length || 0, icon: Package },
+    {
+      label: 'Missions Terminées',
+      value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
+      icon: TrendingUp,
+    },
     { label: 'Note Moyenne', value: '4.8/5', icon: Star },
     { label: 'Membre Depuis', value: format(new Date(user.createdAt), 'MMM yyyy'), icon: Calendar },
   ];
@@ -148,8 +166,6 @@ function AffreteurProfile() {
   const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === 'verified').length;
   const totalKycDocs = Object.keys(kycDocuments).length;
   const kycPercentage = (kycProgress / totalKycDocs) * 100;
-
-  if (!user) return null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
@@ -161,10 +177,18 @@ function AffreteurProfile() {
           </p>
         </div>
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
-            <Edit className="h-4 w-4" />
-            Modifier
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
+              <Edit className="h-4 w-4" />
+              Modifier
+            </Button>
+            <Link to="/app/settings">
+              <Button variant="outline" className="gap-2 cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Paramètres
+              </Button>
+            </Link>
+          </div>
         ) : (
           <div className="flex gap-2">
             <Button
@@ -237,7 +261,7 @@ function AffreteurProfile() {
                 </CardContent>
               </Card>
 
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Préférences</CardTitle>
                 </CardHeader>
@@ -265,7 +289,7 @@ function AffreteurProfile() {
                     Gérer les Préférences
                   </Button>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </CardContent>
         </Card>
