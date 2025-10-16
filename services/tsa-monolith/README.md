@@ -503,3 +503,5 @@ DEBUG=knex:query npm run dev
 ## 📄 License
 
 Projet TSA Contest 2025 - Usage interne uniquement.
+#   T e s t   t r i g g e r  
+ 
