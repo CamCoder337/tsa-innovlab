@@ -267,13 +267,18 @@ jobs:
           # Frontend
           FRONTEND_URL: http://localhost:5173
         run: |
+          set +e  # Don't exit on error
           echo "🧪 Running AdonisJS tests with Japa framework..."
           
           # Run tests and capture output
-          test_output=$(npm test 2>&1)
-          test_exit_code=$?
+          npm test 2>&1 | tee test_output.txt
+          test_exit_code=${PIPESTATUS[0]}
           
-          echo "$test_output"
+          echo ""
+          echo "Test exit code: $test_exit_code"
+          
+          # Read the output
+          test_output=$(cat test_output.txt)
           echo ""
           
           # Analyze test results
