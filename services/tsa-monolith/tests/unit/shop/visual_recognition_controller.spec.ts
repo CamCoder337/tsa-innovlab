@@ -73,4 +73,3 @@ test.group('Shop Visual Recognition Controller', (group) => {
     assert.isTrue(response.status() === 200 || response.status() === 500)
   })
 })
-
