@@ -36,6 +36,8 @@ test.group('Shop Visual Recognition Controller', (group) => {
    * 2. Or mocking library like 'sinon' for unit testing
    *
    * Install sinon for complete mocking: npm install --save-dev sinon @types/sinon
+   *
+   * Tests validate authentication, error handling, and AI service integration.
    */
 
   test('should require authentication for image search', async ({ client }) => {
