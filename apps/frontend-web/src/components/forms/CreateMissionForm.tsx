@@ -215,7 +215,7 @@ export default function CreateMissionForm({
   }
 
   const INITIAL_VALUES: CreateMissionDto = {
-    titre: currentMission?.titre || '',
+    titre: currentMission?.title || '',
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
     description: currentMission?.description || '',
     typeMarchandise: currentMission?.typeMarchandise || '',

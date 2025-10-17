@@ -3,10 +3,10 @@ import { useCallback, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { shopService } from '@/services/shop.service';
 import type { Product, ProductFilterParams } from '@/types/product.types';
-import type { PaginatedMetaResponse } from '@/types/common.types';
+import type { PaginatedMetaResponse, Paginator } from '@/types/common.types';
 
 export function useProducts() {
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
 
   const products = useProductStore((s) => s.products);
   const currentProduct = useProductStore((s) => s.currentProduct);
@@ -24,7 +24,7 @@ export function useProducts() {
   const setError = useProductStore((s) => s.setError);
   const setStats = useProductStore((s) => s.setStats);
 
-  const handleGetAllProducts = useCallback(async () => {
+  const handleAdminGetAllProducts = useCallback(async () => {
     let page: number = 1;
     let next: boolean = true;
     let productsList: PaginatedMetaResponse<Product, 'products'> = {
@@ -54,10 +54,7 @@ export function useProducts() {
 
     while (next) {
       try {
-        const response =
-          user?.role === 'admin'
-            ? await shopService.adminGetProducts({ page })
-            : await shopService.getProducts({ page });
+        const response = await shopService.adminGetProducts({ page });
 
         if (response.error) {
           console.error('API error:', response.error);
@@ -79,14 +76,92 @@ export function useProducts() {
           }
 
           setProducts(productsList.products.data);
-          next = response.data.pagination.hasNext || false;
+          next = response.data.pagination.hasNext;
           if (next) page += 1;
         }
       } catch (error) {
         console.error(error);
       }
     }
-  }, [user?.role, setProducts]);
+  }, [setProducts]);
+
+  const handleGetAllProducts = useCallback(async () => {
+    let page: number = 1;
+    let next: boolean = true;
+    let productsList: Paginator<Product> = {
+      data: [],
+      meta: {
+        total: 0,
+        perPage: 20,
+        currentPage: 1,
+        lastPage: 1,
+        firstPage: 1,
+        firstPageUrl: null,
+        lastPageUrl: null,
+        nextPageUrl: null,
+        previousPageUrl: null,
+      },
+    };
+
+    while (next) {
+      try {
+        const response = await shopService.getProducts({ page });
+
+        if (response.error) {
+          console.error('API error:', response.error);
+          next = false;
+          break;
+        }
+
+        if (response.data) {
+          if (page === 1) {
+            productsList = response.data;
+          } else {
+            productsList = {
+              data: [...productsList.data, ...response.data.data],
+              meta: response.data.meta,
+            };
+          }
+
+          setProducts(productsList.data);
+
+          // Check if there are more pages to fetch
+          next = page < response.data.meta.lastPage;
+          if (next) {
+            page += 1;
+          }
+        } else {
+          // No data received, stop the loop
+          next = false;
+        }
+      } catch (error) {
+        console.error(error);
+        next = false; // Stop the loop on error
+      }
+    }
+  }, [setProducts]);
+
+  const handleFetchStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await shopService.getAdminProductStats();
+
+      if (response.error) {
+        setError(response.error.message);
+        return;
+      }
+
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch product stats');
+    } finally {
+      setLoading(false);
+    }
+  }, [setError, setLoading, setStats]);
 
   const filterProducts = (filters: ProductFilterParams) => {
     return products.filter((product) => {
@@ -116,8 +191,11 @@ export function useProducts() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) handleGetAllProducts();
-  }, [handleGetAllProducts, isAuthenticated]);
+    if (user && user.role == 'admin') {
+      handleAdminGetAllProducts();
+      handleFetchStats();
+    } else handleGetAllProducts();
+  }, [handleAdminGetAllProducts, handleFetchStats, handleGetAllProducts, user]);
 
   return {
     // State

@@ -1,6 +1,6 @@
 import type { Timestamps } from './common.types';
 
-export type UserRole = 'admin' | 'transporteur' | 'affreteur';
+export type UserRole = 'admin' | 'transporteur' | 'affreteur' | 'client';
 
 export type UserStatus = 'pending' | 'active' | 'suspended';
 
@@ -30,6 +30,13 @@ export interface CreateUserRequest {
   role: UserRole;
 }
 
+export interface updateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -41,12 +48,10 @@ export interface ForgotPasswordRequest {
 }
 
 export interface AuthTokens {
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  };
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
 }
 
 export interface MFARequiredResponse {
@@ -55,6 +60,24 @@ export interface MFARequiredResponse {
     mfaSetupRequired?: boolean;
     message: string;
   };
+}
+
+export interface MFAStatus {
+  mfaEnabled: boolean;
+  mfaRequired?: boolean;
+  mustEnableMFA?: boolean;
+}
+
+export interface MFASetupResponse {
+  secret: string;
+  manualEntryKey: string;
+  recoveryCodes: string[];
+  instructions: string;
+}
+
+export interface MFARegenCodes {
+  recoveryCodes: string[];
+  warning: string;
 }
 
 export interface AuthState {
@@ -69,6 +92,7 @@ export interface AuthActions {
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   setToken: (token: string, expiresIn?: number, refreshToken?: string) => void;
+  initializeTokenManagement: () => void;
 }
 
 export type AuthStore = AuthState & AuthActions;

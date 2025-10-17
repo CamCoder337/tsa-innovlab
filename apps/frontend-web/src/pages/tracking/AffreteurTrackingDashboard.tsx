@@ -166,7 +166,7 @@ export default function AffréteurTrackingDashboard() {
                           onClick={() => navigate(`/app/mission/${mission.id}/tracking`)}
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <span className="font-medium text-sm">{mission.titre}</span>
+                            <span className="font-medium text-sm">{mission.title}</span>
                             <Badge className={getPriorityColor(mission.budgetMax)}>
                               {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
                             </Badge>
@@ -232,7 +232,7 @@ export default function AffréteurTrackingDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-3">
-                            <span className="font-medium">{mission.titre}</span>
+                            <span className="font-medium">{mission.title}</span>
                             <Badge className={getPriorityColor(mission.budgetMax)}>
                               {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
                             </Badge>
@@ -321,7 +321,7 @@ export default function AffréteurTrackingDashboard() {
                   <div className="space-y-3">
                     {missions.map((mission) => (
                       <div key={mission.id} className="flex justify-between">
-                        <span className="text-sm">{mission.titre}</span>
+                        <span className="text-sm">{mission.title}</span>
                         <span className="font-medium">
                           {mission.budgetMax.toLocaleString()} FCFA
                         </span>

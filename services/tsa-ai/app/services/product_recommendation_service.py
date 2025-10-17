@@ -26,7 +26,7 @@ class ProductRecommendationService:
     Service for product recommendations using multiple strategies
     """
 
-    def __init__(self):
+    def _init_(self):
         self.model_version = "1.0.0"
         self.cache = {}  # Simple in-memory cache for product similarities
 
@@ -36,7 +36,7 @@ class ProductRecommendationService:
         Only the error type is recorded to keep logs clean.
         """
         try:
-            err_type = err.__class__.__name__
+            err_type = err._class.name_
         except Exception:
             err_type = "UnknownError"
         logger.error(f"{context}: {err_type}")

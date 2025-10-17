@@ -6,7 +6,8 @@ import type { LoginCredentials } from '@/types/auth.types';
 import { VALIDATION_MESSAGES } from '@/lib/validation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const INITIAL_VALUES: LoginCredentials = {
   email: '',
@@ -35,6 +36,8 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: LoginFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <Formik<LoginCredentials>
       initialValues={INITIAL_VALUES}
@@ -65,19 +68,30 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           </div>
 
           <div className="flex flex-col gap-2">
-            <Input
-              name="password"
-              type="password"
-              placeholder="Entrez votre Mot de passe"
-              value={values.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              aria-label="password"
-              aria-invalid={touched.password && !!errors.password}
-              className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
-              required
-              disabled={showMFA}
-            />
+            <div className="relative">
+              <Input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Entrez votre Mot de passe"
+                value={values.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                aria-label="password"
+                aria-invalid={touched.password && !!errors.password}
+                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                required
+                disabled={showMFA}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
             <div className="flex justify-between">
               <div className="w-1/2 text-sm text-red-600">
                 {touched.password && errors.password ? errors.password : null}

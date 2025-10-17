@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta, product_recommendations
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple
 
 # Configure logging
 logging.basicConfig(
@@ -66,6 +66,18 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         logger.info("Database initialized")
+        
+        # Initialize pricing config
+        from app.services.pricing_config_service import init_pricing_config
+        from app.core.database import SessionLocal
+        db = SessionLocal()
+        try:
+            init_pricing_config(db)
+            logger.info("Pricing configuration initialized")
+        except Exception as e:
+            logger.warning(f"Pricing configuration skipped: {e}")
+        finally:
+            db.close()
 
         # Load ML models
         await load_ml_models()
@@ -156,6 +168,18 @@ app.include_router(
     product_recommendations.router,
     prefix="/api/ai/product-recommendations",
     tags=["Product Recommendations"]
+)
+
+app.include_router(
+    visual_recognition.router,
+    prefix="/api/ai/visual",
+    tags=["Visual Recognition"]
+)
+
+app.include_router(
+    pricing_simple.router,
+    prefix="/api/ai",
+    tags=["Pricing Dynamique"]
 )
 
 # TODO: Add other AI routers

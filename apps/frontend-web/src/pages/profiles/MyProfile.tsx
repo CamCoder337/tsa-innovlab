@@ -1,8 +1,9 @@
 import { useAuth } from '@/hooks/useAuth';
+import { Navigate } from 'react-router-dom';
 import AffreteurProfile from './AffreteurProfile';
 import TransporteurProfile from './TransporteurProfile';
-import { Navigate } from 'react-router-dom';
-import AdminProfile from './AdminProfile';
+import AdminProfile from '../admin/AdminProfile';
+import ClientProfile from './ClientProfile';
 
 export default function MyProfile() {
   const { user } = useAuth();
@@ -13,18 +14,16 @@ export default function MyProfile() {
   }
 
   // Render appropriate component based on user role
-  if (user.role === 'affreteur') {
-    return <AffreteurProfile />;
+  switch (user?.role) {
+    case 'affreteur':
+      return <AffreteurProfile />;
+    case 'transporteur':
+      return <TransporteurProfile />;
+    case 'admin':
+      return <AdminProfile />;
+    case 'client':
+      return <ClientProfile />;
+    default:
+      return <Navigate to="/app" />;
   }
-
-  if (user.role === 'transporteur') {
-    return <TransporteurProfile />;
-  }
-
-  if (user.role === 'admin') {
-    return <AdminProfile />;
-  }
-
-  // For other roles (Client), show a generic message or redirect
-  return <Navigate to="/app" />;
 }

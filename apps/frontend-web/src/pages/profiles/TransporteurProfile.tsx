@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {
   User,
@@ -17,10 +16,17 @@ import {
   X,
   Shield,
   Award,
+  Settings,
 } from 'lucide-react';
-import ProfileForm from '@/components/forms/ProfileForm';
+import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
 import KYCForm from '@/components/forms/KYCForm';
 import { format } from 'date-fns';
+import { authService } from '@/services/auth.service';
+import toast from 'react-hot-toast';
+import type { FormikProps } from 'formik';
+import type { updateUserRequest } from '@/types/auth.types';
+import { useMissions } from '@/hooks/useMissions';
+import { Link } from 'react-router-dom';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -33,10 +39,11 @@ interface Document {
 }
 
 function TransporteurProfile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const { myMissions } = useMissions();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
   const [kycUploading, setKycUploading] = useState<string | null>(null);
   const [kycDocuments, setKycDocuments] = useState<Record<string, Document>>({
     identityCard: {
@@ -83,8 +90,6 @@ function TransporteurProfile() {
     },
   });
 
-  if (!user) return null;
-
   const handleKycUpload = async () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -99,41 +104,87 @@ function TransporteurProfile() {
           placeholder: 'Add Name',
         },
       }));
-
-      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error(error);
-      setMessage('Erreur lors du téléchargement du document');
+      toast.error('Erreur lors du téléchargement du document');
     } finally {
       setKycUploading(null);
     }
   };
 
-  const handleSave = async () => {
-    setIsLoading(true);
-    setMessage('');
-
+  const handleSave = async (values: updateUserRequest) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsLoading(true);
+      const response = await authService.updateProfile(values);
+      console.log(response);
 
-      handleKycUpload();
-      setIsEditing(false);
-      setMessage('Profil mis à jour avec succès');
+      if (response.error) {
+        console.error(response.error);
+        toast.error(response.error.message || 'Erreur lors de la mise à jour du profil');
+      }
 
-      setTimeout(() => setMessage(''), 3000);
+      if (response.data) {
+        handleKycUpload();
+        updateUser(response.data);
+        toast.success('Profil mis à jour avec succès');
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error(error);
-      setMessage('Erreur lors de la mise à jour du profil');
+      toast.error('Erreur lors de la mise à jour du profil');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSaveClick = () => {
+    if (formikRef.current) {
+      const currentValues = formikRef.current.values;
+      const initialValues = formikRef.current.initialValues;
+
+      // Compare values and find differences
+      const differences: Partial<ProfileFormValues> = {};
+      let hasChanges = false;
+
+      (Object.keys(currentValues) as (keyof ProfileFormValues)[]).forEach((key) => {
+        if (currentValues[key] !== initialValues[key]) {
+          differences[key] = currentValues[key];
+          hasChanges = true;
+        }
+      });
+
+      if (hasChanges) {
+        handleSave(differences as updateUserRequest);
+      } else {
+        toast('Aucune modification détectée');
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    if (formikRef.current) formikRef.current.resetForm();
+    setIsEditing(false);
+  };
+
   const stats = [
-    { label: 'Missions Terminées', value: '89', icon: Truck },
+    {
+      label: 'Missions Terminées',
+      value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
+      icon: Truck,
+    },
     { label: 'Note Moyenne', value: '4.9/5', icon: Star },
-    { label: 'Taux de Réussite', value: '98%', icon: Award },
-    { label: 'Membre Depuis', value: format(new Date(user.createdAt), 'MMM yyyy'), icon: Calendar },
+    {
+      label: 'Taux de Réussite',
+      value:
+        myMissions?.filter((mission) => mission.status === 'completed').length /
+          myMissions?.length || 0,
+      icon: Award,
+    },
+    {
+      label: 'Membre Depuis',
+      value: user ? format(new Date(user.createdAt), 'MMM yyyy') : '',
+      icon: Calendar,
+    },
   ];
 
   const vehicleInfo = {
@@ -147,8 +198,10 @@ function TransporteurProfile() {
   const totalKycDocs = Object.keys(kycDocuments).length;
   const kycPercentage = (kycProgress / totalKycDocs) * 100;
 
+  if (!user) return null;
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
@@ -157,17 +210,36 @@ function TransporteurProfile() {
           </p>
         </div>
         {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} className="gap-2">
-            <Edit className="h-4 w-4" />
-            Modifier
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
+              <Edit className="h-4 w-4" />
+              Modifier
+            </Button>
+            <Link to="/app/settings">
+              <Button variant="outline" className="gap-2 cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Paramètres
+              </Button>
+            </Link>
+          </div>
         ) : (
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={isLoading} className="gap-2">
+            <Button
+              disabled={isLoading}
+              onClick={handleSaveClick}
+              className="gap-2 cursor-pointer"
+              type="submit"
+              form="profile-form"
+            >
               <Save className="h-4 w-4" />
               {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
             </Button>
-            <Button variant="outline" disabled={isLoading}>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              className="gap-2 cursor-pointer"
+              onClick={handleCancel}
+            >
               <X className="h-4 w-4" />
               Annuler
             </Button>
@@ -175,24 +247,17 @@ function TransporteurProfile() {
         )}
       </div>
 
-      {message && (
-        <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
-          <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
-            {message}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:justify-between gap-6">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               Informations Personnelles
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 lg:grid-cols-2  gap-6 justify-between">
+          <CardContent className="grid grid-cols-1  gap-6 justify-between">
             <ProfileForm
+              ref={formikRef}
               user={user}
               isEditing={isEditing}
               onSubmit={handleSave}
@@ -229,42 +294,7 @@ function TransporteurProfile() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="h-5 w-5" />
-                    Mon Véhicule
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Modèle</span>
-                    <span className="font-semibold">{vehicleInfo.model}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Plaque</span>
-                    <span className="font-semibold">{vehicleInfo.plate}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Capacité</span>
-                    <span className="font-semibold">{vehicleInfo.capacity}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Kilométrage</span>
-                    <span className="font-semibold">{vehicleInfo.mileage}</span>
-                  </div>
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>État Général</span>
-                      <span className="text-green-600">Excellent</span>
-                    </div>
-                    <Progress value={92} className="w-full" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Certifications</CardTitle>
                 </CardHeader>
@@ -291,7 +321,42 @@ function TransporteurProfile() {
                     </Badge>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="min-w-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Mon Véhicule
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Modèle</span>
+              <span className="font-semibold">{vehicleInfo.model}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Plaque</span>
+              <span className="font-semibold">{vehicleInfo.plate}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Capacité</span>
+              <span className="font-semibold">{vehicleInfo.capacity}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Kilométrage</span>
+              <span className="font-semibold">{vehicleInfo.mileage}</span>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>État Général</span>
+                <span className="text-green-600">Excellent</span>
+              </div>
+              <Progress value={92} className="w-full" />
             </div>
           </CardContent>
         </Card>
@@ -314,7 +379,7 @@ function TransporteurProfile() {
               <KYCForm
                 kycDocuments={kycDocuments}
                 kycUploading={kycUploading}
-                onDocumentUpload={handleSave}
+                onDocumentUpload={handleKycUpload}
               />
             </div>
 

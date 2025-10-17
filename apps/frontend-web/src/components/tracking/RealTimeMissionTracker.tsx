@@ -5,23 +5,11 @@ import { Button } from '@/components/ui/button';
 import MissionTrackingMap from './MissionTrackingMap';
 import type { Mission } from '@/types/mission.types';
 import { RefreshCw, MapPin, Truck, Clock, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
+import { useMissions } from '@/hooks/useMissions';
 
 interface RealTimeMissionTrackerProps {
   className?: string;
 }
-
-// Simulation d'une API call pour récupérer les missions en temps réel
-const fetchMissionsFromAPI = async (): Promise<Mission[]> => {
-  // En production, ceci ferait un appel à votre API AdonisJS
-  // return await fetch('/api/missions/tracking').then(res => res.json());
-
-  // Pour la démo, on simule un délai et on retourne les données mock
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  // Import dynamique pour éviter les erreurs de build
-  const { MOCK_MISSIONS } = await import('@/data/mock-missions');
-  return MOCK_MISSIONS;
-};
 
 // Simulation des mises à jour temps réel via WebSocket
 const simulateRealTimeUpdates = (
@@ -58,7 +46,7 @@ const simulateRealTimeUpdates = (
 };
 
 export default function RealTimeMissionTracker({ className = '' }: RealTimeMissionTrackerProps) {
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const { myMissions: missions, setMyMissions: setMissions } = useMissions();
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -69,8 +57,6 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     const loadMissions = async () => {
       try {
         setIsLoading(true);
-        const fetchedMissions = await fetchMissionsFromAPI();
-        setMissions(fetchedMissions);
         setLastUpdate(new Date());
         setIsConnected(true);
       } catch (error) {
@@ -94,7 +80,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     });
 
     return cleanup;
-  }, [missions]); // Seulement quand les missions sont chargées initialement
+  }, [missions, setMissions]); // Seulement quand les missions sont chargées initialement
 
   // Statistiques temps réel
   const stats = {
@@ -108,8 +94,6 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
-      const freshMissions = await fetchMissionsFromAPI();
-      setMissions(freshMissions);
       setLastUpdate(new Date());
       setIsConnected(true);
     } catch (error) {
@@ -267,7 +251,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-semibold">{selectedMission.titre}</h4>
+                  <h4 className="font-semibold">{selectedMission.title}</h4>
                   <p className="text-sm text-gray-600">{selectedMission.description}</p>
                 </div>
 
@@ -351,7 +335,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                         }`}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{mission.titre}</p>
+                        <p className="text-sm font-medium truncate">{mission.title}</p>
                         <p className="text-xs text-gray-500">
                           {new Date(mission.updatedAt).toLocaleTimeString()}
                         </p>

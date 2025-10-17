@@ -49,12 +49,8 @@ const Login: React.FC = () => {
     }
 
     // Successful login - response.data is of type AuthTokens
-    if ('accessToken' in response.data.data && 'refreshToken' in response.data.data) {
-      setToken(
-        response.data.data.accessToken,
-        response.data.data.expiresIn,
-        response.data.data.refreshToken
-      );
+    if ('accessToken' in response.data && 'refreshToken' in response.data) {
+      setToken(response.data.accessToken, response.data.expiresIn, response.data.refreshToken);
       toast.success('Connexion réussie');
     }
   };

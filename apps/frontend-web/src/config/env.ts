@@ -75,10 +75,17 @@ export const getGoogleMapsApiKey = (): string => {
   return window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 };
 
+export const getWebSocketUrl = (): string => {
+  const apiUrl = getApiUrl();
+  // Convert HTTP URL to WebSocket URL
+  return apiUrl.replace(/^http/, 'ws') + '/ws';
+};
+
 // Export all environment variables as a single config object
 export const env = {
   apiUrl: getApiUrl,
   supabaseUrl: getSupabaseUrl,
   supabaseAnonKey: getSupabaseAnonKey,
   googleMapsApiKey: getGoogleMapsApiKey,
+  webSocketUrl: getWebSocketUrl,
 } as const;

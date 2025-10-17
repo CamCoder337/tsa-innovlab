@@ -25,7 +25,7 @@ services:
 
     # Ports mapping - expose port 80 du container sur le port hôte (défaut: 30005)
     ports:
-      - "${FRONTEND_HOST_PORT:-30005}:80"
+      - '${FRONTEND_HOST_PORT:-30005}:80'
 
     # Networks - utilisation du réseau InnovlabG1
     networks:
@@ -33,7 +33,7 @@ services:
 
     # Health check
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/health']
       interval: 30s
       timeout: 10s
       start_period: 30s
@@ -41,9 +41,9 @@ services:
 
     # Portainer labels
     labels:
-      - "com.tsa.service=frontend"
-      - "com.tsa.description=TSA Frontend Web Application (React + Vite)"
-      - "com.tsa.version=1.0.0"
+      - 'com.tsa.service=frontend'
+      - 'com.tsa.description=TSA Frontend Web Application (React + Vite)'
+      - 'com.tsa.version=1.0.0'
 
 # ========================================
 # Networks

@@ -194,6 +194,16 @@ router
       '#controllers/http/affreteur/missions_controller.getFeedback'
     )
 
+    // Pricing dynamique pour les missions
+    router.post(
+      '/pricing/calculate',
+      '#controllers/http/affreteur/dynamic_pricing_controller.calculate'
+    )
+    router.get(
+      '/pricing/config',
+      '#controllers/http/affreteur/dynamic_pricing_controller.getConfig'
+    )
+
     // Suivi des expéditions
     router.get('/shipments', '#controllers/http/affreteur/shipments_controller.index')
     router.get(
@@ -219,6 +229,16 @@ router
 
     // Réclamer une mission
     router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
+
+    // Pricing dynamique (pour estimer avant de proposer)
+    router.post(
+      '/pricing/calculate',
+      '#controllers/http/affreteur/dynamic_pricing_controller.calculate'
+    )
+    router.get(
+      '/pricing/config',
+      '#controllers/http/affreteur/dynamic_pricing_controller.getConfig'
+    )
 
     // Suivi des courses
     router.put(
@@ -267,6 +287,16 @@ router
     router.get(
       '/product-recommendations/similar/:id',
       '#controllers/http/shop/product_recommendations_controller.similar'
+    )
+
+    // Reconnaissance visuelle (authentifié)
+    router.post(
+      '/visual-recognition/search',
+      '#controllers/http/shop/visual_recognition_controller.searchByImage'
+    )
+    router.get(
+      '/visual-recognition/health',
+      '#controllers/http/shop/visual_recognition_controller.health'
     )
   })
   .prefix('/api/shop')

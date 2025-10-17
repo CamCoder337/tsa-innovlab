@@ -7,6 +7,8 @@ import { MissionDetails } from '@/components/missions/MissionDetails';
 import { MissionOffers } from '@/components/missions/MissionOffers';
 import { MissionActions } from '@/components/missions/MissionActions';
 import { MissionTimeline } from '@/components/missions/MissionTimeline';
+import { MissionAppreciation } from '@/components/missions/MissionAppreciation';
+import { MissionFinancial } from '@/components/missions/MissionFinancial';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -74,12 +76,12 @@ export default function MissionDetailsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-3xl font-bold">Mission: {currentMission.titre}</h1>
+        <h1 className="text-3xl font-bold">Mission: {currentMission.title}</h1>
         <div className="ml-auto">
           <MissionActions
             mission={currentMission}
@@ -101,6 +103,13 @@ export default function MissionDetailsPage() {
               <TabsTrigger value="details">Details</TabsTrigger>
               {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>}
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
+              {/* {currentMission.status === 'completed' && (
+                <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
+              )} */}
+              {(user?.role === 'affreteur' || user?.role === 'admin') && (
+                <TabsTrigger value="financial">Financial</TabsTrigger>
+              )}
             </>
           )}
         </TabsList>
@@ -115,6 +124,14 @@ export default function MissionDetailsPage() {
 
         <TabsContent value="timeline">
           <MissionTimeline mission={currentMission} />
+        </TabsContent>
+
+        <TabsContent value="appreciation">
+          <MissionAppreciation mission={currentMission} onUpdate={fetchMission} />
+        </TabsContent>
+
+        <TabsContent value="financial">
+          <MissionFinancial mission={currentMission} onUpdate={fetchMission} />
         </TabsContent>
       </Tabs>
     </div>

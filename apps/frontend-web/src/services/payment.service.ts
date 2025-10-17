@@ -1,87 +1,125 @@
 import type {
   Payment,
-  CreatePaymentIntentDto,
-  ConfirmPaymentDto,
-  PaymentMethod,
+  CreatePaymentRequest,
+  ConfirmPaymentRequest,
+  SavedPaymentMethod,
+  OrderPaymentRequest,
+  PaymentFilters,
+  PaymentListResponse,
+  MTNPaymentResponse,
+  PaymentSimulation,
 } from '@/types/payment.types';
+import { BaseApi } from './api';
 
-const API_BASE_URL = '/api/payments';
+class PaymentService extends BaseApi {
+  constructor() {
+    super();
+  }
 
-export const paymentService = {
-  async createPaymentIntent(
-    paymentData: CreatePaymentIntentDto
-  ): Promise<{ clientSecret: string }> {
-    const response = await fetch(`${API_BASE_URL}/intents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(paymentData),
+  // Create payment for e-commerce orders
+  async createOrderPayment(paymentData: OrderPaymentRequest): Promise<Payment> {
+    const response = await this.post('/client/orders/payment', paymentData);
+    return response.data;
+  }
+
+  // Create payment for missions
+  async createMissionPayment(paymentData: CreatePaymentRequest): Promise<Payment> {
+    const response = await this.post('/payments/missions', paymentData);
+    return response.data;
+  }
+
+  // MTN Mobile Money payment simulation (for development)
+  async simulateMTNPayment(phoneNumber: string, amount: string): Promise<PaymentSimulation> {
+    const response = await this.post('/payments/mtn/simulate', {
+      phoneNumber,
+      amount,
+      currency: 'XOF',
     });
+    return response.data;
+  }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create payment intent');
+  // Confirm MTN Mobile Money payment
+  async confirmPayment(confirmData: ConfirmPaymentRequest): Promise<Payment> {
+    const response = await this.post('/payments/confirm', confirmData);
+    return response.data;
+  }
+
+  // Check payment status
+  async getPaymentStatus(paymentId: string): Promise<Payment> {
+    const response = await this.get(`/payments/${paymentId}`);
+    return response.data;
+  }
+
+  // Get user's saved payment methods
+  async getSavedPaymentMethods(): Promise<SavedPaymentMethod[]> {
+    const response = await this.get('/client/payment-methods');
+    return response.data;
+  }
+
+  // Save a new payment method
+  async savePaymentMethod(paymentMethod: Partial<SavedPaymentMethod>): Promise<SavedPaymentMethod> {
+    const response = await this.post('/client/payment-methods', paymentMethod);
+    return response.data;
+  }
+
+  // Delete a saved payment method
+  async deletePaymentMethod(methodId: string): Promise<void> {
+    await this.delete(`/client/payment-methods/${methodId}`);
+  }
+
+  // Get payment history with filters
+  async getPaymentHistory(filters?: PaymentFilters): Promise<PaymentListResponse> {
+    const params = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          if (Array.isArray(value)) {
+            value.forEach((v) => params.append(key, v.toString()));
+          } else {
+            params.append(key, value.toString());
+          }
+        }
+      });
     }
 
-    return response.json();
-  },
+    const response = await this.get(`/client/payments?${params.toString()}`);
+    return response.data;
+  }
 
-  async confirmPayment(confirmData: ConfirmPaymentDto): Promise<Payment> {
-    const response = await fetch(`${API_BASE_URL}/confirm`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(confirmData),
-    });
+  // Get payments for a specific order
+  async getOrderPayments(orderId: string): Promise<Payment[]> {
+    const response = await this.get(`/client/orders/${orderId}/payments`);
+    return response.data;
+  }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to confirm payment');
-    }
+  // Get payments for a specific mission
+  async getMissionPayments(missionId: string): Promise<Payment[]> {
+    const response = await this.get(`/payments/missions/${missionId}`);
+    return response.data;
+  }
 
-    return response.json();
-  },
-
-  async getPaymentMethods(): Promise<PaymentMethod[]> {
-    const response = await fetch(`${API_BASE_URL}/methods`);
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch payment methods');
-    }
-
-    return response.json();
-  },
-
-  async getPaymentHistory(missionId?: string): Promise<Payment[]> {
-    const url = missionId ? `${API_BASE_URL}?missionId=${missionId}` : `${API_BASE_URL}`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch payment history');
-    }
-
-    return response.json();
-  },
-
+  // Request payment refund
   async requestRefund(paymentId: string, reason: string): Promise<Payment> {
-    const response = await fetch(`${API_BASE_URL}/${paymentId}/refund`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ reason }),
-    });
+    const response = await this.post(`/payments/${paymentId}/refund`, { reason });
+    return response.data;
+  }
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to request refund');
-    }
+  // Get refund status
+  async getRefundStatus(paymentId: string): Promise<Payment> {
+    const response = await this.get(`/payments/${paymentId}/refund`);
+    return response.data;
+  }
 
-    return response.json();
-  },
-};
+  // Webhook handler for payment status updates (admin only)
+  async handlePaymentWebhook(webhookData: Record<string, unknown>): Promise<void> {
+    await this.post('/admin/payments/webhook', webhookData);
+  }
+
+  // Get MTN Mobile Money transaction status
+  async getMTNTransactionStatus(transactionId: string): Promise<MTNPaymentResponse> {
+    const response = await this.get(`/payments/mtn/status/${transactionId}`);
+    return response.data;
+  }
+}
+
+export const paymentService = new PaymentService();

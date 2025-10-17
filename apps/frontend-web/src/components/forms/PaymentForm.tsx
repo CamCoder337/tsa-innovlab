@@ -22,19 +22,20 @@ import type {
   PaymentMethod,
   PaymentMethodType,
   MobileMoneyProvider,
+  CardDetails,
 } from '@/types/payment.types';
 
 interface PaymentFormProps {
   amount: number;
   currency?: string;
-  paymentMethod?: PaymentMethodType;
+  paymentMethod?: PaymentMethod;
   onSuccess: (payment: Payment) => void;
   onError: (error: Error) => void;
-  savedCards?: PaymentMethod[];
+  savedCards?: CardDetails[];
 }
 
 interface PaymentFormData {
-  paymentMethod: PaymentMethodType;
+  paymentMethod: PaymentMethod;
   // Card fields
   cardNumber: string;
   expiryDate: string;
@@ -120,7 +121,7 @@ const PaymentValidationSchema = Yup.object().shape({
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
   currency = 'xaf',
-  paymentMethod = 'cash',
+  paymentMethod = 'bank_transfer',
   onSuccess,
   onError,
   savedCards = [],
@@ -151,7 +152,13 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       try {
         // Simulate API call with different delays for different methods
         const delay =
-          values.paymentMethod === 'mobile' ? 2000 : values.paymentMethod === 'card' ? 1500 : 500;
+          values.paymentMethod === 'orange_money' ||
+          values.paymentMethod === 'mtn_momo' ||
+          values.paymentMethod === 'wave'
+            ? 2000
+            : values.paymentMethod === 'bank_transfer'
+              ? 1500
+              : 500;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
         // Mock payment success
@@ -161,10 +168,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           currency,
           status: 'completed',
           paymentMethod: values.paymentMethod,
-          paymentIntentId: `pi_${Math.random().toString(36).substr(2, 17)}`,
-          paidAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          transactionId: `pi_${Math.random().toString(36).substr(2, 17)}`,
+          paidAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
 
         onSuccess(mockPayment);
@@ -266,8 +273,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               <SelectContent>
                 <SelectItem value="">Nouvelle carte</SelectItem>
                 {savedCards.map((card) => (
-                  <SelectItem key={card.id} value={card.id}>
-                    {card.brand} •••• {card.last4} (Exp: {card.expMonth}/{card.expYear})
+                  <SelectItem key={card.cardNumber} value={card.cardNumber}>
+                    {card.cardNumber.slice(0, 4)} •••• {card.cardNumber.slice(-4)} (Exp:{' '}
+                    {card.expiryDate})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -500,9 +508,13 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
       {renderPaymentMethodSelector()}
 
-      {formik.values.paymentMethod === 'card' && renderCardPayment()}
-      {formik.values.paymentMethod === 'mobile' && renderMobileMoneyPayment()}
-      {formik.values.paymentMethod === 'cash' && renderCashPayment()}
+      {(formik.values.paymentMethod === 'bank_transfer' ||
+        formik.values.paymentMethod === 'wave') &&
+        renderCardPayment()}
+      {(formik.values.paymentMethod === 'mtn_momo' ||
+        formik.values.paymentMethod === 'orange_money') &&
+        renderMobileMoneyPayment()}
+      {formik.values.paymentMethod === 'cash_on_delivery' && renderCashPayment()}
 
       <div className="pt-4">
         <Button
@@ -533,14 +545,16 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              {formik.values.paymentMethod === 'mobile'
+              {formik.values.paymentMethod === 'mtn_momo' ||
+              formik.values.paymentMethod === 'orange_money'
                 ? 'Envoi de la demande...'
-                : formik.values.paymentMethod === 'card'
+                : formik.values.paymentMethod === 'bank_transfer' ||
+                    formik.values.paymentMethod === 'wave'
                   ? 'Traitement du paiement...'
                   : 'Confirmation...'}
             </>
           ) : (
-            `${formik.values.paymentMethod === 'cash' ? 'Confirmer la commande' : 'Payer'} ${amount.toLocaleString()} ${currency.toUpperCase()}`
+            `${formik.values.paymentMethod === 'cash_on_delivery' ? 'Confirmer la commande' : 'Payer'} ${amount.toLocaleString()} ${currency.toUpperCase()}`
           )}
         </Button>
       </div>

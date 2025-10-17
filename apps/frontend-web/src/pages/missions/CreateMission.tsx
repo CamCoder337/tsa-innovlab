@@ -69,7 +69,7 @@ export default function CreateMission() {
   };
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto">
+    <div className="flex-1 max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {currentMission ? 'Modifier une Mission' : 'Créer une Nouvelle Mission'}

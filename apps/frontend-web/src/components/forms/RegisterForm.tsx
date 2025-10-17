@@ -11,6 +11,8 @@ import type { UserRole, CreateUserRequest } from '@/types/auth.types';
 import { VALIDATION_MESSAGES } from '@/lib/validation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 const INITIAL_VALUES: RegisterFormData = {
   firstName: '',
@@ -23,7 +25,7 @@ const INITIAL_VALUES: RegisterFormData = {
   role: 'affreteur',
 };
 
-const USER_ROLES: UserRole[] = ['affreteur', 'transporteur', 'admin'];
+const USER_ROLES: UserRole[] = ['affreteur', 'transporteur', 'client'];
 
 const validationSchema = Yup.object({
   firstName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_NAME),
@@ -32,7 +34,12 @@ const validationSchema = Yup.object({
     .trim()
     .required(VALIDATION_MESSAGES.REQUIRED_EMAIL)
     .email(VALIDATION_MESSAGES.INVALID_EMAIL),
-  password: Yup.string().required(VALIDATION_MESSAGES.REQUIRED_PASSWORD),
+  password: Yup.string()
+    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
+      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
+    ),
   confirmPassword: Yup.string()
     .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
     .oneOf([Yup.ref('password')], VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH),
@@ -61,6 +68,9 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onSubmit, isSubmitting = false }: RegisterFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <Formik<RegisterFormData>
       initialValues={INITIAL_VALUES}
@@ -146,36 +156,62 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
             </div>
 
             <div className="flex flex-col gap-2">
-              <Input
-                name="password"
-                id="password"
-                aria-label="password"
-                type="password"
-                placeholder="Entrez votre Mot de passe"
-                value={values.password}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
-                required
-              />
+              <div className="relative">
+                <Input
+                  name="password"
+                  id="password"
+                  aria-label="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Entrez votre Mot de passe"
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
               {touched.password && errors.password ? (
                 <div className="text-sm text-red-600">{errors.password}</div>
               ) : null}
             </div>
 
             <div className="flex flex-col gap-2">
-              <Input
-                name="confirmPassword"
-                id="confirmPassword"
-                aria-label="confirmPassword"
-                type="password"
-                placeholder="Confirmez votre Mot de passe"
-                value={values.confirmPassword}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
-                required
-              />
+              <div className="relative">
+                <Input
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  aria-label="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirmez votre Mot de passe"
+                  value={values.confirmPassword}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               {touched.confirmPassword && errors.confirmPassword ? (
                 <div className="text-sm text-red-600">{errors.confirmPassword}</div>
               ) : null}

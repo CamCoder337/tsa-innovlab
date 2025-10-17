@@ -9,6 +9,7 @@ import {
   Users,
   ShoppingBag,
   MapPin,
+  MessagesSquare,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -49,13 +50,27 @@ const affreteurMenu: SidebarItem[] = [
     id: 'products',
     label: 'Boutique',
     icon: ShoppingCart,
-    href: '/shop',
+    href: '/app/shop',
+    children: [
+      {
+        id: 'orders',
+        label: 'Commandes',
+        icon: ShoppingBag,
+        href: '/app/shop/orders',
+      },
+    ],
   },
   {
     id: 'tracking',
     label: 'Suivi Temps Réel',
     icon: MapPin,
     href: '/app/tracking-dashboard',
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
   },
   // {
   //     id: "freight",
@@ -95,13 +110,19 @@ const transporteurMenu: SidebarItem[] = [
     id: 'products',
     label: 'Boutique',
     icon: ShoppingCart,
-    href: '/shop',
+    href: '/app/shop',
   },
   {
     id: 'tracking',
     label: 'Suivi Temps Réel',
     icon: MapPin,
     href: '/app/tracking-dashboard',
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
   },
   // {
   //     id: "tracking",
@@ -151,6 +172,12 @@ const adminMenu: SidebarItem[] = [
     icon: MapPin,
     href: '/app/tracking-dashboard',
   },
+  {
+    id: 'chat',
+    label: 'Chat',
+    icon: MessagesSquare,
+    href: '/app/chat',
+  },
   // {
   //     id: "analytics",
   //     label: "Analytique IA",
@@ -162,8 +189,18 @@ const adminMenu: SidebarItem[] = [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
+const clientMenu: SidebarItem[] = [
+  {
+    id: 'products',
+    label: 'Boutique',
+    icon: ShoppingCart,
+    href: '/app/shop',
+  },
+];
+
 function GetMenuByRole(): SidebarItem[] {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return clientMenu;
   if (user?.role === 'transporteur') return transporteurMenu;
   if (user?.role === 'admin') return adminMenu;
   return affreteurMenu;
@@ -176,21 +213,21 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
       {items.map((item) => (
         <SidebarMenuItem key={item.id}>
           {item.children && item.children.length ? (
-            <details>
+            <details open={true} className="gap-2 flex flex-col">
               <summary className="list-none">
                 <SidebarMenuButton asChild isActive={item.href ? pathname === item.href : false}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 font-medium">
+                    <Link to={item.href!} className="flex items-center gap-3 font-medium">
                       <item.icon className="h-5 w-5" />
                       <span className="text-base">{item.label}</span>
-                    </div>
+                    </Link>
                     <div>
                       <ChevronDown width={16} height={16} />
                     </div>
                   </div>
                 </SidebarMenuButton>
               </summary>
-              <SidebarMenu>
+              <SidebarMenu className="ml-4">
                 {item.children.map((child) => (
                   <SidebarMenuItem key={child.id}>
                     {child.href ? (
@@ -234,9 +271,11 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 }
 
 export default function Sidebar() {
-  const { user } = useAuth();
-  const role = user && user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1);
+  const { user, isAuthenticated } = useAuth();
+  const role = user ? user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) : 'Invité';
   const menu = GetMenuByRole();
+
+  if (!isAuthenticated) return null;
 
   return (
     <SidebarProvider>

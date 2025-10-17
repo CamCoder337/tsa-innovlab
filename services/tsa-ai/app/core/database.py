@@ -25,11 +25,16 @@ if settings.environment == "test":
     )
 else:
     # PostgreSQL for development/production
+    # Add encoding parameters for Windows compatibility
+    connect_args = {
+        "client_encoding": "utf8",
+    }
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,
         pool_recycle=300,
         echo=settings.debug,  # Log SQL queries in debug mode
+        connect_args=connect_args,
     )
 
 # Session factory
