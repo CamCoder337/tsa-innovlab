@@ -78,7 +78,8 @@ export const getGoogleMapsApiKey = (): string => {
 export const getWebSocketUrl = (): string => {
   const apiUrl = getApiUrl();
   // Convert HTTP URL to WebSocket URL
-  return apiUrl.replace(/^http/, 'ws') + '/ws';
+  return apiUrl.replace(/^http/, 'ws') + `/ws/notifications`;
+  // return apiUrl.replace(/^http/, 'ws') + `/ws/notifications?Authorization=Bearer ${token}`;
 };
 
 // Export all environment variables as a single config object

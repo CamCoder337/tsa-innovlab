@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Renderable } from 'react-hot-toast';
+import type { PaginationMeta } from './common.types';
 
 export enum NotificationType {
   MISSION_ASSIGNED = 'mission_assigned',
@@ -78,8 +79,8 @@ export interface NotificationFilters {
 export interface NotificationStats {
   total: number;
   unread: number;
+  urgent: number;
   byType: Record<NotificationType, number>;
-  byPriority: Record<NotificationPriority, number>;
 }
 
 // WebSocket notification events
@@ -128,15 +129,16 @@ export interface NotificationApiResponse {
 }
 
 export interface NotificationListResponse {
-  notifications: Notification[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+  notifications: {
+    meta: PaginationMeta;
+    data: Notification[];
+  };
+  stats: {
+    unread: number;
+    urgent: number;
   };
 }
 
 export interface NotificationStatsResponse {
-  stats: NotificationStats;
+  data: NotificationStats;
 }

@@ -56,15 +56,17 @@ export const useNotificationStore = create<NotificationStore>()(
           set({ isLoading: true, error: null });
 
           const response = await notificationService.getNotifications(filters);
-          const notifications = response.data?.notifications.map((notification) => ({
-            ...notification,
-            isNew: false, // Will be set to true for real-time notifications
-          }));
+          if (response.data) {
+            const notifications = response.data.notifications?.data?.map((notification) => ({
+              ...notification,
+              isNew: false, // Will be set to true for real-time notifications
+            }));
 
-          set({
-            notifications,
-            isLoading: false,
-          });
+            set({
+              notifications,
+              isLoading: false,
+            });
+          }
         } catch (error) {
           console.error('Failed to fetch notifications:', error);
           set({
@@ -77,7 +79,9 @@ export const useNotificationStore = create<NotificationStore>()(
       fetchNotificationStats: async () => {
         try {
           const response = await notificationService.getNotificationStats();
-          set({ stats: response.data?.stats });
+          if (response.data) {
+            set({ stats: response.data });
+          }
         } catch (error) {
           console.error('Failed to fetch notification stats:', error);
         }

@@ -24,7 +24,6 @@ import { useMissions } from '@/hooks/useMissions';
 import { useAddresses } from '@/hooks/useAddresses';
 import { missionService } from '@/services/mission.service';
 import toast from 'react-hot-toast';
-import { usePropositions } from '@/hooks/usePropositions';
 import MissionCard from '@/components/missions/MissionCard';
 // import { Calendar } from '@/components/ui/calendar';
 
@@ -36,8 +35,8 @@ interface FormValues {
 }
 
 export default function MissionsTransporteurPage() {
-  const { missions, myMissions, currentMission, setCurrentMission, deleteMission } = useMissions();
-  const { myPropositions, addProposition } = usePropositions();
+  const { missions, myMissions, currentMission, setCurrentMission, updateMission, deleteMission } =
+    useMissions();
   const { addresses } = useAddresses();
   const [activeTab, setActiveTab] = useState('available');
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,15 +46,12 @@ export default function MissionsTransporteurPage() {
 
   const filteredMissions = (() => {
     if (activeTab === 'all') {
-      return [...missions, ...myMissions, ...myPropositions];
+      return [...missions, ...myMissions];
     }
 
     if (activeTab === 'available') {
       return missions.filter((mission) => mission.status === 'published');
     }
-
-    if (activeTab === 'pending')
-      return myPropositions.filter((proposition) => proposition.status === 'pending');
 
     // For other tabs, filter myMissions by status
     return myMissions.filter((mission) => {
@@ -66,14 +62,8 @@ export default function MissionsTransporteurPage() {
   })();
 
   const applyProposition = async (data: FormValues) => {
-    const payload = {
-      prixPropose: data.amount,
-      delaiPropose: data.delai,
-      commentaire: data.message,
-    };
-
     try {
-      const response = await missionService.applyForMission(data.id, payload);
+      const response = await missionService.applyForMission(data.id);
 
       if (response.error) {
         console.log(response.error);
@@ -82,7 +72,7 @@ export default function MissionsTransporteurPage() {
       }
 
       if (response.data) {
-        addProposition(response.data);
+        updateMission(data.id, response.data);
         deleteMission(data.id);
         toast.success('Contre-proposition envoyée');
         setIsDialogOpen(false);
@@ -228,9 +218,8 @@ export default function MissionsTransporteurPage() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="available">Disponibles</TabsTrigger>
-                <TabsTrigger value="pending">En attente</TabsTrigger>
                 <TabsTrigger value="assigned">En Cours</TabsTrigger>
                 <TabsTrigger value="completed">Terminées</TabsTrigger>
                 <TabsTrigger value="all">Toutes</TabsTrigger>

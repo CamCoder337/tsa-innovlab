@@ -4,6 +4,7 @@ import { missionService } from '@/services/mission.service';
 import type { Mission, MissionFilterParams } from '@/types/mission.types';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { useCallback, useEffect } from 'react';
+import { adminService } from '@/services/admin.service';
 
 export function useMissions() {
   const { isAuthenticated, user } = useAuth();
@@ -56,7 +57,7 @@ export function useMissions() {
       try {
         const response =
           user?.role === 'admin'
-            ? await missionService.adminGetMissions({ page })
+            ? await adminService.adminGetMissions({ page })
             : user?.role === 'affreteur'
               ? await missionService.getAffreteurMissions({ page })
               : await missionService.getAvailableMissions({ page });
@@ -158,7 +159,7 @@ export function useMissions() {
       setLoading(true);
       setError(null);
 
-      const response = await missionService.getMissionStats();
+      const response = await adminService.getMissionStats();
 
       if (response.error) {
         setError(response.error.message);

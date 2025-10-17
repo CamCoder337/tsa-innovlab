@@ -40,7 +40,7 @@ export interface Mission extends Timestamps {
 }
 
 export interface CreateMissionDto {
-  titre: string;
+  title: string;
   affreteurId: string;
   description?: string;
   typeMarchandise?: string;

@@ -1,8 +1,7 @@
 import type { Timestamps } from './common.types';
+import type { UserStatus } from './user.types';
 
 export type UserRole = 'admin' | 'transporteur' | 'affreteur' | 'client';
-
-export type UserStatus = 'pending' | 'active' | 'suspended';
 
 export interface User extends Timestamps {
   id: string;
@@ -30,11 +29,13 @@ export interface CreateUserRequest {
   role: UserRole;
 }
 
-export interface updateUserRequest {
+export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
   phone?: string;
+  role?: UserRole;
+  status?: UserStatus;
 }
 
 export interface LoginCredentials {
@@ -84,11 +85,15 @@ export interface AuthState {
   currentUser: User | null;
   token: string | null;
   refreshToken: string | null;
+  error: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 export interface AuthActions {
-  login: (user: User, token?: string) => void;
+  signup: (data: CreateUserRequest) => Promise<boolean | undefined>;
+  login: (data: LoginCredentials) => Promise<boolean | 'mfa_required' | undefined>;
+  getUser: () => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   setToken: (token: string, expiresIn?: number, refreshToken?: string) => void;

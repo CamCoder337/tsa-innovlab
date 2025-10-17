@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { shopService } from '@/services/shop.service';
 import type { Product, ProductFilterParams } from '@/types/product.types';
 import type { PaginatedMetaResponse, Paginator } from '@/types/common.types';
+import { adminService } from '@/services/admin.service';
 
 export function useProducts() {
   const { user } = useAuth();
@@ -54,7 +55,7 @@ export function useProducts() {
 
     while (next) {
       try {
-        const response = await shopService.adminGetProducts({ page });
+        const response = await adminService.adminGetProducts({ page });
 
         if (response.error) {
           console.error('API error:', response.error);
@@ -146,7 +147,7 @@ export function useProducts() {
       setLoading(true);
       setError(null);
 
-      const response = await shopService.getAdminProductStats();
+      const response = await adminService.getAdminProductStats();
 
       if (response.error) {
         setError(response.error.message);
