@@ -388,6 +388,7 @@ router
 
     // Notifications
     router.get('/notifications', '#controllers/http/common/notifications_controller.index')
+    router.get('/notifications/stats', '#controllers/http/common/notifications_controller.stats')
     router.put(
       '/notifications/:id/read',
       '#controllers/http/common/notifications_controller.markAsRead'
