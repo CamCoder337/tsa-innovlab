@@ -194,6 +194,12 @@ router
       '#controllers/http/affreteur/missions_controller.getFeedback'
     )
 
+    // Historique des missions
+    router.get(
+      '/missions/:id/history',
+      '#controllers/http/affreteur/missions_controller.getHistory'
+    )
+
     // Pricing dynamique pour les missions
     router.post(
       '/pricing/calculate',
@@ -229,6 +235,12 @@ router
 
     // Réclamer une mission
     router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
+
+    // Historique des missions
+    router.get(
+      '/missions/:id/history',
+      '#controllers/http/transporteur/missions_controller.getHistory'
+    )
 
     // Pricing dynamique (pour estimer avant de proposer)
     router.post(
