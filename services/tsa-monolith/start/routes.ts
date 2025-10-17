@@ -351,6 +351,10 @@ router
   .group(() => {
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
+    router.get(
+      '/conversations/search/users',
+      '#controllers/http/common/conversations_controller.searchUsers'
+    )
     router.get('/conversations/:id', '#controllers/http/common/conversations_controller.show')
     router.post(
       '/conversations/direct',
@@ -361,10 +365,6 @@ router
       '#controllers/http/common/conversations_controller.createMission'
     )
     router.delete('/conversations/:id', '#controllers/http/common/conversations_controller.destroy')
-    router.get(
-      '/conversations/search/users',
-      '#controllers/http/common/conversations_controller.searchUsers'
-    )
 
     // Messages
     router.get(

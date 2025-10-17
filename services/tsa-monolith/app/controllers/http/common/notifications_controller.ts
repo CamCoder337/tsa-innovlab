@@ -19,6 +19,7 @@ export default class NotificationsController {
   async index({ request, response, auth }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
+      console.log('🔍 Notifications index - User ID:', user.id, 'Type:', typeof user.id)
       const { page = 1, limit = 20, filter = 'all' } = request.qs()
 
       const query = Notification.query()
@@ -39,13 +40,18 @@ export default class NotificationsController {
 
       const notifications = await query.paginate(page, limit)
 
+      console.log('📊 Getting stats for user ID:', user.id)
+      const unreadCount = await this.getUnreadCount(user.id)
+      const urgentCount = await this.getUrgentCount(user.id)
+      console.log('✅ Stats retrieved - Unread:', unreadCount, 'Urgent:', urgentCount)
+
       return response.ok({
         success: true,
         data: {
           notifications: notifications.serialize(),
           stats: {
-            unread: await this.getUnreadCount(user.id),
-            urgent: await this.getUrgentCount(user.id),
+            unread: unreadCount,
+            urgent: urgentCount,
           },
         },
       })
@@ -247,6 +253,7 @@ export default class NotificationsController {
 
   // Méthodes privées utilitaires
   private async getUnreadCount(userId: string): Promise<number> {
+    console.log('🔍 getUnreadCount - Received userId:', userId, 'Type:', typeof userId)
     const result = await Notification.query()
       .where('user_id', userId)
       .whereNull('read_at')
