@@ -10,7 +10,6 @@ test.group('Affreteur Missions History', (group) => {
   let otherAffreteur: User
   let transporteur: User
   let affreteurToken: string
-  let otherAffreteurToken: string
   let adresseDepart: Address
   let adresseArrivee: Address
 
@@ -68,7 +67,6 @@ test.group('Affreteur Missions History', (group) => {
     })
 
     affreteurToken = await affreteur.generateAccessToken('test-token')
-    otherAffreteurToken = await otherAffreteur.generateAccessToken('test-token')
   })
 
   group.each.teardown(async () => {
@@ -128,7 +126,7 @@ test.group('Affreteur Missions History', (group) => {
   test('should support pagination for mission history', async ({ client, assert }) => {
     const mission = await Mission.create({
       affreteurId: affreteur.id,
-      title: 'Mission avec beaucoup d\'historique',
+      title: "Mission avec beaucoup d'historique",
       status: MissionStatus.ASSIGNED,
       transporteurId: transporteur.id,
       adresseDepartId: adresseDepart.id,
@@ -202,7 +200,7 @@ test.group('Affreteur Missions History', (group) => {
   test('should not retrieve history for mission not owned', async ({ client }) => {
     const mission = await Mission.create({
       affreteurId: otherAffreteur.id,
-      title: 'Mission d\'un autre affreteur',
+      title: "Mission d'un autre affreteur",
       status: MissionStatus.ASSIGNED,
       transporteurId: transporteur.id,
       adresseDepartId: adresseDepart.id,
@@ -279,9 +277,7 @@ test.group('Affreteur Missions History', (group) => {
     response.assertStatus(401)
   })
 
-  test('should not allow transporteur to access affreteur history endpoint', async ({
-    client,
-  }) => {
+  test('should not allow transporteur to access affreteur history endpoint', async ({ client }) => {
     const transporteurToken = await transporteur.generateAccessToken('test-token')
 
     const mission = await Mission.create({

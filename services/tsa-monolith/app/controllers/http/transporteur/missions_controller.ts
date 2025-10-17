@@ -465,7 +465,6 @@ export default class MissionsController {
   async getHistory({ params, request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const MissionUpdate = (await import('#models/mission_update')).default
 
       // Vérifier que la mission est assignée à ce transporteur
       const mission = await Mission.query()

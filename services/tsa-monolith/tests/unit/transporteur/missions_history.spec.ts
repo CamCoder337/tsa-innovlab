@@ -126,7 +126,7 @@ test.group('Transporteur Missions History', (group) => {
   test('should support pagination for mission history', async ({ client, assert }) => {
     const mission = await Mission.create({
       affreteurId: affreteur.id,
-      title: 'Mission avec beaucoup d\'historique',
+      title: "Mission avec beaucoup d'historique",
       status: MissionStatus.ASSIGNED,
       transporteurId: transporteur.id,
       adresseDepartId: adresseDepart.id,
@@ -203,7 +203,7 @@ test.group('Transporteur Missions History', (group) => {
   }) => {
     const mission = await Mission.create({
       affreteurId: affreteur.id,
-      title: 'Mission d\'un autre transporteur',
+      title: "Mission d'un autre transporteur",
       status: MissionStatus.ASSIGNED,
       transporteurId: otherTransporteur.id,
       adresseDepartId: adresseDepart.id,
@@ -295,9 +295,7 @@ test.group('Transporteur Missions History', (group) => {
     response.assertStatus(401)
   })
 
-  test('should not allow affreteur to access transporteur history endpoint', async ({
-    client,
-  }) => {
+  test('should not allow affreteur to access transporteur history endpoint', async ({ client }) => {
     const affreteurToken = await affreteur.generateAccessToken('test-token')
 
     const mission = await Mission.create({
@@ -316,10 +314,7 @@ test.group('Transporteur Missions History', (group) => {
     response.assertStatus(403)
   })
 
-  test('should retrieve empty history for mission with no updates', async ({
-    client,
-    assert,
-  }) => {
+  test('should retrieve empty history for mission with no updates', async ({ client, assert }) => {
     const mission = await Mission.create({
       affreteurId: affreteur.id,
       title: 'Mission sans historique',
