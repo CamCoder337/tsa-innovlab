@@ -40,6 +40,33 @@ function roleGuard(role: UserRole) {
   }
 }
 
+// Helper function pour créer un middleware multi-rôles
+function multiRoleGuard(allowedRoles: UserRole[]) {
+  return async (ctx: any, next: any) => {
+    const user = ctx.auth.getUserOrFail()
+
+    if (!allowedRoles.includes(user.role)) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'Access forbidden. Insufficient permissions.',
+        allowed_roles: allowedRoles,
+        user_role: user.role,
+      })
+    }
+
+    // Vérifier MFA pour les admins
+    if (user.role === UserRole.ADMIN && user.mustEnableMFA()) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'MFA setup required for admin accounts',
+        action_required: 'enable_mfa',
+      })
+    }
+
+    await next()
+  }
+}
+
 // Route de base
 router.get('/', async () => {
   return {
@@ -97,8 +124,11 @@ router
     router.get('/dashboard', '#controllers/http/admin/dashboard_controller.index')
 
     // Gestion des utilisateurs
+    router.get('/users/stats', '#controllers/http/admin/users_controller.stats')
     router.get('/users', '#controllers/http/admin/users_controller.index')
     router.get('/users/:id', '#controllers/http/admin/users_controller.show')
+    router.post('/users/:id/suspend', '#controllers/http/admin/users_controller.suspend')
+    router.post('/users/:id/activate', '#controllers/http/admin/users_controller.activate')
     router.put('/users/:id', '#controllers/http/admin/users_controller.update')
     router.delete('/users/:id', '#controllers/http/admin/users_controller.destroy')
 
@@ -154,18 +184,14 @@ router
     )
     router.delete('/missions/:id', '#controllers/http/affreteur/missions_controller.destroy')
 
-    // Gestion des propositions reçues
+    // Feedback des missions
+    router.post(
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.createFeedback'
+    )
     router.get(
-      '/missions/:id/propositions',
-      '#controllers/http/affreteur/propositions_controller.index'
-    )
-    router.post(
-      '/missions/:missionId/propositions/:id/accept',
-      '#controllers/http/affreteur/propositions_controller.accept'
-    )
-    router.post(
-      '/missions/:missionId/propositions/:id/reject',
-      '#controllers/http/affreteur/propositions_controller.reject'
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.getFeedback'
     )
 
     // Pricing dynamique pour les missions
@@ -201,15 +227,8 @@ router
     // Mes missions
     router.get('/my-missions', '#controllers/http/transporteur/missions_controller.myMissions')
 
-    // Propositions
-    router.post(
-      '/missions/:id/apply',
-      '#controllers/http/transporteur/propositions_controller.apply'
-    )
-    router.get(
-      '/my-propositions',
-      '#controllers/http/transporteur/propositions_controller.myPropositions'
-    )
+    // Réclamer une mission
+    router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
 
     // Pricing dynamique (pour estimer avant de proposer)
     router.post(
@@ -283,7 +302,7 @@ router
   .prefix('/api/shop')
   .middleware(middleware.auth())
 
-// ===== ROUTES CLIENT (E-COMMERCE) =====
+// ===== ROUTES E-COMMERCE (CLIENT, AFFRETEUR, TRANSPORTEUR) =====
 router
   .group(() => {
     // Panier (Cart)
@@ -310,7 +329,10 @@ router
     )
   })
   .prefix('/api/client')
-  .middleware([middleware.auth(), roleGuard(UserRole.CLIENT)])
+  .middleware([
+    middleware.auth(),
+    multiRoleGuard([UserRole.CLIENT, UserRole.AFFRETEUR, UserRole.TRANSPORTEUR]),
+  ])
 
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router

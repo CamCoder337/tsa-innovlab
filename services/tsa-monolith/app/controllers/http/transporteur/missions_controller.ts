@@ -10,9 +10,8 @@ import NotificationManagerService from '#services/notification_manager_service'
 export default class MissionsController {
   constructor(private notificationManager: NotificationManagerService) {}
 
-  async available({ request, auth, response }: HttpContext) {
+  async available({ request, response }: HttpContext) {
     try {
-      const user = auth.getUserOrFail()
       const validatedData = await request.validateUsing(missionQueryValidator)
 
       const {
@@ -29,10 +28,8 @@ export default class MissionsController {
 
       const query = Mission.query()
         .where('status', MissionStatus.PUBLISHED)
-        // Exclure les missions où ce transporteur a déjà une proposition en attente
-        .whereDoesntHave('propositions', (propositionQuery) => {
-          propositionQuery.where('transporteurId', user.id).where('status', 'pending')
-        })
+        // Exclure les missions déjà réclamées par un transporteur
+        .whereNull('transporteur_id')
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
@@ -149,20 +146,16 @@ export default class MissionsController {
         sortOrder = 'desc',
       } = validatedData
 
-      // Récupérer les missions où ce transporteur a une proposition acceptée
+      // Récupérer les missions assignées à ce transporteur
       const query = Mission.query()
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
-        .whereHas('propositions', (propositionQuery) => {
-          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
-        })
+        .where('transporteur_id', user.id)
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')
         })
         .preload('adresseDepart')
         .preload('adresseArrivee')
-        .preload('propositions', (propositionQuery) => {
-          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
-        })
+        .preload('feedback')
 
       if (status) {
         query.where('status', status)
@@ -365,6 +358,63 @@ export default class MissionsController {
     }
   }
 
+  /**
+   * Réclamer une mission publiée
+   * Le transporteur devient assigné directement à la mission
+   */
+  async claim({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('status', MissionStatus.PUBLISHED)
+        .whereNull('transporteur_id')
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found, not available, or already claimed',
+        })
+      }
+
+      // Assigner le transporteur et changer le statut
+      mission.transporteurId = user.id
+      mission.status = MissionStatus.ASSIGNED
+      await mission.save()
+
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
+      // 🔔 Notifier l'affreteur de l'assignation
+      try {
+        const { default: MissionNotificationService } = await import(
+          '#services/mission_notification_service'
+        )
+        const notificationService = new MissionNotificationService()
+        await notificationService.notifyMissionAssigned(mission, user.id)
+        console.log(`✅ Affreteur notifié de l'assignation de la mission ${mission.id}`)
+      } catch (notificationError) {
+        console.error('❌ Erreur notification assignation:', notificationError)
+        // Ne pas faire échouer l'assignation si les notifications échouent
+      }
+
+      return response.json({
+        success: true,
+        message: 'Mission claimed successfully',
+        data: mission,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to claim mission',
+        error: error.message,
+      })
+    }
+  }
+
   async uploadProof({ params, request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
@@ -374,9 +424,7 @@ export default class MissionsController {
       const mission = await Mission.query()
         .where('id', params.id)
         .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
-        .whereHas('propositions', (propositionQuery) => {
-          propositionQuery.where('transporteurId', user.id).where('status', 'accepted')
-        })
+        .where('transporteur_id', user.id)
         .first()
 
       if (!mission) {

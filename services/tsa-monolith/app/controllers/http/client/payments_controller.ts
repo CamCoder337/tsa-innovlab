@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import PaymentService from '#services/payment_service'
 import OrderService from '#services/order_service'
-import { initiatePaymentValidator, confirmPaymentValidator } from '#validators/payment_validator'
+import { confirmPaymentValidator, initiatePaymentValidator } from '#validators/payment_validator'
 
 /**
  * Contrôleur pour la gestion des paiements client
@@ -86,11 +86,12 @@ export default class PaymentsController {
    */
   async confirm({ auth, params, request, response }: HttpContext) {
     try {
-      // Seulement en développement
-      if (process.env.NODE_ENV !== 'development') {
+      // Seulement en développement et en mode test
+      const allowedEnvironments = ['development', 'testing', 'test']
+      if (!allowedEnvironments.includes(process.env.NODE_ENV || 'development')) {
         return response.forbidden({
           success: false,
-          message: 'This endpoint is only available in development mode',
+          message: 'This endpoint is only available in development and test modes',
         })
       }
 

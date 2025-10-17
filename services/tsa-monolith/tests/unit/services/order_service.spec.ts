@@ -270,12 +270,12 @@ test.group('OrderService', (group) => {
     )
 
     await cartService.addItem(user.id, product.id, 2)
-    // const order2 = await orderService.createOrderFromCart(
-    //   user.id,
-    //   shippingAddress.id,
-    //   billingAddress.id,
-    //   'mtn_mobile_money'
-    // )
+    await orderService.createOrderFromCart(
+      user.id,
+      shippingAddress.id,
+      billingAddress.id,
+      'mtn_mobile_money'
+    )
 
     // Marquer une commande comme livrée
     order1.status = OrderStatus.DELIVERED

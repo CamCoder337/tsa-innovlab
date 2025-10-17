@@ -1,7 +1,6 @@
 import Payment, { PaymentMethod, PaymentStatus } from '#models/payment'
-import Order from '#models/order'
+import Order, { PaymentStatus as OrderPaymentStatus } from '#models/order'
 import OrderService from '#services/order_service'
-import { PaymentStatus as OrderPaymentStatus } from '#models/order'
 
 /**
  * Service de gestion des paiements

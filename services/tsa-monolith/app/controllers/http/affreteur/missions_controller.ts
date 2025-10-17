@@ -264,6 +264,8 @@ export default class MissionsController {
         .preload('affreteur')
         .preload('adresseDepart')
         .preload('adresseArrivee')
+        .preload('transporteur')
+        .preload('feedback')
         .first()
 
       if (!mission) {
@@ -564,6 +566,119 @@ export default class MissionsController {
       return response.status(500).json({
         success: false,
         message: 'Failed to delete mission',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Créer un feedback pour noter le transporteur après la mission
+   */
+  async createFeedback({ params, request, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      // Importer le validateur et le modèle
+      const { createFeedbackValidator } = await import('#validators/feedback_validator')
+      const feedbackModule = await import('#models/feedback')
+      const Feedback = feedbackModule.default
+
+      const validatedData = await request.validateUsing(createFeedbackValidator)
+
+      // Vérifier que la mission existe, appartient à cet affreteur et est COMPLETED
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .where('status', MissionStatus.COMPLETED)
+        .whereNotNull('transporteur_id')
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found, not completed, or no transporteur assigned',
+        })
+      }
+
+      // Vérifier qu'aucun feedback n'existe déjà
+      const existingFeedback = await Feedback.query().where('mission_id', mission.id).first()
+
+      if (existingFeedback) {
+        return response.status(422).json({
+          success: false,
+          message: 'Feedback already exists for this mission',
+        })
+      }
+
+      // Créer le feedback
+      const feedback = await Feedback.create({
+        missionId: mission.id,
+        affreteurId: user.id,
+        transporteurId: mission.transporteurId!,
+        rating: validatedData.rating,
+        description: validatedData.description || null,
+      })
+
+      await feedback.load('transporteur')
+      await feedback.load('mission')
+
+      return response.status(201).json({
+        success: true,
+        message: 'Feedback created successfully',
+        data: feedback,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to create feedback',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Récupérer le feedback d'une mission
+   */
+  async getFeedback({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const feedbackModule = await import('#models/feedback')
+      const Feedback = feedbackModule.default
+
+      // Vérifier que la mission appartient à cet affreteur
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const feedback = await Feedback.query()
+        .where('mission_id', mission.id)
+        .preload('transporteur')
+        .first()
+
+      if (!feedback) {
+        return response.status(404).json({
+          success: false,
+          message: 'Feedback not found for this mission',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'Feedback retrieved successfully',
+        data: feedback,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve feedback',
         error: error.message,
       })
     }
