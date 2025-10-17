@@ -19,7 +19,7 @@ export default class MainSeeder extends BaseSeeder {
     // 1. Créer l'utilisateur admin en premier
     await this.runSeeder('./admin_user_seeder.js')
 
-    // 2. Créer les utilisateurs par défaut (affreteur + transporteur)
+    // 2. Créer les utilisateurs par défaut (affreteur + transporteur + client)
     await this.runSeeder('./default_users_seeder.js')
 
     // 3. Seeder les catégories

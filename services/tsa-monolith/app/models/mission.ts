@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasOne } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasOne } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Address from '#models/address'
 import Feedback from '#models/feedback'
+import MissionUpdate from '#models/mission_update'
 
 export enum MissionStatus {
   DRAFT = 'draft',
@@ -80,6 +81,9 @@ export default class Mission extends BaseModel {
 
   @hasOne(() => Feedback)
   declare feedback: HasOne<typeof Feedback>
+
+  @hasMany(() => MissionUpdate)
+  declare updates: HasMany<typeof MissionUpdate>
 
   public getBudgetRange(): string {
     if (this.budgetMin && this.budgetMax) {

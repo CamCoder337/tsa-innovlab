@@ -458,4 +458,72 @@ export default class MissionsController {
       })
     }
   }
+
+  /**
+   * Récupérer l'historique d'une mission assignée
+   */
+  async getHistory({ params, request, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      // Vérifier que la mission est assignée à ce transporteur
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('transporteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found or not assigned to you',
+        })
+      }
+
+      // Paramètres de requête optionnels
+      const page = request.input('page', 1)
+      const limit = request.input('limit', 50)
+      const type = request.input('type') // Filtrer par type d'événement
+
+      // Construire la requête
+      const query = MissionUpdate.query()
+        .where('mission_id', mission.id)
+        .preload('transporteur', (transporteurQuery) => {
+          transporteurQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
+        })
+        .orderBy('created_at', 'desc')
+
+      // Filtrer par type si spécifié
+      if (type) {
+        query.where('type', type)
+      }
+
+      // Pagination
+      const updates = await query.paginate(page, limit)
+
+      return response.json({
+        success: true,
+        message: 'Mission history retrieved successfully',
+        data: {
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+          updates: updates.serialize(),
+          pagination: {
+            current_page: updates.currentPage,
+            per_page: updates.perPage,
+            total: updates.total,
+            last_page: updates.lastPage,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve mission history',
+        error: error.message,
+      })
+    }
+  }
 }
