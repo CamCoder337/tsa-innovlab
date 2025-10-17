@@ -184,18 +184,14 @@ router
     )
     router.delete('/missions/:id', '#controllers/http/affreteur/missions_controller.destroy')
 
-    // Gestion des propositions reçues
+    // Feedback des missions
+    router.post(
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.createFeedback'
+    )
     router.get(
-      '/missions/:id/propositions',
-      '#controllers/http/affreteur/propositions_controller.index'
-    )
-    router.post(
-      '/missions/:missionId/propositions/:id/accept',
-      '#controllers/http/affreteur/propositions_controller.accept'
-    )
-    router.post(
-      '/missions/:missionId/propositions/:id/reject',
-      '#controllers/http/affreteur/propositions_controller.reject'
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.getFeedback'
     )
 
     // Suivi des expéditions
@@ -221,15 +217,8 @@ router
     // Mes missions
     router.get('/my-missions', '#controllers/http/transporteur/missions_controller.myMissions')
 
-    // Propositions
-    router.post(
-      '/missions/:id/apply',
-      '#controllers/http/transporteur/propositions_controller.apply'
-    )
-    router.get(
-      '/my-propositions',
-      '#controllers/http/transporteur/propositions_controller.myPropositions'
-    )
+    // Réclamer une mission
+    router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
 
     // Suivi des courses
     router.put(
