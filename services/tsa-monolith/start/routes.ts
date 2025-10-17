@@ -351,6 +351,11 @@ router
   .group(() => {
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
+    // Support both hyphenated and slash-separated search routes for frontend compatibility
+    router.get(
+      '/conversations/search-users',
+      '#controllers/http/common/conversations_controller.searchUsers'
+    )
     router.get(
       '/conversations/search/users',
       '#controllers/http/common/conversations_controller.searchUsers'

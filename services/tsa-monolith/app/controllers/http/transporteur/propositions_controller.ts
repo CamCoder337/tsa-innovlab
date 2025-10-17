@@ -62,7 +62,7 @@ export default class PropositionsController {
 
       // Précharger les relations pour la réponse
       await proposition.load('mission', (missionQuery) => {
-        missionQuery.select('id', 'titre', 'description', 'budgetMin', 'budgetMax')
+        missionQuery.select('id', 'title', 'description', 'budgetMin', 'budgetMax')
       })
       await proposition.load('transporteur', (userQuery) => {
         userQuery.select('id', 'firstName', 'lastName', 'phone')
@@ -104,7 +104,7 @@ export default class PropositionsController {
           missionQuery
             .select(
               'id',
-              'titre',
+              'title',
               'description',
               'budgetMin',
               'budgetMax',
@@ -133,7 +133,7 @@ export default class PropositionsController {
       // Recherche dans le titre des missions
       if (search) {
         query.whereHas('mission', (missionQuery) => {
-          missionQuery.where('titre', 'ILIKE', `%${search}%`)
+          missionQuery.where('title', 'ILIKE', `%${search}%`)
         })
       }
 

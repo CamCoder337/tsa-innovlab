@@ -39,7 +39,7 @@ export default class MissionsController {
       if (search) {
         query.where((builder) => {
           builder
-            .whereILike('titre', `%${search}%`)
+            .whereILike('title', `%${search}%`)
             .orWhereILike('description', `%${search}%`)
             .orWhereILike('type_marchandise', `%${search}%`)
         })
@@ -164,7 +164,7 @@ export default class MissionsController {
       if (search) {
         query.where((builder) => {
           builder
-            .whereILike('titre', `%${search}%`)
+            .whereILike('title', `%${search}%`)
             .orWhereILike('description', `%${search}%`)
             .orWhereILike('type_marchandise', `%${search}%`)
         })
