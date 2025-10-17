@@ -7,9 +7,9 @@ import type {
   Notification,
   NotificationFilters,
   NotificationListResponse,
-  NotificationStatsResponse,
   NotificationApiResponse,
   CreateNotificationRequest,
+  NotificationStats,
 } from '@/types/notification.types';
 import type { ApiResponse } from '@/types/common.types';
 import type { AxiosError } from 'axios';
@@ -71,8 +71,8 @@ export class NotificationService extends BaseApi {
         ? `/api/common/notifications?${queryString}`
         : '/api/common/notifications';
 
-      const response = await this.insertToken().get<NotificationListResponse>(url);
-      return { data: response.data };
+      const response = await this.insertToken().get(url);
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
@@ -81,12 +81,10 @@ export class NotificationService extends BaseApi {
   /**
    * Get notification statistics
    */
-  async getNotificationStats(): Promise<ApiResponse<NotificationStatsResponse>> {
+  async getNotificationStats(): Promise<ApiResponse<NotificationStats>> {
     try {
-      const response = await this.insertToken().get<NotificationStatsResponse>(
-        '/api/common/notifications/stats'
-      );
-      return { data: response.data };
+      const response = await this.insertToken().get('/api/common/notifications/stats');
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

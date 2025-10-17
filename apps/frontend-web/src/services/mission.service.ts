@@ -11,7 +11,6 @@ import type {
   CreateMissionDto,
   UpdateMissionDto,
   MissionFilterParams,
-  MissionStats,
 } from '@/types/mission.types';
 import type { AffreteurPropositionsResponse, Proposition } from '@/types/proposition.types';
 import type { AxiosError } from 'axios';
@@ -219,6 +218,7 @@ export class MissionService extends BaseApi {
       });
     });
   }
+
   private isAxiosError(
     error: unknown
   ): error is AxiosError<{ message?: string; errors?: unknown[] }> {
@@ -417,14 +417,10 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async applyForMission(
-    missionId: string,
-    data: { prixPropose: number; delaiPropose: number; commentaire?: string }
-  ): Promise<ApiResponse<Proposition>> {
+  async applyForMission(missionId: string): Promise<ApiResponse<Mission>> {
     try {
       const response = await this.insertToken().post(
-        `/api/transporteur/missions/${missionId}/apply`,
-        data
+        `/api/transporteur/missions/${missionId}/claim`
       );
       return { data: response.data.data };
     } catch (error) {
@@ -497,58 +493,6 @@ export class MissionService extends BaseApi {
       const response = await this.insertToken().get('/api/transporteur/my-propositions', {
         params,
       });
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  // Admin Operations
-
-  async adminGetMissions(
-    params?: MissionFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
-    try {
-      const response = await this.insertToken().get('/api/admin/missions', { params });
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async adminGetMission(id: string): Promise<ApiResponse<Mission>> {
-    try {
-      const response = await this.insertToken().get(`/api/admin/missions/${id}`);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async adminUpdateMission(
-    id: string,
-    data: Partial<UpdateMissionDto>
-  ): Promise<ApiResponse<Mission>> {
-    try {
-      const response = await this.insertToken().put(`/api/admin/missions/${id}`, data);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async adminDeleteMission(id: string): Promise<ApiResponse<{ success: boolean }>> {
-    try {
-      await this.insertToken().delete(`/api/admin/missions/${id}`);
-      return { data: { success: true } };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async getMissionStats(): Promise<ApiResponse<MissionStats>> {
-    try {
-      const response = await this.insertToken().get('/api/admin/missions/stats');
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

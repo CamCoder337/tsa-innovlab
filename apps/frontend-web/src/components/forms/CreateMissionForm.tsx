@@ -86,7 +86,7 @@ const ClientSideAddressPicker = ({
 const countryOptions = countryList().getData();
 
 const validationSchema = Yup.object({
-  titre: Yup.string().required('Le titre est requis'),
+  title: Yup.string().required('Le titre est requis'),
   affreteurId: Yup.string().when('$isAdmin', {
     is: true,
     then: (schema) => schema.required("L'ID de l'affréteur est requis"),
@@ -215,7 +215,7 @@ export default function CreateMissionForm({
   }
 
   const INITIAL_VALUES: CreateMissionDto = {
-    titre: currentMission?.title || '',
+    title: currentMission?.title || '',
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
     description: currentMission?.description || '',
     typeMarchandise: currentMission?.typeMarchandise || '',
@@ -300,19 +300,19 @@ export default function CreateMissionForm({
                 })}
               >
                 <div>
-                  <Label htmlFor="titre">Titre de la Mission</Label>
+                  <Label htmlFor="title">Titre de la Mission</Label>
                   <Input
-                    id="titre"
-                    name="titre"
+                    id="title"
+                    name="title"
                     placeholder="ex: Transport Électronique Douala → Yaoundé"
-                    value={values.titre}
+                    value={values.title}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={cn('w-full', touched.titre && errors.titre && 'border-red-500')}
+                    className={cn('w-full', touched.title && errors.title && 'border-red-500')}
                     required
                   />
-                  {touched.titre && errors.titre && (
-                    <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+                  {touched.title && errors.title && (
+                    <div className="text-sm text-red-600 mt-1">{errors.title}</div>
                   )}
                 </div>
                 {user?.role === 'admin' && (

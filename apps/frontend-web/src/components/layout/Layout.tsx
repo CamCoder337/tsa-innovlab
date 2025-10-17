@@ -5,6 +5,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { useMissions } from '@/hooks/useMissions';
 import { usePropositions } from '@/hooks/usePropositions';
+import { useUsers } from '@/hooks/useUsers';
 import { webSocketService } from '@/services/websocket.service';
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +16,7 @@ export default function Layout() {
   usePropositions();
   useProducts();
   useCategories();
+  useUsers();
 
   useEffect(() => {
     if (isAuthenticated && token) {

@@ -54,7 +54,7 @@ import { useFormik } from 'formik';
 import { toast } from 'react-hot-toast';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
-import { shopService } from '@/services/shop.service';
+import { adminService } from '@/services/admin.service';
 
 const defaultFilters: ProductFilterParams = {
   search: '',
@@ -115,7 +115,7 @@ export default function AdminProductsPage() {
         stockAlert: values.stockAlert ? Number(values.stockAlert) : 0,
       };
 
-      const response = await toast.promise(shopService.createProduct(payload), {
+      const response = await toast.promise(adminService.createProduct(payload), {
         loading: 'Création du produit...',
       });
       console.log(response);
@@ -179,7 +179,7 @@ export default function AdminProductsPage() {
         ...changes,
       };
 
-      const response = await toast.promise(shopService.updateProduct(editingProduct.id, payload), {
+      const response = await toast.promise(adminService.updateProduct(editingProduct.id, payload), {
         loading: 'Mise à jour du produit...',
       });
       console.log(response);
@@ -205,7 +205,7 @@ export default function AdminProductsPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
 
     try {
-      const response = await toast.promise(shopService.deleteProduct(id), {
+      const response = await toast.promise(adminService.deleteProduct(id), {
         loading: 'Suppression du produit...',
       });
       console.log(response);
@@ -226,7 +226,7 @@ export default function AdminProductsPage() {
 
   const handleAddCategory = async (values: CreateCategory) => {
     try {
-      const response = await toast.promise(shopService.createCategory(values), {
+      const response = await toast.promise(adminService.createCategory(values), {
         loading: 'Création de la catégorie...',
       });
       console.log(response);
@@ -291,7 +291,7 @@ export default function AdminProductsPage() {
       };
 
       const response = await toast.promise(
-        shopService.updateCategory(editingCategory.id, payload),
+        adminService.updateCategory(editingCategory.id, payload),
         {
           loading: 'Mise à jour de la catégorie...',
         }
@@ -319,7 +319,7 @@ export default function AdminProductsPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
 
     try {
-      const response = await toast.promise(shopService.deleteCategory(id), {
+      const response = await toast.promise(adminService.deleteCategory(id), {
         loading: 'Suppression de la catégorie...',
       });
 
@@ -720,7 +720,7 @@ export default function AdminProductsPage() {
                               className={`gap-1 ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                               onClick={async () => {
                                 try {
-                                  const response = await shopService.updateProduct(product.id, {
+                                  const response = await adminService.updateProduct(product.id, {
                                     id: product.id,
                                     isActive: !product.isActive,
                                   });
@@ -860,7 +860,7 @@ export default function AdminProductsPage() {
                           className={`gap-1 ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                           onClick={async () => {
                             try {
-                              const response = await shopService.updateCategory(category.id, {
+                              const response = await adminService.updateCategory(category.id, {
                                 id: category.id,
                                 isActive: !category.isActive,
                               });

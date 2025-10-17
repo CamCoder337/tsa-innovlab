@@ -4,79 +4,50 @@ import { Card, CardContent } from '@/components/ui/card';
 import bg from '@/assets/login-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import { useAuth } from '@/hooks/useAuth';
-import { authService } from '@/services/auth.service';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
 import { toast } from 'react-hot-toast';
 import LoginForm from '@/components/forms/LoginForm';
 import type { LoginCredentials } from '@/types/auth.types';
 
 const Login: React.FC = () => {
+  const { token, login, getUser, error } = useAuth();
   const navigate = useNavigate();
-  const { token, login, logout, setToken } = useAuth();
   const [showMfaField, setShowMfaField] = useState(false);
 
   const handleLogin = async (data: LoginCredentials) => {
-    const response = await authService.login(data);
+    const response = await login(data);
 
-    if (response.error) {
-      console.log(response.error.errors?.[0]);
-      if (response.error.errors?.[0] === 'Invalid credentials') {
-        toast.error('Email ou Mot de passe incorrect');
-      } else if (response.error.errors?.[0] === 'Account is not active') {
-        toast.error(
-          `Compte inactif. Veuillez consulter vos mails et récuperer votre code de validation à cet adresse : ${data.email}`
-        );
-        localStorage.setItem('verificationEmail', data.email);
-        navigate('/verify-email');
-      } else {
-        toast.error(response.error.message || 'Échec de connexion');
+    console.log(response);
+
+    if (!response) {
+      console.log('false');
+      if (error) {
+        toast.error(error);
+        if (localStorage.getItem('verificationEmail')) {
+          navigate('/verify-email');
+        }
       }
       return;
     }
 
-    if (!response.data) {
-      toast.error('Réponse invalide du serveur');
-      return;
-    }
-
-    // Check if MFA is required
-    if ('requiresMFA' in response.data && response.data.requiresMFA) {
-      setShowMfaField(true);
-      toast('Code MFA requis', {
-        icon: '⚠️',
-      });
-      return;
-    }
-
-    // Successful login - response.data is of type AuthTokens
-    if ('accessToken' in response.data && 'refreshToken' in response.data) {
-      setToken(response.data.accessToken, response.data.expiresIn, response.data.refreshToken);
-      toast.success('Connexion réussie');
+    if (response) {
+      if (response === 'mfa_required') {
+        setShowMfaField(true);
+        toast('Code MFA requis', {
+          icon: '⚠️',
+        });
+        return;
+      } else {
+        toast.success('Connexion réussie');
+      }
     }
   };
 
   useEffect(() => {
-    const getUserProfile = async () => {
-      const response = await authService.getCurrentUser();
-
-      if (response.error) {
-        console.log(response.error.errors?.[0]);
-        toast.error(response.error.message || 'Échec de connexion');
-        logout();
-        return false;
-      }
-
-      if (!response.data) {
-        toast.error('Réponse invalide du serveur');
-        return false;
-      }
-      login(response.data);
-    };
-
     if (token) {
-      getUserProfile();
+      getUser();
     }
-  }, [token, login, logout]);
+  }, [token, getUser]);
 
   return (
     <RedirectIfAuthenticated>

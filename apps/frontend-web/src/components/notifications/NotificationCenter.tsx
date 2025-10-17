@@ -121,7 +121,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-hidden">
+      <DropdownMenuContent align="end" className="w-96 max-h-96 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <DropdownMenuLabel className="text-base font-semibold">Notifications</DropdownMenuLabel>
@@ -216,7 +216,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                         </div>
 
                         <p
-                          className={`text-xs truncate ${
+                          className={`text-xs break-words ${
                             !notification.readAt ? 'text-gray-700' : 'text-gray-500'
                           }`}
                         >

@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { useCallback, useEffect } from 'react';
 import { shopService } from '@/services/shop.service';
 import type { Category } from '@/types/category.types';
+import { adminService } from '@/services/admin.service';
 
 export function useCategories() {
   const { user } = useAuth();
@@ -58,7 +59,7 @@ export function useCategories() {
 
     while (next) {
       try {
-        const response = await shopService.adminGetCategories({ page });
+        const response = await adminService.adminGetCategories({ page });
 
         if (response.error) {
           console.error('API error:', response.error);
