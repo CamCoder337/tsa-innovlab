@@ -3,8 +3,10 @@ import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/o
 import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Address from '#models/address'
+import Vehicle from '#models/vehicle'
 import Feedback from '#models/feedback'
 import MissionUpdate from '#models/mission_update'
+import { VehicleType } from '#models/vehicle'
 
 export enum MissionStatus {
   DRAFT = 'draft',
@@ -23,6 +25,12 @@ export default class Mission extends BaseModel {
 
   @column()
   declare transporteurId: string | null
+
+  @column()
+  declare vehicleId: string | null
+
+  @column()
+  declare requiredVehicleType: VehicleType | null
 
   @column({ columnName: 'titre' })
   declare title: string
@@ -78,6 +86,9 @@ export default class Mission extends BaseModel {
 
   @belongsTo(() => Address, { foreignKey: 'adresseArriveeId' })
   declare adresseArrivee: BelongsTo<typeof Address>
+
+  @belongsTo(() => Vehicle, { foreignKey: 'vehicleId' })
+  declare vehicle: BelongsTo<typeof Vehicle>
 
   @hasOne(() => Feedback)
   declare feedback: HasOne<typeof Feedback>

@@ -1,9 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
+import Database from '@adonisjs/lucid/services/db'
 import Mission, { MissionStatus } from '#models/mission'
+import Vehicle, { VehicleStatus } from '#models/vehicle'
 import MissionUpdate from '#models/mission_update'
 import { missionQueryValidator, updateStatusValidator } from '#validators/mission_validator'
 import { deliveryProofValidator, locationUpdateValidator } from '#validators/proposition_validator'
+import { claimMissionValidator } from '#validators/vehicle_validator'
 import NotificationManagerService from '#services/notification_manager_service'
 
 @inject()
@@ -203,6 +206,7 @@ export default class MissionsController {
       const mission = await Mission.query()
         .where('id', params.id)
         .where('status', MissionStatus.ASSIGNED)
+        .preload('vehicle')
         .first()
 
       if (!mission) {
@@ -229,13 +233,38 @@ export default class MissionsController {
 
       const user = auth.getUserOrFail()
       const oldStatus = mission.status
-      mission.status = validatedData.status as MissionStatus
+      const newStatus = validatedData.status as MissionStatus
 
-      await mission.save()
+      // Utiliser une transaction pour garantir la cohérence
+      await Database.transaction(async (trx) => {
+        // Mettre à jour le statut de la mission
+        mission.status = newStatus
+        await mission.useTransaction(trx).save()
+
+        // 🚗 Libérer le véhicule si la mission est terminée ou annulée
+        if (
+          mission.vehicleId &&
+          (newStatus === MissionStatus.COMPLETED || newStatus === MissionStatus.CANCELLED)
+        ) {
+          const vehicle = await Vehicle.query({ client: trx })
+            .where('id', mission.vehicleId)
+            .first()
+
+          if (vehicle && vehicle.status === VehicleStatus.IN_MISSION) {
+            vehicle.status = VehicleStatus.AVAILABLE
+            await vehicle.save()
+            console.log(
+              `✅ Véhicule ${vehicle.registration} libéré après ${newStatus} de mission ${mission.id}`
+            )
+          }
+        }
+      })
 
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+      await mission.refresh() // Recharger pour avoir le véhicule mis à jour
+      await mission.load('vehicle')
 
       // 📍 Créer un MissionUpdate pour le tracking
       try {
@@ -243,7 +272,7 @@ export default class MissionsController {
           mission.id,
           user.id,
           oldStatus,
-          validatedData.status as MissionStatus,
+          newStatus,
           validatedData.commentaire || 'Mise à jour de statut par le transporteur'
         )
       } catch (updateError) {
@@ -255,7 +284,7 @@ export default class MissionsController {
         await this.notificationManager.notifyMissionStatusChanged(
           mission,
           oldStatus,
-          validatedData.status as MissionStatus,
+          newStatus,
           user
         )
         console.log(`✅ Affreteur notifié du changement de statut mission ${mission.id}`)
@@ -266,12 +295,15 @@ export default class MissionsController {
 
       return response.json({
         success: true,
-        message: `Mission status updated from ${oldStatus} to ${validatedData.status}`,
+        message: `Mission status updated from ${oldStatus} to ${newStatus}`,
         data: {
           mission,
           oldStatus,
-          newStatus: validatedData.status,
+          newStatus,
           comment: validatedData.commentaire || null,
+          vehicleReleased:
+            mission.vehicleId &&
+            (newStatus === MissionStatus.COMPLETED || newStatus === MissionStatus.CANCELLED),
         },
       })
     } catch (error) {
@@ -359,34 +391,74 @@ export default class MissionsController {
   }
 
   /**
-   * Réclamer une mission publiée
-   * Le transporteur devient assigné directement à la mission
+   * Réclamer une mission publiée avec assignation d'un véhicule
+   * Le transporteur devient assigné directement à la mission avec son véhicule
    */
-  async claim({ params, auth, response }: HttpContext) {
+  async claim({ params, request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
+      const { vehicleId } = await request.validateUsing(claimMissionValidator)
 
-      const mission = await Mission.query()
-        .where('id', params.id)
-        .where('status', MissionStatus.PUBLISHED)
-        .whereNull('transporteur_id')
-        .first()
+      // Utiliser une transaction pour garantir la cohérence
+      const result = await Database.transaction(async (trx) => {
+        // 1. Vérifier que la mission est disponible (avec lock pour éviter race condition)
+        const mission = await Mission.query({ client: trx })
+          .where('id', params.id)
+          .where('status', MissionStatus.PUBLISHED)
+          .whereNull('transporteur_id')
+          .whereNull('vehicle_id')
+          .forUpdate() // Lock optimiste
+          .first()
 
-      if (!mission) {
-        return response.status(404).json({
-          success: false,
-          message: 'Mission not found, not available, or already claimed',
-        })
-      }
+        if (!mission) {
+          throw new Error('Mission not found, not available, or already claimed')
+        }
 
-      // Assigner le transporteur et changer le statut
-      mission.transporteurId = user.id
-      mission.status = MissionStatus.ASSIGNED
-      await mission.save()
+        // 2. Vérifier que le véhicule existe et appartient au transporteur
+        const vehicle = await Vehicle.query({ client: trx })
+          .where('id', vehicleId)
+          .where('userId', user.id)
+          .forUpdate()
+          .first()
 
+        if (!vehicle) {
+          throw new Error('Vehicle not found or does not belong to you')
+        }
+
+        // 3. Vérifier que le véhicule est disponible
+        if (vehicle.status !== VehicleStatus.AVAILABLE) {
+          throw new Error(
+            `Vehicle is not available (current status: ${vehicle.statusLabel})`
+          )
+        }
+
+        // 4. Vérifier la compatibilité du type de véhicule si requis
+        if (mission.requiredVehicleType && mission.requiredVehicleType !== vehicle.type) {
+          throw new Error(
+            `Vehicle type mismatch: mission requires ${mission.requiredVehicleType}, but vehicle is ${vehicle.type}`
+          )
+        }
+
+        // 5. Assigner le transporteur, le véhicule et changer le statut
+        mission.transporteurId = user.id
+        mission.vehicleId = vehicleId
+        mission.status = MissionStatus.ASSIGNED
+        await mission.save()
+
+        // 6. Passer le véhicule en mission
+        vehicle.status = VehicleStatus.IN_MISSION
+        await vehicle.save()
+
+        return { mission, vehicle }
+      })
+
+      const { mission, vehicle } = result
+
+      // Charger les relations pour la réponse
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+      await mission.load('vehicle')
 
       // 🔔 Notifier l'affreteur de l'assignation
       try {
@@ -403,10 +475,32 @@ export default class MissionsController {
 
       return response.json({
         success: true,
-        message: 'Mission claimed successfully',
-        data: mission,
+        message: 'Mission claimed successfully with vehicle assignment',
+        data: {
+          mission,
+          vehicle: vehicle.serialize(),
+        },
       })
     } catch (error) {
+      // Gérer les erreurs spécifiques
+      if (error.message.includes('Mission not found')) {
+        return response.status(404).json({
+          success: false,
+          message: error.message,
+        })
+      }
+
+      if (
+        error.message.includes('Vehicle not found') ||
+        error.message.includes('not available') ||
+        error.message.includes('mismatch')
+      ) {
+        return response.status(422).json({
+          success: false,
+          message: error.message,
+        })
+      }
+
       return response.status(500).json({
         success: false,
         message: 'Failed to claim mission',
