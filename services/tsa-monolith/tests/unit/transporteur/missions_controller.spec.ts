@@ -3,6 +3,7 @@ import Database from '@adonisjs/lucid/services/db'
 import User, { UserRole, UserStatus } from '#models/user'
 import Mission, { MissionStatus } from '#models/mission'
 import Address from '#models/address'
+import Vehicle, { VehicleType, VehicleStatus } from '#models/vehicle'
 
 test.group('Transporteur Missions Controller', (group) => {
   let transporteur: User
@@ -10,6 +11,7 @@ test.group('Transporteur Missions Controller', (group) => {
   let transporteurToken: string
   let adresseDepart: Address
   let adresseArrivee: Address
+  let testVehicle: Vehicle
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
@@ -51,6 +53,15 @@ test.group('Transporteur Missions Controller', (group) => {
       region: 'Centre',
       country: 'Cameroun',
       postalCode: '5678',
+    })
+
+    // Créer un véhicule de test pour le transporteur
+    testVehicle = await Vehicle.create({
+      userId: transporteur.id,
+      type: VehicleType.TRUCK,
+      registration: 'CM-TEST-1234',
+      description: 'Camion de test 20 tonnes',
+      status: VehicleStatus.AVAILABLE,
     })
 
     transporteurToken = await transporteur.generateAccessToken('test-token')
@@ -133,16 +144,18 @@ test.group('Transporteur Missions Controller', (group) => {
     const response = await client
       .post(`/api/transporteur/missions/${mission.id}/claim`)
       .bearerToken(transporteurToken)
+      .json({ vehicleId: testVehicle.id })
 
     response.assertStatus(200)
     response.assertBodyContains({
       success: true,
-      message: 'Mission claimed successfully',
+      message: 'Mission claimed successfully with vehicle assignment',
     })
 
     const body = response.body()
-    assert.equal(body.data.transporteurId, transporteur.id)
-    assert.equal(body.data.status, MissionStatus.ASSIGNED)
+    assert.equal(body.data.mission.transporteurId, transporteur.id)
+    assert.equal(body.data.mission.status, MissionStatus.ASSIGNED)
+    assert.equal(body.data.mission.vehicleId, testVehicle.id)
 
     // Vérifier en base de données
     await mission.refresh()
@@ -162,6 +175,7 @@ test.group('Transporteur Missions Controller', (group) => {
     const response = await client
       .post(`/api/transporteur/missions/${mission.id}/claim`)
       .bearerToken(transporteurToken)
+      .json({ vehicleId: testVehicle.id })
 
     response.assertStatus(404)
     response.assertBodyContains({
@@ -193,6 +207,7 @@ test.group('Transporteur Missions Controller', (group) => {
     const response = await client
       .post(`/api/transporteur/missions/${mission.id}/claim`)
       .bearerToken(transporteurToken)
+      .json({ vehicleId: testVehicle.id })
 
     response.assertStatus(404)
     response.assertBodyContains({

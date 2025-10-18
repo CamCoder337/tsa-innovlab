@@ -269,9 +269,11 @@ test.group('Admin Users Controller', (group) => {
     assert.equal(body.data.user.id, transporteurUser.id)
     assert.equal(body.data.user.role, UserRole.TRANSPORTEUR)
     // Stats should exist for transporteur (even if 0)
-    assert.exists(body.data.stats.totalPropositions)
-    assert.exists(body.data.stats.acceptedPropositions)
-    assert.exists(body.data.stats.pendingPropositions)
+    assert.exists(body.data.stats.totalVehicles)
+    assert.exists(body.data.stats.availableVehicles)
+    assert.exists(body.data.stats.totalAssignedMissions)
+    assert.exists(body.data.stats.completedMissions)
+    assert.exists(body.data.stats.activeMissions)
   })
 
   test('should return 404 for non-existent user', async ({ client }) => {

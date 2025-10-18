@@ -45,7 +45,9 @@ export default class VehiclesController {
       // Recherche par immatriculation ou description
       if (search) {
         query.where((builder) => {
-          builder.whereILike('registration', `%${search}%`).orWhereILike('description', `%${search}%`)
+          builder
+            .whereILike('registration', `%${search}%`)
+            .orWhereILike('description', `%${search}%`)
         })
       }
 

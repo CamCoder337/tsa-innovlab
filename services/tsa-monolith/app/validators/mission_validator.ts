@@ -114,7 +114,20 @@ const missionQuerySchema = vine.object({
   typeMarchandise: vine.string().trim().optional(),
 })
 
+const deliveryProofSchema = vine.object({
+  proofType: vine.enum(['photo', 'signature', 'both']),
+  description: vine.string().trim().maxLength(500).optional(),
+  imageUrl: vine.string().url().optional(),
+})
+
+const locationUpdateSchema = vine.object({
+  latitude: vine.number().min(-90).max(90),
+  longitude: vine.number().min(-180).max(180),
+})
+
 export const createMissionValidator = vine.compile(createMissionSchema)
 export const updateMissionValidator = vine.compile(updateMissionSchema)
 export const updateStatusValidator = vine.compile(updateStatusSchema)
 export const missionQueryValidator = vine.compile(missionQuerySchema)
+export const deliveryProofValidator = vine.compile(deliveryProofSchema)
+export const locationUpdateValidator = vine.compile(locationUpdateSchema)

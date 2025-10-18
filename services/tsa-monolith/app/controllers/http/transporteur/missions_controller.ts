@@ -4,8 +4,12 @@ import Database from '@adonisjs/lucid/services/db'
 import Mission, { MissionStatus } from '#models/mission'
 import Vehicle, { VehicleStatus } from '#models/vehicle'
 import MissionUpdate from '#models/mission_update'
-import { missionQueryValidator, updateStatusValidator } from '#validators/mission_validator'
-import { deliveryProofValidator, locationUpdateValidator } from '#validators/proposition_validator'
+import {
+  missionQueryValidator,
+  updateStatusValidator,
+  deliveryProofValidator,
+  locationUpdateValidator,
+} from '#validators/mission_validator'
 import { claimMissionValidator } from '#validators/vehicle_validator'
 import NotificationManagerService from '#services/notification_manager_service'
 
@@ -427,9 +431,7 @@ export default class MissionsController {
 
         // 3. Vérifier que le véhicule est disponible
         if (vehicle.status !== VehicleStatus.AVAILABLE) {
-          throw new Error(
-            `Vehicle is not available (current status: ${vehicle.statusLabel})`
-          )
+          throw new Error(`Vehicle is not available (current status: ${vehicle.statusLabel})`)
         }
 
         // 4. Vérifier la compatibilité du type de véhicule si requis

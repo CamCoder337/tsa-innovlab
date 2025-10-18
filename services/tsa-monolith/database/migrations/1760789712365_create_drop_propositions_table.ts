@@ -11,8 +11,18 @@ export default class extends BaseSchema {
     // Recréer la table si rollback (au cas où)
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
-      table.uuid('mission_id').notNullable().references('id').inTable('missions').onDelete('CASCADE')
-      table.uuid('transporter_id').notNullable().references('id').inTable('users').onDelete('CASCADE')
+      table
+        .uuid('mission_id')
+        .notNullable()
+        .references('id')
+        .inTable('missions')
+        .onDelete('CASCADE')
+      table
+        .uuid('transporter_id')
+        .notNullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('CASCADE')
       table.decimal('proposed_budget', 10, 2).notNullable()
       table.text('message').nullable()
       table.enum('status', ['PENDING', 'ACCEPTED', 'REJECTED']).defaultTo('PENDING')
