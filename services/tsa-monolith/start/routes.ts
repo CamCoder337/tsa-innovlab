@@ -223,6 +223,17 @@ router
 // ===== ROUTES TRANSPORTEUR =====
 router
   .group(() => {
+    // Gestion des véhicules
+    router.get('/vehicles', '#controllers/http/transporteur/vehicles_controller.index')
+    router.post('/vehicles', '#controllers/http/transporteur/vehicles_controller.store')
+    router.get('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.show')
+    router.put('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.update')
+    router.delete('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.destroy')
+    router.put(
+      '/vehicles/:id/status',
+      '#controllers/http/transporteur/vehicles_controller.updateStatus'
+    )
+
     // Missions disponibles
     router.get(
       '/missions/available',
@@ -233,7 +244,7 @@ router
     // Mes missions
     router.get('/my-missions', '#controllers/http/transporteur/missions_controller.myMissions')
 
-    // Réclamer une mission
+    // Réclamer une mission (avec vehicleId requis)
     router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
 
     // Historique des missions
@@ -351,6 +362,11 @@ router
   .group(() => {
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
+    // Support both hyphenated and slash-separated search routes for frontend compatibility
+    router.get(
+      '/conversations/search-users',
+      '#controllers/http/common/conversations_controller.searchUsers'
+    )
     router.get(
       '/conversations/search/users',
       '#controllers/http/common/conversations_controller.searchUsers'

@@ -1,8 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User, { UserRole, UserStatus } from '#models/user'
 import Mission from '#models/mission'
-import Proposition from '#models/proposition'
 import Order from '#models/order'
+import Vehicle from '#models/vehicle'
 import AuditLog from '#models/audit_log'
 import { listUsersValidator, updateUserStatusValidator } from '#validators/user_validator'
 
@@ -112,10 +112,13 @@ export default class UsersController {
 
         case UserRole.TRANSPORTEUR:
           // Statistiques pour les transporteurs
-          const propositions = await Proposition.query().where('transporteur_id', user.id)
-          stats.totalPropositions = propositions.length
-          stats.acceptedPropositions = propositions.filter((p) => p.status === 'accepted').length
-          stats.pendingPropositions = propositions.filter((p) => p.status === 'pending').length
+          const assignedMissions = await Mission.query().where('transporteur_id', user.id)
+          const vehicles = await Vehicle.query().where('user_id', user.id)
+          stats.totalVehicles = vehicles.length
+          stats.availableVehicles = vehicles.filter((v) => v.status === 'available').length
+          stats.totalAssignedMissions = assignedMissions.length
+          stats.completedMissions = assignedMissions.filter((m) => m.status === 'completed').length
+          stats.activeMissions = assignedMissions.filter((m) => m.status === 'assigned').length
           break
 
         case UserRole.ADMIN:

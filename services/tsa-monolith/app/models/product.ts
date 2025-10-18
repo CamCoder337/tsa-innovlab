@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Category from '#models/category'
 import User from '#models/user'
 import AuditLog from '#models/audit_log'
+import { VehicleType } from '#models/vehicle'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -47,6 +48,9 @@ export default class Product extends BaseModel {
 
   @column()
   declare createdBy: string | null
+
+  @column()
+  declare preferredVehicleType: VehicleType | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

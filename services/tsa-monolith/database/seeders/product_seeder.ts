@@ -2,8 +2,51 @@ import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import Product from '#models/product'
 import Category from '#models/category'
 import User from '#models/user'
+import { VehicleType } from '#models/vehicle'
 
 export default class ProductSeeder extends BaseSeeder {
+  /**
+   * Détermine le type de véhicule préféré basé sur la catégorie et le nom du produit
+   */
+  private getPreferredVehicleType(categoryName: string, productName: string): VehicleType {
+    // Règles basées sur la catégorie
+    switch (categoryName) {
+      case 'Électronique':
+        // Produits légers/moyens → Voiture ou Camionnette
+        return productName.toLowerCase().includes('ordinateur') ||
+          productName.toLowerCase().includes('écran')
+          ? VehicleType.VAN
+          : VehicleType.CAR
+
+      case 'Mobilier':
+        // Produits volumineux → Camionnette ou Camion
+        return productName.toLowerCase().includes('table') ||
+          productName.toLowerCase().includes('bureau') ||
+          productName.toLowerCase().includes('armoire')
+          ? VehicleType.TRUCK
+          : VehicleType.VAN
+
+      case 'Fournitures de Bureau':
+        // Petits volumes → Moto ou Voiture
+        return productName.toLowerCase().includes('papier') ||
+          productName.toLowerCase().includes('stylo')
+          ? VehicleType.MOTORCYCLE
+          : VehicleType.CAR
+
+      case 'Équipements Industriels':
+        // Produits lourds → Camion
+        return VehicleType.TRUCK
+
+      case 'Véhicules et Transport':
+        // Produits très volumineux → Camion
+        return VehicleType.TRUCK
+
+      default:
+        // Par défaut → Camionnette
+        return VehicleType.VAN
+    }
+  }
+
   async run() {
     // Récupérer les catégories existantes
     const categories = await Category.all()
@@ -629,6 +672,9 @@ export default class ProductSeeder extends BaseSeeder {
         continue
       }
 
+      // Déterminer le type de véhicule préféré
+      const preferredVehicleType = this.getPreferredVehicleType(categoryName, product.name)
+
       // Vérifier si le produit existe déjà
       const existingProduct = await Product.findBy('reference', product.reference)
       if (!existingProduct) {
@@ -636,10 +682,11 @@ export default class ProductSeeder extends BaseSeeder {
           ...product,
           categoryId: category.id,
           createdBy: adminUser.id,
+          preferredVehicleType,
         })
       }
     }
 
-    console.log('✅ Products seeded successfully')
+    console.log('✅ Products seeded successfully with preferred vehicle types')
   }
 }
