@@ -68,9 +68,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     if (conversation.id) {
       fetchMessages(conversation.id);
       // Mark messages as read when opening conversation
-      markAllMessagesAsRead(conversation.id);
+      if (messages) markAllMessagesAsRead(conversation.id);
     }
-  }, [conversation.id, fetchMessages, markAllMessagesAsRead]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.id, messages]);
 
   useEffect(() => {
     scrollToBottom();

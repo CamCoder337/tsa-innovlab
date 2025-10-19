@@ -6,6 +6,7 @@ import type {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  OrderFiltersQuery,
 } from '@/types/order.types';
 import { shopService } from '@/services/shop.service';
 
@@ -219,41 +220,33 @@ const mockOrders: Order[] = [
 ];
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
-  orders: mockOrders, // Initialize with mock data for development
+  orders: [],
   currentOrder: null,
   isLoading: false,
   error: null,
 
   // Actions
-  fetchOrders: async () => {
+  fetchOrders: async (params?: OrderFiltersQuery) => {
     set({ isLoading: true, error: null });
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      set({
-        orders: mockOrders,
-        isLoading: false,
-        error: null,
-      });
-      return;
+      const response = await shopService.getOrders(params);
 
-      // const response = await shopService.getOrders();
+      if (response.error) {
+        set({
+          error: response.error.message,
+          isLoading: false,
+        });
+        return;
+      }
 
-      // if (response.error) {
-      //   set({
-      //     error: response.error.message,
-      //     isLoading: false
-      //   });
-      //   return;
-      // }
-
-      // if (response.data?.orders) {
-      //   set({
-      //     orders: response.data.orders.data,
-      //     isLoading: false,
-      //     error: null
-      //   });
-      // }
+      if (response.data?.orders) {
+        set({
+          orders: response.data.orders.data,
+          isLoading: false,
+          error: null,
+        });
+      }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to fetch orders',
@@ -266,43 +259,23 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const mockOrder = mockOrders.find((order) => order.id === orderId);
+      const response = await shopService.getOrder(orderId);
 
-      console.log(mockOrder);
-
-      if (mockOrder) {
+      if (response.error) {
         set({
-          currentOrder: mockOrder,
+          error: response.error.message,
+          isLoading: false,
+        });
+        return;
+      }
+
+      if (response.data) {
+        set({
+          currentOrder: response.data,
           isLoading: false,
           error: null,
         });
-      } else {
-        const errorMessage = 'Order not found';
-        set({
-          error: errorMessage,
-          isLoading: false,
-        });
-        throw new Error(errorMessage);
       }
-
-      // const response = await shopService.getOrder(orderId);
-
-      // if (response.error) {
-      //   set({
-      //     error: response.error.message,
-      //     isLoading: false
-      //   });
-      //   return;
-      // }
-
-      // if (response.data) {
-      //   set({
-      //     currentOrder: response.data,
-      //     isLoading: false,
-      //     error: null
-      //   });
-      // }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to fetch order',
@@ -444,7 +417,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     });
   },
 
-  // Development utility methods
+  // Development utility methods (can be removed in production)
   loadMockData: () => {
     set({
       orders: mockOrders,

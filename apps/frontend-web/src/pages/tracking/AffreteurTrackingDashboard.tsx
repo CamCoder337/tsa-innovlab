@@ -1,20 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
-import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
+import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { getStatusColor } from '@/lib/mission-utils';
 import { useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
-const getPriorityColor = (budgetMax: number) => {
-  if (budgetMax > 200000) return 'bg-red-100 text-red-800'; // Urgent/High value
-  if (budgetMax > 100000) return 'bg-orange-100 text-orange-800'; // High
-  if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800'; // Medium
-  return 'bg-green-100 text-green-800'; // Low
-};
+// const getPriorityColor = (budgetMax: number) => {
+//   if (budgetMax > 200000) return 'bg-red-100 text-red-800'; // Urgent/High value
+//   if (budgetMax > 100000) return 'bg-orange-100 text-orange-800'; // High
+//   if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800'; // Medium
+//   return 'bg-green-100 text-green-800'; // Low
+// };
 
 export default function AffréteurTrackingDashboard() {
   const { myMissions: missions, currentMission, setCurrentMission } = useMissions();
@@ -37,7 +36,7 @@ export default function AffréteurTrackingDashboard() {
         {/* En-tête */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Affréteur</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Tableau de Suivi</h1>
             <p className="text-gray-600">Gérez vos expéditions et suivez vos performances</p>
           </div>
           <Button className="bg-blue-600 hover:bg-blue-700">
@@ -147,7 +146,7 @@ export default function AffréteurTrackingDashboard() {
                 </Card>
               </div>
 
-              {/* Missions urgentes */}
+              {/* Missions urgentes
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -212,7 +211,7 @@ export default function AffréteurTrackingDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              </div>
+              </div> */}
             </div>
           </TabsContent>
 
@@ -233,9 +232,9 @@ export default function AffréteurTrackingDashboard() {
                         <div className="space-y-2 flex-1">
                           <div className="flex items-center gap-3">
                             <span className="font-medium">{mission.title}</span>
-                            <Badge className={getPriorityColor(mission.budgetMax)}>
+                            {/* <Badge className={getPriorityColor(mission.budgetMax)}>
                               {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
-                            </Badge>
+                            </Badge> */}
                             <div
                               className={`w-2 h-2 rounded-full ${getStatusColor(mission.status)}`}
                             />
@@ -245,10 +244,7 @@ export default function AffréteurTrackingDashboard() {
                             <span>
                               {mission.typeMarchandise} - {mission.poids}kg
                             </span>
-                            <span>
-                              {mission.budgetMin.toLocaleString()}-
-                              {mission.budgetMax.toLocaleString()} FCFA
-                            </span>
+                            <span>{mission.budgetMin?.toLocaleString()} FCFA</span>
                             {mission.transporteurId && <span>👤 Assigné</span>}
                           </div>
                         </div>
@@ -256,7 +252,7 @@ export default function AffréteurTrackingDashboard() {
                           <div>
                             <p className="text-sm text-gray-500">Livraison prévue</p>
                             <p className="font-medium">
-                              {new Date(mission.dateArriveePrevue).toLocaleDateString()}
+                              {new Date(mission.dateArriveePrevue ?? '').toLocaleDateString()}
                             </p>
                           </div>
                           <MissionTrackingButton missionId={mission.id} className="text-xs" />
@@ -323,7 +319,7 @@ export default function AffréteurTrackingDashboard() {
                       <div key={mission.id} className="flex justify-between">
                         <span className="text-sm">{mission.title}</span>
                         <span className="font-medium">
-                          {mission.budgetMax.toLocaleString()} FCFA
+                          {mission.budgetMin?.toLocaleString()} FCFA
                         </span>
                       </div>
                     ))}

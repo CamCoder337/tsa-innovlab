@@ -2,41 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { notificationService } from '@/services/notification.service';
 import { webSocketService } from '@/services/websocket.service';
-import type {
-  NotificationFilters,
-  NotificationStats,
-  NotificationListItem,
-  NotificationEventData,
-} from '@/types/notification.types';
-
-interface NotificationStore {
-  // State
-  notifications: NotificationListItem[];
-  stats: NotificationStats | null;
-  isLoading: boolean;
-  error: string | null;
-
-  // Actions
-  fetchNotifications: (filters?: NotificationFilters) => Promise<void>;
-  fetchNotificationStats: () => Promise<void>;
-  markNotificationRead: (notificationId: string) => Promise<void>;
-  markAllNotificationsRead: () => Promise<void>;
-  deleteNotification: (notificationId: string) => Promise<void>;
-  sendTestNotification: () => Promise<void>;
-
-  // Real-time event handlers
-  handleNewNotification: (data: NotificationEventData) => void;
-
-  // Utility actions
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
-
-  // WebSocket subscription management
-  initializeWebSocketSubscriptions: () => void;
-  cleanupWebSocketSubscriptions: () => void;
-}
+import type { NotificationEventData, NotificationStore } from '@/types/notification.types';
 
 const initialState = {
   notifications: [],
@@ -56,15 +22,17 @@ export const useNotificationStore = create<NotificationStore>()(
           set({ isLoading: true, error: null });
 
           const response = await notificationService.getNotifications(filters);
-          const notifications = response.data?.notifications.map((notification) => ({
-            ...notification,
-            isNew: false, // Will be set to true for real-time notifications
-          }));
+          if (response.data) {
+            const notifications = response.data.notifications?.data?.map((notification) => ({
+              ...notification,
+              isNew: false, // Will be set to true for real-time notifications
+            }));
 
-          set({
-            notifications,
-            isLoading: false,
-          });
+            set({
+              notifications,
+              isLoading: false,
+            });
+          }
         } catch (error) {
           console.error('Failed to fetch notifications:', error);
           set({
@@ -77,7 +45,9 @@ export const useNotificationStore = create<NotificationStore>()(
       fetchNotificationStats: async () => {
         try {
           const response = await notificationService.getNotificationStats();
-          set({ stats: response.data?.stats });
+          if (response.data) {
+            set({ stats: response.data });
+          }
         } catch (error) {
           console.error('Failed to fetch notification stats:', error);
         }
@@ -201,6 +171,8 @@ export const useNotificationStore = create<NotificationStore>()(
         const { handleNewNotification } = get();
 
         // Subscribe to notification events
+
+        webSocketService.connect();
         webSocketService.subscribe('notification', handleNewNotification);
       },
 

@@ -1,24 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Users,
-  Package,
-  Truck,
-  DollarSign,
-  TrendingUp,
-  AlertTriangle,
+  Activity,
   CheckCircle,
   Clock,
+  DollarSign,
+  Package,
+  TrendingUp,
+  Users,
+  XCircle,
+  AlertTriangle,
   BarChart3,
   PieChart,
-  Activity,
+  Truck,
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { useProducts } from '@/hooks/useProducts';
+import { useUsers } from '@/hooks/useUsers';
 import { DashboardUtils } from '@/lib/dashboard.utils';
 import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
+import type { MissionStatus } from '@/types/mission.types';
 
 interface OverallStats {
   overview: {
@@ -35,7 +40,13 @@ interface OverallStats {
     inProgress: number;
     completed: number;
     cancelled: number;
-    totalValue: number;
+    recent: Array<{
+      id: string;
+      title: string;
+      status: MissionStatus;
+      affreteur: string | null;
+      createdAt: string;
+    }>;
   };
   products: {
     total: number;
@@ -81,47 +92,44 @@ export default function AdminDashboard() {
     isLoading: productStatsLoading,
     error: productStatsError,
   } = useProducts();
+  const { users, userStats, isLoading: userStatsLoading, error: userStatsError } = useUsers();
 
   const [stats, setStats] = useState<OverallStats>({} as OverallStats);
 
   // Calculate real statistics from API data
   useEffect(() => {
-    if (missionStats && productStats) {
+    if (missionStats && productStats && userStats) {
       const calculatedStats = {
         overview: {
-          totalUsers: missionStats.totals.affreteurs + missionStats.totals.transporteurs || 0,
-          totalMissions: missionStats.totals.missions || 0,
-          totalProducts: productStats.products.totalProducts || 0,
-          totalRevenue: productStats.inventory.totalValue || 0,
-          activeTransporteurs: missionStats.totals.transporteurs || 0,
-          activeAffreteurs: missionStats.totals.affreteurs || 0,
+          totalUsers: userStats.total || 0,
+          totalMissions: missionStats.totals?.missions || 0,
+          totalProducts: productStats.products?.totalProducts || 0,
+          totalRevenue: productStats.inventory?.totalValue || 0,
+          activeTransporteurs: userStats.byRole?.transporteur || 0,
+          activeAffreteurs: userStats.byRole?.affreteur || 0,
         },
         missions: {
-          published: missionStats.statusStats.published || 0,
-          assigned: missionStats.statusStats.assigned || 0,
-          inProgress: missionStats.statusStats.in_progress || 0,
-          completed: missionStats.statusStats.completed || 0,
-          cancelled: missionStats.statusStats.cancelled || 0,
-          totalValue: productStats.inventory.totalValue,
+          published: missionStats.statusStats?.published || 0,
+          assigned: missionStats.statusStats?.assigned || 0,
+          inProgress: missionStats.statusStats?.in_progress || 0,
+          completed: missionStats.statusStats?.completed || 0,
+          cancelled: missionStats.statusStats?.cancelled || 0,
+          recent: missionStats.recentMissions || [],
         },
         products: {
-          total: productStats.products.totalProducts,
-          active: productStats.products.activeProducts,
-          lowStock: productStats.products.lowStockProducts,
-          outOfStock: productStats.products.outOfStockProducts,
-          totalValue: productStats.inventory.totalValue,
+          total: productStats.products?.totalProducts || 0,
+          active: productStats.products?.activeProducts || 0,
+          lowStock: productStats.products?.lowStockProducts || 0,
+          outOfStock: productStats.products?.outOfStockProducts || 0,
+          totalValue: productStats.inventory?.totalValue || 0,
         },
         users: {
-          total: missionStats.totals.affreteurs + missionStats.totals.transporteurs,
-          admins: 5, // This would need to come from a user stats endpoint
-          transporteurs: missionStats.totals.transporteurs,
-          affreteurs: missionStats.totals.affreteurs,
-          activeToday: Math.floor(
-            (missionStats.totals.affreteurs + missionStats.totals.transporteurs) * 0.2
-          ), // Mock calculation
-          newThisMonth: Math.floor(
-            (missionStats.totals.affreteurs + missionStats.totals.transporteurs) * 0.05
-          ), // Mock calculation
+          total: userStats.total || 0,
+          admins: userStats.byRole?.admin || 0,
+          transporteurs: userStats.byRole?.transporteur || 0,
+          affreteurs: userStats.byRole?.affreteur || 0,
+          activeToday: DashboardUtils.calculateActiveUsersToday(users) || 0,
+          newThisMonth: DashboardUtils.calculateNewUsersThisMonth(users) || 0,
         },
         revenue: {
           today:
@@ -130,7 +138,7 @@ export default function AdminDashboard() {
             missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).week : 0,
           thisMonth:
             missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).month : 0,
-          thisYear: productStats.inventory.totalValue,
+          thisYear: productStats.inventory?.totalValue,
           growth: {
             daily: 12.5, // These would need to come from analytics endpoints
             weekly: 8.3,
@@ -142,10 +150,11 @@ export default function AdminDashboard() {
 
       setStats(calculatedStats);
     }
-  }, [missionStats, productStats, missions, setStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missionStats, productStats, userStats, missions]);
 
   // Show loading state
-  if (missionStatsLoading || productStatsLoading) {
+  if (missionStatsLoading || productStatsLoading || userStatsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -157,13 +166,15 @@ export default function AdminDashboard() {
   }
 
   // Show error state
-  if (missionStatsError || productStatsError) {
+  if (missionStatsError || productStatsError || userStatsError) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
-          <p className="text-gray-600 text-sm">{missionStatsError || productStatsError}</p>
+          <p className="text-gray-600 text-sm">
+            {missionStatsError || productStatsError || userStatsError}
+          </p>
         </div>
       </div>
     );
@@ -259,33 +270,62 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Mission TSA-045 terminée</p>
-                      <p className="text-xs text-gray-500">Il y a 2 heures</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Nouveau transporteur inscrit</p>
-                      <p className="text-xs text-gray-500">Il y a 4 heures</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Clock className="h-4 w-4 text-orange-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Mission TSA-046 en retard</p>
-                      <p className="text-xs text-gray-500">Il y a 6 heures</p>
-                    </div>
-                  </div>
+                  {stats?.missions?.recent?.slice(0, 3)?.map((mission) => {
+                    const statusLabel = getStatusLabel(mission.status);
+                    const StatusIcon =
+                      mission.status === 'completed'
+                        ? CheckCircle
+                        : mission.status === 'assigned'
+                          ? Truck
+                          : mission.status === 'published'
+                            ? Users
+                            : mission.status === 'cancelled'
+                              ? XCircle
+                              : Clock; // draft status
+
+                    return (
+                      <div className="flex items-center gap-3" key={mission.id}>
+                        <div
+                          className={`p-2 rounded-lg ${
+                            mission.status === 'completed'
+                              ? 'bg-green-100'
+                              : mission.status === 'assigned'
+                                ? 'bg-blue-100'
+                                : mission.status === 'published'
+                                  ? 'bg-purple-100'
+                                  : mission.status === 'cancelled'
+                                    ? 'bg-red-100'
+                                    : 'bg-gray-100' // draft
+                          }`}
+                        >
+                          <StatusIcon
+                            className={`h-4 w-4 ${
+                              mission.status === 'completed'
+                                ? 'text-green-600'
+                                : mission.status === 'assigned'
+                                  ? 'text-blue-600'
+                                  : mission.status === 'published'
+                                    ? 'text-purple-600'
+                                    : mission.status === 'cancelled'
+                                      ? 'text-red-600'
+                                      : 'text-gray-600' // draft
+                            }`}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{`Mission ${mission.title} ${statusLabel.toLowerCase()}`}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(mission.createdAt).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -408,12 +448,48 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Gestion des Utilisateurs</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                Gestion des Utilisateurs
+                <Link to="/admin/users">
+                  <Button variant="outline" size="sm">
+                    Voir tous les utilisateurs
+                  </Button>
+                </Link>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
-                Interface de gestion des utilisateurs à implémenter...
-              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">{stats?.users?.admins || 0}</p>
+                  <p className="text-sm text-gray-600">Administrateurs</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats?.users?.affreteurs || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Affréteurs</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-600">
+                    {stats?.users?.transporteurs || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Transporteurs</p>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <p className="text-2xl font-bold text-orange-600">
+                    {stats?.users?.activeToday || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Utilisateurs actifs</p>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Nouveaux utilisateurs ce mois</span>
+                  <span className="font-medium text-green-600">
+                    +{stats?.users?.newThisMonth || 0}
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

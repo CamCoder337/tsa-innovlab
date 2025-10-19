@@ -2,8 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, CheckCircle, AlertTriangle, FileText, MessageSquare } from 'lucide-react';
+import { Clock, CheckCircle, AlertTriangle, FileText, MessageSquare, Loader2 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
+import { missionService } from '@/services/mission.service';
+import { useEffect, useState } from 'react';
 
 interface TimelineEvent {
   id: string;
@@ -24,7 +26,94 @@ interface MissionTimelineProps {
 }
 
 export function MissionTimeline({ mission }: MissionTimelineProps) {
-  // Generate timeline events based on mission data
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMissionHistory = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch mission history from API
+        const response = await missionService.getMissionHistory(mission.id);
+
+        if (response.error) {
+          setError("Erreur lors du chargement de l'historique");
+          // Fallback to generated events
+          setEvents(generateTimelineEvents());
+        } else if (response.data?.missions?.data) {
+          // Transform API response to timeline events
+          const historyEvents = transformHistoryToEvents(response.data.missions.data);
+          // Combine with basic mission events
+          const basicEvents = generateTimelineEvents();
+          const allEvents = [...historyEvents, ...basicEvents];
+          // Remove duplicates and sort
+          const uniqueEvents = allEvents.filter(
+            (event, index, self) => index === self.findIndex((e) => e.id === event.id)
+          );
+          setEvents(
+            uniqueEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          );
+        } else {
+          // Fallback to generated events if no data
+          setEvents(generateTimelineEvents());
+        }
+      } catch {
+        setError("Erreur lors du chargement de l'historique");
+        // Fallback to generated events
+        setEvents(generateTimelineEvents());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMissionHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mission.id]);
+
+  // Transform mission history data to timeline events
+  const transformHistoryToEvents = (historyMissions: Mission[]): TimelineEvent[] => {
+    const historyEvents: TimelineEvent[] = [];
+
+    historyMissions.forEach((historyMission, index) => {
+      if (index > 0) {
+        const previousMission = historyMissions[index - 1];
+
+        // Status changes
+        if (historyMission.status !== previousMission.status) {
+          historyEvents.push({
+            id: `history-status-${historyMission.id}-${index}`,
+            type: 'status_change',
+            title: `Statut mis à jour: ${getStatusLabel(historyMission.status)}`,
+            description: `Changement de "${getStatusLabel(previousMission.status)}" vers "${getStatusLabel(historyMission.status)}"`,
+            date: historyMission.updatedAt,
+          });
+        }
+
+        // Location updates
+        if (
+          historyMission.currentPosition &&
+          (!previousMission.currentPosition ||
+            historyMission.currentPosition.lat !== previousMission.currentPosition.lat ||
+            historyMission.currentPosition.lng !== previousMission.currentPosition.lng)
+        ) {
+          historyEvents.push({
+            id: `history-location-${historyMission.id}-${index}`,
+            type: 'status_change',
+            title: 'Position mise à jour',
+            description: `Nouvelle position: ${historyMission.currentPosition.lat.toFixed(4)}, ${historyMission.currentPosition.lng.toFixed(4)}`,
+            date: historyMission.lastPositionUpdate || historyMission.updatedAt,
+          });
+        }
+      }
+    });
+
+    return historyEvents;
+  };
+
+  // Generate timeline events based on mission data (fallback)
   const generateTimelineEvents = (): TimelineEvent[] => {
     const events: TimelineEvent[] = [];
 
@@ -173,15 +262,28 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     }
   };
 
-  const events = generateTimelineEvents();
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Historique de la mission</CardTitle>
       </CardHeader>
       <CardContent>
-        {events.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span className="text-muted-foreground">Chargement de l'historique...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+            <p className="text-muted-foreground mb-2">{error}</p>
+            <p className="text-xs text-muted-foreground">
+              Affichage des données de base disponibles
+            </p>
+          </div>
+        ) : null}
+
+        {events.length === 0 && !isLoading ? (
           <div className="text-center py-8 text-muted-foreground">
             Aucun événement à afficher pour le moment
           </div>

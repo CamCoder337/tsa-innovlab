@@ -287,6 +287,68 @@ export class GoogleMapsService {
     return content;
   }
 
+  async calculateDistance(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+  ): Promise<number | null> {
+    try {
+      // Ensure Google Maps is loaded with geometry library
+      await googleMapsLoader.load({ libraries: ['geometry'] });
+
+      // Use spherical geometry to calculate distance
+      const originLatLng = new google.maps.LatLng(origin.lat, origin.lng);
+      const destinationLatLng = new google.maps.LatLng(destination.lat, destination.lng);
+
+      // Calculate distance in meters, then convert to kilometers
+      const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(
+        originLatLng,
+        destinationLatLng
+      );
+
+      return Math.round(distanceInMeters / 1000); // Convert to km and round
+    } catch (error) {
+      console.error('Error calculating distance:', error);
+      return null;
+    }
+  }
+
+  async calculateDistanceWithDirections(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+  ): Promise<{ distance: number; duration: number } | null> {
+    try {
+      // Ensure Google Maps is loaded
+      await googleMapsLoader.load({ libraries: ['routes'] });
+
+      if (!this.directionsService) {
+        this.directionsService = new google.maps.DirectionsService();
+      }
+
+      const request: google.maps.DirectionsRequest = {
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        avoidHighways: false,
+        avoidTolls: false,
+      };
+
+      const result = await this.directionsService.route(request);
+
+      if (result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+        const leg = result.routes[0].legs[0];
+        return {
+          distance: Math.round((leg.distance?.value || 0) / 1000), // Convert to km
+          duration: Math.round((leg.duration?.value || 0) / 60), // Convert to minutes
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error calculating distance with directions:', error);
+      return null;
+    }
+  }
+
   destroy(): void {
     this.markers.forEach((marker) => (marker.map = null));
     this.markers.clear();

@@ -2,123 +2,183 @@ import type {
   Payment,
   CreatePaymentRequest,
   ConfirmPaymentRequest,
-  SavedPaymentMethod,
-  OrderPaymentRequest,
-  PaymentFilters,
-  PaymentListResponse,
-  MTNPaymentResponse,
   PaymentSimulation,
+  OrderPaymentRequest,
 } from '@/types/payment.types';
 import { BaseApi } from './api';
+import type { ApiResponse } from '@/types/common.types';
+import type { AxiosError } from 'axios';
 
 class PaymentService extends BaseApi {
-  constructor() {
-    super();
+  private isAxiosError(
+    error: unknown
+  ): error is AxiosError<{ message?: string; errors?: unknown[] }> {
+    return (error as AxiosError).isAxiosError === true;
   }
 
-  // Create payment for e-commerce orders
-  async createOrderPayment(paymentData: OrderPaymentRequest): Promise<Payment> {
-    const response = await this.post('/client/orders/payment', paymentData);
-    return response.data;
+  private getErrorMessage(error: AxiosError<{ message?: string; errors?: unknown[] }>): string {
+    return error.response?.data?.message || error.message || 'An error occurred';
   }
 
-  // Create payment for missions
-  async createMissionPayment(paymentData: CreatePaymentRequest): Promise<Payment> {
-    const response = await this.post('/payments/missions', paymentData);
-    return response.data;
-  }
+  private getErrorResponse(error: unknown): {
+    success: false;
+    status: number;
+    message: string;
+    errors: string[];
+  } {
+    if (this.isAxiosError(error)) {
+      const errors = error.response?.data?.errors || [];
+      const stringErrors = errors.map((err) =>
+        typeof err === 'object' && err !== null ? JSON.stringify(err) : String(err)
+      );
 
-  // MTN Mobile Money payment simulation (for development)
-  async simulateMTNPayment(phoneNumber: string, amount: string): Promise<PaymentSimulation> {
-    const response = await this.post('/payments/mtn/simulate', {
-      phoneNumber,
-      amount,
-      currency: 'XOF',
-    });
-    return response.data;
-  }
-
-  // Confirm MTN Mobile Money payment
-  async confirmPayment(confirmData: ConfirmPaymentRequest): Promise<Payment> {
-    const response = await this.post('/payments/confirm', confirmData);
-    return response.data;
-  }
-
-  // Check payment status
-  async getPaymentStatus(paymentId: string): Promise<Payment> {
-    const response = await this.get(`/payments/${paymentId}`);
-    return response.data;
-  }
-
-  // Get user's saved payment methods
-  async getSavedPaymentMethods(): Promise<SavedPaymentMethod[]> {
-    const response = await this.get('/client/payment-methods');
-    return response.data;
-  }
-
-  // Save a new payment method
-  async savePaymentMethod(paymentMethod: Partial<SavedPaymentMethod>): Promise<SavedPaymentMethod> {
-    const response = await this.post('/client/payment-methods', paymentMethod);
-    return response.data;
-  }
-
-  // Delete a saved payment method
-  async deletePaymentMethod(methodId: string): Promise<void> {
-    await this.delete(`/client/payment-methods/${methodId}`);
-  }
-
-  // Get payment history with filters
-  async getPaymentHistory(filters?: PaymentFilters): Promise<PaymentListResponse> {
-    const params = new URLSearchParams();
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((v) => params.append(key, v.toString()));
-          } else {
-            params.append(key, value.toString());
-          }
-        }
-      });
+      return {
+        success: false,
+        status: error.response?.status || 500,
+        message: this.getErrorMessage(error),
+        errors: stringErrors,
+      };
     }
-
-    const response = await this.get(`/client/payments?${params.toString()}`);
-    return response.data;
+    return {
+      success: false,
+      status: 500,
+      message: 'An unexpected error occurred',
+      errors: [],
+    };
   }
 
-  // Get payments for a specific order
-  async getOrderPayments(orderId: string): Promise<Payment[]> {
-    const response = await this.get(`/client/orders/${orderId}/payments`);
-    return response.data;
+  // Payment Operations
+  async initiatePayment(data: CreatePaymentRequest): Promise<ApiResponse<Payment>> {
+    try {
+      const response = await this.insertToken().post('/api/client/payments/initiate', data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
   }
 
-  // Get payments for a specific mission
-  async getMissionPayments(missionId: string): Promise<Payment[]> {
-    const response = await this.get(`/payments/missions/${missionId}`);
-    return response.data;
+  async getPaymentStatus(id: string): Promise<ApiResponse<Payment>> {
+    try {
+      const response = await this.insertToken().get(`/api/client/payments/${id}/status`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
   }
 
-  // Request payment refund
-  async requestRefund(paymentId: string, reason: string): Promise<Payment> {
-    const response = await this.post(`/payments/${paymentId}/refund`, { reason });
-    return response.data;
+  async confirmPayment(id: string, data: ConfirmPaymentRequest): Promise<ApiResponse<Payment>> {
+    try {
+      const response = await this.insertToken().post(`/api/client/payments/${id}/confirm`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
   }
 
-  // Get refund status
-  async getRefundStatus(paymentId: string): Promise<Payment> {
-    const response = await this.get(`/payments/${paymentId}/refund`);
-    return response.data;
+  async getOrderPayment(orderId: string): Promise<ApiResponse<Payment>> {
+    try {
+      const response = await this.insertToken().get(`/api/client/orders/${orderId}/payment`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
   }
 
-  // Webhook handler for payment status updates (admin only)
-  async handlePaymentWebhook(webhookData: Record<string, unknown>): Promise<void> {
-    await this.post('/admin/payments/webhook', webhookData);
+  async createOrderPayment(data: OrderPaymentRequest): Promise<Payment> {
+    try {
+      const response = await this.insertToken().post('/api/client/orders/payment', data);
+      return response.data.data;
+    } catch (error) {
+      if (this.isAxiosError(error)) {
+        throw new Error(this.getErrorMessage(error));
+      }
+      throw new Error('Failed to create order payment');
+    }
   }
 
-  // Get MTN Mobile Money transaction status
-  async getMTNTransactionStatus(transactionId: string): Promise<MTNPaymentResponse> {
-    const response = await this.get(`/payments/mtn/status/${transactionId}`);
-    return response.data;
+  async getPaymentHistory(params: {
+    missionId?: string;
+    orderId?: string;
+  }): Promise<{ payments: Payment[] }> {
+    // Simulate API call with mock data
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockPayments: Payment[] = [
+          {
+            id: 'pay_1',
+            orderId: params.orderId || 'order_1',
+            amount: 150000, // Amount in cents (1500 FCFA)
+            method: 'orange_money',
+            status: 'completed',
+            transactionId: 'TXN_OM_123456',
+            phoneNumber: '+237600000000',
+            createdAt: '2024-01-15T10:30:00Z',
+            updatedAt: '2024-01-15T10:35:00Z',
+          },
+          {
+            id: 'pay_2',
+            orderId: params.orderId || 'order_2',
+            amount: 75000, // Amount in cents (750 FCFA)
+            method: 'bank_transfer',
+            status: 'pending',
+            transactionId: 'TXN_BT_789012',
+            createdAt: '2024-01-10T14:20:00Z',
+            updatedAt: '2024-01-10T14:20:00Z',
+          },
+          {
+            id: 'pay_3',
+            orderId: params.orderId || 'order_3',
+            amount: 200000, // Amount in cents (2000 FCFA)
+            method: 'mtn_mobile_money',
+            status: 'failed',
+            transactionId: 'TXN_MTN_345678',
+            phoneNumber: '+237677000000',
+            createdAt: '2024-01-05T09:15:00Z',
+            updatedAt: '2024-01-05T09:16:00Z',
+          },
+        ];
+
+        resolve({ payments: mockPayments });
+      }, 1000); // Simulate 1 second delay
+    });
+  }
+
+  // MTN Mobile Money Payment Simulation
+  async simulateMTNPayment(phoneNumber: string, amount: number): Promise<PaymentSimulation> {
+    // Simulate API call with processing time
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Generate a random transaction ID
+        const transactionId = `MTN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Simulate success/failure based on phone number validation
+        const isValidPhone = /^\+237[679]\d{8}$/.test(phoneNumber);
+        const hasEnoughBalance = amount <= 1000000; // Simulate balance limit of 10,000 FCFA
+
+        if (!isValidPhone) {
+          resolve({
+            success: false,
+            transactionId: '',
+            message: 'Numéro de téléphone MTN invalide. Utilisez le format +237XXXXXXXXX',
+            processingTime: 2000,
+          });
+        } else if (!hasEnoughBalance) {
+          resolve({
+            success: false,
+            transactionId: '',
+            message: 'Solde insuffisant sur votre compte MTN Mobile Money',
+            processingTime: 3000,
+          });
+        } else {
+          resolve({
+            success: true,
+            transactionId,
+            message: `Simulation réussie pour ${phoneNumber}. Montant: ${amount / 100} FCFA`,
+            processingTime: 2500,
+          });
+        }
+      }, 2000); // Simulate 2 second processing delay
+    });
   }
 }
 

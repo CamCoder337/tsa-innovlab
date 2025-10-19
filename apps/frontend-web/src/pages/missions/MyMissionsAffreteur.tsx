@@ -1,38 +1,37 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Clock, Plus, Package, MessageSquare } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { missionService } from '@/services/mission.service';
 import { toast } from 'react-hot-toast';
 import MissionCard from '@/components/missions/MissionCard';
 
 export default function MyMissionsAffreteur() {
-  const { myMissions, updateMission } = useMissions();
-  const [activeTab, setActiveTab] = useState('all');
+  const { myMissions, error, publishMission } = useMissions();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
 
   const handlePublish = async (id: string) => {
-    const response = await missionService.publishMission(id);
-    console.log(response);
+    await publishMission(id);
 
-    if (response.error) {
-      toast.error(response.error.message);
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
     }
 
-    if (response.data) {
-      updateMission(id, response.data);
-      toast.success('Mission publiée avec succès');
-      setTimeout(() => {
-        window.location.reload();
-      }, 2500);
-    }
+    toast.success('Mission publiée avec succès');
+    setTimeout(() => {
+      window.location.reload();
+    }, 2500);
   };
 
   const filteredMissions = myMissions.filter((mission) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'actives') return ['published', 'assigned'].includes(mission.status);
+    if (activeTab === 'pending') return mission.status === 'published';
+    if (activeTab === 'actives') return mission.status === 'assigned';
     if (activeTab === 'completed') return mission.status === 'completed';
     if (activeTab === 'draft') return mission.status === 'draft';
     return true;
@@ -118,8 +117,9 @@ export default function MyMissionsAffreteur() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">Toutes</TabsTrigger>
+              <TabsTrigger value="pending">En attente</TabsTrigger>
               <TabsTrigger value="actives">Actives</TabsTrigger>
               <TabsTrigger value="completed">Terminées</TabsTrigger>
               <TabsTrigger value="draft">Brouillons</TabsTrigger>

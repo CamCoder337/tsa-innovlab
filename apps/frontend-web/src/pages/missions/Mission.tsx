@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
 import type { MissionStatus } from '@/types/mission.types';
 import { MissionDetails } from '@/components/missions/MissionDetails';
-import { MissionOffers } from '@/components/missions/MissionOffers';
 import { MissionActions } from '@/components/missions/MissionActions';
 import { MissionTimeline } from '@/components/missions/MissionTimeline';
 import { MissionAppreciation } from '@/components/missions/MissionAppreciation';
@@ -46,17 +45,17 @@ export default function MissionDetailsPage() {
     if (id) {
       fetchMission();
     }
-  }, [fetchMission, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleStatusUpdate = async (status: MissionStatus, commentaire?: string) => {
     if (!currentMission) return;
 
     try {
-      const response = await missionService.updateMissionStatus(
-        currentMission.id,
+      const response = await missionService.updateMissionStatus(currentMission.id, {
         status,
-        commentaire || ''
-      );
+        commentaire,
+      });
       if (response.data) {
         toast.success(`Mission ${status} successfully`);
       }
@@ -101,7 +100,7 @@ export default function MissionDetailsPage() {
           {currentMission.status !== 'draft' && (
             <>
               <TabsTrigger value="details">Details</TabsTrigger>
-              {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>}
+              {/* {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>} */}
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
               {/* {currentMission.status === 'completed' && (
@@ -118,9 +117,9 @@ export default function MissionDetailsPage() {
           <MissionDetails mission={currentMission} />
         </TabsContent>
 
-        <TabsContent value="offers">
+        {/* <TabsContent value="offers">
           <MissionOffers mission={currentMission} userRole={user?.role} onRefresh={fetchMission} />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="timeline">
           <MissionTimeline mission={currentMission} />

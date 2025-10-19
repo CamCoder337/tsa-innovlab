@@ -1,22 +1,17 @@
 import type { MissionStatus } from '@/types/mission.types';
-import type { PropositionStatus } from '@/types/proposition.types';
 import { CheckCircle, Clock, Package, XCircle } from 'lucide-react';
 
-export function getStatusColor(status: MissionStatus | PropositionStatus) {
+export function getStatusColor(status: MissionStatus) {
   switch (status) {
     case 'draft':
       return 'bg-gray-100 text-gray-800';
     case 'published':
       return 'bg-blue-100 text-blue-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
     case 'assigned':
       return 'bg-purple-100 text-purple-800';
     case 'completed':
-    case 'accepted':
       return 'bg-green-100 text-green-800';
     case 'cancelled':
-    case 'rejected':
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';
@@ -40,7 +35,7 @@ export function getStatusIcon(status: string) {
   }
 }
 
-export function getStatusLabel(status: MissionStatus | PropositionStatus) {
+export function getStatusLabel(status: MissionStatus) {
   const labels = {
     draft: 'BROUILLON',
     published: 'OUVERTE',

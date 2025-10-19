@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare, ThumbsUp, Award } from 'lucide-react';
-import type { Mission } from '@/types/mission.types';
+import { Star, MessageSquare, ThumbsUp, Award, Loader2, AlertTriangle } from 'lucide-react';
+import type { Mission, MissionFeedback } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
+import { missionService } from '@/services/mission.service';
 import toast from 'react-hot-toast';
 
 interface MissionAppreciationProps {
@@ -37,6 +38,43 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
     wouldRecommend: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingFeedback, setExistingFeedback] = useState<MissionFeedback | null>(null);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchExistingFeedback = async () => {
+      setIsLoadingFeedback(true);
+      setFeedbackError(null);
+
+      try {
+        const response = await missionService.getMissionFeedback(mission.id);
+
+        if (response.error) {
+          setFeedbackError('Erreur lors du chargement des appréciations');
+          return;
+        }
+
+        if (response.data) {
+          setExistingFeedback(response.data);
+          // Pre-fill form with existing feedback if available
+          if (response.data && response.data.rating) {
+            setAppreciation((prev) => ({
+              ...prev,
+              rating: response.data?.rating || 0,
+              comment: response.data?.description || '',
+            }));
+          }
+        }
+      } catch {
+        setFeedbackError('Erreur lors du chargement des appréciations');
+      } finally {
+        setIsLoadingFeedback(false);
+      }
+    };
+
+    fetchExistingFeedback();
+  }, [mission.id]);
 
   // Calcul automatique de la note générale
   const calculateOverallRating = (
@@ -83,19 +121,23 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
 
     setIsSubmitting(true);
     try {
-      // TODO: Implement API call to submit appreciation with detailed criteria
-      // await missionService.submitAppreciation(mission.id, {
-      //   ponctualite: appreciation.ponctualite,
-      //   fiabilite: appreciation.fiabilite,
-      //   qualiteService: appreciation.qualiteService,
-      //   gestionIncidents: appreciation.gestionIncidents,
-      //   rating: appreciation.rating,
-      //   comment: appreciation.comment,
-      //   wouldRecommend: appreciation.wouldRecommend
-      // });
+      // Submit appreciation using mission service
+      const feedbackData = {
+        rating: appreciation.rating,
+        description: appreciation.comment,
+      };
 
-      toast.success('Appréciation détaillée soumise avec succès');
-      onUpdate?.();
+      const response = await missionService.createMissionFeedback(mission.id, feedbackData);
+
+      if (response.error) {
+        toast.error(response.error.message || "Erreur lors de la soumission de l'appréciation");
+      }
+
+      if (response.data) {
+        toast.success('Appréciation détaillée soumise avec succès');
+        setExistingFeedback(response.data);
+        onUpdate?.();
+      }
     } catch {
       toast.error("Erreur lors de la soumission de l'appréciation");
     } finally {
@@ -432,12 +474,57 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* TODO: Load and display existing appreciations */}
-          <div className="text-center py-8 text-gray-500">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Aucune appréciation pour le moment</p>
-            <p className="text-sm">Les appréciations apparaîtront ici une fois soumises</p>
-          </div>
+          {isLoadingFeedback ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span className="text-muted-foreground">Chargement des appréciations...</span>
+            </div>
+          ) : feedbackError ? (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+              <p className="text-muted-foreground">{feedbackError}</p>
+            </div>
+          ) : existingFeedback ? (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">Appréciation soumise</h4>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${
+                          star <= (existingFeedback.rating || 0)
+                            ? 'text-yellow-400 fill-current'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                    <span className="ml-1 text-sm font-medium">{existingFeedback.rating}/5</span>
+                  </div>
+                </div>
+                {existingFeedback.description && (
+                  <p className="text-sm text-gray-600 mb-2">{existingFeedback.description}</p>
+                )}
+                <p className="text-xs text-gray-500">
+                  Soumise le{' '}
+                  {new Date(existingFeedback.createdAt).toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Aucune appréciation pour le moment</p>
+              <p className="text-sm">Les appréciations apparaîtront ici une fois soumises</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

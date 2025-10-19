@@ -101,7 +101,7 @@ export default function TransporteurTrackingDashboard() {
   const activeAssignments = missions.filter((m) => m.transporteurId === 'transporteur-1').length;
   const completedToday = 3; // Calculé dynamiquement
   const totalDistance = 525; // Calculé à partir des adresses
-  const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMax, 0);
+  const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMin!, 0);
   const driverRating = 4.8;
 
   return (
@@ -248,7 +248,7 @@ export default function TransporteurTrackingDashboard() {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span>Mission en Cours</span>
-                        {currentAssignment.budgetMax > 200000 && (
+                        {currentAssignment.budgetMin! > 200000 && (
                           <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
                         )}
                       </CardTitle>
@@ -290,7 +290,7 @@ export default function TransporteurTrackingDashboard() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Paiement:</span>
                           <span className="font-medium text-green-600">
-                            {currentAssignment.budgetMax.toLocaleString()} FCFA
+                            {currentAssignment.budgetMin!.toLocaleString()} FCFA
                           </span>
                         </div>
                       </div>
@@ -298,7 +298,7 @@ export default function TransporteurTrackingDashboard() {
                       <div className="border-t pt-3">
                         <p className="text-sm text-gray-600 mb-2">Livraison prévue:</p>
                         <p className="font-medium">
-                          {new Date(currentAssignment.dateArriveePrevue).toLocaleString()}
+                          {new Date(currentAssignment.dateArriveePrevue!).toLocaleString()}
                         </p>
                       </div>
 
@@ -371,7 +371,7 @@ export default function TransporteurTrackingDashboard() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
                             <span className="font-medium">{assignment.title}</span>
-                            {assignment.budgetMax > 200000 && (
+                            {assignment.budgetMin! > 200000 && (
                               <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
                             )}
                             <div
@@ -387,15 +387,15 @@ export default function TransporteurTrackingDashboard() {
                           </p>
                           <div className="flex items-center gap-4 text-sm text-gray-500">
                             <span>Volume: {assignment.volume}m³</span>
-                            <span>Budget: {assignment.budgetMax.toLocaleString()} FCFA</span>
+                            <span>Budget: {assignment.budgetMin!.toLocaleString()} FCFA</span>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-green-600">
-                            {assignment.budgetMax.toLocaleString()} FCFA
+                            {assignment.budgetMin!.toLocaleString()} FCFA
                           </p>
                           <p className="text-sm text-gray-500">
-                            {new Date(assignment.dateArriveePrevue).toLocaleDateString()}
+                            {new Date(assignment.dateArriveePrevue!).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

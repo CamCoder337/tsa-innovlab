@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Mission } from '@/types/mission.types';
-import type { Proposition } from '@/types/proposition.types';
 import {
   Select,
   SelectContent,
@@ -18,44 +17,36 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { PropositionForm } from '@/components/forms/PropositionForm';
+import { Button } from '@/components/ui/button';
 import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { useAddresses } from '@/hooks/useAddresses';
-import { missionService } from '@/services/mission.service';
+import { useVehicles } from '@/hooks/useVehicles';
 import toast from 'react-hot-toast';
-import { usePropositions } from '@/hooks/usePropositions';
 import MissionCard from '@/components/missions/MissionCard';
+import { VehicleTypeLabels } from '@/types/vehicle.types';
 // import { Calendar } from '@/components/ui/calendar';
 
-interface FormValues {
-  id: string;
-  amount: number;
-  delai: number;
-  message: string;
-}
-
 export default function MissionsTransporteurPage() {
-  const { missions, myMissions, currentMission, setCurrentMission, deleteMission } = useMissions();
-  const { myPropositions, addProposition } = usePropositions();
+  const { missions, myMissions, currentMission, error, setCurrentMission, applyMission } =
+    useMissions();
   const { addresses } = useAddresses();
+  const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const [activeTab, setActiveTab] = useState('available');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
 
   const filteredMissions = (() => {
     if (activeTab === 'all') {
-      return [...missions, ...myMissions, ...myPropositions];
+      return [...missions, ...myMissions];
     }
 
     if (activeTab === 'available') {
       return missions.filter((mission) => mission.status === 'published');
     }
-
-    if (activeTab === 'pending')
-      return myPropositions.filter((proposition) => proposition.status === 'pending');
 
     // For other tabs, filter myMissions by status
     return myMissions.filter((mission) => {
@@ -65,32 +56,28 @@ export default function MissionsTransporteurPage() {
     });
   })();
 
-  const applyProposition = async (data: FormValues) => {
-    const payload = {
-      prixPropose: data.amount,
-      delaiPropose: data.delai,
-      commentaire: data.message,
-    };
+  const applyForMission = async () => {
+    if (!currentMission || !selectedVehicleId) {
+      toast.error('Veuillez sélectionner un véhicule');
+      return;
+    }
 
     try {
-      const response = await missionService.applyForMission(data.id, payload);
+      await applyMission(currentMission.id, selectedVehicleId);
 
-      if (response.error) {
-        console.log(response.error);
-        toast.error(response.error.message || 'Erreur lors de la soumission ');
+      if (error) {
+        console.error(error);
+        toast.error(error || 'Erreur lors de la candidature');
         return;
       }
 
-      if (response.data) {
-        addProposition(response.data);
-        deleteMission(data.id);
-        toast.success('Contre-proposition envoyée');
-        setIsDialogOpen(false);
-        setCurrentMission(null);
-      }
+      toast.success('Candidature envoyée avec succès');
+      setIsDialogOpen(false);
+      setCurrentMission(null);
+      setSelectedVehicleId('');
     } catch (error) {
-      console.error('Error performing action:', error);
-      toast.error('Failed to perform action');
+      console.error('Error applying for mission:', error);
+      toast.error('Erreur lors de la candidature');
     }
   };
 
@@ -228,9 +215,8 @@ export default function MissionsTransporteurPage() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="available">Disponibles</TabsTrigger>
-                <TabsTrigger value="pending">En attente</TabsTrigger>
                 <TabsTrigger value="assigned">En Cours</TabsTrigger>
                 <TabsTrigger value="completed">Terminées</TabsTrigger>
                 <TabsTrigger value="all">Toutes</TabsTrigger>
@@ -238,25 +224,16 @@ export default function MissionsTransporteurPage() {
 
               <TabsContent value={activeTab} className="mt-6">
                 <div className="space-y-4">
-                  {filteredMissions.map((item: Mission | Proposition) => {
-                    // Type guard to check if the item is a Mission
-                    const isMission = 'title' in item;
-                    const mission = isMission ? (item as Mission) : (item as Proposition).mission;
-
-                    // Only render MissionCard for actual missions, skip propositions for now
-                    if (!mission) return null;
-
-                    return (
-                      <MissionCard
-                        key={item.id}
-                        mission={mission}
-                        onApply={handleApplyToMission}
-                        showApplyButton={isMission && activeTab === 'available'}
-                        showPublishButton={false}
-                        showTrackingButton={true}
-                      />
-                    );
-                  })}
+                  {filteredMissions.map((mission: Mission) => (
+                    <MissionCard
+                      key={mission.id}
+                      mission={mission}
+                      onApply={handleApplyToMission}
+                      showApplyButton={activeTab === 'available'}
+                      showPublishButton={false}
+                      showTrackingButton={true}
+                    />
+                  ))}
                 </div>
 
                 {filteredMissions.length === 0 && (
@@ -273,30 +250,95 @@ export default function MissionsTransporteurPage() {
               </TabsContent>
             </Tabs>
 
-            {/* Action Dialog */}
+            {/* Vehicle Selection Dialog */}
             <Dialog
               open={isDialogOpen}
               onOpenChange={(open) => {
                 if (!open) {
                   setCurrentMission(null);
+                  setSelectedVehicleId('');
                 }
                 setIsDialogOpen(open);
               }}
             >
               <DialogContent>
                 <DialogDescription className="hidden">
-                  Vous allez postuler à une mission
+                  Sélectionnez un véhicule pour postuler à cette mission
                 </DialogDescription>
                 <DialogHeader>
                   <DialogTitle>Postuler à la mission</DialogTitle>
                 </DialogHeader>
 
-                <PropositionForm
-                  action={'offer'}
-                  mission={currentMission as Mission}
-                  onSubmit={applyProposition}
-                  onCancel={() => setIsDialogOpen(false)}
-                />
+                <div className="space-y-4">
+                  {currentMission && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900">{currentMission.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{currentMission.description}</p>
+                      {currentMission.requiredVehicleType && (
+                        <p className="text-sm text-blue-600 mt-2">
+                          Type de véhicule requis:{' '}
+                          {VehicleTypeLabels[currentMission.requiredVehicleType]}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sélectionnez un véhicule disponible *
+                    </label>
+                    {vehiclesLoading ? (
+                      <div className="flex items-center justify-center p-4">
+                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-600">Chargement des véhicules...</span>
+                      </div>
+                    ) : availableVehicles.length === 0 ? (
+                      <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                        <p>Aucun véhicule disponible</p>
+                        <p className="text-sm mt-1">
+                          Vous devez avoir au moins un véhicule disponible pour postuler à une
+                          mission.
+                        </p>
+                      </div>
+                    ) : (
+                      <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un véhicule" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableVehicles.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{vehicle.registration}</span>
+                                <span className="text-sm text-gray-500">
+                                  ({VehicleTypeLabels[vehicle.type]})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsDialogOpen(false);
+                        setSelectedVehicleId('');
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={applyForMission}
+                      disabled={!selectedVehicleId || availableVehicles.length === 0}
+                    >
+                      Postuler
+                    </Button>
+                  </div>
+                </div>
               </DialogContent>
             </Dialog>
           </CardContent>

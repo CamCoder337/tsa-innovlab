@@ -7,6 +7,7 @@ import { Sparkles, TrendingUp, Users, ShoppingCart, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
+import { shopService } from '@/services/shop.service';
 
 interface ProductRecommendationsProps {
   type: 'popular' | 'personalized' | 'similar';
@@ -17,8 +18,8 @@ interface ProductRecommendationsProps {
 
 interface RecommendationResponse {
   products: Product[];
-  reason?: string;
-  confidence?: number;
+  strategy: string;
+  total: number;
 }
 
 export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
@@ -38,58 +39,40 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       setIsLoading(true);
       setError(null);
 
-      let url = '';
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      // Add auth header if authenticated
-      if (isAuthenticated) {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-      }
+      let response;
 
       switch (type) {
         case 'popular':
-          url = `/api/shop/product-recommendations/popular?limit=${limit}`;
+          response = await shopService.getProductRecommendations(limit);
           break;
         case 'personalized':
-          if (!isAuthenticated) {
-            // Fallback to popular for non-authenticated users
-            url = `/api/shop/product-recommendations/popular?limit=${limit}`;
-          } else {
-            url = `/api/shop/product-recommendations?limit=${limit}`;
-          }
+          response = await shopService.getProductRecommendations(limit);
           break;
         case 'similar':
           if (!productId) {
             throw new Error('Product ID required for similar recommendations');
           }
-          url = `/api/shop/product-recommendations/similar/${productId}?limit=${limit}`;
+          response = await shopService.getSimilarProducts(productId, limit);
           break;
       }
 
-      const response = await fetch(url, { headers });
-
-      if (!response.ok) {
+      if (response.error) {
         throw new Error('Failed to fetch recommendations');
       }
 
-      const data = await response.json();
-      setRecommendations(data.data || data);
+      if (response.data) setRecommendations(response.data as RecommendationResponse);
     } catch (err) {
       console.error('Error fetching recommendations:', err);
       setError(err instanceof Error ? err.message : 'Failed to load recommendations');
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, type, productId, limit]);
+  }, [limit, productId, type]);
 
   useEffect(() => {
     fetchRecommendations();
-  }, [type, productId, isAuthenticated, fetchRecommendations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAddToCart = async (product: Product) => {
     try {
@@ -246,7 +229,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           </div>
         )}
 
-        {recommendations?.reason && type === 'personalized' && (
+        {/* {recommendations?.reason && type === 'personalized' && (
           <div className="mt-4 p-3 bg-blue-50 rounded-lg">
             <div className="flex items-center gap-2 text-sm text-blue-700">
               <Sparkles className="h-4 w-4" />
@@ -268,7 +251,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               </div>
             )}
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );

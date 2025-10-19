@@ -116,7 +116,7 @@ export default function CartSummaryPage() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+  }, [selectedAddress, useManualAddress]);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -648,7 +648,7 @@ export default function CartSummaryPage() {
             {/* Payment Form */}
             <PaymentForm
               amount={total}
-              currency="fcfa"
+              orderId={orderNumber}
               onSuccess={(payment) => {
                 console.log('Payment successful:', payment);
                 // Generate order number

@@ -46,7 +46,7 @@ function AffreteurDashboard() {
       value: metrics?.activeMissions || 0,
       change: `${myMissions.length} au total`,
       color: 'blue',
-      href: 'app/missions/active',
+      href: '/app/missions?tab=actives',
     },
     {
       title: 'Coût Moyen',
@@ -58,7 +58,7 @@ function AffreteurDashboard() {
           (metrics?.averageCost || 0) * 1.05
         ) + ' ce mois',
       color: 'green',
-      href: 'app/reports/costs',
+      href: '/app/reports/costs',
     },
     {
       title: 'Missions en Attente',
@@ -66,7 +66,7 @@ function AffreteurDashboard() {
       value: myMissions.filter((m) => m.status === 'published').length,
       change: `${myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status)).length} en cours`,
       color: 'purple',
-      href: 'app/missions/pending',
+      href: '/app/missions?tab=pending',
     },
     {
       title: 'Taux de Réussite',
@@ -78,7 +78,7 @@ function AffreteurDashboard() {
           (metrics?.successRate || 0) - 2
         ) + ' ce mois',
       color: 'green',
-      href: '/affreteur/reports/missions',
+      href: '/app',
     },
   ];
 
@@ -205,13 +205,13 @@ function AffreteurDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link to="/missions/create">
+            <Link to="/app/missions/create">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Plus className="h-4 w-4" />
                 Nouvelle Mission
               </Button>
             </Link>
-            <Link to="/tracking-dashboard">
+            <Link to="/app/tracking-dashboard">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <MapPin className="h-4 w-4" />
                 Suivi Expéditions

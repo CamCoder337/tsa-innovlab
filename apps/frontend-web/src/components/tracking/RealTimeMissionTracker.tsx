@@ -80,7 +80,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     });
 
     return cleanup;
-  }, [missions, setMissions]); // Seulement quand les missions sont chargées initialement
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missions]); // Seulement quand les missions sont chargées initialement
 
   // Statistiques temps réel
   const stats = {
@@ -88,7 +89,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     assigned: missions.filter((m) => m.status === 'assigned').length,
     completed: missions.filter((m) => m.status === 'completed').length,
     inProgress: missions.filter((m) => ['assigned', 'published'].includes(m.status)).length,
-    highPriority: missions.filter((m) => m.budgetMax > 200000).length,
+    highPriority: missions.filter((m) => m.budgetMax! > 200000).length,
   };
 
   const handleRefresh = async () => {
@@ -271,18 +272,18 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                   <div className="flex justify-between">
                     <span className="text-gray-600">Budget:</span>
                     <span className="font-medium text-green-600">
-                      {selectedMission.budgetMax.toLocaleString()} FCFA
+                      {selectedMission.budgetMin?.toLocaleString()} FCFA
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Livraison:</span>
                     <span className="font-medium">
-                      {new Date(selectedMission.dateArriveePrevue).toLocaleDateString()}
+                      {new Date(selectedMission.dateArriveePrevue!).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
 
-                {selectedMission.budgetMax > 200000 && (
+                {selectedMission.budgetMin! > 200000 && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-red-500" />
