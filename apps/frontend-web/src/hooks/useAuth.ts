@@ -18,7 +18,7 @@ export const useAuth = () => {
   useEffect(() => {
     if (isAuthenticated && !token) logout();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isAuthenticated]);
+  }, [isAuthenticated]);
 
   return {
     user,

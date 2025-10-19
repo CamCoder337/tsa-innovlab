@@ -78,17 +78,10 @@ class WebSocketService {
     if (this.isConnecting) return;
 
     this.isConnecting = true;
-    const wsUrl = getWebSocketUrl();
+    const wsUrl = getWebSocketUrl(this.token || undefined);
 
     try {
-      if (this.token) {
-        // Pass Authorization token as subprotocol
-        // Backend can extract this from Sec-WebSocket-Protocol header
-        const authProtocol = `authorization.bearer.${this.token.replace(/\./g, '_')}`;
-        this.ws = new WebSocket(wsUrl, [authProtocol]);
-      } else {
-        this.ws = new WebSocket(wsUrl);
-      }
+      this.ws = new WebSocket(wsUrl);
 
       this.setupEventListeners();
     } catch (error) {

@@ -42,7 +42,7 @@ function removeCookie(name: string, options: CookieOptions = {}) {
 }
 
 // Helper function to get persisted user data
-function getPersistedUser(): User | null {
+export function getPersistedUser(): User | null {
   try {
     const persistedData = localStorage.getItem('tsa_user');
     if (persistedData) {
@@ -205,14 +205,15 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      logout: () => {
+      logout: async () => {
         // Arrêter la gestion automatique des tokens
         tokenManager.stopTokenManagement();
         try {
-          if (get().token)
-            toast.promise(authService.logout(), {
-              loading: 'Déconnexion...',
-            });
+          await toast.promise(authService.logout(), {
+            loading: 'Déconnexion...',
+          });
+
+          toast.success('Déconnexion réussie');
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
           set({
@@ -221,11 +222,9 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: null,
             isAuthenticated: false,
           });
-          return true;
         } catch (error) {
           console.error(error);
           toast.error('Erreur lors de la déconnexion');
-          return false;
         }
       },
 

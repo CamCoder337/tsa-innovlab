@@ -230,8 +230,6 @@ export default function MissionsTransporteurPage() {
                       mission={mission}
                       onApply={handleApplyToMission}
                       showApplyButton={activeTab === 'available'}
-                      showPublishButton={false}
-                      showTrackingButton={true}
                     />
                   ))}
                 </div>

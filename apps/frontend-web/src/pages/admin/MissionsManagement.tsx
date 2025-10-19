@@ -219,7 +219,6 @@ export default function MissionsManagement() {
                       mission={mission}
                       showApplyButton={false}
                       showPublishButton={false}
-                      showTrackingButton={false}
                     />
                   ))}
                 </div>

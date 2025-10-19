@@ -23,8 +23,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/avatar';
 import logo from '@/assets/logo_white_bg.png';
 import { useAuth } from '@/hooks/useAuth';
-import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
 import { useCart } from '@/hooks/useCart';
 import CartDrawer from '@/components/shop/CartDrawer';
 import { NotificationCenter } from '../notifications/NotificationCenter';
@@ -39,12 +37,7 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    toast.promise(authService.logout(), {
-      loading: 'Déconnexion...',
-      success: 'Déconnexion réussie',
-      error: 'Erreur lors de la déconnexion',
-    });
-    logout();
+    await logout();
     navigate('/');
   };
 

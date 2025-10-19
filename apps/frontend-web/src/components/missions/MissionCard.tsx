@@ -10,9 +10,9 @@ interface MissionCardProps {
   mission: Mission;
   onPublish?: (id: string) => void;
   onApply?: (mission: Mission) => void;
+  onCancel?: (id: string) => void;
   showApplyButton?: boolean;
   showPublishButton?: boolean;
-  showTrackingButton?: boolean;
   className?: string;
 }
 
@@ -20,9 +20,7 @@ export default function MissionCard({
   mission,
   onPublish,
   onApply,
-  showApplyButton = false,
-  showPublishButton = true,
-  showTrackingButton = true,
+  onCancel,
   className = '',
 }: MissionCardProps) {
   // const fetchPropositions = useCallback(async () => {
@@ -106,7 +104,7 @@ export default function MissionCard({
                 Voir Détails
               </Button>
             </Link>
-            {showPublishButton && mission.status === 'draft' && onPublish && (
+            {mission.status === 'draft' && onPublish && (
               <Button
                 variant="outline"
                 className="gap-2 bg-tsa-blue text-white w-full"
@@ -116,7 +114,7 @@ export default function MissionCard({
                 Publier
               </Button>
             )}
-            {showApplyButton && mission.status === 'published' && onApply && (
+            {mission.status === 'published' && onApply && (
               <Button
                 className="gap-2 w-full"
                 style={{ backgroundColor: 'var(--tsa-blue)' }}
@@ -126,18 +124,17 @@ export default function MissionCard({
                 Postuler
               </Button>
             )}
-            {!showApplyButton && mission.status === 'published' && (
-              <Link
-                to={`/app/missions/${mission.id}?tab=offers`}
-                aria-label={`Voir ${mission.title}`}
+            {mission.status === 'published' && onCancel && (
+              <Button
+                className="gap-2 w-full"
+                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                onClick={() => onCancel(mission.id)}
               >
-                <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
-                  <MessageSquare className="h-4 w-4" />
-                  Voir Offres
-                </Button>
-              </Link>
+                <MessageSquare className="h-4 w-4" />
+                Annuler la Mission
+              </Button>
             )}
-            {showTrackingButton && mission.status === 'assigned' && (
+            {mission.status === 'assigned' && (
               <Link
                 to={`/app/missions/${mission.id}/tracking`}
                 aria-label={`Suivre ${mission.title}`}
