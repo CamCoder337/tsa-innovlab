@@ -119,6 +119,16 @@ export default class NotificationService {
       case 'account_locked':
         await this.emailService.sendAccountLockedNotification(user)
         break
+
+      case 'low_stock_alert':
+        // Send low stock alert email with product in array format for template
+        await this.emailService.sendLowStockAlert(user.email, [
+          {
+            name: data.productName,
+            quantity: data.stockCurrent,
+          },
+        ])
+        break
     }
   }
 
@@ -138,6 +148,7 @@ export default class NotificationService {
       account_verified: 'Compte vérifié',
       mfa_enabled: '2FA activée',
       account_locked: 'Compte verrouillé',
+      low_stock_alert: '⚠️ Alerte Stock Faible',
     }
     return titles[type] || 'Notification'
   }
@@ -150,6 +161,8 @@ export default class NotificationService {
         return 'Votre proposition a été acceptée'
       case 'proposition_rejected':
         return 'Votre proposition a été refusée'
+      case 'low_stock_alert':
+        return `Le produit "${data.productName}" a un stock faible (${data.stockCurrent} unités restantes)`
       default:
         return 'Vous avez une nouvelle notification'
     }
@@ -159,6 +172,7 @@ export default class NotificationService {
     const priorities: Record<string, any> = {
       proposition_accepted: 'high',
       mission_cancelled: 'high',
+      low_stock_alert: 'high',
       account_locked: 'urgent',
       nouvelle_proposition: 'normal',
       new_mission: 'normal',
