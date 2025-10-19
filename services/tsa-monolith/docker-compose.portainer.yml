@@ -137,6 +137,58 @@ services:
       timeout: 10s
       retries: 3
 
+  # FastAPI AI Service
+  tsa-ai:
+    build:
+      context: ../tsa-ai
+      dockerfile: Dockerfile
+    container_name: tsa-ai-backend
+    restart: unless-stopped
+    environment:
+      # Application
+      APP_NAME: ${AI_APP_NAME:-TSA Contest AI API}
+      APP_VERSION: ${AI_APP_VERSION:-1.0.0}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${AI_DEBUG:-false}
+      LOG_LEVEL: ${AI_LOG_LEVEL:-INFO}
+
+      # Database PostgreSQL (via réseau Docker)
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}
+
+      # Redis (via réseau Docker)
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      CACHE_TTL_SECONDS: ${AI_CACHE_TTL:-300}
+
+      # CORS Origins
+      ALLOWED_ORIGINS: ${AI_ALLOWED_ORIGINS:-["http://localhost:3000", "http://localhost:5173", "http://localhost:3333"]}
+
+      # ML Models
+      MODELS_PATH: ${AI_MODELS_PATH:-ml_models}
+      PREDICTION_BATCH_SIZE: ${AI_PREDICTION_BATCH_SIZE:-100}
+      MODEL_RELOAD_INTERVAL: ${AI_MODEL_RELOAD_INTERVAL:-3600}
+
+      # Internal service communication
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key-change-in-production}
+
+    ports:
+      - '${AI_PORT:-8000}:8000'
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - InnovlabG1
+
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/ai/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 # Volumes pour persistance des données
 volumes:
   postgres_data:

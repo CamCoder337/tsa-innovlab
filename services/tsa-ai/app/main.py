@@ -39,18 +39,20 @@ if settings.sentry_dsn:
     logger.info("Sentry monitoring initialized")
 
 
-async def load_ml_models():
-    """
-    Load ML models at startup
-    """
-    try:
-        from app.services.ml_service import ml_service
-        await ml_service.load_all_models()
-        logger.info("ML models loaded successfully")
-    except Exception as e:
-        logger.error(f"Failed to load ML models: {e}")
-        # Don't fail startup if models can't be loaded
-        pass
+# Commented out: ml_service.py doesn't exist yet
+# Each service (eta_service, product_recommendation_service) manages its own models
+# async def load_ml_models():
+#     """
+#     Load ML models at startup
+#     """
+#     try:
+#         from app.services.ml_service import ml_service
+#         await ml_service.load_all_models()
+#         logger.info("ML models loaded successfully")
+#     except Exception as e:
+#         logger.error(f"Failed to load ML models: {e}")
+#         # Don't fail startup if models can't be loaded
+#         pass
 
 
 @asynccontextmanager
@@ -80,7 +82,7 @@ async def lifespan(app: FastAPI):
             db.close()
 
         # Load ML models
-        await load_ml_models()
+        # await load_ml_models()  # Commented out: ml_service.py doesn't exist yet
 
     except Exception as e:
         logger.error(f"Startup failed: {e}")
