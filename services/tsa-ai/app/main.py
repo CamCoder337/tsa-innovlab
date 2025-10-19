@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple
 
 # Configure logging
 logging.basicConfig(
@@ -39,20 +39,19 @@ if settings.sentry_dsn:
     logger.info("Sentry monitoring initialized")
 
 
-# Commented out: ml_service.py doesn't exist yet
-# Each service (eta_service, product_recommendation_service) manages its own models
-# async def load_ml_models():
-#     """
-#     Load ML models at startup
-#     """
-#     try:
-#         from app.services.ml_service import ml_service
-#         await ml_service.load_all_models()
-#         logger.info("ML models loaded successfully")
-#     except Exception as e:
-#         logger.error(f"Failed to load ML models: {e}")
-#         # Don't fail startup if models can't be loaded
-#         pass
+async def load_ml_models():
+    """
+    Load ML models at startup
+    """
+    try:
+        # TODO: Implement ml_service when ML models are ready
+        # from app.services.ml_service import ml_service
+        # await ml_service.load_all_models()
+        logger.info("ML models loading skipped (not implemented yet)")
+    except Exception as e:
+        logger.error(f"Failed to load ML models: {e}")
+        # Don't fail startup if models can't be loaded
+        pass
 
 
 @asynccontextmanager
@@ -82,11 +81,11 @@ async def lifespan(app: FastAPI):
             db.close()
 
         # Load ML models
-        # await load_ml_models()  # Commented out: ml_service.py doesn't exist yet
+        await load_ml_models()
 
     except Exception as e:
-        logger.warning(f"Startup warning (DB not available): {e}")
-        logger.info("Continuing without database - chatbot will work in stateless mode")
+        logger.error(f"Startup failed: {e}")
+        raise
 
     yield
 
@@ -184,12 +183,6 @@ app.include_router(
     tags=["Pricing Dynamique"]
 )
 
-app.include_router(
-    chatbot.router,
-    prefix="/api/ai/chatbot",
-    tags=["Chatbot"]
-)
-
 # TODO: Add other AI routers
 # app.include_router(predictions.router, prefix="/api/ai/predictions", tags=["Predictions"])
 # app.include_router(anomalies.router, prefix="/api/ai/anomalies", tags=["Anomaly Detection"])
@@ -221,7 +214,6 @@ async def ai_root():
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
             "/api/ai/product-recommendations - Product recommendations ✅",
-            "/api/ai/chatbot - Chatbot assistant ✅",
             "/api/ai/predictions - General predictions (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
@@ -229,7 +221,6 @@ async def ai_root():
         "ml_models": {
             "eta": "✅ Operational",
             "product_recommendation": "✅ Operational",
-            "chatbot": "✅ Operational",
             "anomaly": "🚧 In development"
         }
     }

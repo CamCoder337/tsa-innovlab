@@ -1,0 +1,618 @@
+{
+  "info": {
+    "name": "TSA InnovLab - Product Recommendations API",
+    "description": "Collection de tests pour le système de recommandation de produits",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/ai",
+      "type": "string"
+    },
+    {
+      "key": "adonis_url",
+      "value": "http://localhost:3333/api",
+      "type": "string"
+    },
+    {
+      "key": "test_user_id",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "test_product_id",
+      "value": "660e8400-e29b-41d4-a716-446655440001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/health",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "health"]
+            },
+            "description": "Vérifier la santé du service de recommandation"
+          },
+          "response": []
+        },
+        {
+          "name": "Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/stats",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "stats"]
+            },
+            "description": "Obtenir les statistiques du système de recommandation"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Personalized Recommendations",
+      "item": [
+        {
+          "name": "Personalized - New User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"limit\": 5,\n  \"context\": \"homepage\",\n  \"exclude_product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Recommandations pour un nouvel utilisateur (devrait utiliser popularity_based)"
+          },
+          "response": []
+        },
+        {
+          "name": "Personalized - Existing User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 10,\n  \"context\": \"homepage\",\n  \"exclude_product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Recommandations pour un utilisateur avec historique"
+          },
+          "response": []
+        },
+        {
+          "name": "Personalized - With Exclusions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 10,\n  \"context\": \"cart\",\n  \"exclude_product_ids\": [\n    \"660e8400-e29b-41d4-a716-446655440001\",\n    \"660e8400-e29b-41d4-a716-446655440002\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Recommandations avec exclusion de certains produits"
+          },
+          "response": []
+        },
+        {
+          "name": "Personalized - Different Contexts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 5,\n  \"context\": \"checkout\",\n  \"exclude_product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Tester différents contextes: homepage, product, cart, checkout"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Similar Products",
+      "item": [
+        {
+          "name": "Similar Products",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{test_product_id}}\",\n  \"limit\": 5,\n  \"exclude_product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/similar",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "similar"]
+            },
+            "description": "Obtenir des produits similaires à un produit donné"
+          },
+          "response": []
+        },
+        {
+          "name": "Similar Products - With Exclusions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{test_product_id}}\",\n  \"limit\": 10,\n  \"exclude_product_ids\": [\n    \"660e8400-e29b-41d4-a716-446655440002\",\n    \"660e8400-e29b-41d4-a716-446655440003\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/similar",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "similar"]
+            },
+            "description": "Produits similaires avec exclusions"
+          },
+          "response": []
+        },
+        {
+          "name": "Similar Products - Non-existent Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"limit\": 5,\n  \"exclude_product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/similar",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "similar"]
+            },
+            "description": "Test avec un produit qui n'existe pas (devrait retourner product_not_found)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Popular Products",
+      "item": [
+        {
+          "name": "Popular Products - Default",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/popular?limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "popular"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Produits populaires avec paramètres par défaut (30 jours)"
+          },
+          "response": []
+        },
+        {
+          "name": "Popular Products - Last 7 Days",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/popular?limit=5&time_window_days=7",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "popular"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                },
+                {
+                  "key": "time_window_days",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": "Produits populaires sur les 7 derniers jours"
+          },
+          "response": []
+        },
+        {
+          "name": "Popular Products - Last 90 Days",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/popular?limit=20&time_window_days=90",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "popular"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "time_window_days",
+                  "value": "90"
+                }
+              ]
+            },
+            "description": "Produits populaires sur les 90 derniers jours"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Feedback",
+      "item": [
+        {
+          "name": "Feedback - View",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"product_id\": \"{{test_product_id}}\",\n  \"action\": \"view\",\n  \"context\": \"homepage\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "feedback"]
+            },
+            "description": "Feedback: l'utilisateur a vu le produit"
+          },
+          "response": []
+        },
+        {
+          "name": "Feedback - Click",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"product_id\": \"{{test_product_id}}\",\n  \"action\": \"click\",\n  \"context\": \"homepage\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "feedback"]
+            },
+            "description": "Feedback: l'utilisateur a cliqué sur le produit"
+          },
+          "response": []
+        },
+        {
+          "name": "Feedback - Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"product_id\": \"{{test_product_id}}\",\n  \"action\": \"add_to_cart\",\n  \"context\": \"product_page\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "feedback"]
+            },
+            "description": "Feedback: l'utilisateur a ajouté le produit au panier"
+          },
+          "response": []
+        },
+        {
+          "name": "Feedback - Purchase",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"product_id\": \"{{test_product_id}}\",\n  \"action\": \"purchase\",\n  \"context\": \"checkout\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/feedback",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "feedback"]
+            },
+            "description": "Feedback: l'utilisateur a acheté le produit"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Validation & Error Cases",
+      "item": [
+        {
+          "name": "Invalid Limit - Too High",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 100,\n  \"context\": \"homepage\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Test avec limit > 50 (devrait échouer avec 422)"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Limit - Zero",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 0,\n  \"context\": \"homepage\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Test avec limit = 0 (devrait échouer avec 422)"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{test_user_id}}\",\n  \"limit\": 5,\n  \"context\": \"invalid_context\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Test avec contexte invalide (devrait fallback sur 'homepage')"
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"limit\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/product-recommendations/personalized",
+              "host": ["{{base_url}}"],
+              "path": ["product-recommendations", "personalized"]
+            },
+            "description": "Test sans user_id (devrait échouer avec 422)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. AdonisJS Integration",
+      "item": [
+        {
+          "name": "Login - Get Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.token && jsonData.token.accessToken) {",
+                  "        pm.environment.set('jwt_token', jsonData.token.accessToken);",
+                  "        console.log('JWT token saved');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{adonis_url}}/auth/login",
+              "host": ["{{adonis_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login pour obtenir un JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Recommendations via AdonisJS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{adonis_url}}/shop/product-recommendations?limit=10&context=homepage",
+              "host": ["{{adonis_url}}"],
+              "path": ["shop", "product-recommendations"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "context",
+                  "value": "homepage"
+                }
+              ]
+            },
+            "description": "Recommandations personnalisées via l'API AdonisJS (nécessite authentification)"
+          },
+          "response": []
+        },
+        {
+          "name": "Similar Products via AdonisJS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{adonis_url}}/shop/product-recommendations/similar/{{test_product_id}}?limit=5",
+              "host": ["{{adonis_url}}"],
+              "path": ["shop", "product-recommendations", "similar", "{{test_product_id}}"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Produits similaires via AdonisJS (pas d'auth requise)"
+          },
+          "response": []
+        },
+        {
+          "name": "Popular Products via AdonisJS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{adonis_url}}/shop/product-recommendations/popular?limit=10",
+              "host": ["{{adonis_url}}"],
+              "path": ["shop", "product-recommendations", "popular"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Produits populaires via AdonisJS (pas d'auth requise)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
