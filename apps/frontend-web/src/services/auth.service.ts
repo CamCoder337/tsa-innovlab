@@ -89,7 +89,7 @@ export class AuthService extends BaseApi {
     }
   }
 
-  async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string }>> {
+  async forgotPassword(email: string): Promise<ApiResponse<{ message: string }>> {
     try {
       const response = await this.axiosInstance.post('/api/auth/forgot-password', { email });
       return { data: response.data };
@@ -98,18 +98,11 @@ export class AuthService extends BaseApi {
     }
   }
 
-  async resetPassword(
-    token: string,
-    email: string,
-    password: string,
-    passwordConfirmation: string
-  ): Promise<ApiResponse<{ message: string }>> {
+  async resetPassword(token: string, password: string): Promise<ApiResponse<{ message: string }>> {
     try {
       const response = await this.axiosInstance.post('/api/auth/reset-password', {
         token,
-        email,
         password,
-        password_confirmation: passwordConfirmation,
       });
       return { data: response.data };
     } catch (error) {

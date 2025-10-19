@@ -20,10 +20,12 @@ import type {
   UpdateCategory,
 } from '@/types/category.types';
 import type {
+  CreateMissionDto,
   Mission,
   MissionFilterParams,
   MissionStats,
-  UpdateMissionDto,
+  MissionStatus,
+  UpdateMissionStatus,
 } from '@/types/mission.types';
 import type { User, UpdateUserRequest } from '@/types/auth.types';
 import type { UserFilterParams, UserStats, UserStatusUpdateRequest } from '@/types/user.types';
@@ -200,22 +202,29 @@ export class AdminService extends BaseApi {
     }
   }
 
-  async adminUpdateMission(
-    id: string,
-    data: Partial<UpdateMissionDto>
-  ): Promise<ApiResponse<Mission>> {
+  async adminCreateMission(data: CreateMissionDto): Promise<ApiResponse<Mission>> {
     try {
-      const response = await this.insertToken().put(`/api/admin/missions/${id}`, data);
+      const response = await this.insertToken().post('/api/admin/missions', data);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async adminDeleteMission(id: string): Promise<ApiResponse<{ success: boolean }>> {
+  async adminUpdateMissionStatus(
+    id: string,
+    data: UpdateMissionStatus
+  ): Promise<
+    ApiResponse<{
+      mission: Mission;
+      oldStatus: MissionStatus;
+      newStatus: MissionStatus;
+      commentaire: string;
+    }>
+  > {
     try {
-      await this.insertToken().delete(`/api/admin/missions/${id}`);
-      return { data: { success: true } };
+      const response = await this.insertToken().put(`/api/admin/missions/${id}/status`, data);
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

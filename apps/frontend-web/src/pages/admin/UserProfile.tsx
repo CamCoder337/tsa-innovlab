@@ -49,7 +49,8 @@ export default function UserProfile() {
     if (id) {
       fetchUser(id);
     }
-  }, [id, fetchUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleSuspend = async (reason?: string) => {
     if (!currentUser || !id) return;

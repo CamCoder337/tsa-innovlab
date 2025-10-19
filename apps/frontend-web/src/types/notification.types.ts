@@ -69,9 +69,7 @@ export interface Notification {
 }
 
 export interface NotificationFilters {
-  type?: NotificationType;
-  priority?: NotificationPriority;
-  read?: boolean;
+  filter?: 'all' | 'unread' | 'read' | 'urgent';
   page?: number;
   limit?: number;
 }
@@ -141,4 +139,33 @@ export interface NotificationListResponse {
 
 export interface NotificationStatsResponse {
   data: NotificationStats;
+}
+
+export interface NotificationStore {
+  // State
+  notifications: NotificationListItem[];
+  stats: NotificationStats | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  fetchNotifications: (filters?: NotificationFilters) => Promise<void>;
+  fetchNotificationStats: () => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  deleteNotification: (notificationId: string) => Promise<void>;
+  sendTestNotification: () => Promise<void>;
+
+  // Real-time event handlers
+  handleNewNotification: (data: NotificationEventData) => void;
+
+  // Utility actions
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
+
+  // WebSocket subscription management
+  initializeWebSocketSubscriptions: () => void;
+  cleanupWebSocketSubscriptions: () => void;
 }

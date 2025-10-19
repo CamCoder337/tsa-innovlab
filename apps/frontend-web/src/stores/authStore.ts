@@ -44,7 +44,7 @@ function removeCookie(name: string, options: CookieOptions = {}) {
 // Helper function to get persisted user data
 function getPersistedUser(): User | null {
   try {
-    const persistedData = localStorage.getItem('user');
+    const persistedData = localStorage.getItem('tsa_user');
     if (persistedData) {
       const parsed = JSON.parse(persistedData);
       return parsed.state?.currentUser || null;
@@ -251,7 +251,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'user',
+      name: 'tsa_user',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currentUser: state.currentUser,

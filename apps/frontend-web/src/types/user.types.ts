@@ -37,14 +37,27 @@ export interface UserStats {
 
 export interface UserWithStats extends User {
   stats?: {
+    // Common stats
     totalOrders?: number;
     totalMissions?: number;
     totalPropositions?: number;
+
+    // Client-specific stats
     totalSpent?: number;
+    pendingOrders?: number;
+    completedOrders?: number;
+
+    // Affreteur-specific stats
     publishedMissions?: number;
     completedMissions?: number;
-    acceptedPropositions?: number;
-    pendingPropositions?: number;
+
+    // Transporteur-specific stats
+    totalVehicles?: number;
+    availableVehicles?: number;
+    totalAssignedMissions?: number;
+    activeMissions?: number;
+
+    // Admin-specific stats
     totalActions?: number;
   };
 }

@@ -19,8 +19,8 @@ const Login: React.FC = () => {
 
     console.log(response);
 
-    if (!response) {
-      console.log('false');
+    // Handle login failure
+    if (response === false) {
       if (error) {
         toast.error(error);
         if (localStorage.getItem('verificationEmail')) {
@@ -30,16 +30,20 @@ const Login: React.FC = () => {
       return;
     }
 
-    if (response) {
-      if (response === 'mfa_required') {
-        setShowMfaField(true);
-        toast('Code MFA requis', {
-          icon: '⚠️',
-        });
-        return;
-      } else {
-        toast.success('Connexion réussie');
-      }
+    // Handle MFA requirement
+    if (response === 'mfa_required') {
+      setShowMfaField(true);
+      toast('Code MFA requis', {
+        icon: '⚠️',
+      });
+      return;
+    }
+
+    // Handle successful login
+    if (response === true) {
+      toast.success('Connexion réussie');
+      // Navigate to dashboard or intended destination
+      // navigate('/app');
     }
   };
 
@@ -47,7 +51,8 @@ const Login: React.FC = () => {
     if (token) {
       getUser();
     }
-  }, [token, getUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   return (
     <RedirectIfAuthenticated>

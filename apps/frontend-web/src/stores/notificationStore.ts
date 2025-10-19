@@ -2,41 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { notificationService } from '@/services/notification.service';
 import { webSocketService } from '@/services/websocket.service';
-import type {
-  NotificationFilters,
-  NotificationStats,
-  NotificationListItem,
-  NotificationEventData,
-} from '@/types/notification.types';
-
-interface NotificationStore {
-  // State
-  notifications: NotificationListItem[];
-  stats: NotificationStats | null;
-  isLoading: boolean;
-  error: string | null;
-
-  // Actions
-  fetchNotifications: (filters?: NotificationFilters) => Promise<void>;
-  fetchNotificationStats: () => Promise<void>;
-  markNotificationRead: (notificationId: string) => Promise<void>;
-  markAllNotificationsRead: () => Promise<void>;
-  deleteNotification: (notificationId: string) => Promise<void>;
-  sendTestNotification: () => Promise<void>;
-
-  // Real-time event handlers
-  handleNewNotification: (data: NotificationEventData) => void;
-
-  // Utility actions
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
-
-  // WebSocket subscription management
-  initializeWebSocketSubscriptions: () => void;
-  cleanupWebSocketSubscriptions: () => void;
-}
+import type { NotificationEventData, NotificationStore } from '@/types/notification.types';
 
 const initialState = {
   notifications: [],
@@ -205,6 +171,8 @@ export const useNotificationStore = create<NotificationStore>()(
         const { handleNewNotification } = get();
 
         // Subscribe to notification events
+
+        webSocketService.connect();
         webSocketService.subscribe('notification', handleNewNotification);
       },
 

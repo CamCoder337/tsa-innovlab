@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { Cart, CartItem, CartStore } from '@/types/cart.types';
+import type { Cart, CartItem, CartStore, AddToCartRequest } from '@/types/cart.types';
 import type { Product } from '@/types/product.types';
 import { useAuthStore } from '@/stores/authStore';
 import { useProductStore } from '@/stores/productStore';
+import { shopService } from '@/services/shop.service';
 
 const CART_STORAGE_KEY = 'tsa_cart';
 
@@ -99,50 +100,98 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Add item to cart
-  addItem: async (product: Product, quantity: number = 1) => {
+  addItem: async (productId: string, quantity: number = 1) => {
     const { cart } = get();
-    const existingItemIndex = cart.items.findIndex((item) => item.productId === product.id);
+    const currentUser = useAuthStore.getState().currentUser;
 
-    let updatedItems: CartItem[];
+    try {
+      set({ isLoading: true, error: null });
 
-    if (existingItemIndex >= 0) {
-      updatedItems = cart.items.map((item, index) =>
-        index === existingItemIndex ? { ...item, quantity: item.quantity + quantity } : item
-      );
-    } else {
-      const newItem: CartItem = {
-        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        cartId: cart.id || '',
-        productId: product.id,
-        product, // Include the full product object
-        quantity,
-        unitPrice: product.price,
-      };
-      updatedItems = [...cart.items, newItem];
+      if (currentUser) {
+        // Authenticated user - use API
+        const addRequest: AddToCartRequest = { productId, quantity };
+        const response = await shopService.addCartItem(addRequest);
+
+        if (response.error) {
+          set({ error: response.error.message, isLoading: false });
+          return;
+        }
+
+        // Refresh cart from server
+        await get().fetchCart();
+      } else {
+        // Unauthenticated user - use local storage
+        const products = useProductStore.getState().products;
+        const product = products.find((p: Product) => p.id === productId);
+
+        if (!product) {
+          set({ error: 'Product not found', isLoading: false });
+          return;
+        }
+
+        const existingItemIndex = cart.items.findIndex((item) => item.productId === productId);
+        let updatedItems: CartItem[];
+
+        if (existingItemIndex >= 0) {
+          updatedItems = cart.items.map((item, index) =>
+            index === existingItemIndex ? { ...item, quantity: item.quantity + quantity } : item
+          );
+        } else {
+          const newItem: CartItem = {
+            id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            cartId: cart.id || '',
+            productId: product.id,
+            product,
+            quantity,
+            unitPrice: product.price,
+          };
+          updatedItems = [...cart.items, newItem];
+        }
+
+        const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
+        persistCartToLocalStorage(updatedCart);
+        set({ cart: updatedCart, isLoading: false, error: null });
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to add item to cart',
+        isLoading: false,
+      });
     }
-
-    const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
-
-    // For unauthenticated users, persist to localStorage
-    if (!cart.id) {
-      persistCartToLocalStorage(updatedCart);
-    }
-
-    set({ cart: updatedCart, error: null });
   },
 
   // Remove item from cart
   removeItem: async (itemId: string) => {
     const { cart } = get();
-    const updatedItems = cart.items.filter((item) => item.id !== itemId);
-    const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
+    const currentUser = useAuthStore.getState().currentUser;
 
-    // For unauthenticated users, persist to localStorage
-    if (!cart.id) {
-      persistCartToLocalStorage(updatedCart);
+    try {
+      set({ isLoading: true, error: null });
+
+      if (currentUser) {
+        // Authenticated user - use API
+        const response = await shopService.deleteCartItem(itemId);
+
+        if (response.error) {
+          set({ error: response.error.message, isLoading: false });
+          return;
+        }
+
+        // Refresh cart from server
+        await get().fetchCart();
+      } else {
+        // Unauthenticated user - use local storage
+        const updatedItems = cart.items.filter((item) => item.id !== itemId);
+        const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
+        persistCartToLocalStorage(updatedCart);
+        set({ cart: updatedCart, isLoading: false, error: null });
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to remove item from cart',
+        isLoading: false,
+      });
     }
-
-    set({ cart: updatedCart, error: null });
   },
 
   // Update item quantity
@@ -153,41 +202,104 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
 
     const { cart } = get();
-    const updatedItems = cart.items.map((item) =>
-      item.id === itemId ? { ...item, quantity } : item
-    );
+    const currentUser = useAuthStore.getState().currentUser;
 
-    const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
+    try {
+      set({ isLoading: true, error: null });
 
-    // For unauthenticated users, persist to localStorage
-    if (!cart.id) {
-      persistCartToLocalStorage(updatedCart);
+      if (currentUser) {
+        // Authenticated user - use API
+        const response = await shopService.updateCartItem(itemId, quantity);
+
+        if (response.error) {
+          set({ error: response.error.message, isLoading: false });
+          return;
+        }
+
+        // Refresh cart from server
+        await get().fetchCart();
+      } else {
+        // Unauthenticated user - use local storage
+        const updatedItems = cart.items.map((item) =>
+          item.id === itemId ? { ...item, quantity } : item
+        );
+        const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
+        persistCartToLocalStorage(updatedCart);
+        set({ cart: updatedCart, isLoading: false, error: null });
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update item quantity',
+        isLoading: false,
+      });
     }
-
-    set({ cart: updatedCart, error: null });
   },
 
   // Clear cart
   clearCart: async () => {
-    const emptyCart = createEmptyCart();
-    clearCartFromLocalStorage();
-    set({ cart: emptyCart, error: null });
+    const currentUser = useAuthStore.getState().currentUser;
+
+    try {
+      set({ isLoading: true, error: null });
+
+      if (currentUser) {
+        // Authenticated user - use API
+        const response = await shopService.clearCart();
+
+        if (response.error) {
+          set({ error: response.error.message, isLoading: false });
+          return;
+        }
+
+        // Refresh cart from server
+        await get().fetchCart();
+      } else {
+        // Unauthenticated user - clear local storage
+        const emptyCart = createEmptyCart();
+        clearCartFromLocalStorage();
+        set({ cart: emptyCart, isLoading: false, error: null });
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to clear cart',
+        isLoading: false,
+      });
+    }
   },
 
   // Fetch cart from server
   fetchCart: async () => {
+    const currentUser = useAuthStore.getState().currentUser;
+
     try {
       set({ isLoading: true, error: null });
 
-      // TODO: Implement API call to fetch cart from server
-      // const cartData = await cartService.getCart();
-      // const updatedCart = updateCartTotals(cartData);
-      // set({ cart: updatedCart, isLoading: false });
+      if (currentUser) {
+        // Authenticated user - fetch from API
+        const response = await shopService.getCart();
 
-      // For now, just load from localStorage
-      const savedCart = loadCartFromLocalStorage();
-      const updatedCart = updateCartTotals(savedCart);
-      set({ cart: updatedCart, isLoading: false });
+        if (response.error) {
+          // If cart doesn't exist, create empty cart
+          if (response.error.status === 404) {
+            const emptyCart = createEmptyCart();
+            set({ cart: emptyCart, isLoading: false, error: null });
+            return;
+          }
+          set({ error: response.error.message, isLoading: false });
+          return;
+        }
+
+        if (response.data) {
+          const updatedCart = updateCartTotals(response.data);
+          persistCartToLocalStorage(updatedCart);
+          set({ cart: updatedCart, isLoading: false, error: null });
+        }
+      } else {
+        // Unauthenticated user - load from localStorage
+        const savedCart = loadCartFromLocalStorage();
+        const updatedCart = updateCartTotals(savedCart);
+        set({ cart: updatedCart, isLoading: false, error: null });
+      }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to fetch cart',
@@ -197,19 +309,40 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   // Sync with server cart (for authenticated users)
-  syncWithServer: (serverCart: Cart) => {
+  syncWithServer: async (serverCart: Cart) => {
     const { cart: localCart } = get();
 
-    // If local cart has no ID and has items, we need to merge
-    if (!localCart.id && localCart.items.length > 0) {
-      // This would typically involve API calls to add local items to server cart
-      // For now, we'll just replace with server cart and note the merge requirement
-      console.log('Local cart items need to be synced to server:', localCart.items);
-    }
+    try {
+      set({ isLoading: true, error: null });
 
-    const updatedCart = updateCartTotals(serverCart);
-    persistCartToLocalStorage(updatedCart);
-    set({ cart: updatedCart, error: null });
+      // If local cart has items and no ID, merge them with server cart
+      if (!localCart.id && localCart.items.length > 0) {
+        // Add each local item to server cart
+        for (const item of localCart.items) {
+          const addRequest: AddToCartRequest = {
+            productId: item.productId,
+            quantity: item.quantity,
+          };
+          await shopService.addCartItem(addRequest);
+        }
+
+        // Clear local storage after successful sync
+        clearCartFromLocalStorage();
+
+        // Fetch updated cart from server
+        await get().fetchCart();
+      } else {
+        // No local items to merge, just use server cart
+        const updatedCart = updateCartTotals(serverCart);
+        persistCartToLocalStorage(updatedCart);
+        set({ cart: updatedCart, isLoading: false, error: null });
+      }
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to sync with server',
+        isLoading: false,
+      });
+    }
   },
 
   // Get item by product ID

@@ -4,15 +4,21 @@
 
 import { BaseApi } from './api';
 import { webSocketService } from './websocket.service';
-import type { ApiResponse, PaginatedMetaResponse, Paginator } from '@/types/common.types';
+import type { ApiResponse, PaginatedMetaResponse } from '@/types/common.types';
 import type {
   Mission,
   MissionStatus,
   CreateMissionDto,
   UpdateMissionDto,
   MissionFilterParams,
+  CreateMissionFeedback,
+  MissionFeedback,
+  MissionUpdateFilterParams,
+  DynamicPricingRequest,
+  DynamicPricingResponse,
+  UpdateMissionStatus,
+  proofType,
 } from '@/types/mission.types';
-import type { AffreteurPropositionsResponse, Proposition } from '@/types/proposition.types';
 import type { AxiosError } from 'axios';
 
 // Types pour les événements WebSocket
@@ -314,10 +320,46 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async cancelMission(id: string, reason: string): Promise<ApiResponse<Mission>> {
+  async unpublishMission(id: string): Promise<ApiResponse<Mission>> {
     try {
-      const response = await this.insertToken().post(`/api/affreteur/missions/${id}/cancel`, {
-        reason,
+      const response = await this.insertToken().post(`/api/affreteur/missions/${id}/unpublish`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getMissionFeedback(id: string): Promise<ApiResponse<MissionFeedback>> {
+    try {
+      const response = await this.insertToken().get(`/api/affreteur/missions/${id}/feedback`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async createMissionFeedback(
+    id: string,
+    data: CreateMissionFeedback
+  ): Promise<ApiResponse<MissionFeedback>> {
+    try {
+      const response = await this.insertToken().post(
+        `/api/affreteur/missions/${id}/feedback`,
+        data
+      );
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getMissionHistory(
+    id: string,
+    params?: MissionUpdateFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
+    try {
+      const response = await this.insertToken().get(`/api/affreteur/missions/${id}/history`, {
+        params,
       });
       return { data: response.data.data };
     } catch (error) {
@@ -325,32 +367,13 @@ export class MissionService extends BaseApi {
     }
   }
 
-  // Affreteur Proposition Operations
-
-  async getMissionPropositions(
-    missionId: string,
-    params?: { status?: string; search?: string; sortBy?: string; sortOrder?: string }
-  ): Promise<ApiResponse<AffreteurPropositionsResponse>> {
-    try {
-      const response = await this.insertToken().get(
-        `/api/affreteur/missions/${missionId}/propositions`,
-        { params }
-      );
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async acceptProposition(
-    missionId: string,
-    propositionId: string,
-    { commentaire }: { commentaire?: string }
-  ): Promise<ApiResponse<{ mission: Mission; proposition: Proposition }>> {
+  async calculateDynamicPricing(
+    requestData: DynamicPricingRequest
+  ): Promise<ApiResponse<DynamicPricingResponse>> {
     try {
       const response = await this.insertToken().post(
-        `/api/affreteur/missions/${missionId}/propositions/${propositionId}/accept`,
-        { commentaire }
+        '/api/affreteur/pricing/calculate',
+        requestData
       );
       return { data: response.data.data };
     } catch (error) {
@@ -358,21 +381,34 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async rejectProposition(
-    missionId: string,
-    propositionId: string,
-    { commentaire }: { commentaire?: string }
-  ): Promise<ApiResponse<Proposition>> {
+  async getDynamicPricingConfig(): Promise<ApiResponse<Record<string, number>>> {
     try {
-      const response = await this.insertToken().post(
-        `/api/affreteur/missions/${missionId}/propositions/${propositionId}/reject`,
-        { commentaire }
-      );
+      const response = await this.insertToken().get('/api/affreteur/pricing/config');
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
+
+  // async getAffreteurShipments(
+  //   params?: MissionFilterParams
+  // ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
+  //   try {
+  //     const response = await this.insertToken().get('/api/affreteur/missions', { params });
+  //     return { data: response.data.data };
+  //   } catch (error) {
+  //     return { error: this.getErrorResponse(error) };
+  //   }
+  // }
+
+  // async getAffreteurShipment(id: string): Promise<ApiResponse<Mission>> {
+  //   try {
+  //     const response = await this.insertToken().get(`/api/affreteur/missions/${id}`);
+  //     return { data: response.data.data };
+  //   } catch (error) {
+  //     return { error: this.getErrorResponse(error) };
+  //   }
+  // }
 
   // Transporteur Mission Operations
 
@@ -417,11 +453,26 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async applyForMission(missionId: string): Promise<ApiResponse<Mission>> {
+  async applyForMission(missionId: string, vehicleId: string): Promise<ApiResponse<Mission>> {
     try {
       const response = await this.insertToken().post(
-        `/api/transporteur/missions/${missionId}/claim`
+        `/api/transporteur/missions/${missionId}/claim`,
+        { vehicleId }
       );
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getTransporteurMissionHistory(
+    id: string,
+    params?: MissionUpdateFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
+    try {
+      const response = await this.insertToken().get(`/api/transporteur/missions/${id}/history`, {
+        params,
+      });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -430,13 +481,19 @@ export class MissionService extends BaseApi {
 
   async updateMissionStatus(
     missionId: string,
-    status: MissionStatus,
-    commentaire: string
-  ): Promise<ApiResponse<Mission>> {
+    data: UpdateMissionStatus
+  ): Promise<
+    ApiResponse<{
+      mission: Mission;
+      oldStatus: MissionStatus;
+      newStatus: MissionStatus;
+      commentaire: string;
+    }>
+  > {
     try {
       const response = await this.insertToken().put(
         `/api/transporteur/missions/${missionId}/status`,
-        { status, commentaire }
+        data
       );
       return { data: response.data.data };
     } catch (error) {
@@ -446,8 +503,18 @@ export class MissionService extends BaseApi {
 
   async updateMissionLocation(
     missionId: string,
-    location: { latitude: number; longitude: number; address: string }
-  ): Promise<ApiResponse<Mission>> {
+    location: { latitude: number; longitude: number; timestamp: Date }
+  ): Promise<
+    ApiResponse<{
+      missionId: string;
+      location: {
+        latitude: number;
+        longitude: number;
+        timestamp: string;
+      };
+      realTimeBroadcast: boolean;
+    }>
+  > {
     try {
       const response = await this.insertToken().post(
         `/api/transporteur/missions/${missionId}/location`,
@@ -461,38 +528,28 @@ export class MissionService extends BaseApi {
 
   async uploadProof(
     missionId: string,
-    formData: FormData
-  ): Promise<ApiResponse<{ proofUrl: string }>> {
+    data: FormData
+  ): Promise<
+    ApiResponse<{
+      missionId: string;
+      proof: {
+        type: proofType;
+        description: string;
+        imageUrl: string;
+        timestamp: string;
+      };
+    }>
+  > {
     try {
       const response = await this.insertToken().post(
         `/api/transporteur/missions/${missionId}/proof`,
-        formData,
+        data,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         }
       );
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  // Transporteur Proposition Operations
-
-  async getMyPropositions(params?: {
-    status?: string;
-    search?: string;
-    sortBy?: string;
-    sortOrder?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<ApiResponse<Paginator<Proposition>>> {
-    try {
-      const response = await this.insertToken().get('/api/transporteur/my-propositions', {
-        params,
-      });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

@@ -33,17 +33,37 @@ export interface UpdateAddressDto extends Partial<CreateAddressDto> {
 
 interface AddressState {
   addresses: Address[];
+  currentAddress: Address | null;
   isLoading: boolean;
   error: string | null;
 }
 
 interface AddressActions {
+  // Async actions
+  fetchAddresses: () => Promise<void>;
+  fetchAddress: (id: string) => Promise<void>;
+  createAddress: (addressData: Omit<Address, 'id' | 'createdAt'>) => Promise<boolean>;
+  updateAddressAsync: (id: string, updates: Partial<Address>) => Promise<boolean>;
+  deleteAddressAsync: (id: string) => Promise<boolean>;
+
+  // Basic actions
   setAddresses: (addresses: Address[]) => void;
-  getAddress: (addressId: string) => void;
   addAddress: (address: Address) => void;
-  updateAddress: (addressId: string, updates: Partial<Address>) => void;
-  deleteAddress: (addressId: string) => void;
+  updateAddress: (id: string, updates: Partial<Address>) => void;
+  deleteAddress: (id: string) => void;
+  setCurrentAddress: (address: Address | null) => void;
+
+  // Utility actions
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   clearError: () => void;
+  reset: () => void;
+
+  // Utility methods
+  getAddress: (id: string) => Address | undefined;
+  searchAddresses: (query: string) => Address[];
+  getAddressesByCity: (city: string) => Address[];
+  getAddressesByRegion: (region: string) => Address[];
 }
 
 export type AddressStore = AddressState & AddressActions;

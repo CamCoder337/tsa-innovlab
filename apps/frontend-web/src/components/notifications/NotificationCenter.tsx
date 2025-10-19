@@ -32,7 +32,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     deleteNotification,
     clearError,
   } = useNotifications();
-
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
@@ -40,7 +39,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     // Load notifications and stats on mount
     fetchNotifications();
     fetchNotificationStats();
-  }, [fetchNotifications, fetchNotificationStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const unreadCount = stats?.unread || 0;
   const filteredNotifications =

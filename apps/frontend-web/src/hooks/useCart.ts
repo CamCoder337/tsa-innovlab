@@ -32,13 +32,14 @@ export const useCart = () => {
     if (!isInitialized) {
       initializeCart();
     }
-  }, [isInitialized, initializeCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized]);
 
   // Enhanced methods with additional logic
   const addToCart = (product: Product, quantity: number = 1) => {
     try {
       setError(null);
-      addItem(product, quantity);
+      addItem(product.id, quantity);
     } catch (error) {
       setError('Failed to add item to cart');
       console.error('Error adding item to cart:', error);

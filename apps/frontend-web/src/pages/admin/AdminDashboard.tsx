@@ -150,7 +150,8 @@ export default function AdminDashboard() {
 
       setStats(calculatedStats);
     }
-  }, [missionStats, productStats, userStats, missions, users, setStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missionStats, productStats, userStats, missions]);
 
   // Show loading state
   if (missionStatsLoading || productStatsLoading || userStatsLoading) {

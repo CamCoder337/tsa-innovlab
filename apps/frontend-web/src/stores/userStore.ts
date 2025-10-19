@@ -10,10 +10,23 @@ import type {
 } from '@/types/user.types';
 import { adminService } from '@/services/admin.service';
 
+export function getPersistedData(): Partial<UserState> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_users');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted user data:', error);
+  }
+  return null;
+}
+
 const initialState: UserState = {
-  users: [],
-  currentUser: null,
-  userStats: null,
+  users: getPersistedData()?.users || [],
+  currentUser: getPersistedData()?.currentUser || null,
+  userStats: getPersistedData()?.userStats || null,
   isLoading: false,
   error: null,
   pagination: null,
@@ -277,11 +290,12 @@ export const useUserStore = create<UserStore>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'users',
+      name: 'tsa_users',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         users: state.users,
-        stats: state.userStats,
+        currentUser: state.currentUser,
+        userStats: state.userStats,
       }),
     }
   )

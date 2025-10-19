@@ -1,9 +1,11 @@
 import { useCallback, useEffect } from 'react';
 import { useUserStore } from '@/stores/userStore';
+import { useAuth } from './useAuth';
 /**
  * Main hook for user management operations
  */
 export const useUsers = () => {
+  const { user } = useAuth();
   const {
     users,
     currentUser,
@@ -25,9 +27,12 @@ export const useUsers = () => {
   } = useUserStore();
 
   useEffect(() => {
-    fetchUsers();
-    fetchUserStats();
-  }, [fetchUsers, fetchUserStats]);
+    if (user && user.role === 'admin') {
+      fetchUsers();
+      fetchUserStats();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const getUserById = useCallback(
     (id: string) => {

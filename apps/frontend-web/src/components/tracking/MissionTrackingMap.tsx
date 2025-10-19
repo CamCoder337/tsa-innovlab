@@ -87,7 +87,7 @@ export default function MissionTrackingMap({
       // Ajouter les marqueurs pour chaque mission
       filteredMissions.forEach((mission) => {
         // Marqueur de départ
-        const departPosition = getCityFromAddressId(mission.adresseDepartId);
+        const departPosition = getCityFromAddressId(mission.adresseDepartId ?? '');
         const departMarkerData: MarkerData = {
           id: `${mission.id}-depart`,
           position: departPosition,
@@ -111,7 +111,7 @@ export default function MissionTrackingMap({
         }
 
         // Marqueur d'arrivée
-        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId);
+        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId ?? '');
         const arriveeMarkerData: MarkerData = {
           id: `${mission.id}-arrivee`,
           position: arriveePosition,
@@ -169,8 +169,8 @@ export default function MissionTrackingMap({
       // Ajuster la vue pour inclure toutes les missions
       if (filteredMissions.length > 0) {
         const allPositions = filteredMissions.flatMap((mission) => [
-          getCityFromAddressId(mission.adresseDepartId),
-          getCityFromAddressId(mission.adresseArriveeId),
+          getCityFromAddressId(mission.adresseDepartId ?? ''),
+          getCityFromAddressId(mission.adresseArriveeId ?? ''),
         ]);
         mapsService.fitBounds(allPositions);
       }

@@ -16,8 +16,9 @@ export const useAuth = () => {
   const updateUser = useAuthStore((s) => s.updateUser);
 
   useEffect(() => {
-    if (!token) logout();
-  }, [token, logout]);
+    if (isAuthenticated && !token) logout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, isAuthenticated]);
 
   return {
     user,

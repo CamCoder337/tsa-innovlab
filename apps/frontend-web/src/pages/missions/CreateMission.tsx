@@ -1,14 +1,13 @@
 import CreateMissionForm from '@/components/forms/CreateMissionForm';
 import type { CreateMissionDto } from '@/types/mission.types';
 import { useAddresses } from '@/hooks/useAddresses';
-import { missionService } from '@/services/mission.service';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
 
 export default function CreateMission() {
   const { addresses } = useAddresses();
-  const { currentMission, addMission, updateMission } = useMissions();
+  const { currentMission, error, createMission, updateMission, publishMission } = useMissions();
   const navigate = useNavigate();
 
   const handleCreateMission = async (data: CreateMissionDto, action: string, publish: boolean) => {
@@ -22,25 +21,19 @@ export default function CreateMission() {
         ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
         : '',
     };
-
-    let response;
     if (currentMission && action === 'update') {
-      response = await missionService.updateMission(currentMission.id, formattedData);
+      await updateMission(currentMission.id, formattedData);
     } else {
-      response = await missionService.createMission(formattedData);
-    }
-    console.log('Server response:', response);
+      await createMission(formattedData);
 
-    if (response.error) {
-      toast.error(response.error.message || 'Une erreur est survenue');
-    }
+      if (error) {
+        toast.error(error || 'Une erreur est survenue');
+        return;
+      }
 
-    if (response.data) {
       if (currentMission && action === 'update') {
-        updateMission(currentMission.id, response.data);
         toast.success('Mission modifiée avec succès');
       } else {
-        addMission(response.data);
         toast.success('Mission créée avec succès');
       }
 
@@ -48,22 +41,19 @@ export default function CreateMission() {
         navigate('/app/missions');
       }
 
-      if (publish) {
-        const id = response.data.id;
-        const response1 = await missionService.publishMission(id);
-        console.log(response1);
+      if (publish && currentMission) {
+        const id = currentMission.id;
+        await publishMission(id);
 
-        if (response1.error) {
-          toast.error(response1.error.message || 'Une erreur est survenue');
+        if (error) {
+          toast.error(error || 'Une erreur est survenue');
+          return;
         }
 
-        if (response1.data) {
-          updateMission(id, response1.data);
-          toast.success('Mission publiée avec succès');
-          setTimeout(() => {
-            navigate(`/app/missions/${id}`);
-          }, 2500);
-        }
+        toast.success('Mission publiée avec succès');
+        setTimeout(() => {
+          navigate(`/app/missions/${id}`);
+        }, 2500);
       }
     }
   };
