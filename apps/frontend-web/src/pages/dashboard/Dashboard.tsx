@@ -1,11 +1,11 @@
-import { useAuthStore } from '@/stores/authStore';
 import { Navigate } from 'react-router-dom';
 import AffreteurDashboard from './AffreteurDashboard';
 import TransporteurDashboard from './TransporteurDashboard';
 import AdminDashboard from '../admin/AdminDashboard';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Dashboard() {
-  const user = useAuthStore((s) => s.currentUser);
+  const { user } = useAuth();
 
   switch (user?.role) {
     case 'affreteur':

@@ -20,7 +20,7 @@ export const ChatList: React.FC<ChatListProps> = ({
   onCreateConversation,
 }) => {
   const { user } = useAuth();
-  const { conversations, isLoading, error, fetchConversations, clearError, currentConversation } =
+  const { conversations, isLoading, error, currentConversation, fetchConversations, clearError } =
     useChat();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -27,7 +27,7 @@ import type {
 
 interface PaymentFormProps {
   amount: number;
-  currency?: string;
+  orderId: string;
   paymentMethod?: PaymentMethod;
   onSuccess: (payment: Payment) => void;
   onError: (error: Error) => void;
@@ -120,7 +120,7 @@ const PaymentValidationSchema = Yup.object().shape({
 
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
-  currency = 'xaf',
+  orderId,
   paymentMethod = 'bank_transfer',
   onSuccess,
   onError,
@@ -153,7 +153,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         // Simulate API call with different delays for different methods
         const delay =
           values.paymentMethod === 'orange_money' ||
-          values.paymentMethod === 'mtn_momo' ||
+          values.paymentMethod === 'mtn_mobile_money' ||
           values.paymentMethod === 'wave'
             ? 2000
             : values.paymentMethod === 'bank_transfer'
@@ -164,12 +164,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         // Mock payment success
         const mockPayment: Payment = {
           id: `pay_${Math.random().toString(36).substr(2, 9)}`,
+          orderId: orderId,
           amount,
-          currency,
           status: 'completed',
-          paymentMethod: values.paymentMethod,
+          method: values.paymentMethod,
           transactionId: `pi_${Math.random().toString(36).substr(2, 17)}`,
-          paidAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -487,10 +486,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           </p>
           <p className="text-sm text-yellow-700">
             Vous paierez en espèces lors de la réception de votre commande. Assurez-vous d'avoir le
-            montant exact:{' '}
-            <strong>
-              {amount.toLocaleString()} {currency.toUpperCase()}
-            </strong>
+            montant exact: <strong>{amount.toLocaleString()} FCFA</strong>
           </p>
         </div>
       </CardContent>
@@ -511,7 +507,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       {(formik.values.paymentMethod === 'bank_transfer' ||
         formik.values.paymentMethod === 'wave') &&
         renderCardPayment()}
-      {(formik.values.paymentMethod === 'mtn_momo' ||
+      {(formik.values.paymentMethod === 'mtn_mobile_money' ||
         formik.values.paymentMethod === 'orange_money') &&
         renderMobileMoneyPayment()}
       {formik.values.paymentMethod === 'cash_on_delivery' && renderCashPayment()}
@@ -545,7 +541,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              {formik.values.paymentMethod === 'mtn_momo' ||
+              {formik.values.paymentMethod === 'mtn_mobile_money' ||
               formik.values.paymentMethod === 'orange_money'
                 ? 'Envoi de la demande...'
                 : formik.values.paymentMethod === 'bank_transfer' ||
@@ -554,7 +550,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   : 'Confirmation...'}
             </>
           ) : (
-            `${formik.values.paymentMethod === 'cash_on_delivery' ? 'Confirmer la commande' : 'Payer'} ${amount.toLocaleString()} ${currency.toUpperCase()}`
+            `${formik.values.paymentMethod === 'cash_on_delivery' ? 'Confirmer la commande' : 'Payer'} ${amount.toLocaleString()} $FCFA`
           )}
         </Button>
       </div>

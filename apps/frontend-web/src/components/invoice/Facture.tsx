@@ -184,7 +184,7 @@ export const Facture: React.FC<FactureProps> = ({
                 </p>
                 <p>
                   <span className="font-medium">Méthode:</span>{' '}
-                  {getPaymentMethodLabel(payment.paymentMethod)}
+                  {getPaymentMethodLabel(payment.method)}
                 </p>
               </div>
             </div>
@@ -292,15 +292,14 @@ export const Facture: React.FC<FactureProps> = ({
             <div className="text-sm text-gray-600 space-y-1">
               <p>
                 <span className="font-medium">Méthode:</span>{' '}
-                {getPaymentMethodLabel(payment.paymentMethod)}
+                {getPaymentMethodLabel(payment.method)}
               </p>
               <p>
-                <span className="font-medium">Montant:</span> {payment.amount.toLocaleString()}{' '}
-                {payment.currency.toUpperCase()}
+                <span className="font-medium">Montant:</span> {payment.amount.toLocaleString()} FCFA
               </p>
               <p>
                 <span className="font-medium">Date de paiement:</span>{' '}
-                {formatDate(new Date(payment.paidAt || payment.createdAt))}
+                {formatDate(new Date(payment.createdAt))}
               </p>
               <p>
                 <span className="font-medium">ID de transaction:</span> {payment.transactionId}

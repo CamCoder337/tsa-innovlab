@@ -1,4 +1,5 @@
 import type { User, UserRole } from './auth.types';
+import type { Timestamps } from './common.types';
 import type { Mission } from './mission.types';
 
 /**
@@ -22,7 +23,7 @@ export enum ConversationType {
 /**
  * Message interface matching backend Message model
  */
-export interface Message {
+export interface Message extends Timestamps {
   id: number;
   conversationId: number;
   senderId: string;
@@ -30,8 +31,6 @@ export interface Message {
   content: string;
   type: MessageType;
   readAt?: string;
-  createdAt: string;
-  updatedAt: string;
   // Relations (optional when populated)
   sender?: User;
   conversation?: Conversation;
@@ -41,22 +40,20 @@ export interface Message {
 /**
  * Conversation interface matching backend Conversation model
  */
-export interface Conversation {
+export interface Conversation extends Timestamps {
   id: number;
   type: ConversationType;
   user1Id: string;
   user2Id: string;
   missionId?: number;
   lastActivityAt: string;
-  createdAt: string;
-  updatedAt: string;
   // Relations (optional when populated)
   user1?: User;
   user2?: User;
   mission?: Mission;
   messages?: Message[];
   // Computed fields
-  messagesCount?: number;
+  // messagesCount?: number;
   unreadMessagesCount?: number;
   otherParticipant?: Partial<User>;
 }

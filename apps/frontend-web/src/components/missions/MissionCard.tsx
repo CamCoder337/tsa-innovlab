@@ -5,10 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, Eye, Edit, MessageSquare } from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import type { Mission } from '@/types/mission.types';
-import { useCallback, useEffect, useState } from 'react';
-import type { Proposition } from '@/types/proposition.types';
-import { missionService } from '@/services/mission.service';
-import { useAuth } from '@/hooks/useAuth';
 
 interface MissionCardProps {
   mission: Mission;
@@ -29,22 +25,19 @@ export default function MissionCard({
   showTrackingButton = true,
   className = '',
 }: MissionCardProps) {
-  const { user } = useAuth();
-  const [myPropositions, setMyPropositions] = useState<Proposition[]>([]);
+  // const fetchPropositions = useCallback(async () => {
+  //   const response = await missionService.getMissionPropositions(mission.id);
+  //   if (response.error) {
+  //     console.error(response.error.message);
+  //   }
+  //   if (response.data) {
+  //     setMyPropositions(response.data.propositions.data);
+  //   }
+  // }, [mission.id]);
 
-  const fetchPropositions = useCallback(async () => {
-    const response = await missionService.getMissionPropositions(mission.id);
-    if (response.error) {
-      console.error(response.error.message);
-    }
-    if (response.data) {
-      setMyPropositions(response.data.propositions.data);
-    }
-  }, [mission.id]);
-
-  useEffect(() => {
-    if (user && user.role === 'affreteur') fetchPropositions();
-  }, [fetchPropositions, user]);
+  // useEffect(() => {
+  //   if (user && user.role === 'affreteur') fetchPropositions();
+  // }, [fetchPropositions, user]);
 
   return (
     <Card className={`hover:shadow-md transition-shadow ${className}`}>
@@ -140,7 +133,7 @@ export default function MissionCard({
               >
                 <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                   <MessageSquare className="h-4 w-4" />
-                  Voir Offres ({myPropositions.length})
+                  Voir Offres
                 </Button>
               </Link>
             )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Renderable } from 'react-hot-toast';
+import type { PaginationMeta } from './common.types';
 
 export enum NotificationType {
   MISSION_ASSIGNED = 'mission_assigned',
@@ -68,9 +69,7 @@ export interface Notification {
 }
 
 export interface NotificationFilters {
-  type?: NotificationType;
-  priority?: NotificationPriority;
-  read?: boolean;
+  filter?: 'all' | 'unread' | 'read' | 'urgent';
   page?: number;
   limit?: number;
 }
@@ -78,8 +77,8 @@ export interface NotificationFilters {
 export interface NotificationStats {
   total: number;
   unread: number;
+  urgent: number;
   byType: Record<NotificationType, number>;
-  byPriority: Record<NotificationPriority, number>;
 }
 
 // WebSocket notification events
@@ -128,15 +127,45 @@ export interface NotificationApiResponse {
 }
 
 export interface NotificationListResponse {
-  notifications: Notification[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+  notifications: {
+    meta: PaginationMeta;
+    data: Notification[];
+  };
+  stats: {
+    unread: number;
+    urgent: number;
   };
 }
 
 export interface NotificationStatsResponse {
-  stats: NotificationStats;
+  data: NotificationStats;
+}
+
+export interface NotificationStore {
+  // State
+  notifications: NotificationListItem[];
+  stats: NotificationStats | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  fetchNotifications: (filters?: NotificationFilters) => Promise<void>;
+  fetchNotificationStats: () => Promise<void>;
+  markNotificationRead: (notificationId: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
+  deleteNotification: (notificationId: string) => Promise<void>;
+  sendTestNotification: () => Promise<void>;
+
+  // Real-time event handlers
+  handleNewNotification: (data: NotificationEventData) => void;
+
+  // Utility actions
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
+
+  // WebSocket subscription management
+  initializeWebSocketSubscriptions: () => void;
+  cleanupWebSocketSubscriptions: () => void;
 }

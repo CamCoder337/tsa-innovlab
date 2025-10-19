@@ -81,6 +81,13 @@ export interface UpdateOrderStatusRequest {
   trackingNumber?: string;
 }
 
+export interface OrderStats {
+  totalOrders: number;
+  totalSpent: number;
+  pendingOrders: number;
+  completedOrders: number;
+}
+
 export interface OrdersListResponse {
   orders: Order[];
   pagination?: {

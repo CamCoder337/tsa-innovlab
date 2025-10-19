@@ -12,7 +12,8 @@ export default function MyMissions() {
 
   useEffect(() => {
     setCurrentMission(null);
-  }, [setCurrentMission]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user) {
     return null;

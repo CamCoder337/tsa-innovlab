@@ -39,6 +39,19 @@ export interface PaginationMeta {
   previousPageUrl: string | null;
 }
 
+export type PaginatedKeyResponse<T, K extends string> = {
+  [key in K]: T[];
+} & {
+  pagination: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+};
+
 export type PaginatedMetaResponse<T, K extends string> = {
   [key in K]: {
     data: T[];

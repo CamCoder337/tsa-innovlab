@@ -14,7 +14,8 @@ export const useTokenManager = () => {
     if (isAuthenticated && token && refreshToken) {
       initializeTokenManagement();
     }
-  }, [isAuthenticated, token, refreshToken, initializeTokenManagement]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, token, refreshToken]);
 
   // Retourner des informations utiles sur l'état des tokens
   return {

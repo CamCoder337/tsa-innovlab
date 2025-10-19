@@ -8,7 +8,7 @@ import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import type { FormikProps } from 'formik';
 import type { ProfileFormValues } from '@/components/forms/ProfileForm';
-import type { updateUserRequest } from '@/types/auth.types';
+import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';
 import ProfileForm from '@/components/forms/ProfileForm';
 
@@ -18,7 +18,7 @@ export default function ClientProfile() {
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
 
-  const handleSave = async (values: updateUserRequest) => {
+  const handleSave = async (values: UpdateUserRequest) => {
     try {
       setIsLoading(true);
       const response = await authService.updateProfile(values);
@@ -59,7 +59,7 @@ export default function ClientProfile() {
       });
 
       if (hasChanges) {
-        handleSave(differences as updateUserRequest);
+        handleSave(differences as UpdateUserRequest);
       } else {
         toast('Aucune modification détectée');
       }

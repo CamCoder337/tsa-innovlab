@@ -30,11 +30,12 @@ export interface CartStore {
 
   // Actions
   initializeCart: () => Promise<void>;
-  addItem: (product: Product, quantity?: number) => Promise<void>;
+  addItem: (productId: string, quantity?: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   fetchCart: () => Promise<void>;
+  syncWithServer: (serverCart: Cart) => Promise<void>;
 
   // Computed getters
   getItemByProductId: (productId: string) => CartItem | undefined;
