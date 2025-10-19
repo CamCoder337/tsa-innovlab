@@ -19,9 +19,13 @@ export default function Layout() {
 
   useEffect(() => {
     if (isAuthenticated && token) {
+      console.log('Initializing WebSocket with token');
       webSocketService.initialize(token);
+    } else if (isAuthenticated && !token) {
+      console.warn('User is authenticated but token is missing');
     }
-  }, [isAuthenticated, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   return (
     <SidebarProvider>

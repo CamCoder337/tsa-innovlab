@@ -389,13 +389,14 @@ export default function CreateMissionForm({
     <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
-      onSubmit={(values) =>
+      onSubmit={(values) => {
+        console.log(values);
         onSubmit(
           values,
           currentMission ? 'update' : 'create',
           currentMission ? currentMission.status === 'draft' : true
-        )
-      }
+        );
+      }}
       validateOnBlur={true}
       validateOnChange={true}
     >
@@ -611,22 +612,6 @@ export default function CreateMissionForm({
                               />
                             </div>
                           </div> */}
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setShowNewAddressForm(null)}
-                          >
-                            Annuler
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => saveNewAddress('departure', setFieldValue)}
-                            disabled={!newAddress.street || !newAddress.city}
-                          >
-                            Enregistrer
-                          </Button>
                         </div>
                       </div>
                     </div>
@@ -1057,6 +1042,7 @@ export default function CreateMissionForm({
                           }
                         }}
                         initialFocus
+                        disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -1095,7 +1081,9 @@ export default function CreateMissionForm({
                         }}
                         initialFocus
                         disabled={(date) =>
-                          values.dateDepartEstime ? date < new Date(values.dateDepartEstime) : false
+                          values.dateDepartEstime
+                            ? date < new Date(values.dateDepartEstime)
+                            : date < new Date()
                         }
                       />
                     </PopoverContent>
@@ -1208,9 +1196,9 @@ export default function CreateMissionForm({
               </div>
 
               {/* Manual Budget Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-center w-1/2 gap-4">
                 <div>
-                  <Label htmlFor="budgetMin">Budget Minimum (FCFA)</Label>
+                  <Label htmlFor="budgetMin">Prix (FCFA)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -1237,11 +1225,11 @@ export default function CreateMissionForm({
                   {touched.budgetMin && errors.budgetMin && (
                     <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">
+                  {/* <p className="text-xs text-gray-500 mt-1">
                     Les transporteurs peuvent négocier ce prix
-                  </p>
+                  </p> */}
                 </div>
-                <div>
+                {/* <div>
                   <Label htmlFor="budgetMax">Budget Maximum (FCFA)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -1269,7 +1257,7 @@ export default function CreateMissionForm({
                   {touched.budgetMax && errors.budgetMax && (
                     <div className="text-sm text-red-600 mt-1">{errors.budgetMax}</div>
                   )}
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
@@ -1282,6 +1270,10 @@ export default function CreateMissionForm({
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting}
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'create', true);
+                  }}
                 >
                   <Package className="h-4 w-4 mr-2" />
                   {isSubmitting ? 'Publication en cours...' : 'Publier la Mission'}
@@ -1302,10 +1294,13 @@ export default function CreateMissionForm({
             {currentMission && (
               <>
                 <Button
-                  type="submit"
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting}
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'update', currentMission.status === 'draft');
+                  }}
                 >
                   <Package className="h-4 w-4 mr-2" />
                   {isSubmitting

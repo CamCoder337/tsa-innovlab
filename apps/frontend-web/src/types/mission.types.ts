@@ -145,7 +145,7 @@ export interface MissionActions {
   fetchAllMissions: () => Promise<void>;
   fetchMyMissions: () => Promise<void>;
   fetchMission: (id: string) => Promise<void>;
-  createMission: (data: CreateMissionDto) => Promise<void>;
+  createMission: (data: CreateMissionDto) => Promise<Mission | null>;
   updateMission: (id: string, data: UpdateMissionDto) => Promise<void>;
   deleteMission: (id: string) => void;
   publishMission: (id: string) => Promise<void>;

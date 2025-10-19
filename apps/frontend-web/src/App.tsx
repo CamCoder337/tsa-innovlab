@@ -27,6 +27,7 @@ const CartSummary = lazy(() => import('./pages/shop/CartSummary'));
 const Orders = lazy(() => import('./pages/shop/Orders'));
 const Order = lazy(() => import('./pages/shop/Order'));
 
+const Vehicles = lazy(() => import('./pages/vehicles/MyVehicles'));
 const Chat = lazy(() => import('./pages/ChatPage'));
 const Transactions = lazy(() => import('./pages/BillingPage'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
@@ -213,6 +214,14 @@ function App() {
           element={
             <Suspense fallback={<LoadingFallback />}>
               <ProductsManagement />
+            </Suspense>
+          }
+        />
+        <Route
+          path="vehicles"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Vehicles />
             </Suspense>
           }
         />

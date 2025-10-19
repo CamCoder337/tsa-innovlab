@@ -34,7 +34,7 @@ interface ChatState {
   fetchMessages: (conversationId: number, page?: number) => Promise<void>;
   sendMessage: (conversationId: number, content: string) => Promise<void>;
   createDirectConversation: (userId: string) => Promise<Conversation>;
-  createMissionConversation: (missionId: number, userId: string) => Promise<Conversation>;
+  createMissionConversation: (userId: string, missionId?: string) => Promise<Conversation>;
   markMessageAsRead: (messageId: number) => Promise<void>;
   markAllMessagesAsRead: (conversationId: number) => Promise<void>;
   searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
@@ -195,10 +195,16 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
-      createMissionConversation: async (missionId, userId) => {
+      createMissionConversation: async (userId, missionId) => {
         try {
           set({ isLoading: true, error: null });
-          const request: CreateMissionConversationRequest = { missionId, userId };
+          if (!missionId) {
+            throw new Error('Mission ID is required for mission conversations');
+          }
+          const request: CreateMissionConversationRequest = {
+            missionId: parseInt(missionId),
+            userId,
+          };
           const response = await chatService.createMissionConversation(request);
 
           if (response.data) {
