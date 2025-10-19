@@ -95,6 +95,9 @@ services:
       MAIL_FROM: ${MAIL_FROM}
       SUPPORT_EMAIL: ${SUPPORT_EMAIL}
 
+      # AI Service (communication interne Docker)
+      FASTAPI_BASE_URL: http://tsa-ai:8000
+
       # Admin par défaut
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
@@ -103,6 +106,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      tsa-ai:
         condition: service_healthy
 
     networks:
