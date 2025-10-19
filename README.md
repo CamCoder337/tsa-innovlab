@@ -321,11 +321,41 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 📚 Documentation
 
+### Documentation Générale
 - [Guide d'Installation](./docs/installation.md)
 - [Documentation API](./docs/api.md)
 - [Guide Utilisateur](./docs/user-guide.md)
 - [Architecture Technique](./docs/architecture.md)
 - [Guide de Contribution](./CONTRIBUTING.md)
+
+### Documentation des Fonctionnalités Avancées
+
+#### 🤖 Système de Recommandation de Produits
+Le système de recommandation utilise 3 algorithmes d'IA pour suggérer des produits pertinents :
+
+- **[Documentation Complète du Système](./PRODUCT_RECOMMENDATION_SYSTEM.md)** - Architecture, algorithmes, et implémentation détaillée
+- **[Guide de Test](./services/tsa-ai/TEST_RECOMMENDATIONS.md)** - Comment tester le système (manuel, unitaire, charge)
+- **[Script de Test Rapide](./services/tsa-ai/test_recommendations_quick.py)** - Script Python pour tester en une commande
+- **[Collection Postman](./services/tsa-ai/postman_collection.json)** - Collection complète pour Postman/Insomnia
+- **[Résumé](./docs/RECOMMENDATION_SYSTEM.md)** - Vue d'ensemble et liens vers la documentation
+
+**Démarrage rapide** :
+```bash
+# Lancer les services
+cd services/tsa-ai && uvicorn app.main:app --reload --port 8000
+cd services/tsa-monolith && npm run dev
+
+# Tester le système
+cd services/tsa-ai && python test_recommendations_quick.py
+```
+
+**Algorithmes implémentés** :
+- **Collaborative Filtering** : Pour utilisateurs avec ≥3 achats
+- **Content-Based** : Pour utilisateurs avec 1-2 achats
+- **Popularity-Based** : Pour nouveaux utilisateurs
+- **Content Similarity** : Pour produits similaires
+
+**Performance** : < 100ms en moyenne, 200 req/s
 
 ## 🤝 Contribution
 

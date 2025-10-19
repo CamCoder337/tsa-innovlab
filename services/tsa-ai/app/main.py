@@ -44,9 +44,10 @@ async def load_ml_models():
     Load ML models at startup
     """
     try:
-        from app.services.ml_service import ml_service
-        await ml_service.load_all_models()
-        logger.info("ML models loaded successfully")
+        # TODO: Implement ml_service when ML models are ready
+        # from app.services.ml_service import ml_service
+        # await ml_service.load_all_models()
+        logger.info("ML models loading skipped (not implemented yet)")
     except Exception as e:
         logger.error(f"Failed to load ML models: {e}")
         # Don't fail startup if models can't be loaded
