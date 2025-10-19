@@ -238,7 +238,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
               ? await missionService.getAffreteurMission(id)
               : user?.role === 'transporteur'
                 ? await missionService.getTransporteurMission(id)
-                : await missionService.adminGetMission(id);
+                : await adminService.adminGetMission(id);
 
           if (response.error) {
             set({
