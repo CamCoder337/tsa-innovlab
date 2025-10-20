@@ -64,7 +64,7 @@ export interface UserWithStats extends User {
 
 export interface UserState {
   users: User[];
-  currentUser: UserWithStats | null;
+  selectedUser: UserWithStats | null;
   userStats: UserStats | null;
   isLoading: boolean;
   error: string | null;

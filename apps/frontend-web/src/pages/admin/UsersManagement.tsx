@@ -341,10 +341,12 @@ export default function AdminUsersPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Eye className="h-3 w-3" />
-                            Voir
-                          </Button>
+                          <Link to={`/app/users/${user.id}`}>
+                            <Button variant="outline" size="sm" className="gap-1">
+                              <Eye className="h-3 w-3" />
+                              Voir
+                            </Button>
+                          </Link>
                           <Button variant="outline" size="sm" className="gap-1">
                             <Edit className="h-3 w-3" />
                             Modifier

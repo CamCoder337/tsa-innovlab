@@ -76,17 +76,6 @@ export const useCart = () => {
     }
   };
 
-  // Fetch cart from server
-  const loadCart = async () => {
-    try {
-      setError(null);
-      await fetchCart();
-    } catch (error) {
-      setError('Failed to load cart');
-      console.error('Error loading cart:', error);
-    }
-  };
-
   // Helper methods
   const isInCart = (productId: string): boolean => {
     return getItemQuantity(productId) > 0;
@@ -108,20 +97,6 @@ export const useCart = () => {
     return cart.items.length === 0;
   };
 
-  // For authenticated users - sync local cart with server
-  const syncCartWithServer = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await loadCart();
-    } catch (error) {
-      setError('Failed to sync cart with server');
-      console.error('Error syncing cart with server:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return {
     // State
     cart,
@@ -134,9 +109,7 @@ export const useCart = () => {
     removeFromCart,
     updateQuantity,
     clearAllItems,
-    loadCart,
-    syncCartWithServer,
-    reset,
+    fetchCart,
 
     // Getters
     getItemByProductId,
@@ -149,6 +122,8 @@ export const useCart = () => {
 
     // Utility
     setError,
+    setLoading,
+    reset,
   };
 };
 

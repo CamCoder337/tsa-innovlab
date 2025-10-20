@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import { VisualSearch } from '@/components/shop/VisualSearch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, Grid, List, Search, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Eye, Grid, List, Search, SlidersHorizontal } from 'lucide-react';
 import type { Product } from '@/types/product.types';
 import { useProducts } from '@/hooks/useProducts';
 import type { ProductFilterParams } from '@/types/product.types';
@@ -19,6 +20,7 @@ import { ProductFilters } from '@/components/shop/ProductFilters';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
 import toast from 'react-hot-toast';
 
 export default function Shop() {
@@ -26,6 +28,7 @@ export default function Shop() {
   const { products = [], isLoading } = useProducts();
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
+  const { results, error: VisualError } = useVisualRecognitionSearch();
   const lowStockProducts = products?.filter((p) => p.stock <= p.stockAlert);
 
   // Local state
@@ -49,51 +52,54 @@ export default function Shop() {
   const filteredProducts = useMemo(() => {
     return products
       .filter((product) => {
-        // Search filter
-        if (filters.search) {
-          const query = filters.search.toLowerCase();
-          const matchesName = product.name.toLowerCase().includes(query);
-          const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
-          const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
+        if (results && results.products.length > 0) {
+          return results.products.includes(product);
+        } else {
+          // Search filter
+          if (filters.search) {
+            const query = filters.search.toLowerCase();
+            const matchesName = product.name.toLowerCase().includes(query);
+            const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
+            const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
 
-          if (!matchesName && !matchesDescription && !matchesCategory) {
-            return false;
-          }
-        }
-
-        // Category filter
-        if (filters.categoryId && filters.categoryId.length > 0) {
-          if (Array.isArray(filters.categoryId)) {
-            if (!filters.categoryId.includes(product.categoryId ?? '')) {
+            if (!matchesName && !matchesDescription && !matchesCategory) {
               return false;
             }
-          } else if (filters.categoryId !== product.categoryId) {
+          }
+
+          // Category filter
+          if (filters.categoryId && filters.categoryId.length > 0) {
+            if (Array.isArray(filters.categoryId)) {
+              if (!filters.categoryId.includes(product.categoryId ?? '')) {
+                return false;
+              }
+            } else if (filters.categoryId !== product.categoryId) {
+              return false;
+            }
+          }
+
+          // Price range filter
+          const productPrice = parseFloat(product.price);
+          if (filters.minPrice !== undefined && productPrice < filters.minPrice) {
+            return false;
+          }
+          if (filters.maxPrice !== undefined && productPrice > filters.maxPrice) {
+            return false;
+          }
+
+          // Stock status filters
+          if (filters.inStock && product.stock <= 0) {
+            return false;
+          }
+          if (filters.lowStock && product.stock > product.stockAlert) {
+            return false;
+          }
+
+          // Active status filter
+          if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
             return false;
           }
         }
-
-        // Price range filter
-        const productPrice = parseFloat(product.price);
-        if (filters.minPrice !== undefined && productPrice < filters.minPrice) {
-          return false;
-        }
-        if (filters.maxPrice !== undefined && productPrice > filters.maxPrice) {
-          return false;
-        }
-
-        // Stock status filters
-        if (filters.inStock && product.stock <= 0) {
-          return false;
-        }
-        if (filters.lowStock && product.stock > product.stockAlert) {
-          return false;
-        }
-
-        // Active status filter
-        if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
-          return false;
-        }
-
         return true;
       })
       .sort((a, b) => {
@@ -115,7 +121,7 @@ export default function Shop() {
             return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         }
       });
-  }, [products, filters]);
+  }, [products, filters, results]);
 
   const handleAddToCart = (product: Product, quantity: number) => {
     addToCart(product, quantity);
@@ -189,6 +195,17 @@ export default function Shop() {
         </Card>
       )}
 
+      {VisualError && (
+        <Card className="mb-6 border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <h3 className="font-medium text-orange-800">{`${VisualError}`}</h3>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Mobile Filters */}
       <div className="md:hidden flex items-center justify-between gap-4 mb-6">
         <Button
@@ -209,6 +226,7 @@ export default function Shop() {
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
           />
+          <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
         <Select
           value={filters.sortBy || 'updatedAt'}
@@ -319,14 +337,22 @@ export default function Shop() {
           )}
 
           {/* No Results */}
-          {!isLoading && filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Aucun produit trouvé</p>
-              <Button onClick={clearFilters} variant="outline">
-                Effacer les filtres
-              </Button>
-            </div>
-          )}
+          {!isLoading &&
+            filteredProducts.length === 0 &&
+            (results ? (
+              <div className="text-center py-8 text-gray-500">
+                <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>Aucun produit similaire trouvé</p>
+                <p className="text-sm">Essayez avec une autre image</p>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">Aucun produit trouvé</p>
+                <Button onClick={clearFilters} variant="outline">
+                  Effacer les filtres
+                </Button>
+              </div>
+            ))}
         </div>
       </div>
     </div>

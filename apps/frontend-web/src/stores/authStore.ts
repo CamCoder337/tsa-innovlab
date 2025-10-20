@@ -222,6 +222,7 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: null,
             isAuthenticated: false,
           });
+          localStorage.clear();
         } catch (error) {
           console.error(error);
           toast.error('Erreur lors de la déconnexion');

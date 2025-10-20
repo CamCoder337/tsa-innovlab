@@ -40,7 +40,7 @@ import {
 export default function UserProfile() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentUser, isLoading, error, fetchUser, suspendUser, activateUser, deleteUser } =
+  const { selectedUser, isLoading, error, fetchUser, suspendUser, activateUser, deleteUser } =
     useUsers();
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function UserProfile() {
   }, [id]);
 
   const handleSuspend = async (reason?: string) => {
-    if (!currentUser || !id) return;
+    if (!selectedUser || !id) return;
 
     try {
       setActionLoading('suspend');
@@ -67,7 +67,7 @@ export default function UserProfile() {
   };
 
   const handleActivate = async (reason?: string) => {
-    if (!currentUser || !id) return;
+    if (!selectedUser || !id) return;
 
     try {
       setActionLoading('activate');
@@ -81,7 +81,7 @@ export default function UserProfile() {
   };
 
   const handleDelete = async () => {
-    if (!currentUser || !id) return;
+    if (!selectedUser || !id) return;
 
     try {
       setActionLoading('delete');
@@ -148,12 +148,12 @@ export default function UserProfile() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-tsa-blue"></div>
       </div>
     );
   }
 
-  if (error || !currentUser) {
+  if (error || !selectedUser) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
         <AlertTriangle className="h-16 w-16 text-red-500" />
@@ -168,12 +168,12 @@ export default function UserProfile() {
   }
 
   const userStats = [
-    { label: 'Missions créées', value: currentUser.stats?.totalMissions || 0, icon: BarChart3 },
-    { label: 'Propositions', value: currentUser.stats?.totalPropositions || 0, icon: Building },
-    { label: 'Commandes', value: currentUser.stats?.totalOrders || 0, icon: Users },
+    { label: 'Missions créées', value: selectedUser.stats?.totalMissions || 0, icon: BarChart3 },
+    { label: 'Propositions', value: selectedUser.stats?.totalPropositions || 0, icon: Building },
+    { label: 'Commandes', value: selectedUser.stats?.totalOrders || 0, icon: Users },
     {
       label: 'Dernière connexion',
-      value: currentUser.lastLoginAt ? formatDate(currentUser.lastLoginAt) : 'Jamais',
+      value: selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : 'Jamais',
       icon: Calendar,
     },
   ];
@@ -201,7 +201,7 @@ export default function UserProfile() {
             </Button>
           </Link>
 
-          {currentUser.status === 'active' ? (
+          {selectedUser.status === 'active' ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="gap-2 text-orange-600 hover:text-orange-700">
@@ -286,33 +286,34 @@ export default function UserProfile() {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Nom complet</label>
                   <p className="text-lg font-semibold">
-                    {`${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'N/A'}
+                    {`${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() ||
+                      'N/A'}
                   </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Statut</label>
-                  <div className="mt-1">{getStatusBadge(currentUser.status)}</div>
+                  <div className="mt-1">{getStatusBadge(selectedUser.status)}</div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Email</label>
                   <div className="flex items-center gap-2 mt-1">
                     <Mail className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm">{currentUser.email}</p>
+                    <p className="text-sm">{selectedUser.email}</p>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Téléphone</label>
                   <div className="flex items-center gap-2 mt-1">
                     <Phone className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm">{currentUser.phone || 'Non renseigné'}</p>
+                    <p className="text-sm">{selectedUser.phone || 'Non renseigné'}</p>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Rôle</label>
                   <div className="flex items-center gap-2 mt-1">
-                    {getRoleIcon(currentUser.role)}
+                    {getRoleIcon(selectedUser.role)}
                     <Badge variant="outline" className="capitalize">
-                      {currentUser.role}
+                      {selectedUser.role}
                     </Badge>
                   </div>
                 </div>
@@ -320,19 +321,19 @@ export default function UserProfile() {
                   <label className="text-sm font-medium text-gray-500">Date d'inscription</label>
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm">{formatDate(currentUser.createdAt)}</p>
+                    <p className="text-sm">{formatDate(selectedUser.createdAt)}</p>
                   </div>
                 </div>
               </div>
 
-              {/* {currentUser.companyName && (
+              {/* {selectedUser.companyName && (
                 <>
                   <Separator />
                   <div>
                     <label className="text-sm font-medium text-gray-500">Entreprise</label>
                     <div className="flex items-center gap-2 mt-1">
                       <Building className="h-4 w-4 text-gray-400" />
-                      <p className="text-sm">{currentUser.companyName}</p>
+                      <p className="text-sm">{selectedUser.companyName}</p>
                     </div>
                   </div>
                 </>
@@ -374,20 +375,20 @@ export default function UserProfile() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Email vérifié</span>
-                <Badge variant={currentUser.emailVerifiedAt ? 'default' : 'secondary'}>
-                  {currentUser.emailVerifiedAt ? 'Oui' : 'Non'}
+                <Badge variant={selectedUser.emailVerifiedAt ? 'default' : 'secondary'}>
+                  {selectedUser.emailVerifiedAt ? 'Oui' : 'Non'}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">2FA activé</span>
-                <Badge variant={currentUser.mfaEnabled ? 'default' : 'secondary'}>
-                  {currentUser.mfaEnabled ? 'Oui' : 'Non'}
+                <Badge variant={selectedUser.mfaEnabled ? 'default' : 'secondary'}>
+                  {selectedUser.mfaEnabled ? 'Oui' : 'Non'}
                 </Badge>
               </div>
-              {currentUser.lastLoginAt && (
+              {selectedUser.lastLoginAt && (
                 <div className="pt-2 border-t">
                   <span className="text-sm text-gray-600">Dernière connexion</span>
-                  <p className="text-sm font-medium">{formatDate(currentUser.lastLoginAt)}</p>
+                  <p className="text-sm font-medium">{formatDate(selectedUser.lastLoginAt)}</p>
                 </div>
               )}
             </CardContent>

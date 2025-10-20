@@ -96,11 +96,11 @@ export class ShopService extends BaseApi {
   }
 
   async visualRecognitionSearch(
-    limit?: number
+    image?: File
   ): Promise<ApiResponse<{ products: Product[]; processing_time_ms: number; total: number }>> {
     try {
-      const response = await this.insertToken().get('/api/shop/product-recommendations/popular', {
-        params: { limit },
+      const response = await this.insertToken().get('/api/shop/visual-recognition/search', {
+        params: { image },
       });
       return { data: response.data.data };
     } catch (error) {

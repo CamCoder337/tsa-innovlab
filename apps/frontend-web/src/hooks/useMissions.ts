@@ -1,20 +1,12 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useMissionStore } from '@/stores/missionStore';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-import { useAuth } from './useAuth';
 
 /**
  * Main missions hook providing all mission functionality
  */
 export const useMissions = () => {
   const store = useMissionStore();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user && user.role !== 'affreteur') store.fetchAllMissions();
-    if (user && user.role !== 'admin') store.fetchMyMissions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   const getMissionById = useCallback(
     (id: string): Mission | undefined => {
@@ -82,6 +74,15 @@ export const useMissions = () => {
     ).length;
   }, [store.missions, store.myMissions]);
 
+  // Memoize fetchMission to prevent infinite loops
+  const fetchMissionMemoized = useCallback(
+    (id: string) => {
+      store.fetchMission(id);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [store.currentMission]
+  );
+
   return {
     // State
     missions: store.missions,
@@ -99,7 +100,8 @@ export const useMissions = () => {
     // Actions
     fetchAllMissions: store.fetchAllMissions,
     fetchMyMissions: store.fetchMyMissions,
-    fetchMission: store.fetchMission,
+    fetchMission: fetchMissionMemoized,
+    fetchMissionsStats: store.fetchMissionsStats,
     createMission: store.createMission,
     updateMission: store.updateMission,
     deleteMission: store.deleteMission,
