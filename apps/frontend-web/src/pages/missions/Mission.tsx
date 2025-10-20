@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
 import type { MissionStatus } from '@/types/mission.types';
@@ -10,7 +10,7 @@ import { MissionAppreciation } from '@/components/missions/MissionAppreciation';
 import { MissionFinancial } from '@/components/missions/MissionFinancial';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';
 
@@ -19,20 +19,13 @@ export default function MissionDetailsPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { currentMission, isLoading, fetchMission } = useMissions();
+  const { currentMission, isLoading, error, fetchMission } = useMissions();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
 
+  // Fetch mission data when component mounts or ID changes
   useEffect(() => {
     if (id) {
       fetchMission(id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  // Handle mission not found in useEffect to avoid setState during render
-  useEffect(() => {
-    if (!isLoading && !currentMission && id) {
-      toast.error('Mission introuvable', { duration: 5000 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -55,11 +48,41 @@ export default function MissionDetailsPage() {
   };
 
   if (isLoading) {
-    return <div className="container mx-auto py-8">Loading mission details...</div>;
+    return (
+      <div className="container mx-auto py-8 flex h-full justify-center items-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading mission details...</span>
+        </div>
+      </div>
+    );
   }
 
+  // Handle error state
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 flex h-full justify-center items-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-600">Error loading mission: {error}</p>
+          <Button onClick={() => id && fetchMission(id)} variant="outline">
+            Try Again
+          </Button>
+          <Button onClick={() => navigate('/app/missions')} variant="ghost">
+            Back to Missions
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle mission not found
+  if (!isLoading && !currentMission && !error) {
+    return <Navigate to="/app/missions" replace />;
+  }
+
+  // Handle missing mission (shouldn't happen but for safety)
   if (!currentMission) {
-    return <Navigate to="/app/missions" />;
+    return <Navigate to="/app/missions" replace />;
   }
 
   return (

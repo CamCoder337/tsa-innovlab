@@ -109,7 +109,7 @@ export interface OrderStore {
   error: string | null;
 
   // Actions
-  fetchOrders: () => Promise<void>;
+  fetchOrders: (params?: OrderFiltersQuery) => Promise<void>;
   fetchOrder: (orderId: string) => Promise<void>;
   createOrder: (orderData: CreateOrderRequest) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
@@ -120,10 +120,6 @@ export interface OrderStore {
   setError: (error: string | null) => void;
   clearError: () => void;
   reset: () => void;
-
-  // Development utility methods
-  loadMockData: () => void;
-  addMockOrder: (order: Order) => void;
 }
 
 export interface OrderFilters {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Send,
   Phone,
@@ -41,6 +41,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>(null);
+  const currentConversationIdRef = useRef<number | null>(null);
 
   const currentMessages = useMemo(() => {
     return messages[conversation.id] || [];
@@ -58,20 +59,30 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
         if (!isOtherParticipant) return null;
         return {
           userId: indicator.userId,
-          fullName: conversation.otherParticipant?.fullName,
+          firstName: conversation.otherParticipant?.firstName,
+          lastName: conversation.otherParticipant?.lastName,
         };
       });
   }, [typingIndicators, conversation.id, conversation.otherParticipant]);
 
+  // Create stable function references to avoid infinite loops
+  const loadMessagesForConversation = useCallback(
+    async (conversationId: number) => {
+      await fetchMessages(conversationId);
+      if (messages) {
+        await markAllMessagesAsRead(conversationId);
+      }
+    },
+    [fetchMessages, markAllMessagesAsRead, messages]
+  );
+
   useEffect(() => {
-    // Load messages when conversation changes
-    if (conversation.id) {
-      fetchMessages(conversation.id);
-      // Mark messages as read when opening conversation
-      if (messages) markAllMessagesAsRead(conversation.id);
+    // Only load messages when conversation actually changes
+    if (conversation.id && currentConversationIdRef.current !== conversation.id) {
+      currentConversationIdRef.current = conversation.id;
+      loadMessagesForConversation(conversation.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation.id, messages]);
+  }, [conversation.id, loadMessagesForConversation]);
 
   useEffect(() => {
     scrollToBottom();
@@ -118,17 +129,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     if (conversation.type === 'mission' && conversation.mission) {
       return `Mission: ${conversation.mission.title}`;
     }
-    return conversation.otherParticipant?.fullName || 'Utilisateur inconnu';
+    return (
+      conversation.otherParticipant?.firstName + ' ' + conversation.otherParticipant?.lastName ||
+      'Utilisateur inconnu'
+    );
   };
 
   const getConversationSubtitle = () => {
     if (conversation.type === 'mission') {
-      return `avec ${conversation.otherParticipant?.fullName}`;
+      return `avec ${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`;
     }
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-          conversation.otherParticipant?.role?.slice(1) || ''
+        conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -160,10 +174,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
             <Avatar className="h-10 w-10">
               <AvatarImage
                 src={conversation.otherParticipant?.avatarUrl}
-                alt={conversation.otherParticipant?.fullName}
+                alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
               />
               <AvatarFallback>
-                {conversation.otherParticipant?.fullName?.charAt(0) || '?'}
+                {conversation.otherParticipant?.firstName?.charAt(0) || ''}
+                {conversation.otherParticipant?.lastName?.charAt(0) || ''}
+                {!conversation.otherParticipant?.firstName &&
+                  !conversation.otherParticipant?.lastName &&
+                  '?'}
               </AvatarFallback>
             </Avatar>
             <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
@@ -247,7 +265,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
                 </div>
                 <span>
                   {typingUsers.length === 1
-                    ? `${typingUsers[0]?.fullName} est en train d'écrire...`
+                    ? `${typingUsers[0]?.firstName} est en train d'écrire...`
                     : `${typingUsers.length} personnes sont en train d'écrire...`}
                 </span>
               </div>
@@ -263,7 +281,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
           <Input
             value={newMessage}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={`Envoyer un message à ${conversation.otherParticipant?.fullName || "l'utilisateur"}...`}
+            placeholder={`Envoyer un message à ${conversation.otherParticipant?.firstName || "l'utilisateur"}...`}
             className="flex-1"
             disabled={isLoading}
           />
@@ -281,7 +299,8 @@ interface MessageBubbleProps {
   isCurrentUser: boolean;
   showAvatar: boolean;
   otherParticipant?: {
-    fullName?: string;
+    firstName?: string;
+    lastName?: string;
     avatar?: string;
   };
 }
@@ -302,7 +321,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   const formatMessageTime = (createdAt: string) => {
+    // Handle null, undefined, or empty string
+    if (!createdAt) {
+      return 'Maintenant';
+    }
+
     const messageDate = new Date(createdAt);
+
+    // Check if the date is valid
+    if (isNaN(messageDate.getTime())) {
+      console.warn('Invalid date format received:', createdAt);
+      return 'Date invalide';
+    }
+
     const now = new Date();
     const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
 
@@ -325,9 +356,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         <div className="w-8">
           {showAvatar && (
             <Avatar className="h-8 w-8">
-              <AvatarImage src={otherParticipant?.avatar} alt={otherParticipant?.fullName} />
-              <AvatarFallback className="text-xs">
-                {otherParticipant?.fullName?.charAt(0) || '?'}
+              <AvatarImage
+                src={otherParticipant?.avatar}
+                alt={`${otherParticipant?.firstName} ${otherParticipant?.lastName}`}
+              />
+              <AvatarFallback>
+                {otherParticipant?.firstName?.charAt(0) || ''}
+                {otherParticipant?.lastName?.charAt(0) || ''}
+                {!otherParticipant?.firstName && !otherParticipant?.lastName && '?'}
               </AvatarFallback>
             </Avatar>
           )}
@@ -336,19 +372,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? 'order-1' : ''}`}>
         <div
-          className={`px-4 py-2 rounded-2xl ${
-            isCurrentUser
+          className={`px-4 py-2 rounded-2xl ${isCurrentUser
               ? 'bg-blue-600 text-white rounded-br-md'
               : 'bg-gray-100 text-gray-900 rounded-bl-md'
-          }`}
+            }`}
         >
           <div className="text-sm whitespace-pre-wrap break-words">{message.content}</div>
         </div>
 
         <div
-          className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${
-            isCurrentUser ? 'justify-end' : 'justify-start'
-          }`}
+          className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${isCurrentUser ? 'justify-end' : 'justify-start'
+            }`}
         >
           <span>{formatMessageTime(message.createdAt)}</span>
           {getMessageStatusIcon()}

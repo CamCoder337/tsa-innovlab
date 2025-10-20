@@ -369,26 +369,52 @@ export const useProductStore = create<ProductStoreExtended>()(
       // Utility methods
       filterProducts: (filters: ProductFilterParams) => {
         const { products } = get();
+        console.log(products);
+
         return products.filter((product) => {
-          if (
-            filters.search &&
-            !product.name.toLowerCase().includes(filters.search.toLowerCase())
-          ) {
-            return false;
-          }
-          if (filters.categoryId && product.categoryId !== filters.categoryId) {
-            return false;
-          }
-          if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
-            return false;
-          }
-          if (filters.inStock !== undefined) {
-            const inStock = product.stock > 0;
-            if (filters.inStock !== inStock) {
+          if (filters.search) {
+            const query = filters.search.toLowerCase();
+            const matchesName = product.name.toLowerCase().includes(query);
+            const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
+            const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
+
+            if (!matchesName && !matchesDescription && !matchesCategory) {
               return false;
             }
           }
-          return true;
+
+          // Category filter
+          if (filters.categoryId && filters.categoryId.length > 0) {
+            if (Array.isArray(filters.categoryId)) {
+              if (!filters.categoryId.includes(product.categoryId ?? '')) {
+                return false;
+              }
+            } else if (filters.categoryId !== product.categoryId) {
+              return false;
+            }
+          }
+
+          // Price range filter
+          const productPrice = parseFloat(product.price);
+          if (filters.minPrice !== undefined && productPrice < filters.minPrice) {
+            return false;
+          }
+          if (filters.maxPrice !== undefined && productPrice > filters.maxPrice) {
+            return false;
+          }
+
+          // Stock status filters
+          if (filters.inStock && product.stock <= 0) {
+            return false;
+          }
+          if (filters.lowStock && product.stock > product.stockAlert) {
+            return false;
+          }
+
+          // Active status filter
+          if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
+            return false;
+          }
         });
       },
 
@@ -419,8 +445,12 @@ export const useProductStore = create<ProductStoreExtended>()(
       },
     }),
     {
-      name: 'tsa-product-store',
+      name: 'tsa_products',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        products: state.products,
+        stats: state.stats,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.isLoading = false;

@@ -1,29 +1,60 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import { useProducts } from '@/hooks/useProducts';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 import { useCategories } from '@/hooks/useCategories';
+import { useChat } from '@/hooks/useChat';
 import { useMissions } from '@/hooks/useMissions';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useOrders } from '@/hooks/useOrders';
+import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
 import { webSocketService } from '@/services/websocket.service';
-import { useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function Layout() {
-  const { isAuthenticated, token } = useAuth();
-  useMissions();
-  useProducts();
-  useCategories();
-  useUsers();
+  const { isAuthenticated, token, user } = useAuth();
+  const { fetchCart } = useCart();
+  const { fetchAdminCategories, fetchCategories } = useCategories();
+  const { fetchConversations } = useChat();
+  const { fetchAllMissions, fetchMyMissions, fetchMissionsStats } = useMissions();
+  const { fetchNotifications, fetchNotificationStats } = useNotifications();
+  const { fetchOrders } = useOrders();
+  const { fetchAdminProducts, fetchProducts, fetchProductStats } = useProducts();
+  const { fetchUsers, fetchUserStats } = useUsers();
 
   useEffect(() => {
-    if (isAuthenticated && token) {
-      console.log('Initializing WebSocket with token');
-      webSocketService.initialize(token);
-    } else if (isAuthenticated && !token) {
-      console.warn('User is authenticated but token is missing');
+    if (user && user.role !== 'client') {
+      if (user && user.role !== 'affreteur') fetchAllMissions();
+      if (user && user.role !== 'admin') {
+        fetchMyMissions();
+      }
+      if (user && user.role === 'admin') {
+        fetchAdminCategories();
+        fetchAdminProducts();
+        fetchMissionsStats();
+        fetchProductStats();
+        fetchUsers();
+        fetchUserStats();
+      }
+      fetchConversations();
+      fetchNotifications();
+      fetchNotificationStats();
+    } else {
+      if (user && user.role !== 'admin') {
+        fetchCart();
+        fetchCategories();
+        fetchOrders();
+        fetchProducts();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && token) webSocketService.initialize(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
@@ -31,7 +62,7 @@ export default function Layout() {
     <SidebarProvider>
       <div className="flex h-screen bg-gray-50 flex-1 flex-col">
         <Header />
-        <main className="flex">
+        <main className="flex h-full">
           <div>
             <Sidebar />
           </div>

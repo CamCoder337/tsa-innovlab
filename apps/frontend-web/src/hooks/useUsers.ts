@@ -1,14 +1,12 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useUserStore } from '@/stores/userStore';
-import { useAuth } from './useAuth';
 /**
  * Main hook for user management operations
  */
 export const useUsers = () => {
-  const { user } = useAuth();
   const {
     users,
-    currentUser,
+    selectedUser,
     userStats,
     isLoading,
     error,
@@ -25,14 +23,6 @@ export const useUsers = () => {
     clearError,
     reset,
   } = useUserStore();
-
-  useEffect(() => {
-    if (user && user.role === 'admin') {
-      fetchUsers();
-      fetchUserStats();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   const getUserById = useCallback(
     (id: string) => {
@@ -90,7 +80,7 @@ export const useUsers = () => {
   return {
     // State
     users,
-    currentUser,
+    selectedUser,
     userStats,
     isLoading,
     error,

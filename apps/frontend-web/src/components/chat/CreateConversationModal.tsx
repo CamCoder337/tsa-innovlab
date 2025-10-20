@@ -224,7 +224,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                     <p className="text-xs text-gray-600">{selectedUser.email}</p>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {selectedUser.role}
+                    {selectedUser.role?.charAt(0).toUpperCase() + selectedUser.role?.slice(1) || ''}
                   </Badge>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setSelectedUser(null)}>
@@ -262,7 +262,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-xs">
-                        {user.role}
+                        {user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || ''}
                       </Badge>
                       {conversationType === ConversationType.MISSION &&
                         user.relatedMissions &&

@@ -1,17 +1,7 @@
 import { useCategoryStore } from '@/stores/categoryStore';
-import { useAuth } from './useAuth';
-import { useEffect } from 'react';
 
 export function useCategories() {
-  const { user } = useAuth();
   const store = useCategoryStore();
-
-  // Auto-initialize on first use
-  useEffect(() => {
-    if (user && user.role === 'admin') store.fetchAdminCategories();
-    else store.fetchCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   return {
     // State
@@ -26,6 +16,7 @@ export function useCategories() {
 
     // Async actions
     fetchCategories: store.fetchCategories,
+    fetchAdminCategories: store.fetchAdminCategories,
     fetchCategory: store.fetchCategory,
     createCategory: store.createCategory,
     updateCategory: store.updateCategory,

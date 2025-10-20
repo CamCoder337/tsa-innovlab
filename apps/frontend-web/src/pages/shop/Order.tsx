@@ -156,11 +156,11 @@ const getOrderTimeline = (order: Order): TimelineStep[] => {
 
 export default function OrderDetailsPage() {
   const { id: orderId } = useParams<{ id: string }>();
-  const { currentOrder, isLoading, loadOrder } = useOrders();
+  const { currentOrder, isLoading, fetchOrder } = useOrders();
 
   useEffect(() => {
     if (orderId) {
-      loadOrder(orderId);
+      fetchOrder(orderId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);

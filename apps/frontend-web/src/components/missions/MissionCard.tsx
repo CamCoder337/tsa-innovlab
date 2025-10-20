@@ -40,10 +40,14 @@ export default function MissionCard({
   return (
     <Card className={`hover:shadow-md transition-shadow ${className}`}>
       <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-3">
+        <div className="flex flex-1 flex-col lg:flex-row lg:items-center gap-4">
+          <Link
+            to={`/app/missions/${mission.id}`}
+            className="flex flex-col flex-1"
+            aria-label={`Voir ${mission.title}`}
+          >
+            <div className="flex flex-col flex-1">
+              <div className="flex flex-1 items-start justify-between mb-3">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{mission.title}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -68,9 +72,9 @@ export default function MissionCard({
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
                 <div>
-                  <span className="text-gray-500">Budget Min.:</span>
+                  <span className="text-gray-500">Tarif:</span>
                   <span className="ml-1 font-medium">
                     {mission.budgetMin?.toLocaleString() || 0} FCFA
                   </span>

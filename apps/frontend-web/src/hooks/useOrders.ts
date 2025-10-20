@@ -1,5 +1,5 @@
 import { useOrderStore } from '@/stores/orderStore';
-import type { CreateOrderRequest, OrderStatus } from '@/types/order.types';
+import type { OrderStatus } from '@/types/order.types';
 
 /**
  * Custom hook for order operations
@@ -20,60 +20,6 @@ export const useOrders = () => {
     clearError,
     reset,
   } = useOrderStore();
-
-  // Enhanced methods with additional logic
-  const loadOrders = async () => {
-    try {
-      clearError();
-      await fetchOrders();
-    } catch (error) {
-      setError('Failed to load orders');
-      console.error('Error loading orders:', error);
-    }
-  };
-
-  const loadOrder = async (orderId: string) => {
-    try {
-      clearError();
-      const order = await fetchOrder(orderId);
-      return order;
-    } catch (error) {
-      setError('Failed to load order');
-      console.error('Error loading order:', error);
-    }
-  };
-
-  const placeOrder = async (orderData: CreateOrderRequest) => {
-    try {
-      clearError();
-      const order = await createOrder(orderData);
-      return order;
-    } catch (error) {
-      setError('Failed to create order');
-      console.error('Error creating order:', error);
-      throw error;
-    }
-  };
-
-  const updateStatus = async (orderId: string, status: OrderStatus) => {
-    try {
-      clearError();
-      await updateOrderStatus(orderId, status);
-    } catch (error) {
-      setError('Failed to update order status');
-      console.error('Error updating order status:', error);
-    }
-  };
-
-  const cancelOrderById = async (orderId: string) => {
-    try {
-      clearError();
-      await cancelOrder(orderId);
-    } catch (error) {
-      setError('Failed to cancel order');
-      console.error('Error cancelling order:', error);
-    }
-  };
 
   // Helper methods
   const getOrderById = (orderId: string) => {
@@ -100,11 +46,11 @@ export const useOrders = () => {
     error,
 
     // Actions
-    loadOrders,
-    loadOrder,
-    placeOrder,
-    updateStatus,
-    cancelOrderById,
+    fetchOrders,
+    fetchOrder,
+    createOrder,
+    updateOrderStatus,
+    cancelOrder,
     reset,
 
     // Getters

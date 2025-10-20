@@ -25,7 +25,7 @@ export function getPersistedData(): Partial<UserState> | null {
 
 const initialState: UserState = {
   users: getPersistedData()?.users || [],
-  currentUser: getPersistedData()?.currentUser || null,
+  selectedUser: getPersistedData()?.selectedUser || null,
   userStats: getPersistedData()?.userStats || null,
   isLoading: false,
   error: null,
@@ -89,7 +89,7 @@ export const useUserStore = create<UserStore>()(
             };
 
             set({
-              currentUser: userWithStats,
+              selectedUser: userWithStats,
               isLoading: false,
               error: null,
             });
@@ -147,14 +147,14 @@ export const useUserStore = create<UserStore>()(
 
           if (response.data) {
             const updatedUser = Object.values(response.data)[0];
-            const currentUsers = get().users;
+            const selectedUsers = get().users;
 
             set({
-              users: currentUsers.map((user) => (user.id === id ? updatedUser : user)),
-              currentUser:
-                get().currentUser?.id === id
-                  ? { ...get().currentUser!, ...updatedUser }
-                  : get().currentUser,
+              users: selectedUsers.map((user) => (user.id === id ? updatedUser : user)),
+              selectedUser:
+                get().selectedUser?.id === id
+                  ? { ...get().selectedUser!, ...updatedUser }
+                  : get().selectedUser,
               isLoading: false,
               error: null,
             });
@@ -183,14 +183,14 @@ export const useUserStore = create<UserStore>()(
 
           if (response.data) {
             const updatedUser = Object.values(response.data)[0];
-            const currentUsers = get().users;
+            const selectedUsers = get().users;
 
             set({
-              users: currentUsers.map((user) => (user.id === id ? updatedUser : user)),
-              currentUser:
-                get().currentUser?.id === id
-                  ? { ...get().currentUser!, ...updatedUser }
-                  : get().currentUser,
+              users: selectedUsers.map((user) => (user.id === id ? updatedUser : user)),
+              selectedUser:
+                get().selectedUser?.id === id
+                  ? { ...get().selectedUser!, ...updatedUser }
+                  : get().selectedUser,
               isLoading: false,
               error: null,
             });
@@ -222,14 +222,14 @@ export const useUserStore = create<UserStore>()(
 
           if (response.data) {
             const updatedUser = Object.values(response.data)[0];
-            const currentUsers = get().users;
+            const selectedUsers = get().users;
 
             set({
-              users: currentUsers.map((user) => (user.id === id ? updatedUser : user)),
-              currentUser:
-                get().currentUser?.id === id
-                  ? { ...get().currentUser!, ...updatedUser }
-                  : get().currentUser,
+              users: selectedUsers.map((user) => (user.id === id ? updatedUser : user)),
+              selectedUser:
+                get().selectedUser?.id === id
+                  ? { ...get().selectedUser!, ...updatedUser }
+                  : get().selectedUser,
               isLoading: false,
               error: null,
             });
@@ -260,11 +260,11 @@ export const useUserStore = create<UserStore>()(
           }
 
           if (response.data) {
-            const currentUsers = get().users;
+            const selectedUsers = get().users;
 
             set({
-              users: currentUsers.filter((user) => user.id !== id),
-              currentUser: get().currentUser?.id === id ? null : get().currentUser,
+              users: selectedUsers.filter((user) => user.id !== id),
+              selectedUser: get().selectedUser?.id === id ? null : get().selectedUser,
               isLoading: false,
               error: null,
             });
@@ -294,7 +294,7 @@ export const useUserStore = create<UserStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         users: state.users,
-        currentUser: state.currentUser,
+        selectedUser: state.selectedUser,
         userStats: state.userStats,
       }),
     }
