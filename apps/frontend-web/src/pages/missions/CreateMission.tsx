@@ -21,40 +21,49 @@ export default function CreateMission() {
         ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
         : '',
     };
+
+    let missionId: string | undefined;
+
     if (currentMission && action === 'update') {
       await updateMission(currentMission.id, formattedData);
+      missionId = currentMission.id;
     } else {
-      await createMission(formattedData);
+      const newMission = await createMission(formattedData);
+      missionId = newMission?.id;
+    }
+
+    if (error) {
+      toast.error(error || 'Une erreur est survenue');
+      return;
+    }
+
+    if (currentMission && action === 'update') {
+      toast.success('Mission modifiée avec succès');
+    } else {
+      toast.success('Mission créée avec succès');
+    }
+
+    if (!publish) {
+      setTimeout(() => {
+        navigate('/app/missions');
+      }, 2500);
+      return;
+    }
+
+    // If publish is true and we have a mission ID, publish it
+    if (publish && missionId) {
+      await publishMission(missionId);
 
       if (error) {
-        toast.error(error || 'Une erreur est survenue');
+        console.error(error);
+        toast.error(error);
         return;
       }
 
-      if (currentMission && action === 'update') {
-        toast.success('Mission modifiée avec succès');
-      } else {
-        toast.success('Mission créée avec succès');
-      }
-
-      if (!publish) {
-        navigate('/app/missions');
-      }
-
-      if (publish && currentMission) {
-        const id = currentMission.id;
-        await publishMission(id);
-
-        if (error) {
-          toast.error(error || 'Une erreur est survenue');
-          return;
-        }
-
-        toast.success('Mission publiée avec succès');
-        setTimeout(() => {
-          navigate(`/app/missions/${id}`);
-        }, 2500);
-      }
+      toast.success('Mission publiée avec succès');
+      setTimeout(() => {
+        navigate(`/app/missions/${missionId}`);
+      }, 2500);
     }
   };
 

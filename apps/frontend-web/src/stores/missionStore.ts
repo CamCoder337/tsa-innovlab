@@ -10,7 +10,7 @@ import type { MissionStoreExtended } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
-import { getPersistedData as getUserPersistedData } from './userStore';
+import { getPersistedUser } from './authStore';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -25,7 +25,7 @@ function getPersistedData(): Partial<MissionStoreExtended> | null {
   return null;
 }
 
-const user = getUserPersistedData()?.currentUser || null;
+const user = getPersistedUser() || null;
 
 const initialState = {
   missions: getPersistedData()?.missions || [],
@@ -212,7 +212,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
               }
 
               set({
-                missions: missionsList.missions.data,
+                myMissions: missionsList.missions.data,
                 isLoading: false,
                 error: null,
               });
@@ -233,7 +233,12 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.getAffreteurMission(id);
+          const response =
+            user?.role === 'affreteur'
+              ? await missionService.getAffreteurMission(id)
+              : user?.role === 'transporteur'
+                ? await missionService.getTransporteurMission(id)
+                : await adminService.adminGetMission(id);
 
           if (response.error) {
             set({
@@ -269,7 +274,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
               error: response.error.message,
               isLoading: false,
             });
-            return;
+            return null;
           }
 
           if (response.data) {
@@ -280,12 +285,16 @@ export const useMissionStore = create<MissionStoreExtended>()(
               isLoading: false,
               error: null,
             });
+            return response.data;
           }
+
+          return null;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to create mission',
             isLoading: false,
           });
+          return null;
         }
       },
 
@@ -378,9 +387,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
           if (response.data) {
             const currentMissions = get().missions;
+            const currentMyMissions = get().myMissions;
 
             set({
               missions: currentMissions.map((mission) =>
+                mission.id === id ? response.data! : mission
+              ),
+              myMissions: currentMyMissions.map((mission) =>
                 mission.id === id ? response.data! : mission
               ),
               currentMission:

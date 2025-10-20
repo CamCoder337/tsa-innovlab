@@ -83,10 +83,10 @@ export interface ConversationFilters {
 
 export interface SearchUser {
   id: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: UserRole;
-  avatar?: string;
 }
 
 export interface SearchUsersRequest {

@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 import MissionCard from '@/components/missions/MissionCard';
 
 export default function MyMissionsAffreteur() {
-  const { myMissions, error, publishMission } = useMissions();
+  const { myMissions, error, publishMission, unpublishMission } = useMissions();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
 
@@ -23,9 +23,21 @@ export default function MyMissionsAffreteur() {
     }
 
     toast.success('Mission publiée avec succès');
-    setTimeout(() => {
-      window.location.reload();
-    }, 2500);
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 2500);
+  };
+
+  const handleunpublish = async (id: string) => {
+    await unpublishMission(id);
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
+    }
+
+    toast.success('Mission annulée avec succès');
   };
 
   const filteredMissions = myMissions.filter((mission) => {
@@ -128,7 +140,12 @@ export default function MyMissionsAffreteur() {
             <TabsContent value={activeTab} className="mt-6">
               <div className="space-y-4">
                 {filteredMissions.map((mission) => (
-                  <MissionCard key={mission.id} mission={mission} onPublish={handlePublish} />
+                  <MissionCard
+                    key={mission.id}
+                    mission={mission}
+                    onPublish={handlePublish}
+                    onCancel={handleunpublish}
+                  />
                 ))}
               </div>
 

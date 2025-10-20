@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
 import type { MissionStatus } from '@/types/mission.types';
@@ -19,31 +19,20 @@ export default function MissionDetailsPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
-  const [loading, setLoading] = useState(true);
+  const { currentMission, isLoading, fetchMission } = useMissions();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
-
-  const fetchMission = useCallback(async () => {
-    if (!id) {
-      navigate('/app/missions');
-      return;
-    }
-    setLoading(true);
-    const foundMission =
-      missions.find((mission) => mission.id === id) ||
-      myMissions.find((mission) => mission.id === id);
-    if (!foundMission) {
-      setCurrentMission(null);
-    }
-    if (foundMission) {
-      setCurrentMission(foundMission);
-    }
-    setLoading(false);
-  }, [id, missions, myMissions, navigate, setCurrentMission]);
 
   useEffect(() => {
     if (id) {
-      fetchMission();
+      fetchMission(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Handle mission not found in useEffect to avoid setState during render
+  useEffect(() => {
+    if (!isLoading && !currentMission && id) {
+      toast.error('Mission introuvable', { duration: 5000 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -65,12 +54,11 @@ export default function MissionDetailsPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <div className="container mx-auto py-8">Loading mission details...</div>;
   }
 
   if (!currentMission) {
-    toast.error('Mission introuvable', { duration: 5000 });
     return <Navigate to="/app/missions" />;
   }
 
@@ -86,7 +74,7 @@ export default function MissionDetailsPage() {
             mission={currentMission}
             userRole={user?.role}
             onStatusUpdate={handleStatusUpdate}
-            onRefresh={fetchMission}
+            onRefresh={() => fetchMission(id!)}
           />
         </div>
       </div>
@@ -126,11 +114,11 @@ export default function MissionDetailsPage() {
         </TabsContent>
 
         <TabsContent value="appreciation">
-          <MissionAppreciation mission={currentMission} onUpdate={fetchMission} />
+          <MissionAppreciation mission={currentMission} onUpdate={() => fetchMission(id!)} />
         </TabsContent>
 
         <TabsContent value="financial">
-          <MissionFinancial mission={currentMission} onUpdate={fetchMission} />
+          <MissionFinancial mission={currentMission} onUpdate={() => fetchMission(id!)} />
         </TabsContent>
       </Tabs>
     </div>
