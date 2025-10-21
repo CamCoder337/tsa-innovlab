@@ -20,26 +20,39 @@ const createEmptyCart = (): Cart => {
 
 // Cart calculation utilities
 function calculateCartTotals(items: CartItem[]): {
-  itemsCount: number;
-  totalPrice: number;
+  itemCount: number;
+  totalAmount: number;
   totalQuantity: number;
 } {
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + parseInt(item.unitPrice) * item.quantity, 0);
-  const itemsCount = items.length;
+  const totalAmount = items.reduce(
+    (sum, item) => sum + parseInt(item.priceAtAdd) * item.quantity,
+    0
+  );
+  const itemCount = items.length;
 
-  return { itemsCount, totalPrice, totalQuantity };
+  return { itemCount, totalAmount, totalQuantity };
 }
 
-function updateCartTotals(cart: Cart): Cart {
+function updateCartTotals(cart: Cart): {
+  cart: Cart;
+  itemCount: number;
+  totalAmount: number;
+  totalQuantity: number;
+} {
   const totals = calculateCartTotals(cart.items);
   return {
-    ...cart,
+    cart,
     ...totals,
   };
 }
 
-function getPersistedCart(): Cart {
+function getPersistedCart(): {
+  cart: Cart;
+  itemCount: number;
+  totalAmount: number;
+  totalQuantity: number;
+} {
   try {
     const persistedData = localStorage.getItem(CART_STORAGE_KEY);
     if (persistedData) {
@@ -57,18 +70,26 @@ function getPersistedCart(): Cart {
         }
         return item;
       });
-      return cartData;
+      return parsed.state;
     }
   } catch (error) {
     console.error('Error loading persisted cart data:', error);
   }
-  return createEmptyCart();
+  return {
+    cart: createEmptyCart(),
+    itemCount: 0,
+    totalAmount: 0,
+    totalQuantity: 0,
+  };
 }
 
 const currentUser = getPersistedUser() || null;
 
 const initialState = {
   cart: createEmptyCart(),
+  itemCount: 0,
+  totalAmount: 0,
+  totalQuantity: 0,
   isLoading: false,
   error: null,
   isInitialized: false,
@@ -82,18 +103,17 @@ export const useCartStore = create<CartStore>()(
 
       // Initialize cart from localStorage
       initializeCart: async () => {
-        const savedCart = getPersistedCart();
-        const updatedCart = updateCartTotals(savedCart);
+        const savedCart = getPersistedCart().cart;
 
         set({
-          cart: updatedCart,
+          cart: savedCart,
           isInitialized: true,
           error: null,
         });
       },
 
       // Add item to cart
-      addItem: async (productId: string, quantity: number = 1, sync: boolean = false) => {
+      addItem: async (productId: string, quantity: number = 1) => {
         const { cart } = get();
 
         try {
@@ -110,15 +130,12 @@ export const useCartStore = create<CartStore>()(
             }
 
             if (response.data) {
-              if (sync) {
-                return;
-              }
               const updatedCart = {
                 ...cart,
                 items: [...cart.items, response.data],
               };
               set({
-                cart: updateCartTotals(updatedCart),
+                ...updateCartTotals(updatedCart),
                 isLoading: false,
                 error: null,
               });
@@ -147,13 +164,17 @@ export const useCartStore = create<CartStore>()(
                 productId: product.id,
                 product,
                 quantity,
-                unitPrice: product.price,
+                priceAtAdd: product.price,
               };
               updatedItems = [...cart.items, newItem];
             }
 
-            const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
-            set({ cart: updatedCart, isLoading: false, error: null });
+            const updatedCart = { ...cart, items: updatedItems };
+            set({
+              ...updateCartTotals(updatedCart),
+              isLoading: false,
+              error: null,
+            });
           }
         } catch (error) {
           set({
@@ -181,8 +202,12 @@ export const useCartStore = create<CartStore>()(
           }
           // Unauthenticated user - use local storage
           const updatedItems = cart.items.filter((item) => item.id !== itemId);
-          const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
-          set({ cart: updatedCart, isLoading: false, error: null });
+          const updatedCart = { ...cart, items: updatedItems };
+          set({
+            ...updateCartTotals(updatedCart),
+            isLoading: false,
+            error: null,
+          });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to remove item from cart',
@@ -211,26 +236,17 @@ export const useCartStore = create<CartStore>()(
               set({ error: response.error.message, isLoading: false });
               return;
             }
-
-            if (response.data) {
-              const updatedCart = {
-                ...cart,
-                items: [...cart.items, response.data],
-              };
-              set({
-                cart: updateCartTotals(updatedCart),
-                isLoading: false,
-                error: null,
-              });
-            }
-          } else {
-            // Unauthenticated user - use local storage
-            const updatedItems = cart.items.map((item) =>
-              item.id === itemId ? { ...item, quantity } : item
-            );
-            const updatedCart = updateCartTotals({ ...cart, items: updatedItems });
-            set({ cart: updatedCart, isLoading: false, error: null });
           }
+          // Unauthenticated user - use local storage
+          const updatedItems = cart.items.map((item) =>
+            item.id === itemId ? { ...item, quantity } : item
+          );
+          const updatedCart = { ...cart, items: updatedItems };
+          set({
+            ...updateCartTotals(updatedCart),
+            isLoading: false,
+            error: null,
+          });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to update item quantity',
@@ -252,13 +268,15 @@ export const useCartStore = create<CartStore>()(
               set({ error: response.error.message, isLoading: false });
               return;
             }
-
-            // Refresh cart from server
-            await get().fetchCart();
+            if (response.data) {
+              const emptyCart = createEmptyCart();
+              set({ ...updateCartTotals(emptyCart), isLoading: false, error: null });
+              await get().fetchCart();
+            }
           } else {
             // Unauthenticated user - clear local storage
             const emptyCart = createEmptyCart();
-            set({ cart: emptyCart, isLoading: false, error: null });
+            set({ ...updateCartTotals(emptyCart), isLoading: false, error: null });
           }
         } catch (error) {
           set({
@@ -276,9 +294,10 @@ export const useCartStore = create<CartStore>()(
         try {
           set({ isLoading: true, error: null });
 
+          console.log('fetchCart');
           if (currentUser) {
             if (!localCart.id && localCart.items.length > 0) {
-              syncWithServer();
+              await syncWithServer();
             }
             // Authenticated user - fetch from API
             const response = await shopService.getCart();
@@ -289,7 +308,17 @@ export const useCartStore = create<CartStore>()(
             }
 
             if (response.data) {
-              set({ cart: response.data, isLoading: false, error: null });
+              set({
+                cart: response.data.cart,
+                itemCount: response.data.itemCount,
+                totalAmount: response.data.totalAmount,
+                totalQuantity: response.data.cart.items.reduce(
+                  (total, item) => total + item.quantity,
+                  0
+                ),
+                isLoading: false,
+                error: null,
+              });
             }
           }
         } catch (error) {
@@ -302,22 +331,71 @@ export const useCartStore = create<CartStore>()(
 
       // Sync with server cart (for authenticated users)
       syncWithServer: async () => {
-        const { cart: localCart, addItem, error } = get();
+        const { cart: localCart } = get();
 
         try {
-          // If local cart has items and no ID, merge them with server cart
-          for (const item of localCart.items) {
-            await addItem(item.productId, item.quantity, true);
-            if (error) {
-              console.error(error);
-              return;
-            }
-            const updatedItems = localCart.items.filter((localItem) => localItem.id !== item.id);
-            const updatedCart = updateCartTotals({ ...localCart, items: updatedItems });
-            set({ cart: updatedCart, isLoading: false, error: null });
+          set({ isLoading: true, error: null });
+
+          console.log('syncWithServer');
+          // First, fetch the current server cart to see what's already there
+          const serverCartResponse = await shopService.getCart();
+
+          if (serverCartResponse.error) {
+            set({ error: serverCartResponse.error.message, isLoading: false });
+            return;
           }
 
-          localStorage.removeItem(CART_STORAGE_KEY);
+          const serverCart = serverCartResponse.data?.cart;
+          if (!serverCart) {
+            set({ error: 'Failed to fetch server cart', isLoading: false });
+            return;
+          }
+
+          // Merge local cart items with server cart items intelligently
+          for (const localItem of localCart.items) {
+            // Check if this product already exists in server cart
+            const existingServerItem = serverCart.items?.find(
+              (serverItem) => serverItem.productId === localItem.productId
+            );
+            const sameQuantity = existingServerItem?.quantity === localItem.quantity;
+
+            if (!sameQuantity) {
+              if (existingServerItem) {
+                const quantity =
+                  existingServerItem.product!.stock! < localItem.quantity
+                    ? existingServerItem.product!.stock!
+                    : localItem.quantity;
+                // Product exists in server cart - update quantity to the maximum of both
+                const response = await shopService.updateCartItem(existingServerItem.id, quantity);
+                if (response.error) {
+                  console.warn(
+                    `Failed to sync item ${localItem.productId}:`,
+                    response.error.message
+                  );
+                  // Continue with other items instead of stopping the entire sync
+                  continue;
+                }
+              } else {
+                // Product doesn't exist in server cart - add it
+                const addRequest: AddToCartRequest = {
+                  productId: localItem.productId,
+                  quantity: localItem.quantity,
+                };
+
+                const response = await shopService.addCartItem(addRequest);
+                if (response.error) {
+                  console.warn(
+                    `Failed to sync item ${localItem.productId}:`,
+                    response.error.message
+                  );
+                  // Continue with other items instead of stopping the entire sync
+                  continue;
+                }
+              }
+            }
+          }
+
+          get().reset();
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to sync with server',
@@ -347,7 +425,7 @@ export const useCartStore = create<CartStore>()(
       // Get total price of all items in cart
       getTotalPrice: () => {
         const { cart } = get();
-        return cart.items.reduce((sum, item) => sum + parseInt(item.unitPrice) * item.quantity, 0);
+        return cart.items.reduce((sum, item) => sum + parseInt(item.priceAtAdd) * item.quantity, 0);
       },
 
       // Utility actions
@@ -362,7 +440,7 @@ export const useCartStore = create<CartStore>()(
       reset: () => {
         const emptyCart = createEmptyCart();
         set({
-          cart: emptyCart,
+          ...updateCartTotals(emptyCart),
           isLoading: false,
           error: null,
           isInitialized: false,
@@ -374,6 +452,9 @@ export const useCartStore = create<CartStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         cart: state.cart,
+        itemCount: state.itemCount,
+        totalAmount: state.totalAmount,
+        totalQuantity: state.totalQuantity,
       }),
     }
   )

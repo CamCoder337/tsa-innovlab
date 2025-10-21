@@ -66,16 +66,6 @@ export const useCart = () => {
     }
   };
 
-  const clearAllItems = () => {
-    try {
-      setError(null);
-      clearCart();
-    } catch (error) {
-      setError('Failed to clear cart');
-      console.error('Error clearing cart:', error);
-    }
-  };
-
   // Helper methods
   const isInCart = (productId: string): boolean => {
     return getItemQuantity(productId) > 0;
@@ -108,7 +98,7 @@ export const useCart = () => {
     addToCart,
     removeFromCart,
     updateQuantity,
-    clearAllItems,
+    clearCart,
     fetchCart,
 
     // Getters

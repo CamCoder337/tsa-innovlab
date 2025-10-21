@@ -14,7 +14,7 @@ export enum OrderStatus {
 
 export enum PaymentMethod {
   ORANGE_MONEY = 'orange_money',
-  MTN_MOMO = 'mtn_momo',
+  MTN_MOMO = 'mtn_mobile_money',
   WAVE = 'wave',
   BANK_TRANSFER = 'bank_transfer',
   CASH_ON_DELIVERY = 'cash_on_delivery',
@@ -70,8 +70,8 @@ export interface Order extends Partial<Timestamps> {
 
 // DTOs for API requests
 export interface CreateOrderRequest {
-  shippingAddressId?: string;
-  billingAddressId?: string;
+  shippingAddressId: string;
+  billingAddressId: string;
   paymentMethod: PaymentMethod;
   notes?: string;
 }

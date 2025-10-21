@@ -26,6 +26,7 @@ export default function Layout() {
   const { fetchUsers, fetchUserStats } = useUsers();
 
   useEffect(() => {
+    console.log('Layout');
     if (user && user.role !== 'client') {
       if (user && user.role !== 'affreteur') fetchAllMissions();
       if (user && user.role !== 'admin') {
@@ -42,13 +43,14 @@ export default function Layout() {
       fetchConversations();
       fetchNotifications();
       fetchNotificationStats();
-    } else {
-      if (user && user.role !== 'admin') {
+    }
+    if (!user || user.role !== 'admin') {
+      if (user) {
         fetchCart();
-        fetchCategories();
         fetchOrders();
-        fetchProducts();
       }
+      fetchCategories();
+      fetchProducts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

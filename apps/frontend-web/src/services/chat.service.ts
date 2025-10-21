@@ -164,7 +164,7 @@ export class ChatService extends BaseApi {
   async sendMessage(
     conversationId: number,
     request: SendMessageRequest
-  ): Promise<ApiResponse<Message>> {
+  ): Promise<ApiResponse<{ message: Message }>> {
     try {
       const response = await this.insertToken().post(
         `/api/common/conversations/${conversationId}/messages`,
