@@ -263,6 +263,35 @@ export const useMissionStore = create<MissionStoreExtended>()(
         }
       },
 
+      fetchMissionsStats: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getMissionStats();
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              stats: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch mission',
+            isLoading: false,
+          });
+        }
+      },
+
       createMission: async (data: CreateMissionDto) => {
         try {
           set({ isLoading: true, error: null });
@@ -504,8 +533,15 @@ export const useMissionStore = create<MissionStoreExtended>()(
       partialize: (state) => ({
         missions: state.missions,
         myMissions: state.myMissions,
+        currentMission: state.currentMission,
         stats: state.stats,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isLoading = false;
+          state.error = null;
+        }
+      },
     }
   )
 );

@@ -1,21 +1,7 @@
 import { useProductStore } from '@/stores/productStore';
-import { useEffect } from 'react';
-import { useAuth } from './useAuth';
 
 export function useProducts() {
   const store = useProductStore();
-  const { user } = useAuth();
-
-  // Auto-initialize on first use
-  useEffect(() => {
-    if (user && user.role == 'admin') {
-      store.fetchAdminProducts();
-      store.fetchProductStats();
-    } else {
-      store.fetchProducts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   return {
     // State

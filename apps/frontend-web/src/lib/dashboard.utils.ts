@@ -244,4 +244,31 @@ export class DashboardUtils {
       return createdAt >= monthStart;
     }).length;
   }
+
+  static calculateNewMissionsThisMonth(missions: Mission[]): number {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return missions?.filter((mission) => {
+      const createdAt = new Date(mission.createdAt);
+      return createdAt >= monthStart;
+    }).length;
+  }
+
+  static calculateSuccessRate(completedMissions: number, totalMissions: number): string {
+    if (totalMissions === 0) return '0.0';
+    const rate = (completedMissions / totalMissions) * 100;
+    return rate.toFixed(1);
+  }
+
+  static calculateNewUsersLastMonth(users: User[]): number {
+    const now = new Date();
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    return users?.filter((user) => {
+      const createdAt = new Date(user.createdAt);
+      return createdAt >= lastMonthStart && createdAt <= lastMonthEnd;
+    }).length;
+  }
 }

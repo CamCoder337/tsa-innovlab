@@ -48,31 +48,3 @@ export const useAddresses = () => {
     getAddressesByRegion: store.getAddressesByRegion,
   };
 };
-
-// Helper hooks for specific use cases
-export const useAddressLoading = () => useAddressStore((state) => state.isLoading);
-export const useAddressError = () => useAddressStore((state) => state.error);
-export const useCurrentAddress = () => useAddressStore((state) => state.currentAddress);
-
-export const useSearchAddresses = (query: string) => {
-  const addresses = useAddressStore((state) => state.addresses);
-  const lowercaseQuery = query.toLowerCase();
-  return addresses.filter(
-    (addr) =>
-      addr.label?.toLowerCase().includes(lowercaseQuery) ||
-      addr.street?.toLowerCase().includes(lowercaseQuery) ||
-      addr.city?.toLowerCase().includes(lowercaseQuery) ||
-      addr.region?.toLowerCase().includes(lowercaseQuery) ||
-      addr.country?.toLowerCase().includes(lowercaseQuery)
-  );
-};
-
-export const useAddressesByCity = (city: string) => {
-  const addresses = useAddressStore((state) => state.addresses);
-  return addresses.filter((addr) => addr.city?.toLowerCase() === city.toLowerCase());
-};
-
-export const useAddressesByRegion = (region: string) => {
-  const addresses = useAddressStore((state) => state.addresses);
-  return addresses.filter((addr) => addr.region?.toLowerCase() === region.toLowerCase());
-};

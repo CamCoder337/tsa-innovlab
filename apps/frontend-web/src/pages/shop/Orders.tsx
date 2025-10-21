@@ -80,7 +80,7 @@ const statusConfig = {
 };
 
 export default function OrdersPage() {
-  const { orders, isLoading, loadOrders } = useOrders();
+  const { orders, isLoading, fetchOrders } = useOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'total' | 'status'>('date');
@@ -117,7 +117,7 @@ export default function OrdersPage() {
   }, [orders, searchTerm, statusFilter, sortBy, sortOrder]);
 
   const handleRefresh = () => {
-    loadOrders();
+    fetchOrders();
   };
 
   if (isLoading) {

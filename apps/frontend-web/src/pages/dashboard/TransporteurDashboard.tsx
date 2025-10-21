@@ -70,7 +70,7 @@ function TransporteurDashboard() {
     {
       title: 'Taux de Réussite',
       icon: CheckCircle,
-      value: DashboardUtils.formatPercentage(metrics?.successRate || 0),
+      value: 0, // DashboardUtils.formatPercentage(metrics?.successRate || 0)
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.successRate || 0,

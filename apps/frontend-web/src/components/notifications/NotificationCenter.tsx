@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell, CheckCheck, Trash2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,8 +25,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     stats,
     isLoading,
     error,
-    fetchNotifications,
-    fetchNotificationStats,
     markNotificationRead,
     markAllNotificationsRead,
     deleteNotification,
@@ -34,13 +32,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-
-  useEffect(() => {
-    // Load notifications and stats on mount
-    fetchNotifications();
-    fetchNotificationStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const unreadCount = stats?.unread || 0;
   const filteredNotifications =

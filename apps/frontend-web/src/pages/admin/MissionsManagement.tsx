@@ -7,27 +7,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, Clock, CheckCircle, AlertTriangle, Package, Plus } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission, MissionStatus } from '@/types/mission.types';
+import { VehicleType, VehicleTypeLabels } from '@/types/vehicle.types';
 import { Link } from 'react-router-dom';
 import MissionCard from '@/components/missions/MissionCard';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function MissionsManagement() {
   const { missions = [], isLoading, error } = useMissions();
   const [searchQuery, setSearchQuery] = useState('');
-  // const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   // const [statusFilter, setStatusFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<MissionStatus | 'all'>('all');
 
   const filteredMissions = missions.filter((mission: Mission) => {
     const matchesSearch =
       mission.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mission.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseArrivee?.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseDepart?.label?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseArrivee?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseDepart?.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseArrivee?.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mission.adresseDepart?.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (mission.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
 
-    // const matchesType = typeFilter === 'all' || mission.typeMarchandise === typeFilter;
-    // const matchesStatus = statusFilter === 'all' || mission.status === statusFilter;
+    const matchesType = typeFilter === 'all' || mission.requiredVehicleType === typeFilter;
     const matchesTab = activeTab === 'all' || mission.status === activeTab;
 
-    return matchesSearch && matchesTab;
+    return matchesSearch && matchesType && matchesTab;
   });
 
   const exportToCSV = (): void => {
@@ -76,7 +88,7 @@ export default function MissionsManagement() {
       <div className="grid gap-4 md:grid-cols-5 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium text-muted-foreground h-5">
               Total des Missions
             </CardTitle>
           </CardHeader>
@@ -86,7 +98,7 @@ export default function MissionsManagement() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <Package className="h-4 w-4 mr-1 text-gray-500" />
               Brouillons
             </CardTitle>
@@ -97,7 +109,7 @@ export default function MissionsManagement() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <AlertTriangle className="h-4 w-4 mr-1 text-blue-500" />
               Publiées
             </CardTitle>
@@ -108,7 +120,7 @@ export default function MissionsManagement() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <Clock className="h-4 w-4 mr-1 text-yellow-500" />
               Assignées
             </CardTitle>
@@ -119,7 +131,7 @@ export default function MissionsManagement() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
               Terminées
             </CardTitle>
@@ -145,33 +157,19 @@ export default function MissionsManagement() {
               </div>
             </div>
             <div className="flex gap-2">
-              {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Statut" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Tous les statuts</SelectItem>
-                                    <SelectItem value="draft">Brouillon</SelectItem>
-                                    <SelectItem value="published">Publiée</SelectItem>
-                                    <SelectItem value="assigned">Assignée</SelectItem>
-                                    <SelectItem value="completed">Terminée</SelectItem>
-                                    <SelectItem value="cancelled">Annulée</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Type de marchandise" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Tous les types</SelectItem>
-                                    <SelectItem value="electronique">Électronique</SelectItem>
-                                    <SelectItem value="construction">Matériaux de Construction</SelectItem>
-                                    <SelectItem value="alimentaire">Produits Alimentaires</SelectItem>
-                                    <SelectItem value="textile">Textiles</SelectItem>
-                                    <SelectItem value="machines">Machines</SelectItem>
-                                    <SelectItem value="chimique">Produits Chimiques</SelectItem>
-                                </SelectContent>
-                            </Select> */}
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Type de vehicule" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all"> Tous les véhicules </SelectItem>
+                  {Object.values(VehicleType).map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {VehicleTypeLabels[type]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
                 Exporter
@@ -186,7 +184,7 @@ export default function MissionsManagement() {
         onValueChange={(value) => setActiveTab(value as MissionStatus | 'all')}
         className="space-y-4"
       >
-        <TabsList>
+        <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="all" className="flex items-center gap-1">
             Toutes <Badge variant="secondary">{statusCounts.total}</Badge>
           </TabsTrigger>

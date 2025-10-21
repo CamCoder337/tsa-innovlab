@@ -129,3 +129,39 @@ export interface TypingIndicator {
   isTyping: boolean;
   timestamp: number;
 }
+
+export interface ChatState {
+  // State
+  conversations: ConversationListItem[];
+  currentConversation: Conversation | null;
+  messages: Record<number, Message[]>; // conversationId -> messages
+  typingIndicators: TypingIndicator[];
+  isLoading: boolean;
+  error: string | null;
+  unreadCount: number;
+
+  // Actions
+  fetchConversations: (filters?: ConversationFilters) => Promise<void>;
+  fetchConversation: (conversationId: number) => Promise<void>;
+  fetchMessages: (conversationId: number, page?: number) => Promise<void>;
+  sendMessage: (conversationId: number, content: string) => Promise<void>;
+  createDirectConversation: (userId: string) => Promise<Conversation>;
+  createMissionConversation: (userId: string, missionId?: string) => Promise<Conversation>;
+  markMessageAsRead: (messageId: number) => Promise<void>;
+  markAllMessagesAsRead: (conversationId: number) => Promise<void>;
+  searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
+
+  // Real-time actions
+  handleNewMessage: (message: Message) => void;
+  handleMessageRead: (messageId: number, conversationId: number) => void;
+  handleTypingStart: (conversationId: number, userId: string) => void;
+  handleTypingStop: (conversationId: number, userId: string) => void;
+  sendTypingIndicator: (conversationId: number, isTyping: boolean) => void;
+
+  // Utility actions
+  setCurrentConversation: (conversation: Conversation | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
+}

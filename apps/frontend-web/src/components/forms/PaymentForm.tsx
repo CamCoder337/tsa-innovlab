@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type Dispatch, type SetStateAction } from 'react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import libphonenumber from 'google-libphonenumber';
@@ -24,11 +24,13 @@ import type {
   MobileMoneyProvider,
   CardDetails,
 } from '@/types/payment.types';
+import { PaymentMethod as PaymentMethods } from '@/types/order.types';
 
 interface PaymentFormProps {
   amount: number;
   orderId: string;
-  paymentMethod?: PaymentMethod;
+  paymentMethod?: PaymentMethodType;
+  setPaymentMethod: Dispatch<SetStateAction<PaymentMethodType>>;
   onSuccess: (payment: Payment) => void;
   onError: (error: Error) => void;
   savedCards?: CardDetails[];
@@ -65,7 +67,7 @@ const validateCameroonPhone = (phone: string): boolean => {
 
 const PaymentValidationSchema = Yup.object().shape({
   paymentMethod: Yup.string()
-    .oneOf(['card', 'mobile', 'cash'], 'Méthode de paiement invalide')
+    .oneOf(Object.values(PaymentMethods), 'Méthode de paiement invalide')
     .required('Veuillez sélectionner une méthode de paiement'),
 
   // Card validation (conditional)
@@ -121,7 +123,8 @@ const PaymentValidationSchema = Yup.object().shape({
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
   orderId,
-  paymentMethod = 'bank_transfer',
+  paymentMethod = 'cash',
+  setPaymentMethod,
   onSuccess,
   onError,
   savedCards = [],
@@ -130,7 +133,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
   const formik = useFormik<PaymentFormData>({
     initialValues: {
-      paymentMethod: paymentMethod,
+      paymentMethod: 'cash_on_delivery',
       // Card fields
       cardNumber: '',
       expiryDate: '',
@@ -139,7 +142,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       saveCard: false,
       useSavedCard: '',
       // Mobile money fields
-      mobileProvider: 'orange_money',
+      mobileProvider: 'mtn_mobile_money',
       mobilePhone: '',
       receiverName: '',
     },
@@ -212,9 +215,13 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       </CardHeader>
       <CardContent>
         <RadioGroup
-          value={formik.values.paymentMethod}
+          value={paymentMethod}
           onValueChange={(value: PaymentMethodType) => {
-            formik.setFieldValue('paymentMethod', value);
+            setPaymentMethod(value);
+            if (paymentMethod === 'cash') formik.setFieldValue('paymentMethod', 'cash_on_delivery');
+            if (paymentMethod === 'mobile')
+              formik.setFieldValue('paymentMethod', 'mtn_mobile_money');
+            if (paymentMethod === 'card') formik.setFieldValue('paymentMethod', 'bank_transfer');
           }}
           className="flex gap-4 justify-center"
         >
@@ -390,16 +397,17 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           <Label>Service de paiement *</Label>
           <Select
             value={formik.values.mobileProvider}
-            onValueChange={(value: MobileMoneyProvider) =>
-              formik.setFieldValue('mobileProvider', value)
-            }
+            onValueChange={(value: MobileMoneyProvider) => {
+              formik.setFieldValue('payment_method', value);
+              formik.setFieldValue('mobileProvider', value);
+            }}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="orange_money">Orange Money</SelectItem>
               <SelectItem value="mtn_mobile_money">MTN Mobile Money</SelectItem>
+              <SelectItem value="orange_money">Orange Money</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -504,13 +512,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
       {renderPaymentMethodSelector()}
 
-      {(formik.values.paymentMethod === 'bank_transfer' ||
-        formik.values.paymentMethod === 'wave') &&
-        renderCardPayment()}
-      {(formik.values.paymentMethod === 'mtn_mobile_money' ||
-        formik.values.paymentMethod === 'orange_money') &&
-        renderMobileMoneyPayment()}
-      {formik.values.paymentMethod === 'cash_on_delivery' && renderCashPayment()}
+      {paymentMethod === 'card' && renderCardPayment()}
+      {paymentMethod === 'mobile' && renderMobileMoneyPayment()}
+      {paymentMethod === 'cash' && renderCashPayment()}
 
       <div className="pt-4">
         <Button

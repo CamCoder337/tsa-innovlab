@@ -16,6 +16,7 @@ const Layout = lazy(() => import('./components/layout/Layout'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
 const Users = lazy(() => import('./pages/admin/UsersManagement'));
+const User = lazy(() => import('./pages/admin/UserProfile'));
 
 const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
 const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
@@ -157,14 +158,24 @@ function App() {
           }
         />
 
-        <Route
-          path="users"
-          element={
-            <Suspense fallback={<LoadingFallback />}>
-              <Users />
-            </Suspense>
-          }
-        />
+        <Route path="users">
+          <Route
+            path=""
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Users />
+              </Suspense>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <User />
+              </Suspense>
+            }
+          />
+        </Route>
 
         <Route path="shop">
           <Route

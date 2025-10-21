@@ -1,58 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  Conversation,
   ConversationListItem,
-  Message,
-  TypingIndicator,
-  ConversationFilters,
   CreateDirectConversationRequest,
   CreateMissionConversationRequest,
   SendMessageRequest,
   ChatMessageEvent,
   ChatMessageReadEvent,
   ChatTypingEvent,
-  SearchUser,
+  ChatState,
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
-import type { UserRole } from '@/types/auth.types';
-
-interface ChatState {
-  // State
-  conversations: ConversationListItem[];
-  currentConversation: Conversation | null;
-  messages: Record<number, Message[]>; // conversationId -> messages
-  typingIndicators: TypingIndicator[];
-  isLoading: boolean;
-  error: string | null;
-  unreadCount: number;
-
-  // Actions
-  fetchConversations: (filters?: ConversationFilters) => Promise<void>;
-  fetchConversation: (conversationId: number) => Promise<void>;
-  fetchMessages: (conversationId: number, page?: number) => Promise<void>;
-  sendMessage: (conversationId: number, content: string) => Promise<void>;
-  createDirectConversation: (userId: string) => Promise<Conversation>;
-  createMissionConversation: (userId: string, missionId?: string) => Promise<Conversation>;
-  markMessageAsRead: (messageId: number) => Promise<void>;
-  markAllMessagesAsRead: (conversationId: number) => Promise<void>;
-  searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
-
-  // Real-time actions
-  handleNewMessage: (message: Message) => void;
-  handleMessageRead: (messageId: number, conversationId: number) => void;
-  handleTypingStart: (conversationId: number, userId: string) => void;
-  handleTypingStop: (conversationId: number, userId: string) => void;
-  sendTypingIndicator: (conversationId: number, isTyping: boolean) => void;
-
-  // Utility actions
-  setCurrentConversation: (conversation: Conversation | null) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
-}
 
 const initialState = {
   conversations: [],
@@ -109,19 +68,30 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: true, error: null });
           const response = await chatService.getMessages(conversationId, page);
 
-          const { messages } = get();
-          const existingMessages = messages[conversationId] || [];
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
 
-          // For page 1, replace messages; for other pages, append
-          const newMessages =
-            page === 1
-              ? response.data?.data || []
-              : [...existingMessages, ...(response.data?.data || [])];
+          if (response.data) {
+            const { messages } = get();
+            const existingMessages = messages[conversationId] || [];
 
-          set({
-            messages: { ...messages, [conversationId]: newMessages },
-            isLoading: false,
-          });
+            // For page 1, replace messages; for other pages, append
+            const newMessages =
+              page === 1
+                ? response.data.data || []
+                : [...existingMessages, ...(response.data.data || [])];
+
+            set({
+              messages: { ...messages, [conversationId]: newMessages },
+              isLoading: false,
+            });
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch messages',
@@ -130,24 +100,64 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
+      // fetchMessages: async (conversationId, page = 1) => {
+      //   try {
+      //     set({ isLoading: true, error: null });
+      //     const response = await chatService.getMessages(conversationId, page);
+
+      //     if (response.error)
+      //       set({
+      //         error: response.error.errors[0] || response.error.message || 'Erreur lors de la récupération des messages',
+      //         isLoading: false,
+      //       });
+
+      //     if (response.data) {
+      //       const { messages } = get();
+      //       const existingMessages = messages[conversationId] || [];
+
+      //       // For page 1, replace messages; for other pages, append
+      //       const newMessages =
+      //         page === 1
+      //           ? response.data.data || []
+      //           : [...existingMessages, ...(response.data.data || [])];
+
+      //       set({
+      //         messages: { ...messages, [conversationId]: newMessages },
+      //         isLoading: false,
+      //       });
+      //     }
+      //   } catch (error) {
+      //     set({
+      //       error: error instanceof Error ? error.message : 'Failed to fetch messages',
+      //       isLoading: false,
+      //     });
+      //   }
+      // },
+
       sendMessage: async (conversationId, content) => {
         try {
           const request: SendMessageRequest = { content };
           const response = await chatService.sendMessage(conversationId, request);
 
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
+
           if (response.data) {
-            // Optimistically add message to local state
             const { messages } = get();
-            const conversationMessages = messages[conversationId] || [];
+            const existingMessages = messages[conversationId] || [];
+
+            // For page 1, replace messages; for other pages, append
+            const newMessages = [...existingMessages, response.data.message];
 
             set({
-              messages: {
-                ...messages,
-                [conversationId]: [...conversationMessages, response.data],
-              },
+              messages: { ...messages, [conversationId]: newMessages },
             });
-          } else if (response.error) {
-            set({ error: response.error.message });
           }
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'Failed to send message' });
@@ -382,6 +392,7 @@ export const useChatStore = create<ChatState>()(
         // Only persist conversations and current conversation
         conversations: state.conversations,
         currentConversation: state.currentConversation,
+        messages: state.messages,
       }),
     }
   )
