@@ -49,9 +49,7 @@ function ProductPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  const listProduct = useMemo(() => products?.find((p) => p.id === id), [id, products]);
-
-  const product = listProduct;
+  const product = useMemo(() => products?.find((p) => p.id === id), [id, products]);
 
   const handleAddToCart = async () => {
     if (!product) return;

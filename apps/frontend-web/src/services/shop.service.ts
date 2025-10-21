@@ -96,12 +96,21 @@ export class ShopService extends BaseApi {
   }
 
   async visualRecognitionSearch(
-    image?: File
+    image: File
   ): Promise<ApiResponse<{ products: Product[]; processing_time_ms: number; total: number }>> {
     try {
-      const response = await this.insertToken().get('/api/shop/visual-recognition/search', {
-        params: { image },
-      });
+      const formData = new FormData();
+      formData.append('image', image);
+
+      const response = await this.insertToken().post(
+        '/api/shop/visual-recognition/search',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -119,7 +128,9 @@ export class ShopService extends BaseApi {
   }
 
   // Cart Operations
-  async getCart(): Promise<ApiResponse<Cart>> {
+  async getCart(): Promise<
+    ApiResponse<{ cart: Cart; itemCount: number; totalAmount: number; totalQuantity: number }>
+  > {
     try {
       const response = await this.insertToken().get('/api/client/cart');
       return { data: response.data.data };

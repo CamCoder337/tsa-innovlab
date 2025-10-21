@@ -44,7 +44,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   const currentConversationIdRef = useRef<number | null>(null);
 
   const currentMessages = useMemo(() => {
-    return messages[conversation.id] || [];
+    const this_messages = messages[conversation.id].reverse();
+    return this_messages || [];
   }, [messages, conversation.id]);
 
   const typingUsers = useMemo(() => {
@@ -78,11 +79,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
 
   useEffect(() => {
     // Only load messages when conversation actually changes
-    if (conversation.id && currentConversationIdRef.current !== conversation.id) {
+    if (conversation.id) {
       currentConversationIdRef.current = conversation.id;
       loadMessagesForConversation(conversation.id);
     }
-  }, [conversation.id, loadMessagesForConversation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversation.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -142,7 +144,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-        conversation.otherParticipant?.role?.slice(1) || ''
+          conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -166,7 +168,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-screen bg-white">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
@@ -372,17 +374,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? 'order-1' : ''}`}>
         <div
-          className={`px-4 py-2 rounded-2xl ${isCurrentUser
+          className={`px-4 py-2 rounded-2xl ${
+            isCurrentUser
               ? 'bg-blue-600 text-white rounded-br-md'
               : 'bg-gray-100 text-gray-900 rounded-bl-md'
-            }`}
+          }`}
         >
           <div className="text-sm whitespace-pre-wrap break-words">{message.content}</div>
         </div>
 
         <div
-          className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${isCurrentUser ? 'justify-end' : 'justify-start'
-            }`}
+          className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${
+            isCurrentUser ? 'justify-end' : 'justify-start'
+          }`}
         >
           <span>{formatMessageTime(message.createdAt)}</span>
           {getMessageStatusIcon()}

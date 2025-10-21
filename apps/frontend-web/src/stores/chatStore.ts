@@ -68,19 +68,30 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: true, error: null });
           const response = await chatService.getMessages(conversationId, page);
 
-          const { messages } = get();
-          const existingMessages = messages[conversationId] || [];
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
 
-          // For page 1, replace messages; for other pages, append
-          const newMessages =
-            page === 1
-              ? response.data?.data || []
-              : [...existingMessages, ...(response.data?.data || [])];
+          if (response.data) {
+            const { messages } = get();
+            const existingMessages = messages[conversationId] || [];
 
-          set({
-            messages: { ...messages, [conversationId]: newMessages },
-            isLoading: false,
-          });
+            // For page 1, replace messages; for other pages, append
+            const newMessages =
+              page === 1
+                ? response.data.data || []
+                : [...existingMessages, ...(response.data.data || [])];
+
+            set({
+              messages: { ...messages, [conversationId]: newMessages },
+              isLoading: false,
+            });
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch messages',
@@ -89,24 +100,64 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
+      // fetchMessages: async (conversationId, page = 1) => {
+      //   try {
+      //     set({ isLoading: true, error: null });
+      //     const response = await chatService.getMessages(conversationId, page);
+
+      //     if (response.error)
+      //       set({
+      //         error: response.error.errors[0] || response.error.message || 'Erreur lors de la récupération des messages',
+      //         isLoading: false,
+      //       });
+
+      //     if (response.data) {
+      //       const { messages } = get();
+      //       const existingMessages = messages[conversationId] || [];
+
+      //       // For page 1, replace messages; for other pages, append
+      //       const newMessages =
+      //         page === 1
+      //           ? response.data.data || []
+      //           : [...existingMessages, ...(response.data.data || [])];
+
+      //       set({
+      //         messages: { ...messages, [conversationId]: newMessages },
+      //         isLoading: false,
+      //       });
+      //     }
+      //   } catch (error) {
+      //     set({
+      //       error: error instanceof Error ? error.message : 'Failed to fetch messages',
+      //       isLoading: false,
+      //     });
+      //   }
+      // },
+
       sendMessage: async (conversationId, content) => {
         try {
           const request: SendMessageRequest = { content };
           const response = await chatService.sendMessage(conversationId, request);
 
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
+
           if (response.data) {
-            // Optimistically add message to local state
             const { messages } = get();
-            const conversationMessages = messages[conversationId] || [];
+            const existingMessages = messages[conversationId] || [];
+
+            // For page 1, replace messages; for other pages, append
+            const newMessages = [...existingMessages, response.data.message];
 
             set({
-              messages: {
-                ...messages,
-                [conversationId]: [...conversationMessages, response.data],
-              },
+              messages: { ...messages, [conversationId]: newMessages },
             });
-          } else if (response.error) {
-            set({ error: response.error.message });
           }
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'Failed to send message' });
@@ -341,6 +392,7 @@ export const useChatStore = create<ChatState>()(
         // Only persist conversations and current conversation
         conversations: state.conversations,
         currentConversation: state.currentConversation,
+        messages: state.messages,
       }),
     }
   )

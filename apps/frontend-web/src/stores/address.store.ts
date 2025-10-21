@@ -55,7 +55,7 @@ export const useAddressStore = create<AddressStore>()(
         }
       },
 
-      createAddress: async (addressData: Omit<Address, 'id' | 'createdAt'>) => {
+      createAddress: async (addressData: Omit<Address, 'createdAt'>) => {
         set({ isLoading: true, error: null });
         try {
           // TODO: Replace with actual API call when address service is available
@@ -72,7 +72,6 @@ export const useAddressStore = create<AddressStore>()(
           // For now, create locally with mock ID
           const newAddress: Address = {
             ...addressData,
-            id: `addr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             createdAt: new Date().toISOString(),
           };
           const addresses = get().addresses;

@@ -148,13 +148,7 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Revenus Potentiels</p>
-                  <p className="text-2xl font-bold">
-                    {myMissions
-                      .filter((m) => m.status === 'assigned')
-                      .reduce((sum, m) => sum + (m.budgetMin ?? 0), 0)
-                      .toLocaleString()}{' '}
-                    FCFA
-                  </p>
+                  <p className="text-2xl font-bold">0 FCFA</p>
                 </div>
               </div>
             </CardContent>
@@ -181,9 +175,9 @@ export default function MissionsTransporteurPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les origines</SelectItem>
-                  {addresses.map((adresseDepart) => (
+                  {addresses.map((adresseDepart, index) => (
                     <SelectItem
-                      key={adresseDepart.id || 'unknown'}
+                      key={`${adresseDepart.id || 'unknown'}-${index}`}
                       value={adresseDepart.id || 'unknown'}
                     >
                       {adresseDepart.label || 'Non spécifiée'}

@@ -15,7 +15,7 @@ export type PaymentMethod =
 // Legacy type for backward compatibility
 export type PaymentMethodType = 'card' | 'mobile' | 'cash';
 
-export type MobileMoneyProvider = 'orange_money' | 'mtn_momo' | 'wave';
+export type MobileMoneyProvider = 'orange_money' | 'mtn_mobile_money' | 'wave';
 
 // Updated Payment interface to match backend e-commerce flow
 export interface Payment extends Timestamps {

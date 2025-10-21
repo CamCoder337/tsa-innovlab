@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { Link } from 'react-router-dom';
 
@@ -20,12 +20,11 @@ interface CartDrawerProps {
 
 function CartDrawer({ children }: CartDrawerProps) {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
   const {
     cart,
     updateQuantity,
     removeFromCart,
-    clearAllItems,
+    clearCart,
     getTotalItems,
     getFormattedTotalPrice,
     isEmpty,
@@ -34,59 +33,39 @@ function CartDrawer({ children }: CartDrawerProps) {
   } = useCart();
 
   const handleUpdateQuantity = useCallback(
-    async (productId: string, newQuantity: number) => {
-      updateQuantity(productId, newQuantity);
-
-      // TODO: When Cart API is available, sync with server for authenticated users
-      if (user) {
-        console.log('Would sync cart update with server for user:', user.id);
-        // const response = await cartApi.updateItem(itemId, newQuantity);
-        // Handle server response
-      }
+    async (itemId: string, newQuantity: number) => {
+      updateQuantity(itemId, newQuantity);
     },
-    [updateQuantity, user]
+    [updateQuantity]
   );
 
   const handleRemoveItem = useCallback(
     async (productId: string) => {
       removeFromCart(productId);
-
-      // TODO: When Cart API is available, sync with server for authenticated users
-      if (user) {
-        console.log('Would sync cart removal with server for user:', user.id);
-        // const response = await cartApi.removeItem(itemId);
-        // Handle server response
-      }
     },
-    [removeFromCart, user]
+    [removeFromCart]
   );
 
   // Auto-remove items with zero quantity
   useEffect(() => {
     const zeroQuantityItem = cart.items.find((item) => item.quantity <= 0);
     if (zeroQuantityItem) {
-      handleRemoveItem(zeroQuantityItem.productId);
+      handleRemoveItem(zeroQuantityItem.id);
     }
   }, [cart.items, handleRemoveItem]);
 
   const handleClearCart = useCallback(async () => {
-    clearAllItems();
-
-    // TODO: When Cart API is available, sync with server for authenticated users
-    if (user) {
-      console.log('Would sync cart clear with server for user:', user.id);
-      // const response = await cartApi.clearCart();
-      // Handle server response
-    }
-  }, [clearAllItems, user]);
+    clearCart();
+  }, [clearCart]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetDescription className="hidden"> Votre panier </SheetDescription>
       <SheetContent className="w-full sm:max-w-md p-4">
         <SheetHeader>
           <SheetTitle>
-            <h1 className="text-xl font-semibold">Mon panier</h1>
+            <h2 className="text-xl font-semibold">Mon panier</h2>
           </SheetTitle>
         </SheetHeader>
         {error && (
@@ -114,7 +93,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                     >
                       {item.product?.name || 'Produit'}
                     </p>
-                    <p className="text-xs text-zinc-600">{item.unitPrice.toLocaleString()} FCFA</p>
+                    <p className="text-xs text-zinc-600">{item.priceAtAdd.toLocaleString()} FCFA</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -123,7 +102,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       aria-label="Diminuer la quantité"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUpdateQuantity(item.productId, item.quantity - 1);
+                        handleUpdateQuantity(item.id, item.quantity - 1);
                       }}
                       disabled={item.quantity <= 1 || isLoading}
                     >
@@ -140,7 +119,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                         e.stopPropagation();
                         const newQuantity = parseInt(e.target.value || '1', 10);
                         if (newQuantity > 0) {
-                          handleUpdateQuantity(item.productId, newQuantity);
+                          handleUpdateQuantity(item.id, newQuantity);
                         }
                       }}
                       disabled={isLoading}
@@ -151,7 +130,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       aria-label="Augmenter la quantité"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleUpdateQuantity(item.productId, item.quantity + 1);
+                        handleUpdateQuantity(item.id, item.quantity + 1);
                       }}
                       disabled={item.quantity >= (item.product?.stock || 0) || isLoading}
                     >
@@ -163,7 +142,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       aria-label="Supprimer l'article"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRemoveItem(item.productId);
+                        handleRemoveItem(item.id);
                       }}
                       disabled={isLoading}
                     >
@@ -197,7 +176,7 @@ function CartDrawer({ children }: CartDrawerProps) {
               >
                 Vider
               </Button>
-              <Link to={'/cart'}>
+              <Link to={'/app/shop/cart'}>
                 <Button
                   className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
                   onClick={(e) => e.stopPropagation()}

@@ -42,7 +42,7 @@ interface AddressActions {
   // Async actions
   fetchAddresses: () => Promise<void>;
   fetchAddress: (id: string) => Promise<void>;
-  createAddress: (addressData: Omit<Address, 'id' | 'createdAt'>) => Promise<boolean>;
+  createAddress: (addressData: Omit<Address, 'createdAt'>) => Promise<boolean>;
   updateAddressAsync: (id: string, updates: Partial<Address>) => Promise<boolean>;
   deleteAddressAsync: (id: string) => Promise<boolean>;
 

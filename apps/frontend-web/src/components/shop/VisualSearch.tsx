@@ -16,7 +16,7 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const { results, isLoading, searchByImage, clearResults } = useVisualRecognitionSearch();
+  const { results, error, isLoading, searchByImage, clearResults } = useVisualRecognitionSearch();
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,13 +48,15 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
     }
 
     try {
-      await searchByImage(imageFile); // Get 12 results
-      toast.success('Recherche visuelle terminée!');
+      await searchByImage(imageFile);
+      if (error) toast.error('Erreur lors de la recherche visuelle');
+      if (results) toast.success('Recherche visuelle terminée!');
     } catch (err) {
       console.error('Visual search error:', err);
       toast.error('Erreur lors de la recherche visuelle');
     }
-  }, [imageFile, searchByImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageFile]);
 
   const handleClearImage = () => {
     setSelectedImage(null);

@@ -29,7 +29,7 @@ export const useVisualRecognitionSearch = (): UseVisualRecognitionSearchReturn =
       const response = await shopService.visualRecognitionSearch(image);
 
       if (response.error) {
-        throw new Error(response.error.message || 'Failed to perform visual recognition search');
+        setError(response.error.errors[0] || 'Failed to perform visual recognition search');
       }
 
       if (response.data) {
@@ -37,7 +37,6 @@ export const useVisualRecognitionSearch = (): UseVisualRecognitionSearchReturn =
       }
     } catch (err) {
       console.error('Visual recognition search error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to perform visual search');
     } finally {
       setIsLoading(false);
     }

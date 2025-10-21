@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, Eye, Edit, MessageSquare } from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
+import { useMissions } from '@/hooks/useMissions';
 import type { Mission } from '@/types/mission.types';
 
 interface MissionCardProps {
@@ -23,6 +24,12 @@ export default function MissionCard({
   onCancel,
   className = '',
 }: MissionCardProps) {
+  const { setCurrentMission } = useMissions();
+
+  const handleMissionClick = () => {
+    setCurrentMission(mission);
+  };
+
   // const fetchPropositions = useCallback(async () => {
   //   const response = await missionService.getMissionPropositions(mission.id);
   //   if (response.error) {
@@ -45,6 +52,7 @@ export default function MissionCard({
             to={`/app/missions/${mission.id}`}
             className="flex flex-col flex-1"
             aria-label={`Voir ${mission.title}`}
+            onClick={handleMissionClick}
           >
             <div className="flex flex-col flex-1">
               <div className="flex flex-1 items-start justify-between mb-3">
@@ -102,7 +110,11 @@ export default function MissionCard({
           </Link>
 
           <div className="flex flex-col gap-2 lg:w-48">
-            <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
+            <Link
+              to={`/app/missions/${mission.id}`}
+              aria-label={`Voir ${mission.title}`}
+              onClick={handleMissionClick}
+            >
               <Button variant="outline" className="gap-2 bg-transparent w-full">
                 <Eye className="h-4 w-4" />
                 Voir Détails
@@ -142,6 +154,7 @@ export default function MissionCard({
               <Link
                 to={`/app/missions/${mission.id}/tracking`}
                 aria-label={`Suivre ${mission.title}`}
+                onClick={handleMissionClick}
               >
                 <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                   <MapPin className="h-4 w-4" />
