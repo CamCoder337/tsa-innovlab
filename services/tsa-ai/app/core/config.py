@@ -49,6 +49,12 @@ class Settings(BaseSettings):
         default="internal-secret-key",
         alias="INTERNAL_SERVICE_SECRET"
     )
+    
+    # Monolith API URL for chatbot to call back
+    monolith_api_url: str = Field(
+        default="http://localhost:3333/api",
+        alias="MONOLITH_API_URL"
+    )
 
     # ML Model settings
     prediction_batch_size: int = Field(default=100, alias="PREDICTION_BATCH_SIZE")

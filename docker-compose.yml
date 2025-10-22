@@ -225,7 +225,7 @@ services:
         echo '🗄️ Running database migrations...' &&
         node build/bin/console.js migration:run --force &&
         echo '🌱 Seeding database (if needed)...' &&
-        node build/bin/console.js db:seed --force || true &&
+        node build/bin/console.js db:seed || true &&
         echo '✅ Starting application server...' &&
         node build/bin/server.js
       "
