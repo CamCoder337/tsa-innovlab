@@ -159,7 +159,7 @@ export default function UserProfile() {
         <AlertTriangle className="h-16 w-16 text-red-500" />
         <h2 className="text-xl font-semibold text-gray-900">Utilisateur introuvable</h2>
         <p className="text-gray-600">L'utilisateur demandé n'existe pas ou a été supprimé.</p>
-        <Button onClick={() => navigate('/admin/users')}>
+        <Button onClick={() => navigate('/app/users')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour à la liste
         </Button>
@@ -183,7 +183,7 @@ export default function UserProfile() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={() => navigate('/admin/users')}>
+          <Button variant="outline" onClick={() => navigate('/app/users')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
@@ -194,7 +194,7 @@ export default function UserProfile() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Link to={`/admin/users/${id}/edit`}>
+          <Link to={`/app/users/${id}/edit`}>
             <Button variant="outline" className="gap-2">
               <Edit className="h-4 w-4" />
               Modifier
@@ -243,7 +243,7 @@ export default function UserProfile() {
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="gap-2">
+              <Button variant="destructive" className="gap-2 text-white">
                 <Trash2 className="h-4 w-4" />
                 Supprimer
               </Button>

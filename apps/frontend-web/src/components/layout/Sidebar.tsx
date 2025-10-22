@@ -46,6 +46,14 @@ const affreteurMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
   },
   {
     id: 'products',
@@ -106,6 +114,14 @@ const transporteurMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
   },
   {
     id: 'vehicles',
@@ -118,12 +134,14 @@ const transporteurMenu: SidebarItem[] = [
     label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
-  },
-  {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
+    children: [
+      {
+        id: 'orders',
+        label: 'Commandes',
+        icon: ShoppingBag,
+        href: '/app/shop/orders',
+      },
+    ],
   },
   {
     id: 'chat',
@@ -160,6 +178,14 @@ const adminMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
   },
   {
     id: 'products',
@@ -172,12 +198,6 @@ const adminMenu: SidebarItem[] = [
     label: 'Utilisateurs',
     icon: Users,
     href: '/app/users',
-  },
-  {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
   },
   {
     id: 'chat',

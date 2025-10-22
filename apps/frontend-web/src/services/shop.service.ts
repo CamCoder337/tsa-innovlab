@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { BaseApi } from './api';
-import type { ApiResponse, PaginatedMetaResponse, Paginator } from '@/types/common.types';
+import type { ApiResponse, Paginator } from '@/types/common.types';
 import type { CategoryFilterParams, CategoryResponse } from '@/types/category.types';
 import type { Product, ProductFilterParams } from '@/types/product.types';
 import type { AxiosError } from 'axios';
@@ -176,9 +176,7 @@ export class ShopService extends BaseApi {
   }
 
   // Order Operations
-  async getOrders(
-    params?: OrderFiltersQuery
-  ): Promise<ApiResponse<PaginatedMetaResponse<Order, 'orders'>>> {
+  async getOrders(params?: OrderFiltersQuery): Promise<ApiResponse<Paginator<Order>>> {
     try {
       const response = await this.insertToken().get('/api/client/orders', { params });
       return { data: response.data.data };

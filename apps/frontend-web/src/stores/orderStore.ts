@@ -37,9 +37,9 @@ export const useOrderStore = create<OrderStore>()(
             return;
           }
 
-          if (response.data?.orders) {
+          if (response.data) {
             set({
-              orders: response.data.orders.data,
+              orders: response.data.data,
               isLoading: false,
               error: null,
             });

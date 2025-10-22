@@ -44,8 +44,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   const currentConversationIdRef = useRef<number | null>(null);
 
   const currentMessages = useMemo(() => {
-    const this_messages = messages[conversation.id].reverse();
-    return this_messages || [];
+    return messages[conversation.id] || [];
   }, [messages, conversation.id]);
 
   const typingUsers = useMemo(() => {
@@ -168,7 +167,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col bg-white h-[calc(100vh-120px)]">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center gap-3">
