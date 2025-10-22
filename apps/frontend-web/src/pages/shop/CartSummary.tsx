@@ -343,9 +343,7 @@ export default function CartSummaryPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity - 1)
-                                  }
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                   disabled={item.quantity <= 1 || isLoading}
                                 >
                                   <Minus className="h-3 w-3" />
@@ -355,7 +353,7 @@ export default function CartSummaryPage() {
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleUpdateQuantity(
-                                      item.productId,
+                                      item.id,
                                       Number.parseInt(e.target.value) || 1
                                     )
                                   }
@@ -367,9 +365,7 @@ export default function CartSummaryPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity + 1)
-                                  }
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                   disabled={
                                     item.quantity >= (item.product?.stock || 0) || isLoading
                                   }
@@ -393,7 +389,7 @@ export default function CartSummaryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleRemoveItem(item.productId)}
+                              onClick={() => handleRemoveItem(item.id)}
                               className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                               disabled={isLoading}
                             >
