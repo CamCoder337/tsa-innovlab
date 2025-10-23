@@ -33,6 +33,14 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: true, error: null });
           const response = await chatService.getConversations(filters);
 
+          if (response.error) {
+            set({
+              error: response.error.errors[0] || response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
           // Transform conversations to include UI-specific fields
           const conversations: ConversationListItem[] =
             response.data?.data?.map((conv) => ({
@@ -54,6 +62,15 @@ export const useChatStore = create<ChatState>()(
         try {
           set({ isLoading: true, error: null });
           const response = await chatService.getConversation(conversationId);
+
+          if (response.error) {
+            set({
+              error: response.error.errors[0] || response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
           set({ currentConversation: response.data, isLoading: false });
         } catch (error) {
           set({
@@ -87,8 +104,13 @@ export const useChatStore = create<ChatState>()(
                 ? response.data.data || []
                 : [...existingMessages, ...(response.data.data || [])];
 
+            // Sort by createdAt descending (newest first)
+            const sortedMessages = newMessages.sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+
             set({
-              messages: { ...messages, [conversationId]: newMessages },
+              messages: { ...messages, [conversationId]: sortedMessages },
               isLoading: false,
             });
           }
@@ -99,40 +121,6 @@ export const useChatStore = create<ChatState>()(
           });
         }
       },
-
-      // fetchMessages: async (conversationId, page = 1) => {
-      //   try {
-      //     set({ isLoading: true, error: null });
-      //     const response = await chatService.getMessages(conversationId, page);
-
-      //     if (response.error)
-      //       set({
-      //         error: response.error.errors[0] || response.error.message || 'Erreur lors de la récupération des messages',
-      //         isLoading: false,
-      //       });
-
-      //     if (response.data) {
-      //       const { messages } = get();
-      //       const existingMessages = messages[conversationId] || [];
-
-      //       // For page 1, replace messages; for other pages, append
-      //       const newMessages =
-      //         page === 1
-      //           ? response.data.data || []
-      //           : [...existingMessages, ...(response.data.data || [])];
-
-      //       set({
-      //         messages: { ...messages, [conversationId]: newMessages },
-      //         isLoading: false,
-      //       });
-      //     }
-      //   } catch (error) {
-      //     set({
-      //       error: error instanceof Error ? error.message : 'Failed to fetch messages',
-      //       isLoading: false,
-      //     });
-      //   }
-      // },
 
       sendMessage: async (conversationId, content) => {
         try {
@@ -152,11 +140,14 @@ export const useChatStore = create<ChatState>()(
             const { messages } = get();
             const existingMessages = messages[conversationId] || [];
 
-            // For page 1, replace messages; for other pages, append
+            // Add new message and sort by createdAt
             const newMessages = [...existingMessages, response.data.message];
+            const sortedMessages = newMessages.sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
 
             set({
-              messages: { ...messages, [conversationId]: newMessages },
+              messages: { ...messages, [conversationId]: sortedMessages },
             });
           }
         } catch (error) {
@@ -299,12 +290,17 @@ export const useChatStore = create<ChatState>()(
       handleNewMessage: (message) => {
         const { messages, conversations, currentConversation } = get();
 
-        // Add message to conversation
+        // Add message to conversation and sort by createdAt
         const conversationMessages = messages[message.conversationId] || [];
+        const newMessages = [...conversationMessages, message];
+        const sortedMessages = newMessages.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
         set({
           messages: {
             ...messages,
-            [message.conversationId]: [...conversationMessages, message],
+            [message.conversationId]: sortedMessages,
           },
         });
 

@@ -117,26 +117,36 @@ export const useCartStore = create<CartStore>()(
         const { cart } = get();
 
         try {
-          set({ isLoading: true, error: null });
-
           if (currentUser) {
             // Authenticated user - use API
             const addRequest: AddToCartRequest = { productId, quantity };
             const response = await shopService.addCartItem(addRequest);
 
             if (response.error) {
-              set({ error: response.error.message, isLoading: false });
+              set({ error: response.error.message });
               return;
             }
 
             if (response.data) {
+              const existingItemIndex = cart.items.findIndex(
+                (item) => item.productId === productId
+              );
+              let updatedItems: CartItem[];
+              if (existingItemIndex >= 0) {
+                updatedItems = cart.items.map((item, index) =>
+                  index === existingItemIndex
+                    ? { ...item, quantity: item.quantity + quantity }
+                    : item
+                );
+              } else {
+                updatedItems = [...cart.items, response.data];
+              }
               const updatedCart = {
                 ...cart,
-                items: [...cart.items, response.data],
+                items: updatedItems,
               };
               set({
                 ...updateCartTotals(updatedCart),
-                isLoading: false,
                 error: null,
               });
             }
@@ -146,7 +156,7 @@ export const useCartStore = create<CartStore>()(
             const product = products.find((p: Product) => p.id === productId);
 
             if (!product) {
-              set({ error: 'Product not found', isLoading: false });
+              set({ error: 'Product not found' });
               return;
             }
 
@@ -172,7 +182,6 @@ export const useCartStore = create<CartStore>()(
             const updatedCart = { ...cart, items: updatedItems };
             set({
               ...updateCartTotals(updatedCart),
-              isLoading: false,
               error: null,
             });
           }

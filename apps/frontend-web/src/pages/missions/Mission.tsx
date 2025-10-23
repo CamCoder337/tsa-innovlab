@@ -59,7 +59,7 @@ export default function MissionDetailsPage() {
   }
 
   // Handle error state
-  if (error) {
+  if (error && !currentMission) {
     return (
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="text-center space-y-4">
