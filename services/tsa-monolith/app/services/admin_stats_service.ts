@@ -104,6 +104,7 @@ export interface MissionStats {
     draft: number
     published: number
     assigned: number
+    in_progress: number
     completed: number
     cancelled: number
   }
@@ -538,6 +539,7 @@ export default class AdminStatsService {
       draft: allMissions.filter((m) => m.status === MissionStatus.DRAFT).length,
       published: allMissions.filter((m) => m.status === MissionStatus.PUBLISHED).length,
       assigned: allMissions.filter((m) => m.status === MissionStatus.ASSIGNED).length,
+      in_progress: allMissions.filter((m) => m.status === MissionStatus.IN_PROGRESS).length,
       completed: allMissions.filter((m) => m.status === MissionStatus.COMPLETED).length,
       cancelled: allMissions.filter((m) => m.status === MissionStatus.CANCELLED).length,
     }

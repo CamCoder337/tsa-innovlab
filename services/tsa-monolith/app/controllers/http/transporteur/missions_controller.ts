@@ -209,7 +209,7 @@ export default class MissionsController {
 
       const mission = await Mission.query()
         .where('id', params.id)
-        .where('status', MissionStatus.ASSIGNED)
+        .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.IN_PROGRESS])
         .preload('vehicle')
         .first()
 
@@ -222,7 +222,12 @@ export default class MissionsController {
 
       // Vérifier les transitions de statut autorisées pour les transporteurs
       const allowedTransitions: Record<MissionStatus, MissionStatus[]> = {
-        [MissionStatus.ASSIGNED]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
+        [MissionStatus.ASSIGNED]: [
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.COMPLETED,
+          MissionStatus.CANCELLED,
+        ],
+        [MissionStatus.IN_PROGRESS]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
       } as Record<MissionStatus, MissionStatus[]>
 
       const currentAllowedStatuses = allowedTransitions[mission.status] || []
