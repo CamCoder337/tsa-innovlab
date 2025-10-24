@@ -49,9 +49,7 @@ function ProductPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  const listProduct = useMemo(() => products?.find((p) => p.id === id), [id, products]);
-
-  const product = listProduct;
+  const product = useMemo(() => products?.find((p) => p.id === id), [id, products]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -71,7 +69,7 @@ function ProductPage() {
     if (navigator.share && product) {
       navigator.share({
         title: product.name,
-        text: product.description,
+        text: product.description || '',
         url: window.location.href,
       });
     } else {
@@ -239,11 +237,11 @@ function ProductPage() {
           {/* Description */}
           <div>
             <p className="text-zinc-700 leading-relaxed">
-              {showFullDescription || product.description.length <= 200
-                ? product.description
-                : `${product.description.slice(0, 200)}...`}
+              {showFullDescription || product.description!.length <= 200
+                ? product.description || ''
+                : `${product.description!.slice(0, 200)}...`}
             </p>
-            {product.description.length > 200 && (
+            {product.description!.length > 200 && (
               <button
                 onClick={() => setShowFullDescription(!showFullDescription)}
                 className="text-green-600 hover:text-green-700 text-sm font-medium mt-2"

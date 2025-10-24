@@ -16,6 +16,7 @@ const Layout = lazy(() => import('./components/layout/Layout'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
 const Users = lazy(() => import('./pages/admin/UsersManagement'));
+const User = lazy(() => import('./pages/admin/UserProfile'));
 
 const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
 const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
@@ -27,6 +28,7 @@ const CartSummary = lazy(() => import('./pages/shop/CartSummary'));
 const Orders = lazy(() => import('./pages/shop/Orders'));
 const Order = lazy(() => import('./pages/shop/Order'));
 
+const Vehicles = lazy(() => import('./pages/vehicles/MyVehicles'));
 const Chat = lazy(() => import('./pages/ChatPage'));
 const Transactions = lazy(() => import('./pages/BillingPage'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
@@ -41,46 +43,227 @@ const LoadingFallback = () => (
 
 function App() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <Login />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <Register />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ForgotPassword />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/verify-email"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <VerifyEmail />
+          </Suspense>
+        }
+      />
 
-        <Route path="/app" element={<ProtectedRoute element={<Layout />} />}>
-          <Route path="" element={<Dashboard />} />
-          <Route path="profile" element={<MyProfile />} />
-          <Route path="settings" element={<MySettings />} />
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Layout />
+              </Suspense>
+            }
+          />
+        }
+      >
+        <Route
+          path=""
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Dashboard />
+            </Suspense>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <MyProfile />
+            </Suspense>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <MySettings />
+            </Suspense>
+          }
+        />
 
-          <Route path="missions">
-            <Route path="" element={<MyMissions />} />
-            <Route path="create" element={<CreateMission />} />
-            <Route path=":id" element={<Mission />} />
-            <Route path=":id/edit" element={<CreateMission />} />
-          </Route>
-
-          <Route path="transactions" element={<Transactions />} />
-
-          <Route path="users" element={<Users />} />
-
-          <Route path="shop">
-            <Route path="" element={<Shop />} />
-            <Route path="product/:id" element={<Product />} />
-            <Route path="cart" element={<CartSummary />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="order/:id" element={<Order />} />
-          </Route>
-
-          <Route path="products" element={<ProductsManagement />} />
-          <Route path="chat" element={<Chat />} />
-          <Route path="tracking-dashboard" element={<TrackingDashboardPage />} />
-          <Route path="mission/:id/tracking" element={<MissionTrackingPage />} />
+        <Route path="missions">
+          <Route
+            path=""
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <MyMissions />
+              </Suspense>
+            }
+          />
+          <Route
+            path="create"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreateMission />
+              </Suspense>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Mission />
+              </Suspense>
+            }
+          />
+          <Route
+            path=":id/edit"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreateMission />
+              </Suspense>
+            }
+          />
         </Route>
 
-        <Route path="*" element={<Navigate to="/app" replace />} />
-      </Routes>
-    </Suspense>
+        <Route
+          path="transactions"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Transactions />
+            </Suspense>
+          }
+        />
+
+        <Route path="users">
+          <Route
+            path=""
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Users />
+              </Suspense>
+            }
+          />
+          <Route
+            path=":id"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <User />
+              </Suspense>
+            }
+          />
+        </Route>
+
+        <Route path="shop">
+          <Route
+            path=""
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Shop />
+              </Suspense>
+            }
+          />
+          <Route
+            path="product/:id"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Product />
+              </Suspense>
+            }
+          />
+          <Route
+            path="cart"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CartSummary />
+              </Suspense>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Orders />
+              </Suspense>
+            }
+          />
+          <Route
+            path="order/:id"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Order />
+              </Suspense>
+            }
+          />
+        </Route>
+
+        <Route
+          path="products"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ProductsManagement />
+            </Suspense>
+          }
+        />
+        <Route
+          path="vehicles"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Vehicles />
+            </Suspense>
+          }
+        />
+        <Route
+          path="chat"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Chat />
+            </Suspense>
+          }
+        />
+        <Route
+          path="tracking-dashboard"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <TrackingDashboardPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="mission/:id/tracking"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <MissionTrackingPage />
+            </Suspense>
+          }
+        />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/app" replace />} />
+    </Routes>
   );
 }
 

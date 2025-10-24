@@ -51,7 +51,7 @@ function createAxiosInstance(): AxiosInstance {
         }
 
         // Si le refresh échoue ou l'utilisateur est inactif, déconnecter
-        useAuthStore.getState().logout();
+        // useAuthStore.getState().logout();
       }
 
       return Promise.reject(error);

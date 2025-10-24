@@ -55,35 +55,3 @@ export const useChat = () => {
     },
   };
 };
-
-/**
- * Hook for messages of current conversation
- */
-export const useCurrentMessages = () => {
-  const currentConversation = useChatStore((state) => state.currentConversation);
-  const messages = useChatStore((state) => state.messages);
-
-  return currentConversation ? messages[currentConversation.id] || [] : [];
-};
-
-/**
- * Hook for typing indicators in current conversation
- */
-export const useCurrentTypingIndicators = () => {
-  const currentConversation = useChatStore((state) => state.currentConversation);
-  const typingIndicators = useChatStore((state) => state.typingIndicators);
-
-  if (!currentConversation) return [];
-
-  return typingIndicators
-    .filter((t) => t.conversationId === currentConversation.id && t.isTyping)
-    .map((t) => t.userId);
-};
-
-/**
- * Hook for total unread messages count
- */
-export const useUnreadCount = () => {
-  const conversations = useChatStore((state) => state.conversations);
-  return conversations.reduce((total, conv) => total + (conv.unreadMessagesCount || 0), 0);
-};

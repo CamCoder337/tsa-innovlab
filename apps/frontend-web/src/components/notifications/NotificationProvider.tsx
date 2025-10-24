@@ -74,13 +74,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         cleanupWebSocketSubscriptions();
       };
     }
-  }, [
-    isAuthenticated,
-    user,
-    initializeWebSocketSubscriptions,
-    cleanupWebSocketSubscriptions,
-    handleNewNotification,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user]);
 
   return (
     <>

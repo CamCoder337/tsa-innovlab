@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Search, Plus, MessageCircle, Users, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,22 +20,17 @@ export const ChatList: React.FC<ChatListProps> = ({
   onCreateConversation,
 }) => {
   const { user } = useAuth();
-  const { conversations, isLoading, error, fetchConversations, clearError, currentConversation } =
-    useChat();
+  const { conversations, isLoading, error, currentConversation, clearError } = useChat();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
-
-  useEffect(() => {
-    // Load conversations on mount
-    fetchConversations();
-  }, [fetchConversations]);
 
   // Filter conversations based on search and type
   const filteredConversations = conversations.filter((conv) => {
     const matchesSearch =
       searchQuery === '' ||
-      conv.otherParticipant?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.otherParticipant?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.otherParticipant?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conv.mission?.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesType = filterType === 'all' || conv.type === filterType;
@@ -54,12 +49,20 @@ export const ChatList: React.FC<ChatListProps> = ({
     if (conversation.type === 'mission' && conversation.mission) {
       return `Mission: ${conversation.mission.title}`;
     }
-    return conversation.otherParticipant?.fullName || 'Utilisateur inconnu';
+
+    const firstName = conversation.otherParticipant?.firstName;
+    const lastName = conversation.otherParticipant?.lastName;
+
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+
+    return 'Utilisateur inconnu';
   };
 
   const getConversationSubtitle = (conversation: ConversationListItem) => {
     if (conversation.type === 'mission') {
-      return `avec ${conversation.otherParticipant?.fullName}`;
+      return `avec ${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`;
     }
     if (conversation.otherParticipant?.role) {
       return (
@@ -187,10 +190,14 @@ export const ChatList: React.FC<ChatListProps> = ({
                       <Avatar className="h-10 w-10">
                         <AvatarImage
                           src={conversation.otherParticipant?.avatarUrl}
-                          alt={conversation.otherParticipant?.fullName}
+                          alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
                         />
                         <AvatarFallback>
-                          {conversation.otherParticipant?.fullName?.charAt(0) || '?'}
+                          {conversation.otherParticipant?.firstName?.charAt(0) || ''}
+                          {conversation.otherParticipant?.lastName?.charAt(0) || ''}
+                          {!conversation.otherParticipant?.firstName &&
+                            !conversation.otherParticipant?.lastName &&
+                            '?'}
                         </AvatarFallback>
                       </Avatar>
                       {/* Conversation type indicator */}

@@ -10,18 +10,19 @@ import {
   ShoppingBag,
   MapPin,
   MessagesSquare,
+  Truck,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
   SidebarSeparator,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -45,6 +46,14 @@ const affreteurMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
   },
   {
     id: 'products',
@@ -105,18 +114,34 @@ const transporteurMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
+  },
+  {
+    id: 'vehicles',
+    label: 'Mes Véhicules',
+    icon: Truck,
+    href: '/app/vehicles',
   },
   {
     id: 'products',
     label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
-  },
-  {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
+    children: [
+      {
+        id: 'orders',
+        label: 'Commandes',
+        icon: ShoppingBag,
+        href: '/app/shop/orders',
+      },
+    ],
   },
   {
     id: 'chat',
@@ -153,6 +178,14 @@ const adminMenu: SidebarItem[] = [
     label: 'Missions',
     icon: Package,
     href: '/app/missions',
+    children: [
+      {
+        id: 'tracking',
+        label: 'Suivi Temps Réel',
+        icon: MapPin,
+        href: '/app/tracking-dashboard',
+      },
+    ],
   },
   {
     id: 'products',
@@ -165,12 +198,6 @@ const adminMenu: SidebarItem[] = [
     label: 'Utilisateurs',
     icon: Users,
     href: '/app/users',
-  },
-  {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
   },
   {
     id: 'chat',
@@ -215,7 +242,11 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
           {item.children && item.children.length ? (
             <details open={true} className="gap-2 flex flex-col">
               <summary className="list-none">
-                <SidebarMenuButton asChild isActive={item.href ? pathname === item.href : false}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={item.href ? pathname === item.href : false}
+                  tooltip={item.label}
+                >
                   <div className="flex items-center justify-between">
                     <Link to={item.href!} className="flex items-center gap-3 font-medium">
                       <item.icon className="h-5 w-5" />
@@ -231,14 +262,18 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
                 {item.children.map((child) => (
                   <SidebarMenuItem key={child.id}>
                     {child.href ? (
-                      <SidebarMenuButton asChild isActive={pathname === child.href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === child.href}
+                        tooltip={child.label}
+                      >
                         <Link to={child.href!} className="flex items-center gap-3 font-medium">
                           <child.icon className="h-5 w-5" />
                           <span>{child.label}</span>
                         </Link>
                       </SidebarMenuButton>
                     ) : (
-                      <SidebarMenuButton>
+                      <SidebarMenuButton tooltip={child.label}>
                         <div className="flex items-center gap-3 font-medium">
                           <child.icon className="h-5 w-5" />
                           <span>{child.label}</span>
@@ -250,14 +285,14 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
               </SidebarMenu>
             </details>
           ) : item.href ? (
-            <SidebarMenuButton asChild isActive={pathname === item.href}>
+            <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
               <Link to={item.href} className="flex items-center gap-3 font-medium">
                 <item.icon className="h-5 w-5" />
                 <span className="text-base">{item.label}</span>
               </Link>
             </SidebarMenuButton>
           ) : (
-            <SidebarMenuButton>
+            <SidebarMenuButton tooltip={item.label}>
               <div className="flex items-center gap-3 font-medium">
                 <item.icon className="h-5 w-5" />
                 <span className="text-base">{item.label}</span>
@@ -278,22 +313,23 @@ export default function Sidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <SidebarProvider>
-      <UISidebar collapsible="icon" className="top-16 h-full">
-        <SidebarContent>
-          <SidebarGroup className="h-full flex flex-col">
-            <SidebarGroupLabel>
-              <div className="flex flex-1 justify-center text-base font-bold text-tsa-blue">
-                Espace {role}
-              </div>
-            </SidebarGroupLabel>
-            <SidebarGroupContent className="max-h-screen h-full p-4">
-              <MenuTree items={menu} />
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarSeparator />
-        </SidebarContent>
-      </UISidebar>
-    </SidebarProvider>
+    <UISidebar collapsible="icon" className="top-16 h-full">
+      <SidebarHeader className="flex flex-row items-center justify-between p-2">
+        <div className="flex items-center gap-2">
+          <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
+            Espace {role}
+          </div>
+        </div>
+        <SidebarTrigger className="ml-auto" />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup className="h-full flex flex-col">
+          <SidebarGroupContent className="max-h-screen h-full p-4">
+            <MenuTree items={menu} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarSeparator />
+      </SidebarContent>
+    </UISidebar>
   );
 }

@@ -19,7 +19,7 @@ interface MTNPaymentFormProps {
 }
 
 interface PaymentFormData {
-  paymentMethod: PaymentMethod;
+  method: PaymentMethod;
   phoneNumber: string;
   payerMessage: string;
 }
@@ -32,7 +32,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
   onPaymentError,
 }) => {
   const [formData, setFormData] = useState<PaymentFormData>({
-    paymentMethod: 'mtn_momo',
+    method: 'mtn_mobile_money',
     phoneNumber: '',
     payerMessage: '',
   });
@@ -43,7 +43,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
 
   const paymentMethods = [
     {
-      id: 'mtn_momo' as PaymentMethod,
+      id: 'mtn_mobile_money' as PaymentMethod,
       name: 'MTN Mobile Money',
       icon: Smartphone,
       color: 'bg-yellow-500',
@@ -100,8 +100,11 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
 
     try {
       // For MTN Mobile Money, simulate the payment first
-      if (formData.paymentMethod === 'mtn_momo') {
-        const simulation = await paymentService.simulateMTNPayment(formData.phoneNumber, amount);
+      if (formData.method === 'mtn_mobile_money') {
+        const simulation = await paymentService.simulateMTNPayment(
+          formData.phoneNumber,
+          Number(amount)
+        );
 
         setSimulationResult(simulation);
 
@@ -131,10 +134,9 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
     try {
       const paymentData: OrderPaymentRequest = {
         orderId,
-        paymentMethod: formData.paymentMethod,
+        paymentMethod: formData.method,
         phoneNumber:
-          formData.paymentMethod !== 'cash_on_delivery' &&
-          formData.paymentMethod !== 'bank_transfer'
+          formData.method !== 'cash_on_delivery' && formData.method !== 'bank_transfer'
             ? formData.phoneNumber
             : undefined,
       };
@@ -169,8 +171,8 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
     }
   };
 
-  const selectedMethod = paymentMethods.find((m) => m.id === formData.paymentMethod);
-  const requiresPhone = ['mtn_momo', 'orange_money', 'wave'].includes(formData.paymentMethod);
+  const selectedMethod = paymentMethods.find((m) => m.id === formData.method);
+  const requiresPhone = ['mtn_mobile_money', 'orange_money', 'wave'].includes(formData.method);
 
   if (step === 'processing') {
     return (
@@ -262,13 +264,13 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {paymentMethods.map((method) => {
               const Icon = method.icon;
-              const isSelected = formData.paymentMethod === method.id;
+              const isSelected = formData.method === method.id;
 
               return (
                 <button
                   key={method.id}
                   type="button"
-                  onClick={() => handleInputChange('paymentMethod', method.id)}
+                  onClick={() => handleInputChange('method', method.id)}
                   className={`p-4 border-2 rounded-lg text-left transition-all ${
                     isSelected
                       ? 'border-blue-500 bg-blue-50'
@@ -338,7 +340,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
               <span className="text-gray-600">Méthode:</span>
               <Badge variant="secondary">{selectedMethod?.name}</Badge>
             </div>
-            {formData.paymentMethod === 'cash_on_delivery' && (
+            {formData.method === 'cash_on_delivery' && (
               <div className="flex items-start gap-2 mt-3 p-3 bg-yellow-50 rounded">
                 <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
                 <div className="text-sm text-yellow-800">
@@ -353,7 +355,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
         {/* Action Button */}
         <Button
           onClick={
-            formData.paymentMethod === 'mtn_momo' ? handleSimulatePayment : handleCreatePayment
+            formData.method === 'mtn_mobile_money' ? handleSimulatePayment : handleCreatePayment
           }
           disabled={isProcessing || (requiresPhone && !formData.phoneNumber)}
           className="w-full"
@@ -366,7 +368,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
             </>
           ) : (
             <>
-              {formData.paymentMethod === 'mtn_momo' ? (
+              {formData.method === 'mtn_mobile_money' ? (
                 <>
                   <Clock className="h-4 w-4 mr-2" />
                   Simuler le Paiement

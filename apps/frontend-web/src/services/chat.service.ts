@@ -13,7 +13,7 @@ import type {
   SearchUsersRequest,
   SearchUser,
 } from '@/types/chat.types';
-import type { ApiResponse, PaginatedResponse } from '@/types/common.types';
+import type { ApiResponse, PaginatedResponse, Paginator } from '@/types/common.types';
 import type { AxiosError } from 'axios';
 
 /**
@@ -61,21 +61,10 @@ export class ChatService extends BaseApi {
    * Get user's conversations with pagination and filtering
    */
   async getConversations(
-    filters?: ConversationFilters
-  ): Promise<ApiResponse<PaginatedResponse<Conversation>>> {
+    params?: ConversationFilters
+  ): Promise<ApiResponse<Paginator<Conversation>>> {
     try {
-      const params = new URLSearchParams();
-
-      if (filters?.page) params.append('page', filters.page.toString());
-      if (filters?.limit) params.append('limit', filters.limit.toString());
-      if (filters?.type) params.append('type', filters.type);
-
-      const queryString = params.toString();
-      const url = queryString
-        ? `/api/common/conversations?${queryString}`
-        : '/api/common/conversations';
-
-      const response = await this.insertToken().get(url);
+      const response = await this.insertToken().get('/api/common/conversations', { params });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -85,9 +74,9 @@ export class ChatService extends BaseApi {
   /**
    * Get a specific conversation by ID
    */
-  async getConversation(conversationId: number): Promise<ApiResponse<Conversation>> {
+  async getConversation(id: number): Promise<ApiResponse<Conversation>> {
     try {
-      const response = await this.insertToken().get(`/api/common/conversations/${conversationId}`);
+      const response = await this.insertToken().get(`/api/common/conversations/${id}`);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -126,13 +115,11 @@ export class ChatService extends BaseApi {
    * Delete/archive a conversation
    */
   async deleteConversation(
-    conversationId: number
+    id: number
   ): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
-      const response = await this.insertToken().delete(
-        `/api/common/conversations/${conversationId}`
-      );
-      return { data: response.data.data };
+      const response = await this.insertToken().delete(`/api/common/conversations/${id}`);
+      return { data: response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
@@ -141,20 +128,11 @@ export class ChatService extends BaseApi {
   /**
    * Search users for creating new conversations
    */
-  async searchUsers(request?: SearchUsersRequest): Promise<ApiResponse<SearchUser[]>> {
+  async searchUsers(params?: SearchUsersRequest): Promise<ApiResponse<SearchUser[]>> {
     try {
-      const params = new URLSearchParams();
-
-      if (request?.search) params.append('search', request.search);
-      if (request?.role) params.append('role', request.role);
-      if (request?.limit) params.append('limit', request.limit.toString());
-
-      const queryString = params.toString();
-      const url = queryString
-        ? `/api/common/conversations/search-users?${queryString}`
-        : '/api/common/conversations/search-users';
-
-      const response = await this.insertToken().get(url);
+      const response = await this.insertToken().get('/api/common/conversations/search/users', {
+        params,
+      });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -170,13 +148,9 @@ export class ChatService extends BaseApi {
     limit = 50
   ): Promise<ApiResponse<PaginatedResponse<Message>>> {
     try {
-      const response = await this.insertToken().get<{
-        success: boolean;
-        data: {
-          messages: PaginatedResponse<Message>;
-          conversation: Conversation;
-        };
-      }>(`/api/common/conversations/${conversationId}/messages?page=${page}&limit=${limit}`);
+      const response = await this.insertToken().get(
+        `/api/common/conversations/${conversationId}/messages?page=${page}&limit=${limit}`
+      );
 
       return { data: response.data.data.messages };
     } catch (error) {
@@ -190,7 +164,7 @@ export class ChatService extends BaseApi {
   async sendMessage(
     conversationId: number,
     request: SendMessageRequest
-  ): Promise<ApiResponse<Message>> {
+  ): Promise<ApiResponse<{ message: Message }>> {
     try {
       const response = await this.insertToken().post(
         `/api/common/conversations/${conversationId}/messages`,
@@ -205,9 +179,9 @@ export class ChatService extends BaseApi {
   /**
    * Mark a specific message as read
    */
-  async markMessageAsRead(messageId: number): Promise<ApiResponse<Message>> {
+  async markMessageAsRead(id: number): Promise<ApiResponse<Message>> {
     try {
-      const response = await this.insertToken().patch(`/messages/${messageId}/read`);
+      const response = await this.insertToken().put(`/api/common/messages/${id}/read`);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -221,7 +195,7 @@ export class ChatService extends BaseApi {
     conversationId: number
   ): Promise<ApiResponse<{ updatedCount: number }>> {
     try {
-      const response = await this.insertToken().patch(
+      const response = await this.insertToken().put(
         `/api/common/conversations/${conversationId}/messages/read-all`
       );
       return { data: response.data.data };
@@ -236,7 +210,7 @@ export class ChatService extends BaseApi {
   async sendTypingIndicator(
     conversationId: number,
     isTyping: boolean
-  ): Promise<ApiResponse<{ success: boolean }>> {
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
       const response = await this.insertToken().post(
         `/api/common/conversations/${conversationId}/typing`,
@@ -255,7 +229,7 @@ export class ChatService extends BaseApi {
    */
   async getUnreadCount(): Promise<ApiResponse<{ unreadCount: number }>> {
     try {
-      const response = await this.insertToken().get('/messages/unread-count');
+      const response = await this.insertToken().get('/api/common/messages/unread-count');
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

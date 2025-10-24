@@ -75,10 +75,18 @@ export const getGoogleMapsApiKey = (): string => {
   return window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 };
 
-export const getWebSocketUrl = (): string => {
+export const getWebSocketUrl = (token?: string): string => {
   const apiUrl = getApiUrl();
   // Convert HTTP URL to WebSocket URL
-  return apiUrl.replace(/^http/, 'ws') + '/ws';
+  const baseWsUrl = apiUrl.replace(/^http/, 'ws') + `/ws/notifications`;
+
+  if (token) {
+    const urlWithToken = `${baseWsUrl}?token=${token}`;
+    return urlWithToken;
+  }
+
+  console.log('Generated WebSocket URL without token:', baseWsUrl);
+  return baseWsUrl;
 };
 
 // Export all environment variables as a single config object

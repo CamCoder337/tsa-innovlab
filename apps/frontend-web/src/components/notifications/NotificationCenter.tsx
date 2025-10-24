@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell, CheckCheck, Trash2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,22 +25,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     stats,
     isLoading,
     error,
-    fetchNotifications,
-    fetchNotificationStats,
     markNotificationRead,
     markAllNotificationsRead,
     deleteNotification,
     clearError,
   } = useNotifications();
-
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-
-  useEffect(() => {
-    // Load notifications and stats on mount
-    fetchNotifications();
-    fetchNotificationStats();
-  }, [fetchNotifications, fetchNotificationStats]);
 
   const unreadCount = stats?.unread || 0;
   const filteredNotifications =
@@ -121,7 +112,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-hidden">
+      <DropdownMenuContent align="end" className="w-96 max-h-96 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <DropdownMenuLabel className="text-base font-semibold">Notifications</DropdownMenuLabel>
@@ -216,7 +207,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                         </div>
 
                         <p
-                          className={`text-xs truncate ${
+                          className={`text-xs break-words ${
                             !notification.readAt ? 'text-gray-700' : 'text-gray-500'
                           }`}
                         >

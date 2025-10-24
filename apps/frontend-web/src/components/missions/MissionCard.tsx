@@ -4,19 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, Eye, Edit, MessageSquare } from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
+import { useMissions } from '@/hooks/useMissions';
 import type { Mission } from '@/types/mission.types';
-import { useCallback, useEffect, useState } from 'react';
-import type { Proposition } from '@/types/proposition.types';
-import { missionService } from '@/services/mission.service';
-import { useAuth } from '@/hooks/useAuth';
 
 interface MissionCardProps {
   mission: Mission;
   onPublish?: (id: string) => void;
   onApply?: (mission: Mission) => void;
+  onCancel?: (id: string) => void;
   showApplyButton?: boolean;
   showPublishButton?: boolean;
-  showTrackingButton?: boolean;
   className?: string;
 }
 
@@ -24,35 +21,41 @@ export default function MissionCard({
   mission,
   onPublish,
   onApply,
-  showApplyButton = false,
-  showPublishButton = true,
-  showTrackingButton = true,
+  onCancel,
   className = '',
 }: MissionCardProps) {
-  const { user } = useAuth();
-  const [myPropositions, setMyPropositions] = useState<Proposition[]>([]);
+  const { setCurrentMission } = useMissions();
 
-  const fetchPropositions = useCallback(async () => {
-    const response = await missionService.getMissionPropositions(mission.id);
-    if (response.error) {
-      console.error(response.error.message);
-    }
-    if (response.data) {
-      setMyPropositions(response.data.propositions.data);
-    }
-  }, [mission.id]);
+  const handleMissionClick = () => {
+    setCurrentMission(mission);
+  };
 
-  useEffect(() => {
-    if (user && user.role === 'affreteur') fetchPropositions();
-  }, [fetchPropositions, user]);
+  // const fetchPropositions = useCallback(async () => {
+  //   const response = await missionService.getMissionPropositions(mission.id);
+  //   if (response.error) {
+  //     console.error(response.error.message);
+  //   }
+  //   if (response.data) {
+  //     setMyPropositions(response.data.propositions.data);
+  //   }
+  // }, [mission.id]);
+
+  // useEffect(() => {
+  //   if (user && user.role === 'affreteur') fetchPropositions();
+  // }, [fetchPropositions, user]);
 
   return (
     <Card className={`hover:shadow-md transition-shadow ${className}`}>
       <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-3">
+        <div className="flex flex-1 flex-col lg:flex-row lg:items-center gap-4">
+          <Link
+            to={`/app/missions/${mission.id}`}
+            className="flex flex-col flex-1"
+            aria-label={`Voir ${mission.title}`}
+            onClick={handleMissionClick}
+          >
+            <div className="flex flex-col flex-1">
+              <div className="flex flex-1 items-start justify-between mb-3">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{mission.title}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -77,9 +80,9 @@ export default function MissionCard({
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
                 <div>
-                  <span className="text-gray-500">Budget Min.:</span>
+                  <span className="text-gray-500">Tarif:</span>
                   <span className="ml-1 font-medium">
                     {mission.budgetMin?.toLocaleString() || 0} FCFA
                   </span>
@@ -107,13 +110,17 @@ export default function MissionCard({
           </Link>
 
           <div className="flex flex-col gap-2 lg:w-48">
-            <Link to={`/app/missions/${mission.id}`} aria-label={`Voir ${mission.title}`}>
+            <Link
+              to={`/app/missions/${mission.id}`}
+              aria-label={`Voir ${mission.title}`}
+              onClick={handleMissionClick}
+            >
               <Button variant="outline" className="gap-2 bg-transparent w-full">
                 <Eye className="h-4 w-4" />
                 Voir Détails
               </Button>
             </Link>
-            {showPublishButton && mission.status === 'draft' && onPublish && (
+            {mission.status === 'draft' && onPublish && (
               <Button
                 variant="outline"
                 className="gap-2 bg-tsa-blue text-white w-full"
@@ -123,7 +130,7 @@ export default function MissionCard({
                 Publier
               </Button>
             )}
-            {showApplyButton && mission.status === 'published' && onApply && (
+            {mission.status === 'published' && onApply && (
               <Button
                 className="gap-2 w-full"
                 style={{ backgroundColor: 'var(--tsa-blue)' }}
@@ -133,21 +140,21 @@ export default function MissionCard({
                 Postuler
               </Button>
             )}
-            {!showApplyButton && mission.status === 'published' && (
-              <Link
-                to={`/app/missions/${mission.id}?tab=offers`}
-                aria-label={`Voir ${mission.title}`}
+            {mission.status === 'published' && onCancel && (
+              <Button
+                className="gap-2 w-full"
+                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                onClick={() => onCancel(mission.id)}
               >
-                <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
-                  <MessageSquare className="h-4 w-4" />
-                  Voir Offres ({myPropositions.length})
-                </Button>
-              </Link>
+                <MessageSquare className="h-4 w-4" />
+                Annuler la Mission
+              </Button>
             )}
-            {showTrackingButton && mission.status === 'assigned' && (
+            {mission.status === 'assigned' && (
               <Link
                 to={`/app/missions/${mission.id}/tracking`}
                 aria-label={`Suivre ${mission.title}`}
+                onClick={handleMissionClick}
               >
                 <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                   <MapPin className="h-4 w-4" />

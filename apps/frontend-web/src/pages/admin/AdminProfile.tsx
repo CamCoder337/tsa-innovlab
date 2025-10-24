@@ -7,7 +7,7 @@ import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileF
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import type { FormikProps } from 'formik';
-import type { updateUserRequest } from '@/types/auth.types';
+import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
 
@@ -20,7 +20,7 @@ function AdminProfile() {
 
   if (!user) return null;
 
-  const handleSave = async (values: updateUserRequest) => {
+  const handleSave = async (values: UpdateUserRequest) => {
     try {
       setIsLoading(true);
       const response = await authService.updateProfile(values);
@@ -61,7 +61,7 @@ function AdminProfile() {
       });
 
       if (hasChanges) {
-        handleSave(differences as updateUserRequest);
+        handleSave(differences as UpdateUserRequest);
       } else {
         toast('Aucune modification détectée');
       }

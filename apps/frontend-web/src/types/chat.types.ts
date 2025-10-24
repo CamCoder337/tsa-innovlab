@@ -1,4 +1,5 @@
 import type { User, UserRole } from './auth.types';
+import type { Timestamps } from './common.types';
 import type { Mission } from './mission.types';
 
 /**
@@ -22,7 +23,7 @@ export enum ConversationType {
 /**
  * Message interface matching backend Message model
  */
-export interface Message {
+export interface Message extends Timestamps {
   id: number;
   conversationId: number;
   senderId: string;
@@ -30,8 +31,6 @@ export interface Message {
   content: string;
   type: MessageType;
   readAt?: string;
-  createdAt: string;
-  updatedAt: string;
   // Relations (optional when populated)
   sender?: User;
   conversation?: Conversation;
@@ -41,22 +40,20 @@ export interface Message {
 /**
  * Conversation interface matching backend Conversation model
  */
-export interface Conversation {
+export interface Conversation extends Timestamps {
   id: number;
   type: ConversationType;
   user1Id: string;
   user2Id: string;
   missionId?: number;
   lastActivityAt: string;
-  createdAt: string;
-  updatedAt: string;
   // Relations (optional when populated)
   user1?: User;
   user2?: User;
   mission?: Mission;
   messages?: Message[];
   // Computed fields
-  messagesCount?: number;
+  // messagesCount?: number;
   unreadMessagesCount?: number;
   otherParticipant?: Partial<User>;
 }
@@ -86,10 +83,10 @@ export interface ConversationFilters {
 
 export interface SearchUser {
   id: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: UserRole;
-  avatar?: string;
 }
 
 export interface SearchUsersRequest {
@@ -131,4 +128,40 @@ export interface TypingIndicator {
   userId: string;
   isTyping: boolean;
   timestamp: number;
+}
+
+export interface ChatState {
+  // State
+  conversations: ConversationListItem[];
+  currentConversation: Conversation | null;
+  messages: Record<number, Message[]>; // conversationId -> messages
+  typingIndicators: TypingIndicator[];
+  isLoading: boolean;
+  error: string | null;
+  unreadCount: number;
+
+  // Actions
+  fetchConversations: (filters?: ConversationFilters) => Promise<void>;
+  fetchConversation: (conversationId: number) => Promise<void>;
+  fetchMessages: (conversationId: number, page?: number) => Promise<void>;
+  sendMessage: (conversationId: number, content: string) => Promise<void>;
+  createDirectConversation: (userId: string) => Promise<Conversation>;
+  createMissionConversation: (userId: string, missionId?: string) => Promise<Conversation>;
+  markMessageAsRead: (messageId: number) => Promise<void>;
+  markAllMessagesAsRead: (conversationId: number) => Promise<void>;
+  searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
+
+  // Real-time actions
+  handleNewMessage: (message: Message) => void;
+  handleMessageRead: (messageId: number, conversationId: number) => void;
+  handleTypingStart: (conversationId: number, userId: string) => void;
+  handleTypingStop: (conversationId: number, userId: string) => void;
+  sendTypingIndicator: (conversationId: number, isTyping: boolean) => void;
+
+  // Utility actions
+  setCurrentConversation: (conversation: Conversation | null) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
 }

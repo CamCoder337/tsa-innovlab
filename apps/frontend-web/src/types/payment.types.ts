@@ -1,10 +1,13 @@
+import type { Timestamps } from './common.types';
+import type { Order } from './order.types';
+
 // Align with backend Order model PaymentStatus enum
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 // Align with backend Order model PaymentMethod enum
 export type PaymentMethod =
   | 'orange_money'
-  | 'mtn_momo'
+  | 'mtn_mobile_money'
   | 'wave'
   | 'bank_transfer'
   | 'cash_on_delivery';
@@ -12,26 +15,17 @@ export type PaymentMethod =
 // Legacy type for backward compatibility
 export type PaymentMethodType = 'card' | 'mobile' | 'cash';
 
-export type MobileMoneyProvider = 'orange_money' | 'mtn_momo' | 'wave';
+export type MobileMoneyProvider = 'orange_money' | 'mtn_mobile_money' | 'wave';
 
 // Updated Payment interface to match backend e-commerce flow
-export interface Payment {
+export interface Payment extends Timestamps {
   id: string;
-  orderId?: string; // For e-commerce orders
-  missionId?: string; // For mission payments
-  amount: number; // Decimal as string to match backend
-  currency: string;
+  orderId: string;
+  order?: Order;
+  amount: number;
+  method: PaymentMethod;
   status: PaymentStatus;
-  paymentMethod: PaymentMethod;
-  transactionId?: string; // MTN Mobile Money transaction ID
-  reference?: string; // Payment reference
-  receiptUrl?: string;
-  paidAt?: string; // ISO string
-  createdAt: string; // ISO string
-  updatedAt: string; // ISO string
-  // MTN Mobile Money specific fields
-  mtnTransactionId?: string;
-  mtnStatus?: string;
+  transactionId?: string;
   phoneNumber?: string;
 }
 
@@ -58,22 +52,14 @@ export interface CardDetails {
 
 // Updated for e-commerce and MTN Mobile Money integration
 export interface CreatePaymentRequest {
-  orderId?: string; // For e-commerce orders
-  missionId?: string; // For mission payments
-  amount: string; // Decimal as string
-  currency?: string;
-  paymentMethod: PaymentMethod;
-  // MTN Mobile Money specific fields
-  phoneNumber?: string;
-  payerMessage?: string;
-  payeeNote?: string;
+  orderId: string;
+  payerMessage: string;
 }
 
 // MTN Mobile Money payment confirmation
 export interface ConfirmPaymentRequest {
-  paymentId: string;
-  transactionId?: string; // MTN transaction ID
-  confirmationCode?: string;
+  transactionId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // Saved payment method for users

@@ -206,7 +206,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <Input
             id="reference"
             name="reference"
-            value={formik.values.reference}
+            value={formik.values.reference || ''}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             placeholder="Référence du produit"
@@ -343,7 +343,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         <Textarea
           id="description"
           name="description"
-          value={formik.values.description}
+          value={formik.values.description || ''}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           placeholder="Décrivez votre produit..."

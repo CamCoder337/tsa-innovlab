@@ -1,91 +1,232 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Address, AddressStore } from '../types/address.types';
 
-// const mockAddresses: Address[] = [
-//     {
-//         "id": "1b5e5b85-105f-42e4-8074-086611953bb6",
-//         "label": "Entrepôt Douala Bonabéri",
-//         "street": "Rue des Industries",
-//         "city": "Douala",
-//         "region": "Littoral",
-//         "country": "Cameroon",
-//         "postalCode": "12345",
-//         "latitude": 4.0667,
-//         "longitude": 9.7,
-//         "createdAt": "2025-09-24T05:25:33.651+01:00"
-//     },
-//     {
-//         "id": "58702ea1-d151-450b-9020-b238ecbeff7a",
-//         "label": "Chantier Yaoundé Centre",
-//         "street": "Avenue Kennedy",
-//         "city": "Yaoundé",
-//         "region": "Centre",
-//         "country": "Cameroon",
-//         "postalCode": "12345",
-//         "latitude": 3.8667,
-//         "longitude": 11.5167,
-//         "createdAt": "2025-09-24T05:25:33.653+01:00"
-//     }
-//   ];
+export const useAddressStore = create<AddressStore>()(
+  persist(
+    (set, get) => ({
+      // State
+      addresses: [],
+      currentAddress: null,
+      isLoading: false,
+      error: null,
 
-function persistAddressesToLocalStorage(addresses: Address[]) {
-  try {
-    localStorage.setItem('tsa_addresses', JSON.stringify(addresses));
-  } catch (error) {
-    console.error('Failed to persist addresses to localStorage:', error);
-  }
-}
+      // Async actions (placeholder for future API integration)
+      fetchAddresses: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          // TODO: Replace with actual API call when address service is available
+          // const response = await addressService.getAddresses();
+          // if (response.error) {
+          //   set({ error: response.error.message, isLoading: false });
+          // } else {
+          //   set({ addresses: response.data || [], isLoading: false });
+          // }
 
-function loadAddressesFromLocalStorage(): Address[] {
-  try {
-    const raw = localStorage.getItem('tsa_addresses');
-    if (raw) {
-      return JSON.parse(raw);
+          // For now, just set loading to false
+          set({ isLoading: false });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch addresses',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchAddress: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // TODO: Replace with actual API call when address service is available
+          // const response = await addressService.getAddress(id);
+          // if (response.error) {
+          //   set({ error: response.error.message, isLoading: false });
+          // } else {
+          //   set({ currentAddress: response.data, isLoading: false });
+          // }
+
+          // For now, find in local store
+          const address = get().addresses.find((addr) => addr.id === id);
+          set({ currentAddress: address || null, isLoading: false });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch address',
+            isLoading: false,
+          });
+        }
+      },
+
+      createAddress: async (addressData: Omit<Address, 'createdAt'>) => {
+        set({ isLoading: true, error: null });
+        try {
+          // TODO: Replace with actual API call when address service is available
+          // const response = await addressService.createAddress(addressData);
+          // if (response.error) {
+          //   set({ error: response.error.message, isLoading: false });
+          //   return false;
+          // } else {
+          //   const addresses = get().addresses;
+          //   set({ addresses: [...addresses, response.data], isLoading: false });
+          //   return true;
+          // }
+
+          // For now, create locally with mock ID
+          const newAddress: Address = {
+            ...addressData,
+            createdAt: new Date().toISOString(),
+          };
+          const addresses = get().addresses;
+          set({ addresses: [...addresses, newAddress], isLoading: false });
+          return true;
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to create address',
+            isLoading: false,
+          });
+          return false;
+        }
+      },
+
+      updateAddressAsync: async (id: string, updates: Partial<Address>) => {
+        set({ isLoading: true, error: null });
+        try {
+          // TODO: Replace with actual API call when address service is available
+          // const response = await addressService.updateAddress(id, updates);
+          // if (response.error) {
+          //   set({ error: response.error.message, isLoading: false });
+          //   return false;
+          // } else {
+          //   const addresses = get().addresses;
+          //   const updatedAddresses = addresses.map((addr) =>
+          //     addr.id === id ? { ...addr, ...response.data } : addr
+          //   );
+          //   set({ addresses: updatedAddresses, isLoading: false });
+          //   return true;
+          // }
+
+          // For now, update locally
+          const addresses = get().addresses;
+          const updatedAddresses = addresses.map((addr) =>
+            addr.id === id ? { ...addr, ...updates } : addr
+          );
+          set({ addresses: updatedAddresses, isLoading: false });
+          return true;
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to update address',
+            isLoading: false,
+          });
+          return false;
+        }
+      },
+
+      deleteAddressAsync: async (id: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // TODO: Replace with actual API call when address service is available
+          // const response = await addressService.deleteAddress(id);
+          // if (response.error) {
+          //   set({ error: response.error.message, isLoading: false });
+          //   return false;
+          // } else {
+          //   const addresses = get().addresses;
+          //   const updatedAddresses = addresses.filter((addr) => addr.id !== id);
+          //   set({ addresses: updatedAddresses, isLoading: false });
+          //   return true;
+          // }
+
+          // For now, delete locally
+          const addresses = get().addresses;
+          const updatedAddresses = addresses.filter((addr) => addr.id !== id);
+          set({ addresses: updatedAddresses, isLoading: false });
+          return true;
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to delete address',
+            isLoading: false,
+          });
+          return false;
+        }
+      },
+
+      // Basic actions
+      setAddresses: (addresses: Address[]) => {
+        set({ addresses });
+      },
+
+      addAddress: (address: Address) => {
+        const addresses = get().addresses;
+        set({ addresses: [...addresses, address] });
+      },
+
+      updateAddress: (id: string, updates: Partial<Address>) => {
+        const addresses = get().addresses;
+        const updatedAddresses = addresses.map((addr) =>
+          addr.id === id ? { ...addr, ...updates } : addr
+        );
+        set({ addresses: updatedAddresses });
+      },
+
+      deleteAddress: (id: string) => {
+        const addresses = get().addresses;
+        const updatedAddresses = addresses.filter((addr) => addr.id !== id);
+        set({ addresses: updatedAddresses });
+      },
+
+      setCurrentAddress: (address: Address | null) => {
+        set({ currentAddress: address });
+      },
+
+      // Utility actions
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
+
+      setError: (error: string | null) => {
+        set({ error });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+
+      reset: () => {
+        set({ addresses: [], currentAddress: null, isLoading: false, error: null });
+      },
+
+      // Utility methods
+      getAddress: (id: string) => {
+        return get().addresses.find((addr) => addr.id === id);
+      },
+
+      searchAddresses: (query: string) => {
+        const lowercaseQuery = query.toLowerCase();
+        return get().addresses.filter(
+          (addr) =>
+            addr.label?.toLowerCase().includes(lowercaseQuery) ||
+            addr.street?.toLowerCase().includes(lowercaseQuery) ||
+            addr.city?.toLowerCase().includes(lowercaseQuery) ||
+            addr.region?.toLowerCase().includes(lowercaseQuery) ||
+            addr.country?.toLowerCase().includes(lowercaseQuery)
+        );
+      },
+
+      getAddressesByCity: (city: string) => {
+        return get().addresses.filter((addr) => addr.city?.toLowerCase() === city.toLowerCase());
+      },
+
+      getAddressesByRegion: (region: string) => {
+        return get().addresses.filter(
+          (addr) => addr.region?.toLowerCase() === region.toLowerCase()
+        );
+      },
+    }),
+    {
+      name: 'tsa-address-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        addresses: state.addresses,
+        currentAddress: state.currentAddress,
+      }),
     }
-  } catch (error) {
-    console.error('Failed to load missions from localStorage:', error);
-  }
-  return [];
-}
-
-export const useAddressStore = create<AddressStore>((set, get) => ({
-  addresses: loadAddressesFromLocalStorage(),
-  isLoading: false,
-  error: null,
-
-  setAddresses: async (addresses: Address[]) => {
-    persistAddressesToLocalStorage(addresses);
-    set({ addresses });
-  },
-
-  getAddress: async (id: string) => {
-    return get().addresses.find((addr) => addr.id === id);
-  },
-
-  addAddress: async (address: Address) => {
-    const addresses = get().addresses;
-    const updatedAddresses = [...addresses, address];
-    persistAddressesToLocalStorage(updatedAddresses);
-    set({ addresses: updatedAddresses });
-  },
-
-  updateAddress: async (id: string, updates: Partial<Address>) => {
-    const addresses = get().addresses;
-    const updatedAddresses = addresses.map((addr) =>
-      addr.id === id ? { ...addr, ...updates } : addr
-    );
-    persistAddressesToLocalStorage(updatedAddresses);
-    set({ addresses: updatedAddresses });
-  },
-
-  deleteAddress: async (id: string) => {
-    const addresses = get().addresses;
-    const updatedAddresses = addresses.filter((addr) => addr.id !== id);
-    persistAddressesToLocalStorage(updatedAddresses);
-    set({ addresses: updatedAddresses });
-  },
-
-  clearError: () => {
-    set({ error: null });
-  },
-}));
+  )
+);

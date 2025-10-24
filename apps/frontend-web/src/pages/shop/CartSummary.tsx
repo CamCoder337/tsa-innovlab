@@ -12,7 +12,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Trash2,
   Plus,
@@ -33,12 +39,15 @@ import AddressPicker from '@/components/maps/AddressPicker';
 import { useAddressSelection } from '@/hooks/useAddressSelection';
 import PaymentForm from '@/components/forms/PaymentForm';
 import Facture from '@/components/invoice/Facture';
-import type { Payment } from '@/types/payment.types';
+import type { Payment, PaymentMethodType } from '@/types/payment.types';
+import { useOrders } from '@/hooks/useOrders';
+import { type Order, PaymentMethod } from '@/types/order.types';
+import { useAddresses } from '@/hooks/useAddresses';
 
 const OrderSchema = Yup.object().shape({
   deliveryAddress: Yup.string().required("L'adresse de livraison est requise"),
   deliveryCity: Yup.string().required('La ville est requise'),
-  deliveryPostalCode: Yup.string().required('Le code postal est requis'),
+  deliveryPostalCode: Yup.string(),
   deliveryNotes: Yup.string().max(200, 'Les notes ne peuvent pas dépasser 200 caractères'),
   // Google Maps coordinates
   latitude: Yup.number(),
@@ -52,8 +61,10 @@ export default function CartSummaryPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [completedPayment, setCompletedPayment] = useState<Payment | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [useManualAddress, setUseManualAddress] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('cash');
 
   const {
     cart,
@@ -64,7 +75,11 @@ export default function CartSummaryPage() {
     isEmpty,
     isLoading,
     error,
+    clearCart,
   } = useCart();
+
+  const { createOrder } = useOrders();
+  const { createAddress } = useAddresses();
 
   const {
     selectedAddress,
@@ -116,7 +131,7 @@ export default function CartSummaryPage() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+  }, [selectedAddress, useManualAddress]);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -124,6 +139,87 @@ export default function CartSummaryPage() {
 
   const handleRemoveItem = (productId: string) => {
     removeFromCart(productId);
+  };
+
+  const handleCreateOrder = async (payment: Payment): Promise<Order | null> => {
+    try {
+      // Map payment method from Payment to OrderPaymentMethod
+      const getPaymentMethod = (method: string): PaymentMethod => {
+        switch (method) {
+          case 'mobile':
+            return PaymentMethod.MTN_MOMO; // Default to MTN for mobile
+          case 'card':
+            return PaymentMethod.BANK_TRANSFER;
+          case 'cash':
+            return PaymentMethod.CASH_ON_DELIVERY;
+          default:
+            return PaymentMethod.MTN_MOMO;
+        }
+      };
+
+      // Generate UUIDs for addresses (since we don't have real API yet)
+      const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c == 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      };
+
+      const shippingAddressId = generateUUID();
+      const billingAddressId = generateUUID();
+
+      // Create shipping address first
+      const shippingAddressData = {
+        id: shippingAddressId,
+        street: formik.values.deliveryAddress,
+        city: formik.values.deliveryCity,
+        region: formik.values.deliveryCity, // Using city as region for now
+        country: 'Cameroun', // Default country
+        postalCode: formik.values.deliveryPostalCode || '',
+        latitude: formik.values.latitude || 0,
+        longitude: formik.values.longitude || 0,
+        label: formik.values.deliveryAddress,
+        placeId: formik.values.placeId, // Store Google Places ID separately
+      };
+
+      const shippingAddressCreated = await createAddress(shippingAddressData);
+      if (!shippingAddressCreated) {
+        throw new Error('Failed to create shipping address');
+      }
+
+      // For billing, use the same address data but with different ID and label
+      const billingAddressData = {
+        id: billingAddressId,
+        street: formik.values.deliveryAddress,
+        city: formik.values.deliveryCity,
+        region: formik.values.deliveryCity,
+        country: 'Cameroun',
+        postalCode: formik.values.deliveryPostalCode || '',
+        latitude: formik.values.latitude || 0,
+        longitude: formik.values.longitude || 0,
+        label: 'Billing Address',
+        placeId: formik.values.placeId,
+      };
+
+      const billingAddressCreated = await createAddress(billingAddressData);
+      if (!billingAddressCreated) {
+        throw new Error('Failed to create billing address');
+      }
+
+      const orderData = {
+        shippingAddressId: shippingAddressId, // Use the generated UUID
+        billingAddressId: billingAddressId, // Use the generated UUID
+        paymentMethod: getPaymentMethod(payment.method),
+        notes: formik.values.deliveryNotes || undefined,
+      };
+
+      const order = await createOrder(orderData);
+      return order;
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      return null;
+    }
   };
 
   const subtotal = getTotalPrice();
@@ -136,12 +232,13 @@ export default function CartSummaryPage() {
     deliveryOption === 'express' ? 5000 : deliveryOption === 'same-day' ? 10000 : 2000;
   const total = subtotal + deliveryFee;
 
-  if (paymentSuccess && completedPayment) {
+  if (paymentSuccess && completedPayment && createdOrder) {
     return (
       <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Facture
           payment={completedPayment}
-          orderNumber={orderNumber}
+          order={createdOrder}
+          orderNumber={createdOrder.orderNumber}
           items={cart.items}
           deliveryAddress={{
             address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
@@ -170,9 +267,10 @@ export default function CartSummaryPage() {
           onClose={() => {
             setPaymentSuccess(false);
             setCompletedPayment(null);
+            setCreatedOrder(null);
             setOrderNumber('');
-            // Optionally clear cart after successful order
-            // clearCart()
+            // Clear cart after successful order
+            clearCart();
           }}
         />
       </main>
@@ -245,9 +343,7 @@ export default function CartSummaryPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity - 1)
-                                  }
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                   disabled={item.quantity <= 1 || isLoading}
                                 >
                                   <Minus className="h-3 w-3" />
@@ -257,7 +353,7 @@ export default function CartSummaryPage() {
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleUpdateQuantity(
-                                      item.productId,
+                                      item.id,
                                       Number.parseInt(e.target.value) || 1
                                     )
                                   }
@@ -269,9 +365,7 @@ export default function CartSummaryPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity + 1)
-                                  }
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                                   disabled={
                                     item.quantity >= (item.product?.stock || 0) || isLoading
                                   }
@@ -285,16 +379,17 @@ export default function CartSummaryPage() {
                           <div className="text-right">
                             <div className="flex flex-col items-end gap-1">
                               <p className="text-lg font-bold">
-                                {(parseFloat(item.unitPrice) * item.quantity).toLocaleString()} FCFA
+                                {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
+                                FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.unitPrice.toLocaleString()} FCFA each
+                                {item.priceAtAdd.toLocaleString()} FCFA each
                               </p>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleRemoveItem(item.productId)}
+                              onClick={() => handleRemoveItem(item.id)}
                               className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                               disabled={isLoading}
                             >
@@ -536,7 +631,9 @@ export default function CartSummaryPage() {
                       style={{ backgroundColor: 'var(--tsa-blue)' }}
                       disabled={isEmpty() || isLoading || (!useManualAddress && !isAddressSelected)}
                       onClick={() => {
+                        console.log('Test');
                         const validationErrors = formik.validateForm();
+                        console.error(validationErrors);
                         if (Object.keys(validationErrors).length === 0) {
                           formik.handleSubmit();
                         } else {
@@ -615,6 +712,7 @@ export default function CartSummaryPage() {
 
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogDescription className="hidden"> Finaliser le paiement </DialogDescription>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
@@ -648,15 +746,26 @@ export default function CartSummaryPage() {
             {/* Payment Form */}
             <PaymentForm
               amount={total}
-              currency="fcfa"
-              onSuccess={(payment) => {
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              orderId={orderNumber}
+              onSuccess={async (payment) => {
                 console.log('Payment successful:', payment);
-                // Generate order number
-                const orderNum = `TSA-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-                setOrderNumber(orderNum);
-                setCompletedPayment(payment);
-                setPaymentSuccess(true);
-                setShowPayment(false);
+
+                // Create order after successful payment
+                const order = await handleCreateOrder(payment);
+
+                if (order) {
+                  setCreatedOrder(order);
+                  setOrderNumber(order.orderNumber);
+                  setCompletedPayment(payment);
+                  setPaymentSuccess(true);
+                  setShowPayment(false);
+                } else {
+                  console.error('Failed to create order');
+                  // Handle order creation failure
+                  setShowPayment(false);
+                }
               }}
               onError={(error) => {
                 console.error('Payment error:', error);

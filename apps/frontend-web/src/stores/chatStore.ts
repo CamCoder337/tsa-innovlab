@@ -1,58 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
-  Conversation,
   ConversationListItem,
-  Message,
-  TypingIndicator,
-  ConversationFilters,
   CreateDirectConversationRequest,
   CreateMissionConversationRequest,
   SendMessageRequest,
   ChatMessageEvent,
   ChatMessageReadEvent,
   ChatTypingEvent,
-  SearchUser,
+  ChatState,
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
-import type { UserRole } from '@/types/auth.types';
-
-interface ChatState {
-  // State
-  conversations: ConversationListItem[];
-  currentConversation: Conversation | null;
-  messages: Record<number, Message[]>; // conversationId -> messages
-  typingIndicators: TypingIndicator[];
-  isLoading: boolean;
-  error: string | null;
-  unreadCount: number;
-
-  // Actions
-  fetchConversations: (filters?: ConversationFilters) => Promise<void>;
-  fetchConversation: (conversationId: number) => Promise<void>;
-  fetchMessages: (conversationId: number, page?: number) => Promise<void>;
-  sendMessage: (conversationId: number, content: string) => Promise<void>;
-  createDirectConversation: (userId: string) => Promise<Conversation>;
-  createMissionConversation: (missionId: number, userId: string) => Promise<Conversation>;
-  markMessageAsRead: (messageId: number) => Promise<void>;
-  markAllMessagesAsRead: (conversationId: number) => Promise<void>;
-  searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
-
-  // Real-time actions
-  handleNewMessage: (message: Message) => void;
-  handleMessageRead: (messageId: number, conversationId: number) => void;
-  handleTypingStart: (conversationId: number, userId: string) => void;
-  handleTypingStop: (conversationId: number, userId: string) => void;
-  sendTypingIndicator: (conversationId: number, isTyping: boolean) => void;
-
-  // Utility actions
-  setCurrentConversation: (conversation: Conversation | null) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
-}
 
 const initialState = {
   conversations: [],
@@ -73,6 +32,14 @@ export const useChatStore = create<ChatState>()(
         try {
           set({ isLoading: true, error: null });
           const response = await chatService.getConversations(filters);
+
+          if (response.error) {
+            set({
+              error: response.error.errors[0] || response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
 
           // Transform conversations to include UI-specific fields
           const conversations: ConversationListItem[] =
@@ -95,6 +62,15 @@ export const useChatStore = create<ChatState>()(
         try {
           set({ isLoading: true, error: null });
           const response = await chatService.getConversation(conversationId);
+
+          if (response.error) {
+            set({
+              error: response.error.errors[0] || response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
           set({ currentConversation: response.data, isLoading: false });
         } catch (error) {
           set({
@@ -109,19 +85,35 @@ export const useChatStore = create<ChatState>()(
           set({ isLoading: true, error: null });
           const response = await chatService.getMessages(conversationId, page);
 
-          const { messages } = get();
-          const existingMessages = messages[conversationId] || [];
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
 
-          // For page 1, replace messages; for other pages, append
-          const newMessages =
-            page === 1
-              ? response.data?.data || []
-              : [...existingMessages, ...(response.data?.data || [])];
+          if (response.data) {
+            const { messages } = get();
+            const existingMessages = messages[conversationId] || [];
 
-          set({
-            messages: { ...messages, [conversationId]: newMessages },
-            isLoading: false,
-          });
+            // For page 1, replace messages; for other pages, append
+            const newMessages =
+              page === 1
+                ? response.data.data || []
+                : [...existingMessages, ...(response.data.data || [])];
+
+            // Sort by createdAt descending (newest first)
+            const sortedMessages = newMessages.sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+
+            set({
+              messages: { ...messages, [conversationId]: sortedMessages },
+              isLoading: false,
+            });
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch messages',
@@ -135,19 +127,28 @@ export const useChatStore = create<ChatState>()(
           const request: SendMessageRequest = { content };
           const response = await chatService.sendMessage(conversationId, request);
 
+          if (response.error)
+            set({
+              error:
+                response.error.errors[0] ||
+                response.error.message ||
+                'Erreur lors de la récupération des messages',
+              isLoading: false,
+            });
+
           if (response.data) {
-            // Optimistically add message to local state
             const { messages } = get();
-            const conversationMessages = messages[conversationId] || [];
+            const existingMessages = messages[conversationId] || [];
+
+            // Add new message and sort by createdAt
+            const newMessages = [...existingMessages, response.data.message];
+            const sortedMessages = newMessages.sort(
+              (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
 
             set({
-              messages: {
-                ...messages,
-                [conversationId]: [...conversationMessages, response.data],
-              },
+              messages: { ...messages, [conversationId]: sortedMessages },
             });
-          } else if (response.error) {
-            set({ error: response.error.message });
           }
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'Failed to send message' });
@@ -195,10 +196,16 @@ export const useChatStore = create<ChatState>()(
         }
       },
 
-      createMissionConversation: async (missionId, userId) => {
+      createMissionConversation: async (userId, missionId) => {
         try {
           set({ isLoading: true, error: null });
-          const request: CreateMissionConversationRequest = { missionId, userId };
+          if (!missionId) {
+            throw new Error('Mission ID is required for mission conversations');
+          }
+          const request: CreateMissionConversationRequest = {
+            missionId: parseInt(missionId),
+            userId,
+          };
           const response = await chatService.createMissionConversation(request);
 
           if (response.data) {
@@ -283,12 +290,17 @@ export const useChatStore = create<ChatState>()(
       handleNewMessage: (message) => {
         const { messages, conversations, currentConversation } = get();
 
-        // Add message to conversation
+        // Add message to conversation and sort by createdAt
         const conversationMessages = messages[message.conversationId] || [];
+        const newMessages = [...conversationMessages, message];
+        const sortedMessages = newMessages.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
         set({
           messages: {
             ...messages,
-            [message.conversationId]: [...conversationMessages, message],
+            [message.conversationId]: sortedMessages,
           },
         });
 
@@ -376,6 +388,7 @@ export const useChatStore = create<ChatState>()(
         // Only persist conversations and current conversation
         conversations: state.conversations,
         currentConversation: state.currentConversation,
+        messages: state.messages,
       }),
     }
   )

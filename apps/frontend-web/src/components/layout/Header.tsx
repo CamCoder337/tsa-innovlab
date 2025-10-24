@@ -23,11 +23,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/avatar';
 import logo from '@/assets/logo_white_bg.png';
 import { useAuth } from '@/hooks/useAuth';
-import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
 import { useCart } from '@/hooks/useCart';
 import CartDrawer from '@/components/shop/CartDrawer';
 import { NotificationCenter } from '../notifications/NotificationCenter';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -38,19 +37,20 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    toast.promise(authService.logout(), {
-      loading: 'Déconnexion...',
-      success: 'Déconnexion réussie',
-      error: 'Erreur lors de la déconnexion',
-    });
-    logout();
+    await logout();
     navigate('/');
   };
 
   return (
     <header className="fixed inset-y-0 z-10 h-fit w-full border-b bg-white flex items-center justify-between md:px-6">
-      {/* Logo */}
+      {/* Logo and Mobile Sidebar Trigger */}
       <div className="flex items-center gap-1">
+        {/* Mobile Sidebar Trigger - only show when user is authenticated */}
+        {user && (
+          <div className="md:hidden mr-2">
+            <SidebarTrigger />
+          </div>
+        )}
         <div className="rounded-lg flex items-center justify-center">
           <img src={logo} alt="TSA Logistics" width={100} height={100} />
         </div>

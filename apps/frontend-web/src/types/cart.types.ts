@@ -10,7 +10,7 @@ export interface CartItem extends Partial<Timestamps> {
   productId: string;
   product?: Product; // Optional populated relation
   quantity: number;
-  unitPrice: string; // Prix unitaire au moment de l'ajout au panier (decimal as string)
+  priceAtAdd: string; // Prix unitaire au moment de l'ajout au panier (decimal as string)
 }
 
 export interface Cart extends Partial<Timestamps> {
@@ -24,17 +24,21 @@ export interface Cart extends Partial<Timestamps> {
 export interface CartStore {
   // State
   cart: Cart;
+  itemCount: number;
+  totalAmount: number;
+  totalQuantity: number;
   isLoading: boolean;
   error: string | null;
   isInitialized: boolean;
 
   // Actions
   initializeCart: () => Promise<void>;
-  addItem: (product: Product, quantity?: number) => Promise<void>;
+  addItem: (productId: string, quantity?: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   updateItemQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   fetchCart: () => Promise<void>;
+  syncWithServer: () => Promise<void>;
 
   // Computed getters
   getItemByProductId: (productId: string) => CartItem | undefined;

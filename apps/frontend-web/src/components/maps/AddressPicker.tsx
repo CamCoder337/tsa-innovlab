@@ -177,7 +177,7 @@ export default function AddressPicker({
       const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
         types: ['address'],
         fields: ['formatted_address', 'address_components', 'geometry', 'place_id'],
-        componentRestrictions: { country: ['ci', 'bf', 'ml', 'ne', 'sn'] },
+        componentRestrictions: { country: ['cm'] },
       });
 
       autocompleteRef.current = autocomplete;
@@ -298,7 +298,7 @@ export default function AddressPicker({
           const geocoder = new google.maps.Geocoder();
           const result = await geocoder.geocode({
             location: { lat: latitude, lng: longitude },
-            region: 'CI', // Prioritize Côte d'Ivoire results
+            region: 'CM', // Prioritize Côte d'Ivoire results
           });
 
           if (result.results && result.results.length > 0) {

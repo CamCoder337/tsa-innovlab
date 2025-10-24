@@ -1,1627 +1,23 @@
 import { create } from 'zustand';
-import type { Product, ProductStats, ProductStoreExtended } from '@/types/product.types';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import type {
+  Product,
+  ProductStats,
+  ProductStoreExtended,
+  ProductFilterParams,
+  CreateProduct,
+  UpdateProduct,
+} from '@/types/product.types';
+import { adminService } from '@/services/admin.service';
+import { shopService } from '@/services/shop.service';
+import type { PaginatedMetaResponse, Paginator } from '@/types/common.types';
 
-// const mockProducts: Product[] = [
-//   {
-//     id: '3fef7657-be57-46d5-98c5-748bb962a0e0',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Trou de balle',
-//     description: 'Un trou de classe mondiale pour vos balles',
-//     reference: 'TROU-D-001',
-//     price: '299.99',
-//     stock: 20,
-//     stockAlert: 5,
-//     unit: 'pièce',
-//     imageUrl: null,
-//     images: ['https://example.com/image1.jpg'],
-//     specifications: {
-//       color: 'Blue',
-//       weight: '1kg',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:53:36.483+01:00',
-//     updatedAt: '2025-09-21T09:00:00.953+01:00',
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '1a1f067f-b555-449b-a269-fae3bb512e14',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Diable de Transport Aluminium',
-//     description: 'Diable pliable en aluminium charge 200kg',
-//     reference: 'DIABLE-ALU-200',
-//     price: '159.00',
-//     stock: 25,
-//     stockAlert: 5,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       wheels: 'Pneumatic',
-//       folding: 'Yes',
-//       capacity: '200kg',
-//       material: 'Aluminum',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.084+01:00',
-//     updatedAt: '2025-09-11T00:42:41.084+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'bbb35556-15d9-4cd1-b1ee-562492ea758a',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Gerbeur Électrique 1.6m',
-//     description: 'Gerbeur électrique pour stockage en hauteur',
-//     reference: 'GERB-ELEC-16',
-//     price: '2890.00',
-//     stock: 6,
-//     stockAlert: 1,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       lift: '1600mm',
-//       mast: 'Duplex',
-//       battery: '12V 100Ah',
-//       capacity: '1000kg',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.081+01:00',
-//     updatedAt: '2025-09-11T00:42:41.081+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '3a96475f-b25d-4b7f-918e-983f299c9876',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Remorque Plateau 750kg',
-//     description: 'Remorque plateau non freinée pour utilitaires',
-//     reference: 'REM-PLAT-750',
-//     price: '899.00',
-//     stock: 12,
-//     stockAlert: 3,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       type: 'Non-braked',
-//       payload: '750kg',
-//       material: 'Galvanized steel',
-//       dimensions: '2.5x1.3m',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.077+01:00',
-//     updatedAt: '2025-09-11T00:42:41.077+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'c86b39b0-5c96-4a3a-93b0-82d669da4976',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Transpalette Électrique',
-//     description: 'Transpalette électrique 1.5T avec batteries lithium',
-//     reference: 'TRANSP-ELEC-15',
-//     price: '3250.00',
-//     stock: 6,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       forks: '1150mm',
-//       speed: '6.5 km/h',
-//       battery: 'Lithium-ion',
-//       capacity: '1500kg',
-//     },
-//     isActive: false,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.073+01:00',
-//     updatedAt: '2025-09-21T09:36:25.810+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '41d0d994-5ae9-4ebc-8cef-24a44e8d67f4',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Chariot Élévateur Toyota 2T',
-//     description: 'Chariot élévateur électrique 2 tonnes',
-//     reference: 'TOYOTA-FE-2T',
-//     price: '28500.00',
-//     stock: 2,
-//     stockAlert: 1,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       lift: '3000mm',
-//       type: 'Electric',
-//       battery: '48V 500Ah',
-//       capacity: '2000kg',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.069+01:00',
-//     updatedAt: '2025-09-11T00:42:41.069+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'a7c9290f-6635-4d8e-9a29-c63d80781142',
-//     categoryId: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//     name: 'Camion de Livraison Iveco Daily',
-//     description: 'Véhicule utilitaire pour livraisons urbaines',
-//     reference: 'IVECO-DAILY-001',
-//     price: '45000.00',
-//     stock: 3,
-//     stockAlert: 1,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//     images: ['https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400'],
-//     specifications: {
-//       engine: '2.3L Diesel',
-//       volume: '12.8 m³',
-//       capacity: '3.5 tons',
-//       transmission: 'Manual 6-speed',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:41.006+01:00',
-//     updatedAt: '2025-09-11T00:42:41.006+01:00',
-//     category: {
-//       id: 'e289151a-a26f-4b49-840f-2ff6c6b0a3b2',
-//       name: 'Véhicules et Transport',
-//       description: 'Véhicules de transport et logistique',
-//       parentId: null,
-//       slug: 'vehicules-et-transport',
-//       imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400',
-//       isActive: true,
-//       displayOrder: 5,
-//       createdAt: '2025-09-11T00:42:40.768+01:00',
-//       updatedAt: '2025-09-11T00:42:40.768+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '1b8c5668-69ca-4f4d-b848-e12c9e48fb40',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: "Établi d'Atelier Professionnel",
-//     description: 'Établi robuste avec étau et rangements',
-//     reference: 'ETAB-PRO-001',
-//     price: '349.00',
-//     stock: 15,
-//     stockAlert: 3,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       vise: 'Integrated 150mm vise',
-//       storage: '2 drawers + tool rack',
-//       material: 'Steel frame, hardwood top',
-//       dimensions: '150x60x85cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.999+01:00',
-//     updatedAt: '2025-09-11T00:42:40.999+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'f366538c-5c71-4198-ba4c-b0e2daaca008',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: "Meuleuse d'Angle 125mm",
-//     description: "Meuleuse d'angle professionnelle 1400W",
-//     reference: 'MEUL-ANG-125',
-//     price: '89.99',
-//     stock: 35,
-//     stockAlert: 8,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       disc: '125mm',
-//       power: '1400W',
-//       speed: '11000 rpm',
-//       safety: 'Restart protection',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.996+01:00',
-//     updatedAt: '2025-09-11T00:42:40.996+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'fdda33a0-d55c-462b-8322-1458647cb427',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: 'Scie Circulaire sur Table',
-//     description: 'Scie circulaire stationnaire 254mm',
-//     reference: 'SCIE-CIRC-254',
-//     price: '459.00',
-//     stock: 12,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       blade: '254mm',
-//       depth: '79mm at 90°',
-//       motor: '1800W',
-//       table: '640x487mm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.993+01:00',
-//     updatedAt: '2025-09-11T00:42:40.993+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '165512cc-dcc2-434f-91cc-0528d8a940ca',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: 'Poste à Souder MIG/MAG',
-//     description: 'Station de soudage semi-automatique professionnelle',
-//     reference: 'SOUD-MIG-PRO',
-//     price: '1299.00',
-//     stock: 6,
-//     stockAlert: 1,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       duty: '60% at 200A',
-//       type: 'MIG/MAG',
-//       wire: '0.6-1.2mm',
-//       current: '20-200A',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.990+01:00',
-//     updatedAt: '2025-09-11T00:42:40.990+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '64c5f1fb-f111-4fcb-bab1-5a1470f671b8',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: "Compresseur d'Air 100L",
-//     description: "Compresseur d'air 3HP réservoir 100 litres",
-//     reference: 'COMP-AIR-100L',
-//     price: '649.99',
-//     stock: 8,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       tank: '100 liters',
-//       power: '3HP',
-//       output: '350L/min',
-//       pressure: '8 bar',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.987+01:00',
-//     updatedAt: '2025-09-11T00:42:40.987+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '6d76f6fc-30c2-4b05-84cf-e1b30272c9af',
-//     categoryId: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//     name: 'Perceuse à Colonne Industrielle',
-//     description: 'Perceuse à colonne 16mm pour usage intensif',
-//     reference: 'PERC-COL-16',
-//     price: '899.00',
-//     stock: 10,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//     images: ['https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400'],
-//     specifications: {
-//       motor: '750W',
-//       table: '410x410mm',
-//       speeds: '12 speeds',
-//       capacity: '16mm in steel',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.984+01:00',
-//     updatedAt: '2025-09-11T00:42:40.984+01:00',
-//     category: {
-//       id: '1d978f99-bbb5-4d90-a745-4afc97948c04',
-//       name: 'Équipements Industriels',
-//       description: "Machines et équipements pour l'industrie",
-//       parentId: null,
-//       slug: 'equipements-industriels',
-//       imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400',
-//       isActive: true,
-//       displayOrder: 4,
-//       createdAt: '2025-09-11T00:42:40.684+01:00',
-//       updatedAt: '2025-09-11T00:42:40.684+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '2ce3a43b-bf6a-434f-bb92-e8409d39d604',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Tableau Blanc Magnétique 120x90cm',
-//     description: 'Tableau blanc effaçable à sec avec marqueurs',
-//     reference: 'TABLEAU-120x90',
-//     price: '89.99',
-//     stock: 18,
-//     stockAlert: 3,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       frame: 'Aluminum',
-//       surface: 'Magnetic lacquered steel',
-//       dimensions: '120x90cm',
-//       accessories: 'Markers and eraser included',
-//     },
-//     isActive: false,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.979+01:00',
-//     updatedAt: '2025-09-21T09:22:04.851+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'ea39a522-85ec-4318-bcd2-c7b655f952b6',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Calculatrice Scientifique Casio',
-//     description: 'Calculatrice scientifique programmable',
-//     reference: 'CALC-CASIO-FX',
-//     price: '45.99',
-//     stock: 40,
-//     stockAlert: 8,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       power: 'Solar + battery',
-//       memory: '9 variable memories',
-//       display: '2-line display',
-//       functions: '417 scientific functions',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.976+01:00',
-//     updatedAt: '2025-09-11T00:42:40.976+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'a227414a-6c00-44af-8bf5-fcc6c632e848',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Classeurs à Levier A4 (Lot de 10)',
-//     description: 'Classeurs à levier dos 8cm couleurs assorties',
-//     reference: 'CLASS-LEV-10',
-//     price: '35.00',
-//     stock: 60,
-//     stockAlert: 12,
-//     unit: 'lot',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       spine: '8cm',
-//       colors: 'Assorted colors',
-//       format: 'A4',
-//       material: 'Cardboard with PP coating',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.971+01:00',
-//     updatedAt: '2025-09-11T00:42:40.971+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: 'e508ba9c-1201-4e50-9b97-1b749552a694',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Agrafeuse Métallique Heavy Duty',
-//     description: 'Agrafeuse robuste pour 50 feuilles',
-//     reference: 'AGRAF-HD-50',
-//     price: '24.99',
-//     stock: 80,
-//     stockAlert: 15,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       staples: '26/6 and 26/8',
-//       capacity: '50 sheets',
-//       material: 'Metal construction',
-//       guarantee: '2 years',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.968+01:00',
-//     updatedAt: '2025-09-11T00:42:40.968+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '77e5228b-5262-4fea-b4d5-442826f0f740',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Lot de 12 Stylos Bille Bleus',
-//     description: 'Stylos à bille encre bleue pointe moyenne',
-//     reference: 'STYLO-BILLE-12',
-//     price: '8.50',
-//     stock: 150,
-//     stockAlert: 30,
-//     unit: 'lot',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       ink: 'Blue',
-//       tip: 'Medium point 1.0mm',
-//       type: 'Ballpoint pen',
-//       quantity: '12 pens',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.908+01:00',
-//     updatedAt: '2025-09-11T00:42:40.908+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '4646cd27-f1e1-4baa-bcba-e7765218b007',
-//     categoryId: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//     name: 'Lot de 500 Feuilles A4 Premium',
-//     description: 'Papier blanc A4 80g/m² haute qualité',
-//     reference: 'PAPIER-A4-500',
-//     price: '12.99',
-//     stock: 200,
-//     stockAlert: 50,
-//     unit: 'lot',
-//     imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//     images: ['https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400'],
-//     specifications: {
-//       format: 'A4 (210x297mm)',
-//       weight: '80g/m²',
-//       quantity: '500 sheets',
-//       whiteness: '96% ISO',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.905+01:00',
-//     updatedAt: '2025-09-11T00:42:40.905+01:00',
-//     category: {
-//       id: '4b5304fd-91fc-420b-87af-6ca59b4c02df',
-//       name: 'Fournitures de Bureau',
-//       description: 'Papeterie et accessoires de bureau',
-//       parentId: null,
-//       slug: 'fournitures-de-bureau',
-//       imageUrl: 'https://images.unsplash.com/photo-1562813733-b31f71025d54?w=400',
-//       isActive: true,
-//       displayOrder: 3,
-//       createdAt: '2025-09-11T00:42:40.681+01:00',
-//       updatedAt: '2025-09-21T10:32:42.387+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '779d75e6-932f-45a7-97da-4ca861649a46',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Caisson Mobile 3 Tiroirs',
-//     description: 'Caisson de bureau mobile avec 3 tiroirs et serrure',
-//     reference: 'CAISSON-3T',
-//     price: '129.00',
-//     stock: 35,
-//     stockAlert: 7,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-//     images: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'],
-//     specifications: {
-//       drawers: '3 drawers',
-//       mobility: '4 wheels with brakes',
-//       security: 'Central lock',
-//       dimensions: '40x55x60cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.900+01:00',
-//     updatedAt: '2025-09-11T00:42:40.900+01:00',
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//   },
-//   {
-//     id: '1cd432e3-89a9-4adf-9d74-567432bea0d9',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Étagère Modulaire 5 Niveaux',
-//     description: "Système d'étagères modulaire en métal",
-//     reference: 'ETAG-MOD-5N',
-//     price: '159.99',
-//     stock: 25,
-//     stockAlert: 5,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-//     images: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'],
-//     specifications: {
-//       levels: '5 adjustable shelves',
-//       capacity: '50kg per shelf',
-//       material: 'Steel frame',
-//       dimensions: '180x80x40cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.897+01:00',
-//     updatedAt: '2025-09-11T00:42:40.897+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//   },
-//   {
-//     id: '6b336178-6689-459f-9c68-cae082358068',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Table de Réunion Ovale 8 Places',
-//     description: 'Grande table de réunion en bois massif pour 8 personnes',
-//     reference: 'TABLE-OVAL-8',
-//     price: '899.00',
-//     stock: 5,
-//     stockAlert: 1,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=400',
-//     images: ['https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=400'],
-//     specifications: {
-//       finish: 'Natural oil finish',
-//       capacity: '8 people',
-//       material: 'Solid oak wood',
-//       dimensions: '240x120cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.895+01:00',
-//     updatedAt: '2025-09-11T00:42:40.895+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//   },
-//   {
-//     id: '49971b88-c600-4a28-aa32-0c49b986616d',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Armoire de Rangement 2 Portes',
-//     description: 'Armoire de bureau métallique avec serrure',
-//     reference: 'ARM-MET-2P',
-//     price: '189.99',
-//     stock: 30,
-//     stockAlert: 5,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-//     images: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'],
-//     specifications: {
-//       shelves: '4 adjustable shelves',
-//       material: 'Steel with powder coating',
-//       security: 'Key lock',
-//       dimensions: '90x40x180cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.892+01:00',
-//     updatedAt: '2025-09-11T00:42:40.892+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//   },
-//   {
-//     id: '620516d4-3f5e-49ab-8d21-4cbb758b6dfa',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Chaise de Bureau Ergonomique Herman Miller',
-//     description: 'Fauteuil de bureau ergonomique premium avec support lombaire',
-//     reference: 'HM-AERON-001',
-//     price: '1299.00',
-//     stock: 8,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-//     images: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'],
-//     specifications: {
-//       armrests: 'Adjustable',
-//       material: 'Mesh back, fabric seat',
-//       warranty: '12 years',
-//       adjustments: '12-point adjustment',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.889+01:00',
-//     updatedAt: '2025-09-11T00:42:40.889+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//   },
-//   {
-//     id: 'eee9debe-6eb2-4eeb-838a-b02eff336a3b',
-//     categoryId: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//     name: 'Bureau Assis-Debout Électrique',
-//     description: 'Bureau réglable en hauteur électriquement 140x70cm',
-//     reference: 'DESK-ELEC-140',
-//     price: '599.00',
-//     stock: 12,
-//     stockAlert: 2,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
-//     images: ['https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400'],
-//     specifications: {
-//       height: '71-121cm adjustable',
-//       weight: '45kg',
-//       material: 'Steel frame, melamine top',
-//       dimensions: '140x70cm',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.886+01:00',
-//     updatedAt: '2025-09-11T00:42:40.886+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '345dbf1c-37a5-431b-9a64-b1165e68da72',
-//       name: 'Mobilier',
-//       description: 'Meubles et équipements de bureau',
-//       parentId: null,
-//       slug: 'mobilier',
-//       imageUrl: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400',
-//       isActive: true,
-//       displayOrder: 2,
-//       createdAt: '2025-09-11T00:42:40.676+01:00',
-//       updatedAt: '2025-09-11T00:42:40.676+01:00',
-//     },
-//   },
-//   {
-//     id: 'a8f33ba7-f47e-443d-b011-e034cab9b585',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Souris Gaming Razer DeathAdder',
-//     description: 'Souris gaming ergonomique haute précision',
-//     reference: 'RAZER-DA-V3',
-//     price: '79.99',
-//     stock: 45,
-//     stockAlert: 8,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400',
-//     images: ['https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400'],
-//     specifications: {
-//       dpi: '30000 DPI',
-//       buttons: '8 programmable buttons',
-//       lighting: 'RGB Chroma',
-//       connectivity: 'USB Wired',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.882+01:00',
-//     updatedAt: '2025-09-11T00:42:40.882+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-//   {
-//     id: 'f010eed4-5627-4fa6-b21d-e42922a6166c',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Clavier Mécanique Logitech MX',
-//     description: 'Clavier mécanique sans fil pour professionnels',
-//     reference: 'LOGI-MX-KEYS',
-//     price: '129.99',
-//     stock: 60,
-//     stockAlert: 10,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400',
-//     images: ['https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400'],
-//     specifications: {
-//       type: 'Mechanical',
-//       battery: 'Up to 5 months',
-//       backlight: 'Smart illumination',
-//       connectivity: 'Wireless 2.4GHz + Bluetooth',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.878+01:00',
-//     updatedAt: '2025-09-11T00:42:40.878+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-//   {
-//     id: '5da92b2b-cc27-4892-b936-67a30c9bdf0a',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Imprimante Laser HP LaserJet Pro',
-//     description: 'Imprimante laser noir et blanc professionnelle',
-//     reference: 'HP-LJ-PRO-001',
-//     price: '289.00',
-//     stock: 20,
-//     stockAlert: 4,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=400',
-//     images: ['https://images.unsplash.com/photo-1612198188060-c7c2a3b66eae?w=400'],
-//     specifications: {
-//       type: 'Laser Monochrome',
-//       speed: '25 pages/min',
-//       connectivity: 'WiFi, Ethernet, USB',
-//       paperCapacity: '250 sheets',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.874+01:00',
-//     updatedAt: '2025-09-11T00:42:40.874+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-//   {
-//     id: '117a566f-4a0c-465f-85a2-21ab8f83af57',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Écran Samsung 27" 4K',
-//     description: 'Moniteur professionnel 27 pouces Ultra HD 4K',
-//     reference: 'SAMSUNG-M27-4K',
-//     price: '349.99',
-//     stock: 40,
-//     stockAlert: 8,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400',
-//     images: ['https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400'],
-//     specifications: {
-//       size: '27 inches',
-//       resolution: '3840x2160 4K UHD',
-//       refreshRate: '60Hz',
-//       connectivity: 'HDMI, USB-C, DisplayPort',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.869+01:00',
-//     updatedAt: '2025-09-11T00:42:40.869+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-//   {
-//     id: 'dcc3908f-4986-40e6-a3d4-94539f14b258',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'iPhone 14 Pro',
-//     description: 'Smartphone Apple iPhone 14 Pro 256GB',
-//     reference: 'APPLE-IP14P-256',
-//     price: '1329.00',
-//     stock: 15,
-//     stockAlert: 3,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=400',
-//     images: ['https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=400'],
-//     specifications: {
-//       chip: 'A16 Bionic',
-//       camera: '48MP Triple Camera',
-//       display: '6.1" Super Retina XDR',
-//       storage: '256GB',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.789+01:00',
-//     updatedAt: '2025-09-11T00:42:40.789+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-//   {
-//     id: '7ae4dacf-7533-4914-959b-bffbafd44908',
-//     categoryId: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//     name: 'Ordinateur Portable Dell XPS 15',
-//     description: 'Ordinateur portable professionnel 15.6" avec processeur Intel i7',
-//     reference: 'DELL-XPS15-001',
-//     price: '1899.99',
-//     stock: 25,
-//     stockAlert: 5,
-//     unit: 'unité',
-//     imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400',
-//     images: ['https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400'],
-//     specifications: {
-//       ram: '16GB DDR4',
-//       screen: '15.6" Full HD',
-//       storage: '512GB SSD',
-//       graphics: 'NVIDIA RTX 3050',
-//       processor: 'Intel Core i7-12700H',
-//     },
-//     isActive: true,
-//     createdBy: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//     createdAt: '2025-09-11T00:42:40.785+01:00',
-//     updatedAt: '2025-09-11T00:42:40.785+01:00',
-//     creator: {
-//       id: '6ce4457b-565a-4c51-8a2c-4378e021c40f',
-//       email: 'fredtchiadeu@gmail.com',
-//       firstName: 'Administrator',
-//       lastName: 'System',
-//       phone: '+237600000000',
-//       role: 'admin',
-//       status: 'active',
-//       emailVerifiedAt: '2025-09-11T00:42:39.789+01:00',
-//       mfaEnabled: true,
-//       lastLoginAt: null,
-//       failedLoginAttempts: 0,
-//       lockedUntil: null,
-//       createdAt: '2025-09-11T00:42:40.274+01:00',
-//       updatedAt: '2025-09-11T00:42:40.477+01:00',
-//     },
-//     category: {
-//       id: '4c90652d-ae2e-4bc6-93e1-1a30369c02b7',
-//       name: 'Électronique',
-//       description: 'Produits électroniques et informatiques',
-//       parentId: null,
-//       slug: 'electronique',
-//       imageUrl: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400',
-//       isActive: true,
-//       displayOrder: 1,
-//       createdAt: '2025-09-11T00:42:40.671+01:00',
-//       updatedAt: '2025-09-11T00:42:40.671+01:00',
-//     },
-//   },
-// ];
-
-function persistProductsToLocalStorage(products: Product[]) {
-  try {
-    localStorage.setItem('tsa_products', JSON.stringify(products));
-  } catch (error) {
-    console.error('Failed to persist products to localStorage:', error);
-  }
-}
-
-function loadProductsFromLocalStorage(): Product[] {
-  try {
-    const raw = localStorage.getItem('tsa_products');
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {
-    console.error('Failed to load products from localStorage:', error);
-  }
-  return [];
-}
-
-function persistProductsStatsToLocalStorage(stats: ProductStats) {
-  try {
-    localStorage.setItem('tsa_products_stats', JSON.stringify(stats));
-  } catch (error) {
-    console.error('Failed to persist products to localStorage:', error);
-  }
-}
-
-function loadProductsStatsFromLocalStorage(): ProductStats {
-  try {
-    const raw = localStorage.getItem('tsa_products_stats');
-    if (raw) {
-      return JSON.parse(raw);
-    }
-  } catch (error) {
-    console.error('Failed to load products from localStorage:', error);
-  }
-  return {
+const initialState = {
+  products: [] as Product[],
+  currentProduct: null as Product | null,
+  isLoading: false,
+  error: null as string | null,
+  stats: {
     products: {
       totalProducts: 0,
       activeProducts: 0,
@@ -1633,60 +29,434 @@ function loadProductsStatsFromLocalStorage(): ProductStats {
     },
     inventory: {},
     topCategories: [],
-  };
-}
+  } as ProductStats,
+};
 
-export const useProductStore = create<ProductStoreExtended>((set, get) => ({
-  // State
-  products: loadProductsFromLocalStorage(),
-  currentProduct: null,
-  isLoading: false,
-  error: null,
-  stats: loadProductsStatsFromLocalStorage(),
+export const useProductStore = create<ProductStoreExtended>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  // Basic actions
-  setProducts: (products: Product[] = []) => {
-    persistProductsToLocalStorage(products);
-    set({ products });
-  },
+      // Basic actions
+      setProducts: (products: Product[] = []) => {
+        set({ products });
+      },
 
-  addProduct: (product: Product) => {
-    const products = get().products;
-    const updatedProducts = [...products, product];
-    persistProductsToLocalStorage(updatedProducts);
-    set({ products: updatedProducts });
-  },
+      setCurrentProduct: (product: Product | null) => {
+        set({ currentProduct: product });
+      },
 
-  updateProduct: (id: string, updates: Partial<Product>) => {
-    const products = get().products;
-    const updatedProducts = products.map((product) =>
-      product.id === id ? { ...product, ...updates } : product
-    );
-    persistProductsToLocalStorage(updatedProducts);
-    set({ products: updatedProducts });
-  },
+      setStats: (stats: ProductStats) => {
+        set({ stats });
+      },
 
-  deleteProduct: (id: string) => {
-    const products = get().products;
-    const updatedProducts = products.filter((product) => product.id !== id);
-    persistProductsToLocalStorage(updatedProducts);
-    set({ products: updatedProducts });
-  },
+      // Data fetching actions
+      fetchAdminProducts: async () => {
+        let page: number = 1;
+        let next: boolean = true;
+        let retryAttempts: number = 0;
+        let productsList: PaginatedMetaResponse<Product, 'products'> = {
+          products: {
+            data: [],
+            meta: {
+              total: 0,
+              perPage: 20,
+              currentPage: 1,
+              lastPage: 1,
+              firstPage: 1,
+              firstPageUrl: null,
+              lastPageUrl: null,
+              nextPageUrl: null,
+              previousPageUrl: null,
+            },
+          },
+          pagination: {
+            currentPage: 1,
+            hasNext: false,
+            hasPrev: false,
+            perPage: 20,
+            total: 0,
+            lastPage: 1,
+          },
+        };
 
-  setCurrentProduct: (product: Product | null) => {
-    set({ currentProduct: product });
-  },
+        while (next) {
+          try {
+            set({ isLoading: true, error: null });
 
-  setLoading: (loading: boolean) => {
-    set({ isLoading: loading });
-  },
+            const response = await adminService.adminGetProducts({ page });
 
-  setError: (error: string | null) => {
-    set({ error });
-  },
+            if (response.error) {
+              retryAttempts += 1;
+              if (retryAttempts > 3) {
+                next = false;
+              }
+              set({
+                error: response.error.message,
+                isLoading: false,
+              });
+              return;
+            }
 
-  setStats: (stats: ProductStats) => {
-    persistProductsStatsToLocalStorage(stats);
-    set({ stats });
-  },
-}));
+            if (response.data) {
+              if (page === 1) {
+                productsList = response.data;
+              } else {
+                productsList = {
+                  products: {
+                    data: [...productsList.products.data, ...response.data.products.data],
+                    meta: response.data.products.meta,
+                  },
+                  pagination: { ...response.data.pagination },
+                };
+              }
+
+              set({
+                products: productsList.products.data,
+                isLoading: false,
+                error: null,
+              });
+
+              next = productsList.pagination.hasNext;
+              if (next) page += 1;
+            }
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Failed to fetch products',
+              isLoading: false,
+            });
+          }
+        }
+      },
+
+      fetchProducts: async () => {
+        let page: number = 1;
+        let next: boolean = true;
+        let retryAttempts: number = 0;
+        let productsList: Paginator<Product> = {
+          data: [],
+          meta: {
+            total: 0,
+            perPage: 20,
+            currentPage: 1,
+            lastPage: 1,
+            firstPage: 1,
+            firstPageUrl: null,
+            lastPageUrl: null,
+            nextPageUrl: null,
+            previousPageUrl: null,
+          },
+        };
+
+        while (next) {
+          try {
+            set({ isLoading: true, error: null });
+
+            const response = await shopService.getProducts({ page });
+
+            if (response.error) {
+              retryAttempts += 1;
+              if (retryAttempts > 3) {
+                next = false;
+              }
+              set({
+                error: response.error.message,
+                isLoading: false,
+              });
+              return;
+            }
+
+            if (response.data) {
+              if (page === 1) {
+                productsList = response.data;
+              } else {
+                productsList = {
+                  data: [...productsList.data, ...response.data.data],
+                  meta: response.data.meta,
+                };
+              }
+
+              set({
+                products: productsList.data || [],
+                isLoading: false,
+                error: null,
+              });
+
+              next = page < response.data.meta.lastPage;
+              if (next) page += 1;
+            }
+          } catch (error) {
+            set({
+              error: error instanceof Error ? error.message : 'Failed to fetch products',
+              isLoading: false,
+            });
+          }
+        }
+      },
+
+      fetchProduct: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await shopService.getProduct(id);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              currentProduct: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch product',
+            isLoading: false,
+          });
+        }
+      },
+
+      createProduct: async (data: CreateProduct) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.createProduct(data);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            const newProduct = Object.values(response.data)[0];
+            const { products } = get();
+            set({
+              products: [newProduct, ...products],
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to create product',
+            isLoading: false,
+          });
+        }
+      },
+
+      updateProduct: async (id: string, data: UpdateProduct) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.updateProduct(id, data);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            const updatedProduct = Object.values(response.data)[0];
+            const { products } = get();
+            const updatedProducts = products.map((product) =>
+              product.id === id ? updatedProduct : product
+            );
+            set({
+              products: updatedProducts,
+              currentProduct:
+                get().currentProduct?.id === id ? updatedProduct : get().currentProduct,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to update product',
+            isLoading: false,
+          });
+        }
+      },
+
+      deleteProduct: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.deleteProduct(id);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          const { products } = get();
+          const updatedProducts = products.filter((product) => product.id !== id);
+          set({
+            products: updatedProducts,
+            currentProduct: get().currentProduct?.id === id ? null : get().currentProduct,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to delete product',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchProductStats: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getAdminProductStats();
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              stats: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch product stats',
+            isLoading: false,
+          });
+        }
+      },
+
+      // Utility actions
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading });
+      },
+
+      setError: (error: string | null) => {
+        set({ error });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+
+      reset: () => {
+        set(initialState);
+      },
+
+      // Utility methods
+      filterProducts: (filters: ProductFilterParams) => {
+        const { products } = get();
+        console.log(products);
+
+        return products.filter((product) => {
+          if (filters.search) {
+            const query = filters.search.toLowerCase();
+            const matchesName = product.name.toLowerCase().includes(query);
+            const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
+            const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
+
+            if (!matchesName && !matchesDescription && !matchesCategory) {
+              return false;
+            }
+          }
+
+          // Category filter
+          if (filters.categoryId && filters.categoryId.length > 0) {
+            if (Array.isArray(filters.categoryId)) {
+              if (!filters.categoryId.includes(product.categoryId ?? '')) {
+                return false;
+              }
+            } else if (filters.categoryId !== product.categoryId) {
+              return false;
+            }
+          }
+
+          // Price range filter
+          const productPrice = parseFloat(product.price);
+          if (filters.minPrice !== undefined && productPrice < filters.minPrice) {
+            return false;
+          }
+          if (filters.maxPrice !== undefined && productPrice > filters.maxPrice) {
+            return false;
+          }
+
+          // Stock status filters
+          if (filters.inStock && product.stock <= 0) {
+            return false;
+          }
+          if (filters.lowStock && product.stock > product.stockAlert) {
+            return false;
+          }
+
+          // Active status filter
+          if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
+            return false;
+          }
+        });
+      },
+
+      searchProducts: (query: string) => {
+        const { products } = get();
+        const lowercaseQuery = query.toLowerCase();
+        return products.filter(
+          (product) =>
+            product.name.toLowerCase().includes(lowercaseQuery) ||
+            product.description?.toLowerCase().includes(lowercaseQuery) ||
+            product.reference?.toLowerCase().includes(lowercaseQuery)
+        );
+      },
+
+      getProductsByCategory: (categoryId: string) => {
+        const { products } = get();
+        return products.filter((product) => product.categoryId === categoryId);
+      },
+
+      getLowStockProducts: () => {
+        const { products } = get();
+        return products.filter((product) => product.stock <= product.stockAlert);
+      },
+
+      getOutOfStockProducts: () => {
+        const { products } = get();
+        return products.filter((product) => product.stock === 0);
+      },
+    }),
+    {
+      name: 'tsa_products',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        products: state.products,
+        stats: state.stats,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isLoading = false;
+          state.error = null;
+        }
+      },
+    }
+  )
+);

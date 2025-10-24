@@ -54,7 +54,7 @@ import { useFormik } from 'formik';
 import { toast } from 'react-hot-toast';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
-import { shopService } from '@/services/shop.service';
+import { adminService } from '@/services/admin.service';
 
 const defaultFilters: ProductFilterParams = {
   search: '',
@@ -69,9 +69,21 @@ const defaultFilters: ProductFilterParams = {
 };
 
 export default function AdminProductsPage() {
-  const { products, stats, filterProducts, addProduct, updateProduct, deleteProduct } =
-    useProducts();
-  const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
+  const {
+    products,
+    stats,
+    error: productError,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+  } = useProducts();
+  const {
+    categories,
+    error: categoryError,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategories();
 
   const [filters, setFilters] = useState<ProductFilterParams>(defaultFilters);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -82,28 +94,77 @@ export default function AdminProductsPage() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    return filterProducts(filters).sort((a, b) => {
-      // Sort products
-      let result = 0;
+    return products
+      .filter((product) => {
+        // Search filter
+        if (filters.search) {
+          const query = filters.search.toLowerCase();
+          const matchesName = product.name.toLowerCase().includes(query);
+          const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
+          const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
 
-      switch (filters.sortBy) {
-        case 'price':
-          result = parseFloat(a.price) - parseFloat(b.price);
-          break;
-        case 'updatedAt':
-          result = new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-          break;
-        case 'name':
-          result = a.name.localeCompare(b.name);
-          break;
-        default:
-          return 0;
-      }
+          if (!matchesName && !matchesDescription && !matchesCategory) {
+            return false;
+          }
+        }
 
-      // Apply sort order (asc/desc)
-      return filters.sortOrder === 'desc' ? -result : result;
-    });
-  }, [filterProducts, filters]);
+        // Category filter
+        if (filters.categoryId && filters.categoryId.length > 0) {
+          if (Array.isArray(filters.categoryId)) {
+            if (!filters.categoryId.includes(product.categoryId ?? '')) {
+              return false;
+            }
+          } else if (filters.categoryId !== product.categoryId) {
+            return false;
+          }
+        }
+
+        // Price range filter
+        const productPrice = parseFloat(product.price);
+        if (filters.minPrice !== undefined && productPrice < filters.minPrice) {
+          return false;
+        }
+        if (filters.maxPrice !== undefined && productPrice > filters.maxPrice) {
+          return false;
+        }
+
+        // Stock status filters
+        if (filters.inStock && product.stock <= 0) {
+          return false;
+        }
+        if (filters.lowStock && product.stock > product.stockAlert) {
+          return false;
+        }
+
+        // Active status filter
+        if (filters.isActive !== undefined && product.isActive !== filters.isActive) {
+          return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Sort products
+        let result = 0;
+
+        switch (filters.sortBy) {
+          case 'price':
+            result = parseFloat(a.price) - parseFloat(b.price);
+            break;
+          case 'updatedAt':
+            result = new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            break;
+          case 'name':
+            result = a.name.localeCompare(b.name);
+            break;
+          default:
+            return 0;
+        }
+
+        // Apply sort order (asc/desc)
+        return filters.sortOrder === 'desc' ? -result : result;
+      });
+  }, [products, filters]);
 
   const handleAddProduct = async (values: CreateProduct) => {
     try {
@@ -115,22 +176,18 @@ export default function AdminProductsPage() {
         stockAlert: values.stockAlert ? Number(values.stockAlert) : 0,
       };
 
-      const response = await toast.promise(shopService.createProduct(payload), {
+      await toast.promise(createProduct(payload), {
         loading: 'Création du produit...',
       });
-      console.log(response);
 
-      if (response.error) {
+      if (productError) {
         toast.error('Erreur lors de la création du produit');
         return;
       }
 
-      if (response.data) {
-        toast.success('Produit créé avec succès');
-        addProduct(response.data.product);
-        setIsDialogOpen(false);
-        productFormik.resetForm();
-      }
+      toast.success('Produit créé avec succès');
+      setIsDialogOpen(false);
+      productFormik.resetForm();
     } catch (error) {
       console.error('Error adding product:', error);
     }
@@ -179,23 +236,19 @@ export default function AdminProductsPage() {
         ...changes,
       };
 
-      const response = await toast.promise(shopService.updateProduct(editingProduct.id, payload), {
+      await toast.promise(updateProduct(editingProduct.id, payload), {
         loading: 'Mise à jour du produit...',
       });
-      console.log(response);
 
-      if (response.error) {
+      if (productError) {
         toast.error('Erreur lors de la mise à jour du produit');
         return;
       }
 
-      if (response.data) {
-        toast.success('Produit mis à jour avec succès');
-        updateProduct(editingProduct.id, response.data.product);
-        setIsDialogOpen(false);
-        setEditingProduct(null);
-        productFormik.resetForm();
-      }
+      toast.success('Produit mis à jour avec succès');
+      setIsDialogOpen(false);
+      setEditingProduct(null);
+      productFormik.resetForm();
     } catch (error) {
       console.error('Error updating product:', error);
     }
@@ -205,20 +258,16 @@ export default function AdminProductsPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
 
     try {
-      const response = await toast.promise(shopService.deleteProduct(id), {
+      await toast.promise(deleteProduct(id), {
         loading: 'Suppression du produit...',
       });
-      console.log(response);
 
-      if (response.error) {
+      if (productError) {
         toast.error('Erreur lors de la suppression du produit');
         return;
       }
 
-      if (response.data) {
-        toast.success('Produit supprimé avec succès');
-        deleteProduct(id);
-      }
+      toast.success('Produit supprimé avec succès');
     } catch (error) {
       console.error('Error deleting product:', error);
     }
@@ -226,22 +275,18 @@ export default function AdminProductsPage() {
 
   const handleAddCategory = async (values: CreateCategory) => {
     try {
-      const response = await toast.promise(shopService.createCategory(values), {
+      await toast.promise(createCategory(values), {
         loading: 'Création de la catégorie...',
       });
-      console.log(response);
 
-      if (response.error) {
+      if (categoryError) {
         toast.error('Erreur lors de la création de la catégorie');
         return;
       }
 
-      if (response.data) {
-        toast.success('Catégorie créée avec succès');
-        addCategory(response.data.category);
-        setIsDialogOpen(false);
-        categoryFormik.resetForm();
-      }
+      toast.success('Catégorie créée avec succès');
+      setIsDialogOpen(false);
+      categoryFormik.resetForm();
     } catch (error) {
       console.error('Error adding category:', error);
     }
@@ -290,26 +335,19 @@ export default function AdminProductsPage() {
         ...changes,
       };
 
-      const response = await toast.promise(
-        shopService.updateCategory(editingCategory.id, payload),
-        {
-          loading: 'Mise à jour de la catégorie...',
-        }
-      );
-      console.log(response);
+      await toast.promise(updateCategory(editingCategory.id, payload), {
+        loading: 'Mise à jour de la catégorie...',
+      });
 
-      if (response.error) {
+      if (categoryError) {
         toast.error('Erreur lors de la mise à jour de la catégorie');
         return;
       }
 
-      if (response.data) {
-        toast.success('Catégorie mise à jour avec succès');
-        updateCategory(editingCategory.id, response.data.category);
-        setIsDialogOpen(false);
-        setEditingCategory(null);
-        categoryFormik.resetForm();
-      }
+      toast.success('Catégorie mise à jour avec succès');
+      setIsDialogOpen(false);
+      setEditingCategory(null);
+      categoryFormik.resetForm();
     } catch (error) {
       console.error('Error updating category:', error);
     }
@@ -319,21 +357,16 @@ export default function AdminProductsPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
 
     try {
-      const response = await toast.promise(shopService.deleteCategory(id), {
+      await toast.promise(deleteCategory(id), {
         loading: 'Suppression de la catégorie...',
       });
 
-      console.log(response);
-
-      if (response.error) {
+      if (categoryError) {
         toast.error('Erreur lors de la suppression de la catégorie');
         return;
       }
 
-      if (response.data) {
-        toast.success('Catégorie supprimée avec succès');
-        deleteCategory(id);
-      }
+      toast.success('Catégorie supprimée avec succès');
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -720,12 +753,13 @@ export default function AdminProductsPage() {
                               className={`gap-1 ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                               onClick={async () => {
                                 try {
-                                  const response = await shopService.updateProduct(product.id, {
+                                  await updateProduct(product.id, {
                                     id: product.id,
                                     isActive: !product.isActive,
                                   });
-                                  if (response.data) {
-                                    updateProduct(product.id, response.data.product);
+                                  if (productError) {
+                                    toast.error('Erreur lors de la mise à jour du produit');
+                                    return;
                                   }
                                 } catch (error) {
                                   console.log(error);
@@ -860,7 +894,7 @@ export default function AdminProductsPage() {
                           className={`gap-1 ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                           onClick={async () => {
                             try {
-                              const response = await shopService.updateCategory(category.id, {
+                              const response = await adminService.updateCategory(category.id, {
                                 id: category.id,
                                 isActive: !category.isActive,
                               });

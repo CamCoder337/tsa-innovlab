@@ -1,17 +1,16 @@
 import { useParams, useNavigate, Navigate, useSearchParams } from 'react-router-dom';
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
 import type { MissionStatus } from '@/types/mission.types';
 import { MissionDetails } from '@/components/missions/MissionDetails';
-import { MissionOffers } from '@/components/missions/MissionOffers';
 import { MissionActions } from '@/components/missions/MissionActions';
 import { MissionTimeline } from '@/components/missions/MissionTimeline';
 import { MissionAppreciation } from '@/components/missions/MissionAppreciation';
 import { MissionFinancial } from '@/components/missions/MissionFinancial';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';
 
@@ -20,43 +19,25 @@ export default function MissionDetailsPage() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
-  const [loading, setLoading] = useState(true);
+  const { currentMission, isLoading, error, fetchMission } = useMissions();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
 
-  const fetchMission = useCallback(async () => {
-    if (!id) {
-      navigate('/app/missions');
-      return;
-    }
-    setLoading(true);
-    const foundMission =
-      missions.find((mission) => mission.id === id) ||
-      myMissions.find((mission) => mission.id === id);
-    if (!foundMission) {
-      setCurrentMission(null);
-    }
-    if (foundMission) {
-      setCurrentMission(foundMission);
-    }
-    setLoading(false);
-  }, [id, missions, myMissions, navigate, setCurrentMission]);
-
+  // Fetch mission data when component mounts or ID changes
   useEffect(() => {
     if (id) {
-      fetchMission();
+      fetchMission(id);
     }
-  }, [fetchMission, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleStatusUpdate = async (status: MissionStatus, commentaire?: string) => {
     if (!currentMission) return;
 
     try {
-      const response = await missionService.updateMissionStatus(
-        currentMission.id,
+      const response = await missionService.updateMissionStatus(currentMission.id, {
         status,
-        commentaire || ''
-      );
+        commentaire,
+      });
       if (response.data) {
         toast.success(`Mission ${status} successfully`);
       }
@@ -66,13 +47,42 @@ export default function MissionDetailsPage() {
     }
   };
 
-  if (loading) {
-    return <div className="container mx-auto py-8">Loading mission details...</div>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 flex h-full justify-center items-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading mission details...</span>
+        </div>
+      </div>
+    );
   }
 
+  // Handle error state
+  if (error && !currentMission) {
+    return (
+      <div className="container mx-auto py-8 flex h-full justify-center items-center">
+        <div className="text-center space-y-4">
+          <p className="text-red-600">Error loading mission: {error}</p>
+          <Button onClick={() => id && fetchMission(id)} variant="outline">
+            Try Again
+          </Button>
+          <Button onClick={() => navigate('/app/missions')} variant="ghost">
+            Back to Missions
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle mission not found
+  if (!isLoading && !currentMission && !error) {
+    return <Navigate to="/app/missions" replace />;
+  }
+
+  // Handle missing mission (shouldn't happen but for safety)
   if (!currentMission) {
-    toast.error('Mission introuvable', { duration: 5000 });
-    return <Navigate to="/app/missions" />;
+    return <Navigate to="/app/missions" replace />;
   }
 
   return (
@@ -87,7 +97,7 @@ export default function MissionDetailsPage() {
             mission={currentMission}
             userRole={user?.role}
             onStatusUpdate={handleStatusUpdate}
-            onRefresh={fetchMission}
+            onRefresh={() => fetchMission(id!)}
           />
         </div>
       </div>
@@ -101,7 +111,7 @@ export default function MissionDetailsPage() {
           {currentMission.status !== 'draft' && (
             <>
               <TabsTrigger value="details">Details</TabsTrigger>
-              {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>}
+              {/* {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>} */}
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
               {/* {currentMission.status === 'completed' && (
@@ -118,20 +128,20 @@ export default function MissionDetailsPage() {
           <MissionDetails mission={currentMission} />
         </TabsContent>
 
-        <TabsContent value="offers">
+        {/* <TabsContent value="offers">
           <MissionOffers mission={currentMission} userRole={user?.role} onRefresh={fetchMission} />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="timeline">
           <MissionTimeline mission={currentMission} />
         </TabsContent>
 
         <TabsContent value="appreciation">
-          <MissionAppreciation mission={currentMission} onUpdate={fetchMission} />
+          <MissionAppreciation mission={currentMission} onUpdate={() => fetchMission(id!)} />
         </TabsContent>
 
         <TabsContent value="financial">
-          <MissionFinancial mission={currentMission} onUpdate={fetchMission} />
+          <MissionFinancial mission={currentMission} onUpdate={() => fetchMission(id!)} />
         </TabsContent>
       </Tabs>
     </div>
