@@ -85,8 +85,8 @@ async def lifespan(app: FastAPI):
         # await load_ml_models()  # Commented out: ml_service.py doesn't exist yet
 
     except Exception as e:
-        logger.error(f"Startup failed: {e}")
-        raise
+        logger.warning(f"Startup warning (DB not available): {e}")
+        logger.info("Continuing without database - chatbot will work in stateless mode")
 
     yield
 
