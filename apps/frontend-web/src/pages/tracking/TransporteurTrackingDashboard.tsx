@@ -18,7 +18,7 @@ import {
   Star,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
-import { MOCK_MISSIONS, getActiveMissions } from '@/data/mock-missions';
+import { useMissions } from '@/hooks/useMissions';
 
 interface VehicleStatus {
   id: string;
@@ -88,8 +88,9 @@ const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
 };
 
 export default function TransporteurTrackingDashboard() {
+  const { myMissions: missions } = useMissions();
   const [assignments] = useState<Mission[]>(
-    MOCK_MISSIONS.filter((m) => m.transporteurId === 'transporteur-1')
+    missions.filter((m) => m.transporteurId === 'transporteur-1')
   );
   const [vehicleStatus] = useState<VehicleStatus>(VEHICLE_STATUS);
   const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
@@ -97,12 +98,10 @@ export default function TransporteurTrackingDashboard() {
   );
 
   // Calculs des KPIs
-  const activeAssignments = getActiveMissions().filter(
-    (m) => m.transporteurId === 'transporteur-1'
-  ).length;
+  const activeAssignments = missions.filter((m) => m.transporteurId === 'transporteur-1').length;
   const completedToday = 3; // Calculé dynamiquement
   const totalDistance = 525; // Calculé à partir des adresses
-  const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMax, 0);
+  const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMin!, 0);
   const driverRating = 4.8;
 
   return (
@@ -209,7 +208,7 @@ export default function TransporteurTrackingDashboard() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Navigation className="w-5 h-5" />
-                        Navigation - {currentAssignment.titre}
+                        Navigation - {currentAssignment.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -249,14 +248,14 @@ export default function TransporteurTrackingDashboard() {
                     <CardHeader>
                       <CardTitle className="flex items-center justify-between">
                         <span>Mission en Cours</span>
-                        {currentAssignment.budgetMax > 200000 && (
+                        {currentAssignment.budgetMin! > 200000 && (
                           <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
                         )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
-                        <h4 className="font-medium text-gray-900">{currentAssignment.titre}</h4>
+                        <h4 className="font-medium text-gray-900">{currentAssignment.title}</h4>
                         <p className="text-sm text-gray-600">{currentAssignment.description}</p>
                       </div>
 
@@ -291,7 +290,7 @@ export default function TransporteurTrackingDashboard() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Paiement:</span>
                           <span className="font-medium text-green-600">
-                            {currentAssignment.budgetMax.toLocaleString()} FCFA
+                            {currentAssignment.budgetMin!.toLocaleString()} FCFA
                           </span>
                         </div>
                       </div>
@@ -299,7 +298,7 @@ export default function TransporteurTrackingDashboard() {
                       <div className="border-t pt-3">
                         <p className="text-sm text-gray-600 mb-2">Livraison prévue:</p>
                         <p className="font-medium">
-                          {new Date(currentAssignment.dateArriveePrevue).toLocaleString()}
+                          {new Date(currentAssignment.dateArriveePrevue!).toLocaleString()}
                         </p>
                       </div>
 
@@ -371,8 +370,8 @@ export default function TransporteurTrackingDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
-                            <span className="font-medium">{assignment.titre}</span>
-                            {assignment.budgetMax > 200000 && (
+                            <span className="font-medium">{assignment.title}</span>
+                            {assignment.budgetMin! > 200000 && (
                               <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
                             )}
                             <div
@@ -388,15 +387,15 @@ export default function TransporteurTrackingDashboard() {
                           </p>
                           <div className="flex items-center gap-4 text-sm text-gray-500">
                             <span>Volume: {assignment.volume}m³</span>
-                            <span>Budget: {assignment.budgetMax.toLocaleString()} FCFA</span>
+                            <span>Budget: {assignment.budgetMin!.toLocaleString()} FCFA</span>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-green-600">
-                            {assignment.budgetMax.toLocaleString()} FCFA
+                            {assignment.budgetMin!.toLocaleString()} FCFA
                           </p>
                           <p className="text-sm text-gray-500">
-                            {new Date(assignment.dateArriveePrevue).toLocaleDateString()}
+                            {new Date(assignment.dateArriveePrevue!).toLocaleDateString()}
                           </p>
                         </div>
                       </div>

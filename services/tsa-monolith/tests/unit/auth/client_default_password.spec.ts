@@ -231,7 +231,7 @@ test.group('Client Default Password', (group) => {
     const defaultPassword = env.get('ADMIN_PASSWORD', 'Admin123!')
 
     const clientData = {
-      email: 'client@tsa-logistics.com',
+      email: 'client-seeder-test@tsa-logistics.com',
       firstName: 'Test',
       lastName: 'Client',
       phone: '+237600000008',
@@ -253,7 +253,7 @@ test.group('Client Default Password', (group) => {
       lockedUntil: null,
     })
 
-    assert.equal(client.email, 'client@tsa-logistics.com', 'Email should be correct')
+    assert.equal(client.email, 'client-seeder-test@tsa-logistics.com', 'Email should be correct')
     assert.equal(client.role, UserRole.CLIENT, 'Role should be CLIENT')
 
     // Vérifier la connexion avec le mot de passe par défaut

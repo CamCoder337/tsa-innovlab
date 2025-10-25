@@ -5,40 +5,28 @@ import type { CreateUserRequest } from '@/types/auth.types';
 import bg from '@/assets/register-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
-import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 import RegisterForm from '@/components/forms/RegisterForm';
+import { useAuth } from '@/hooks/useAuth';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { signup, error } = useAuth();
 
   const handleRegister = async (data: CreateUserRequest) => {
-    const response = await authService.register(data);
+    const response = await signup(data);
 
-    if (response.error) {
-      console.log(response.error.errors?.[0]);
-      const errorMessage = response.error.errors?.[0];
-      if (errorMessage === 'Invalid credentials') {
-        toast.error('Email ou Mot de passe incorrect');
-      } else if (errorMessage === 'Account is not active') {
-        toast.error(`Compte inactif. Veuillez consulter vos mails à cet adresse : ${data.email}`);
-      } else if (errorMessage.includes('email has already been taken')) {
-        toast.error('Cette adresse mail est déjà associée à un compte');
-      } else {
-        toast.error(response.error.message || 'Échec de connexion');
+    if (!response) {
+      if (error) {
+        toast.error(error);
       }
       return;
     }
 
-    if (!response.data) {
-      toast.error('Réponse invalide du serveur');
-      return;
+    if (response) {
+      toast.success('Inscription réussie');
+      navigate('/verify-email');
     }
-
-    // Store email in localStorage for verification
-    localStorage.setItem('verificationEmail', response.data.email);
-    toast.success('Inscription réussie');
-    navigate('/verify-email');
   };
 
   return (

@@ -51,7 +51,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-2xl flex items-center gap-2">
-                {mission.titre}
+                {mission.title}
                 <Badge className={getStatusColor(mission.status)}>
                   {getStatusLabel(mission.status)}
                 </Badge>

@@ -29,6 +29,7 @@ export default class ProductsController {
         maxPrice,
         inStock,
         lowStock,
+        preferredVehicleType,
         sortBy = 'createdAt',
         sortOrder = 'desc',
       } = filters
@@ -69,6 +70,11 @@ export default class ProductsController {
       }
       if (lowStock) {
         query.whereRaw('stock <= stock_alert')
+      }
+
+      // Filtre par type de véhicule préféré
+      if (preferredVehicleType) {
+        query.where('preferredVehicleType', preferredVehicleType)
       }
 
       // Tri

@@ -265,7 +265,7 @@ export default class ConversationsController {
         userQuery.select('id', 'firstName', 'lastName', 'email', 'role')
       })
       await conversation.load('mission', (missionQuery) => {
-        missionQuery.select('id', 'titre', 'status')
+        missionQuery.select('id', 'title', 'status')
       })
 
       const otherParticipant =

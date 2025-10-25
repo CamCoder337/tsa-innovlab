@@ -17,22 +17,37 @@ import { Separator } from '@/components/ui/separator';
 import {
   Bell,
   Shield,
-  Eye,
-  EyeOff,
   Save,
   Smartphone,
   Mail,
   MapPin,
   Truck,
   Clock,
+  CheckCircle,
+  Copy,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
+import { authService } from '@/services/auth.service';
+
+interface MFAStatus {
+  enabled: boolean;
+  setupRequired: boolean;
+  backupCodes: string[];
+  key?: string;
+  secret?: string;
+}
 
 function TransporteurSettings() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
+    enabled: user?.mfaEnabled || false,
+    setupRequired: user?.mfaEnabled || false,
+    backupCodes: [],
+  });
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -41,6 +56,7 @@ function TransporteurSettings() {
     newMissions: true,
     routeUpdates: true,
     paymentAlerts: true,
+    weeklyReports: true,
   });
 
   const [preferences, setPreferences] = useState({
@@ -50,56 +66,128 @@ function TransporteurSettings() {
     autoAccept: false,
     maxDistance: 500,
     workingHours: { start: '06:00', end: '20:00' },
-  });
-
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    vehicleType: 'truck',
+    maxWeight: 5000,
   });
 
   if (!user) return null;
 
   const handleSaveSettings = async () => {
     setIsLoading(true);
-    setMessage('');
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      setMessage('Paramètres sauvegardés avec succès');
-      setTimeout(() => setMessage(''), 3000);
+      toast.success('Paramètres sauvegardés avec succès');
+      setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      setMessage('Erreur lors de la sauvegarde');
+      toast.error('Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePasswordChange = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setMessage('Les mots de passe ne correspondent pas');
-      return;
-    }
-
-    setIsLoading(true);
+  const handleMFAToggle = async (enabled: boolean) => {
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setMessage('Mot de passe modifié avec succès');
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => setMessage(''), 3000);
+      setIsLoading(true);
+
+      if (enabled) {
+        // Initialize MFA setup
+        const response = await authService.setupMFA();
+
+        if (response.error) {
+          console.error(response.error);
+          toast.error(response.error?.message);
+        }
+
+        if (response.data) {
+          const status = await authService.statusMFA();
+
+          if (status.error) {
+            console.error(status.error);
+            toast.error(status.error?.message);
+          }
+
+          if (status.data) {
+            setMfaStatus({
+              enabled: status.data.mfaEnabled,
+              setupRequired: true,
+              backupCodes: response.data.recoveryCodes,
+              key: response.data.manualEntryKey,
+              secret: response.data.secret,
+            });
+          }
+        }
+      } else {
+        // Disable MFA
+        const response = await fetch('/api/auth/mfa/disable', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+
+        if (response.ok) {
+          setMfaStatus({
+            enabled: false,
+            setupRequired: false,
+            backupCodes: [],
+          });
+          toast.success('MFA désactivé avec succès');
+        }
+      }
     } catch (error) {
       console.error(error);
-      setMessage('Erreur lors du changement de mot de passe');
+      toast.error('Erreur lors de la configuration MFA');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMFAEnable = async (code: string) => {
+    try {
+      setIsLoading(true);
+
+      const response = await authService.enableMFA(code);
+
+      if (response.error) {
+        console.error(response.error);
+        toast.error(response.error?.message || 'Code invalide');
+      }
+
+      if (response.data) {
+        const status = await authService.statusMFA();
+
+        if (status.error) {
+          console.error(status.error);
+          toast.error(status.error?.message);
+        }
+
+        if (status.data) {
+          setMfaStatus({
+            ...mfaStatus,
+            enabled: status.data.mfaEnabled,
+            setupRequired: true,
+          });
+        }
+        toast.success('MFA activé avec succès');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Erreur lors de l'activation MFA");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copié dans le presse-papiers');
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
@@ -112,14 +200,6 @@ function TransporteurSettings() {
           {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
         </Button>
       </div>
-
-      {message && (
-        <Alert className={message.includes('succès') ? 'border-green-200 bg-green-50' : ''}>
-          <AlertDescription className={message.includes('succès') ? 'text-green-800' : ''}>
-            {message}
-          </AlertDescription>
-        </Alert>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -196,6 +276,16 @@ function TransporteurSettings() {
                 }
               />
             </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Rapports hebdomadaires</span>
+              <Switch
+                checked={notifications.weeklyReports}
+                onCheckedChange={(checked) =>
+                  setNotifications({ ...notifications, weeklyReports: checked })
+                }
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -203,38 +293,107 @@ function TransporteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              Préférences de Travail
+              Préférences
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Langue</Label>
+            <div className="flex justify-between">
+              <div className="space-y-2">
+                <Label>Langue</Label>
+                <Select
+                  value={preferences.language}
+                  onValueChange={(value) => setPreferences({ ...preferences, language: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Devise</Label>
+                <Select
+                  value={preferences.currency}
+                  onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FCFA">FCFA</SelectItem>
+                    <SelectItem value="EUR">Euro</SelectItem>
+                    <SelectItem value="USD">Dollar US</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Fuseau Horaire</Label>
+                <Select
+                  value={preferences.timezone}
+                  onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Africa/Douala">Afrique/Douala</SelectItem>
+                    <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* <div className="space-y-2">
+              <Label>Type de véhicule</Label>
               <Select
-                value={preferences.language}
-                onValueChange={(value) => setPreferences({ ...preferences, language: value })}
+                value={preferences.vehicleType}
+                onValueChange={(value) => setPreferences({ ...preferences, vehicleType: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="truck">Camion</SelectItem>
+                  <SelectItem value="van">Camionnette</SelectItem>
+                  <SelectItem value="motorcycle">Moto</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
-            <div className="space-y-2">
-              <Label>Distance maximale (km)</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="number"
-                  value={preferences.maxDistance}
-                  onChange={(e) =>
-                    setPreferences({ ...preferences, maxDistance: Number(e.target.value) })
-                  }
-                  className="pl-10"
-                />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label>Distance maximale (km)</Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={preferences.maxDistance}
+                    onChange={(e) =>
+                      setPreferences({ ...preferences, maxDistance: Number(e.target.value) })
+                    }
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Poids maximum (kg)</Label>
+                <div className="relative">
+                  <Truck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    value={preferences.maxWeight}
+                    onChange={(e) =>
+                      setPreferences({ ...preferences, maxWeight: Number(e.target.value) })
+                    }
+                    className="pl-10"
+                  />
+                </div>
               </div>
             </div>
 
@@ -293,78 +452,140 @@ function TransporteurSettings() {
               Sécurité
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                <div className="relative">
-                  <Input
-                    id="currentPassword"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={passwordData.currentPassword}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, currentPassword: e.target.value })
-                    }
-                    placeholder="Mot de passe actuel"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+          <CardContent className="space-y-6">
+            <PasswordChangeForm isLoading={isLoading} setIsLoading={setIsLoading} />
 
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="newPassword"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={passwordData.newPassword}
-                    onChange={(e) =>
-                      setPasswordData({ ...passwordData, newPassword: e.target.value })
-                    }
-                    placeholder="Nouveau mot de passe"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
+            <Separator />
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) =>
-                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-                  }
-                  placeholder="Confirmer le mot de passe"
+            {/* MFA Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    Authentification à deux facteurs (MFA)
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Ajoutez une couche de sécurité supplémentaire à votre compte
+                  </p>
+                </div>
+                <Switch
+                  checked={mfaStatus.enabled}
+                  onCheckedChange={handleMFAToggle}
+                  disabled={isLoading}
                 />
               </div>
-            </div>
 
-            <Button onClick={handlePasswordChange} disabled={isLoading} className="gap-2">
-              <Shield className="h-4 w-4" />
-              Changer le Mot de Passe
-            </Button>
+              {mfaStatus.enabled && (
+                <Alert>
+                  <CheckCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    MFA est activé sur votre compte. Votre compte est protégé.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {mfaStatus.setupRequired && (
+                <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                  <h5 className="font-medium">Configuration MFA</h5>
+
+                  {mfaStatus.key && (
+                    <div className="space-y-3">
+                      <p className="text-sm">
+                        1. Copiez code avec votre application d'authentification (Google
+                        Authenticator, Authy, etc.)
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
+                          {mfaStatus.key}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(mfaStatus.key || '')}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <p className="text-sm">2. Ou entrez manuellement cette clé secrète :</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
+                          {mfaStatus.secret}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(mfaStatus.secret || '')}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="mfaCode">
+                          3. Entrez le code à 6 chiffres de votre application
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="mfaCode"
+                            placeholder="000000"
+                            maxLength={6}
+                            className="w-32"
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && e.currentTarget.value.length === 6) {
+                                handleMFAEnable(e.currentTarget.value);
+                              }
+                            }}
+                          />
+                          <Button
+                            onClick={(e) => {
+                              const input = e.currentTarget
+                                .previousElementSibling as HTMLInputElement;
+                              if (input.value.length === 6) {
+                                handleMFAEnable(input.value);
+                              }
+                            }}
+                            disabled={isLoading}
+                          >
+                            Activer MFA
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {mfaStatus.backupCodes.length > 0 && (
+                <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <h5 className="font-medium">Codes de récupération</h5>
+                  </div>
+                  <p className="text-sm text-yellow-800">
+                    Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte
+                    si vous perdez votre téléphone.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {mfaStatus.backupCodes.map((code, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <code className="flex-1 p-2 bg-white rounded text-sm font-mono border">
+                          {code}
+                        </code>
+                        <Button variant="outline" size="sm" onClick={() => copyToClipboard(code)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" size="sm">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Régénérer les codes
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

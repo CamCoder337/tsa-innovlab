@@ -40,6 +40,33 @@ function roleGuard(role: UserRole) {
   }
 }
 
+// Helper function pour créer un middleware multi-rôles
+function multiRoleGuard(allowedRoles: UserRole[]) {
+  return async (ctx: any, next: any) => {
+    const user = ctx.auth.getUserOrFail()
+
+    if (!allowedRoles.includes(user.role)) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'Access forbidden. Insufficient permissions.',
+        allowed_roles: allowedRoles,
+        user_role: user.role,
+      })
+    }
+
+    // Vérifier MFA pour les admins
+    if (user.role === UserRole.ADMIN && user.mustEnableMFA()) {
+      return ctx.response.status(403).json({
+        success: false,
+        message: 'MFA setup required for admin accounts',
+        action_required: 'enable_mfa',
+      })
+    }
+
+    await next()
+  }
+}
+
 // Route de base
 router.get('/', async () => {
   return {
@@ -97,8 +124,11 @@ router
     router.get('/dashboard', '#controllers/http/admin/dashboard_controller.index')
 
     // Gestion des utilisateurs
+    router.get('/users/stats', '#controllers/http/admin/users_controller.stats')
     router.get('/users', '#controllers/http/admin/users_controller.index')
     router.get('/users/:id', '#controllers/http/admin/users_controller.show')
+    router.post('/users/:id/suspend', '#controllers/http/admin/users_controller.suspend')
+    router.post('/users/:id/activate', '#controllers/http/admin/users_controller.activate')
     router.put('/users/:id', '#controllers/http/admin/users_controller.update')
     router.delete('/users/:id', '#controllers/http/admin/users_controller.destroy')
 
@@ -135,6 +165,11 @@ router
     router.get('/stats/users', '#controllers/http/admin/stats_controller.users')
     router.get('/stats/missions', '#controllers/http/admin/stats_controller.missions')
     router.get('/stats/products', '#controllers/http/admin/stats_controller.products')
+
+    // Feedbacks
+    router.get('/feedbacks', '#controllers/http/admin/feedbacks_controller.index')
+    router.get('/feedbacks/stats', '#controllers/http/admin/feedbacks_controller.stats')
+    router.get('/feedbacks/:id', '#controllers/http/admin/feedbacks_controller.show')
   })
   .prefix('/api/admin')
   .middleware([middleware.auth(), roleGuard(UserRole.ADMIN)])
@@ -154,18 +189,20 @@ router
     )
     router.delete('/missions/:id', '#controllers/http/affreteur/missions_controller.destroy')
 
-    // Gestion des propositions reçues
+    // Feedback des missions
+    router.post(
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.createFeedback'
+    )
     router.get(
-      '/missions/:id/propositions',
-      '#controllers/http/affreteur/propositions_controller.index'
+      '/missions/:id/feedback',
+      '#controllers/http/affreteur/missions_controller.getFeedback'
     )
-    router.post(
-      '/missions/:missionId/propositions/:id/accept',
-      '#controllers/http/affreteur/propositions_controller.accept'
-    )
-    router.post(
-      '/missions/:missionId/propositions/:id/reject',
-      '#controllers/http/affreteur/propositions_controller.reject'
+
+    // Historique des missions
+    router.get(
+      '/missions/:id/history',
+      '#controllers/http/affreteur/missions_controller.getHistory'
     )
 
     // Pricing dynamique pour les missions
@@ -191,6 +228,17 @@ router
 // ===== ROUTES TRANSPORTEUR =====
 router
   .group(() => {
+    // Gestion des véhicules
+    router.get('/vehicles', '#controllers/http/transporteur/vehicles_controller.index')
+    router.post('/vehicles', '#controllers/http/transporteur/vehicles_controller.store')
+    router.get('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.show')
+    router.put('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.update')
+    router.delete('/vehicles/:id', '#controllers/http/transporteur/vehicles_controller.destroy')
+    router.put(
+      '/vehicles/:id/status',
+      '#controllers/http/transporteur/vehicles_controller.updateStatus'
+    )
+
     // Missions disponibles
     router.get(
       '/missions/available',
@@ -201,14 +249,13 @@ router
     // Mes missions
     router.get('/my-missions', '#controllers/http/transporteur/missions_controller.myMissions')
 
-    // Propositions
-    router.post(
-      '/missions/:id/apply',
-      '#controllers/http/transporteur/propositions_controller.apply'
-    )
+    // Réclamer une mission (avec vehicleId requis)
+    router.post('/missions/:id/claim', '#controllers/http/transporteur/missions_controller.claim')
+
+    // Historique des missions
     router.get(
-      '/my-propositions',
-      '#controllers/http/transporteur/propositions_controller.myPropositions'
+      '/missions/:id/history',
+      '#controllers/http/transporteur/missions_controller.getHistory'
     )
 
     // Pricing dynamique (pour estimer avant de proposer)
@@ -283,7 +330,7 @@ router
   .prefix('/api/shop')
   .middleware(middleware.auth())
 
-// ===== ROUTES CLIENT (E-COMMERCE) =====
+// ===== ROUTES E-COMMERCE (CLIENT, AFFRETEUR, TRANSPORTEUR) =====
 router
   .group(() => {
     // Panier (Cart)
@@ -310,13 +357,25 @@ router
     )
   })
   .prefix('/api/client')
-  .middleware([middleware.auth(), roleGuard(UserRole.CLIENT)])
+  .middleware([
+    middleware.auth(),
+    multiRoleGuard([UserRole.CLIENT, UserRole.AFFRETEUR, UserRole.TRANSPORTEUR]),
+  ])
 
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
   .group(() => {
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
+    // Support both hyphenated and slash-separated search routes for frontend compatibility
+    router.get(
+      '/conversations/search-users',
+      '#controllers/http/common/conversations_controller.searchUsers'
+    )
+    router.get(
+      '/conversations/search/users',
+      '#controllers/http/common/conversations_controller.searchUsers'
+    )
     router.get('/conversations/:id', '#controllers/http/common/conversations_controller.show')
     router.post(
       '/conversations/direct',
@@ -327,10 +386,6 @@ router
       '#controllers/http/common/conversations_controller.createMission'
     )
     router.delete('/conversations/:id', '#controllers/http/common/conversations_controller.destroy')
-    router.get(
-      '/conversations/search/users',
-      '#controllers/http/common/conversations_controller.searchUsers'
-    )
 
     // Messages
     router.get(
@@ -354,6 +409,7 @@ router
 
     // Notifications
     router.get('/notifications', '#controllers/http/common/notifications_controller.index')
+    router.get('/notifications/stats', '#controllers/http/common/notifications_controller.stats')
     router.put(
       '/notifications/:id/read',
       '#controllers/http/common/notifications_controller.markAsRead'

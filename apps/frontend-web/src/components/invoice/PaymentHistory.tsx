@@ -15,8 +15,8 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
     const fetchPayments = async () => {
       try {
         setLoading(true);
-        const data = await paymentService.getPaymentHistory(missionId);
-        setPayments(data);
+        const data = await paymentService.getPaymentHistory({ missionId });
+        setPayments(data.payments);
       } catch (err) {
         setError("Erreur lors du chargement de l'historique des paiements");
         console.error(err);
@@ -150,7 +150,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                   {formatDate(payment.createdAt.toString())}
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  {(payment.amount / 100).toFixed(2)} {payment.currency.toUpperCase()}
+                  {(payment.amount / 100).toFixed(2)} FCFA
                 </td>
                 <td className="whitespace-nowrap px-3 py-4">
                   <span
@@ -162,9 +162,9 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  {payment.paymentMethod}
+                  {payment.method}
                 </td>
-                <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                {/* <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                   {payment.receiptUrl && (
                     <a
                       href={payment.receiptUrl}
@@ -175,7 +175,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                       Reçu
                     </a>
                   )}
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>

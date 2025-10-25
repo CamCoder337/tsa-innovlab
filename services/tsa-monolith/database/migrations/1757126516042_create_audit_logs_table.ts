@@ -12,6 +12,7 @@ export default class AuditLogsSchema extends BaseSchema {
       table.uuid('entity_id')
       table.jsonb('old_values')
       table.jsonb('new_values')
+      table.jsonb('metadata')
       table.specificType('ip_address', 'inet') // PostgreSQL inet
       table.text('user_agent')
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())

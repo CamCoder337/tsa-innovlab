@@ -10,20 +10,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import countryList from 'react-select-country-list';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, MapPin, Package, DollarSign, Clock, Plus, X } from 'lucide-react';
-import type { CreateMissionDto } from '@/types/mission.types';
+import {
+  CalendarIcon,
+  MapPin,
+  Package,
+  DollarSign,
+  Clock,
+  Plus,
+  X,
+  Calculator,
+  Loader2,
+} from 'lucide-react';
+import type {
+  CreateMissionDto,
+  DynamicPricingRequest,
+  DynamicPricingResponse,
+} from '@/types/mission.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, Suspense, lazy, useCallback } from 'react';
+import { useState, Suspense, lazy, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUsers } from '@/hooks/useUsers';
 import type { Address } from '@/types/address.types';
 import { useMissions } from '@/hooks/useMissions';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { missionService } from '@/services/mission.service';
+import { GoogleMapsService } from '@/services/google-maps.service';
 import toast from 'react-hot-toast';
 
 // Lazy load AddressPicker with Suspense for client-side rendering
@@ -82,11 +97,8 @@ const ClientSideAddressPicker = ({
   );
 };
 
-// Initialize country list with French labels
-const countryOptions = countryList().getData();
-
 const validationSchema = Yup.object({
-  titre: Yup.string().required('Le titre est requis'),
+  title: Yup.string().required('Le titre est requis'),
   affreteurId: Yup.string().when('$isAdmin', {
     is: true,
     then: (schema) => schema.required("L'ID de l'affréteur est requis"),
@@ -103,7 +115,7 @@ const validationSchema = Yup.object({
   adresseDepart: Yup.object({
     street: Yup.string().required('La rue est requise'),
     city: Yup.string().required('La ville est requise'),
-    postalCode: Yup.string().required('Le code postal est requis'),
+    postalCode: Yup.string(),
     country: Yup.string().required('Le pays est requis'),
     label: Yup.string().required('Le nom est requis'),
     region: Yup.string().required('La région est requise'),
@@ -113,7 +125,7 @@ const validationSchema = Yup.object({
   adresseArrivee: Yup.object({
     street: Yup.string().required('La rue est requise'),
     city: Yup.string().required('La ville est requise'),
-    postalCode: Yup.string().required('Le code postal est requis'),
+    postalCode: Yup.string(),
     country: Yup.string().required('Le pays est requis'),
     label: Yup.string().required('Le nom est requis'),
     region: Yup.string().required('La région est requise'),
@@ -158,32 +170,12 @@ const convertAddressDetailsToAddress = (addressDetails: AddressDetails): NewAddr
 
 export default function CreateMissionForm({
   onSubmit,
-  isSubmitting = false,
-  addresses = [],
+  isSubmitting,
+  addresses,
 }: CreateMissionFormProps) {
   const { user } = useAuth();
-  const { id } = useParams();
-  const { missions, myMissions, currentMission, setCurrentMission } = useMissions();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-
-  const fetchMission = useCallback(async () => {
-    if (!id) {
-      navigate('/app/missions');
-      return;
-    }
-    setLoading(true);
-    const foundMission =
-      missions.find((mission) => mission.id === id) ||
-      myMissions.find((mission) => mission.id === id);
-    if (!foundMission) {
-      setCurrentMission(null);
-    }
-    if (foundMission) {
-      setCurrentMission(foundMission);
-    }
-    setLoading(false);
-  }, [id, missions, myMissions, navigate, setCurrentMission]);
+  const { getUsersByRole } = useUsers();
+  const { currentMission } = useMissions();
 
   const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
     null
@@ -194,28 +186,18 @@ export default function CreateMissionForm({
     city: '',
     region: '',
     country: 'Cameroun',
-    postalCode: '',
+    postalCode: '00000',
     latitude: 3.848, // Default to Yaoundé, Cameroon
     longitude: 11.5021,
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchMission();
-    }
-  }, [fetchMission, id]);
-
-  if (id && loading) {
-    return <div className="container mx-auto py-8">Loading mission details...</div>;
-  }
-
-  if (id && !currentMission) {
-    toast.error('Mission introuvable', { duration: 5000 });
-    return <Navigate to="/app/missions" />;
-  }
+  // Dynamic pricing state
+  const [dynamicPricing, setDynamicPricing] = useState<DynamicPricingResponse | null>(null);
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+  const [showDynamicPricing, setShowDynamicPricing] = useState(false);
 
   const INITIAL_VALUES: CreateMissionDto = {
-    titre: currentMission?.titre || '',
+    title: currentMission?.title || '',
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
     description: currentMission?.description || '',
     typeMarchandise: currentMission?.typeMarchandise || '',
@@ -227,6 +209,139 @@ export default function CreateMissionForm({
     adresseArrivee: currentMission?.adresseArrivee || undefined,
     budgetMin: currentMission?.budgetMin || 0,
     budgetMax: currentMission?.budgetMax || 0,
+  };
+
+  // Calculate dynamic pricing
+  const calculateDynamicPricing = async (formValues: CreateMissionDto) => {
+    if (
+      !formValues.adresseDepart ||
+      !formValues.adresseArrivee ||
+      !formValues.poids ||
+      !formValues.volume
+    ) {
+      toast.error(
+        'Veuillez remplir les adresses, le poids et le volume pour calculer le prix dynamique'
+      );
+      return;
+    }
+
+    // Validate that addresses have coordinates
+    if (
+      !formValues.adresseDepart.latitude ||
+      !formValues.adresseDepart.longitude ||
+      !formValues.adresseArrivee.latitude ||
+      !formValues.adresseArrivee.longitude
+    ) {
+      toast.error('Les adresses doivent avoir des coordonnées valides pour calculer la distance');
+      return;
+    }
+
+    setIsCalculatingPrice(true);
+    try {
+      // Calculate distance using Google Maps API
+      const googleMapsService = new GoogleMapsService();
+      const distanceResult = await googleMapsService.calculateDistanceWithDirections(
+        {
+          lat: formValues.adresseDepart.latitude,
+          lng: formValues.adresseDepart.longitude,
+        },
+        {
+          lat: formValues.adresseArrivee.latitude,
+          lng: formValues.adresseArrivee.longitude,
+        }
+      );
+
+      if (!distanceResult) {
+        // Fallback to straight-line distance if directions fail
+        const straightLineDistance = await googleMapsService.calculateDistance(
+          {
+            lat: formValues.adresseDepart.latitude,
+            lng: formValues.adresseDepart.longitude,
+          },
+          {
+            lat: formValues.adresseArrivee.latitude,
+            lng: formValues.adresseArrivee.longitude,
+          }
+        );
+
+        if (!straightLineDistance) {
+          toast.error('Impossible de calculer la distance entre les adresses');
+          return;
+        }
+
+        // Use straight-line distance with a 1.3 multiplier for road distance estimation
+        const estimatedDistance = Math.round(straightLineDistance * 1.3);
+
+        const pricingRequest: DynamicPricingRequest = {
+          origin: formValues.adresseDepart.label,
+          destination: formValues.adresseArrivee.label,
+          distance_km: estimatedDistance,
+          weight_tons: formValues.poids,
+          cargo_type: formValues.typeMarchandise || 'general',
+          urgency: formValues.dateDepartEstime
+            ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
+                (1000 * 60 * 60 * 24) <
+              7
+              ? 'urgent'
+              : 'normal'
+            : 'normal',
+        };
+
+        const response = await missionService.calculateDynamicPricing(pricingRequest);
+
+        if (response.error) {
+          toast.error(response.error.message || 'Erreur lors du calcul du prix dynamique');
+        } else if (response.data) {
+          setDynamicPricing(response.data);
+          setShowDynamicPricing(true);
+          toast.success(
+            `Prix dynamique calculé avec succès! (Distance estimée: ${estimatedDistance} km)`
+          );
+        }
+      } else {
+        // Use actual driving distance from Google Directions API
+        const pricingRequest: DynamicPricingRequest = {
+          origin: formValues.adresseDepart.label,
+          destination: formValues.adresseArrivee.label,
+          distance_km: distanceResult.distance,
+          weight_tons: formValues.poids,
+          cargo_type: formValues.typeMarchandise || 'general',
+          urgency: formValues.dateDepartEstime
+            ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
+                (1000 * 60 * 60 * 24) <
+              7
+              ? 'urgent'
+              : 'normal'
+            : 'normal',
+        };
+
+        const response = await missionService.calculateDynamicPricing(pricingRequest);
+
+        if (response.error) {
+          toast.error(response.error.message || 'Erreur lors du calcul du prix dynamique');
+        } else if (response.data) {
+          setDynamicPricing(response.data);
+          setShowDynamicPricing(true);
+          toast.success(
+            `Prix dynamique calculé avec succès! (Distance: ${distanceResult.distance} km, Durée: ${Math.round(distanceResult.duration / 60)}h${distanceResult.duration % 60}min)`
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating dynamic pricing:', error);
+      toast.error('Erreur lors du calcul du prix dynamique');
+    } finally {
+      setIsCalculatingPrice(false);
+    }
+  };
+
+  // Apply dynamic pricing to form
+  const applyDynamicPricing = (setFieldValue: (field: string, value: number) => void) => {
+    if (dynamicPricing) {
+      setFieldValue('budgetMin', dynamicPricing.calculated_price * 0.8); // 20% below estimated
+      setFieldValue('budgetMax', dynamicPricing.calculated_price * 1.2); // 20% above estimated
+      toast.success('Prix dynamique appliqué au budget!');
+    }
   };
 
   const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -263,7 +378,7 @@ export default function CreateMissionForm({
       city: '',
       region: '',
       country: 'Cameroun',
-      postalCode: '',
+      postalCode: '00000',
       label: '',
       latitude: 3.848,
       longitude: 11.5021,
@@ -274,13 +389,14 @@ export default function CreateMissionForm({
     <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema}
-      onSubmit={(values) =>
+      onSubmit={(values) => {
+        console.log(values);
         onSubmit(
           values,
-          id ? 'update' : 'create',
-          id && currentMission ? currentMission.status === 'draft' : true
-        )
-      }
+          currentMission ? 'update' : 'create',
+          currentMission ? currentMission.status === 'draft' : true
+        );
+      }}
       validateOnBlur={true}
       validateOnChange={true}
     >
@@ -300,36 +416,46 @@ export default function CreateMissionForm({
                 })}
               >
                 <div>
-                  <Label htmlFor="titre">Titre de la Mission</Label>
+                  <Label htmlFor="title">Titre de la Mission</Label>
                   <Input
-                    id="titre"
-                    name="titre"
+                    id="title"
+                    name="title"
                     placeholder="ex: Transport Électronique Douala → Yaoundé"
-                    value={values.titre}
+                    value={values.title}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={cn('w-full', touched.titre && errors.titre && 'border-red-500')}
+                    className={cn('w-full', touched.title && errors.title && 'border-red-500')}
                     required
                   />
-                  {touched.titre && errors.titre && (
-                    <div className="text-sm text-red-600 mt-1">{errors.titre}</div>
+                  {touched.title && errors.title && (
+                    <div className="text-sm text-red-600 mt-1">{errors.title}</div>
                   )}
                 </div>
                 {user?.role === 'admin' && (
                   <div>
-                    <Label htmlFor="affreteurId">Affréteur (ID)</Label>
-                    <Input
-                      id="affreteurId"
-                      name="affreteurId"
-                      placeholder="ID de l'affréteur"
+                    <Label htmlFor="affreteurId">Affréteur</Label>
+                    <Select
                       value={values.affreteurId || ''}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={cn(
-                        'w-full',
-                        touched.affreteurId && errors.affreteurId && 'border-red-500'
-                      )}
-                    />
+                      onValueChange={(value) => {
+                        setFieldValue('affreteurId', value);
+                      }}
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          'w-full',
+                          touched.affreteurId && errors.affreteurId && 'border-red-500'
+                        )}
+                      >
+                        <SelectValue placeholder="Sélectionner un affréteur" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getUsersByRole('affreteur').map((affreteur) => (
+                          <SelectItem key={affreteur.id} value={affreteur.id}>
+                            {affreteur.firstName} {affreteur.lastName} ({affreteur.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {touched.affreteurId && errors.affreteurId && (
                       <div className="text-sm text-red-600 mt-1">{errors.affreteurId}</div>
                     )}
@@ -353,17 +479,28 @@ export default function CreateMissionForm({
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="label">Nom</Label>
+                      <div className="flex justify-between gap-4">
+                        <div className="flex space-y-2 items-center gap-2 w-full">
+                          <Label htmlFor="label">Libellé</Label>
                           <Input
                             name="label"
                             value={newAddress.label}
                             onChange={handleNewAddressChange}
                             placeholder="Ex: Domicile, Travail"
+                            className="w-full"
                           />
                         </div>
-                        <div className="space-y-2">
+
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('departure', setFieldValue)}
+                            disabled={!newAddress.street || !newAddress.city}
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
+                        {/* <div className="space-y-2">
                           <Label htmlFor="street">Rue *</Label>
                           <Input
                             name="street"
@@ -376,16 +513,6 @@ export default function CreateMissionForm({
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="postalCode">Code postal *</Label>
-                          <Input
-                            name="postalCode"
-                            value={newAddress.postalCode}
-                            onChange={handleNewAddressChange}
-                            placeholder="75000"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
                           <Label htmlFor="city">Ville *</Label>
                           <Input
                             name="city"
@@ -395,8 +522,6 @@ export default function CreateMissionForm({
                             required
                           />
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="region">Région</Label>
                           <Input
@@ -404,6 +529,19 @@ export default function CreateMissionForm({
                             value={newAddress.region}
                             onChange={handleNewAddressChange}
                             placeholder="Centre"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+
+                        <div className="space-y-2">
+                          <Label htmlFor="postalCode">Code postal *</Label>
+                          <Input
+                            name="postalCode"
+                            value={newAddress.postalCode}
+                            onChange={handleNewAddressChange}
+                            placeholder="75000"
+                            required
                           />
                         </div>
                         <div className="space-y-2">
@@ -421,7 +559,7 @@ export default function CreateMissionForm({
                               </option>
                             ))}
                           </select>
-                        </div>
+                        </div> */}
                       </div>
                       <div className="space-y-4">
                         <div>
@@ -440,7 +578,7 @@ export default function CreateMissionForm({
                                   city: '',
                                   region: '',
                                   country: 'Cameroun',
-                                  postalCode: '',
+                                  postalCode: '00000',
                                   latitude: 3.848,
                                   longitude: 11.5021,
                                 });
@@ -450,7 +588,7 @@ export default function CreateMissionForm({
                               className="w-full"
                             />
                           </div>
-                          <div className="mt-2 grid grid-cols-2 gap-4">
+                          {/* <div className="mt-2 grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="latitude">Latitude</Label>
                               <Input
@@ -473,25 +611,7 @@ export default function CreateMissionForm({
                                 placeholder="11.5021"
                               />
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setShowNewAddressForm(null)}
-                          >
-                            Annuler
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => saveNewAddress('departure', setFieldValue)}
-                            disabled={
-                              !newAddress.street || !newAddress.city || !newAddress.postalCode
-                            }
-                          >
-                            Enregistrer
-                          </Button>
+                          </div> */}
                         </div>
                       </div>
                     </div>
@@ -585,17 +705,28 @@ export default function CreateMissionForm({
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                      <div className="flex justify-between gap-4">
+                        <div className="flex space-y-2 items-center gap-2 w-full">
                           <Label htmlFor="label">Libellé</Label>
                           <Input
                             name="label"
                             value={newAddress.label}
                             onChange={handleNewAddressChange}
                             placeholder="Ex: Domicile, Travail"
+                            className="w-full"
                           />
                         </div>
-                        <div className="space-y-2">
+
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            type="button"
+                            onClick={() => saveNewAddress('arrival', setFieldValue)}
+                            disabled={!newAddress.street || !newAddress.city}
+                          >
+                            Enregistrer
+                          </Button>
+                        </div>
+                        {/* <div className="space-y-2">
                           <Label htmlFor="street">Rue *</Label>
                           <Input
                             name="street"
@@ -653,7 +784,7 @@ export default function CreateMissionForm({
                               </option>
                             ))}
                           </select>
-                        </div>
+                        </div>*/}
                       </div>
                       <div className="space-y-4">
                         <div>
@@ -672,7 +803,7 @@ export default function CreateMissionForm({
                                   city: '',
                                   region: '',
                                   country: 'Cameroun',
-                                  postalCode: '',
+                                  postalCode: '00000',
                                   latitude: 3.848,
                                   longitude: 11.5021,
                                 });
@@ -682,7 +813,7 @@ export default function CreateMissionForm({
                               className="w-full"
                             />
                           </div>
-                          <div className="mt-2 grid grid-cols-2 gap-4">
+                          {/* <div className="mt-2 grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="latitude">Latitude</Label>
                               <Input
@@ -705,25 +836,7 @@ export default function CreateMissionForm({
                                 placeholder="11.5021"
                               />
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-end space-x-2 pt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setShowNewAddressForm(null)}
-                          >
-                            Annuler
-                          </Button>
-                          <Button
-                            type="button"
-                            onClick={() => saveNewAddress('arrival', setFieldValue)}
-                            disabled={
-                              !newAddress.street || !newAddress.city || !newAddress.postalCode
-                            }
-                          >
-                            Enregistrer
-                          </Button>
+                          </div> */}
                         </div>
                       </div>
                     </div>
@@ -929,6 +1042,7 @@ export default function CreateMissionForm({
                           }
                         }}
                         initialFocus
+                        disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -967,7 +1081,9 @@ export default function CreateMissionForm({
                         }}
                         initialFocus
                         disabled={(date) =>
-                          values.dateDepartEstime ? date < new Date(values.dateDepartEstime) : false
+                          values.dateDepartEstime
+                            ? date < new Date(values.dateDepartEstime)
+                            : date < new Date()
                         }
                       />
                     </PopoverContent>
@@ -988,9 +1104,101 @@ export default function CreateMissionForm({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Dynamic Pricing Section */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-blue-600" />
+                    <h4 className="font-medium text-blue-900">Prix Dynamique Intelligent</h4>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => calculateDynamicPricing(values)}
+                    disabled={
+                      isCalculatingPrice ||
+                      !values.adresseDepart ||
+                      !values.adresseArrivee ||
+                      !values.poids ||
+                      !values.volume
+                    }
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  >
+                    {isCalculatingPrice ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Calcul...
+                      </>
+                    ) : (
+                      <>
+                        <Calculator className="h-4 w-4 mr-2" />
+                        Calculer le Prix
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-blue-700 mb-3">
+                  Obtenez une estimation de prix basée sur la distance, le poids, le volume et les
+                  conditions du marché.
+                </p>
+
+                {dynamicPricing && showDynamicPricing && (
+                  <div className="bg-white p-3 rounded border border-blue-200">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600">Distance</p>
+                        <p className="font-medium">
+                          {dynamicPricing.breakdown.distance_factor.toFixed(1)} km
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Prix estimé</p>
+                        <p className="font-medium text-green-600">
+                          {dynamicPricing.calculated_price.toLocaleString()} FCFA
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Fourchette</p>
+                        <p className="font-medium">
+                          {(dynamicPricing.calculated_price * 0.8).toLocaleString()} -{' '}
+                          {(dynamicPricing.calculated_price * 1.2).toLocaleString()} FCFA
+                        </p>
+                      </div>
+                      <div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => applyDynamicPricing(setFieldValue)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Appliquer
+                        </Button>
+                      </div>
+                    </div>
+                    {/* {dynamicPricing.factors && (
+                      <div className="mt-3 pt-3 border-t border-blue-100">
+                        <p className="text-xs text-gray-600 mb-2">Facteurs de prix:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(dynamicPricing.factors).map(([key, value]) => (
+                            <span
+                              key={key}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                            >
+                              {key}: {typeof value === 'number' ? value.toFixed(2) : value}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )} */}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual Budget Section */}
+              <div className="flex justify-center w-1/2 gap-4">
                 <div>
-                  <Label htmlFor="budgetMin">Budget Minimum (FCFA)</Label>
+                  <Label htmlFor="budgetMin">Prix (FCFA)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -1017,11 +1225,11 @@ export default function CreateMissionForm({
                   {touched.budgetMin && errors.budgetMin && (
                     <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
                   )}
-                  <p className="text-xs text-gray-500 mt-1">
+                  {/* <p className="text-xs text-gray-500 mt-1">
                     Les transporteurs peuvent négocier ce prix
-                  </p>
+                  </p> */}
                 </div>
-                <div>
+                {/* <div>
                   <Label htmlFor="budgetMax">Budget Maximum (FCFA)</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -1049,19 +1257,23 @@ export default function CreateMissionForm({
                   {touched.budgetMax && errors.budgetMax && (
                     <div className="text-sm text-red-600 mt-1">{errors.budgetMax}</div>
                   )}
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
 
           <div className="flex gap-4">
-            {!id && (
+            {!currentMission && (
               <>
                 <Button
                   type="submit"
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting}
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'create', true);
+                  }}
                 >
                   <Package className="h-4 w-4 mr-2" />
                   {isSubmitting ? 'Publication en cours...' : 'Publier la Mission'}
@@ -1079,13 +1291,16 @@ export default function CreateMissionForm({
                 </Button>
               </>
             )}
-            {id && (
+            {currentMission && (
               <>
                 <Button
-                  type="submit"
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting}
+                  onClick={() => {
+                    // Set status to 'draft' and submit
+                    onSubmit({ ...values }, 'update', currentMission.status === 'draft');
+                  }}
                 >
                   <Package className="h-4 w-4 mr-2" />
                   {isSubmitting

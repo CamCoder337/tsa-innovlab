@@ -1,17 +1,60 @@
-import { io, type Socket } from 'socket.io-client';
-import { getApiUrl } from '@/config/env';
+import { getWebSocketUrl } from '@/config/env';
+
+/**
+ * WebSocket Event Types matching backend WebSocketEventType
+ */
+export enum WebSocketEventType {
+  // General events
+  CONNECTED = 'connected',
+  BROADCAST = 'broadcast',
+  NOTIFICATION = 'notification',
+
+  // Authentication events
+  AUTH_REQUEST = 'auth:request',
+  AUTH_SUCCESS = 'auth:success',
+  AUTH_FAILED = 'auth:failed',
+
+  // Chat events
+  CHAT_MESSAGE = 'chat:message',
+  CHAT_MESSAGE_READ = 'chat:read',
+  CHAT_TYPING_START = 'chat:typing:start',
+  CHAT_TYPING_STOP = 'chat:typing:stop',
+  CHAT_CONVERSATION_CREATED = 'chat:conversation:created',
+  CHAT_CONVERSATION_UPDATED = 'chat:conversation:updated',
+
+  // Mission events
+  MISSION_NEW = 'mission:new',
+  MISSION_UPDATED = 'mission:updated',
+  MISSION_STATUS_CHANGED = 'mission:status:changed',
+}
+
+/**
+ * WebSocket Message interface matching backend
+ */
+export interface WebSocketMessage {
+  type: string | WebSocketEventType;
+  data: unknown;
+  timestamp: string;
+  userId?: string;
+}
 
 type EventCallback<T = unknown> = (data: T) => void;
 
+/**
+ * Enhanced WebSocket Service matching backend capabilities
+ * Uses native WebSocket instead of Socket.IO to match backend implementation
+ */
 class WebSocketService {
-  private socket: Socket | null = null;
+  private ws: WebSocket | null = null;
   private eventCallbacks: Map<string, Set<EventCallback>> = new Map();
   private static instance: WebSocketService;
-  /**
-   * Authentication token for WebSocket connection
-   * Used for initial connection and potential re-authentication
-   */
   private token: string | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private isConnecting = false;
+  private isAuthenticated = false;
 
   private constructor() {}
 
@@ -23,39 +66,127 @@ class WebSocketService {
   }
 
   public initialize(accessToken: string): void {
-    if (this.socket?.connected) {
+    if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) {
       return;
     }
 
     this.token = accessToken;
-    this.socket = io(getApiUrl(), {
-      path: '/socket.io',
-      auth: { token: this.token },
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
+    this.connect();
+  }
 
-    this.socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
+  public connect(): void {
+    if (this.isConnecting) return;
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
+    this.isConnecting = true;
+    const wsUrl = getWebSocketUrl(this.token || undefined);
 
-    // Réécoute des événements enregistrés en cas de reconnexion
-    this.socket.on('connect', () => {
-      this.eventCallbacks.forEach((callbacks, event) => {
+    try {
+      this.ws = new WebSocket(wsUrl);
+
+      this.setupEventListeners();
+    } catch (error) {
+      console.error('❌ WebSocket connection failed:', error);
+      this.isConnecting = false;
+      this.scheduleReconnect();
+    }
+  }
+
+  private setupEventListeners(): void {
+    if (!this.ws) return;
+
+    this.ws.onopen = () => {
+      console.log('✅ WebSocket connected successfully');
+      this.isConnecting = false;
+      this.reconnectAttempts = 0;
+      this.isAuthenticated = true; // Token was validated during connection
+      this.startHeartbeat();
+
+      // Trigger connected event for subscribers
+      const callbacks = this.eventCallbacks.get(WebSocketEventType.CONNECTED);
+      if (callbacks) {
         callbacks.forEach((callback) => {
-          this.socket?.on(event, callback);
+          try {
+            callback({ authenticated: true });
+          } catch (error) {
+            console.error('❌ Error in connected callback:', error);
+          }
         });
+      }
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        this.handleMessage(message);
+      } catch (error) {
+        console.error('❌ Failed to parse WebSocket message:', error);
+      }
+    };
+
+    this.ws.onclose = (event) => {
+      console.log('❌ WebSocket disconnected:', event.code, event.reason);
+      this.isConnecting = false;
+      this.isAuthenticated = false;
+      this.stopHeartbeat();
+
+      if (event.code !== 1000) {
+        // Not a normal closure
+        this.scheduleReconnect();
+      }
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('❌ WebSocket error:', error);
+      this.isConnecting = false;
+      this.isAuthenticated = false;
+    };
+  }
+
+  private handleMessage(message: WebSocketMessage): void {
+    const callbacks = this.eventCallbacks.get(message.type);
+    if (callbacks) {
+      callbacks.forEach((callback) => {
+        try {
+          callback(message.data);
+        } catch (error) {
+          console.error('❌ Error in WebSocket callback:', error);
+        }
       });
-    });
+    }
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000); // 30 seconds
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('❌ Max reconnection attempts reached');
+      return;
+    }
+
+    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts);
+    console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
+
+    setTimeout(() => {
+      this.reconnectAttempts++;
+      this.connect();
+    }, delay);
   }
 
   public subscribe<T = unknown>(event: string, callback: (data: T) => void): () => void {
-    if (!this.socket) {
+    if (!this.ws) {
       console.error('WebSocket not initialized. Call initialize() first.');
       return () => {};
     }
@@ -70,16 +201,14 @@ class WebSocketService {
     };
 
     this.eventCallbacks.get(event)?.add(wrappedCallback);
-    this.socket.on(event, wrappedCallback);
 
-    // Retourne une fonction pour se désabonner
+    // Return unsubscribe function
     return () => {
       this.unsubscribe(event, wrappedCallback);
     };
   }
 
   public unsubscribe<T = unknown>(event: string, callback: EventCallback<T>): void {
-    this.socket?.off(event, callback as EventCallback<unknown>);
     this.eventCallbacks.get(event)?.delete(callback as EventCallback<unknown>);
     if (this.eventCallbacks.get(event)?.size === 0) {
       this.eventCallbacks.delete(event);
@@ -87,23 +216,66 @@ class WebSocketService {
   }
 
   public emit<T = unknown>(event: string, data?: T): void {
-    if (!this.socket) {
-      console.error('WebSocket not initialized. Call initialize() first.');
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket not connected. Cannot send message.');
       return;
     }
-    this.socket.emit(event, data);
+
+    if (!this.isAuthenticated) {
+      console.error('WebSocket not authenticated. Cannot send message.');
+      return;
+    }
+
+    const message: WebSocketMessage = {
+      type: event,
+      data,
+      timestamp: new Date().toISOString(),
+    };
+
+    this.ws.send(JSON.stringify(message));
   }
 
   public disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-      this.eventCallbacks.clear();
+    this.stopHeartbeat();
+    this.isAuthenticated = false;
+    if (this.ws) {
+      this.ws.close(1000, 'Client disconnect');
+      this.ws = null;
     }
+    this.eventCallbacks.clear();
+    this.reconnectAttempts = 0;
   }
 
   public isConnected(): boolean {
-    return this.socket?.connected ?? false;
+    return this.ws?.readyState === WebSocket.OPEN && this.isAuthenticated;
+  }
+
+  /**
+   * Send typing indicator for chat
+   */
+  public sendTypingIndicator(conversationId: number, isTyping: boolean): void {
+    this.emit(
+      isTyping ? WebSocketEventType.CHAT_TYPING_START : WebSocketEventType.CHAT_TYPING_STOP,
+      {
+        conversationId,
+        isTyping,
+      }
+    );
+  }
+
+  /**
+   * Get connection status
+   */
+  public getConnectionStatus(): {
+    connected: boolean;
+    connecting: boolean;
+    reconnectAttempts: number;
+  } {
+    return {
+      connected: this.isConnected(),
+      connecting: this.isConnecting,
+      reconnectAttempts: this.reconnectAttempts,
+    };
   }
 }
 

@@ -46,7 +46,7 @@ function AffreteurDashboard() {
       value: metrics?.activeMissions || 0,
       change: `${myMissions.length} au total`,
       color: 'blue',
-      href: 'app/missions/active',
+      href: '/app/missions?tab=actives',
     },
     {
       title: 'Coût Moyen',
@@ -58,7 +58,7 @@ function AffreteurDashboard() {
           (metrics?.averageCost || 0) * 1.05
         ) + ' ce mois',
       color: 'green',
-      href: 'app/reports/costs',
+      href: '/app/reports/costs',
     },
     {
       title: 'Missions en Attente',
@@ -66,7 +66,7 @@ function AffreteurDashboard() {
       value: myMissions.filter((m) => m.status === 'published').length,
       change: `${myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status)).length} en cours`,
       color: 'purple',
-      href: 'app/missions/pending',
+      href: '/app/missions?tab=pending',
     },
     {
       title: 'Taux de Réussite',
@@ -78,14 +78,14 @@ function AffreteurDashboard() {
           (metrics?.successRate || 0) - 2
         ) + ' ce mois',
       color: 'green',
-      href: '/affreteur/reports/missions',
+      href: '/app',
     },
   ];
 
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -161,14 +161,15 @@ function AffreteurDashboard() {
             <div className="space-y-4">
               {recentMissions.length > 0 ? (
                 recentMissions.map((mission) => (
-                  <div
+                  <Link
+                    to={`/app/missions/${mission.id}`}
                     key={mission.id}
                     className="flex items-center justify-between p-3 border rounded-lg"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
                       <div>
-                        <p className="font-medium">{mission.titre}</p>
+                        <p className="font-medium">{mission.title}</p>
                         <p className="text-sm text-muted-foreground">{mission.route}</p>
                         <p className="text-xs text-muted-foreground">
                           {mission.transporteur
@@ -183,7 +184,7 @@ function AffreteurDashboard() {
                       <p className="text-xs font-medium text-tsa-blue">{mission.formattedBudget}</p>
                       <Progress value={mission.progress} className="w-20 h-1" />
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
@@ -204,13 +205,13 @@ function AffreteurDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link to="/missions/create">
+            <Link to="/app/missions/create">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Plus className="h-4 w-4" />
                 Nouvelle Mission
               </Button>
             </Link>
-            <Link to="/tracking-dashboard">
+            <Link to="/app/tracking-dashboard">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <MapPin className="h-4 w-4" />
                 Suivi Expéditions

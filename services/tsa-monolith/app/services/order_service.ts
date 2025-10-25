@@ -3,6 +3,7 @@ import Order, { OrderStatus, PaymentStatus } from '#models/order'
 import OrderItem from '#models/order_item'
 import Cart, { CartStatus } from '#models/cart'
 import Product from '#models/product'
+import Address from '#models/address'
 import CartService from '#services/cart_service'
 
 export default class OrderService {
@@ -24,6 +25,29 @@ export default class OrderService {
   ): Promise<Order> {
     // Transaction pour garantir la cohérence des données
     const order = await db.transaction(async (trx) => {
+      // Valider que les adresses existent et appartiennent à l'utilisateur
+      const shippingAddress = await Address.query({ client: trx })
+        .where('id', shippingAddressId)
+        .where('userId', userId)
+        .first()
+
+      if (!shippingAddress) {
+        throw new Error(
+          'Shipping address not found or does not belong to you. Please create a valid shipping address first.'
+        )
+      }
+
+      const billingAddress = await Address.query({ client: trx })
+        .where('id', billingAddressId)
+        .where('userId', userId)
+        .first()
+
+      if (!billingAddress) {
+        throw new Error(
+          'Billing address not found or does not belong to you. Please create a valid billing address first.'
+        )
+      }
+
       // Récupérer le panier actif avec ses articles
       const cart = await Cart.query({ client: trx })
         .where('userId', userId)

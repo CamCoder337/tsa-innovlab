@@ -1,14 +1,18 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, belongsTo, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Address from '#models/address'
-import Proposition from '#models/proposition'
+import Vehicle from '#models/vehicle'
+import Feedback from '#models/feedback'
+import MissionUpdate from '#models/mission_update'
+import { VehicleType } from '#models/vehicle'
 
 export enum MissionStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ASSIGNED = 'assigned',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
@@ -22,6 +26,12 @@ export default class Mission extends BaseModel {
 
   @column()
   declare transporteurId: string | null
+
+  @column()
+  declare vehicleId: string | null
+
+  @column()
+  declare requiredVehicleType: VehicleType | null
 
   @column({ columnName: 'titre' })
   declare title: string
@@ -78,8 +88,14 @@ export default class Mission extends BaseModel {
   @belongsTo(() => Address, { foreignKey: 'adresseArriveeId' })
   declare adresseArrivee: BelongsTo<typeof Address>
 
-  @hasMany(() => Proposition)
-  declare propositions: HasMany<typeof Proposition>
+  @belongsTo(() => Vehicle, { foreignKey: 'vehicleId' })
+  declare vehicle: BelongsTo<typeof Vehicle>
+
+  @hasOne(() => Feedback)
+  declare feedback: HasOne<typeof Feedback>
+
+  @hasMany(() => MissionUpdate)
+  declare updates: HasMany<typeof MissionUpdate>
 
   public getBudgetRange(): string {
     if (this.budgetMin && this.budgetMax) {

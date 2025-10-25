@@ -1,4 +1,4 @@
-import { getGoogleMapsApiKey } from '@/config/env';
+import { googleMapsLoader } from '@/lib/google-maps-loader';
 
 export interface MapConfig {
   center: { lat: number; lng: number };
@@ -17,39 +17,14 @@ export interface MarkerData {
 
 export class GoogleMapsService {
   private map: google.maps.Map | null = null;
-  private markers: Map<string, google.maps.Marker> = new Map();
+  private markers: Map<string, google.maps.marker.AdvancedMarkerElement> = new Map();
   private directionsService: google.maps.DirectionsService | null = null;
   private directionsRenderer: google.maps.DirectionsRenderer | null = null;
-  private isLoaded: boolean = false;
-
-  constructor() {
-    this.loadGoogleMapsScript();
-  }
-
-  private async loadGoogleMapsScript(): Promise<void> {
-    if (this.isLoaded || window.google?.maps) {
-      this.isLoaded = true;
-      return;
-    }
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${getGoogleMapsApiKey()}&libraries=places,geometry,routes&v=weekly`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        this.isLoaded = true;
-        resolve();
-      };
-      script.onerror = () => reject(new Error('Failed to load Google Maps script'));
-      document.head.appendChild(script);
-    });
-  }
 
   async initializeMap(container: HTMLElement, config: MapConfig): Promise<google.maps.Map> {
     try {
       // Ensure Google Maps is loaded
-      await this.loadGoogleMapsScript();
+      await googleMapsLoader.load({ libraries: ['places', 'geometry', 'routes', 'marker'] });
 
       this.map = new google.maps.Map(container, {
         center: config.center,
@@ -92,15 +67,23 @@ export class GoogleMapsService {
     }
   }
 
-  addMarker(markerData: MarkerData): google.maps.Marker | null {
+  addMarker(markerData: MarkerData): google.maps.marker.AdvancedMarkerElement | null {
     if (!this.map) return null;
 
-    const marker = new google.maps.Marker({
+    // Create marker element with custom icon
+    const markerElement = document.createElement('div');
+    markerElement.style.width = '32px';
+    markerElement.style.height = '32px';
+    markerElement.style.backgroundImage = `url(${this.getMarkerIconUrl(markerData.type)})`;
+    markerElement.style.backgroundSize = 'contain';
+    markerElement.style.backgroundRepeat = 'no-repeat';
+    markerElement.style.cursor = 'pointer';
+
+    const marker = new google.maps.marker.AdvancedMarkerElement({
       position: markerData.position,
       map: this.map,
       title: markerData.title,
-      icon: this.getMarkerIcon(markerData.type),
-      animation: markerData.type === 'vehicle' ? google.maps.Animation.DROP : undefined,
+      content: markerElement,
     });
 
     // Info window pour afficher les détails
@@ -119,14 +102,14 @@ export class GoogleMapsService {
   updateMarkerPosition(markerId: string, position: { lat: number; lng: number }): void {
     const marker = this.markers.get(markerId);
     if (marker) {
-      marker.setPosition(position);
+      marker.position = position;
     }
   }
 
   removeMarker(markerId: string): void {
     const marker = this.markers.get(markerId);
     if (marker) {
-      marker.setMap(null);
+      marker.map = null;
       this.markers.delete(markerId);
     }
   }
@@ -222,52 +205,23 @@ export class GoogleMapsService {
     }
   }
 
-  private getMarkerIcon(
+  private getMarkerIconUrl(
     type: 'vehicle' | 'destination' | 'waypoint' | 'user' | 'origin'
-  ): google.maps.Icon {
+  ): string {
     const iconBase = 'https://maps.google.com/mapfiles/kml/shapes/';
 
     switch (type) {
       case 'vehicle':
-        return {
-          url: iconBase + 'truck.png',
-          scaledSize: new google.maps.Size(32, 32),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(16, 32),
-        };
+        return iconBase + 'truck.png';
       case 'destination':
-        return {
-          url: iconBase + 'flag.png',
-          scaledSize: new google.maps.Size(32, 32),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(16, 32),
-        };
+        return iconBase + 'flag.png';
       case 'origin':
-        return {
-          url: 'https://maps.google.com/mapfiles/kml/paddle/go.png',
-          scaledSize: new google.maps.Size(32, 32),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(16, 32),
-        };
+        return 'https://maps.google.com/mapfiles/kml/paddle/go.png';
       case 'waypoint':
-        return {
-          url: iconBase + 'placemark_circle.png',
-          scaledSize: new google.maps.Size(24, 24),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(12, 24),
-        };
       case 'user':
-        return {
-          url: iconBase + 'placemark_circle.png',
-          scaledSize: new google.maps.Size(24, 24),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(12, 24),
-        };
+        return iconBase + 'placemark_circle.png';
       default:
-        return {
-          url: iconBase + 'placemark_circle.png',
-          scaledSize: new google.maps.Size(24, 24),
-        };
+        return iconBase + 'placemark_circle.png';
     }
   }
 
@@ -333,8 +287,70 @@ export class GoogleMapsService {
     return content;
   }
 
+  async calculateDistance(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+  ): Promise<number | null> {
+    try {
+      // Ensure Google Maps is loaded with geometry library
+      await googleMapsLoader.load({ libraries: ['geometry'] });
+
+      // Use spherical geometry to calculate distance
+      const originLatLng = new google.maps.LatLng(origin.lat, origin.lng);
+      const destinationLatLng = new google.maps.LatLng(destination.lat, destination.lng);
+
+      // Calculate distance in meters, then convert to kilometers
+      const distanceInMeters = google.maps.geometry.spherical.computeDistanceBetween(
+        originLatLng,
+        destinationLatLng
+      );
+
+      return Math.round(distanceInMeters / 1000); // Convert to km and round
+    } catch (error) {
+      console.error('Error calculating distance:', error);
+      return null;
+    }
+  }
+
+  async calculateDistanceWithDirections(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+  ): Promise<{ distance: number; duration: number } | null> {
+    try {
+      // Ensure Google Maps is loaded
+      await googleMapsLoader.load({ libraries: ['routes'] });
+
+      if (!this.directionsService) {
+        this.directionsService = new google.maps.DirectionsService();
+      }
+
+      const request: google.maps.DirectionsRequest = {
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        avoidHighways: false,
+        avoidTolls: false,
+      };
+
+      const result = await this.directionsService.route(request);
+
+      if (result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+        const leg = result.routes[0].legs[0];
+        return {
+          distance: Math.round((leg.distance?.value || 0) / 1000), // Convert to km
+          duration: Math.round((leg.duration?.value || 0) / 60), // Convert to minutes
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error calculating distance with directions:', error);
+      return null;
+    }
+  }
+
   destroy(): void {
-    this.markers.forEach((marker) => marker.setMap(null));
+    this.markers.forEach((marker) => (marker.map = null));
     this.markers.clear();
     this.map = null;
     this.directionsService = null;

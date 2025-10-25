@@ -24,6 +24,13 @@ export default class DefaultUsersSeeder extends BaseSeeder {
         phone: '+237600000002',
         role: UserRole.TRANSPORTEUR,
       },
+      {
+        email: 'client@tsa-logistics.com',
+        firstName: 'Emma',
+        lastName: 'Nzui',
+        phone: '+237600090002',
+        role: UserRole.CLIENT,
+      },
     ]
 
     for (const userData of defaultUsers) {

@@ -70,7 +70,7 @@ function TransporteurDashboard() {
     {
       title: 'Taux de Réussite',
       icon: CheckCircle,
-      value: DashboardUtils.formatPercentage(metrics?.successRate || 0),
+      value: 0, // DashboardUtils.formatPercentage(metrics?.successRate || 0)
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.successRate || 0,
@@ -88,7 +88,7 @@ function TransporteurDashboard() {
   if (!user) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -171,7 +171,7 @@ function TransporteurDashboard() {
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
                       <div>
-                        <p className="font-medium">{mission.titre}</p>
+                        <p className="font-medium">{mission.title}</p>
                         <p className="text-sm text-muted-foreground">{mission.route}</p>
                         <p className="text-xs text-muted-foreground">
                           {mission.affreteur

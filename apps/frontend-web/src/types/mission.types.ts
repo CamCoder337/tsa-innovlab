@@ -1,33 +1,50 @@
 import type { Timestamps } from './common.types';
 import type { Address } from './address.types';
 import type { User } from './auth.types';
+import type { Vehicle, VehicleType } from './vehicle.types';
 
 export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
+
+export type MissionUpdateType =
+  | 'status_change'
+  | 'location_update'
+  | 'proof_upload'
+  | 'note'
+  | 'issue';
+
+export type proofType =
+  | 'delivery_signature'
+  | 'photo_delivery'
+  | 'recipient_confirmation'
+  | 'damage_report';
 
 export interface Mission extends Timestamps {
   id: string;
   affreteurId: string;
   affreteur?: User;
-  titre: string;
-  description: string;
-  typeMarchandise: string;
-  poids: number;
-  volume: number;
-  dateDepartEstime: string;
-  dateArriveePrevue: string;
-  adresseDepartId: string;
+  transporteurId?: string | null;
+  transporteur?: User;
+  vehicleId?: string | null;
+  vehicle?: Vehicle;
+  requiredVehicleType?: VehicleType | null;
+  title: string;
+  description?: string | null;
+  typeMarchandise?: string | null;
+  poids?: number | null;
+  volume?: number | null;
+  dateDepartEstime?: string | null;
+  dateArriveePrevue?: string | null;
+  adresseDepartId?: string | null;
   adresseDepart?: Address;
-  adresseArriveeId: string;
+  adresseArriveeId?: string | null;
   adresseArrivee?: Address;
-  budgetMin: number;
-  budgetMax: number;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
   status: MissionStatus;
   isFlexibleDates?: boolean;
   isFlexibleRoute?: boolean;
   notesComplementaires?: string;
   documents?: string[];
-  transporteurId?: string;
-  transporteur?: User;
   dateDebutReelle?: string;
   dateFinReelle?: string;
   ratingAffreteur?: number;
@@ -40,7 +57,7 @@ export interface Mission extends Timestamps {
 }
 
 export interface CreateMissionDto {
-  titre: string;
+  title: string;
   affreteurId: string;
   description?: string;
   typeMarchandise?: string;
@@ -52,6 +69,12 @@ export interface CreateMissionDto {
   adresseArrivee?: Address;
   budgetMin?: number;
   budgetMax?: number;
+  requiredVehicleType?: VehicleType;
+}
+
+// Mission application interface for transporteurs
+export interface ApplyForMissionRequest {
+  vehicleId: string;
 }
 
 export interface UpdateMissionDto extends Partial<CreateMissionDto> {
@@ -65,6 +88,12 @@ export interface UpdateMissionDto extends Partial<CreateMissionDto> {
   commentaireTransporteur?: string | null;
 }
 
+export interface UpdateMissionStatus {
+  status: MissionStatus;
+  transporteurId?: string | null;
+  commentaire?: string | null;
+}
+
 export interface MissionStats {
   totals: {
     missions: number;
@@ -74,7 +103,7 @@ export interface MissionStats {
   statusStats: Record<string, number>;
   recentMissions: Array<{
     id: string;
-    titre: string;
+    title: string;
     status: MissionStatus;
     affreteur: string | null;
     createdAt: string;
@@ -110,14 +139,125 @@ export interface MissionState {
 export interface MissionActions {
   setMissions: (missions: Mission[]) => void;
   setMyMissions: (missions: Mission[]) => void;
-  setStats: (stats: MissionStats) => void;
-  addMission: (mission: Mission) => void;
-  updateMission: (id: string, update: Mission) => void;
-  deleteMission: (id: string) => void;
   setCurrentMission: (mission: Mission | null) => void;
+  setStats: (stats: MissionStats) => void;
+
+  fetchAllMissions: () => Promise<void>;
+  fetchMyMissions: () => Promise<void>;
+  fetchMission: (id: string) => Promise<void>;
+  fetchMissionsStats: () => Promise<void>;
+  createMission: (data: CreateMissionDto) => Promise<Mission | null>;
+  updateMission: (id: string, data: UpdateMissionDto) => Promise<void>;
+  deleteMission: (id: string) => void;
+  publishMission: (id: string) => Promise<void>;
+  unpublishMission: (id: string) => Promise<void>;
+  applyForMission: (id: string, vehicleId: string) => Promise<void>;
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
 }
 
 // Extended store interface with API and utility methods
 export type MissionStoreExtended = MissionState & MissionActions;
+
+export interface MissionFeedback extends Timestamps {
+  id: string;
+  missionId: string;
+  mission?: Mission;
+  affreteurId: string;
+  affreteur?: User;
+  transporteurId?: string;
+  transporteur?: User;
+  rating: number;
+  description?: string;
+}
+
+export interface CreateMissionFeedback {
+  rating: number;
+  description?: string;
+}
+
+export interface MissionUpdate extends Timestamps {
+  id: string;
+  missionId: string;
+  mission?: Mission;
+  transporteurId?: string;
+  transporteur?: User;
+  type: MissionUpdateType;
+  title: string;
+  description?: string;
+  oldStatus?: string;
+  newStatus?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  attachments?: string[];
+  isPublic: boolean;
+}
+
+export interface MissionUpdateFilterParams {
+  page?: number;
+  limit?: number;
+  type?: MissionUpdateType;
+}
+
+export interface RecommendationRequest {
+  userId: string;
+  limit?: number;
+  context?: 'homepage' | 'product' | 'cart' | 'checkout';
+}
+
+export interface SimilarProductsRequest {
+  productId: string;
+  limit?: number;
+}
+
+export interface RecommendationResponse {
+  success: boolean;
+  recommendations: Array<{
+    product_id: string;
+    score: number;
+    reason: string;
+  }>;
+  strategy_used: string;
+}
+
+export interface DynamicPricingRequest {
+  origin: string;
+  destination: string;
+  distance_km: number;
+  weight_tons: number;
+  cargo_type?: string;
+  urgency?: string;
+}
+
+export interface DynamicPricingResponse {
+  success: boolean;
+  calculated_price: number;
+  negotiation_range: {
+    min_price: number;
+    max_price: number;
+    margin_percentage: number;
+    reason: string;
+  };
+  breakdown: {
+    base_cost: number;
+    distance_factor: number;
+    weight_factor: number;
+    cargo_type_multiplier: number;
+    urgency_multiplier: number;
+  };
+}
+
+export interface VisualRecognitionResponse {
+  success: boolean;
+  results: Array<{
+    product_id: string;
+    product_name: string;
+    confidence: number;
+    category: string;
+  }>;
+  processing_time_ms: number;
+}

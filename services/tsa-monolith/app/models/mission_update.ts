@@ -153,6 +153,7 @@ export default class MissionUpdate extends BaseModel {
         : null,
       attachments: this.attachments,
       isPublic: this.isPublic,
+      transporteur: this.transporteur ? this.transporteur.serialize() : undefined,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     }

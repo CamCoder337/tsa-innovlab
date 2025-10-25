@@ -1,8 +1,9 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
-import AffreteurSettings from './AffreteurSettings';
-import TransporteurSettings from './TransporteurSettings';
 import AdminSettings from '../admin/AdminSettings';
+import TransporteurSettings from './TransporteurSettings';
+import AffreteurSettings from './AffreteurSettings';
+import ClientSettings from './ClientSettings';
 
 export default function MySettings() {
   const { user } = useAuth();
@@ -13,18 +14,16 @@ export default function MySettings() {
   }
 
   // Render appropriate component based on user role
-  if (user.role === 'affreteur') {
-    return <AffreteurSettings />;
+  switch (user.role) {
+    case 'affreteur':
+      return <AffreteurSettings />;
+    case 'transporteur':
+      return <TransporteurSettings />;
+    case 'admin':
+      return <AdminSettings />;
+    case 'client':
+      return <ClientSettings />;
+    default:
+      return <Navigate to="/app" />;
   }
-
-  if (user.role === 'transporteur') {
-    return <TransporteurSettings />;
-  }
-
-  if (user.role === 'admin') {
-    return <AdminSettings />;
-  }
-
-  // For other roles (Client), show a generic message or redirect
-  return <Navigate to="/app" />;
 }

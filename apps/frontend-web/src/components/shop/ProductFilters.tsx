@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { X, Search as SearchIcon } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import type { ProductFilterParams } from '@/types/product.types';
+import { VisualSearch } from './VisualSearch';
 
 type ProductFilter = Omit<ProductFilterParams, 'page' | 'limit' | 'sortBy' | 'sortOrder'>;
 
@@ -143,6 +144,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
               onChange={handleSearchChange}
               className="w-full pl-9"
             />
+            <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 

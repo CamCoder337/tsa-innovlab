@@ -61,7 +61,9 @@ const updateMissionSchema = vine.object({
     .optional(),
   budgetMin: vine.number().min(0).optional(),
   budgetMax: vine.number().min(0).optional(),
-  status: vine.enum(['draft', 'published', 'assigned', 'completed', 'cancelled']).optional(),
+  status: vine
+    .enum(['draft', 'published', 'assigned', 'in_progress', 'completed', 'cancelled'])
+    .optional(),
 
   // Adresses pour mise à jour
   adresseDepart: vine
@@ -104,7 +106,9 @@ const updateStatusSchema = vine.object({
 const missionQuerySchema = vine.object({
   page: vine.number().min(1).optional(),
   limit: vine.number().min(1).max(100).optional(),
-  status: vine.enum(['draft', 'published', 'assigned', 'completed', 'cancelled']).optional(),
+  status: vine
+    .enum(['draft', 'published', 'assigned', 'in_progress', 'completed', 'cancelled'])
+    .optional(),
   search: vine.string().trim().maxLength(255).optional(),
   sortBy: vine.enum(['created_at', 'updated_at', 'title', 'budget_min', 'budget_max']).optional(),
   sortOrder: vine.enum(['asc', 'desc']).optional(),
@@ -114,7 +118,20 @@ const missionQuerySchema = vine.object({
   typeMarchandise: vine.string().trim().optional(),
 })
 
+const deliveryProofSchema = vine.object({
+  proofType: vine.enum(['photo', 'signature', 'both']),
+  description: vine.string().trim().maxLength(500).optional(),
+  imageUrl: vine.string().url().optional(),
+})
+
+const locationUpdateSchema = vine.object({
+  latitude: vine.number().min(-90).max(90),
+  longitude: vine.number().min(-180).max(180),
+})
+
 export const createMissionValidator = vine.compile(createMissionSchema)
 export const updateMissionValidator = vine.compile(updateMissionSchema)
 export const updateStatusValidator = vine.compile(updateStatusSchema)
 export const missionQueryValidator = vine.compile(missionQuerySchema)
+export const deliveryProofValidator = vine.compile(deliveryProofSchema)
+export const locationUpdateValidator = vine.compile(locationUpdateSchema)

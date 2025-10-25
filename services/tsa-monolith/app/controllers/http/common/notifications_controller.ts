@@ -18,13 +18,14 @@ export default class NotificationsController {
    */
   async index({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
+      console.log('🔍 Notifications index - User ID:', user.id, 'Type:', typeof user.id)
       const { page = 1, limit = 20, filter = 'all' } = request.qs()
 
       const query = Notification.query()
         .where('user_id', user.id)
         .preload('mission', (missionQuery) => {
-          missionQuery.select('id', 'titre', 'status')
+          missionQuery.select('id', 'title', 'status')
         })
         .orderBy('created_at', 'desc')
 
@@ -39,13 +40,18 @@ export default class NotificationsController {
 
       const notifications = await query.paginate(page, limit)
 
+      console.log('📊 Getting stats for user ID:', user.id)
+      const unreadCount = await this.getUnreadCount(user.id)
+      const urgentCount = await this.getUrgentCount(user.id)
+      console.log('✅ Stats retrieved - Unread:', unreadCount, 'Urgent:', urgentCount)
+
       return response.ok({
         success: true,
         data: {
           notifications: notifications.serialize(),
           stats: {
-            unread: await this.getUnreadCount(Number(user.id)),
-            urgent: await this.getUrgentCount(Number(user.id)),
+            unread: unreadCount,
+            urgent: urgentCount,
           },
         },
       })
@@ -64,7 +70,7 @@ export default class NotificationsController {
    */
   async markAsRead({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
       const { id } = request.params()
 
       const notification = await Notification.query()
@@ -97,7 +103,7 @@ export default class NotificationsController {
    */
   async markAllAsRead({ response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
 
       const updatedCount = await Notification.query()
         .where('user_id', user.id)
@@ -126,7 +132,7 @@ export default class NotificationsController {
    */
   async destroy({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
       const { id } = request.params()
 
       const notification = await Notification.query()
@@ -155,12 +161,12 @@ export default class NotificationsController {
    */
   async stats({ response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
 
       const [unreadCount, urgentCount, totalCount] = await Promise.all([
-        this.getUnreadCount(Number(user.id)),
-        this.getUrgentCount(Number(user.id)),
-        this.getTotalCount(Number(user.id)),
+        this.getUnreadCount(user.id),
+        this.getUrgentCount(user.id),
+        this.getTotalCount(user.id),
       ])
 
       // Répartition par type
@@ -200,7 +206,7 @@ export default class NotificationsController {
    */
   async testNotification({ request, response, auth }: HttpContext) {
     try {
-      const user = auth.user!
+      const user = auth.getUserOrFail()
 
       // Vérifier que l'utilisateur est admin
       if (user.role !== 'admin') {
@@ -246,7 +252,8 @@ export default class NotificationsController {
   }
 
   // Méthodes privées utilitaires
-  private async getUnreadCount(userId: number): Promise<number> {
+  private async getUnreadCount(userId: string): Promise<number> {
+    console.log('🔍 getUnreadCount - Received userId:', userId, 'Type:', typeof userId)
     const result = await Notification.query()
       .where('user_id', userId)
       .whereNull('read_at')
@@ -255,7 +262,7 @@ export default class NotificationsController {
     return Number.parseInt(result[0].$extras.count)
   }
 
-  private async getUrgentCount(userId: number): Promise<number> {
+  private async getUrgentCount(userId: string): Promise<number> {
     const result = await Notification.query()
       .where('user_id', userId)
       .where('priority', NotificationPriority.URGENT)
@@ -265,7 +272,7 @@ export default class NotificationsController {
     return Number.parseInt(result[0].$extras.count)
   }
 
-  private async getTotalCount(userId: number): Promise<number> {
+  private async getTotalCount(userId: string): Promise<number> {
     const result = await Notification.query().where('user_id', userId).count('* as count')
 
     return Number.parseInt(result[0].$extras.count)
