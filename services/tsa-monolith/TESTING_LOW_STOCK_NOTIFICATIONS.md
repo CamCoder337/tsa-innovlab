@@ -3,6 +3,7 @@
 ## 🎯 Fonctionnalité Implémentée
 
 Système de notification **temps réel** envoyant automatiquement :
+
 - ✉️ **Email** avec template `low_stock_alert.edge`
 - 🔔 **Notification in-app** via système de notifications
 - ⚡ **WebSocket temps réel** (priorité HIGH) pour les admins connectés
@@ -21,22 +22,26 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
 ### Test 1 : Mise à jour manuelle d'un produit existant
 
 1. **Démarrer le serveur** :
+
    ```bash
    npm run dev
    ```
 
 2. **Démarrer le worker d'emails** (dans un autre terminal) :
+
    ```bash
    node ace email:worker
    ```
 
 3. **Identifier un produit** avec stock > stockAlert :
+
    ```bash
    # Via endpoint API
    GET http://localhost:3333/api/admin/products
    ```
 
 4. **Mettre à jour le stock** pour qu'il passe sous le seuil :
+
    ```bash
    PUT http://localhost:3333/api/admin/products/{productId}
    Content-Type: application/json
@@ -48,11 +53,13 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
    ```
 
 5. **Vérifier les logs du serveur** :
+
    ```
    ✅ Recherchez : "Low stock alert sent to X admin(s) for product: {productName}"
    ```
 
 6. **Vérifier la queue Redis** :
+
    ```bash
    redis-cli LLEN notifications
    redis-cli LLEN email_queue
@@ -66,6 +73,7 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
 ### Test 2 : Création d'un nouveau produit avec stock faible
 
 1. **Créer un produit directement en stock faible** :
+
    ```bash
    POST http://localhost:3333/api/admin/products
    Content-Type: application/json
@@ -84,6 +92,7 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
    ⚠️ **Note** : La notification n'est envoyée que lors de la **mise à jour** (hook `@beforeUpdate()`), pas à la création.
 
 2. **Ensuite mettre à jour** pour déclencher :
+
    ```bash
    PUT http://localhost:3333/api/admin/products/{productId}
    Content-Type: application/json
@@ -96,11 +105,13 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
 ### Test 3 : Vérifier plusieurs admins reçoivent l'alerte
 
 1. **Créer plusieurs utilisateurs admin** :
+
    ```bash
    node ace create:test-users
    ```
 
 2. **Vérifier qu'ils sont actifs** :
+
    ```sql
    SELECT id, email, role, status FROM users WHERE role = 'admin' AND status = 'active';
    ```
@@ -114,6 +125,7 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
 ### Test 4 : Vérifier la notification temps réel WebSocket
 
 1. **S'abonner au canal Redis de l'admin** :
+
    ```bash
    redis-cli SUBSCRIBE "user:{admin_user_id}:notifications"
    ```
@@ -140,10 +152,12 @@ Déclenchement : **Automatique** dès qu'un produit passe sous son seuil d'alert
 ## 🔍 Points de Vérification
 
 ### Logs Serveur
+
 - ✅ `Low stock alert sent to X admin(s) for product: {name}`
 - ✅ Pas d'erreur `Failed to send low stock notifications`
 
 ### Base de Données
+
 ```sql
 -- Vérifier l'AuditLog
 SELECT * FROM audit_logs
@@ -153,6 +167,7 @@ LIMIT 5;
 ```
 
 ### Redis
+
 ```bash
 # Vérifier queue des notifications
 redis-cli LLEN notifications
@@ -165,6 +180,7 @@ redis-cli LRANGE notifications 0 -1
 ```
 
 ### Email
+
 - ✅ Subject : "⚠️ Alerte Stock Faible - Action Requise"
 - ✅ Template : Tableau HTML avec nom produit + quantité restante
 - ✅ Lien vers dashboard : `{FRONTEND_URL}/admin/products`
@@ -175,12 +191,14 @@ redis-cli LRANGE notifications 0 -1
 ### Aucune notification envoyée
 
 1. **Vérifier que Redis est actif** :
+
    ```bash
    redis-cli ping
    # Réponse attendue : PONG
    ```
 
 2. **Vérifier les admins actifs** :
+
    ```bash
    node ace diagnose
    ```
@@ -194,12 +212,14 @@ redis-cli LRANGE notifications 0 -1
 ### Emails non reçus
 
 1. **Vérifier que le worker tourne** :
+
    ```bash
    # Vérifier les process
    ps aux | grep "email:worker"
    ```
 
 2. **Tester l'envoi d'email direct** :
+
    ```bash
    node ace test:email
    ```
@@ -216,6 +236,7 @@ redis-cli LRANGE notifications 0 -1
 ### Notifications WebSocket non reçues
 
 1. **Vérifier la priorité** (doit être HIGH) :
+
    ```typescript
    // Dans notification_service.ts
    low_stock_alert: 'high',
@@ -229,15 +250,19 @@ redis-cli LRANGE notifications 0 -1
 ## 📊 Cas Limites
 
 ### Stock = stockAlert exactement
+
 ✅ **Alerte envoyée** (condition : `stock <= stockAlert`)
 
 ### Stock déjà sous le seuil
+
 ❌ **Pas d'alerte** (condition : `oldStock > stockAlert` ET `stock <= stockAlert`)
 
 ### Plusieurs mises à jour successives
+
 ✅ **Alerte à chaque fois** (pas de déduplication selon le choix utilisateur)
 
 ### Aucun admin actif
+
 ⚠️ **Pas d'alerte** mais log d'erreur si admins.length === 0
 
 ## ✅ Checklist de Validation

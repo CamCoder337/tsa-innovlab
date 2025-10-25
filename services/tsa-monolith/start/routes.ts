@@ -165,6 +165,11 @@ router
     router.get('/stats/users', '#controllers/http/admin/stats_controller.users')
     router.get('/stats/missions', '#controllers/http/admin/stats_controller.missions')
     router.get('/stats/products', '#controllers/http/admin/stats_controller.products')
+
+    // Feedbacks
+    router.get('/feedbacks', '#controllers/http/admin/feedbacks_controller.index')
+    router.get('/feedbacks/stats', '#controllers/http/admin/feedbacks_controller.stats')
+    router.get('/feedbacks/:id', '#controllers/http/admin/feedbacks_controller.show')
   })
   .prefix('/api/admin')
   .middleware([middleware.auth(), roleGuard(UserRole.ADMIN)])
