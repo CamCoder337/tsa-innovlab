@@ -379,14 +379,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
       updateMissionStatus: async (id: string, data: UpdateMissionStatus) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           const response = await missionService.updateMissionStatus(id, data);
 
           if (response.error) {
             set({
-              error: response.error.message,
-              isLoading: false,
+              error: response.error.message || 'Erreur de connexion internet'
             });
             return;
           }
