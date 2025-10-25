@@ -61,7 +61,6 @@ import { formatCurrency } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
 import { getOrderStatusColor, getOrderStatusLabel } from '@/lib/order-utils';
 import { OrderStatus, PaymentStatus } from '@/types/order.types';
-import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 export default function OrdersManagement() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -69,8 +68,6 @@ export default function OrdersManagement() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all');
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const { t: tAdmin } = useAdminTranslation();
-  const { t: tCommon } = useCommonTranslation();
 
   // Hooks
   const {
@@ -148,7 +145,7 @@ export default function OrdersManagement() {
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{tAdmin('orders.loading')}</p>
+          <p className="text-gray-600">Chargement des commandes...</p>
         </div>
       </div>
     );
@@ -157,8 +154,8 @@ export default function OrdersManagement() {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAdmin('orders.title')}</h1>
-        <p className="text-gray-600">{tAdmin('orders.subtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Commandes</h1>
+        <p className="text-gray-600">Gérez toutes les commandes clients de la plateforme</p>
       </div>
 
       {error && (
@@ -174,9 +171,9 @@ export default function OrdersManagement() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="overview">{tAdmin('orders.tabs.overview')}</TabsTrigger>
-          <TabsTrigger value="orders">{tAdmin('orders.tabs.allOrders')}</TabsTrigger>
-          <TabsTrigger value="analytics">{tAdmin('orders.tabs.analytics')}</TabsTrigger>
+          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="orders">Toutes les commandes</TabsTrigger>
+          <TabsTrigger value="analytics">Analyses</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -186,10 +183,10 @@ export default function OrdersManagement() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Package className="h-5 w-5 text-tsa-blue" />
+                    <Package className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.totalOrders')}</p>
+                    <p className="text-sm text-gray-600">Total Commandes</p>
                     <p className="text-2xl font-bold">{orderStats.total.toLocaleString()}</p>
                   </div>
                 </div>
@@ -203,7 +200,7 @@ export default function OrdersManagement() {
                     <DollarSign className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.totalRevenue')}</p>
+                    <p className="text-sm text-gray-600">Revenus Total</p>
                     <p className="text-2xl font-bold">{formatCurrency(orderStats.totalRevenue)}</p>
                   </div>
                 </div>
@@ -217,7 +214,7 @@ export default function OrdersManagement() {
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.averageBasket')}</p>
+                    <p className="text-sm text-gray-600">Panier Moyen</p>
                     <p className="text-2xl font-bold">
                       {formatCurrency(orderStats.averageOrderValue)}
                     </p>
@@ -233,9 +230,7 @@ export default function OrdersManagement() {
                     <Clock className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">
-                      {getOrderStatusLabel(OrderStatus.PENDING)}
-                    </p>
+                    <p className="text-sm text-gray-600">En Attente</p>
                     <p className="text-2xl font-bold">{orderStats.pending}</p>
                   </div>
                 </div>
@@ -247,26 +242,26 @@ export default function OrdersManagement() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tAdmin('orders.stats.orderStatus')}</CardTitle>
+                <CardTitle>Statut des Commandes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <p className="text-2xl font-bold text-yellow-600">{orderStats.pending}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.pending')}s</p>
+                      <p className="text-sm text-gray-600">En Attente</p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-tsa-blue">{orderStats.processing}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.processing')}s</p>
+                      <p className="text-2xl font-bold text-blue-600">{orderStats.processing}</p>
+                      <p className="text-sm text-gray-600">En Traitement</p>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
                       <p className="text-2xl font-bold text-purple-600">{orderStats.shipped}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.shipped')}s</p>
+                      <p className="text-sm text-gray-600">Expédiées</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">{orderStats.delivered}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.delivered')}s</p>
+                      <p className="text-sm text-gray-600">Livrées</p>
                     </div>
                   </div>
                 </div>
@@ -275,7 +270,7 @@ export default function OrdersManagement() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{tAdmin('orders.stats.recentOrders')}</CardTitle>
+                <CardTitle>Commandes Récentes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -316,7 +311,7 @@ export default function OrdersManagement() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder={tAdmin('orders.filters.searchPlaceholder')}
+                  placeholder="Rechercher par numéro, client..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -327,17 +322,17 @@ export default function OrdersManagement() {
                 onValueChange={(value) => setStatusFilter(value as OrderStatus | 'all')}
               >
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder={tAdmin('orders.filters.filterByStatus')} />
+                  <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tAdmin('orders.filters.allStatuses')}</SelectItem>
-                  <SelectItem value="pending">{tCommon('status.pending')}</SelectItem>
-                  <SelectItem value="paid">{tCommon('status.paid')}</SelectItem>
-                  <SelectItem value="processing">{tCommon('status.processing')}</SelectItem>
-                  <SelectItem value="shipped">{tCommon('status.shipped')}</SelectItem>
-                  <SelectItem value="delivered">{tCommon('status.delivered')}</SelectItem>
-                  <SelectItem value="cancelled">{tCommon('status.cancelled')}</SelectItem>
-                  <SelectItem value="refunded">{tCommon('status.refunded')}</SelectItem>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="pending">En Attente</SelectItem>
+                  <SelectItem value="paid">Payée</SelectItem>
+                  <SelectItem value="processing">En Traitement</SelectItem>
+                  <SelectItem value="shipped">Expédiée</SelectItem>
+                  <SelectItem value="delivered">Livrée</SelectItem>
+                  <SelectItem value="cancelled">Annulée</SelectItem>
+                  <SelectItem value="refunded">Remboursée</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -345,25 +340,25 @@ export default function OrdersManagement() {
                 onValueChange={(value) => setPaymentFilter(value as PaymentStatus | 'all')}
               >
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder={tAdmin('orders.filters.filterByPayment')} />
+                  <SelectValue placeholder="Filtrer par paiement" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tAdmin('orders.filters.allPayments')}</SelectItem>
-                  <SelectItem value="pending">{tCommon('status.pending')}</SelectItem>
-                  <SelectItem value="completed">{tCommon('status.completed')}</SelectItem>
-                  <SelectItem value="failed">{tCommon('status.failed')}</SelectItem>
-                  <SelectItem value="refunded">{tCommon('status.refunded')}</SelectItem>
+                  <SelectItem value="all">Tous les paiements</SelectItem>
+                  <SelectItem value="pending">En Attente</SelectItem>
+                  <SelectItem value="completed">Complété</SelectItem>
+                  <SelectItem value="failed">Échoué</SelectItem>
+                  <SelectItem value="refunded">Remboursé</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => fetchOrders()}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                {tCommon('actions.refresh')}
+                Actualiser
               </Button>
               <Button variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                {tCommon('actions.export')}
+                Exporter
               </Button>
             </div>
           </div>
@@ -372,18 +367,18 @@ export default function OrdersManagement() {
           {selectedOrders.length > 0 && (
             <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-700">
-                {tCommon('actions.bulkSelected', { count: selectedOrders.length })}
+                {selectedOrders.length} commande(s) sélectionnée(s)
               </p>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => handleBulkAction('export')}>
-                  {tCommon('actions.export')}
+                  Exporter
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkAction('update_status')}
                 >
-                  {tCommon('actions.updateStatus')}
+                  Mettre à jour le statut
                 </Button>
               </div>
             </div>
@@ -411,13 +406,13 @@ export default function OrdersManagement() {
                         }}
                       />
                     </TableHead>
-                    <TableHead>{tAdmin('orders.table.number')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.client')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.date')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.amount')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.status')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.payment')}</TableHead>
-                    <TableHead className="text-right">{tAdmin('orders.table.actions')}</TableHead>
+                    <TableHead>Numéro</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Paiement</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -462,10 +457,10 @@ export default function OrdersManagement() {
                           <Badge
                             variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
                           >
-                            {order.paymentStatus === 'pending' && tCommon('status.pending')}
-                            {order.paymentStatus === 'completed' && tCommon('status.completed')}
-                            {order.paymentStatus === 'failed' && tCommon('status.failed')}
-                            {order.paymentStatus === 'refunded' && tCommon('status.refunded')}
+                            {order.paymentStatus === 'pending' && 'En Attente'}
+                            {order.paymentStatus === 'completed' && 'Complété'}
+                            {order.paymentStatus === 'failed' && 'Échoué'}
+                            {order.paymentStatus === 'refunded' && 'Remboursé'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -476,53 +471,50 @@ export default function OrdersManagement() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>{tCommon('actions.title')}</DropdownMenuLabel>
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuItem onClick={() => fetchOrder(order.id)}>
                                 <Eye className="mr-2 h-4 w-4" />
-                                {tCommon('actions.viewDetails')}
+                                Voir détails
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => handleStatusUpdate(order.id, OrderStatus.PROCESSING)}
                               >
                                 <Edit className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markProcessing')}
+                                Marquer en traitement
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleStatusUpdate(order.id, OrderStatus.SHIPPED)}
                               >
                                 <Truck className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markShipped')}
+                                Marquer expédiée
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleStatusUpdate(order.id, OrderStatus.DELIVERED)}
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markDelivered')}
+                                Marquer livrée
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    {tCommon('actions.cancelOrder')}
+                                    Annuler commande
                                   </DropdownMenuItem>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      {tAdmin('orders.dialog.cancelTitle')}
-                                    </AlertDialogTitle>
+                                    <AlertDialogTitle>Annuler la commande</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      {tAdmin('orders.dialog.cancelDescription')}
+                                      Êtes-vous sûr de vouloir annuler cette commande ? Cette action
+                                      ne peut pas être annulée.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      {tAdmin('orders.dialog.cancel')}
-                                    </AlertDialogCancel>
+                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleCancelOrder(order.id)}>
-                                      {tAdmin('orders.dialog.confirmCancel')}
+                                      Confirmer l'annulation
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -541,7 +533,7 @@ export default function OrdersManagement() {
           {filteredOrders.length === 0 && (
             <div className="text-center py-8">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">{tAdmin('orders.empty')}</p>
+              <p className="text-gray-500">Aucune commande trouvée</p>
             </div>
           )}
         </TabsContent>
@@ -550,38 +542,30 @@ export default function OrdersManagement() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tAdmin('orders.analytics.performanceMetrics')}</CardTitle>
+                <CardTitle>Métriques de Performance</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      {tAdmin('orders.analytics.conversionRate')}
-                    </span>
+                    <span className="text-sm text-gray-600">Taux de conversion</span>
                     <span className="font-medium">
                       {allStats.overview.stats?.conversion.total.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      {tAdmin('orders.analytics.averageBasket')}
-                    </span>
+                    <span className="text-sm text-gray-600">Panier moyen</span>
                     <span className="font-medium">
                       {formatCurrency(allStats.overview.stats?.averageBasket.total || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      {tAdmin('orders.analytics.ordersToday')}
-                    </span>
+                    <span className="text-sm text-gray-600">Commandes aujourd'hui</span>
                     <span className="font-medium">
                       {allStats.overview.stats?.orders.byPeriod.today || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
-                      {tAdmin('orders.analytics.revenueThisMonth')}
-                    </span>
+                    <span className="text-sm text-gray-600">Revenus ce mois</span>
                     <span className="font-medium">
                       {formatCurrency(allStats.overview.stats?.revenue.last30Days || 0)}
                     </span>
@@ -592,7 +576,7 @@ export default function OrdersManagement() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{tAdmin('orders.analytics.topProducts')}</CardTitle>
+                <CardTitle>Produits les Plus Vendus</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -603,22 +587,16 @@ export default function OrdersManagement() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-tsa-blue">{index + 1}</span>
+                          <span className="text-sm font-medium text-blue-600">{index + 1}</span>
                         </div>
                         <div>
                           <p className="font-medium text-sm">{product.productName}</p>
-                          <p className="text-xs text-gray-500">
-                            {product.quantitySold} {tAdmin('orders.analytics.sold')}
-                          </p>
+                          <p className="text-xs text-gray-500">{product.quantitySold} vendus</p>
                         </div>
                       </div>
                       <p className="font-medium">{formatCurrency(product.revenue)}</p>
                     </div>
-                  )) || (
-                    <p className="text-gray-500 text-center py-4">
-                      {tAdmin('orders.analytics.noDataAvailable')}
-                    </p>
-                  )}
+                  )) || <p className="text-gray-500 text-center py-4">Aucune donnée disponible</p>}
                 </div>
               </CardContent>
             </Card>

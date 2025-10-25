@@ -25,7 +25,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigationTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type SidebarItem = {
   id: string;
@@ -35,22 +34,22 @@ type SidebarItem = {
   children?: SidebarItem[];
 };
 
-const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
+const affreteurMenu: SidebarItem[] = [
   {
     id: 'dashboard',
-    label: tNav('menu.dashboard'),
+    label: 'Tableau de bord',
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: tNav('menu.missions'),
+    label: 'Missions',
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: tNav('menu.tracking'),
+        label: 'Suivi Temps Réel',
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -58,13 +57,13 @@ const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'products',
-    label: tNav('menu.shop'),
+    label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: tNav('menu.orders'),
+        label: 'Commandes',
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -72,7 +71,7 @@ const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'chat',
-    label: tNav('menu.chat'),
+    label: 'Chat',
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -97,22 +96,22 @@ const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   // }
 ];
 
-const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
+const transporteurMenu: SidebarItem[] = [
   {
     id: 'dashboard',
-    label: tNav('menu.dashboard'),
+    label: 'Tableau de bord',
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: tNav('menu.missions'),
+    label: 'Missions',
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: tNav('menu.tracking'),
+        label: 'Suivi Temps Réel',
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -120,19 +119,19 @@ const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'vehicles',
-    label: tNav('menu.vehicles'),
+    label: 'Mes Véhicules',
     icon: Truck,
     href: '/app/vehicles',
   },
   {
     id: 'products',
-    label: tNav('menu.shop'),
+    label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: tNav('menu.orders'),
+        label: 'Commandes',
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -140,7 +139,7 @@ const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'chat',
-    label: tNav('menu.chat'),
+    label: 'Chat',
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -161,22 +160,22 @@ const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   // },
 ];
 
-const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
+const adminMenu: SidebarItem[] = [
   {
     id: 'dashboard',
-    label: tNav('menu.dashboard'),
+    label: 'Dashboard',
     icon: LayoutDashboard,
     href: '/app',
   },
   {
     id: 'missions',
-    label: tNav('menu.missions'),
+    label: 'Missions',
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: tNav('menu.tracking'),
+        label: 'Suivi Temps Réel',
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -184,25 +183,25 @@ const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'products',
-    label: tNav('menu.shop'),
+    label: 'Boutique',
     icon: ShoppingBag,
     href: '/app/products',
   },
   {
     id: 'orders',
-    label: tNav('menu.orders'),
+    label: 'Commandes',
     icon: ShoppingCart,
     href: '/app/orders',
   },
   {
     id: 'users',
-    label: tNav('menu.users'),
+    label: 'Utilisateurs',
     icon: Users,
     href: '/app/users',
   },
   {
     id: 'chat',
-    label: tNav('menu.chat'),
+    label: 'Chat',
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -217,10 +216,10 @@ const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
-const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
+const clientMenu: SidebarItem[] = [
   {
     id: 'products',
-    label: tNav('menu.shop'),
+    label: 'Boutique',
     icon: ShoppingCart,
     href: '/app/shop',
   },
@@ -228,12 +227,10 @@ const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
 
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
-  const { t: tNav } = useNavigationTranslation();
-
-  if (!isAuthenticated || user?.role === 'client') return getClientMenu(tNav);
-  if (user?.role === 'transporteur') return getTransporteurMenu(tNav);
-  if (user?.role === 'admin') return getAdminMenu(tNav);
-  return getAffreteurMenu(tNav);
+  if (!isAuthenticated) return clientMenu;
+  if (user?.role === 'transporteur') return transporteurMenu;
+  if (user?.role === 'admin') return adminMenu;
+  return affreteurMenu;
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
@@ -310,10 +307,7 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 
 export default function Sidebar() {
   const { user, isAuthenticated } = useAuth();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tNav } = useNavigationTranslation();
-
-  const role = user ? tCommon(`roles.${user?.role}`) : tCommon('roles.guest');
+  const role = user ? user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) : 'Invité';
   const menu = GetMenuByRole();
 
   if (!isAuthenticated) return null;
@@ -323,7 +317,7 @@ export default function Sidebar() {
       <SidebarHeader className="flex flex-row items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
-            {tNav('breadcrumb.workspace', { role })}
+            Espace {role}
           </div>
         </div>
         <SidebarTrigger className="ml-auto" />

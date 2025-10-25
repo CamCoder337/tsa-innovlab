@@ -8,7 +8,7 @@ export function getOrderStatusColor(status: OrderStatus): string {
     case 'pending':
       return 'bg-yellow-500';
     case 'paid':
-      return 'bg-tsa-blue/90';
+      return 'bg-blue-500';
     case 'processing':
       return 'bg-purple-500';
     case 'shipped':
