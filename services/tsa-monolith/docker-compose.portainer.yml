@@ -108,7 +108,7 @@ services:
       redis:
         condition: service_healthy
       tsa-ai:
-        condition: service_healthy
+        condition: service_started
 
     networks:
       - InnovlabG1
@@ -118,7 +118,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   # Nginx Reverse Proxy pour Backend
   nginx-backend:
@@ -141,6 +141,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
   # FastAPI AI Service
   tsa-ai:
@@ -176,7 +177,7 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key-change-in-production}
 
     ports:
-      - '${AI_PORT:-8000}:8000'
+      - '${AI_PORT:-30002}:8000'
 
     depends_on:
       postgres:
@@ -190,9 +191,9 @@ services:
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/ai/health']
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      timeout: 15s
+      retries: 5
+      start_period: 180s
 
 # Volumes pour persistance des données
 volumes:
