@@ -1,27 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { Button } from '../ui/button';
 import { Link } from 'react-router-dom';
 import { getStatusColor } from '@/lib/mission-utils';
 import { getStatusLabel } from '@/lib/mission-utils';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
-import {
-  useMissionsTranslation,
-  useCommonTranslation,
-  useFormsTranslation,
-} from '@/hooks/useTranslation';
 
 interface MissionDetailsProps {
   mission: Mission;
@@ -32,30 +21,21 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   const { deleteMission, error } = useMissions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tForms } = useFormsTranslation();
-  const { t: tMissions } = useMissionsTranslation();
 
   const handleDelete = async (id: string) => {
-    setIsLoading(true);
-
-    toast.loading(tMissions('actions.deletingMission'), {
-      duration: 30000,
-    });
+    setIsLoading(true)
 
     await deleteMission(id);
 
-    toast.dismiss();
-
-    setIsLoading(false);
+    setIsLoading(false)
 
     if (error) {
-      toast.error(error || tCommon('error.generic'));
-      return;
+      toast.error(error || 'Une erreur est survenue');
+      return
     }
 
-    toast.success(tMissions('actions.success.delete'));
-  };
+    toast.success('Mission supprimée avec succès');
+  }
 
   return (
     <div className="space-y-6">
@@ -66,34 +46,34 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
               <CardTitle className="text-2xl flex items-center gap-2">
                 {mission.title}
                 <Badge className={getStatusColor(mission.status)}>
-                  {getStatusLabel(mission.status, tCommon)}
+                  {getStatusLabel(mission.status)}
                 </Badge>
                 {mission.isFlexibleDates && (
                   <Badge variant="outline" className="text-xs">
-                    {tMissions('details.flexibleDates')}
+                    Dates flexibles
                   </Badge>
                 )}
                 {mission.isFlexibleRoute && (
                   <Badge variant="outline" className="text-xs">
-                    {tMissions('details.flexibleRoute')}
+                    Itinéraire flexible
                   </Badge>
                 )}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                #{mission.id} • {mission.typeMarchandise || tMissions('details.typeNotSpecified')}
+                #{mission.id} • {mission.typeMarchandise || 'Type non spécifié'}
               </p>
             </div>
             {user?.role !== 'transporteur' && (
               <div className="space-x-4">
                 <Link to={`/app/missions/${mission.id}/edit`}>
-                  <Button variant="outline">{tCommon('actions.edit')}</Button>
+                  <Button variant="outline">Modifier la Mission</Button>
                 </Link>
                 <Button
                   variant="destructive"
                   className="text-white"
                   onClick={() => setIsDialogOpen(true)}
                 >
-                  {tCommon('actions.delete')}
+                  Supprimer la Mission
                 </Button>
               </div>
             )}
@@ -103,7 +83,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           {mission.description && (
             <div>
               <h3 className="font-medium mb-2 flex items-center gap-2">
-                <Info className="h-4 w-4" /> {tForms('labels.description')}
+                <Info className="h-4 w-4" /> Description
               </h3>
               <p className="text-sm text-muted-foreground">{mission.description}</p>
             </div>
@@ -112,39 +92,39 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <h3 className="font-medium flex items-center gap-2">
-                <MapPin className="h-4 w-4" /> {tMissions('details.route')}
+                <MapPin className="h-4 w-4" /> Itinéraire
               </h3>
               <div className="text-sm space-y-1">
-                <div className="font-medium">{tMissions('departure')}</div>
+                <div className="font-medium">Départ</div>
                 <p className="text-muted-foreground">
-                  {mission.adresseDepart?.label || tCommon('notSpecified')}
+                  {mission.adresseDepart?.label || 'Non spécifié'}
                 </p>
-                <div className="font-medium mt-2">{tMissions('arrival')}</div>
+                <div className="font-medium mt-2">Arrivée</div>
                 <p className="text-muted-foreground">
-                  {mission.adresseArrivee?.label || tCommon('notSpecified')}
+                  {mission.adresseArrivee?.label || 'Non spécifié'}
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
               <h3 className="font-medium flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> {tMissions('details.dates')}
+                <Calendar className="h-4 w-4" /> Dates
               </h3>
               <div className="text-sm space-y-1">
                 <div>
-                  <span className="font-medium">{tMissions('details.estimatedDeparture')}:</span>{' '}
+                  <span className="font-medium">Départ estimé:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.dateDepartEstime
                       ? new Date(mission.dateDepartEstime).toLocaleDateString()
-                      : tCommon('notDefined')}
+                      : 'Non défini'}
                   </span>
                 </div>
                 <div>
-                  <span className="font-medium">{tMissions('details.expectedArrival')}:</span>{' '}
+                  <span className="font-medium">Arrivée prévue:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.dateArriveePrevue
                       ? new Date(mission.dateArriveePrevue).toLocaleDateString()
-                      : tCommon('notDefined')}
+                      : 'Non défini'}
                   </span>
                 </div>
               </div>
@@ -152,32 +132,32 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
             <div className="space-y-2">
               <h3 className="font-medium flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> {tMissions('budget')}
+                <DollarSign className="h-4 w-4" /> Budget
               </h3>
               <div className="text-sm">
                 <div>
-                  <span className="font-medium">{tMissions('budget')}:</span>{' '}
+                  <span className="font-medium">Budget:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.budgetMin?.toLocaleString() || 'N/A'} -{' '}
                     {mission.budgetMax?.toLocaleString() || 'N/A'} FCFA
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className="font-medium">{tMissions('details.cargoType')}:</span>{' '}
+                  <span className="font-medium">Type de marchandise:</span>{' '}
                   <span className="text-muted-foreground">
-                    {mission.typeMarchandise || tCommon('notSpecified')}
+                    {mission.typeMarchandise || 'Non spécifié'}
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className="font-medium">{tForms('labels.weight')}:</span>{' '}
+                  <span className="font-medium">Poids:</span>{' '}
                   <span className="text-muted-foreground">
-                    {mission.poids ? `${mission.poids} kg` : tCommon('notSpecified')}
+                    {mission.poids ? `${mission.poids} kg` : 'Non spécifié'}
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className="font-medium">{tForms('labels.volume')}:</span>{' '}
+                  <span className="font-medium">Volume:</span>{' '}
                   <span className="text-muted-foreground">
-                    {mission.volume ? `${mission.volume} m³` : tCommon('notSpecified')}
+                    {mission.volume ? `${mission.volume} m³` : 'Non spécifié'}
                   </span>
                 </div>
               </div>
@@ -187,7 +167,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           {mission.notesComplementaires && (
             <div>
               <h3 className="font-medium mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" /> {tMissions('details.additionalNotes')}
+                <AlertTriangle className="h-4 w-4" /> Notes complémentaires
               </h3>
               <p className="text-sm text-muted-foreground whitespace-pre-line">
                 {mission.notesComplementaires}
@@ -197,7 +177,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
           {mission.documents && mission.documents.length > 0 && (
             <div>
-              <h3 className="font-medium mb-2">{tMissions('details.documents')}</h3>
+              <h3 className="font-medium mb-2">Documents</h3>
               <div className="flex flex-wrap gap-2">
                 {mission.documents.map((doc, index) => (
                   <a
@@ -207,7 +187,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center px-3 py-1.5 text-sm border rounded-md hover:bg-accent"
                   >
-                    {tMissions('details.document')} {index + 1}
+                    Document {index + 1}
                   </a>
                 ))}
               </div>
@@ -217,27 +197,24 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogDescription className="hidden">{tCommon('actions.delete')}</DialogDescription>
+        <DialogDescription className='hidden'>Supprimer</DialogDescription>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{tMissions('actions.delete')}</DialogTitle>
+            <DialogTitle>Supprimer la Mission</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <p>
-              {tCommon('actions.warning.confirmAction')}{' '}
-              {tMissions('actions.confirmDelete', { mission: mission.title })}
-            </p>
+            <p>Êtes-vous sûr de vouloir supprimer la mission ?</p>
 
             <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
-              <p className="font-medium">{tCommon('actions.warning.irreversible')}</p>
-              <p>{tMissions('actions.warning')}</p>
+              <p className="font-medium">Attention : Cette action est irréversible</p>
+              <p>La mission et toutes les données associées seront définitivement supprimées.</p>
             </div>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isLoading}>
-              {tCommon('actions.cancel')}
+              Annuler
             </Button>
             <Button
               variant="destructive"
@@ -245,7 +222,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
               className="text-white"
               disabled={isLoading}
             >
-              {isLoading ? tMissions('actions.deleting') : tCommon('actions.confirm')}
+              {isLoading ? 'Suppression en cours...' : 'Confirmer'}
             </Button>
           </div>
         </DialogContent>

@@ -8,8 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
-import { toast } from 'sonner';
-import { useShopTranslation } from '@/hooks/useTranslation';
+import toast from 'react-hot-toast';
 
 interface ProductRecommendationsProps {
   type: 'popular' | 'personalized' | 'similar';
@@ -32,7 +31,6 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
-  const { t: tShop } = useShopTranslation();
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +82,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         toast.error(error);
         return;
       }
-      toast.success(tShop('recommendations.addedToCart', { productName: product.name }));
+      toast.success(`${product.name} a été ajouté à votre panier`);
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
@@ -93,15 +91,13 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getTitle = () => {
     switch (type) {
       case 'popular':
-        return tShop('recommendations.popularProducts');
+        return 'Produits Populaires';
       case 'personalized':
-        return isAuthenticated
-          ? tShop('recommendations.recommendedForYou')
-          : tShop('recommendations.popularProducts');
+        return isAuthenticated ? 'Recommandé pour vous' : 'Produits Populaires';
       case 'similar':
-        return tShop('recommendations.similarProducts');
+        return 'Produits Similaires';
       default:
-        return tShop('recommendations.title');
+        return 'Recommandations';
     }
   };
 
@@ -121,15 +117,15 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getDescription = () => {
     switch (type) {
       case 'popular':
-        return tShop('recommendations.popularDescription');
+        return 'Les produits les plus demandés par nos clients';
       case 'personalized':
         return isAuthenticated
-          ? tShop('recommendations.personalizedDescription')
-          : tShop('recommendations.popularDescription');
+          ? 'Sélection personnalisée basée sur vos préférences'
+          : 'Les produits les plus populaires';
       case 'similar':
-        return tShop('recommendations.similarDescription');
+        return "D'autres produits qui pourraient vous intéresser";
       default:
-        return tShop('recommendations.defaultDescription');
+        return 'Découvrez nos recommandations';
     }
   };
 
@@ -146,7 +142,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           {type === 'personalized' && isAuthenticated && (
             <Badge variant="secondary" className="ml-auto">
               <Sparkles className="h-3 w-3 mr-1" />
-              {tShop('recommendations.ai')}
+              IA
             </Badge>
           )}
         </CardTitle>
@@ -186,7 +182,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-tsa-blue transition-colors">
+                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
                     {product.name}
                   </h4>
 
@@ -211,9 +207,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                      {tShop('product.stock')}: {product.stock}
-                    </span>
+                    <span>Stock: {product.stock}</span>
                     {product.category && (
                       <Badge variant="outline" className="text-xs">
                         {product.category.name}
@@ -228,7 +222,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                     disabled={cartLoading || product.stock === 0}
                   >
                     <ShoppingCart className="h-3 w-3 mr-2" />
-                    {product.stock === 0 ? tShop('product.outOfStock') : tShop('product.addToCart')}
+                    {product.stock === 0 ? 'Rupture' : 'Ajouter'}
                   </Button>
                 </div>
               </div>
@@ -237,7 +231,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>{tShop('recommendations.noRecommendations')}</p>
+            <p>Aucune recommandation disponible</p>
           </div>
         )}
 
@@ -247,16 +241,16 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               <Sparkles className="h-4 w-4" />
               <span className="font-medium">Pourquoi ces recommandations ?</span>
             </div>
-            <p className="text-sm text-tsa-blue mt-1">{recommendations.reason}</p>
+            <p className="text-sm text-blue-600 mt-1">{recommendations.reason}</p>
             {recommendations.confidence && (
               <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-tsa-blue">
+                <div className="flex items-center justify-between text-xs text-blue-600">
                   <span>Pertinence</span>
                   <span>{Math.round(recommendations.confidence * 100)}%</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-1.5 mt-1">
                   <div
-                    className="bg-tsa-blue h-1.5 rounded-full transition-all"
+                    className="bg-blue-600 h-1.5 rounded-full transition-all"
                     style={{ width: `${recommendations.confidence * 100}%` }}
                   />
                 </div>

@@ -5,16 +5,13 @@ import type {
   MissionStats,
   CreateMissionDto,
   UpdateMissionDto,
-  MissionFeedback,
-  FeedbackFilterParams,
-  FeedbackStats,
-  UpdateMissionStatus,
 } from '@/types/mission.types';
 import type { MissionStoreExtended } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
+import toast from 'react-hot-toast';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -35,9 +32,6 @@ const initialState = {
   missions: getPersistedData()?.missions || [],
   myMissions: getPersistedData()?.myMissions || [],
   currentMission: null,
-  feedbacks: getPersistedData()?.feedbacks || [],
-  currentFeedback: null,
-  feedbackStats: getPersistedData()?.feedbackStats || null,
   isLoading: false,
   error: null,
   stats: getPersistedData()?.stats || {
@@ -303,17 +297,14 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response =
-            user?.role === 'admin'
-              ? await adminService.adminCreateMission(data)
-              : await missionService.createMission(data);
+          const response = await missionService.createMission(data);
 
           if (response.error) {
             set({
               error: response.error.message,
               isLoading: false,
             });
-            return;
+            return null;
           }
 
           if (response.data) {
@@ -327,13 +318,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
             return response.data;
           }
 
-          return;
+          return null;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to create mission',
             isLoading: false,
           });
-          return;
+          return null;
         }
       },
 
@@ -376,16 +367,19 @@ export const useMissionStore = create<MissionStoreExtended>()(
         }
       },
 
-      updateMissionStatus: async (id: string, data: UpdateMissionStatus) => {
+      deleteMission: async (id: string) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
-          const response = await missionService.updateMissionStatus(id, data);
+          const response = await toast.promise(missionService.deleteMission(id), {
+            loading: 'Suppression de la mission'
+          }, {
+            duration: 30000
+          })
 
           if (response.error) {
             set({
-              error: response.error.message,
-              isLoading: false,
+              error: response.error.message || 'Erreur de connexion internet'
             });
             return;
           }
@@ -395,47 +389,12 @@ export const useMissionStore = create<MissionStoreExtended>()(
             const currentMyMissions = get().myMissions;
 
             set({
-              missions: currentMissions?.map((mission) =>
-                mission.id === id ? response.data!.mission : mission
-              ),
-              myMissions: currentMyMissions?.map((mission) =>
-                mission.id === id ? response.data!.mission : mission
-              ),
-              currentMission:
-                get().currentMission?.id === id ? response.data.mission : get().currentMission,
+              missions: currentMissions.filter((mission) => mission.id !== id),
+              myMissions: currentMyMissions.filter((mission) => mission.id !== id),
+              currentMission: get().currentMission?.id === id ? null : get().currentMission,
               isLoading: false,
               error: null,
             });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to update mission',
-            isLoading: false,
-          });
-        }
-      },
-
-      deleteMission: async (id: string) => {
-        try {
-          set({ error: null });
-
-          const response = await missionService.deleteMission(id);
-
-          if (response.error) {
-            set({
-              error: response.error.message || 'Erreur de connexion internet',
-            });
-            return;
-          }
-
-          if (response.data) {
-            set((state) => ({
-              missions: state.missions.filter((mission) => mission.id !== id),
-              myMissions: state.myMissions.filter((mission) => mission.id !== id),
-              currentMission: state.currentMission?.id === id ? null : state.currentMission,
-              isLoading: false,
-              error: null,
-            }));
           }
         } catch (error) {
           set({
@@ -571,106 +530,6 @@ export const useMissionStore = create<MissionStoreExtended>()(
       clearError: () => set({ error: null }),
 
       reset: () => set(initialState),
-
-      // Feedback Management Actions
-      fetchFeedbacks: async (params?: FeedbackFilterParams) => {
-        try {
-          set({ isLoading: true, error: null });
-
-          const response = await adminService.getFeedbacks(params);
-
-          if (response.error) {
-            set({
-              error: response.error.message,
-              isLoading: false,
-            });
-            return;
-          }
-
-          if (response.data) {
-            set({
-              feedbacks: response.data.feedbacks.data,
-              isLoading: false,
-              error: null,
-            });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to fetch feedbacks',
-            isLoading: false,
-          });
-        }
-      },
-
-      fetchFeedback: async (id: string) => {
-        try {
-          set({ isLoading: true, error: null });
-
-          const response = await adminService.getFeedback(id);
-
-          if (response.error) {
-            set({
-              error: response.error.message,
-              isLoading: false,
-            });
-            return;
-          }
-
-          if (response.data) {
-            set({
-              currentFeedback: response.data,
-              isLoading: false,
-              error: null,
-            });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to fetch feedback',
-            isLoading: false,
-          });
-        }
-      },
-
-      fetchFeedbackStats: async () => {
-        try {
-          set({ isLoading: true, error: null });
-
-          const response = await adminService.getFeedbackStats();
-
-          if (response.error) {
-            set({
-              error: response.error.message,
-              isLoading: false,
-            });
-            return;
-          }
-
-          if (response.data) {
-            set({
-              feedbackStats: response.data,
-              isLoading: false,
-              error: null,
-            });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to fetch feedback stats',
-            isLoading: false,
-          });
-        }
-      },
-
-      setCurrentFeedback: (feedback: MissionFeedback | null) => {
-        set({ currentFeedback: feedback });
-      },
-
-      setFeedbacks: (feedbacks: MissionFeedback[]) => {
-        set({ feedbacks });
-      },
-
-      setFeedbackStats: (feedbackStats: FeedbackStats) => {
-        set({ feedbackStats });
-      },
     }),
     {
       name: 'tsa_missions',
@@ -678,9 +537,8 @@ export const useMissionStore = create<MissionStoreExtended>()(
       partialize: (state) => ({
         missions: state.missions,
         myMissions: state.myMissions,
+        currentMission: state.currentMission,
         stats: state.stats,
-        feedbacks: state.feedbacks,
-        feedbackStats: state.feedbackStats,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
