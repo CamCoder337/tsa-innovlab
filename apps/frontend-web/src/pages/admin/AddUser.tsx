@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AddUserForm from '@/components/forms/AddUserForm';
 import type { CreateUserRequest } from '@/types/auth.types';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminTranslation } from '@/hooks/useTranslation';
 

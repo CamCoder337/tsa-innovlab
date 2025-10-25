@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface MissionFinancialProps {

@@ -5,7 +5,7 @@ import type { CreateUserRequest } from '@/types/auth.types';
 import bg from '@/assets/register-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import RegisterForm from '@/components/forms/RegisterForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';

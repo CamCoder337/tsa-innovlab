@@ -34,7 +34,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { useShopTranslation } from '@/hooks/useTranslation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function ProductPage() {
   const { t } = useShopTranslation();

@@ -8,7 +8,6 @@ import type {
 } from '@/types/auth.types';
 import { tokenManager } from '@/services/token-manager.service';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface CookieOptions {
@@ -209,11 +208,8 @@ export const useAuthStore = create<AuthStore>()(
         // Arrêter la gestion automatique des tokens
         tokenManager.stopTokenManagement();
         try {
-          await toast.promise(authService.logout(), {
-            loading: 'Déconnexion...',
-          });
+          await authService.logout();
 
-          toast.success('Déconnexion réussie');
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
           set({
@@ -225,7 +221,6 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.clear();
         } catch (error) {
           console.error(error);
-          toast.error('Erreur lors de la déconnexion');
         }
       },
 

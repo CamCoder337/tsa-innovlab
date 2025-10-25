@@ -14,7 +14,7 @@ import {
   type UpdateVehicleRequest,
   type VehicleFiltersQuery,
 } from '../../types/vehicle.types';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export const MyVehicles: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);

@@ -28,7 +28,7 @@ import {
   RefreshCw,
   Currency,
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
 
 interface MFAStatus {

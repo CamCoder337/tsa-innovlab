@@ -39,7 +39,7 @@ import type { Address } from '@/types/address.types';
 import { useMissions } from '@/hooks/useMissions';
 import { missionService } from '@/services/mission.service';
 import { GoogleMapsService } from '@/services/google-maps.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useFormsTranslation } from '@/hooks/useTranslation';
 
 // Lazy load AddressPicker with Suspense for client-side rendering

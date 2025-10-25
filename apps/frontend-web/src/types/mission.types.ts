@@ -157,7 +157,10 @@ export interface MissionActions {
   fetchMissionsStats: () => Promise<void>;
   createMission: (data: CreateMissionDto) => Promise<Mission | null>;
   updateMission: (id: string, data: UpdateMissionDto) => Promise<void>;
-  deleteMission: (id: string) => void;
+  deleteMission: (
+    id: string,
+    translations?: { loading?: string; success?: string; error?: string }
+  ) => void;
   publishMission: (id: string) => Promise<void>;
   unpublishMission: (id: string) => Promise<void>;
   applyForMission: (id: string, vehicleId: string) => Promise<void>;

@@ -1,7 +1,7 @@
 import CreateMissionForm from '@/components/forms/CreateMissionForm';
 import type { CreateMissionDto } from '@/types/mission.types';
 import { useAddresses } from '@/hooks/useAddresses';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
 import { useMissionsTranslation } from '@/hooks/useTranslation';

@@ -30,7 +30,7 @@ import {
 import { useUsers } from '@/hooks/useUsers';
 import type { UserStatus } from '@/types/user.types';
 import type { UserRole } from '@/types/auth.types';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useAdminTranslation } from '@/hooks/useTranslation';
 import {
   AlertDialog,

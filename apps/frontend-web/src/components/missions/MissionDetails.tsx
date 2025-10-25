@@ -34,7 +34,13 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   const handleDelete = async (id: string) => {
     setIsLoading(true);
 
+    toast.loading(tMissions('actions.deletingMission'), {
+      duration: 30000,
+    });
+
     await deleteMission(id);
+
+    toast.dismiss();
 
     setIsLoading(false);
 

@@ -59,6 +59,7 @@ export type NotificationData =
 export interface Notification {
   id: string;
   userId: string;
+  description?: string;
   type: NotificationType;
   priority: NotificationPriority;
   title: string;

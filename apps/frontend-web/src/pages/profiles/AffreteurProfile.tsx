@@ -20,7 +20,7 @@ import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileF
 import type { FormikProps } from 'formik';
 import KYCForm from '@/components/forms/KYCForm';
 import { format } from 'date-fns';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { authService } from '@/services/auth.service';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { User, Phone, MapPin, CreditCard, Save, X, Edit, Settings } from 'lucide-react';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { FormikProps } from 'formik';
 import type { ProfileFormValues } from '@/components/forms/ProfileForm';
 import type { UpdateUserRequest } from '@/types/auth.types';

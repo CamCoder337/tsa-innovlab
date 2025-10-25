@@ -217,6 +217,7 @@
   },
   "actions": {
     "confirmAction": "Êtes-vous sûr de vouloir",
+    "deletingMission": "Suppression de la mission",
     "success": {
       "edit": "Mission modifiée avec succès",
       "delete": "Mission supprimée avec succès",

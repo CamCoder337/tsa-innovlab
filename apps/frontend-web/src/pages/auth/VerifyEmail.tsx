@@ -6,7 +6,7 @@ import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
 import type { VerifyEmailFormData } from '@/types/forms.types';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import VerifyEmailForm from '@/components/forms/VerifyEmailForm';
 import { useAuthTranslation } from '@/hooks/useTranslation';
 import LanguageDropdown from '@/components/ui/LanguageDropdown';

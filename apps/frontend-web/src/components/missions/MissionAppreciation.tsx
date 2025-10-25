@@ -6,7 +6,7 @@ import { Star, MessageSquare, ThumbsUp, Award, Loader2, AlertTriangle } from 'lu
 import type { Mission, MissionFeedback } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface MissionAppreciationProps {
