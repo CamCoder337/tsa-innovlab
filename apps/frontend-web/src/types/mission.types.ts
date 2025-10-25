@@ -3,7 +3,13 @@ import type { Address } from './address.types';
 import type { User } from './auth.types';
 import type { Vehicle, VehicleType } from './vehicle.types';
 
-export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
+export type MissionStatus =
+  | 'draft'
+  | 'published'
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
 
 export type MissionUpdateType =
   | 'status_change'
@@ -131,9 +137,12 @@ export interface MissionState {
   missions: Mission[];
   myMissions: Mission[];
   currentMission: Mission | null;
+  stats: MissionStats;
+  feedbacks: MissionFeedback[];
+  currentFeedback: MissionFeedback | null;
+  feedbackStats: FeedbackStats | null;
   isLoading: boolean;
   error: string | null;
-  stats: MissionStats;
 }
 
 export interface MissionActions {
@@ -153,6 +162,14 @@ export interface MissionActions {
   unpublishMission: (id: string) => Promise<void>;
   applyForMission: (id: string, vehicleId: string) => Promise<void>;
 
+  // Feedback management actions
+  fetchFeedbacks: (params?: FeedbackFilterParams) => Promise<void>;
+  fetchFeedback: (id: string) => Promise<void>;
+  fetchFeedbackStats: () => Promise<void>;
+  setCurrentFeedback: (feedback: MissionFeedback | null) => void;
+  setFeedbacks: (feedbacks: MissionFeedback[]) => void;
+  setFeedbackStats: (feedbackStats: FeedbackStats) => void;
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
@@ -162,6 +179,7 @@ export interface MissionActions {
 // Extended store interface with API and utility methods
 export type MissionStoreExtended = MissionState & MissionActions;
 
+// Feedback interfaces based on backend Feedback model
 export interface MissionFeedback extends Timestamps {
   id: string;
   missionId: string;
@@ -177,6 +195,43 @@ export interface MissionFeedback extends Timestamps {
 export interface CreateMissionFeedback {
   rating: number;
   description?: string;
+}
+
+// Feedback filter parameters for admin
+export interface FeedbackFilterParams {
+  page?: number;
+  limit?: number;
+  rating?: number; // Filter by rating (1-5)
+  transporteurId?: string; // Filter by transporteur
+  affreteurId?: string; // Filter by affreteur
+  missionId?: string; // Filter by mission
+  sortBy?: 'rating' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Feedback statistics for admin dashboard
+export interface FeedbackStats {
+  total: number;
+  averageRating: number;
+  distribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+  topTransporteurs: Array<{
+    transporteurId: string;
+    transporteurName: string;
+    averageRating: number;
+    feedbackCount: number;
+  }>;
+  worstTransporteurs: Array<{
+    transporteurId: string;
+    transporteurName: string;
+    averageRating: number;
+    feedbackCount: number;
+  }>;
 }
 
 export interface MissionUpdate extends Timestamps {

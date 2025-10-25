@@ -5,6 +5,9 @@ import type {
   MissionStats,
   CreateMissionDto,
   UpdateMissionDto,
+  MissionFeedback,
+  FeedbackFilterParams,
+  FeedbackStats,
 } from '@/types/mission.types';
 import type { MissionStoreExtended } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
@@ -32,6 +35,9 @@ const initialState = {
   missions: getPersistedData()?.missions || [],
   myMissions: getPersistedData()?.myMissions || [],
   currentMission: null,
+  feedbacks: getPersistedData()?.feedbacks || [],
+  currentFeedback: null,
+  feedbackStats: getPersistedData()?.feedbackStats || null,
   isLoading: false,
   error: null,
   stats: getPersistedData()?.stats || {
@@ -371,15 +377,19 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ error: null });
 
-          const response = await toast.promise(missionService.deleteMission(id), {
-            loading: 'Suppression de la mission'
-          }, {
-            duration: 30000
-          })
+          const response = await toast.promise(
+            missionService.deleteMission(id),
+            {
+              loading: 'Suppression de la mission',
+            },
+            {
+              duration: 30000,
+            }
+          );
 
           if (response.error) {
             set({
-              error: response.error.message || 'Erreur de connexion internet'
+              error: response.error.message || 'Erreur de connexion internet',
             });
             return;
           }
@@ -530,6 +540,106 @@ export const useMissionStore = create<MissionStoreExtended>()(
       clearError: () => set({ error: null }),
 
       reset: () => set(initialState),
+
+      // Feedback Management Actions
+      fetchFeedbacks: async (params?: FeedbackFilterParams) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedbacks(params);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              feedbacks: response.data.feedbacks.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedbacks',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchFeedback: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedback(id);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              currentFeedback: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedback',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchFeedbackStats: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedbackStats();
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              feedbackStats: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedback stats',
+            isLoading: false,
+          });
+        }
+      },
+
+      setCurrentFeedback: (feedback: MissionFeedback | null) => {
+        set({ currentFeedback: feedback });
+      },
+
+      setFeedbacks: (feedbacks: MissionFeedback[]) => {
+        set({ feedbacks });
+      },
+
+      setFeedbackStats: (feedbackStats: FeedbackStats) => {
+        set({ feedbackStats });
+      },
     }),
     {
       name: 'tsa_missions',
@@ -537,8 +647,9 @@ export const useMissionStore = create<MissionStoreExtended>()(
       partialize: (state) => ({
         missions: state.missions,
         myMissions: state.myMissions,
-        currentMission: state.currentMission,
         stats: state.stats,
+        feedbacks: state.feedbacks,
+        feedbackStats: state.feedbackStats,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
