@@ -20,12 +20,10 @@ const Login: React.FC = () => {
     console.log(response);
 
     // Handle login failure
-    if (response === false) {
-      if (error) {
-        toast.error(error);
-        if (localStorage.getItem('verificationEmail')) {
-          navigate('/verify-email');
-        }
+    if (error) {
+      toast.error(error);
+      if (localStorage.getItem('verificationEmail')) {
+        navigate('/verify-email');
       }
       return;
     }
@@ -40,11 +38,7 @@ const Login: React.FC = () => {
     }
 
     // Handle successful login
-    if (response === true) {
-      toast.success('Connexion réussie');
-      // Navigate to dashboard or intended destination
-      // navigate('/app');
-    }
+    toast.success('Connexion réussie')
   };
 
   useEffect(() => {

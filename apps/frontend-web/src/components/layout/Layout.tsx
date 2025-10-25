@@ -25,7 +25,6 @@ export default function Layout() {
   const { fetchUsers, fetchUserStats } = useUsers();
 
   useEffect(() => {
-    console.log('Layout');
     if (user && user.role !== 'client') {
       if (user && user.role !== 'affreteur') fetchAllMissions();
       if (user && user.role !== 'admin') {

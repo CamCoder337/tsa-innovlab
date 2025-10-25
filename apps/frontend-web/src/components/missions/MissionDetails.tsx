@@ -1,13 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { Button } from '../ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getStatusColor } from '@/lib/mission-utils';
 import { getStatusLabel } from '@/lib/mission-utils';
-import { missionService } from '@/services/mission.service';
 import toast from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,30 +18,24 @@ interface MissionDetailsProps {
 
 export function MissionDetails({ mission }: MissionDetailsProps) {
   const { user } = useAuth();
-  const { deleteMission } = useMissions();
-  const navigate = useNavigate();
+  const { deleteMission, error } = useMissions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async (id: string) => {
-    console.log(id);
+    setIsLoading(true)
 
-    setIsLoading(true);
+    await deleteMission(id);
 
-    const response = await missionService.deleteMission(id);
+    setIsLoading(false)
 
-    if (response.error) {
-      console.log(response.error);
-      toast.error('Une erreur est survenue');
+    if (error) {
+      toast.error(error || 'Une erreur est survenue');
+      return
     }
-    if (response.data) {
-      deleteMission(id);
-      toast.success('Mission supprimée avec succès');
-      setTimeout(() => {
-        navigate('/app/missions');
-      }, 2500);
-    }
-  };
+
+    toast.success('Mission supprimée avec succès');
+  }
 
   return (
     <div className="space-y-6">
@@ -204,6 +197,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogDescription className='hidden'>Supprimer</DialogDescription>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Supprimer la Mission</DialogTitle>
