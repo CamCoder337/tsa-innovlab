@@ -1,6 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { Button } from '../ui/button';
@@ -23,19 +29,19 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async (id: string) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     await deleteMission(id);
 
-    setIsLoading(false)
+    setIsLoading(false);
 
     if (error) {
       toast.error(error || 'Une erreur est survenue');
-      return
+      return;
     }
 
     toast.success('Mission supprimée avec succès');
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -197,7 +203,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogDescription className='hidden'>Supprimer</DialogDescription>
+        <DialogDescription className="hidden">Supprimer</DialogDescription>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Supprimer la Mission</DialogTitle>

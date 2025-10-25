@@ -75,10 +75,12 @@ export const useMissions = () => {
   }, [store.missions, store.myMissions]);
 
   // Memoize fetchMission to prevent infinite loops
-  const fetchMissionMemoized = useCallback((id: string) => {
-    store.fetchMission(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.currentMission]
+  const fetchMissionMemoized = useCallback(
+    (id: string) => {
+      store.fetchMission(id);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [store.currentMission]
   );
 
   return {
