@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Camera, X, Clock } from 'lucide-react';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
 import { useShopTranslation } from '@/hooks/useTranslation';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface VisualSearchProps {
   className?: string;

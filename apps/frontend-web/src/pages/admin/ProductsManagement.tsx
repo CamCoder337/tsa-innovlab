@@ -51,7 +51,7 @@ import {
 import { ProductForm } from '@/components/forms/ProductForm';
 import { categoryValidationSchema, productValidationSchema } from '@/lib/validation';
 import { useFormik } from 'formik';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
 import { adminService } from '@/services/admin.service';

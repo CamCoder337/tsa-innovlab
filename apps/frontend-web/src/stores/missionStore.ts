@@ -14,7 +14,6 @@ import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
-import toast from 'react-hot-toast';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -377,15 +376,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ error: null });
 
-          const response = await toast.promise(
-            missionService.deleteMission(id),
-            {
-              loading: 'Suppression de la mission',
-            },
-            {
-              duration: 30000,
-            }
-          );
+          const response = await missionService.deleteMission(id);
 
           if (response.error) {
             set({
@@ -395,16 +386,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-            const currentMyMissions = get().myMissions;
-
-            set({
-              missions: currentMissions.filter((mission) => mission.id !== id),
-              myMissions: currentMyMissions.filter((mission) => mission.id !== id),
-              currentMission: get().currentMission?.id === id ? null : get().currentMission,
+            set((state) => ({
+              missions: state.missions.filter((mission) => mission.id !== id),
+              myMissions: state.myMissions.filter((mission) => mission.id !== id),
+              currentMission: state.currentMission?.id === id ? null : state.currentMission,
               isLoading: false,
               error: null,
-            });
+            }));
           }
         } catch (error) {
           set({

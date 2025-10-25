@@ -16,7 +16,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { handleSupabaseError } from '@/services/supabase';
 import type { CreateProduct, UpdateProduct } from '@/types/product.types';
 import type { Category } from '@/types/category.types';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useFormsTranslation } from '@/hooks/useTranslation';
 
 interface ProductFormProps {

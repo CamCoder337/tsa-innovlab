@@ -217,6 +217,7 @@
   },
   "actions": {
     "confirmAction": "Are you sure you want to",
+    "deletingMission": "Deleting mission",
     "success": {
       "edit": "Mission edited successfully",
       "delete": "Mission deleted successfully",

@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMissions } from '@/hooks/useMissions';
 import { useTrackingTranslation } from '@/hooks/useTranslation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
 
 const getStatusBadgeColor = (status: string) => {

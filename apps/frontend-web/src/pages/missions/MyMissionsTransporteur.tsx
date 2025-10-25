@@ -22,7 +22,7 @@ import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-
 import { useMissions } from '@/hooks/useMissions';
 import { useAddresses } from '@/hooks/useAddresses';
 import { useVehicles } from '@/hooks/useVehicles';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
 import { VehicleTypeLabels } from '@/types/vehicle.types';
 import { useMissionsTranslation } from '@/hooks/useTranslation';

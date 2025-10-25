@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Save, Key } from 'lucide-react';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useFormsTranslation } from '@/hooks/useTranslation';
 
 export interface PasswordChangeFormValues {

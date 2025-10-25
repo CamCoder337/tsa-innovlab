@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Smartphone, CreditCard, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import type { PaymentMethod, OrderPaymentRequest, PaymentSimulation } from '@/types/payment.types';
 import { paymentService } from '@/services/payment.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface MTNPaymentFormProps {
   orderId: string;

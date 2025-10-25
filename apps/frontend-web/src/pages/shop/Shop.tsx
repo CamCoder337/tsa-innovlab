@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useShopTranslation } from '@/hooks/useTranslation';
 
 export default function ShopPage() {

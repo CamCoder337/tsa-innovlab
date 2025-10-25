@@ -23,7 +23,7 @@ import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileF
 import KYCForm from '@/components/forms/KYCForm';
 import { format } from 'date-fns';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { FormikProps } from 'formik';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { useMissions } from '@/hooks/useMissions';

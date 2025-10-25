@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Clock, Plus, Package, MessageSquare } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
 import { useMissionsTranslation } from '@/hooks/useTranslation';
 

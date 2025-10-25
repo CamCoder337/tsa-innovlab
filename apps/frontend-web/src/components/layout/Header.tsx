@@ -29,6 +29,7 @@ import { NotificationCenter } from '../notifications/NotificationCenter';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCommonTranslation, useAuthTranslation } from '@/hooks/useTranslation';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -49,7 +50,14 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
+    toast.loading(tAuth('loggingOut'), {
+      duration: 30000,
+    });
+
     await logout();
+
+    toast.dismiss();
+    toast.success('Déconnexion réussie');
     navigate('/');
   };
 

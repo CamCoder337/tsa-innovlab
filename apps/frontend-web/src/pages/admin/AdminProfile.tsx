@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Settings, Shield, Save, Edit, X, BarChart3, ServerCog } from 'lucide-react';
 import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { FormikProps } from 'formik';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';

@@ -11,7 +11,7 @@ import { MissionFinancial } from '@/components/missions/MissionFinancial';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useMissions } from '@/hooks/useMissions';
 import { useMissionsTranslation } from '@/hooks/useTranslation';
 
@@ -27,7 +27,6 @@ export default function MissionDetailsPage() {
   // Fetch mission data when component mounts or ID changes
   useEffect(() => {
     if (id && !currentMission) {
-      console.log(id);
       fetchMission(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

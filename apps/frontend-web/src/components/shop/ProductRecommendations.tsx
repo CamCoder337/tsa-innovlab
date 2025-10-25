@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useShopTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface ProductRecommendationsProps {
