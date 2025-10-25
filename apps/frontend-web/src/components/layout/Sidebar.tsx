@@ -70,12 +70,6 @@ const affreteurMenu: SidebarItem[] = [
     ],
   },
   {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
-  },
-  {
     id: 'chat',
     label: 'Chat',
     icon: MessagesSquare,

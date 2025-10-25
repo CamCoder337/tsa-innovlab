@@ -11,6 +11,7 @@ import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
+import toast from 'react-hot-toast';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -368,14 +369,17 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
       deleteMission: async (id: string) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
-          const response = await missionService.deleteMission(id);
+          const response = await toast.promise(missionService.deleteMission(id), {
+            loading: 'Suppression de la mission'
+          }, {
+            duration: 30000
+          })
 
           if (response.error) {
             set({
-              error: response.error.message,
-              isLoading: false,
+              error: response.error.message || 'Erreur de connexion internet'
             });
             return;
           }
