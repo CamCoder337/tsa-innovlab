@@ -10,6 +10,7 @@ import {
   Clock,
   CheckCircle,
   TrendingUp,
+  Loader,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,7 +20,7 @@ import { useMemo } from 'react';
 
 function AffreteurDashboard() {
   const { user } = useAuth();
-  const { myMissions } = useMissions();
+  const { myMissions, isLoading } = useMissions();
 
   // Calculate real metrics from mission data
   const metrics = useMemo(() => {
@@ -83,6 +84,12 @@ function AffreteurDashboard() {
   ];
 
   if (!user) return null;
+
+  if (isLoading && myMissions.length === 0) return (
+    <div className="flex items-center justify-center h-screen">
+      <Loader className="animate-spin h-12 w-12 text-tsa-blue" />
+    </div>
+  )
 
   return (
     <div className="space-y-6 p-6">

@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
+import toast from 'react-hot-toast';
 
 interface ProductRecommendationsProps {
   type: 'popular' | 'personalized' | 'similar';
@@ -77,6 +78,11 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const handleAddToCart = async (product: Product) => {
     try {
       await addToCart(product, 1);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      toast.success(`${product.name} a été ajouté à votre panier`);
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }

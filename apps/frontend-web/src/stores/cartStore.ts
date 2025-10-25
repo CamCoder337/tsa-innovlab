@@ -117,6 +117,8 @@ export const useCartStore = create<CartStore>()(
         const { cart } = get();
 
         try {
+          set({ error: null });
+
           if (currentUser) {
             // Authenticated user - use API
             const addRequest: AddToCartRequest = { productId, quantity };

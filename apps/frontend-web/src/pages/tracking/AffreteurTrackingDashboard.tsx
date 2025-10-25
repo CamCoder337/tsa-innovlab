@@ -5,7 +5,7 @@ import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { getStatusColor } from '@/lib/mission-utils';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
 // const getPriorityColor = (budgetMax: number) => {
@@ -39,10 +39,12 @@ export default function AffréteurTrackingDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Tableau de Suivi</h1>
             <p className="text-gray-600">Gérez vos expéditions et suivez vos performances</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Package className="w-4 h-4 mr-2" />
-            Nouvelle Mission
-          </Button>
+          <Link to='/app/missions/create'>
+            <Button className="bg-tsa-blue hover:bg-tsa-blue/80">
+              <Package className="w-4 h-4 mr-2" />
+              Nouvelle Mission
+            </Button>
+          </Link>
         </div>
 
         {/* KPIs */}
@@ -343,6 +345,6 @@ export default function AffréteurTrackingDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 }
