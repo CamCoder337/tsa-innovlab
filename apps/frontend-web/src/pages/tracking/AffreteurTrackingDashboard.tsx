@@ -39,7 +39,7 @@ export default function AffréteurTrackingDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">Tableau de Suivi</h1>
             <p className="text-gray-600">Gérez vos expéditions et suivez vos performances</p>
           </div>
-          <Link to='/app/missions/create'>
+          <Link to="/app/missions/create">
             <Button className="bg-tsa-blue hover:bg-tsa-blue/80">
               <Package className="w-4 h-4 mr-2" />
               Nouvelle Mission
@@ -345,6 +345,6 @@ export default function AffréteurTrackingDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div >
+    </div>
   );
 }
