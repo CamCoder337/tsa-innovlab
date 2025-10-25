@@ -385,7 +385,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
           if (response.error) {
             set({
-              error: response.error.message || 'Erreur de connexion internet'
+              error: response.error.message || 'Erreur de connexion internet',
             });
             return;
           }

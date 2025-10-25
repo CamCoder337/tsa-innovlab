@@ -187,7 +187,7 @@ function TransporteurProfile() {
       label: tProfile('stats.successRate'),
       value:
         myMissions?.filter((mission) => mission.status === 'completed').length /
-        myMissions?.length || 0,
+          myMissions?.length || 0,
       icon: Award,
     },
     {
@@ -263,15 +263,15 @@ function TransporteurProfile() {
               isEditing={isEditing}
               onSubmit={handleSave}
               isLoading={isLoading}
-            // additionalFields={() => (
-            //     <div className="space-y-4">
-            //         <FormField
-            //             name="companyName"
-            //             label="Nom de l'entreprise"
-            //             disabled={!isEditing}
-            //         />
-            //     </div>
-            // )}
+              // additionalFields={() => (
+              //     <div className="space-y-4">
+              //         <FormField
+              //             name="companyName"
+              //             label="Nom de l'entreprise"
+              //             disabled={!isEditing}
+              //         />
+              //     </div>
+              // )}
             />
 
             <div className="space-y-6">
