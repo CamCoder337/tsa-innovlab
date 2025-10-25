@@ -38,7 +38,7 @@ const Login: React.FC = () => {
     }
 
     // Handle successful login
-    toast.success('Connexion réussie')
+    toast.success('Connexion réussie');
   };
 
   useEffect(() => {

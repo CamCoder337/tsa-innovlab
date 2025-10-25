@@ -188,6 +188,12 @@ const adminMenu: SidebarItem[] = [
     href: '/app/products',
   },
   {
+    id: 'orders',
+    label: 'Commandes',
+    icon: ShoppingCart,
+    href: '/app/orders',
+  },
+  {
     id: 'users',
     label: 'Utilisateurs',
     icon: Users,

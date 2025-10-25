@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,149 +12,27 @@ import {
   Package,
   TrendingUp,
   Users,
-  XCircle,
   AlertTriangle,
   BarChart3,
   PieChart,
   Truck,
 } from 'lucide-react';
+import { useAllAdminStats } from '@/hooks/useAdminStats';
+import { DashboardUtils } from '@/lib/dashboard.utils';
+import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
 import { useMissions } from '@/hooks/useMissions';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
-import { DashboardUtils } from '@/lib/dashboard.utils';
-import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
-import type { MissionStatus } from '@/types/mission.types';
-
-interface OverallStats {
-  overview: {
-    totalUsers: number;
-    totalMissions: number;
-    totalProducts: number;
-    totalRevenue: number;
-    activeTransporteurs: number;
-    activeAffreteurs: number;
-  };
-  missions: {
-    published: number;
-    assigned: number;
-    completed: number;
-    cancelled: number;
-    recent: Array<{
-      id: string;
-      title: string;
-      status: MissionStatus;
-      affreteur: string | null;
-      createdAt: string;
-    }>;
-  };
-  products: {
-    total: number;
-    active: number;
-    lowStock: number;
-    outOfStock: number;
-    totalValue: number;
-  };
-  users: {
-    total: number;
-    admins: number; // This would need to come from a user stats endpoint
-    transporteurs: number;
-    affreteurs: number;
-    clients: number;
-    activeToday: number; // Mock calculation
-    newThisMonth: number; // Mock calculation
-  };
-  revenue: {
-    today: number;
-    thisWeek: number;
-    thisMonth: number;
-    thisYear: number;
-    growth: {
-      daily: number; // These would need to come from analytics endpoints
-      weekly: number;
-      monthly: number;
-      yearly: number;
-    };
-  };
-}
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-
-  // Store hooks
-  const {
-    missions,
-    stats: missionStats,
-    isLoading: missionStatsLoading,
-    error: missionStatsError,
-  } = useMissions();
-  const {
-    stats: productStats,
-    isLoading: productStatsLoading,
-    error: productStatsError,
-  } = useProducts();
-  const { users, userStats, isLoading: userStatsLoading, error: userStatsError } = useUsers();
-
-  const [stats, setStats] = useState<OverallStats>({} as OverallStats);
-
-  // Calculate real statistics from API data
-  useEffect(() => {
-    if (missionStats && productStats && userStats) {
-      const calculatedStats = {
-        overview: {
-          totalUsers: userStats.total || 0,
-          totalMissions: missionStats.totals?.missions || 0,
-          totalProducts: productStats.products?.totalProducts || 0,
-          totalRevenue: productStats.inventory?.totalValue || 0,
-          activeTransporteurs: userStats.byRole?.transporteur || 0,
-          activeAffreteurs: userStats.byRole?.affreteur || 0,
-        },
-        missions: {
-          published: missionStats.statusStats?.published || 0,
-          assigned: missionStats.statusStats?.assigned || 0,
-          completed: missionStats.statusStats?.completed || 0,
-          cancelled: missionStats.statusStats?.cancelled || 0,
-          recent: missionStats.recentMissions || [],
-        },
-        products: {
-          total: productStats.products?.totalProducts || 0,
-          active: productStats.products?.activeProducts || 0,
-          lowStock: productStats.products?.lowStockProducts || 0,
-          outOfStock: productStats.products?.outOfStockProducts || 0,
-          totalValue: productStats.inventory?.totalValue || 0,
-        },
-        users: {
-          total: userStats.total || 0,
-          admins: userStats.byRole?.admin || 0,
-          transporteurs: userStats.byRole?.transporteur || 0,
-          affreteurs: userStats.byRole?.affreteur || 0,
-          clients: userStats.byRole?.client || 0,
-          activeToday: DashboardUtils.calculateActiveUsersToday(users) || 0,
-          newThisMonth: DashboardUtils.calculateNewUsersThisMonth(users) || 0,
-        },
-        revenue: {
-          today:
-            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).today : 0,
-          thisWeek:
-            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).week : 0,
-          thisMonth:
-            missions.length > 0 ? DashboardUtils.calculateTimeBasedEarnings(missions).month : 0,
-          thisYear: productStats.inventory?.totalValue,
-          growth: {
-            daily: 12.5, // These would need to come from analytics endpoints
-            weekly: 8.3,
-            monthly: 15.7,
-            yearly: 23.4,
-          },
-        },
-      };
-
-      setStats(calculatedStats);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [missionStats, productStats, userStats, missions]);
+  const allStats = useAllAdminStats();
+  const { stats: missionStats, isLoading: missionLoading } = useMissions();
+  const { stats: productStats, isLoading: productLoading } = useProducts();
+  const { userStats, isLoading: userLoading } = useUsers();
 
   // Show loading state
-  if (missionStatsLoading && productStatsLoading && userStatsLoading) {
+  if (allStats.isLoading || missionLoading || productLoading || userLoading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
@@ -166,19 +44,26 @@ export default function AdminDashboard() {
   }
 
   // Show error state
-  if (missionStatsError || productStatsError || userStatsError) {
-    return (
-      <div className="flex-1 flex items-center justify-center h-full">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
-          <p className="text-gray-600 text-sm">
-            {missionStatsError || productStatsError || userStatsError}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // if (getStatsError()) {
+  //   return (
+  //     <div className="flex-1 flex items-center justify-center h-full">
+  //       <div className="text-center">
+  //         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+  //         <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
+  //         <p className="text-gray-600 text-sm">
+  //           {getStatsError()}
+  //         </p>
+  //         <Button
+  //           onClick={allStats.fetchAllStats}
+  //           className="mt-4"
+  //           variant="outline"
+  //         >
+  //           Réessayer
+  //         </Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex-1 p-6">
@@ -188,10 +73,11 @@ export default function AdminDashboard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="missions">Missions</TabsTrigger>
+          <TabsTrigger value="boutique">Boutique</TabsTrigger>
           <TabsTrigger value="analytics">Analyses</TabsTrigger>
         </TabsList>
 
@@ -206,7 +92,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Utilisateurs Total</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview?.totalUsers.toLocaleString() || '0'}
+                      {allStats.overview.stats?.quickStats.totalUsers.toLocaleString() ||
+                        userStats?.total ||
+                        0}
                     </p>
                   </div>
                 </div>
@@ -222,7 +110,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Total</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview?.totalMissions.toLocaleString() || '0'}
+                      {allStats.overview.stats?.quickStats.totalMissions.toLocaleString() ||
+                        missionStats?.totals?.missions?.toLocaleString() ||
+                        0}
                     </p>
                   </div>
                 </div>
@@ -238,7 +128,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Revenus Total</p>
                     <p className="text-2xl font-bold">
-                      {((stats?.overview?.totalRevenue || 0) / 1000000).toFixed(1)}M FCFA
+                      {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M FCFA
                     </p>
                   </div>
                 </div>
@@ -252,80 +142,40 @@ export default function AdminDashboard() {
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Problèmes en Attente</p>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-sm text-gray-600">Stock Faible</p>
+                    <p className="text-2xl font-bold">
+                      {allStats.products.stats?.lowStockCount ||
+                        productStats?.products?.lowStockProducts ||
+                        0}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  Activité Récente
+                  Top Affréteurs
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {stats?.missions?.recent?.slice(0, 3)?.map((mission) => {
-                    const statusLabel = getStatusLabel(mission.status);
-                    const StatusIcon =
-                      mission.status === 'completed'
-                        ? CheckCircle
-                        : mission.status === 'assigned'
-                          ? Truck
-                          : mission.status === 'published'
-                            ? Users
-                            : mission.status === 'cancelled'
-                              ? XCircle
-                              : Clock; // draft status
-
-                    return (
-                      <div className="flex items-center gap-3" key={mission.id}>
-                        <div
-                          className={`p-2 rounded-lg ${
-                            mission.status === 'completed'
-                              ? 'bg-green-100'
-                              : mission.status === 'assigned'
-                                ? 'bg-blue-100'
-                                : mission.status === 'published'
-                                  ? 'bg-purple-100'
-                                  : mission.status === 'cancelled'
-                                    ? 'bg-red-100'
-                                    : 'bg-gray-100' // draft
-                          }`}
-                        >
-                          <StatusIcon
-                            className={`h-4 w-4 ${
-                              mission.status === 'completed'
-                                ? 'text-green-600'
-                                : mission.status === 'assigned'
-                                  ? 'text-blue-600'
-                                  : mission.status === 'published'
-                                    ? 'text-purple-600'
-                                    : mission.status === 'cancelled'
-                                      ? 'text-red-600'
-                                      : 'text-gray-600' // draft
-                            }`}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{`Mission "${mission.title}" ${statusLabel.toLowerCase()}`}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(mission.createdAt).toLocaleDateString('fr-FR', {
-                              day: 'numeric',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
+                <div className="space-y-3">
+                  {allStats.missions.stats?.topAffreteurs?.slice(0, 5).map((item) => (
+                    <div
+                      key={item.userId}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{item.userName}</p>
+                        <p className="text-xs text-gray-500">{item.missionCount} missions</p>
                       </div>
-                    );
-                  })}
+                      <Badge variant="secondary">Top Affréteur</Badge>
+                    </div>
+                  )) || <p className="text-gray-500 text-center py-4">Aucune mission récente</p>}
                 </div>
               </CardContent>
             </Card>
@@ -333,37 +183,66 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Statistiques Mensuelles
+                  <Activity className="h-5 w-5" />
+                  Top Transporteurs
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Nouvelles missions</span>
-                    <span className="font-medium">
-                      +{DashboardUtils.calculateNewMissionsThisMonth(missions) || 0}
-                    </span>
+                <div className="space-y-3">
+                  {allStats.missions.stats?.topTransporteurs?.slice(0, 5).map((item) => (
+                    <div
+                      key={item.userId}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">{item.userName}</p>
+                        <p className="text-xs text-gray-500">{item.missionCount} missions</p>
+                      </div>
+                      <Badge variant="secondary">Top Affréteur</Badge>
+                    </div>
+                  )) || <p className="text-gray-500 text-center py-4">Aucune mission récente</p>}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Statistiques Rapides
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {allStats.users.stats?.byRole.transporteur ||
+                        userStats?.byRole?.transporteur ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Transporteurs</p>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Nouveaux utilisateurs</span>
-                    <span className="font-medium">+{stats?.users?.newThisMonth || 0}</span>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <p className="text-2xl font-bold text-green-600">
+                      {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Affréteurs</p>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Revenus ce mois</span>
-                    <span className="font-medium text-green-600">
-                      {((stats?.revenue?.thisMonth || 0) / 1000000).toFixed(1)}M FCFA
-                    </span>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <p className="text-2xl font-bold text-purple-600">
+                      {allStats.products.stats?.active ||
+                        productStats?.products?.activeProducts ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Produits Actifs</p>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Taux de réussite</span>
-                    <span className="font-medium">
-                      {DashboardUtils.calculateSuccessRate(
-                        stats?.missions?.completed || 0,
-                        stats?.overview?.totalMissions || 0
-                      )}
-                      %
-                    </span>
+                  <div className="text-center p-3 bg-orange-50 rounded-lg">
+                    <p className="text-2xl font-bold text-orange-600">
+                      {allStats.missions.stats?.byStatus.completed ||
+                        missionStats?.statusStats?.completed ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Missions Terminées</p>
                   </div>
                 </div>
               </CardContent>
@@ -376,7 +255,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(missionStats.recentMissions || []).slice(0, 3).map((activity) => (
+                {(missionStats?.recentMissions || []).slice(0, 3).map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-center justify-between p-4 border rounded-lg"
@@ -416,7 +295,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Affréteurs Actifs</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview?.activeAffreteurs.toLocaleString() || '0'}
+                      {allStats.users.stats?.byRole.affreteur.toLocaleString() ||
+                        userStats?.byRole?.affreteur?.toLocaleString() ||
+                        '0'}
                     </p>
                   </div>
                 </div>
@@ -432,7 +313,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Transporteurs Actifs</p>
                     <p className="text-2xl font-bold">
-                      {stats?.overview?.activeTransporteurs.toLocaleString() || '0'}
+                      {allStats.users.stats?.byRole.transporteur.toLocaleString() ||
+                        userStats?.byRole?.transporteur?.toLocaleString() ||
+                        '0'}
                     </p>
                   </div>
                 </div>
@@ -449,8 +332,8 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-600">Croissance Mensuelle</p>
                     <p className="text-2xl font-bold">
                       {DashboardUtils.calculateGrowthPercentage(
-                        stats?.users?.newThisMonth || 0,
-                        DashboardUtils.calculateNewUsersLastMonth(users) || 0
+                        allStats.users.stats?.byPeriod.last7Days || 0,
+                        allStats.users.stats?.byPeriod.last30Days || 0
                       )}
                     </p>
                   </div>
@@ -473,23 +356,29 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{stats?.users?.admins || 0}</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {allStats.users.stats?.byRole.admin || userStats?.byRole?.admin || 0}
+                  </p>
                   <p className="text-sm text-gray-600">Administrateurs</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <p className="text-2xl font-bold text-green-600">
-                    {stats?.users?.affreteurs || 0}
+                    {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
                   </p>
                   <p className="text-sm text-gray-600">Affréteurs</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <p className="text-2xl font-bold text-purple-600">
-                    {stats?.users?.transporteurs || 0}
+                    {allStats.users.stats?.byRole.transporteur ||
+                      userStats?.byRole?.transporteur ||
+                      0}
                   </p>
                   <p className="text-sm text-gray-600">Transporteurs</p>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
-                  <p className="text-2xl font-bold text-orange-600">{stats?.users?.clients || 0}</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {allStats.users.stats?.byRole.client || userStats?.byRole?.client || 0}
+                  </p>
                   <p className="text-sm text-gray-600">Client</p>
                 </div>
               </div>
@@ -497,7 +386,7 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Nouveaux utilisateurs ce mois</span>
                   <span className="font-medium text-green-600">
-                    +{stats?.users?.newThisMonth || 0}
+                    +{allStats.users.stats?.byPeriod.last30Days || 0}
                   </span>
                 </div>
               </div>
@@ -516,7 +405,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Actives</p>
                     <p className="text-2xl font-bold">
-                      {stats?.missions?.assigned.toLocaleString() || '0'}
+                      {allStats.missions.stats?.byStatus.assigned.toLocaleString() ||
+                        missionStats.statusStats.assigned ||
+                        '0'}
                     </p>
                   </div>
                 </div>
@@ -532,7 +423,9 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Missions Terminées</p>
                     <p className="text-2xl font-bold">
-                      {stats?.missions?.completed.toLocaleString() || '0'}
+                      {allStats.missions.stats?.byStatus.completed ||
+                        missionStats?.statusStats?.completed ||
+                        '0'}
                     </p>
                   </div>
                 </div>
@@ -549,8 +442,8 @@ export default function AdminDashboard() {
                     <p className="text-sm text-gray-600">Taux de Réussite</p>
                     <p className="text-2xl font-bold">
                       {DashboardUtils.calculateSuccessRate(
-                        stats?.missions?.completed || 0,
-                        stats?.overview?.totalMissions || 0
+                        allStats.missions.stats?.byStatus.completed || 0,
+                        allStats.overview.stats?.quickStats.totalMissions || 0
                       )}
                       %
                     </p>
@@ -569,25 +462,33 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <p className="text-2xl font-bold text-yellow-600">
-                      {stats?.missions?.published || 0}
+                      {allStats.missions.stats?.byStatus.published ||
+                        missionStats?.statusStats?.published ||
+                        0}
                     </p>
                     <p className="text-sm text-gray-600">Publiées</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <p className="text-2xl font-bold text-blue-600">
-                      {stats?.missions?.assigned || 0}
+                      {allStats.missions.stats?.byStatus.assigned ||
+                        missionStats?.statusStats?.assigned ||
+                        0}
                     </p>
                     <p className="text-sm text-gray-600">Assignées</p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <p className="text-2xl font-bold text-green-600">
-                      {stats?.missions?.completed || 0}
+                      {allStats.missions.stats?.byStatus.completed ||
+                        missionStats?.statusStats?.completed ||
+                        0}
                     </p>
                     <p className="text-sm text-gray-600">Terminées</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-2xl font-bold text-red-600">
-                      {stats?.missions?.cancelled || 0}
+                      {allStats.missions.stats?.byStatus.cancelled ||
+                        missionStats?.statusStats?.cancelled ||
+                        0}
                     </p>
                     <p className="text-sm text-gray-600">Annulées</p>
                   </div>
@@ -595,7 +496,7 @@ export default function AdminDashboard() {
                 <div className="mt-6">
                   <h4 className="font-medium mb-3">Missions Récentes</h4>
                   <div className="space-y-2">
-                    {stats?.missions?.recent?.slice(0, 5)?.map((mission) => (
+                    {missionStats?.recentMissions?.slice(0, 5)?.map((mission) => (
                       <div
                         key={mission.id}
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
@@ -618,6 +519,332 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="boutique" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Products Overview */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Package className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Produits Total</p>
+                    <p className="text-2xl font-bold">
+                      {allStats.products.stats?.total || productStats?.products?.totalProducts || 0}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Products */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Produits Actifs</p>
+                    <p className="text-2xl font-bold">
+                      {allStats.products.stats?.active ||
+                        productStats?.products?.activeProducts ||
+                        0}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Low Stock Products */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Stock Faible</p>
+                    <p className="text-2xl font-bold">
+                      {allStats.products.stats?.lowStockCount ||
+                        productStats?.products?.lowStockProducts ||
+                        0}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Total Orders */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Commandes Total</p>
+                    <p className="text-2xl font-bold">
+                      {allStats.overview.stats?.orders.total || 0}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Products Statistics */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  Statistiques Produits
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <p className="text-2xl font-bold text-green-600">
+                      {allStats.products.stats?.active ||
+                        productStats?.products?.activeProducts ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Actifs</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-600">
+                      {allStats.products.stats?.inactive ||
+                        productStats?.products?.inactiveProducts ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Inactifs</p>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <p className="text-2xl font-bold text-orange-600">
+                      {allStats.products.stats?.lowStockCount ||
+                        productStats?.products?.lowStockProducts ||
+                        0}
+                    </p>
+                    <p className="text-sm text-gray-600">Stock Faible</p>
+                  </div>
+                  <div className="text-center p-4 bg-red-50 rounded-lg">
+                    <p className="text-2xl font-bold text-red-600">
+                      {productStats?.products?.outOfStockProducts || 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Rupture Stock</p>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="font-medium mb-3">Top Catégories</h4>
+                  <div className="space-y-2">
+                    {productStats?.topCategories?.slice(0, 5)?.map((category) => (
+                      <div
+                        key={category.id}
+                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{category.name}</p>
+                          <p className="text-xs text-gray-500">{category.productCount} produits</p>
+                        </div>
+                        <Badge variant="secondary">{category.productCount}</Badge>
+                      </div>
+                    )) || (
+                      <p className="text-gray-500 text-center py-4">Aucune catégorie trouvée</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Inventory Value & Orders */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Valeur & Commandes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-gray-600">Valeur Totale Inventaire</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {productStats?.inventory?.totalValue
+                        ? `${productStats.inventory.totalValue.toLocaleString()} FCFA`
+                        : '0 FCFA'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <p className="text-xl font-bold text-green-600">
+                        {allStats.overview.stats?.orders.total || 0}
+                      </p>
+                      <p className="text-sm text-gray-600">Commandes</p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <p className="text-xl font-bold text-purple-600">
+                        {allStats.overview.stats?.revenue.total
+                          ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
+                          : '0'}
+                      </p>
+                      <p className="text-sm text-gray-600">Revenus (FCFA)</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Produits Populaires</span>
+                      <span className="font-medium">
+                        {productStats?.products?.activeProducts || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Catégories Actives</span>
+                      <span className="font-medium">
+                        {productStats?.topCategories?.length || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Taux de Stock Faible</span>
+                      <span className="font-medium">
+                        {productStats?.products?.totalProducts
+                          ? `${Math.round(((productStats?.products?.lowStockProducts || 0) / productStats.products.totalProducts) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            {/* Products & Orders Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Résumé Boutique
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-3">Distribution Produits</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Actifs</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{
+                                width: `${((allStats.products.stats?.active || productStats?.products?.activeProducts || 0) / (allStats.products.stats?.total || productStats?.products?.totalProducts || 1)) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {allStats.products.stats?.active ||
+                              productStats?.products?.activeProducts ||
+                              0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Stock Faible</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-orange-600 h-2 rounded-full"
+                              style={{
+                                width: `${((allStats.products.stats?.lowStockCount || productStats?.products?.lowStockProducts || 0) / (allStats.products.stats?.total || productStats?.products?.totalProducts || 1)) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {allStats.products.stats?.lowStockCount ||
+                              productStats?.products?.lowStockProducts ||
+                              0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Rupture</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-red-600 h-2 rounded-full"
+                              style={{
+                                width: `${((productStats?.products?.outOfStockProducts || 0) / (allStats.products.stats?.total || productStats?.products?.totalProducts || 1)) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {productStats?.products?.outOfStockProducts || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Performance Ventes</h4>
+                    <div className="space-y-3">
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <p className="text-lg font-bold text-blue-600">
+                          {allStats.overview.stats?.orders.total || 0}
+                        </p>
+                        <p className="text-sm text-gray-600">Commandes Totales</p>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <p className="text-lg font-bold text-green-600">
+                          {allStats.overview.stats?.revenue.total
+                            ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
+                            : '0'}
+                        </p>
+                        <p className="text-sm text-gray-600">Revenus (FCFA)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Indicateurs Clés</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Taux de Disponibilité</span>
+                        <span className="font-medium text-green-600">
+                          {productStats?.products?.totalProducts
+                            ? `${Math.round(((productStats?.products?.activeProducts || 0) / productStats.products.totalProducts) * 100)}%`
+                            : '0%'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Catégories Actives</span>
+                        <span className="font-medium">
+                          {productStats?.topCategories?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Valeur Moyenne/Produit</span>
+                        <span className="font-medium">
+                          {productStats?.inventory?.totalValue &&
+                          productStats?.products?.totalProducts
+                            ? `${Math.round(productStats.inventory.totalValue / productStats.products.totalProducts).toLocaleString()} FCFA`
+                            : '0 FCFA'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         <TabsContent value="analytics" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
@@ -632,37 +859,55 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
                       <p className="text-2xl font-bold text-blue-600">
-                        {DashboardUtils.formatPercentage(stats?.revenue?.growth?.monthly || 0)}
+                        {allStats.missions.stats?.byStatus.completed ||
+                          missionStats?.statusStats?.completed ||
+                          0}
                       </p>
-                      <p className="text-sm text-gray-600">Croissance Mensuelle</p>
+                      <p className="text-sm text-gray-600">Missions Terminées</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">
-                        {((stats?.revenue?.thisMonth || 0) / 1000000).toFixed(1)}M
+                        {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M
                       </p>
-                      <p className="text-sm text-gray-600">Revenus ce Mois</p>
+                      <p className="text-sm text-gray-600">Revenus Total</p>
                     </div>
                   </div>
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">Métriques de Performance</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Missions Actives</span>
-                        <span className="font-medium">{stats?.missions?.assigned || 0}</span>
+                        <span className="text-sm text-gray-600">Missions Publiées</span>
+                        <span className="font-medium">
+                          {allStats.missions.stats?.byStatus.published ||
+                            missionStats?.statusStats?.published ||
+                            0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Missions Assignées</span>
+                        <span className="font-medium">
+                          {allStats.missions.stats?.byStatus.assigned ||
+                            missionStats?.statusStats?.assigned ||
+                            0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Taux de Completion</span>
                         <span className="font-medium">
                           {DashboardUtils.calculateSuccessRate(
-                            stats?.missions?.completed || 0,
-                            stats?.overview?.totalMissions || 0
+                            allStats.missions.stats?.byStatus.completed ||
+                              missionStats?.statusStats?.completed ||
+                              0,
+                            allStats.missions.stats?.total || missionStats?.totals.missions || 0
                           )}
                           %
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Utilisateurs Actifs</span>
-                        <span className="font-medium">{stats?.users?.activeToday || 0}</span>
+                        <span className="font-medium">
+                          {allStats.users.stats?.active || userStats?.byStatus.active || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -690,12 +935,14 @@ export default function AdminDashboard() {
                               <div
                                 className="bg-blue-600 h-2 rounded-full"
                                 style={{
-                                  width: `${((stats?.users?.affreteurs || 0) / (stats?.users?.total || 1)) * 100}%`,
+                                  width: `${((allStats.users.stats?.byRole?.affreteur || userStats?.byRole.affreteur || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
                                 }}
                               ></div>
                             </div>
                             <span className="text-sm font-medium">
-                              {stats?.users?.affreteurs || 0}
+                              {allStats.users.stats?.byRole?.affreteur ||
+                                userStats?.byRole.affreteur ||
+                                0}
                             </span>
                           </div>
                         </div>
@@ -706,12 +953,14 @@ export default function AdminDashboard() {
                               <div
                                 className="bg-green-600 h-2 rounded-full"
                                 style={{
-                                  width: `${((stats?.users?.transporteurs || 0) / (stats?.users?.total || 1)) * 100}%`,
+                                  width: `${((allStats.users.stats?.byRole?.transporteur || userStats?.byRole.transporteur || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
                                 }}
                               ></div>
                             </div>
                             <span className="text-sm font-medium">
-                              {stats?.users?.transporteurs || 0}
+                              {allStats.users.stats?.byRole?.transporteur ||
+                                userStats?.byRole.transporteur ||
+                                0}
                             </span>
                           </div>
                         </div>
@@ -722,12 +971,14 @@ export default function AdminDashboard() {
                               <div
                                 className="bg-purple-600 h-2 rounded-full"
                                 style={{
-                                  width: `${((stats?.users?.clients || 0) / (stats?.users?.total || 1)) * 100}%`,
+                                  width: `${((allStats.users.stats?.byRole?.client || userStats?.byRole.client || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
                                 }}
                               ></div>
                             </div>
                             <span className="text-sm font-medium">
-                              {stats?.users?.clients || 0}
+                              {allStats.users.stats?.byRole?.client ||
+                                userStats?.byRole.client ||
+                                0}
                             </span>
                           </div>
                         </div>
@@ -739,19 +990,33 @@ export default function AdminDashboard() {
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Aujourd'hui</span>
                           <span className="font-medium">
-                            {DashboardUtils.formatCurrency(stats?.revenue?.today || 0)}
+                            {DashboardUtils.formatCurrency(
+                              allStats.overview.stats?.revenue?.today || 0
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Cette Semaine</span>
+                          <span className="text-sm text-gray-600">7 Derniers Jours</span>
                           <span className="font-medium">
-                            {DashboardUtils.formatCurrency(stats?.revenue?.thisWeek || 0)}
+                            {DashboardUtils.formatCurrency(
+                              allStats.overview.stats?.revenue?.last7Days || 0
+                            )}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Ce Mois</span>
+                          <span className="text-sm text-gray-600">30 Derniers Jours</span>
                           <span className="font-medium">
-                            {DashboardUtils.formatCurrency(stats?.revenue?.thisMonth || 0)}
+                            {DashboardUtils.formatCurrency(
+                              allStats.overview.stats?.revenue?.last30Days || 0
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Total</span>
+                          <span className="font-medium text-green-600">
+                            {DashboardUtils.formatCurrency(
+                              allStats.overview.stats?.revenue?.total || 0
+                            )}
                           </span>
                         </div>
                       </div>

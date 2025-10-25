@@ -26,9 +26,18 @@ import type {
   MissionStats,
   MissionStatus,
   UpdateMissionStatus,
+  MissionFeedback,
+  FeedbackFilterParams,
+  FeedbackStats,
 } from '@/types/mission.types';
 import type { User, UpdateUserRequest } from '@/types/auth.types';
 import type { UserFilterParams, UserStats, UserStatusUpdateRequest } from '@/types/user.types';
+import type {
+  OverviewStats,
+  AdminMissionStats,
+  AdminProductStats,
+  UserStats as AdminUserStats,
+} from '@/types/admin-stats.types';
 
 export class AdminService extends BaseApi {
   private isAxiosError(
@@ -311,6 +320,75 @@ export class AdminService extends BaseApi {
   async deleteUser(id: string): Promise<ApiResponse<Record<string, User>>> {
     try {
       const response = await this.insertToken().delete(`/api/admin/users/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  // Feedback Operations
+
+  async getFeedbacks(
+    params?: FeedbackFilterParams
+  ): Promise<ApiResponse<PaginatedMetaResponse<MissionFeedback, 'feedbacks'>>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/feedbacks', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getFeedback(id: string): Promise<ApiResponse<MissionFeedback>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/feedbacks/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getFeedbackStats(): Promise<ApiResponse<FeedbackStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/feedbacks/stats');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  // Admin Statistics Operations
+
+  async getOverviewStats(): Promise<ApiResponse<OverviewStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/stats/overview');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getAdminUserStats(): Promise<ApiResponse<AdminUserStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/stats/users');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getAdminMissionStats(): Promise<ApiResponse<AdminMissionStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/stats/missions');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getAdminProductsStats(): Promise<ApiResponse<AdminProductStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/stats/products');
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

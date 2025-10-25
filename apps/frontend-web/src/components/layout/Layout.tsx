@@ -12,9 +12,11 @@ import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useAllAdminStats } from '@/hooks/useAdminStats';
 
 export default function Layout() {
   const { user } = useAuth();
+  const { fetchAllStats } = useAllAdminStats();
   const { fetchCart } = useCart();
   const { fetchAdminCategories, fetchCategories } = useCategories();
   const { fetchConversations } = useChat();
@@ -37,6 +39,7 @@ export default function Layout() {
         fetchProductStats();
         fetchUsers();
         fetchUserStats();
+        fetchAllStats();
       }
       fetchConversations();
       fetchNotifications();
