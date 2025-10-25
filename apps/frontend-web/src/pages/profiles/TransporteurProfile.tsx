@@ -179,7 +179,7 @@ function TransporteurProfile() {
       label: 'Taux de Réussite',
       value:
         myMissions?.filter((mission) => mission.status === 'completed').length /
-        myMissions?.length || 0,
+          myMissions?.length || 0,
       icon: Award,
     },
     {
@@ -257,15 +257,15 @@ function TransporteurProfile() {
               isEditing={isEditing}
               onSubmit={handleSave}
               isLoading={isLoading}
-            // additionalFields={() => (
-            //     <div className="space-y-4">
-            //         <FormField
-            //             name="companyName"
-            //             label="Nom de l'entreprise"
-            //             disabled={!isEditing}
-            //         />
-            //     </div>
-            // )}
+              // additionalFields={() => (
+              //     <div className="space-y-4">
+              //         <FormField
+              //             name="companyName"
+              //             label="Nom de l'entreprise"
+              //             disabled={!isEditing}
+              //         />
+              //     </div>
+              // )}
             />
 
             <div className="space-y-6">
@@ -344,14 +344,15 @@ function TransporteurProfile() {
                   <span className="text-sm text-muted-foreground">Statut</span>
                   <Badge
                     variant="outline"
-                    className={`${vehicles[0].status === 'available'
+                    className={`${
+                      vehicles[0].status === 'available'
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : vehicles[0].status === 'in_mission'
                           ? 'bg-blue-50 text-blue-700 border-blue-200'
                           : vehicles[0].status === 'maintenance'
                             ? 'bg-orange-50 text-orange-700 border-orange-200'
                             : 'bg-gray-50 text-gray-700 border-gray-200'
-                      }`}
+                    }`}
                   >
                     {vehicles[0].statusLabel || vehicles[0].status}
                   </Badge>
@@ -382,19 +383,19 @@ function TransporteurProfile() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Disponibles</span>
                   <span className="font-semibold text-green-600">
-                    {vehicles.filter(v => v.status === 'available').length}
+                    {vehicles.filter((v) => v.status === 'available').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">En mission</span>
                   <span className="font-semibold text-blue-600">
-                    {vehicles.filter(v => v.status === 'in_mission').length}
+                    {vehicles.filter((v) => v.status === 'in_mission').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">En maintenance</span>
                   <span className="font-semibold text-orange-600">
-                    {vehicles.filter(v => v.status === 'maintenance').length}
+                    {vehicles.filter((v) => v.status === 'maintenance').length}
                   </span>
                 </div>
                 <Separator />
@@ -403,14 +404,23 @@ function TransporteurProfile() {
                     <span>Taux de disponibilité</span>
                     <span className="text-green-600">
                       {vehicles.length > 0
-                        ? Math.round((vehicles.filter(v => v.status === 'available').length / vehicles.length) * 100)
-                        : 0}%
+                        ? Math.round(
+                            (vehicles.filter((v) => v.status === 'available').length /
+                              vehicles.length) *
+                              100
+                          )
+                        : 0}
+                      %
                     </span>
                   </div>
                   <Progress
-                    value={vehicles.length > 0
-                      ? (vehicles.filter(v => v.status === 'available').length / vehicles.length) * 100
-                      : 0}
+                    value={
+                      vehicles.length > 0
+                        ? (vehicles.filter((v) => v.status === 'available').length /
+                            vehicles.length) *
+                          100
+                        : 0
+                    }
                     className="w-full"
                   />
                 </div>

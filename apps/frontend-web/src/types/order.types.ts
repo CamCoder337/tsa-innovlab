@@ -39,7 +39,7 @@ export interface OrderItem extends Partial<Timestamps> {
   subtotal: string; // Decimal stored as string
 }
 
-export interface Order extends Partial<Timestamps> {
+export interface Order extends Timestamps {
   id: string;
   userId: string;
   user?: User; // Optional populated relation
