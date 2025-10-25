@@ -26,7 +26,7 @@ import toast from 'react-hot-toast';
 export default function Shop() {
   // Store hooks
   const { products = [], isLoading } = useProducts();
-  const { addToCart } = useCart();
+  const { error, addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const { results, error: VisualError } = useVisualRecognitionSearch();
   const lowStockProducts = products?.filter((p) => p.stock <= p.stockAlert);
@@ -123,8 +123,12 @@ export default function Shop() {
       });
   }, [products, filters, results]);
 
-  const handleAddToCart = (product: Product, quantity: number) => {
-    addToCart(product, quantity);
+  const handleAddToCart = async (product: Product, quantity: number) => {
+    await addToCart(product, quantity);
+    if (error) {
+      toast.error(error);
+      return;
+    }
     toast.success(`${product.name} a été ajouté à votre panier`);
   };
 

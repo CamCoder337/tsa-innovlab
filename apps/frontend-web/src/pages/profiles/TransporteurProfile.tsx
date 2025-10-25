@@ -27,6 +27,7 @@ import type { FormikProps } from 'formik';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { useMissions } from '@/hooks/useMissions';
 import { Link } from 'react-router-dom';
+import { useVehicles } from '@/hooks/useVehicles';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -41,6 +42,7 @@ interface Document {
 function TransporteurProfile() {
   const { user, updateUser } = useAuth();
   const { myMissions } = useMissions();
+  const { vehicles } = useVehicles();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
@@ -177,7 +179,7 @@ function TransporteurProfile() {
       label: 'Taux de Réussite',
       value:
         myMissions?.filter((mission) => mission.status === 'completed').length /
-          myMissions?.length || 0,
+        myMissions?.length || 0,
       icon: Award,
     },
     {
@@ -186,13 +188,6 @@ function TransporteurProfile() {
       icon: Calendar,
     },
   ];
-
-  const vehicleInfo = {
-    model: 'Mercedes Actros',
-    plate: 'CM-123-AB',
-    capacity: '25 tonnes',
-    mileage: '45,230 km',
-  };
 
   const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === 'verified').length;
   const totalKycDocs = Object.keys(kycDocuments).length;
@@ -262,15 +257,15 @@ function TransporteurProfile() {
               isEditing={isEditing}
               onSubmit={handleSave}
               isLoading={isLoading}
-              // additionalFields={() => (
-              //     <div className="space-y-4">
-              //         <FormField
-              //             name="companyName"
-              //             label="Nom de l'entreprise"
-              //             disabled={!isEditing}
-              //         />
-              //     </div>
-              // )}
+            // additionalFields={() => (
+            //     <div className="space-y-4">
+            //         <FormField
+            //             name="companyName"
+            //             label="Nom de l'entreprise"
+            //             disabled={!isEditing}
+            //         />
+            //     </div>
+            // )}
             />
 
             <div className="space-y-6">
@@ -330,34 +325,103 @@ function TransporteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              Mon Véhicule
+              {vehicles.length === 1 ? 'Mon Véhicule' : 'Mes Véhicules'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Modèle</span>
-              <span className="font-semibold">{vehicleInfo.model}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Plaque</span>
-              <span className="font-semibold">{vehicleInfo.plate}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Capacité</span>
-              <span className="font-semibold">{vehicleInfo.capacity}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Kilométrage</span>
-              <span className="font-semibold">{vehicleInfo.mileage}</span>
-            </div>
-            <Separator />
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>État Général</span>
-                <span className="text-green-600">Excellent</span>
-              </div>
-              <Progress value={92} className="w-full" />
-            </div>
+            {vehicles.length === 1 ? (
+              // Single vehicle display
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Type</span>
+                  <span className="font-semibold">{vehicles[0].typeLabel || vehicles[0].type}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Immatriculation</span>
+                  <span className="font-semibold">{vehicles[0].registration}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Statut</span>
+                  <Badge
+                    variant="outline"
+                    className={`${vehicles[0].status === 'available'
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : vehicles[0].status === 'in_mission'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : vehicles[0].status === 'maintenance'
+                            ? 'bg-orange-50 text-orange-700 border-orange-200'
+                            : 'bg-gray-50 text-gray-700 border-gray-200'
+                      }`}
+                  >
+                    {vehicles[0].statusLabel || vehicles[0].status}
+                  </Badge>
+                </div>
+                {vehicles[0].description && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Description</span>
+                    <span className="font-semibold text-right max-w-[150px] truncate">
+                      {vehicles[0].description}
+                    </span>
+                  </div>
+                )}
+                <Separator />
+                <Link to="/app/vehicles">
+                  <Button variant="outline" className="w-full gap-2">
+                    <Settings className="h-4 w-4" />
+                    Gérer mon véhicule
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              // Multiple vehicles stats display
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total véhicules</span>
+                  <span className="font-semibold">{vehicles.length}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Disponibles</span>
+                  <span className="font-semibold text-green-600">
+                    {vehicles.filter(v => v.status === 'available').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">En mission</span>
+                  <span className="font-semibold text-blue-600">
+                    {vehicles.filter(v => v.status === 'in_mission').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">En maintenance</span>
+                  <span className="font-semibold text-orange-600">
+                    {vehicles.filter(v => v.status === 'maintenance').length}
+                  </span>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Taux de disponibilité</span>
+                    <span className="text-green-600">
+                      {vehicles.length > 0
+                        ? Math.round((vehicles.filter(v => v.status === 'available').length / vehicles.length) * 100)
+                        : 0}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={vehicles.length > 0
+                      ? (vehicles.filter(v => v.status === 'available').length / vehicles.length) * 100
+                      : 0}
+                    className="w-full"
+                  />
+                </div>
+                <Link to="/app/vehicles">
+                  <Button className="w-full gap-2">
+                    <Truck className="h-4 w-4" />
+                    Gérer mes véhicules
+                  </Button>
+                </Link>
+              </>
+            )}
           </CardContent>
         </Card>
 

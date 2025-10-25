@@ -24,7 +24,8 @@ export default function MissionDetailsPage() {
 
   // Fetch mission data when component mounts or ID changes
   useEffect(() => {
-    if (id) {
+    if (id && !currentMission) {
+      console.log(id)
       fetchMission(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,11 +48,11 @@ export default function MissionDetailsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !error) {
     return (
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          <Loader2 className="animate-spin h-12 w-12 text-tsa-blue" />
           <span>Loading mission details...</span>
         </div>
       </div>

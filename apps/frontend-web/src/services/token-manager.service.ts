@@ -207,6 +207,11 @@ export class TokenManagerService {
       } else {
         console.error('Token refresh failed:', response.error);
         this.isRefreshing = false;
+
+        // Si on a atteint le maximum de tentatives, déconnecter l'utilisateur
+        if (this.retryCount >= this.config.maxRetryAttempts || !useAuthStore.getState().token) {
+          useAuthStore.getState().logout();
+        }
         return false;
       }
     } catch (error) {
@@ -214,7 +219,7 @@ export class TokenManagerService {
       this.isRefreshing = false;
 
       // Si on a atteint le maximum de tentatives, déconnecter l'utilisateur
-      if (this.retryCount >= this.config.maxRetryAttempts) {
+      if (this.retryCount >= this.config.maxRetryAttempts || !useAuthStore.getState().token) {
         useAuthStore.getState().logout();
       }
 
