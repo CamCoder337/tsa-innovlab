@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { useTrackingTranslation } from '@/hooks/useTranslation';
 import { getStatusColor } from '@/lib/mission-utils';
 import { Link, useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
@@ -18,17 +17,18 @@ import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
 export default function AffréteurTrackingDashboard() {
   const { myMissions: missions, currentMission, setCurrentMission } = useMissions();
-  const { t } = useTrackingTranslation();
   const navigate = useNavigate();
 
   // Calculs des KPIs
   const totalMissions = missions.length;
-  const ongoingMissions = missions?.filter((mission) => ['in_progress'].includes(mission.status));
+  const activeMissions = missions?.filter((mission) =>
+    ['assigned', 'published'].includes(mission.status)
+  ).length;
   const completedMissions = missions?.filter((mission) =>
     ['completed'].includes(mission.status)
   ).length;
   const totalRevenue = missions.reduce((sum, m) => sum + Number(m.budgetMin), 0);
-  const avgDeliveryTime = t('analytics.avgDeliveryTime'); // Calculé dynamiquement en production
+  const avgDeliveryTime = '2.3 jours'; // Calculé dynamiquement en production
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -36,13 +36,13 @@ export default function AffréteurTrackingDashboard() {
         {/* En-tête */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-            <p className="text-gray-600">{t('dashboard.subtitle')}</p>
+            <h1 className="text-3xl font-bold text-gray-900">Tableau de Suivi</h1>
+            <p className="text-gray-600">Gérez vos expéditions et suivez vos performances</p>
           </div>
-          <Link to="/app/missions/create">
+          <Link to='/app/missions/create'>
             <Button className="bg-tsa-blue hover:bg-tsa-blue/80">
               <Package className="w-4 h-4 mr-2" />
-              {t('navigation.newMission')}
+              Nouvelle Mission
             </Button>
           </Link>
         </div>
@@ -53,7 +53,7 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('kpis.totalMissions')}</p>
+                  <p className="text-sm font-medium text-gray-600">Total Missions</p>
                   <p className="text-2xl font-bold text-gray-900">{totalMissions}</p>
                 </div>
                 <Package className="w-8 h-8 text-blue-500" />
@@ -65,8 +65,8 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('status.in_progress')}</p>
-                  <p className="text-2xl font-bold text-tsa-blue">{ongoingMissions.length}</p>
+                  <p className="text-sm font-medium text-gray-600">En Cours</p>
+                  <p className="text-2xl font-bold text-blue-600">{activeMissions}</p>
                 </div>
                 <Truck className="w-8 h-8 text-blue-500" />
               </div>
@@ -77,7 +77,7 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('kpis.completedMissions')}</p>
+                  <p className="text-sm font-medium text-gray-600">Terminées</p>
                   <p className="text-2xl font-bold text-green-600">{completedMissions}</p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-green-500" />
@@ -89,7 +89,7 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('kpis.revenue')}</p>
+                  <p className="text-sm font-medium text-gray-600">Chiffre d'Affaires</p>
                   <p className="text-2xl font-bold text-green-600">
                     {totalRevenue.toLocaleString()} FCFA
                   </p>
@@ -103,9 +103,7 @@ export default function AffréteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {t('performance.responseTime')}
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Délai Moyen</p>
                   <p className="text-2xl font-bold text-gray-900">{avgDeliveryTime}</p>
                 </div>
                 <Clock className="w-8 h-8 text-gray-500" />
@@ -116,11 +114,11 @@ export default function AffréteurTrackingDashboard() {
 
         {/* Contenu principal */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-4">
-            <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
-            <TabsTrigger value="missions">{t('tabs.missionDetails')}</TabsTrigger>
-            <TabsTrigger value="analytics">{t('tabs.analytics')}</TabsTrigger>
-            <TabsTrigger value="costs">{t('tabs.costs')}</TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="missions">Mes Missions</TabsTrigger>
+            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+            <TabsTrigger value="costs">Coûts & Budget</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -131,7 +129,7 @@ export default function AffréteurTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MapPin className="w-5 h-5" />
-                      {t('map.title')}
+                      Suivi en Temps Réel
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -139,7 +137,7 @@ export default function AffréteurTrackingDashboard() {
                       className="h-[400px]"
                       missions={missions}
                       selectedMission={
-                        currentMission || missions.find((m) => m.status === 'in_progress')
+                        currentMission || missions.find((m) => m.status === 'assigned')
                       }
                       onMissionClick={(mission) => setCurrentMission(mission)}
                       showUserLocation={false}
@@ -156,7 +154,7 @@ export default function AffréteurTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
-                      {t('missions.priorityMissions')}
+                      Missions Prioritaires
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -195,22 +193,22 @@ export default function AffréteurTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-green-500" />
-                      {t('performance.title')}
+                      Performance
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">{t('performance.successRate')}</span>
+                        <span className="text-sm text-gray-600">Taux de réussite</span>
                         <span className="font-medium text-green-600">94%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">{t('performance.averageDelay')}</span>
+                        <span className="text-sm text-gray-600">Délai moyen</span>
                         <span className="font-medium">{avgDeliveryTime}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">{t('performance.savings')}</span>
-                        <span className="font-medium text-tsa-blue">15%</span>
+                        <span className="text-sm text-gray-600">Économies réalisées</span>
+                        <span className="font-medium text-blue-600">15%</span>
                       </div>
                     </div>
                   </CardContent>
@@ -222,11 +220,11 @@ export default function AffréteurTrackingDashboard() {
           <TabsContent value="missions" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>{t('missions.list')}</CardTitle>
+                <CardTitle>Liste des Missions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {ongoingMissions.map((mission) => (
+                  {missions.map((mission) => (
                     <div
                       key={mission.id}
                       className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
@@ -249,14 +247,12 @@ export default function AffréteurTrackingDashboard() {
                               {mission.typeMarchandise} - {mission.poids}kg
                             </span>
                             <span>{mission.budgetMin?.toLocaleString()} FCFA</span>
-                            {mission.transporteurId && <span>👤 {t('status.assigned')}</span>}
+                            {mission.transporteurId && <span>👤 Assigné</span>}
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end gap-2">
                           <div>
-                            <p className="text-sm text-gray-500">
-                              {t('mission.scheduledDelivery')}
-                            </p>
+                            <p className="text-sm text-gray-500">Livraison prévue</p>
                             <p className="font-medium">
                               {new Date(mission.dateArriveePrevue ?? '').toLocaleDateString()}
                             </p>
@@ -275,22 +271,22 @@ export default function AffréteurTrackingDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('analytics.shipmentEvolution')}</CardTitle>
+                  <CardTitle>Évolution des Expéditions</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    {t('analytics.monthlyShipmentChart')}
+                    Graphique des expéditions par mois
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('analytics.destinationBreakdown')}</CardTitle>
+                  <CardTitle>Répartition par Destination</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    {t('analytics.destinationPieChart')}
+                    Graphique en secteurs des destinations
                   </div>
                 </CardContent>
               </Card>
@@ -301,23 +297,23 @@ export default function AffréteurTrackingDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('performance.monthlyBudget')}</CardTitle>
+                  <CardTitle>Budget Mensuel</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-tsa-blue">2,450,000</p>
-                    <p className="text-gray-600">{t('performance.fcfaThisMonth')}</p>
+                    <p className="text-3xl font-bold text-blue-600">2,450,000</p>
+                    <p className="text-gray-600">FCFA ce mois</p>
                     <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
                       <div className="bg-blue-600 h-2 rounded-full" style={{ width: '73%' }}></div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">{t('analytics.budgetUsed')}</p>
+                    <p className="text-sm text-gray-500 mt-2">73% du budget utilisé</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('analytics.costPerTransport')}</CardTitle>
+                  <CardTitle>Coût par Transport</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -335,13 +331,13 @@ export default function AffréteurTrackingDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('analytics.savingsRealized')}</CardTitle>
+                  <CardTitle>Économies Réalisées</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-green-600">340,000</p>
-                    <p className="text-gray-600">{t('analytics.fcfaSaved')}</p>
-                    <p className="text-sm text-green-600 mt-2">{t('analytics.vsLastMonth')}</p>
+                    <p className="text-gray-600">FCFA économisés</p>
+                    <p className="text-sm text-green-600 mt-2">↗ +12% vs mois dernier</p>
                   </div>
                 </CardContent>
               </Card>
@@ -349,6 +345,6 @@ export default function AffréteurTrackingDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 }

@@ -8,15 +8,11 @@ import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
 import { toast } from 'react-hot-toast';
 import LoginForm from '@/components/forms/LoginForm';
 import type { LoginCredentials } from '@/types/auth.types';
-import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';
-import LanguageDropdown from '@/components/ui/LanguageDropdown';
 
 const Login: React.FC = () => {
   const { token, login, getUser, error } = useAuth();
   const navigate = useNavigate();
   const [showMfaField, setShowMfaField] = useState(false);
-  const { t: tAuth } = useAuthTranslation();
-  const { t: tCommon } = useCommonTranslation();
 
   const handleLogin = async (data: LoginCredentials) => {
     const response = await login(data);
@@ -35,14 +31,14 @@ const Login: React.FC = () => {
     // Handle MFA requirement
     if (response === 'mfa_required') {
       setShowMfaField(true);
-      toast(tAuth('mfa.title'), {
+      toast('Code MFA requis', {
         icon: '⚠️',
       });
       return;
     }
 
     // Handle successful login
-    toast.success(tAuth('login.success'));
+    toast.success('Connexion réussie')
   };
 
   useEffect(() => {
@@ -56,16 +52,13 @@ const Login: React.FC = () => {
     <RedirectIfAuthenticated>
       <div className="min-h-screen flex">
         {/* Left side - Form */}
-        <div className="flex-1 flex items-center justify-center p-8 relative">
-          {/* Language Dropdown - Bottom Right */}
-          <div className="absolute top-10 right-4">
-            <LanguageDropdown position="bottom-right" />
-          </div>
-
+        <div className="flex-1 flex items-center justify-center p-8 md:mr-8">
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">{tAuth('login.title')}</h1>
-              <p className="text-sm font-semibold text-tsa-gray">{tCommon('app.tagline')}</p>
+              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">Heureux de vous Revoir</h1>
+              <p className="text-sm font-semibold text-tsa-gray">
+                Vivez votre logistique en toute confiance
+              </p>
             </div>
 
             <Card className="shadow-xl bg-[#D9D9D980]">
