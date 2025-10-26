@@ -23,20 +23,41 @@ class VisionService:
     def initialize(self):
         """Initialise le client Vision API"""
         try:
-            # Vérifier que les credentials sont configurés
+            # Option 1: Utiliser les credentials depuis les variables d'environnement
+            # Si GOOGLE_CREDENTIALS_JSON est défini, l'utiliser directement
+            credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+            
+            if credentials_json:
+                # Créer les credentials depuis le JSON en variable d'environnement
+                import json
+                from google.oauth2 import service_account
+                
+                credentials_dict = json.loads(credentials_json)
+                credentials = service_account.Credentials.from_service_account_info(credentials_dict)
+                self.client = vision.ImageAnnotatorClient(credentials=credentials)
+                logger.info("Client Google Cloud Vision initialisé depuis GOOGLE_CREDENTIALS_JSON")
+                return True
+            
+            # Option 2: Utiliser le fichier de credentials (développement local)
             credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
-            if not credentials_path:
-                logger.warning("GOOGLE_APPLICATION_CREDENTIALS non défini")
-                logger.info("Définissez la variable d'environnement avec le chemin vers votre fichier JSON de credentials")
-                return False
+            if credentials_path:
+                if not Path(credentials_path).exists():
+                    logger.error(f"Fichier de credentials non trouvé: {credentials_path}")
+                    return False
+                
+                self.client = vision.ImageAnnotatorClient()
+                logger.info("Client Google Cloud Vision initialisé depuis fichier")
+                return True
             
-            if not Path(credentials_path).exists():
-                logger.error(f"Fichier de credentials non trouvé: {credentials_path}")
+            # Option 3: Utiliser les credentials par défaut (si déployé sur GCP)
+            try:
+                self.client = vision.ImageAnnotatorClient()
+                logger.info("Client Google Cloud Vision initialisé avec credentials par défaut")
+                return True
+            except Exception:
+                logger.warning("Aucune méthode d'authentification Google Cloud disponible")
+                logger.info("Définissez GOOGLE_CREDENTIALS_JSON ou GOOGLE_APPLICATION_CREDENTIALS")
                 return False
-            
-            self.client = vision.ImageAnnotatorClient()
-            logger.info("Client Google Cloud Vision initialisé")
-            return True
             
         except Exception as e:
             logger.error(f"Erreur lors de l'initialisation du client Vision: {e}")
