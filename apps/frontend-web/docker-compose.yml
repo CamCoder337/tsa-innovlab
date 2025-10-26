@@ -25,7 +25,7 @@ services:
 
     # Ports mapping - expose port 80 du container sur le port hôte (défaut: 30005)
     ports:
-      - '${FRONTEND_HOST_PORT:-30005}:80'
+      - '${FRONTEND_HOST_PORT:-30001}:80'
 
     # Networks - utilisation du réseau InnovlabG1
     networks:
