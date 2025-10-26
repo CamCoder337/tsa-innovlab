@@ -22,41 +22,24 @@ import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-
 import { useMissions } from '@/hooks/useMissions';
 import { useAddresses } from '@/hooks/useAddresses';
 import { useVehicles } from '@/hooks/useVehicles';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import MissionCard from '@/components/missions/MissionCard';
 import { VehicleTypeLabels } from '@/types/vehicle.types';
-import {
-  useMissionsTranslation,
-  useErrorsTranslation,
-  useCommonTranslation,
-} from '@/hooks/useTranslation';
-import { useSearchParams } from 'react-router-dom';
+import { useMissionsTranslation } from '@/hooks/useTranslation';
 // import { Calendar } from '@/components/ui/calendar';
 
 export default function MissionsTransporteurPage() {
-  const {
-    missions,
-    myMissions,
-    currentMission,
-    error,
-    setCurrentMission,
-    applyMission,
-    updateMissionStatus,
-  } = useMissions();
+  const { missions, myMissions, currentMission, error, setCurrentMission, applyMission } =
+    useMissions();
   const { addresses } = useAddresses();
   const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'available');
+  const [activeTab, setActiveTab] = useState('available');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
-  const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
-  const { t: tMissions } = useMissionsTranslation();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useMissionsTranslation();
 
   const filteredMissions = (() => {
     if (activeTab === 'all') {
@@ -70,19 +53,14 @@ export default function MissionsTransporteurPage() {
     // For other tabs, filter myMissions by status
     return myMissions.filter((mission) => {
       if (activeTab === 'completed') return mission.status === 'completed';
-      if (activeTab === 'active') return ['assigned', 'in_progress'].includes(mission.status);
+      if (activeTab === 'assigned') return mission.status === 'assigned';
       return true;
     });
   })();
 
   const applyForMission = async () => {
-    if (!currentMission) {
-      setIsApplyDialogOpen(false);
-      return;
-    }
-
-    if (!selectedVehicleId) {
-      toast.error(tErrors('missions.selectVehicleError'));
+    if (!currentMission || !selectedVehicleId) {
+      toast.error(t('messages.selectVehicleError'));
       return;
     }
 
@@ -91,54 +69,33 @@ export default function MissionsTransporteurPage() {
 
       if (error) {
         console.error(error);
-        toast.error(error || tErrors('missions.applicationError'));
+        toast.error(error || t('messages.applicationError'));
         return;
       }
 
-      toast.success(tMissions('messages.applicationSentSuccess'));
-      setIsApplyDialogOpen(false);
+      toast.success(t('messages.applicationSentSuccess'));
+      setIsDialogOpen(false);
       setCurrentMission(null);
       setSelectedVehicleId('');
     } catch (error) {
       console.error('Error applying for mission:', error);
-      toast.error(tErrors('missions.applicationError'));
+      toast.error(t('messages.applicationError'));
     }
   };
 
-  const startMission = async () => {
-    if (!currentMission) {
-      setIsStartDialogOpen(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await updateMissionStatus(currentMission.id, { status: 'in_progress' });
-
-      if (error) {
-        toast.error(tErrors('missions.statusUpdateFailed'));
-        return;
-      }
-
-      toast.success(tMissions('messages.statusUpdatedSuccess'));
-      setIsStartDialogOpen(false);
-      setCurrentMission(null);
-    } catch (error) {
-      console.error('Error updating mission status:', error);
-      toast.error(tErrors('missions.statusUpdateFailed'));
-    } finally {
-      setIsLoading(false);
-    }
+  const handleApplyToMission = (mission: Mission) => {
+    setCurrentMission(mission);
+    setIsDialogOpen(true);
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-6">
+    <div className="flex min-h-screen bg-gray-50 p-6">
       <div className="flex-1 p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {tMissions('myMissions.transporteur.title')}
+            {t('myMissions.transporteur.title')}
           </h1>
-          <p className="text-gray-600">{tMissions('myMissions.transporteur.subtitle')}</p>
+          <p className="text-gray-600">{t('myMissions.transporteur.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -150,7 +107,7 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
-                    {tMissions('myMissions.transporteur.stats.availableMissions')}
+                    {t('myMissions.transporteur.stats.availableMissions')}
                   </p>
                   <p className="text-2xl font-bold">
                     {missions.filter((m) => m.status === 'published').length}
@@ -167,13 +124,10 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
-                    {tMissions('myMissions.transporteur.stats.activeMissions')}
+                    {t('myMissions.transporteur.stats.inProgress')}
                   </p>
                   <p className="text-2xl font-bold">
-                    {
-                      myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status))
-                        .length
-                    }
+                    {myMissions.filter((m) => m.status !== 'completed' || 'cancelled').length}
                   </p>
                 </div>
               </div>
@@ -187,7 +141,7 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
-                    {tMissions('myMissions.transporteur.stats.completedMissions')}
+                    {t('myMissions.transporteur.stats.completed')}
                   </p>
                   <p className="text-2xl font-bold">
                     {myMissions.filter((m) => m.status === 'completed').length}
@@ -204,7 +158,7 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">
-                    {tMissions('myMissions.transporteur.stats.potentialRevenue')}
+                    {t('myMissions.transporteur.stats.potentialRevenue')}
                   </p>
                   <p className="text-2xl font-bold">0 FCFA</p>
                 </div>
@@ -220,7 +174,7 @@ export default function MissionsTransporteurPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder={tMissions('myMissions.transporteur.search.placeholder')}
+                    placeholder={t('myMissions.transporteur.search.placeholder')}
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -229,43 +183,36 @@ export default function MissionsTransporteurPage() {
               </div>
               <Select value={filterOrigin} onValueChange={setFilterOrigin}>
                 <SelectTrigger className="w-full md:w-48">
-                  <SelectValue
-                    placeholder={tMissions('myMissions.transporteur.search.filterOrigin')}
-                  />
+                  <SelectValue placeholder={t('myMissions.transporteur.search.filterOrigin')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {tMissions('myMissions.transporteur.search.allOrigins')}
+                    {t('myMissions.transporteur.search.allOrigins')}
                   </SelectItem>
                   {addresses.map((adresseDepart, index) => (
                     <SelectItem
                       key={`${adresseDepart.id || 'unknown'}-${index}`}
                       value={adresseDepart.id || 'unknown'}
                     >
-                      {adresseDepart.label ||
-                        tMissions('myMissions.transporteur.search.unspecified')}
+                      {adresseDepart.label || t('myMissions.transporteur.search.unspecified')}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={filterUrgency} onValueChange={setFilterUrgency}>
                 <SelectTrigger className="w-full md:w-48">
-                  <SelectValue
-                    placeholder={tMissions('myMissions.transporteur.search.filterUrgency')}
-                  />
+                  <SelectValue placeholder={t('myMissions.transporteur.search.filterUrgency')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {tMissions('myMissions.transporteur.search.allUrgencies')}
+                    {t('myMissions.transporteur.search.allUrgencies')}
                   </SelectItem>
-                  <SelectItem value="high">
-                    {tMissions('myMissions.transporteur.search.urgent')}
-                  </SelectItem>
+                  <SelectItem value="high">{t('myMissions.transporteur.search.urgent')}</SelectItem>
                   <SelectItem value="medium">
-                    {tMissions('myMissions.transporteur.search.priority')}
+                    {t('myMissions.transporteur.search.priority')}
                   </SelectItem>
                   <SelectItem value="low">
-                    {tMissions('myMissions.transporteur.search.standard')}
+                    {t('myMissions.transporteur.search.standard')}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -277,18 +224,22 @@ export default function MissionsTransporteurPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              {tMissions('myMissions.transporteur.transportMissions')}
+              {t('myMissions.transporteur.transportMissions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="available">{tCommon('status.available')}</TabsTrigger>
-                <TabsTrigger value="active">{tCommon('status.active')}</TabsTrigger>
-                <TabsTrigger value="completed">{tCommon('status.completed')}</TabsTrigger>
-                <TabsTrigger value="all">
-                  {tMissions('myMissions.transporteur.tabs.all')}
+                <TabsTrigger value="available">
+                  {t('myMissions.transporteur.tabs.available')}
                 </TabsTrigger>
+                <TabsTrigger value="assigned">
+                  {t('myMissions.transporteur.tabs.assigned')}
+                </TabsTrigger>
+                <TabsTrigger value="completed">
+                  {t('myMissions.transporteur.tabs.completed')}
+                </TabsTrigger>
+                <TabsTrigger value="all">{t('myMissions.transporteur.tabs.all')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-6">
@@ -297,14 +248,8 @@ export default function MissionsTransporteurPage() {
                     <MissionCard
                       key={mission.id}
                       mission={mission}
-                      onApply={() => {
-                        setCurrentMission(mission);
-                        setIsApplyDialogOpen(true);
-                      }}
-                      onStart={() => {
-                        setCurrentMission(mission);
-                        setIsStartDialogOpen(true);
-                      }}
+                      onApply={handleApplyToMission}
+                      showApplyButton={activeTab === 'available'}
                     />
                   ))}
                 </div>
@@ -313,10 +258,10 @@ export default function MissionsTransporteurPage() {
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {tMissions('myMissions.transporteur.emptyStates.noMissions')}
+                      {t('myMissions.transporteur.emptyStates.noMissions')}
                     </h3>
                     <p className="text-gray-600">
-                      {tMissions('myMissions.transporteur.emptyStates.noMatchingCriteria')}
+                      {t('myMissions.transporteur.emptyStates.noMatchingCriteria')}
                     </p>
                   </div>
                 )}
@@ -325,23 +270,21 @@ export default function MissionsTransporteurPage() {
 
             {/* Vehicle Selection Dialog */}
             <Dialog
-              open={isApplyDialogOpen}
+              open={isDialogOpen}
               onOpenChange={(open) => {
                 if (!open) {
                   setCurrentMission(null);
                   setSelectedVehicleId('');
                 }
-                setIsApplyDialogOpen(open);
+                setIsDialogOpen(open);
               }}
             >
               <DialogContent>
                 <DialogDescription className="hidden">
-                  {tMissions('myMissions.transporteur.apply.dialogDescription')}
+                  {t('myMissions.transporteur.apply.dialogDescription')}
                 </DialogDescription>
                 <DialogHeader>
-                  <DialogTitle>
-                    {tMissions('myMissions.transporteur.apply.dialogTitle')}
-                  </DialogTitle>
+                  <DialogTitle>{t('myMissions.transporteur.apply.dialogTitle')}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
@@ -351,7 +294,7 @@ export default function MissionsTransporteurPage() {
                       <p className="text-sm text-gray-600 mt-1">{currentMission.description}</p>
                       {currentMission.requiredVehicleType && (
                         <p className="text-sm text-tsa-blue mt-2">
-                          {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
+                          {t('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                           {VehicleTypeLabels[currentMission.requiredVehicleType]}
                         </p>
                       )}
@@ -360,27 +303,27 @@ export default function MissionsTransporteurPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {tMissions('myMissions.transporteur.apply.selectVehicle')}
+                      {t('myMissions.transporteur.apply.selectVehicle')}
                     </label>
                     {vehiclesLoading ? (
                       <div className="flex items-center justify-center p-4">
                         <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                         <span className="ml-2 text-gray-600">
-                          {tMissions('myMissions.transporteur.apply.loadingVehicles')}
+                          {t('myMissions.transporteur.apply.loadingVehicles')}
                         </span>
                       </div>
                     ) : availableVehicles.length === 0 ? (
                       <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                        <p>{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
+                        <p>{t('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
                         <p className="text-sm mt-1">
-                          {tMissions('myMissions.transporteur.apply.noVehiclesMessage')}
+                          {t('myMissions.transporteur.apply.noVehiclesMessage')}
                         </p>
                       </div>
                     ) : (
                       <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
                         <SelectTrigger>
                           <SelectValue
-                            placeholder={tMissions('myMissions.transporteur.apply.chooseVehicle')}
+                            placeholder={t('myMissions.transporteur.apply.chooseVehicle')}
                           />
                         </SelectTrigger>
                         <SelectContent>
@@ -403,48 +346,19 @@ export default function MissionsTransporteurPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setIsApplyDialogOpen(false);
+                        setIsDialogOpen(false);
                         setSelectedVehicleId('');
                       }}
                     >
-                      {tCommon('actions.cancel')}
+                      {t('myMissions.transporteur.apply.cancel')}
                     </Button>
                     <Button
                       onClick={applyForMission}
                       disabled={!selectedVehicleId || availableVehicles.length === 0}
                     >
-                      {tCommon('actions.apply')}
+                      {t('myMissions.transporteur.apply.apply')}
                     </Button>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Mission Start Dialog */}
-            <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{tMissions('actions.start')}</DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-4 py-4">
-                  <p>
-                    {tCommon('actions.warning.confirmAction')}{' '}
-                    {tMissions('actions.start').toLowerCase()} ?
-                  </p>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsStartDialogOpen(false)}
-                    disabled={isLoading}
-                  >
-                    {tCommon('actions.cancel')}
-                  </Button>
-                  <Button variant="default" onClick={startMission} disabled={isLoading}>
-                    {isLoading ? tCommon('messages.processing') : tCommon('actions.confirm')}
-                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

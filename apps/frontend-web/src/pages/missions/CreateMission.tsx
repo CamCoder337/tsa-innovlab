@@ -1,99 +1,82 @@
 import CreateMissionForm from '@/components/forms/CreateMissionForm';
 import type { CreateMissionDto } from '@/types/mission.types';
 import { useAddresses } from '@/hooks/useAddresses';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
-import { useErrorsTranslation, useMissionsTranslation } from '@/hooks/useTranslation';
-import { useCallback } from 'react';
-import { useMissionStore } from '@/stores/missionStore';
+import { useMissionsTranslation } from '@/hooks/useTranslation';
 
 export default function CreateMission() {
   const { addresses } = useAddresses();
-  const { currentMission, createMission, updateMission, publishMission, setError } = useMissions();
+  const { currentMission, error, createMission, updateMission, publishMission } = useMissions();
   const navigate = useNavigate();
-  const { t: tMissions } = useMissionsTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useMissionsTranslation();
 
-  const handleCreateMission = useCallback(
-    async (data: CreateMissionDto, action: string, publish: boolean) => {
-      try {
-        // Format dates to ISO 8601 without milliseconds
-        const formattedData = {
-          ...data,
-          dateDepartEstime: data.dateDepartEstime
-            ? new Date(data.dateDepartEstime).toISOString().replace(/\.\d+Z$/, '')
-            : '',
-          dateArriveePrevue: data.dateArriveePrevue
-            ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
-            : '',
-        };
+  const handleCreateMission = async (data: CreateMissionDto, action: string, publish: boolean) => {
+    // Format dates to ISO 8601 without milliseconds
+    const formattedData = {
+      ...data,
+      dateDepartEstime: data.dateDepartEstime
+        ? new Date(data.dateDepartEstime).toISOString().replace(/\.\d+Z$/, '')
+        : '',
+      dateArriveePrevue: data.dateArriveePrevue
+        ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
+        : '',
+    };
 
-        let missionId: string | undefined;
+    let missionId: string | undefined;
 
-        if (currentMission && action === 'update') {
-          await updateMission(currentMission.id, formattedData);
-          missionId = currentMission.id;
-        } else {
-          const newMission = await createMission(formattedData);
-          missionId = newMission?.id;
-        }
+    if (currentMission && action === 'update') {
+      await updateMission(currentMission.id, formattedData);
+      missionId = currentMission.id;
+    } else {
+      const newMission = await createMission(formattedData);
+      missionId = newMission?.id;
+    }
 
-        const { error } = useMissionStore.getState();
+    if (error) {
+      toast.error(error || t('messages.errorOccurred'));
+      return;
+    }
 
-        // Check if the operation failed
-        if (error || !missionId) {
-          toast.error(tErrors('general.somethingWentWrong'));
-          return;
-        }
+    if (currentMission && action === 'update') {
+      toast.success(t('messages.modifiedSuccess'));
+    } else {
+      toast.success(t('messages.createdSuccess'));
+    }
 
-        console.log('no Error');
+    if (!publish) {
+      setTimeout(() => {
+        navigate('/app/missions');
+      }, 2500);
+      return;
+    }
 
-        if (currentMission && action === 'update') {
-          toast.success(tMissions('messages.modifiedSuccess'));
-        } else {
-          toast.success(tMissions('messages.createdSuccess'));
-        }
+    // If publish is true and we have a mission ID, publish it
+    if (publish && missionId) {
+      await publishMission(missionId);
 
-        if (!publish) {
-          setTimeout(() => {
-            setError(null);
-            navigate('/app/missions');
-          }, 2500);
-          return;
-        }
-
-        // If publish is true and we have a mission ID, publish it
-        if (publish && missionId) {
-          await publishMission(missionId);
-
-          if (error) {
-            toast.error(error || tErrors('general.somethingWentWrong'));
-            return;
-          }
-
-          toast.success(tMissions('messages.publishedSuccess'));
-          setTimeout(() => {
-            navigate(`/app/missions/${missionId}`);
-          }, 2500);
-        }
-      } catch (err) {
-        console.error('Error in handleCreateMission:', err);
-        toast.error(tErrors('general.somethingWentWrong'));
+      if (error) {
+        console.error(error);
+        toast.error(error);
+        return;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    },
-    [currentMission, createMission]
-  );
+
+      toast.success(t('messages.publishedSuccess'));
+      setTimeout(() => {
+        navigate(`/app/missions/${missionId}`);
+      }, 2500);
+    }
+  };
 
   return (
     <div className="flex-1 max-w-4xl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {currentMission ? tMissions('create.editTitle') : tMissions('create.title')}
+          {currentMission ? t('create.editTitle') : t('create.title')}
         </h1>
         <p className="text-gray-600">
-          {currentMission ? tMissions('create.editSubtitle') : tMissions('create.subtitle')}
+          {currentMission ? t('create.editSubtitle') : t('create.subtitle')}
         </p>
       </div>
 

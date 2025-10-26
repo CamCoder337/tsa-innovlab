@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Camera, X, Clock } from 'lucide-react';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
-import { useShopTranslation, useErrorsTranslation } from '@/hooks/useTranslation';
-import { toast } from 'sonner';
+import { useShopTranslation } from '@/hooks/useTranslation';
+import toast from 'react-hot-toast';
 
 interface VisualSearchProps {
   className?: string;
@@ -13,8 +13,7 @@ interface VisualSearchProps {
 export const VisualSearch: React.FC<VisualSearchProps> = ({
   className = '',
 }: VisualSearchProps) => {
-  const { t: tShop } = useShopTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useShopTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -26,12 +25,12 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         // 5MB limit
-        toast.error(tErrors('file.fileTooLarge'));
+        toast.error(t('visualSearch.errors.fileSizeLimit'));
         return;
       }
 
       if (!file.type.startsWith('image/')) {
-        toast.error(tErrors('file.invalidFileType'));
+        toast.error(t('visualSearch.errors.invalidFileType'));
         return;
       }
 
@@ -46,17 +45,17 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
 
   const handleSearch = useCallback(async () => {
     if (!imageFile) {
-      toast.error(tErrors('file.noImageSelected'));
+      toast.error(t('visualSearch.errors.noImageSelected'));
       return;
     }
 
     try {
       await searchByImage(imageFile);
-      if (error) toast.error(tErrors('shop.searchError'));
-      if (results) toast.success(tShop('visualSearch.searchCompleted'));
+      if (error) toast.error(t('visualSearch.errors.searchError'));
+      if (results) toast.success(t('visualSearch.success.searchCompleted'));
     } catch (err) {
       console.error('Visual search error:', err);
-      toast.error(tErrors('shop.searchError'));
+      toast.error(t('visualSearch.errors.searchError'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageFile]);
@@ -103,7 +102,7 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
             <>
               <img
                 src={selectedImage}
-                alt={tShop('visualSearch.title')}
+                alt={t('visualSearch.selectedImageAlt')}
                 className="w-8 h-8 object-cover rounded-lg"
               />
               <Button
@@ -123,12 +122,12 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
       {results && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-medium">{tShop('visualSearch.title')}</h3>
+            <h3 className="font-medium">{t('visualSearch.results.title')}</h3>
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Clock className="h-4 w-4" />
               {results.processing_time_ms}ms
               <Badge variant="outline">
-                {tShop('results.foundPlural', { count: results.total })}
+                {t('visualSearch.results.productCount', { count: results.total })}
               </Badge>
             </div>
           </div>

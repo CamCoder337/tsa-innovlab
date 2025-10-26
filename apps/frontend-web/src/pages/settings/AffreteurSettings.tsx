@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useProfileTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +28,7 @@ import {
   RefreshCw,
   Currency,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
 
 interface MFAStatus {
@@ -45,9 +41,8 @@ interface MFAStatus {
 
 function AffreteurSettings() {
   const { user } = useAuth();
-  const { t: tProfile } = useProfileTranslation();
+  const { t } = useProfileTranslation();
   const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
     enabled: user?.mfaEnabled || false,
@@ -78,11 +73,11 @@ function AffreteurSettings() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(tProfile('settings.saveSuccess'));
+      toast.success(t('settings.saveSuccess'));
       setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('general.saveError'));
+      toast.error(t('settings.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -126,12 +121,12 @@ function AffreteurSettings() {
             setupRequired: false,
             backupCodes: [],
           });
-          toast.success(tProfile('settings.mfa.disableSuccess'));
+          toast.success(t('settings.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error(tProfile('settings.mfa.configError'));
+      toast.error(t('settings.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -157,13 +152,13 @@ function AffreteurSettings() {
           setupRequired: false,
           backupCodes: data.backupCodes || [],
         });
-        toast.success(tProfile('settings.mfa.enableSuccess'));
+        toast.success(t('settings.mfa.enableSuccess'));
       } else {
-        toast.error(tProfile('settings.mfa.invalidCode'));
+        toast.error(t('settings.mfa.invalidCode'));
       }
     } catch (error) {
       console.error(error);
-      toast.error(tProfile('settings.mfa.enableError'));
+      toast.error(t('settings.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -178,12 +173,12 @@ function AffreteurSettings() {
     <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
-          <p className="text-muted-foreground">{tProfile('settings.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <p className="text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
+          {isLoading ? t('settings.saving') : t('settings.save')}
         </Button>
       </div>
 
@@ -192,14 +187,14 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              {tProfile('settings.notifications.title')}
+              {t('settings.notifications.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{tProfile('settings.notifications.email')}</span>
+                <span className="text-sm">{t('settings.notifications.email')}</span>
               </div>
               <Switch
                 checked={notifications.email}
@@ -212,7 +207,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{tProfile('settings.notifications.sms')}</span>
+                <span className="text-sm">{t('settings.notifications.sms')}</span>
               </div>
               <Switch
                 checked={notifications.sms}
@@ -223,7 +218,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">{tProfile('settings.notifications.push')}</span>
+                <span className="text-sm">{t('settings.notifications.push')}</span>
               </div>
               <Switch
                 checked={notifications.push}
@@ -234,7 +229,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">{tProfile('settings.notifications.missionUpdates')}</span>
+              <span className="text-sm">{t('settings.notifications.missionUpdates')}</span>
               <Switch
                 checked={notifications.missionUpdates}
                 onCheckedChange={(checked) =>
@@ -244,7 +239,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">{tProfile('settings.notifications.priceAlerts')}</span>
+              <span className="text-sm">{t('settings.notifications.priceAlerts')}</span>
               <Switch
                 checked={notifications.priceAlerts}
                 onCheckedChange={(checked) =>
@@ -254,7 +249,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">{tProfile('settings.notifications.weeklyReports')}</span>
+              <span className="text-sm">{t('settings.notifications.weeklyReports')}</span>
               <Switch
                 checked={notifications.weeklyReports}
                 onCheckedChange={(checked) =>
@@ -269,13 +264,13 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              {tProfile('settings.preferences.title')}
+              {t('settings.preferences.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <div className="space-y-2">
-                <Label>{tProfile('settings.preferences.language')}</Label>
+                <Label>{t('settings.preferences.language')}</Label>
                 <Select
                   value={preferences.language}
                   onValueChange={(value) => setPreferences({ ...preferences, language: value })}
@@ -284,14 +279,14 @@ function AffreteurSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fr">{tProfile('settings.preferences.french')}</SelectItem>
-                    <SelectItem value="en">{tProfile('settings.preferences.english')}</SelectItem>
+                    <SelectItem value="fr">{t('settings.preferences.french')}</SelectItem>
+                    <SelectItem value="en">{t('settings.preferences.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>{tProfile('settings.preferences.currency')}</Label>
+                <Label>{t('settings.preferences.currency')}</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
@@ -308,7 +303,7 @@ function AffreteurSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tProfile('settings.preferences.timezone')}</Label>
+                <Label>{t('settings.preferences.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
@@ -327,7 +322,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">{tProfile('settings.preferences.autoAssign')}</span>
+              <span className="text-sm">{t('settings.preferences.autoAssign')}</span>
               <Switch
                 checked={preferences.autoAssign}
                 onCheckedChange={(checked) =>
@@ -337,7 +332,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>{tProfile('settings.preferences.priceRange')}</Label>
+              <Label>{t('settings.preferences.priceRange')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
                   <Currency className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -378,7 +373,7 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {tProfile('settings.security.title')}
+              {t('settings.security.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -392,11 +387,9 @@ function AffreteurSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    {tProfile('settings.security.mfa.title')}
+                    {t('settings.security.mfa.title')}
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    {tProfile('settings.security.mfa.description')}
-                  </p>
+                  <p className="text-sm text-gray-600">{t('settings.security.mfa.description')}</p>
                 </div>
                 <Switch
                   checked={mfaStatus.enabled}
@@ -408,22 +401,22 @@ function AffreteurSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>{tProfile('settings.security.mfa.enabled')}</AlertDescription>
+                  <AlertDescription>{t('settings.security.mfa.enabled')}</AlertDescription>
                 </Alert>
               )}
 
               {mfaStatus.setupRequired && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
+                  <h5 className="font-medium">{t('settings.security.mfa.setup')}</h5>
 
                   {mfaStatus.qrCode && (
                     <div className="space-y-3">
-                      <p className="text-sm">{tProfile('settings.security.mfa.scanQR')}</p>
+                      <p className="text-sm">{t('settings.security.mfa.scanQR')}</p>
                       <div className="flex justify-center">
                         <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
                       </div>
 
-                      <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
+                      <p className="text-sm">{t('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
                           {mfaStatus.secret}
@@ -438,9 +431,7 @@ function AffreteurSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="mfaCode">
-                          {tProfile('settings.security.mfa.enterCode')}
-                        </Label>
+                        <Label htmlFor="mfaCode">{t('settings.security.mfa.enterCode')}</Label>
                         <div className="flex gap-2">
                           <Input
                             id="mfaCode"
@@ -463,7 +454,7 @@ function AffreteurSettings() {
                             }}
                             disabled={isLoading}
                           >
-                            {tProfile('settings.security.mfa.enable')}
+                            {t('settings.security.mfa.enable')}
                           </Button>
                         </div>
                       </div>
@@ -476,10 +467,10 @@ function AffreteurSettings() {
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <h5 className="font-medium">{tProfile('settings.security.mfa.backupCodes')}</h5>
+                    <h5 className="font-medium">{t('settings.security.mfa.backupCodes')}</h5>
                   </div>
                   <p className="text-sm text-yellow-800">
-                    {tProfile('settings.security.mfa.backupCodesDescription')}
+                    {t('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {mfaStatus.backupCodes.map((code, index) => (
@@ -495,7 +486,7 @@ function AffreteurSettings() {
                   </div>
                   <Button variant="outline" size="sm">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    {tProfile('settings.security.mfa.regenerateCodes')}
+                    {t('settings.security.mfa.regenerateCodes')}
                   </Button>
                 </div>
               )}

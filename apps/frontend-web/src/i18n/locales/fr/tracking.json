@@ -12,6 +12,14 @@
     "newMission": "Nouvelle Mission",
     "detailedTracking": "Suivi détaillé de la mission"
   },
+  "status": {
+    "published": "Publiée",
+    "assigned": "Assignée",
+    "in_progress": "En cours",
+    "completed": "Terminée",
+    "cancelled": "Annulée",
+    "draft": "Brouillon"
+  },
   "kpis": {
     "totalMissions": "Total Missions",
     "activeMissions": "En Cours",
@@ -21,7 +29,7 @@
     "activeDrivers": "Chauffeurs Actifs",
     "systemUptime": "Disponibilité Système",
     "responseTime": "Temps de réponse",
-    "completedToday": "Terminées Aujourd'hui"
+    "completedToday": "terminées aujourd'hui"
   },
   "mission": {
     "notFound": "Mission non trouvée",
@@ -125,7 +133,7 @@
   "alerts": {
     "title": "Alertes Récentes",
     "management": "Gestion des Alertes",
-    "critical": "Alerte(s) Critique(s) nécessitent votre attention",
+    "critical": "alerte(s) critique(s) nécessitent votre attention",
     "checkTab": "Vérifiez l'onglet \"Alertes & Incidents\" pour plus de détails",
     "vehicleBreakdown": "Panne de véhicule",
     "breakdownMessage": "Le véhicule {{vehicle}} est en panne à {{location}}",
@@ -229,6 +237,7 @@
     "noActiveMission": "Aucune mission active",
     "noActiveMissionMessage": "Vous n'avez pas de mission en cours. Consultez vos missions assignées.",
     "departure": "Départ",
-    "arrival": "Arrivée"
+    "arrival": "Arrivée",
+    "scheduledDelivery": "Livraison prévue"
   }
 }

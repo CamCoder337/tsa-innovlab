@@ -36,7 +36,7 @@ interface TimelineStep {
   description: string;
 }
 
-const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
+const getOrderTimeline = (order: Order, t: TFunction): TimelineStep[] => {
   const timeline: TimelineStep[] = [];
 
   if (order.createdAt) {
@@ -44,8 +44,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PENDING,
       date: order.createdAt,
       completed: true,
-      title: tShop('orderDetails.timeline.created.title'),
-      description: tShop('orderDetails.timeline.created.description'),
+      title: t('orderDetails.timeline.created.title'),
+      description: t('orderDetails.timeline.created.description'),
     });
   }
 
@@ -54,8 +54,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PAID,
       date: order.paidAt,
       completed: true,
-      title: tShop('orderDetails.timeline.paid.title'),
-      description: tShop('orderDetails.timeline.paid.description'),
+      title: t('orderDetails.timeline.paid.title'),
+      description: t('orderDetails.timeline.paid.description'),
     });
   }
 
@@ -64,8 +64,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PROCESSING,
       date: order.updatedAt!, // Safe because we check for existence above
       completed: true,
-      title: tShop('orderDetails.timeline.processing.title'),
-      description: tShop('orderDetails.timeline.processing.description'),
+      title: t('orderDetails.timeline.processing.title'),
+      description: t('orderDetails.timeline.processing.description'),
     });
   }
 
@@ -74,12 +74,12 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.SHIPPED,
       date: order.shippedAt,
       completed: true,
-      title: tShop('orderDetails.timeline.shipped.title'),
+      title: t('orderDetails.timeline.shipped.title'),
       description: order.trackingNumber
-        ? tShop('orderDetails.timeline.shipped.descriptionWithTracking', {
+        ? t('orderDetails.timeline.shipped.descriptionWithTracking', {
             trackingNumber: order.trackingNumber,
           })
-        : tShop('orderDetails.timeline.shipped.description'),
+        : t('orderDetails.timeline.shipped.description'),
     });
   }
 
@@ -88,8 +88,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.DELIVERED,
       date: order.deliveredAt,
       completed: true,
-      title: tShop('orderDetails.timeline.delivered.title'),
-      description: tShop('orderDetails.timeline.delivered.description'),
+      title: t('orderDetails.timeline.delivered.title'),
+      description: t('orderDetails.timeline.delivered.description'),
     });
   }
 
@@ -98,8 +98,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.CANCELLED,
       date: order.cancelledAt,
       completed: true,
-      title: tShop('orderDetails.timeline.cancelled.title'),
-      description: order.notes || tShop('orderDetails.timeline.cancelled.description'),
+      title: t('orderDetails.timeline.cancelled.title'),
+      description: order.notes || t('orderDetails.timeline.cancelled.description'),
     });
   }
 
@@ -109,58 +109,58 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
 };
 
 export default function OrderDetailsPage() {
-  const { t: tShop } = useShopTranslation();
+  const { t } = useShopTranslation();
   const { id: orderId } = useParams<{ id: string }>();
   const { currentOrder, isLoading, fetchOrder } = useOrders();
 
   // Create status config with translations
   const statusConfig = {
     [OrderStatus.PENDING]: {
-      label: tShop('orders.status.pending.label'),
+      label: t('orders.status.pending.label'),
       color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      description: tShop('orders.status.pending.description'),
+      description: t('orders.status.pending.description'),
       icon: Clock,
       step: 1,
     },
     [OrderStatus.PAID]: {
-      label: tShop('orders.status.paid.label'),
+      label: t('orders.status.paid.label'),
       color: 'bg-blue-50 text-blue-700 border-blue-200',
-      description: tShop('orders.status.paid.description'),
+      description: t('orders.status.paid.description'),
       icon: CreditCard,
       step: 2,
     },
     [OrderStatus.PROCESSING]: {
-      label: tShop('orders.status.processing.label'),
+      label: t('orders.status.processing.label'),
       color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      description: tShop('orders.status.processing.description'),
+      description: t('orders.status.processing.description'),
       icon: Package,
       step: 3,
     },
     [OrderStatus.SHIPPED]: {
-      label: tShop('orders.status.shipped.label'),
+      label: t('orders.status.shipped.label'),
       color: 'bg-purple-50 text-purple-700 border-purple-200',
-      description: tShop('orders.status.shipped.description'),
+      description: t('orders.status.shipped.description'),
       icon: Truck,
       step: 4,
     },
     [OrderStatus.DELIVERED]: {
-      label: tShop('orders.status.delivered.label'),
+      label: t('orders.status.delivered.label'),
       color: 'bg-green-50 text-green-700 border-green-200',
-      description: tShop('orders.status.delivered.description'),
+      description: t('orders.status.delivered.description'),
       icon: CheckCircle,
       step: 5,
     },
     [OrderStatus.CANCELLED]: {
-      label: tShop('orders.status.cancelled.label'),
+      label: t('orders.status.cancelled.label'),
       color: 'bg-red-50 text-red-700 border-red-200',
-      description: tShop('orders.status.cancelled.description'),
+      description: t('orders.status.cancelled.description'),
       icon: XCircle,
       step: -1,
     },
     [OrderStatus.REFUNDED]: {
-      label: tShop('orders.status.refunded.label'),
+      label: t('orders.status.refunded.label'),
       color: 'bg-orange-50 text-orange-700 border-orange-200',
-      description: tShop('orders.status.refunded.description'),
+      description: t('orders.status.refunded.description'),
       icon: RefreshCw,
       step: -1,
     },
@@ -192,11 +192,11 @@ export default function OrderDetailsPage() {
         <Card>
           <CardContent className="text-center py-12">
             <h1 className="text-2xl font-bold text-zinc-900 mb-2">
-              {tShop('orderDetails.notFound.title')}
+              {t('orderDetails.notFound.title')}
             </h1>
-            <p className="text-zinc-600 mb-6">{tShop('orderDetails.notFound.message')}</p>
+            <p className="text-zinc-600 mb-6">{t('orderDetails.notFound.message')}</p>
             <Button asChild>
-              <Link to="/app/shop/orders">{tShop('orderDetails.notFound.viewOrders')}</Link>
+              <Link to="/app/shop/orders">{t('orderDetails.notFound.viewOrders')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -205,7 +205,7 @@ export default function OrderDetailsPage() {
   }
 
   const statusInfo = statusConfig[order.status];
-  const timeline = getOrderTimeline(order, tShop);
+  const timeline = getOrderTimeline(order, t);
   const StatusIcon = statusInfo.icon;
 
   const copyToClipboard = (text: string) => {
@@ -222,21 +222,21 @@ export default function OrderDetailsPage() {
             className="flex items-center gap-1 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            {tShop('orderDetails.breadcrumb.myOrders')}
+            {t('orderDetails.breadcrumb.myOrders')}
           </Link>
           <span>/</span>
-          <span>{tShop('orderDetails.breadcrumb.order', { number: order.orderNumber })}</span>
+          <span>{t('orderDetails.breadcrumb.order', { number: order.orderNumber })}</span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-zinc-900 mb-2">
-              {tShop('orderDetails.title', { number: order.orderNumber })}
+              {t('orderDetails.title', { number: order.orderNumber })}
             </h1>
             <div className="flex items-center gap-4 text-sm text-zinc-600">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {tShop('orderDetails.orderedOn')}{' '}
+                {t('orderDetails.orderedOn')}{' '}
                 {order.createdAt
                   ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
                       day: 'numeric',
@@ -248,8 +248,8 @@ export default function OrderDetailsPage() {
               <span className="flex items-center gap-1">
                 <Package className="h-4 w-4" />
                 {(order.items?.length || 0) === 1
-                  ? tShop('orderDetails.itemCount', { count: order.items?.length || 0 })
-                  : tShop('orderDetails.itemCountPlural', { count: order.items?.length || 0 })}
+                  ? t('orderDetails.itemCount', { count: order.items?.length || 0 })
+                  : t('orderDetails.itemCountPlural', { count: order.items?.length || 0 })}
               </span>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function OrderDetailsPage() {
                 className="flex items-center gap-2"
               >
                 <Copy className="h-4 w-4" />
-                {tShop('orderDetails.copyTracking')}
+                {t('orderDetails.copyTracking')}
               </Button>
             )}
           </div>
@@ -283,7 +283,7 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                {tShop('orderDetails.orderTracking')}
+                {t('orderDetails.orderTracking')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -339,7 +339,7 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                {tShop('orderDetails.orderedItems')}
+                {t('orderDetails.orderedItems')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -359,15 +359,15 @@ export default function OrderDetailsPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-zinc-900">{item.productName}</h3>
                       <p className="text-sm text-zinc-600 mb-1">
-                        {tShop('orderDetails.reference')}: {item.productReference}
+                        {t('orderDetails.reference')}: {item.productReference}
                       </p>
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-zinc-600">
-                          {tShop('orderDetails.quantity')}:{' '}
+                          {t('orderDetails.quantity')}:{' '}
                           <span className="font-medium">{item.quantity}</span>
                         </span>
                         <span className="text-zinc-600">
-                          {tShop('orderDetails.unitPrice')}:{' '}
+                          {t('orderDetails.unitPrice')}:{' '}
                           <span className="font-medium">
                             {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
                           </span>
@@ -390,16 +390,14 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Truck className="h-5 w-5" />
-                {tShop('orderDetails.deliveryInfo')}
+                {t('orderDetails.deliveryInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 mt-0.5 text-zinc-500" />
                 <div className="flex-1">
-                  <p className="font-medium text-zinc-900">
-                    {tShop('orderDetails.deliveryAddress')}
-                  </p>
+                  <p className="font-medium text-zinc-900">{t('orderDetails.deliveryAddress')}</p>
                   <p className="text-sm text-zinc-600 mt-1">
                     {order.shippingAddress?.label ||
                       `${order.customerName}, ${order.customerPhone}`}
@@ -411,9 +409,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                   <Package className="h-5 w-5 text-tsa-blue" />
                   <div className="flex-1">
-                    <p className="font-medium text-blue-900">
-                      {tShop('orderDetails.trackingNumber')}
-                    </p>
+                    <p className="font-medium text-blue-900">{t('orderDetails.trackingNumber')}</p>
                     <p className="text-sm text-blue-700 font-mono">{order.trackingNumber}</p>
                   </div>
                   <Button
@@ -432,7 +428,7 @@ export default function OrderDetailsPage() {
                   <Mail className="h-5 w-5 mt-0.5 text-zinc-500" />
                   <div>
                     <p className="font-medium text-zinc-900">
-                      {tShop('orderDetails.deliveryInstructions')}
+                      {t('orderDetails.deliveryInstructions')}
                     </p>
                     <p className="text-sm text-zinc-600 mt-1">{order.notes}</p>
                   </div>
@@ -448,32 +444,32 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                {tShop('orderDetails.orderSummary')}
+                {t('orderDetails.orderSummary')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.subtotal')}</span>
+                  <span className="text-zinc-600">{t('orderDetails.subtotal')}</span>
                   <span className="font-medium">
                     {parseFloat(order.subtotal).toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.shippingCost')}</span>
+                  <span className="text-zinc-600">{t('orderDetails.shippingCost')}</span>
                   <span className="font-medium">
                     {parseFloat(order.shippingCost).toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.taxes')}</span>
+                  <span className="text-zinc-600">{t('orderDetails.taxes')}</span>
                   <span className="font-medium">
                     {parseFloat(order.tax).toLocaleString('fr-FR')} FCFA
                   </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
-                  <span>{tShop('orderDetails.total')}</span>
+                  <span>{t('orderDetails.total')}</span>
                   <span>{parseFloat(order.total).toLocaleString('fr-FR')} FCFA</span>
                 </div>
               </div>
@@ -482,14 +478,14 @@ export default function OrderDetailsPage() {
                 <div className="pt-4 border-t">
                   <div className="flex items-center gap-2 text-sm text-zinc-600">
                     <CreditCard className="h-4 w-4" />
-                    <span>{tShop('orderDetails.paymentMethod')}: </span>
+                    <span>{t('orderDetails.paymentMethod')}: </span>
                     <span className="font-medium capitalize">
                       {order.paymentMethod.replace('_', ' ')}
                     </span>
                   </div>
                   {order.paymentReference && (
                     <p className="text-xs text-zinc-500 mt-1">
-                      {tShop('orderDetails.paymentReference')}: {order.paymentReference}
+                      {t('orderDetails.paymentReference')}: {order.paymentReference}
                     </p>
                   )}
                 </div>
@@ -502,12 +498,12 @@ export default function OrderDetailsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
-                {tShop('orderDetails.customerInfo')}
+                {t('orderDetails.customerInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-zinc-600">{tShop('orderDetails.name')}:</span>
+                <span className="text-zinc-600">{t('orderDetails.name')}:</span>
                 <span className="font-medium">{order.customerName}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -526,23 +522,23 @@ export default function OrderDetailsPage() {
             {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
               <Button variant="outline" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
-                {tShop('orderDetails.downloadInvoice')}
+                {t('orderDetails.downloadInvoice')}
               </Button>
             )}
 
             {order.trackingNumber && (
               <Button variant="outline" className="w-full">
                 <ExternalLink className="mr-2 h-4 w-4" />
-                {tShop('orderDetails.trackPackage')}
+                {t('orderDetails.trackPackage')}
               </Button>
             )}
 
             <Button asChild className="w-full bg-green-600 hover:bg-green-700">
-              <Link to="/app/shop">{tShop('orderDetails.continueShopping')}</Link>
+              <Link to="/app/shop">{t('orderDetails.continueShopping')}</Link>
             </Button>
 
             <Button asChild variant="outline" className="w-full">
-              <Link to="/app/shop/orders">{tShop('orderDetails.backToOrders')}</Link>
+              <Link to="/app/shop/orders">{t('orderDetails.backToOrders')}</Link>
             </Button>
           </div>
         </div>

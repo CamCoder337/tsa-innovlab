@@ -1,7 +1,7 @@
 {
   "title": "Cart",
   "cart": "Cart",
-  "empty": "Your cart is empty",
+  "emptyCart": "Your cart is empty",
   "continueShopping": "Continue shopping",
   "item": "Item",
   "items": "Items",

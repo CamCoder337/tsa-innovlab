@@ -30,12 +30,8 @@ import {
 import { useUsers } from '@/hooks/useUsers';
 import type { UserStatus } from '@/types/user.types';
 import type { UserRole } from '@/types/auth.types';
-import { toast } from 'sonner';
-import {
-  useAdminTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import toast from 'react-hot-toast';
+import { useAdminTranslation } from '@/hooks/useTranslation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,9 +73,7 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { selectedUser, isLoading, error, fetchUser, suspendUser, activateUser, deleteUser } =
     useUsers();
-  const { t: tAdmin } = useAdminTranslation();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useAdminTranslation();
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [kycActionLoading, setKycActionLoading] = useState<string | null>(null);
@@ -98,9 +92,9 @@ export default function UserProfile() {
     try {
       setActionLoading('suspend');
       await suspendUser(id, { status: 'suspended', reason });
-      toast.success(tAdmin('userProfile.userSuspendedSuccess'));
+      toast.success(t('userProfile.userSuspendedSuccess'));
     } catch {
-      toast.error(tErrors('admin.userSuspendError'));
+      toast.error(t('userProfile.userSuspendError'));
     } finally {
       setActionLoading(null);
     }
@@ -112,9 +106,9 @@ export default function UserProfile() {
     try {
       setActionLoading('activate');
       await activateUser(id, { status: 'active', reason });
-      toast.success(tAdmin('userProfile.userActivatedSuccess'));
+      toast.success(t('userProfile.userActivatedSuccess'));
     } catch {
-      toast.error(tErrors('admin.userActivateError'));
+      toast.error(t('userProfile.userActivateError'));
     } finally {
       setActionLoading(null);
     }
@@ -126,10 +120,10 @@ export default function UserProfile() {
     try {
       setActionLoading('delete');
       await deleteUser(id);
-      toast.success(tAdmin('userProfile.userDeletedSuccess'));
+      toast.success(t('userProfile.userDeletedSuccess'));
       navigate('/admin/users');
     } catch {
-      toast.error(tErrors('admin.userDeleteError'));
+      toast.error(t('userProfile.userDeleteError'));
       setActionLoading(null);
     }
   };
@@ -153,21 +147,21 @@ export default function UserProfile() {
         return (
           <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
             <CheckCircle className="h-3 w-3 mr-1" />
-            {tCommon('status.active')}
+            {t('userProfile.statusLabels.active')}
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
             <AlertTriangle className="h-3 w-3 mr-1" />
-            {tCommon('status.pending')}
+            {t('userProfile.statusLabels.pending')}
           </Badge>
         );
       case 'suspended':
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
             <XCircle className="h-3 w-3 mr-1" />
-            {tCommon('status.suspended')}
+            {t('userProfile.statusLabels.suspended')}
           </Badge>
         );
       default:
@@ -327,10 +321,10 @@ export default function UserProfile() {
       setKycActionLoading(`validate-${documentId}`);
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success(tAdmin('userProfile.kyc.documentValidated'));
+      toast.success(t('userProfile.kyc.documentValidated'));
       // In real app, refetch documents
     } catch {
-      toast.error(tErrors('admin.documentValidateError'));
+      toast.error(t('userProfile.kyc.documentValidateError'));
     } finally {
       setKycActionLoading(null);
     }
@@ -342,10 +336,10 @@ export default function UserProfile() {
       setKycActionLoading(`reject-${documentId}`);
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      toast.success(tAdmin('userProfile.kyc.documentRejected'));
+      toast.success(t('userProfile.kyc.documentRejected'));
       // In real app, refetch documents
     } catch {
-      toast.error(tErrors('admin.documentRejectError'));
+      toast.error(t('userProfile.kyc.documentRejectError'));
     } finally {
       setKycActionLoading(null);
     }
@@ -371,9 +365,9 @@ export default function UserProfile() {
       link.download = formattedName;
       link.click();
 
-      toast.success(tAdmin('userProfile.kyc.downloadStarted'));
+      toast.success(t('userProfile.kyc.downloadStarted'));
     } catch {
-      toast.error(tErrors('admin.downloadError'));
+      toast.error(t('userProfile.kyc.downloadError'));
     } finally {
       setKycActionLoading(null);
     }
@@ -385,28 +379,28 @@ export default function UserProfile() {
         return (
           <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
             <CheckCircle className="h-3 w-3 mr-1" />
-            {tCommon('status.verified')}
+            {t('userProfile.kyc.statusLabels.verified')}
           </Badge>
         );
       case 'pending':
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
             <Clock className="h-3 w-3 mr-1" />
-            {tCommon('status.pending')}
+            {t('userProfile.kyc.statusLabels.pending')}
           </Badge>
         );
       case 'rejected':
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
             <X className="h-3 w-3 mr-1" />
-            {tCommon('status.rejected')}
+            {t('userProfile.kyc.statusLabels.rejected')}
           </Badge>
         );
       default:
         return (
           <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
             <AlertTriangle className="h-3 w-3 mr-1" />
-            {tCommon('status.missing')}
+            {t('userProfile.kyc.statusLabels.missing')}
           </Badge>
         );
     }
@@ -424,13 +418,11 @@ export default function UserProfile() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
         <AlertTriangle className="h-16 w-16 text-red-500" />
-        <h2 className="text-xl font-semibold text-gray-900">
-          {tAdmin('userProfile.userNotFound')}
-        </h2>
-        <p className="text-gray-600">{tAdmin('userProfile.userNotFoundDescription')}</p>
+        <h2 className="text-xl font-semibold text-gray-900">{t('userProfile.userNotFound')}</h2>
+        <p className="text-gray-600">{t('userProfile.userNotFoundDescription')}</p>
         <Button onClick={() => navigate('/app/users')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {tAdmin('userProfile.backToList')}
+          {t('userProfile.backToList')}
         </Button>
       </div>
     );
@@ -438,23 +430,21 @@ export default function UserProfile() {
 
   const userStats = [
     {
-      label: tAdmin('userProfile.missionsCreated'),
+      label: t('userProfile.missionsCreated'),
       value: selectedUser.stats?.totalMissions || 0,
       icon: BarChart3,
     },
     {
-      label: tAdmin('userProfile.proposals'),
+      label: t('userProfile.proposals'),
       value: selectedUser.stats?.totalPropositions || 0,
       icon: Building,
     },
+    { label: t('userProfile.orders'), value: selectedUser.stats?.totalOrders || 0, icon: Users },
     {
-      label: tAdmin('userProfile.orders'),
-      value: selectedUser.stats?.totalOrders || 0,
-      icon: Users,
-    },
-    {
-      label: tAdmin('userProfile.lastLogin'),
-      value: selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : tCommon('never'),
+      label: t('userProfile.lastLogin'),
+      value: selectedUser.lastLoginAt
+        ? formatDate(selectedUser.lastLoginAt)
+        : t('userProfile.never'),
       icon: Calendar,
     },
   ];
@@ -466,11 +456,11 @@ export default function UserProfile() {
         <div className="flex items-center space-x-4">
           <Button variant="outline" onClick={() => navigate('/app/users')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            {tCommon('actions.back')}
+            {t('userProfile.back')}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{tAdmin('userProfile.title')}</h1>
-            <p className="text-muted-foreground">{tAdmin('userProfile.subtitle')}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('userProfile.title')}</h1>
+            <p className="text-muted-foreground">{t('userProfile.subtitle')}</p>
           </div>
         </div>
 
@@ -478,7 +468,7 @@ export default function UserProfile() {
           <Link to={`/app/users/${id}/edit`}>
             <Button variant="outline" className="gap-2">
               <Edit className="h-4 w-4" />
-              {tCommon('actions.edit')}
+              {t('userProfile.edit')}
             </Button>
           </Link>
 
@@ -487,26 +477,24 @@ export default function UserProfile() {
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="gap-2 text-orange-600 hover:text-orange-700">
                   <UserX className="h-4 w-4" />
-                  {tCommon('actions.suspend')}
+                  {t('userProfile.suspend')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>{tAdmin('userProfile.suspendUser')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {tAdmin('userProfile.suspendConfirm')}
-                  </AlertDialogDescription>
+                  <AlertDialogTitle>{t('userProfile.suspendUser')}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('userProfile.suspendConfirm')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
+                  <AlertDialogCancel>{t('userProfile.cancel')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => handleSuspend}
                     disabled={actionLoading === 'suspend'}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
                     {actionLoading === 'suspend'
-                      ? tCommon('messages.suspending')
-                      : tCommon('actions.suspend')}
+                      ? t('userProfile.suspending')
+                      : t('userProfile.suspend')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -520,8 +508,8 @@ export default function UserProfile() {
             >
               <UserCheck className="h-4 w-4" />
               {actionLoading === 'activate'
-                ? tCommon('messages.activating')
-                : tCommon('actions.activate')}
+                ? t('userProfile.activating')
+                : t('userProfile.activate')}
             </Button>
           )}
 
@@ -529,26 +517,24 @@ export default function UserProfile() {
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="gap-2 text-white">
                 <Trash2 className="h-4 w-4" />
-                {tCommon('actions.delete')}
+                {t('userProfile.delete')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>{tAdmin('userProfile.deleteUser')}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {tAdmin('userProfile.deleteConfirm')}
-                </AlertDialogDescription>
+                <AlertDialogTitle>{t('userProfile.deleteUser')}</AlertDialogTitle>
+                <AlertDialogDescription>{t('userProfile.deleteConfirm')}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
+                <AlertDialogCancel>{t('userProfile.cancel')}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDelete}
                   disabled={actionLoading === 'delete'}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   {actionLoading === 'delete'
-                    ? tCommon('messages.deleting')
-                    : tAdmin('userProfile.deleteDefinitively')}
+                    ? t('userProfile.deleting')
+                    : t('userProfile.deleteDefinitively')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -563,14 +549,14 @@ export default function UserProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                {tAdmin('userProfile.personalInfo')}
+                {t('userProfile.personalInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tAdmin('userProfile.fullName')}
+                    {t('userProfile.fullName')}
                   </label>
                   <p className="text-lg font-semibold">
                     {`${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`.trim() ||
@@ -579,13 +565,13 @@ export default function UserProfile() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tCommon('status.title')}
+                    {t('userProfile.status')}
                   </label>
                   <div className="mt-1">{getStatusBadge(selectedUser.status)}</div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tAdmin('userProfile.email')}
+                    {t('userProfile.email')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
                     <Mail className="h-4 w-4 text-gray-400" />
@@ -594,18 +580,18 @@ export default function UserProfile() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tAdmin('userProfile.phone')}
+                    {t('userProfile.phone')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
                     <Phone className="h-4 w-4 text-gray-400" />
                     <p className="text-sm">
-                      {selectedUser.phone || tAdmin('userProfile.phoneNotProvided')}
+                      {selectedUser.phone || t('userProfile.phoneNotProvided')}
                     </p>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tCommon('roles.title')}
+                    {t('userProfile.role')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
                     {getRoleIcon(selectedUser.role)}
@@ -616,7 +602,7 @@ export default function UserProfile() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">
-                    {tAdmin('userProfile.registrationDate')}
+                    {t('userProfile.registrationDate')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4 text-gray-400" />
@@ -645,7 +631,7 @@ export default function UserProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                {tAdmin('userProfile.activityStats')}
+                {t('userProfile.activityStats')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -668,27 +654,25 @@ export default function UserProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                {tAdmin('userProfile.security')}
+                {t('userProfile.security')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{tAdmin('userProfile.emailVerified')}</span>
+                <span className="text-sm text-gray-600">{t('userProfile.emailVerified')}</span>
                 <Badge variant={selectedUser.emailVerifiedAt ? 'default' : 'secondary'}>
-                  {selectedUser.emailVerifiedAt ? tCommon('yes') : tCommon('no')}
+                  {selectedUser.emailVerifiedAt ? t('userProfile.yes') : t('userProfile.no')}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
-                  {tAdmin('userProfile.twoFactorEnabled')}
-                </span>
+                <span className="text-sm text-gray-600">{t('userProfile.twoFactorEnabled')}</span>
                 <Badge variant={selectedUser.mfaEnabled ? 'default' : 'secondary'}>
-                  {selectedUser.mfaEnabled ? tCommon('yes') : tCommon('no')}
+                  {selectedUser.mfaEnabled ? t('userProfile.yes') : t('userProfile.no')}
                 </Badge>
               </div>
               {selectedUser.lastLoginAt && (
                 <div className="pt-2 border-t">
-                  <span className="text-sm text-gray-600">{tAdmin('userProfile.lastLogin')}</span>
+                  <span className="text-sm text-gray-600">{t('userProfile.lastLogin')}</span>
                   <p className="text-sm font-medium">{formatDate(selectedUser.lastLoginAt)}</p>
                 </div>
               )}
@@ -697,22 +681,22 @@ export default function UserProfile() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{tAdmin('userProfile.quickActions')}</CardTitle>
+              <CardTitle>{t('userProfile.quickActions')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Link to={`/admin/users/${id}/edit`} className="block">
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <Edit className="h-4 w-4" />
-                  {tAdmin('userProfile.editProfile')}
+                  {t('userProfile.editProfile')}
                 </Button>
               </Link>
               <Button variant="outline" className="w-full justify-start gap-2">
                 <Mail className="h-4 w-4" />
-                {tAdmin('userProfile.sendEmail')}
+                {t('userProfile.sendEmail')}
               </Button>
               <Button variant="outline" className="w-full justify-start gap-2">
                 <BarChart3 className="h-4 w-4" />
-                {tAdmin('userProfile.viewHistory')}
+                {t('userProfile.viewHistory')}
               </Button>
             </CardContent>
           </Card>
@@ -725,10 +709,10 @@ export default function UserProfile() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  {tAdmin('userProfile.kyc.title')} -{' '}
+                  {t('userProfile.kyc.title')} -{' '}
                   {selectedUser.role === 'affreteur'
-                    ? tCommon('roles.affreteur')
-                    : tCommon('roles.transporteur')}
+                    ? t('userProfile.kyc.affreteur')
+                    : t('userProfile.kyc.transporteur')}
                   <Badge
                     variant="outline"
                     className={`ml-auto ${
@@ -741,7 +725,7 @@ export default function UserProfile() {
                     }`}
                   >
                     {kycDocuments.filter((doc) => doc.status === 'verified').length}/
-                    {kycDocuments.length} {tCommon('status.verified')}s
+                    {kycDocuments.length} {t('userProfile.kyc.verified')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -749,7 +733,7 @@ export default function UserProfile() {
                 {kycDocuments.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>{tAdmin('userProfile.kyc.noDocuments')}</p>
+                    <p>{t('userProfile.kyc.noDocuments')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
@@ -784,14 +768,14 @@ export default function UserProfile() {
                                       onClick={() => setSelectedDocument(document)}
                                     >
                                       <Eye className="h-4 w-4" />
-                                      {tCommon('actions.view')}
+                                      {t('userProfile.kyc.view')}
                                     </Button>
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl">
                                     <DialogHeader>
                                       <DialogTitle>{document.label}</DialogTitle>
                                       <DialogDescription>
-                                        {tAdmin('userProfile.kyc.documentPreview', {
+                                        {t('userProfile.kyc.documentPreview', {
                                           date: document.uploadDate
                                             ? formatDate(document.uploadDate)
                                             : 'N/A',
@@ -802,12 +786,12 @@ export default function UserProfile() {
                                       <div className="bg-gray-100 rounded-lg p-8 text-center">
                                         <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                                         <p className="text-gray-600 mb-4">
-                                          {tAdmin('userProfile.kyc.previewPlaceholder', {
+                                          {t('userProfile.kyc.previewPlaceholder', {
                                             fileName: document.fileName,
                                           })}
                                         </p>
                                         <p className="text-sm text-gray-500">
-                                          {tAdmin('userProfile.kyc.previewNote')}
+                                          {t('userProfile.kyc.previewNote')}
                                         </p>
                                       </div>
                                     </div>
@@ -826,7 +810,7 @@ export default function UserProfile() {
                                   ) : (
                                     <Download className="h-4 w-4" />
                                   )}
-                                  {tCommon('actions.download')}
+                                  {t('userProfile.kyc.download')}
                                 </Button>
                               </>
                             )}
@@ -844,7 +828,7 @@ export default function UserProfile() {
                                   ) : (
                                     <CheckCircle className="h-4 w-4" />
                                   )}
-                                  {tCommon('actions.validate')}
+                                  {t('userProfile.kyc.validate')}
                                 </Button>
 
                                 <AlertDialog>
@@ -860,21 +844,21 @@ export default function UserProfile() {
                                       ) : (
                                         <X className="h-4 w-4" />
                                       )}
-                                      {tCommon('actions.reject')}
+                                      {t('userProfile.kyc.reject')}
                                     </Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>
-                                        {tAdmin('userProfile.kyc.rejectDocument')}
+                                        {t('userProfile.kyc.rejectDocument')}
                                       </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        {tAdmin('userProfile.kyc.rejectConfirm')}
+                                        {t('userProfile.kyc.rejectConfirm')}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>
-                                        {tCommon('actions.cancel')}
+                                        {t('userProfile.cancel')}
                                       </AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() =>
@@ -882,7 +866,7 @@ export default function UserProfile() {
                                         }
                                         className="bg-red-600 hover:bg-red-700"
                                       >
-                                        {tCommon('actions.reject')}
+                                        {t('userProfile.kyc.reject')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -897,14 +881,14 @@ export default function UserProfile() {
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">
-                                {tAdmin('userProfile.kyc.details.status')}
+                                {t('userProfile.kyc.details.status')}
                               </span>
                               <p className="font-medium">{document.status}</p>
                             </div>
                             {document.uploadDate && (
                               <div>
                                 <span className="text-gray-500">
-                                  {tAdmin('userProfile.kyc.details.uploaded')}
+                                  {t('userProfile.kyc.details.uploaded')}
                                 </span>
                                 <p className="font-medium">{formatDate(document.uploadDate)}</p>
                               </div>
@@ -913,8 +897,8 @@ export default function UserProfile() {
                               <div>
                                 <span className="text-gray-500">
                                   {document.status === 'verified'
-                                    ? tAdmin('userProfile.kyc.details.validated')
-                                    : tAdmin('userProfile.kyc.details.rejected')}
+                                    ? t('userProfile.kyc.details.validated')
+                                    : t('userProfile.kyc.details.rejected')}
                                 </span>
                                 <p className="font-medium">{formatDate(document.validatedAt)}</p>
                               </div>
@@ -923,8 +907,8 @@ export default function UserProfile() {
                               <div>
                                 <span className="text-gray-500">
                                   {document.status === 'verified'
-                                    ? tAdmin('userProfile.kyc.details.validatedBy')
-                                    : tAdmin('userProfile.kyc.details.rejectedBy')}
+                                    ? t('userProfile.kyc.details.validatedBy')
+                                    : t('userProfile.kyc.details.rejectedBy')}
                                 </span>
                                 <p className="font-medium">{document.validatedBy}</p>
                               </div>
@@ -937,7 +921,7 @@ export default function UserProfile() {
                                 <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
                                 <div>
                                   <p className="text-sm font-medium text-red-800">
-                                    {tAdmin('userProfile.kyc.details.rejectionReason')}
+                                    {t('userProfile.kyc.details.rejectionReason')}
                                   </p>
                                   <p className="text-sm text-red-700">{document.rejectionReason}</p>
                                 </div>
@@ -957,16 +941,16 @@ export default function UserProfile() {
                     <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium text-blue-900">
-                        {tAdmin('userProfile.kyc.management.title')}
+                        {t('userProfile.kyc.management.title')}
                       </h4>
                       <p className="text-sm text-blue-700">
-                        {tAdmin('userProfile.kyc.management.description')}
+                        {t('userProfile.kyc.management.description')}
                       </p>
                       <ul className="text-xs text-tsa-blue mt-2 space-y-1">
-                        <li>• {tAdmin('userProfile.kyc.management.instructions.view')}</li>
-                        <li>• {tAdmin('userProfile.kyc.management.instructions.download')}</li>
-                        <li>• {tAdmin('userProfile.kyc.management.instructions.validate')}</li>
-                        <li>• {tAdmin('userProfile.kyc.management.instructions.reject')}</li>
+                        <li>• {t('userProfile.kyc.management.instructions.view')}</li>
+                        <li>• {t('userProfile.kyc.management.instructions.download')}</li>
+                        <li>• {t('userProfile.kyc.management.instructions.validate')}</li>
+                        <li>• {t('userProfile.kyc.management.instructions.reject')}</li>
                       </ul>
                     </div>
                   </div>

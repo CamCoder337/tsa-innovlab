@@ -34,10 +34,10 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { useShopTranslation } from '@/hooks/useTranslation';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 export default function ProductPage() {
-  const { t: tShop } = useShopTranslation();
+  const { t } = useShopTranslation();
   const { id } = useParams<{ id: string }>();
   const { addToCart, error } = useCart();
   const { products } = useProducts();
@@ -62,7 +62,7 @@ export default function ProductPage() {
       if (error) {
         toast.error(error);
       } else {
-        toast.success(tShop('cart.addedToCart'));
+        toast.success(t('cart.addedToCart'));
       }
     } catch (error) {
       console.error(error);
@@ -118,14 +118,14 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <main className=" flex flex-col flex-1 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
         <Card>
           <CardContent className="text-center py-16">
             <Package className="h-16 w-16 text-zinc-300 mx-auto mb-6" />
-            <h1 className="text-2xl font-bold text-zinc-900 mb-2">{tShop('product.notFound')}</h1>
-            <p className="text-zinc-600 mb-6">{tShop('product.notFoundDescription')}</p>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-2">{t('product.notFound')}</h1>
+            <p className="text-zinc-600 mb-6">{t('product.notFoundDescription')}</p>
             <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to="/shop">{tShop('cart.continueShopping')}</Link>
+              <Link to="/shop">{t('cart.continueShopping')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -145,7 +145,7 @@ export default function ProductPage() {
             className="flex items-center gap-1 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            {tShop('cart.continueShopping')}
+            {t('cart.continueShopping')}
           </Link>
           <span>/</span>
           {product.category?.name && (
@@ -218,8 +218,7 @@ export default function ProductPage() {
                   <div className="flex items-center gap-2 text-sm text-zinc-600">
                     <User className="h-4 w-4" />
                     <span>
-                      {tShop('product.soldBy')} {product.creator.firstName}{' '}
-                      {product.creator.lastName}
+                      {t('product.soldBy')} {product.creator.firstName} {product.creator.lastName}
                     </span>
                   </div>
                 )}
@@ -265,9 +264,7 @@ export default function ProductPage() {
           {/* Quantity & Add to Cart */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-zinc-700">
-                {tShop('product.quantity')}:
-              </span>
+              <span className="text-sm font-medium text-zinc-700">{t('product.quantity')}:</span>
               <div className="flex items-center border rounded-lg">
                 <Button
                   variant="ghost"
@@ -301,7 +298,7 @@ export default function ProductPage() {
               </div>
               <span className="text-sm text-zinc-500">
                 {product.stock}{' '}
-                {product.stock > 1 ? tShop('product.availablePlural') : tShop('product.available')}
+                {product.stock > 1 ? t('product.availablePlural') : t('product.available')}
               </span>
             </div>
 
@@ -312,7 +309,7 @@ export default function ProductPage() {
                 className="flex-1 bg-green-600 hover:bg-green-700 h-12"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                {isAddingToCart ? tShop('product.adding') : tShop('product.addToCart')}
+                {isAddingToCart ? t('product.adding') : t('product.addToCart')}
               </Button>
             </div>
           </div>
@@ -324,8 +321,8 @@ export default function ProductPage() {
                 <Truck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">{tShop('product.fastDelivery')}</p>
-                <p className="text-zinc-600">{tShop('product.deliveryTime')}</p>
+                <p className="font-medium text-zinc-900">{t('product.fastDelivery')}</p>
+                <p className="text-zinc-600">{t('product.deliveryTime')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -333,8 +330,8 @@ export default function ProductPage() {
                 <Shield className="h-5 w-5 text-tsa-blue" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">{tShop('product.warranty')}</p>
-                <p className="text-zinc-600">{tShop('product.warrantyDuration')}</p>
+                <p className="font-medium text-zinc-900">{t('product.warranty')}</p>
+                <p className="text-zinc-600">{t('product.warrantyDuration')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -342,8 +339,8 @@ export default function ProductPage() {
                 <RotateCcw className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">{tShop('product.returnPolicy')}</p>
-                <p className="text-zinc-600">{tShop('product.returnTime')}</p>
+                <p className="font-medium text-zinc-900">{t('product.returnPolicy')}</p>
+                <p className="text-zinc-600">{t('product.returnTime')}</p>
               </div>
             </div>
           </div>
@@ -354,17 +351,17 @@ export default function ProductPage() {
       <div className="mt-12">
         <Tabs defaultValue="description" className="mt-8 w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="description">{tShop('product.description')}</TabsTrigger>
-            <TabsTrigger value="specifications">{tShop('product.specifications')}</TabsTrigger>
-            <TabsTrigger value="reviews">{tShop('product.reviews')}</TabsTrigger>
-            <TabsTrigger value="seller">{tShop('product.seller')}</TabsTrigger>
+            <TabsTrigger value="description">{t('product.description')}</TabsTrigger>
+            <TabsTrigger value="specifications">{t('product.specifications')}</TabsTrigger>
+            <TabsTrigger value="reviews">{t('product.reviews')}</TabsTrigger>
+            <TabsTrigger value="seller">{t('product.seller')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="description" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tShop('product.description')}</CardTitle>
-                <CardDescription>{tShop('product.descriptionInfo')}</CardDescription>
+                <CardTitle>{t('product.description')}</CardTitle>
+                <CardDescription>{t('product.descriptionInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -372,7 +369,7 @@ export default function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">{tShop('product.reference')}:</p>
+                        <p className="font-medium text-zinc-900">{t('product.reference')}:</p>
                         <p className="text-sm text-zinc-600">{product.id}</p>
                       </div>
                     </div>
@@ -381,7 +378,7 @@ export default function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Package className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">{tShop('product.category')}:</p>
+                          <p className="font-medium text-zinc-900">{t('product.category')}:</p>
                           <p className="text-sm text-zinc-600">{product.category.name}</p>
                         </div>
                       </div>
@@ -390,7 +387,7 @@ export default function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">{tShop('product.unit')}:</p>
+                        <p className="font-medium text-zinc-900">{t('product.unit')}:</p>
                         <p className="text-sm text-zinc-600">{product.unit}</p>
                       </div>
                     </div>
@@ -400,7 +397,7 @@ export default function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">{tShop('product.stock')}:</p>
+                        <p className="font-medium text-zinc-900">{t('product.stock')}:</p>
                         <p className="text-sm text-zinc-600">
                           {product.stock} unité{product.stock > 1 ? 's' : ''}
                         </p>
@@ -411,7 +408,7 @@ export default function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">{tShop('product.createdAt')}:</p>
+                          <p className="font-medium text-zinc-900">{t('product.createdAt')}:</p>
                           <p className="text-sm text-zinc-600">
                             {new Date(product.createdAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -427,7 +424,7 @@ export default function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">{tShop('product.updatedAt')}:</p>
+                          <p className="font-medium text-zinc-900">{t('product.updatedAt')}:</p>
                           <p className="text-sm text-zinc-600">
                             {new Date(product.updatedAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -447,51 +444,51 @@ export default function ProductPage() {
           <TabsContent value="specifications" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tShop('product.specifications')}</CardTitle>
-                <CardDescription>{tShop('product.specificationsInfo')}</CardDescription>
+                <CardTitle>{t('product.specifications')}</CardTitle>
+                <CardDescription>{t('product.specificationsInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 text-sm text-gray-600">
                   <p>
-                    <span className="font-medium">{tShop('product.reference')}:</span>{' '}
+                    <span className="font-medium">{t('product.reference')}:</span>{' '}
                     {product.reference}
                   </p>
                   <p>
-                    <span className="font-medium">{tShop('product.category')}:</span>{' '}
+                    <span className="font-medium">{t('product.category')}:</span>{' '}
                     {product.category?.name}
                   </p>
                   {product.specifications?.brand && (
                     <p>
-                      <span className="font-medium">{tShop('product.brand')}:</span>{' '}
+                      <span className="font-medium">{t('product.brand')}:</span>{' '}
                       {product.specifications?.brand}
                     </p>
                   )}
                   {product.specifications?.weight && (
                     <p>
-                      <span className="font-medium">{tShop('product.weight')}:</span>{' '}
+                      <span className="font-medium">{t('product.weight')}:</span>{' '}
                       {product.specifications.weight} kg
                     </p>
                   )}
                   {product.specifications?.dimensions && (
                     <p>
-                      <span className="font-medium">{tShop('product.dimensions')}:</span>{' '}
+                      <span className="font-medium">{t('product.dimensions')}:</span>{' '}
                       {product.specifications.dimensions}
                     </p>
                   )}
                   {product.specifications?.warranty && (
                     <p>
-                      <span className="font-medium">{tShop('product.warranty')}:</span>{' '}
+                      <span className="font-medium">{t('product.warranty')}:</span>{' '}
                       {product.specifications?.warranty} mois
                     </p>
                   )}
                   <p>
-                    <span className="font-medium">{tShop('product.condition')}:</span>{' '}
+                    <span className="font-medium">{t('product.condition')}:</span>{' '}
                     <Badge variant="outline" className="ml-1">
                       {product.specifications?.condition === 'new'
-                        ? tShop('product.new')
+                        ? t('product.new')
                         : product.specifications?.condition === 'used'
-                          ? tShop('product.used')
-                          : tShop('product.refurbished')}
+                          ? t('product.used')
+                          : t('product.refurbished')}
                     </Badge>
                   </p>
                 </div>
@@ -502,8 +499,8 @@ export default function ProductPage() {
           <TabsContent value="reviews" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tShop('product.reviews')}</CardTitle>
-                <CardDescription>{tShop('product.reviewsInfo')}</CardDescription>
+                <CardTitle>{t('product.reviews')}</CardTitle>
+                <CardDescription>{t('product.reviewsInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -511,21 +508,21 @@ export default function ProductPage() {
                     <div className="text-center py-8">
                       <Star className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-zinc-900 mb-2">
-                        {tShop('product.noReviews')}
+                        {t('product.noReviews')}
                       </h3>
-                      <p className="text-zinc-600 mb-4">{tShop('product.noReviewsDescription')}</p>
+                      <p className="text-zinc-600 mb-4">{t('product.noReviewsDescription')}</p>
                       <Button
                         onClick={() => setIsWritingComment(true)}
                         className="bg-green-600 hover:bg-green-700"
                       >
-                        {tShop('product.writeReview')}
+                        {t('product.writeReview')}
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          {tShop('product.rating')}:
+                          {t('product.rating')}:
                         </label>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -544,17 +541,17 @@ export default function ProductPage() {
                             </button>
                           ))}
                           <span className="ml-2 text-sm text-zinc-600">
-                            {selectedRating ? `${selectedRating}/5` : tShop('product.clickToRate')}
+                            {selectedRating ? `${selectedRating}/5` : t('product.clickToRate')}
                           </span>
                         </div>
                       </div>
 
                       <div>
                         <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          {tShop('product.review')}:
+                          {t('product.review')}:
                         </label>
                         <Textarea
-                          placeholder={tShop('product.reviewPlaceholder')}
+                          placeholder={t('product.reviewPlaceholder')}
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           className="min-h-[120px]"
@@ -572,7 +569,7 @@ export default function ProductPage() {
                           disabled={!selectedRating || commentText.length < 10}
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          {tShop('product.publishReview')}
+                          {t('product.publishReview')}
                         </Button>
                         <Button
                           variant="outline"
@@ -582,7 +579,7 @@ export default function ProductPage() {
                             setSelectedRating(0);
                           }}
                         >
-                          {tShop('product.cancel')}
+                          {t('product.cancel')}
                         </Button>
                       </div>
                     </div>
@@ -595,8 +592,8 @@ export default function ProductPage() {
           <TabsContent value="seller" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>{tShop('product.seller')}</CardTitle>
-                <CardDescription>{tShop('product.sellerInfo')}</CardDescription>
+                <CardTitle>{t('product.seller')}</CardTitle>
+                <CardDescription>{t('product.sellerInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {product.creator ? (
@@ -609,7 +606,7 @@ export default function ProductPage() {
                         <h3 className="text-lg font-semibold text-zinc-900">
                           {product.creator.firstName} {product.creator.lastName}
                         </h3>
-                        <p className="text-zinc-600">{tShop('product.verifiedSeller')}</p>
+                        <p className="text-zinc-600">{t('product.verifiedSeller')}</p>
                       </div>
                     </div>
 
@@ -618,17 +615,17 @@ export default function ProductPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Package className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">{tShop('product.soldProducts')}:</p>
+                        <p className="text-sm text-zinc-600">{t('product.soldProducts')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Star className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">{tShop('product.averageRating')}:</p>
+                        <p className="text-sm text-zinc-600">{t('product.averageRating')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">{tShop('product.memberSince')}:</p>
+                        <p className="text-sm text-zinc-600">{t('product.memberSince')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                     </div>
@@ -636,7 +633,7 @@ export default function ProductPage() {
                 ) : (
                   <div className="text-center py-8">
                     <User className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-                    <p className="text-zinc-600">{tShop('product.noSellerInfo')}</p>
+                    <p className="text-zinc-600">{t('product.noSellerInfo')}</p>
                   </div>
                 )}
               </CardContent>

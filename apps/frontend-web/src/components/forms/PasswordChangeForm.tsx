@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Save, Key } from 'lucide-react';
 import { authService } from '@/services/auth.service';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { useFormsTranslation } from '@/hooks/useTranslation';
 
 export interface PasswordChangeFormValues {
@@ -15,19 +15,19 @@ export interface PasswordChangeFormValues {
   confirmPassword: string;
 }
 
-const createValidationSchema = (tForms: (key: string) => string) =>
+const createValidationSchema = (t: (key: string) => string) =>
   Yup.object({
-    currentPassword: Yup.string().required(tForms('validation.required')),
+    currentPassword: Yup.string().required(t('validation.required')),
     newPassword: Yup.string()
-      .min(8, tForms('password.validation.passwordMinLength'))
+      .min(8, t('password.validation.passwordMinLength'))
       .matches(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
-        tForms('password.validation.passwordComplexity')
+        t('password.validation.passwordComplexity')
       )
-      .required(tForms('validation.required')),
+      .required(t('validation.required')),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref('newPassword')], tForms('password.validation.passwordMismatch'))
-      .required(tForms('validation.required')),
+      .oneOf([Yup.ref('newPassword')], t('password.validation.passwordMismatch'))
+      .required(t('validation.required')),
   });
 
 export interface PasswordChangeFormProps {
@@ -36,7 +36,7 @@ export interface PasswordChangeFormProps {
 }
 
 export default function PasswordChangeForm({ isLoading, setIsLoading }: PasswordChangeFormProps) {
-  const { t: tForms } = useFormsTranslation();
+  const { t } = useFormsTranslation();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -61,12 +61,12 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
       );
 
       if (response.error) {
-        toast.error(response.error.message || tForms('password.messages.passwordChangeError'));
+        toast.error(response.error.message || t('password.messages.passwordChangeError'));
         throw new Error(response.error.message);
       }
 
       if (response.data) {
-        toast.success(tForms('password.messages.passwordChangeSuccess'));
+        toast.success(t('password.messages.passwordChangeSuccess'));
       }
       resetForm();
     } catch (error) {
@@ -82,12 +82,12 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
     <div className="space-y-4">
       <h4 className="font-medium flex items-center gap-2">
         <Key className="h-4 w-4" />
-        {tForms('password.labels.changePassword')}
+        {t('password.labels.changePassword')}
       </h4>
 
       <Formik
         initialValues={initialValues}
-        validationSchema={createValidationSchema(tForms)}
+        validationSchema={createValidationSchema(t)}
         validateOnBlur={true}
         validateOnChange={true}
         onSubmit={handleSubmit}
@@ -97,7 +97,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Current Password */}
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">{tForms('password.labels.currentPassword')}</Label>
+                <Label htmlFor="currentPassword">{t('password.labels.currentPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -106,7 +106,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.currentPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder={tForms('password.placeholders.currentPassword')}
+                    placeholder={t('password.placeholders.currentPassword')}
                     disabled={isLoading || isSubmitting}
                     className={
                       errors.currentPassword && touched.currentPassword ? 'border-red-500' : ''
@@ -134,7 +134,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
 
               {/* New Password */}
               <div className="space-y-2">
-                <Label htmlFor="newPassword">{tForms('password.labels.newPassword')}</Label>
+                <Label htmlFor="newPassword">{t('password.labels.newPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -143,7 +143,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.newPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder={tForms('password.placeholders.newPassword')}
+                    placeholder={t('password.placeholders.newPassword')}
                     disabled={isLoading || isSubmitting}
                     className={errors.newPassword && touched.newPassword ? 'border-red-500' : ''}
                   />
@@ -165,7 +165,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">{tForms('password.labels.confirmPassword')}</Label>
+                <Label htmlFor="confirmPassword">{t('password.labels.confirmPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -174,7 +174,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.confirmPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder={tForms('password.placeholders.confirmPassword')}
+                    placeholder={t('password.placeholders.confirmPassword')}
                     disabled={isLoading || isSubmitting}
                     className={
                       errors.confirmPassword && touched.confirmPassword ? 'border-red-500' : ''
@@ -208,8 +208,8 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
             >
               <Save className="h-4 w-4 mr-2" />
               {isLoading || isSubmitting
-                ? tForms('password.buttons.updating')
-                : tForms('password.buttons.changePassword')}
+                ? t('password.buttons.updating')
+                : t('password.buttons.changePassword')}
             </Button>
           </Form>
         )}

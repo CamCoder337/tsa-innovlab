@@ -1,6 +1,6 @@
 {
   "title": "Shop",
-  "subtitle": "Browse our collection of quality refurbished parts from all your suppliers",
+  "subtitle": "Parcourez notre collection de pièces reconditionnées de qualité par tous vos fournisseurs",
   "categories": "Categories",
   "allCategories": "All Categories",
   "featuredProducts": "Featured Products",
@@ -42,8 +42,7 @@
     "applyFilters": "Apply Filters",
     "clearFilters": "Clear Filters",
     "showMore": "Show More",
-    "showLess": "Show Less",
-    "rating": "Minimum rating"
+    "showLess": "Show Less"
   },
   "search": {
     "placeholder": "Search...",
@@ -56,10 +55,7 @@
     "newest": "Newest",
     "priceAsc": "Price ascending",
     "nameAZ": "Name (A-Z)",
-    "stockAvailable": "Stock available",
-    "priceDesc": "Price descending",
-    "rating": "Rating",
-    "popularity": "Popularity"
+    "stockAvailable": "Stock available"
   },
   "alerts": {
     "lowStockTitle": "Low Stock Alert",
@@ -70,18 +66,9 @@
     "foundPlural": "{{count}} products found"
   },
   "product": {
-    "title": "Products",
-    "product": "Product",
-    "name": "Product name",
-    "images": "Images",
-    "availability": "Availability",
-    "viewDetails": "View details",
-    "rating": "Rating",
     "addToCart": "Add to Cart",
     "buyNow": "Buy Now",
     "quantity": "Quantity",
-    "decreaseQuantity": "Decrease Quantity",
-    "increaseQuantity": "Increase Quantity",
     "price": "Price",
     "originalPrice": "Original Price",
     "discount": "Discount",
@@ -234,38 +221,6 @@
     "title": "My Orders",
     "subtitle": "Track your order status and download invoices",
     "refresh": "Refresh",
-    "order": "Order",
-    "orders": "Orders",
-    "orderNumber": "Order number",
-    "orderDate": "Order date",
-    "items": "Items",
-    "quantity": "Quantity",
-    "unitPrice": "Unit price",
-    "subtotal": "Subtotal",
-    "total": "Total",
-    "tax": "Tax",
-    "viewDetails": "View details",
-    "trackOrder": "Track order",
-    "cancelOrder": "Cancel order",
-    "reorder": "Reorder",
-    "payment": {
-      "method": "Payment method",
-      "status": "Payment status",
-      "methods": {
-        "orange_money": "Orange Money",
-        "mtn_momo": "MTN Mobile Money",
-        "wave": "Wave",
-        "bank_transfer": "Bank transfer",
-        "cash_on_delivery": "Cash on delivery"
-      }
-    },
-    "shipping": {
-      "address": "Delivery address",
-      "method": "Delivery method",
-      "cost": "Delivery cost",
-      "tracking": "Tracking",
-      "estimatedDelivery": "Estimated delivery"
-    },
     "search": {
       "placeholder": "Search by order number, name or product...",
       "filterByStatus": "Filter by status",
@@ -290,7 +245,7 @@
       "noResultsMessage": "No orders match your search criteria. Try modifying your filters.",
       "discoverProducts": "Discover Products"
     },
-    "orderItem": {
+    "order": {
       "number": "Order {{number}}",
       "items": "{{count}} item",
       "itemsPlural": "{{count}} items",

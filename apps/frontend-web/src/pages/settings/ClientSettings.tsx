@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useProfileTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +19,7 @@ import {
   Save,
   ShoppingBag,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
 
 interface MFAStatus {
@@ -36,9 +32,8 @@ interface MFAStatus {
 
 export default function ClientSettings() {
   const { user } = useAuth();
-  const { t: tProfile } = useProfileTranslation();
+  const { t } = useProfileTranslation();
   const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
     enabled: user?.mfaEnabled || false,
@@ -58,11 +53,11 @@ export default function ClientSettings() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success(tProfile('settings.saveSuccess'));
+      toast.success(t('settings.saveSuccess'));
       setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('general.saveError'));
+      toast.error(t('settings.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -107,12 +102,12 @@ export default function ClientSettings() {
             setupRequired: false,
             backupCodes: [],
           });
-          toast.success(tProfile('settings.security.mfa.disableSuccess'));
+          toast.success(t('settings.security.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('profile.configError'));
+      toast.error(t('settings.security.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -138,13 +133,13 @@ export default function ClientSettings() {
           setupRequired: false,
           backupCodes: data.backupCodes || [],
         });
-        toast.success(tProfile('settings.security.mfa.enableSuccess'));
+        toast.success(t('settings.security.mfa.enableSuccess'));
       } else {
-        toast.error(tErrors('profile.invalidCode'));
+        toast.error(t('settings.security.mfa.invalidCode'));
       }
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('profile.enableError'));
+      toast.error(t('settings.security.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -161,12 +156,12 @@ export default function ClientSettings() {
     <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
-          <p className="text-muted-foreground">{tProfile('client.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <p className="text-muted-foreground">{t('client.subtitle')}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
+          {isLoading ? t('settings.saving') : t('settings.save')}
         </Button>
       </div>
 
@@ -176,18 +171,16 @@ export default function ClientSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              {tProfile('settings.notifications.title')}
+              {t('settings.notifications.title')}
             </CardTitle>
-            <CardDescription>{tProfile('client.notificationsDescription')}</CardDescription>
+            <CardDescription>{t('client.notificationsDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{tProfile('client.orderUpdates')}</div>
-                  <div className="text-sm text-gray-600">
-                    {tProfile('client.orderUpdatesDescription')}
-                  </div>
+                  <div className="font-medium">{t('client.orderUpdates')}</div>
+                  <div className="text-sm text-gray-600">{t('client.orderUpdatesDescription')}</div>
                 </div>
                 <Switch
                   checked={notifications.orderUpdates}
@@ -199,10 +192,8 @@ export default function ClientSettings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{tProfile('client.promotions')}</div>
-                  <div className="text-sm text-gray-600">
-                    {tProfile('client.promotionsDescription')}
-                  </div>
+                  <div className="font-medium">{t('client.promotions')}</div>
+                  <div className="text-sm text-gray-600">{t('client.promotionsDescription')}</div>
                 </div>
                 <Switch
                   checked={notifications.promotions}
@@ -214,9 +205,9 @@ export default function ClientSettings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{tProfile('client.productRecommendations')}</div>
+                  <div className="font-medium">{t('client.productRecommendations')}</div>
                   <div className="text-sm text-gray-600">
-                    {tProfile('client.productRecommendationsDescription')}
+                    {t('client.productRecommendationsDescription')}
                   </div>
                 </div>
                 <Switch
@@ -229,9 +220,9 @@ export default function ClientSettings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{tProfile('client.securityAlerts')}</div>
+                  <div className="font-medium">{t('client.securityAlerts')}</div>
                   <div className="text-sm text-gray-600">
-                    {tProfile('client.securityAlertsDescription')}
+                    {t('client.securityAlertsDescription')}
                   </div>
                 </div>
                 <Switch
@@ -250,22 +241,22 @@ export default function ClientSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5" />
-              {tProfile('client.shoppingPreferences')}
+              {t('client.shoppingPreferences')}
             </CardTitle>
-            <CardDescription>{tProfile('client.shoppingPreferencesDescription')}</CardDescription>
+            <CardDescription>{t('client.shoppingPreferencesDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-3">
-                <h4 className="font-medium">{tProfile('client.deliveryPreferences')}</h4>
+                <h4 className="font-medium">{t('client.deliveryPreferences')}</h4>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2">
                     <input type="radio" name="delivery" className="rounded" defaultChecked />
-                    <span className="text-sm">{tProfile('client.standardDelivery')}</span>
+                    <span className="text-sm">{t('client.standardDelivery')}</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="radio" name="delivery" className="rounded" />
-                    <span className="text-sm">{tProfile('client.expressDelivery')}</span>
+                    <span className="text-sm">{t('client.expressDelivery')}</span>
                   </label>
                 </div>
               </div>
@@ -278,9 +269,9 @@ export default function ClientSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {tProfile('settings.security.title')}
+              {t('settings.security.title')}
             </CardTitle>
-            <CardDescription>{tProfile('client.securityDescription')}</CardDescription>
+            <CardDescription>{t('client.securityDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <PasswordChangeForm isLoading={isLoading} setIsLoading={setIsLoading} />
@@ -293,11 +284,9 @@ export default function ClientSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    {tProfile('settings.security.mfa.title')}
+                    {t('settings.security.mfa.title')}
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    {tProfile('settings.security.mfa.description')}
-                  </p>
+                  <p className="text-sm text-gray-600">{t('settings.security.mfa.description')}</p>
                 </div>
                 <Switch
                   checked={mfaStatus.enabled}
@@ -309,22 +298,22 @@ export default function ClientSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>{tProfile('settings.security.mfa.enabled')}</AlertDescription>
+                  <AlertDescription>{t('settings.security.mfa.enabled')}</AlertDescription>
                 </Alert>
               )}
 
               {mfaStatus.setupRequired && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
+                  <h5 className="font-medium">{t('settings.security.mfa.setup')}</h5>
 
                   {mfaStatus.qrCode && (
                     <div className="space-y-3">
-                      <p className="text-sm">{tProfile('settings.security.mfa.scanQR')}</p>
+                      <p className="text-sm">{t('settings.security.mfa.scanQR')}</p>
                       <div className="flex justify-center">
                         <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
                       </div>
 
-                      <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
+                      <p className="text-sm">{t('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
                           {mfaStatus.secret}
@@ -339,9 +328,7 @@ export default function ClientSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="mfaCode">
-                          {tProfile('settings.security.mfa.enterCode')}
-                        </Label>
+                        <Label htmlFor="mfaCode">{t('settings.security.mfa.enterCode')}</Label>
                         <div className="flex gap-2">
                           <Input
                             id="mfaCode"
@@ -364,7 +351,7 @@ export default function ClientSettings() {
                             }}
                             disabled={isLoading}
                           >
-                            {tProfile('settings.security.mfa.enable')}
+                            {t('settings.security.mfa.enable')}
                           </Button>
                         </div>
                       </div>
@@ -377,10 +364,10 @@ export default function ClientSettings() {
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <h5 className="font-medium">{tProfile('settings.security.mfa.backupCodes')}</h5>
+                    <h5 className="font-medium">{t('settings.security.mfa.backupCodes')}</h5>
                   </div>
                   <p className="text-sm text-yellow-800">
-                    {tProfile('settings.security.mfa.backupCodesDescription')}
+                    {t('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {mfaStatus.backupCodes.map((code, index) => (
@@ -396,7 +383,7 @@ export default function ClientSettings() {
                   </div>
                   <Button variant="outline" size="sm">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    {tProfile('settings.security.mfa.regenerateCodes')}
+                    {t('settings.security.mfa.regenerateCodes')}
                   </Button>
                 </div>
               )}

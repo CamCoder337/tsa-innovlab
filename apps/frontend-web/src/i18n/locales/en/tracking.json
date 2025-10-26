@@ -12,6 +12,14 @@
     "newMission": "New Mission",
     "detailedTracking": "Detailed mission tracking"
   },
+  "status": {
+    "published": "Published",
+    "assigned": "Assigned",
+    "in_progress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "draft": "Draft"
+  },
   "kpis": {
     "totalMissions": "Total Missions",
     "activeMissions": "Active",
@@ -21,7 +29,7 @@
     "activeDrivers": "Active Drivers",
     "systemUptime": "System Uptime",
     "responseTime": "Response time",
-    "completedToday": "Completed Today"
+    "completedToday": "completed today"
   },
   "mission": {
     "notFound": "Mission not found",
@@ -85,12 +93,7 @@
   "map": {
     "title": "Real-Time Tracking",
     "globalView": "Global Network View",
-    "noLocation": "Position not available",
-    "estimatedArrival": "Estimated arrival",
-    "currentLocation": "Current location",
-    "route": "Route",
-    "traffic": "Traffic",
-    "weather": "Weather",
+    "close": "Close",
     "filters": "Filters",
     "satelliteView": "Satellite View",
     "activeVehicles": "Active vehicles ({{count}})",
@@ -125,7 +128,7 @@
   "alerts": {
     "title": "Recent Alerts",
     "management": "Alert Management",
-    "critical": "Critical Alert(s) require your attention",
+    "critical": "critical alert(s) require your attention",
     "checkTab": "Check the \"Alerts & Incidents\" tab for more details",
     "vehicleBreakdown": "Vehicle breakdown",
     "breakdownMessage": "Vehicle {{vehicle}} is broken down at {{location}}",
@@ -229,6 +232,7 @@
     "noActiveMission": "No active mission",
     "noActiveMissionMessage": "You have no mission in progress. Check your assigned missions.",
     "departure": "Departure",
-    "arrival": "Arrival"
+    "arrival": "Arrival",
+    "scheduledDelivery": "Scheduled delivery"
   }
 }

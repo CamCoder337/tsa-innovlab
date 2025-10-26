@@ -20,16 +20,12 @@ import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileF
 import type { FormikProps } from 'formik';
 import KYCForm from '@/components/forms/KYCForm';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
-import {
-  useProfileTranslation,
-  useErrorsTranslation,
-  useCommonTranslation,
-} from '@/hooks/useTranslation';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -44,9 +40,8 @@ export interface Document {
 function AffreteurProfile() {
   const { user, updateUser } = useAuth();
   const { myMissions } = useMissions();
-  const { t: tProfile } = useProfileTranslation();
+  const { t } = useProfileTranslation();
   const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [kycUploading, setKycUploading] = useState<string | null>(null);
@@ -56,29 +51,29 @@ function AffreteurProfile() {
       status: 'verified',
       fileName: 'carte_identite.pdf',
       uploadDate: '2024-01-15',
-      label: tProfile('kyc.documentTypes.identity'),
-      placeholder: tProfile('kyc.placeholders.identity'),
+      label: t('kyc.documentTypes.identity'),
+      placeholder: t('kyc.placeholders.identity'),
     },
     businessLicense: {
       status: 'pending',
       fileName: 'licence_commerciale.pdf',
       uploadDate: '2024-01-20',
-      label: tProfile('kyc.documentTypes.businessLicense'),
-      placeholder: tProfile('kyc.placeholders.businessLicense'),
+      label: t('kyc.documentTypes.businessLicense'),
+      placeholder: t('kyc.placeholders.businessLicense'),
     },
     taxCertificate: {
       status: 'missing',
       fileName: null,
       uploadDate: null,
-      label: tProfile('kyc.documentTypes.taxCertificate'),
-      placeholder: tProfile('kyc.placeholders.taxCertificate'),
+      label: t('kyc.documentTypes.taxCertificate'),
+      placeholder: t('kyc.placeholders.taxCertificate'),
     },
     bankStatement: {
       status: 'verified',
       fileName: 'releve_bancaire.pdf',
       uploadDate: '2024-01-10',
-      label: tProfile('kyc.documentTypes.bankStatement'),
-      placeholder: tProfile('kyc.placeholders.bankStatement'),
+      label: t('kyc.documentTypes.bankStatement'),
+      placeholder: t('kyc.placeholders.bankStatement'),
     },
   });
 
@@ -98,7 +93,7 @@ function AffreteurProfile() {
       }));
     } catch (error) {
       console.error(error);
-      console.error(tErrors('profile.documentUploadError'));
+      console.error(t('errors.documentUploadError'));
     } finally {
       setKycUploading(null);
     }
@@ -112,18 +107,18 @@ function AffreteurProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || tErrors('profile.updateError'));
+        toast.error(response.error.message || t('errors.updateError'));
       }
 
       if (response.data) {
         handleKycUpload();
         updateUser(response.data);
-        toast.success(tProfile('updateSuccess'));
+        toast.success(t('updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      console.error(tErrors('profile.updateError'));
+      console.error(t('errors.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -161,15 +156,15 @@ function AffreteurProfile() {
   if (!user) return null;
 
   const stats = [
-    { label: tProfile('stats.missionsCreated'), value: myMissions?.length || 0, icon: Package },
+    { label: t('stats.missionsCreated'), value: myMissions?.length || 0, icon: Package },
     {
-      label: tProfile('stats.missionsCompleted'),
+      label: t('stats.missionsCompleted'),
       value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
       icon: TrendingUp,
     },
-    { label: tProfile('stats.averageRating'), value: '4.8/5', icon: Star },
+    { label: t('stats.averageRating'), value: '4.8/5', icon: Star },
     {
-      label: tProfile('stats.memberSince'),
+      label: t('stats.memberSince'),
       value: format(new Date(user.createdAt), 'MMM yyyy'),
       icon: Calendar,
     },
@@ -183,8 +178,8 @@ function AffreteurProfile() {
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('title')}</h1>
-          <p className="text-muted-foreground">{tProfile('subtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
@@ -209,7 +204,7 @@ function AffreteurProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? tProfile('profile.actions.saving') : tProfile('profile.actions.save')}
+              {isLoading ? t('profile.actions.saving') : t('profile.actions.save')}
             </Button>
             <Button
               variant="outline"
@@ -229,7 +224,7 @@ function AffreteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              {tProfile('sections.personalInfo')}
+              {t('sections.personalInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 lg:grid-cols-2  gap-6 justify-between">
@@ -255,7 +250,7 @@ function AffreteurProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    {tProfile('sections.statistics')}
+                    {t('sections.statistics')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -308,12 +303,12 @@ function AffreteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {tProfile('sections.kycDocuments')}
+              {t('sections.kycDocuments')}
               <Badge
                 variant="outline"
                 className={`ml-auto ${kycPercentage === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}
               >
-                {kycProgress}/{totalKycDocs} {tProfile('kyc.verified')}
+                {kycProgress}/{totalKycDocs} {t('kyc.verified')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -332,14 +327,12 @@ function AffreteurProfile() {
               <div className="flex items-start gap-3">
                 <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-blue-900">
-                    {tProfile('kyc.whyDocuments')}
-                  </h4>
-                  <p className="text-sm text-blue-700">{tProfile('kyc.description')}</p>
+                  <h4 className="text-sm font-medium text-blue-900">{t('kyc.whyDocuments')}</h4>
+                  <p className="text-sm text-blue-700">{t('kyc.description')}</p>
                   <ul className="text-xs text-tsa-blue mt-2 space-y-1">
-                    <li>• {tProfile('kyc.acceptedFormats')}</li>
-                    <li>• {tProfile('kyc.verificationTime')}</li>
-                    <li>• {tProfile('kyc.secureStorage')}</li>
+                    <li>• {t('kyc.acceptedFormats')}</li>
+                    <li>• {t('kyc.verificationTime')}</li>
+                    <li>• {t('kyc.secureStorage')}</li>
                   </ul>
                 </div>
               </div>

@@ -28,7 +28,7 @@ export default function ForgotPasswordForm({
   isSubmitting = false,
   isSubmitted = false,
 }: ForgotPasswordFormProps) {
-  const { t: tForms } = useFormsTranslation();
+  const { t } = useFormsTranslation();
 
   return (
     <Formik<ForgotPasswordRequest>
@@ -42,11 +42,11 @@ export default function ForgotPasswordForm({
         isSubmitted ? (
           <>
             <p className="text-gray-600 mb-6">
-              {tForms('messages.resetLinkSent')} <strong>{values.email}</strong>
+              {t('messages.resetLinkSent')} <strong>{values.email}</strong>
             </p>
             <Link to="/">
               <Button className="w-full h-12 bg-tsa-blue/90 text-white font-semibold">
-                {tForms('actions.backToLogin')}
+                {t('actions.backToLogin')}
               </Button>
             </Link>
           </>
@@ -56,7 +56,7 @@ export default function ForgotPasswordForm({
               <Input
                 name="email"
                 type="email"
-                placeholder={tForms('placeholders.enterEmail')}
+                placeholder={t('placeholders.enterEmail')}
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -75,12 +75,12 @@ export default function ForgotPasswordForm({
               loading={isSubmitting}
               disabled={isSubmitting}
             >
-              {tForms('actions.sendResetLink')}
+              {t('actions.sendResetLink')}
             </Button>
 
             <div className="text-center">
               <Link to="/" className="text-tsa-blue font-medium">
-                ← {tForms('actions.backToLogin')}
+                ← {t('actions.backToLogin')}
               </Link>
             </div>
           </Form>

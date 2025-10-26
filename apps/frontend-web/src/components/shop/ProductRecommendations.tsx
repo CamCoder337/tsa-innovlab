@@ -9,6 +9,7 @@ import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
 import toast from 'react-hot-toast';
+import { useShopTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface ProductRecommendationsProps {
   type: 'popular' | 'personalized' | 'similar';
@@ -31,6 +32,8 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
+  const { t: tShop } = useShopTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +85,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         toast.error(error);
         return;
       }
-      toast.success(`${product.name} a été ajouté à votre panier`);
+      toast.success(tShop('recommendations.addedToCart', { productName: product.name }));
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
@@ -91,13 +94,15 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getTitle = () => {
     switch (type) {
       case 'popular':
-        return 'Produits Populaires';
+        return tShop('recommendations.popularProducts');
       case 'personalized':
-        return isAuthenticated ? 'Recommandé pour vous' : 'Produits Populaires';
+        return isAuthenticated
+          ? tShop('recommendations.recommendedForYou')
+          : tShop('recommendations.popularProducts');
       case 'similar':
-        return 'Produits Similaires';
+        return tShop('recommendations.similarProducts');
       default:
-        return 'Recommandations';
+        return tShop('recommendations.title');
     }
   };
 
@@ -117,15 +122,15 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getDescription = () => {
     switch (type) {
       case 'popular':
-        return 'Les produits les plus demandés par nos clients';
+        return tShop('recommendations.popularDescription');
       case 'personalized':
         return isAuthenticated
-          ? 'Sélection personnalisée basée sur vos préférences'
-          : 'Les produits les plus populaires';
+          ? tShop('recommendations.personalizedDescription')
+          : tShop('recommendations.popularDescription');
       case 'similar':
-        return "D'autres produits qui pourraient vous intéresser";
+        return tShop('recommendations.similarDescription');
       default:
-        return 'Découvrez nos recommandations';
+        return tShop('recommendations.defaultDescription');
     }
   };
 
@@ -142,7 +147,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           {type === 'personalized' && isAuthenticated && (
             <Badge variant="secondary" className="ml-auto">
               <Sparkles className="h-3 w-3 mr-1" />
-              IA
+              {tShop('recommendations.ai')}
             </Badge>
           )}
         </CardTitle>
@@ -182,7 +187,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-tsa-blue transition-colors">
                     {product.name}
                   </h4>
 
@@ -207,7 +212,9 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Stock: {product.stock}</span>
+                    <span>
+                      {tShop('stock')}: {product.stock}
+                    </span>
                     {product.category && (
                       <Badge variant="outline" className="text-xs">
                         {product.category.name}
@@ -222,7 +229,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                     disabled={cartLoading || product.stock === 0}
                   >
                     <ShoppingCart className="h-3 w-3 mr-2" />
-                    {product.stock === 0 ? 'Rupture' : 'Ajouter'}
+                    {product.stock === 0 ? tShop('outOfStock') : tCommon('add')}
                   </Button>
                 </div>
               </div>
@@ -231,7 +238,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Aucune recommandation disponible</p>
+            <p>{tShop('recommendations.noRecommendations')}</p>
           </div>
         )}
 
@@ -241,10 +248,10 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               <Sparkles className="h-4 w-4" />
               <span className="font-medium">Pourquoi ces recommandations ?</span>
             </div>
-            <p className="text-sm text-blue-600 mt-1">{recommendations.reason}</p>
+            <p className="text-sm text-tsa-blue mt-1">{recommendations.reason}</p>
             {recommendations.confidence && (
               <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-blue-600">
+                <div className="flex items-center justify-between text-xs text-tsa-blue">
                   <span>Pertinence</span>
                   <span>{Math.round(recommendations.confidence * 100)}%</span>
                 </div>

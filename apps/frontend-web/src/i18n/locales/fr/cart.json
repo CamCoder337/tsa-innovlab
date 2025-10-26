@@ -1,7 +1,7 @@
 {
   "title": "Panier",
   "cart": "Panier",
-  "empty": "Votre panier est vide",
+  "emptyCart": "Votre panier est vide",
   "continueShopping": "Continuer les achats",
   "item": "Article",
   "items": "Articles",

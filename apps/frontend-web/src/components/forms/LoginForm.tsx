@@ -51,7 +51,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
             <Input
               name="email"
               type="email"
-              placeholder={tForms('labels.email')}
+              placeholder={tAuth('login.email')}
               value={values.email}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -71,7 +71,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               <Input
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder={tForms('labels.password')}
+                placeholder={tAuth('login.password')}
                 value={values.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -152,12 +152,12 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-4"></div>
-                {showMFA ? tAuth('mfa.verifying') : tAuth('login.loading')}
+                {showMFA ? tAuth('mfa.verifying') : tAuth('login.loggingIn')}
               </>
             ) : showMFA ? (
-              tAuth('mfa.verify')
+              tAuth('mfa.verifyCode')
             ) : (
-              tAuth('login.button')
+              tAuth('login.loginButton')
             )}
           </Button>
 
@@ -166,7 +166,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               <div className="text-center">
                 <span className="text-gray-600">{tAuth('login.noAccount')} </span>
                 <Link to="/register" className="text-tsa-blue font-medium">
-                  {tAuth('register.label')}
+                  {tAuth('register.register')}
                 </Link>
               </div>
               <div className="text-center">

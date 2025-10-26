@@ -12,7 +12,7 @@ import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
 import { useAuthTranslation } from '@/hooks/useTranslation';
 import LanguageDropdown from '@/components/ui/LanguageDropdown';
 import { authService } from '@/services/auth.service';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 const INITIAL_VALUES = {
   email: '',
@@ -20,7 +20,7 @@ const INITIAL_VALUES = {
 
 const ForgotPassword: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
-  const { t: tAuth } = useAuthTranslation();
+  const { t } = useAuthTranslation();
 
   return (
     <RedirectIfAuthenticated>
@@ -34,11 +34,9 @@ const ForgotPassword: React.FC = () => {
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
               <h1 className="text-4xl font-medium mb-2 text-tsa-blue">
-                {tAuth('forgotPassword.title')}
+                {t('forgotPassword.title')}
               </h1>
-              <p className="text-sm font-semibold text-tsa-gray">
-                {tAuth('forgotPassword.subtitle')}
-              </p>
+              <p className="text-sm font-semibold text-tsa-gray">{t('forgotPassword.subtitle')}</p>
             </div>
 
             <Card className="shadow-xl bg-[#D9D9D980]">
@@ -61,7 +59,7 @@ const ForgotPassword: React.FC = () => {
                         return;
                       }
 
-                      toast.success(tAuth('forgotPassword.successMessage'));
+                      toast.success(t('forgotPassword.successMessage'));
                     } catch (error) {
                       console.error('Forgot password failed:', error);
                     } finally {
@@ -75,11 +73,11 @@ const ForgotPassword: React.FC = () => {
                     isSubmitted || isSubmitting ? (
                       <>
                         <p className="text-gray-600 mb-6">
-                          {tAuth('forgotPassword.successMessage')} <strong>{values.email}</strong>
+                          {t('forgotPassword.successMessage')} <strong>{values.email}</strong>
                         </p>
                         <Link to="/">
                           <Button className="w-full h-12 bg-tsa-blue/90 text-white font-semibold">
-                            {tAuth('forgotPassword.returnToLogin')}
+                            {t('forgotPassword.returnToLogin')}
                           </Button>
                         </Link>
                       </>
@@ -89,7 +87,7 @@ const ForgotPassword: React.FC = () => {
                           <Input
                             name="email"
                             type="email"
-                            placeholder={tAuth('forgotPassword.emailPlaceholder')}
+                            placeholder={t('forgotPassword.emailPlaceholder')}
                             value={values.email}
                             onChange={handleChange}
                             onBlur={handleBlur}
@@ -108,12 +106,12 @@ const ForgotPassword: React.FC = () => {
                           loading={isSubmitting}
                           disabled={isSubmitting}
                         >
-                          {tAuth('forgotPassword.sendLink')}
+                          {t('forgotPassword.sendLink')}
                         </Button>
 
                         <div className="text-center">
                           <Link to="/" className="text-tsa-blue font-medium">
-                            {tAuth('forgotPassword.backToLogin')}
+                            {t('forgotPassword.backToLogin')}
                           </Link>
                         </div>
                       </Form>

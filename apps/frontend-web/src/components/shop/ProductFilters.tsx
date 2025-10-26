@@ -138,7 +138,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
       <CardContent className="space-y-6">
         {/* Search */}
         <div className="md:flex flex-col space-y-2 hidden">
-          <h3 className="font-medium">{tCommon('actions.search')}</h3>
+          <h3 className="font-medium">{tCommon('search')}</h3>
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

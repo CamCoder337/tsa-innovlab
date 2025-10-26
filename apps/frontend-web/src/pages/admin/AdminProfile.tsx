@@ -5,16 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Users, Settings, Shield, Save, Edit, X, BarChart3, ServerCog } from 'lucide-react';
 import ProfileForm, { type ProfileFormValues } from '@/components/forms/ProfileForm';
 import { authService } from '@/services/auth.service';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import type { FormikProps } from 'formik';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
-import {
-  useAdminTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import { useAdminTranslation } from '@/hooks/useTranslation';
 
 function AdminProfile() {
   const { user, updateUser } = useAuth();
@@ -22,9 +18,7 @@ function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
-  const { t: tAdmin } = useAdminTranslation();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useAdminTranslation();
 
   if (!user) return null;
 
@@ -36,17 +30,17 @@ function AdminProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || tErrors('profile.updateError'));
+        toast.error(response.error.message || t('profile.updateError'));
       }
 
       if (response.data) {
         updateUser(response.data);
-        toast.success(tAdmin('profile.updateSuccess'));
+        toast.success(t('profile.updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('profile.updateError'));
+      toast.error(t('profile.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +65,7 @@ function AdminProfile() {
       if (hasChanges) {
         handleSave(differences as UpdateUserRequest);
       } else {
-        toast(tCommon('messages.noChanges'));
+        toast(t('profile.noChanges'));
       }
     }
   };
@@ -82,29 +76,29 @@ function AdminProfile() {
   };
 
   const adminStats = [
-    { label: tAdmin('profile.registeredUsers'), value: '1 245', icon: Users },
-    { label: tAdmin('profile.activeMissions'), value: missions?.length || 0, icon: BarChart3 },
-    { label: tAdmin('profile.openIncidents'), value: '2', icon: Shield },
-    { label: tAdmin('profile.services'), value: 'OK', icon: ServerCog },
+    { label: t('profile.registeredUsers'), value: '1 245', icon: Users },
+    { label: t('profile.activeMissions'), value: missions?.length || 0, icon: BarChart3 },
+    { label: t('profile.openIncidents'), value: '2', icon: Shield },
+    { label: t('profile.services'), value: 'OK', icon: ServerCog },
   ];
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tAdmin('profile.title')}</h1>
-          <p className="text-muted-foreground">{tAdmin('profile.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('profile.title')}</h1>
+          <p className="text-muted-foreground">{t('profile.subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
             <Button onClick={() => setIsEditing(true)} className="gap-2">
               <Edit className="h-4 w-4" />
-              {tCommon('actions.edit')}
+              {t('profile.edit')}
             </Button>
             <Link to="/app/settings">
               <Button variant="outline" className="gap-2">
                 <Settings className="h-4 w-4" />
-                {tCommon('actions.settings')}
+                {t('profile.settings')}
               </Button>
             </Link>
           </div>
@@ -118,11 +112,11 @@ function AdminProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? tCommon('messages.saving') : tCommon('actions.save')}
+              {isLoading ? t('profile.saving') : t('profile.save')}
             </Button>
             <Button variant="outline" disabled={isLoading} className="gap-2" onClick={handleCancel}>
               <X className="h-4 w-4" />
-              {tCommon('actions.cancel')}
+              {t('profile.cancel')}
             </Button>
           </div>
         )}
@@ -133,7 +127,7 @@ function AdminProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              {tAdmin('profile.adminInfo')}
+              {t('profile.adminInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 lg:grid-cols-2  gap-6 justify-between">
@@ -150,7 +144,7 @@ function AdminProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    {tAdmin('profile.platformStats')}
+                    {t('profile.platformStats')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

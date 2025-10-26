@@ -3,29 +3,23 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AddUserForm from '@/components/forms/AddUserForm';
 import type { CreateUserRequest } from '@/types/auth.types';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useAdminTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import { useAdminTranslation } from '@/hooks/useTranslation';
 
 export default function AddUser() {
   const navigate = useNavigate();
   const { signup, isLoading } = useAuth();
-  const { t: tAdmin } = useAdminTranslation();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tErrors } = useErrorsTranslation();
+  const { t } = useAdminTranslation();
 
   const handleSubmit = async (userData: CreateUserRequest) => {
     try {
       await signup(userData);
-      toast.success(tAdmin('addUser.createSuccess'));
+      toast.success(t('addUser.createSuccess'));
       navigate('/admin/users');
     } catch (error) {
       console.error(error);
-      toast.error(tErrors('admin.createError'));
+      toast.error(t('addUser.createError'));
     }
   };
 
@@ -41,11 +35,11 @@ export default function AddUser() {
           <div className="flex items-center space-x-4">
             <Button variant="outline" onClick={() => navigate('/admin/users')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {tCommon('actions.back')}
+              {t('addUser.backButton')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{tAdmin('addUser.title')}</h1>
-              <p className="text-muted-foreground">{tAdmin('addUser.subtitle')}</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t('addUser.title')}</h1>
+              <p className="text-muted-foreground">{t('addUser.subtitle')}</p>
             </div>
           </div>
         </div>

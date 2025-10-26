@@ -24,7 +24,9 @@
       "averageCost": "Coût Moyen",
       "pendingMissions": "Missions en Attente",
       "successRate": "Taux de Réussite",
-      "total": "au total"
+      "total": "au total",
+      "thisMonth": "ce mois",
+      "inProgress": "en cours"
     },
     "sections": {
       "recentMissions": "Mes Missions Récentes",
@@ -50,7 +52,8 @@
     },
     "emptyStates": {
       "noRecentMissions": "Aucune mission récente",
-      "createFirstMission": "Créez votre première mission pour commencer"
+      "createFirstMission": "Créez votre première mission pour commencer",
+      "notAssigned": "Non assigné"
     },
     "alerts": {
       "platformOperational": "Plateforme Opérationnelle",
@@ -69,8 +72,10 @@
       "activeMissions": "Missions Actives",
       "successRate": "Taux de Réussite",
       "new": "nouvelles",
+      "inProgress": "En cours",
       "todayEarnings": "Gains Aujourd'hui",
-      "vsYesterday": "vs hier"
+      "vsYesterday": "vs hier",
+      "thisMonth": "ce mois"
     },
     "sections": {
       "myActiveMissions": "Mes Missions Actives",
@@ -97,9 +102,7 @@
       "fuel": "Carburant",
       "fuelLevel": "Niveau carburant à 85% - Station recommandée à 2km",
       "clientRating": "Évaluation Client",
-      "newRating": "Nouvelle note 5/5 reçue pour votre dernière livraison",
-      "allCaughtUp": "Vous êtes à jour",
-      "noNotifications": "Aucune notification"
+      "newRating": "Nouvelle note 5/5 reçue pour votre dernière livraison"
     },
     "monthlyStats": {
       "missionsThisMonth": "Missions Ce Mois",
@@ -111,6 +114,9 @@
       "noActiveMissions": "Aucune mission active",
       "searchAvailableMissions": "Recherchez des missions disponibles",
       "undefinedClient": "Client non défini"
+    },
+    "missionDetails": {
+      "for": "pour"
     }
   },
   "charts": {

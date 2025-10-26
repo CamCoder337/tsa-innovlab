@@ -29,16 +29,15 @@ import { NotificationCenter } from '../notifications/NotificationCenter';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCommonTranslation, useAuthTranslation } from '@/hooks/useTranslation';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 
-export default function Header({ className }: { className?: string }) {
+export default function Header() {
   const { user, logout } = useAuth();
   const { cart } = useCart();
   const { t: tCommon } = useCommonTranslation();
   const { t: tAuth } = useAuthTranslation();
   const { i18n } = useTranslation();
 
-  const displayName = user ? `${user.fullName}` : tCommon('roles.guest', 'Invité');
+  const displayName = user ? `${user.fullName}` : tAuth('roles.guest', 'Invité');
   const displayRole = user?.role ?? '';
   const isInvite = !user;
   const navigate = useNavigate();
@@ -50,21 +49,12 @@ export default function Header({ className }: { className?: string }) {
   };
 
   const handleLogout = async () => {
-    toast.loading(tAuth('loggingOut'), {
-      duration: 30000,
-    });
-
     await logout();
-
-    toast.dismiss();
-    toast.success('Déconnexion réussie');
     navigate('/');
   };
 
   return (
-    <header
-      className={`h-16 flex items-center justify-between px-6 bg-white border-b ${className}`}
-    >
+    <header className="fixed inset-y-0 z-10 h-fit w-full border-b bg-white flex items-center justify-between md:px-6">
       {/* Logo and Mobile Sidebar Trigger */}
       <div className="flex items-center gap-1">
         {/* Mobile Sidebar Trigger - only show when user is authenticated */}
@@ -131,7 +121,7 @@ export default function Header({ className }: { className?: string }) {
               </Avatar>
               <div className="text-left hidden md:flex flex-col">
                 <p className="text-sm font-medium">{displayName}</p>
-                <p className="text-xs text-muted-foreground">{tCommon(`roles.${displayRole}`)}</p>
+                <p className="text-xs text-muted-foreground">{tAuth(`roles.${displayRole}`)}</p>
               </div>
               <ChevronDown className="h-3 w-3" />
             </Button>
@@ -142,13 +132,13 @@ export default function Header({ className }: { className?: string }) {
                 <Link to="/">
                   <DropdownMenuItem>
                     <LogIn className="mr-2 h-4 w-4" />
-                    {tAuth('login.label')}
+                    {tAuth('register.login')}
                   </DropdownMenuItem>
                 </Link>
                 <Link to="/register">
                   <DropdownMenuItem>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    {tAuth('register.label')}
+                    {tAuth('register.register')}
                   </DropdownMenuItem>
                 </Link>
               </>
