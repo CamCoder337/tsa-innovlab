@@ -1,0 +1,132 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome, {{name}}",
+  "overview": {
+    "totalUsers": "Total Users",
+    "activeUsers": "Active Users",
+    "totalMissions": "Total Missions",
+    "activeMissions": "Active Missions",
+    "totalProducts": "Total Products",
+    "activeProducts": "Active Products",
+    "totalOrders": "Total Orders",
+    "pendingOrders": "Pending Orders"
+  },
+  "affreteur": {
+    "welcome": "Hello, {{name}}",
+    "subtitle": "Manage your shipments and track your missions in real time.",
+    "systemOnline": "System online",
+    "actions": {
+      "createMission": "Create Mission",
+      "myReports": "My Reports"
+    },
+    "insights": {
+      "activeMissions": "Active Missions",
+      "averageCost": "Average Cost",
+      "pendingMissions": "Pending Missions",
+      "successRate": "Success Rate",
+      "total": "total",
+      "thisMonth": "this month",
+      "inProgress": "in progress"
+    },
+    "sections": {
+      "recentMissions": "Recent Missions",
+      "quickActions": "Quick Actions",
+      "recommendations": "Recommendations",
+      "monthlySummary": "Monthly Summary"
+    },
+    "quickActions": {
+      "newMission": "New Mission",
+      "trackShipments": "Track Shipments",
+      "costAnalysis": "Cost Analysis"
+    },
+    "recommendations": {
+      "noRecommendations": "No recommendations available",
+      "createMoreMissions": "Create more missions to get insights"
+    },
+    "monthlySummary": {
+      "createdMissions": "Created Missions",
+      "completedMissions": "Completed Missions",
+      "totalCost": "Total Cost",
+      "savingsRealized": "Savings Realized",
+      "onTimeDelivery": "of your missions delivered on time"
+    },
+    "emptyStates": {
+      "noRecentMissions": "No recent missions",
+      "createFirstMission": "Create your first mission to get started",
+      "notAssigned": "Not assigned"
+    },
+    "alerts": {
+      "platformOperational": "Platform Operational",
+      "allTransporteursAvailable": "All your transporters are available • Real-time tracking active"
+    }
+  },
+  "transporteur": {
+    "welcome": "Hello, {{name}}",
+    "subtitle": "Find new missions and manage your deliveries.",
+    "vehicleOnline": "Vehicle online",
+    "actions": {
+      "availableMissions": "Available Missions"
+    },
+    "insights": {
+      "availableMissions": "Available Missions",
+      "activeMissions": "Active Missions",
+      "successRate": "Success Rate",
+      "new": "new",
+      "inProgress": "In progress",
+      "todayEarnings": "Today's Earnings",
+      "vsYesterday": "vs yesterday",
+      "thisMonth": "this month"
+    },
+    "sections": {
+      "myActiveMissions": "My Active Missions",
+      "quickActions": "Quick Actions",
+      "alertsNotifications": "Alerts & Notifications",
+      "monthlyStats": "Monthly Stats"
+    },
+    "vehicle": {
+      "operational": "Vehicle Operational",
+      "locationActive": "Location active",
+      "fuel": "Fuel",
+      "nextMaintenance": "Next maintenance in",
+      "days": "days"
+    },
+    "quickActions": {
+      "searchMissions": "Search Missions",
+      "gpsTracking": "GPS Tracking",
+      "vehicleStatus": "Vehicle Status",
+      "dailyEarnings": "Daily Earnings"
+    },
+    "alerts": {
+      "newMission": "New Mission Available",
+      "urgentMission": "Urgent mission in your area - Accept now for bonus pay",
+      "fuel": "Fuel Alert",
+      "fuelLevel": "Fuel level at 15% - Plan refueling stop",
+      "rating": "New Rating",
+      "newRating": "New 5/5 rating received for your last delivery",
+      "clientRating": "Client Rating"
+    },
+    "monthlyStats": {
+      "missionsThisMonth": "Missions This Month",
+      "completedMissions": "Completed Missions",
+      "earningsThisMonth": "Earnings This Month",
+      "viewProfile": "View Profile"
+    },
+    "emptyStates": {
+      "noActiveMissions": "No active missions",
+      "searchAvailableMissions": "Search for available missions",
+      "undefinedClient": "Undefined client"
+    },
+    "missionDetails": {
+      "for": "for"
+    }
+  },
+  "charts": {
+    "missionsOverTime": "Missions Over Time",
+    "revenueOverTime": "Revenue Over Time",
+    "topCategories": "Top Categories",
+    "orderStatus": "Order Status"
+  },
+  "recentActivity": "Recent Activity",
+  "quickActions": "Quick Actions",
+  "notifications": "Notifications"
+}

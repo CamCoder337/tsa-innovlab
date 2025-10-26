@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Save, Key } from 'lucide-react';
 import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 export interface PasswordChangeFormValues {
   currentPassword: string;
@@ -14,19 +15,20 @@ export interface PasswordChangeFormValues {
   confirmPassword: string;
 }
 
-const validationSchema = Yup.object({
-  currentPassword: Yup.string().required('Le mot de passe actuel est requis'),
-  newPassword: Yup.string()
-    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
-    )
-    .required('Le nouveau mot de passe est requis'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('newPassword')], 'Les mots de passe ne correspondent pas')
-    .required('La confirmation du mot de passe est requise'),
-});
+const createValidationSchema = (t: (key: string) => string) =>
+  Yup.object({
+    currentPassword: Yup.string().required(t('validation.required')),
+    newPassword: Yup.string()
+      .min(8, t('password.validation.passwordMinLength'))
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
+        t('password.validation.passwordComplexity')
+      )
+      .required(t('validation.required')),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('newPassword')], t('password.validation.passwordMismatch'))
+      .required(t('validation.required')),
+  });
 
 export interface PasswordChangeFormProps {
   isLoading: boolean;
@@ -34,6 +36,7 @@ export interface PasswordChangeFormProps {
 }
 
 export default function PasswordChangeForm({ isLoading, setIsLoading }: PasswordChangeFormProps) {
+  const { t } = useFormsTranslation();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -58,12 +61,12 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
       );
 
       if (response.error) {
-        toast.error(response.error.message || 'Erreur lors de la modification du mot de passe');
+        toast.error(response.error.message || t('password.messages.passwordChangeError'));
         throw new Error(response.error.message);
       }
 
       if (response.data) {
-        toast.success('Mot de passe modifié avec succès');
+        toast.success(t('password.messages.passwordChangeSuccess'));
       }
       resetForm();
     } catch (error) {
@@ -79,12 +82,12 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
     <div className="space-y-4">
       <h4 className="font-medium flex items-center gap-2">
         <Key className="h-4 w-4" />
-        Changer le mot de passe
+        {t('password.labels.changePassword')}
       </h4>
 
       <Formik
         initialValues={initialValues}
-        validationSchema={validationSchema}
+        validationSchema={createValidationSchema(t)}
         validateOnBlur={true}
         validateOnChange={true}
         onSubmit={handleSubmit}
@@ -94,7 +97,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Current Password */}
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Mot de passe actuel</Label>
+                <Label htmlFor="currentPassword">{t('password.labels.currentPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -103,7 +106,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.currentPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder="Mot de passe actuel"
+                    placeholder={t('password.placeholders.currentPassword')}
                     disabled={isLoading || isSubmitting}
                     className={
                       errors.currentPassword && touched.currentPassword ? 'border-red-500' : ''
@@ -131,7 +134,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
 
               {/* New Password */}
               <div className="space-y-2">
-                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                <Label htmlFor="newPassword">{t('password.labels.newPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -140,7 +143,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.newPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder="Nouveau mot de passe"
+                    placeholder={t('password.placeholders.newPassword')}
                     disabled={isLoading || isSubmitting}
                     className={errors.newPassword && touched.newPassword ? 'border-red-500' : ''}
                   />
@@ -162,7 +165,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Label htmlFor="confirmPassword">{t('password.labels.confirmPassword')}</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -171,7 +174,7 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
                     value={values.confirmPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder="Confirmer le mot de passe"
+                    placeholder={t('password.placeholders.confirmPassword')}
                     disabled={isLoading || isSubmitting}
                     className={
                       errors.confirmPassword && touched.confirmPassword ? 'border-red-500' : ''
@@ -204,7 +207,9 @@ export default function PasswordChangeForm({ isLoading, setIsLoading }: Password
               className="w-full md:w-auto"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isLoading || isSubmitting ? 'Modification...' : 'Changer le mot de passe'}
+              {isLoading || isSubmitting
+                ? t('password.buttons.updating')
+                : t('password.buttons.changePassword')}
             </Button>
           </Form>
         )}

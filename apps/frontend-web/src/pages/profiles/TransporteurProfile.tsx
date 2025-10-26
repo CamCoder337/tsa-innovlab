@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,8 @@ function TransporteurProfile() {
   const { user, updateUser } = useAuth();
   const { myMissions } = useMissions();
   const { vehicles } = useVehicles();
+  const { t } = useProfileTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
@@ -52,43 +55,43 @@ function TransporteurProfile() {
       status: 'verified',
       fileName: 'carte_identite.pdf',
       uploadDate: '2024-01-15',
-      label: "Carte d'identité",
-      placeholder: "Glissez votre carte d'identité ici",
+      label: t('kyc.documentTypes.identity'),
+      placeholder: t('kyc.placeholders.identity'),
     },
     drivingLicense: {
       status: 'verified',
       fileName: 'permis_conduire.pdf',
       uploadDate: '2024-01-12',
-      label: 'Permis de conduire',
-      placeholder: 'Glissez votre permis de conduire ici',
+      label: t('kyc.documentTypes.drivingLicense'),
+      placeholder: t('kyc.placeholders.drivingLicense'),
     },
     vehicleRegistration: {
       status: 'pending',
       fileName: 'carte_grise.pdf',
       uploadDate: '2024-01-20',
-      label: 'Carte grise',
-      placeholder: 'Glissez votre carte grise ici',
+      label: t('kyc.documentTypes.vehicleRegistration'),
+      placeholder: t('kyc.placeholders.vehicleRegistration'),
     },
     insurance: {
       status: 'verified',
       fileName: 'assurance_vehicule.pdf',
       uploadDate: '2024-01-10',
-      label: 'Assurance véhicule',
-      placeholder: 'Glissez votre assurance véhicule ici',
+      label: t('kyc.documentTypes.insurance'),
+      placeholder: t('kyc.placeholders.insurance'),
     },
     technicalControl: {
       status: 'missing',
       fileName: null,
       uploadDate: null,
-      label: 'Contrôle technique',
-      placeholder: 'Glissez votre contrôle technique ici',
+      label: t('kyc.documentTypes.technicalControl'),
+      placeholder: t('kyc.placeholders.technicalControl'),
     },
     professionalLicense: {
       status: 'verified',
       fileName: 'licence_transport.pdf',
       uploadDate: '2024-01-08',
-      label: 'Licence transport',
-      placeholder: 'Glissez votre licence transport ici',
+      label: t('kyc.documentTypes.transportLicense'),
+      placeholder: t('kyc.placeholders.transportLicense'),
     },
   });
 
@@ -108,7 +111,7 @@ function TransporteurProfile() {
       }));
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors du téléchargement du document');
+      toast.error(t('errors.documentUploadError'));
     } finally {
       setKycUploading(null);
     }
@@ -122,18 +125,18 @@ function TransporteurProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || 'Erreur lors de la mise à jour du profil');
+        toast.error(response.error.message || t('errors.updateError'));
       }
 
       if (response.data) {
         handleKycUpload();
         updateUser(response.data);
-        toast.success('Profil mis à jour avec succès');
+        toast.success(t('updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la mise à jour du profil');
+      toast.error(t('errors.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +161,7 @@ function TransporteurProfile() {
       if (hasChanges) {
         handleSave(differences as UpdateUserRequest);
       } else {
-        toast('Aucune modification détectée');
+        toast(tCommon('messages.noChangesDetected'));
       }
     }
   };
@@ -170,20 +173,20 @@ function TransporteurProfile() {
 
   const stats = [
     {
-      label: 'Missions Terminées',
+      label: t('stats.missionsCompleted'),
       value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
       icon: Truck,
     },
-    { label: 'Note Moyenne', value: '4.9/5', icon: Star },
+    { label: t('stats.averageRating'), value: '4.9/5', icon: Star },
     {
-      label: 'Taux de Réussite',
+      label: t('stats.successRate'),
       value:
         myMissions?.filter((mission) => mission.status === 'completed').length /
           myMissions?.length || 0,
       icon: Award,
     },
     {
-      label: 'Membre Depuis',
+      label: t('stats.memberSince'),
       value: user ? format(new Date(user.createdAt), 'MMM yyyy') : '',
       icon: Calendar,
     },
@@ -199,21 +202,19 @@ function TransporteurProfile() {
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-          <p className="text-muted-foreground">
-            Gérez vos informations personnelles et votre véhicule
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('transporteur.subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
             <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
               <Edit className="h-4 w-4" />
-              Modifier
+              {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
               <Button variant="outline" className="gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                Paramètres
+                {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
@@ -227,7 +228,7 @@ function TransporteurProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isLoading ? t('actions.saving') : t('actions.save')}
             </Button>
             <Button
               variant="outline"
@@ -236,7 +237,7 @@ function TransporteurProfile() {
               onClick={handleCancel}
             >
               <X className="h-4 w-4" />
-              Annuler
+              {tCommon('actions.cancel')}
             </Button>
           </div>
         )}
@@ -247,7 +248,7 @@ function TransporteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Informations Personnelles
+              {t('sections.personalInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1  gap-6 justify-between">
@@ -273,7 +274,7 @@ function TransporteurProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    Statistiques
+                    {t('sections.statistics')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -325,7 +326,7 @@ function TransporteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              {vehicles.length === 1 ? 'Mon Véhicule' : 'Mes Véhicules'}
+              {vehicles.length === 1 ? t('transporteur.myVehicle') : t('transporteur.myVehicles')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -333,15 +334,19 @@ function TransporteurProfile() {
               // Single vehicle display
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Type</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.vehicleType')}
+                  </span>
                   <span className="font-semibold">{vehicles[0].typeLabel || vehicles[0].type}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Immatriculation</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.registration')}
+                  </span>
                   <span className="font-semibold">{vehicles[0].registration}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Statut</span>
+                  <span className="text-sm text-muted-foreground">{t('transporteur.status')}</span>
                   <Badge
                     variant="outline"
                     className={`${
@@ -359,7 +364,9 @@ function TransporteurProfile() {
                 </div>
                 {vehicles[0].description && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Description</span>
+                    <span className="text-sm text-muted-foreground">
+                      {t('transporteur.description')}
+                    </span>
                     <span className="font-semibold text-right max-w-[150px] truncate">
                       {vehicles[0].description}
                     </span>
@@ -369,7 +376,7 @@ function TransporteurProfile() {
                 <Link to="/app/vehicles">
                   <Button variant="outline" className="w-full gap-2">
                     <Settings className="h-4 w-4" />
-                    Gérer mon véhicule
+                    {t('transporteur.manageVehicle')}
                   </Button>
                 </Link>
               </>
@@ -377,23 +384,31 @@ function TransporteurProfile() {
               // Multiple vehicles stats display
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Total véhicules</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.totalVehicles')}
+                  </span>
                   <span className="font-semibold">{vehicles.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Disponibles</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.available')}
+                  </span>
                   <span className="font-semibold text-green-600">
                     {vehicles.filter((v) => v.status === 'available').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">En mission</span>
-                  <span className="font-semibold text-blue-600">
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.inMission')}
+                  </span>
+                  <span className="font-semibold text-tsa-blue">
                     {vehicles.filter((v) => v.status === 'in_mission').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">En maintenance</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('transporteur.inMaintenance')}
+                  </span>
                   <span className="font-semibold text-orange-600">
                     {vehicles.filter((v) => v.status === 'maintenance').length}
                   </span>
@@ -401,7 +416,7 @@ function TransporteurProfile() {
                 <Separator />
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Taux de disponibilité</span>
+                    <span>{t('transporteur.availabilityRate')}</span>
                     <span className="text-green-600">
                       {vehicles.length > 0
                         ? Math.round(
@@ -427,7 +442,7 @@ function TransporteurProfile() {
                 <Link to="/app/vehicles">
                   <Button className="w-full gap-2">
                     <Truck className="h-4 w-4" />
-                    Gérer mes véhicules
+                    {t('transporteur.manageVehicles')}
                   </Button>
                 </Link>
               </>
@@ -439,12 +454,12 @@ function TransporteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Documents KYC & Certifications Transport
+              {t('transporteur.kycTitle')}
               <Badge
                 variant="outline"
                 className={`ml-auto ${kycPercentage === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}
               >
-                {kycProgress}/{totalKycDocs} Vérifiés
+                {kycProgress}/{totalKycDocs} {t('kyc.verified')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -463,17 +478,17 @@ function TransporteurProfile() {
               <div className="flex items-start gap-3">
                 <Truck className="h-5 w-5 text-green-600 mt-0.5" />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-green-900">Certification Transporteur</h4>
+                  <h4 className="text-sm font-medium text-green-900">
+                    {t('transporteur.certificationTitle')}
+                  </h4>
                   <p className="text-sm text-green-700">
-                    Ces documents sont essentiels pour valider votre statut de transporteur
-                    professionnel et garantir la sécurité des missions sur la plateforme TSA
-                    Logistics.
+                    {t('transporteur.certificationDescription')}
                   </p>
                   <ul className="text-xs text-green-600 mt-2 space-y-1">
-                    <li>• Formats acceptés: PDF, JPG, PNG (max 5MB)</li>
-                    <li>• Vérification sous 24-48h ouvrées</li>
-                    <li>• Documents requis pour accepter des missions</li>
-                    <li>• Renouvellement automatique des alertes d'expiration</li>
+                    <li>• {t('kyc.acceptedFormats')}</li>
+                    <li>• {t('kyc.verificationTime')}</li>
+                    <li>• {t('transporteur.documentsRequired')}</li>
+                    <li>• {t('transporteur.renewalAlerts')}</li>
                   </ul>
                 </div>
               </div>

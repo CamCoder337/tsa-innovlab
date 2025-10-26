@@ -5,19 +5,21 @@ import AddUserForm from '@/components/forms/AddUserForm';
 import type { CreateUserRequest } from '@/types/auth.types';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminTranslation } from '@/hooks/useTranslation';
 
 export default function AddUser() {
   const navigate = useNavigate();
   const { signup, isLoading } = useAuth();
+  const { t } = useAdminTranslation();
 
   const handleSubmit = async (userData: CreateUserRequest) => {
     try {
       await signup(userData);
-      toast.success('Utilisateur créé avec succès');
+      toast.success(t('addUser.createSuccess'));
       navigate('/admin/users');
     } catch (error) {
       console.error(error);
-      toast.error("Erreur lors de la création de l'utilisateur");
+      toast.error(t('addUser.createError'));
     }
   };
 
@@ -33,13 +35,11 @@ export default function AddUser() {
           <div className="flex items-center space-x-4">
             <Button variant="outline" onClick={() => navigate('/admin/users')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour
+              {t('addUser.backButton')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Ajouter un Utilisateur</h1>
-              <p className="text-muted-foreground">
-                Créer un nouveau compte utilisateur sur la plateforme
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">{t('addUser.title')}</h1>
+              <p className="text-muted-foreground">{t('addUser.subtitle')}</p>
             </div>
           </div>
         </div>

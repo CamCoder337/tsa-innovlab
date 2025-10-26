@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import OTPInput from '@/components/ui/otp-input';
 import type { LoginCredentials } from '@/types/auth.types';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 const INITIAL_VALUES: LoginCredentials = {
   email: '',
@@ -15,17 +15,14 @@ const INITIAL_VALUES: LoginCredentials = {
   mfaCode: '',
 };
 
-const validationSchema = (showMFA: boolean) =>
+const validationSchema = (showMFA: boolean, t: (key: string) => string) =>
   Yup.object({
-    email: Yup.string()
-      .trim()
-      .required(VALIDATION_MESSAGES.REQUIRED_EMAIL)
-      .email(VALIDATION_MESSAGES.INVALID_EMAIL),
-    password: Yup.string().required(VALIDATION_MESSAGES.REQUIRED_PASSWORD),
+    email: Yup.string().trim().required(t('validation.required')).email(t('validation.email')),
+    password: Yup.string().required(t('validation.required')),
     mfaCode: showMFA
       ? Yup.string()
-          .required('Code MFA requis')
-          .matches(/^\d{6}$/, 'Le code MFA doit contenir exactement 6 chiffres')
+          .required(t('validation.required'))
+          .matches(/^\d{6}$/, t('validation.mfa'))
       : Yup.string(),
   });
 
@@ -37,11 +34,13 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const { t: tAuth } = useAuthTranslation();
+  const { t: tForms } = useFormsTranslation();
 
   return (
     <Formik<LoginCredentials>
       initialValues={INITIAL_VALUES}
-      validationSchema={validationSchema(showMFA)}
+      validationSchema={validationSchema(showMFA, tForms)}
       onSubmit={onSubmit}
       validateOnBlur={true}
       validateOnChange={true}
@@ -52,7 +51,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
             <Input
               name="email"
               type="email"
-              placeholder="Entrez votre Email"
+              placeholder={tAuth('login.email')}
               value={values.email}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -72,7 +71,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               <Input
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Entrez votre Mot de passe"
+                placeholder={tAuth('login.password')}
                 value={values.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -99,7 +98,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               </div>
               {!showMFA && (
                 <Link to="/forgot-password" className="text-tsa-blue text-sm font-medium">
-                  Mot de passe oublié ?
+                  {tAuth('login.forgotPassword')}
                 </Link>
               )}
             </div>
@@ -108,9 +107,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           {showMFA && (
             <div className="flex flex-col gap-4">
               <div className="text-center">
-                <p className="text-sm text-tsa-gray mb-2">
-                  Entrez le code à 6 chiffres de votre application d'authentification
-                </p>
+                <p className="text-sm text-tsa-gray mb-2">{tAuth('mfa.subtitle')}</p>
               </div>
               <OTPInput
                 length={6}
@@ -140,7 +137,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                   }}
                   className="text-tsa-blue text-sm font-medium"
                 >
-                  Retour à la connexion
+                  {tAuth('mfa.backToLogin')}
                 </button>
               </div>
             </div>
@@ -155,26 +152,26 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-4"></div>
-                {showMFA ? 'VÉRIFICATION...' : 'CONNEXION...'}
+                {showMFA ? tAuth('mfa.verifying') : tAuth('login.loggingIn')}
               </>
             ) : showMFA ? (
-              'VÉRIFIER LE CODE'
+              tAuth('mfa.verifyCode')
             ) : (
-              'JE ME CONNECTE'
+              tAuth('login.loginButton')
             )}
           </Button>
 
           {!showMFA && (
             <>
               <div className="text-center">
-                <span className="text-gray-600">Pas encore de compte ? </span>
+                <span className="text-gray-600">{tAuth('login.noAccount')} </span>
                 <Link to="/register" className="text-tsa-blue font-medium">
-                  Je m'inscris
+                  {tAuth('register.register')}
                 </Link>
               </div>
               <div className="text-center">
                 <Link to="/verify-email" className="text-tsa-blue font-medium">
-                  Vérifier mon email
+                  {tAuth('login.verifyEmail')}
                 </Link>
               </div>
             </>

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useMissions } from '@/hooks/useMissions';
+import { useTrackingTranslation } from '@/hooks/useTranslation';
 
 interface VehicleStatus {
   id: string;
@@ -57,18 +58,18 @@ const getStatusColor = (status: Mission['status']) => {
   }
 };
 
-const getStatusText = (status: Mission['status']) => {
+const getStatusText = (status: Mission['status'], t: (key: string) => string) => {
   switch (status) {
     case 'completed':
-      return 'Terminé';
+      return t('status.completed');
     case 'assigned':
-      return 'Assigné';
+      return t('status.assigned');
     case 'published':
-      return 'Publié';
+      return t('status.published');
     case 'draft':
-      return 'Brouillon';
+      return t('status.draft');
     case 'cancelled':
-      return 'Annulé';
+      return t('status.cancelled');
     default:
       return status;
   }
@@ -89,6 +90,7 @@ const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
 
 export default function TransporteurTrackingDashboard() {
   const { myMissions: missions } = useMissions();
+  const { t } = useTrackingTranslation();
   const [assignments] = useState<Mission[]>(
     missions.filter((m) => m.transporteurId === 'transporteur-1')
   );
@@ -110,8 +112,8 @@ export default function TransporteurTrackingDashboard() {
         {/* En-tête */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Transporteur</h1>
-            <p className="text-gray-600">Gérez vos livraisons et optimisez vos trajets</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+            <p className="text-gray-600">{t('dashboard.subtitle')}</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" className="flex items-center gap-2">
@@ -120,7 +122,7 @@ export default function TransporteurTrackingDashboard() {
             </Button>
             <Button className="bg-green-600 hover:bg-green-700">
               <CheckCircle className="w-4 h-4 mr-2" />
-              Marquer Livré
+              {t('actions.markDelivered')}
             </Button>
           </div>
         </div>
@@ -131,8 +133,8 @@ export default function TransporteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Missions Actives</p>
-                  <p className="text-2xl font-bold text-blue-600">{activeAssignments}</p>
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.activeMissions')}</p>
+                  <p className="text-2xl font-bold text-tsa-blue">{activeAssignments}</p>
                 </div>
                 <Truck className="w-8 h-8 text-blue-500" />
               </div>
@@ -143,7 +145,7 @@ export default function TransporteurTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Livrées Aujourd'hui</p>
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.completedToday')}</p>
                   <p className="text-2xl font-bold text-green-600">{completedToday}</p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-500" />
@@ -193,10 +195,10 @@ export default function TransporteurTrackingDashboard() {
         {/* Contenu principal */}
         <Tabs defaultValue="current" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="current">Mission Actuelle</TabsTrigger>
-            <TabsTrigger value="assignments">Mes Missions</TabsTrigger>
-            <TabsTrigger value="vehicle">État Véhicule</TabsTrigger>
-            <TabsTrigger value="earnings">Gains & Performance</TabsTrigger>
+            <TabsTrigger value="current">{t('tabs.currentMission')}</TabsTrigger>
+            <TabsTrigger value="assignments">{t('tabs.myMissions')}</TabsTrigger>
+            <TabsTrigger value="vehicle">{t('tabs.vehicleStatus')}</TabsTrigger>
+            <TabsTrigger value="earnings">{t('tabs.earnings')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="current" className="space-y-4">
@@ -228,14 +230,16 @@ export default function TransporteurTrackingDashboard() {
                               className={`w-3 h-3 rounded-full ${getStatusColor(currentAssignment.status)}`}
                             />
                             <span className="font-medium">
-                              {getStatusText(currentAssignment.status)}
+                              {getStatusText(currentAssignment.status, t)}
                             </span>
                           </div>
-                          <span className="text-gray-600">Vitesse: {vehicleStatus.speed} km/h</span>
+                          <span className="text-gray-600">
+                            {t('vehicle.speed')}: {vehicleStatus.speed} km/h
+                          </span>
                         </div>
                         <Button className="bg-blue-600 hover:bg-blue-700">
                           <Navigation className="w-4 h-4 mr-2" />
-                          Ouvrir GPS
+                          {t('actions.openGPS')}
                         </Button>
                       </div>
                     </CardContent>
@@ -263,13 +267,13 @@ export default function TransporteurTrackingDashboard() {
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-green-500" />
                           <span className="text-sm">
-                            Départ: {currentAssignment.adresseDepartId}
+                            {t('mission.departure')}: {currentAssignment.adresseDepartId}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-red-500" />
                           <span className="text-sm">
-                            Arrivée: {currentAssignment.adresseArriveeId}
+                            {t('mission.arrival')}: {currentAssignment.adresseArriveeId}
                           </span>
                         </div>
                       </div>
@@ -296,7 +300,9 @@ export default function TransporteurTrackingDashboard() {
                       </div>
 
                       <div className="border-t pt-3">
-                        <p className="text-sm text-gray-600 mb-2">Livraison prévue:</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {t('mission.scheduledDelivery')}:
+                        </p>
                         <p className="font-medium">
                           {new Date(currentAssignment.dateArriveePrevue!).toLocaleString()}
                         </p>
@@ -323,11 +329,11 @@ export default function TransporteurTrackingDashboard() {
                     <CardContent className="space-y-2">
                       <Button className="w-full bg-green-600 hover:bg-green-700">
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Marquer comme Livré
+                        {t('actions.markAsDelivered')}
                       </Button>
                       <Button variant="outline" className="w-full">
                         <AlertTriangle className="w-4 h-4 mr-2" />
-                        Signaler un Problème
+                        {t('actions.reportProblem')}
                       </Button>
                       <Button variant="outline" className="w-full">
                         <Clock className="w-4 h-4 mr-2" />
@@ -341,10 +347,10 @@ export default function TransporteurTrackingDashboard() {
               <Card>
                 <CardContent className="p-8 text-center">
                   <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune mission active</h3>
-                  <p className="text-gray-600">
-                    Vous n'avez pas de mission en cours. Consultez vos missions assignées.
-                  </p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {t('missions.noActiveMission')}
+                  </h3>
+                  <p className="text-gray-600">{t('missions.noActiveMissionMessage')}</p>
                 </CardContent>
               </Card>
             )}
@@ -353,7 +359,7 @@ export default function TransporteurTrackingDashboard() {
           <TabsContent value="assignments" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Mes Missions</CardTitle>
+                <CardTitle>{t('missions.myMissions')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -378,7 +384,7 @@ export default function TransporteurTrackingDashboard() {
                               className={`w-2 h-2 rounded-full ${getStatusColor(assignment.status)}`}
                             />
                             <span className="text-sm text-gray-600">
-                              {getStatusText(assignment.status)}
+                              {getStatusText(assignment.status, t)}
                             </span>
                           </div>
                           <p className="text-gray-600">{assignment.description}</p>
@@ -410,11 +416,11 @@ export default function TransporteurTrackingDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>État du Véhicule</CardTitle>
+                  <CardTitle>{t('vehicle.status')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Batterie</span>
+                    <span className="text-gray-600">{t('vehicle.battery')}</span>
                     <div className="flex items-center gap-2">
                       <div className="w-24 bg-gray-200 rounded-full h-2">
                         <div
@@ -427,7 +433,7 @@ export default function TransporteurTrackingDashboard() {
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Carburant</span>
+                    <span className="text-gray-600">{t('vehicle.fuel')}</span>
                     <div className="flex items-center gap-2">
                       <div className="w-24 bg-gray-200 rounded-full h-2">
                         <div
@@ -440,28 +446,28 @@ export default function TransporteurTrackingDashboard() {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Vitesse actuelle</span>
+                    <span className="text-gray-600">{t('vehicle.currentSpeed')}</span>
                     <span className="font-medium">{vehicleStatus.speed} km/h</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-gray-600">État maintenance</span>
+                    <span className="text-gray-600">{t('vehicle.maintenanceStatus')}</span>
                     <span
                       className={`font-medium ${getMaintenanceColor(vehicleStatus.maintenanceStatus)}`}
                     >
                       {vehicleStatus.maintenanceStatus === 'good'
-                        ? 'Bon'
+                        ? t('vehicle.maintenanceGood')
                         : vehicleStatus.maintenanceStatus === 'warning'
-                          ? 'Attention'
-                          : 'Critique'}
+                          ? t('vehicle.maintenanceWarning')
+                          : t('vehicle.maintenanceCritical')}
                     </span>
                   </div>
 
                   <div className="border-t pt-3">
-                    <p className="text-sm text-gray-600">Position actuelle:</p>
+                    <p className="text-sm text-gray-600">{t('vehicle.currentPosition')}:</p>
                     <p className="font-medium">{vehicleStatus.location}</p>
                     <p className="text-xs text-gray-500">
-                      Dernière mise à jour:{' '}
+                      {t('vehicle.lastUpdate')}:
                       {new Date(vehicleStatus.lastUpdate).toLocaleTimeString()}
                     </p>
                   </div>
@@ -470,28 +476,28 @@ export default function TransporteurTrackingDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Historique de Conduite</CardTitle>
+                  <CardTitle>{t('vehicle.drivingHistory')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Km parcourus aujourd'hui</span>
+                      <span className="text-gray-600">{t('vehicle.kmToday')}</span>
                       <span className="font-medium">245 km</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Temps de conduite</span>
+                      <span className="text-gray-600">{t('vehicle.drivingTime')}</span>
                       <span className="font-medium">6h 30min</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Vitesse moyenne</span>
+                      <span className="text-gray-600">{t('vehicle.averageSpeed')}</span>
                       <span className="font-medium">68 km/h</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Consommation</span>
+                      <span className="text-gray-600">{t('vehicle.consumption')}</span>
                       <span className="font-medium">28L/100km</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Score éco-conduite</span>
+                      <span className="text-gray-600">{t('vehicle.ecoScore')}</span>
                       <span className="font-medium text-green-600">85/100</span>
                     </div>
                   </div>
@@ -523,9 +529,9 @@ export default function TransporteurTrackingDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-blue-600">1,850,000</p>
+                    <p className="text-3xl font-bold text-tsa-blue">1,850,000</p>
                     <p className="text-gray-600">FCFA</p>
-                    <p className="text-sm text-blue-600 mt-2">73% de l'objectif</p>
+                    <p className="text-sm text-tsa-blue mt-2">73% de l'objectif</p>
                   </div>
                 </CardContent>
               </Card>
@@ -545,7 +551,9 @@ export default function TransporteurTrackingDashboard() {
                         />
                       ))}
                     </div>
-                    <p className="text-sm text-gray-600 mt-2">Basé sur 47 avis</p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      {t('performance.basedOnReviews', { count: 47 })}
+                    </p>
                   </div>
                 </CardContent>
               </Card>

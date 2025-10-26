@@ -20,6 +20,7 @@ import {
   Download,
   RefreshCw,
 } from 'lucide-react';
+import { useTrackingTranslation } from '@/hooks/useTranslation';
 import { useMissions } from '@/hooks/useMissions';
 
 interface SystemMetrics {
@@ -65,39 +66,47 @@ const SYSTEM_METRICS: SystemMetrics = {
   avgResponseTime: 245,
 };
 
-const ALERTS: Alert[] = [
+const getAlerts = (t: (key: string, options?: Record<string, unknown>) => string): Alert[] => [
   {
     id: '1',
     type: 'critical',
-    title: 'Véhicule en panne',
-    description: 'Camion CM-1234-AB signale une panne moteur à Edéa',
+    title: t('alerts.vehicleBreakdown'),
+    description: t('alerts.breakdownMessage', { vehicle: 'CM-1234-AB', location: 'Edéa' }),
     timestamp: '2024-10-03T18:30:00Z',
     resolved: false,
   },
   {
     id: '2',
     type: 'warning',
-    title: 'Retard de livraison',
-    description: 'Mission TSA-2024-003 accusera 2h de retard',
+    title: t('alerts.deliveryDelay'),
+    description: t('alerts.delayMessage', { mission: 'TSA-2024-003', delay: '2h' }),
     timestamp: '2024-10-03T17:45:00Z',
     resolved: false,
   },
   {
     id: '3',
     type: 'info',
-    title: 'Nouveau chauffeur',
-    description: "Paul Nkomo a rejoint l'équipe transport",
+    title: t('alerts.newDriver'),
+    description: t('alerts.newDriverMessage', { name: 'Paul Nkomo' }),
     timestamp: '2024-10-03T16:20:00Z',
     resolved: true,
   },
 ];
 
-const PERFORMANCE_METRICS: Performance[] = [
-  { metric: 'Taux de livraison à temps', current: 94.2, target: 95, trend: 'up', unit: '%' },
-  { metric: 'Satisfaction client', current: 4.7, target: 4.8, trend: 'stable', unit: '/5' },
-  { metric: 'Utilisation flotte', current: 71, target: 75, trend: 'up', unit: '%' },
-  { metric: 'Coût par km', current: 125, target: 120, trend: 'down', unit: 'FCFA' },
-  { metric: 'Temps de réponse', current: 2.3, target: 2.0, trend: 'down', unit: 'min' },
+const getPerformanceMetrics = (
+  t: (key: string, options?: Record<string, unknown>) => string
+): Performance[] => [
+  { metric: t('performance.onTimeDelivery'), current: 94.2, target: 95, trend: 'up', unit: '%' },
+  {
+    metric: t('performance.customerSatisfaction'),
+    current: 4.7,
+    target: 4.8,
+    trend: 'stable',
+    unit: '/5',
+  },
+  { metric: t('performance.fleetUtilization'), current: 71, target: 75, trend: 'up', unit: '%' },
+  { metric: t('performance.costPerKm'), current: 125, target: 120, trend: 'down', unit: 'FCFA' },
+  { metric: t('performance.responseTime'), current: 2.3, target: 2.0, trend: 'down', unit: 'min' },
 ];
 
 const getAlertColor = (type: Alert['type']) => {
@@ -125,10 +134,11 @@ const getTrendIcon = (trend: Performance['trend']) => {
 };
 
 export default function AdminTrackingDashboard() {
+  const { t } = useTrackingTranslation();
   const { missions } = useMissions();
-  const [alerts] = useState<Alert[]>(ALERTS);
+  const [alerts] = useState<Alert[]>(getAlerts(t));
   const [metrics] = useState<SystemMetrics>(SYSTEM_METRICS);
-  const [performance] = useState<Performance[]>(PERFORMANCE_METRICS);
+  const [performance] = useState<Performance[]>(getPerformanceMetrics(t));
 
   const unreadAlerts = alerts.filter((a) => !a.resolved).length;
   const criticalAlerts = alerts.filter((a) => a.type === 'critical' && !a.resolved).length;
@@ -137,23 +147,23 @@ export default function AdminTrackingDashboard() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* En-tête */}
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Centre de Contrôle Admin</h1>
-            <p className="text-gray-600">Supervision globale du système TSA Logistics</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.adminTitle')}</h1>
+            <p className="text-gray-600 mt-2">{t('dashboard.adminSubtitle')}</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
-              Exporter Rapport
+              {t('actions.exportReport')}
             </Button>
             <Button variant="outline" className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
-              Actualiser
+              {t('actions.refresh')}
             </Button>
             <Button className="bg-red-600 hover:bg-red-700">
               <Shield className="w-4 h-4 mr-2" />
-              Mode Urgence
+              {t('actions.emergencyMode')}
             </Button>
           </div>
         </div>
@@ -166,14 +176,12 @@ export default function AdminTrackingDashboard() {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 <div>
                   <h3 className="font-semibold text-red-900">
-                    {criticalAlerts} alerte(s) critique(s) nécessitent votre attention
+                    {t('alerts.critical', { count: criticalAlerts })}
                   </h3>
-                  <p className="text-red-700">
-                    Vérifiez l'onglet "Alertes & Incidents" pour plus de détails
-                  </p>
+                  <p className="text-red-700">{t('alerts.checkTab')}</p>
                 </div>
                 <Button size="sm" className="ml-auto bg-red-600 hover:bg-red-700">
-                  Voir Alertes
+                  {t('actions.viewAlerts')}
                 </Button>
               </div>
             </CardContent>
@@ -186,8 +194,8 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Véhicules Actifs</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.activeVehicles')}</p>
+                  <p className="text-2xl font-bold text-tsa-blue">
                     {metrics.activeVehicles}/{metrics.totalVehicles}
                   </p>
                 </div>
@@ -206,7 +214,7 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Chauffeurs Actifs</p>
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.activeDrivers')}</p>
                   <p className="text-2xl font-bold text-green-600">
                     {metrics.activeDrivers}/{metrics.totalDrivers}
                   </p>
@@ -226,13 +234,13 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Missions Actives</p>
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.activeMissions')}</p>
                   <p className="text-2xl font-bold text-purple-600">{metrics.activeMissions}</p>
                 </div>
                 <Package className="w-8 h-8 text-purple-500" />
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {metrics.completedToday} terminées aujourd'hui
+                {t('kpis.completedToday', { count: metrics.completedToday })}
               </p>
             </CardContent>
           </Card>
@@ -241,13 +249,13 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Disponibilité Système</p>
+                  <p className="text-sm font-medium text-gray-600">{t('kpis.systemUptime')}</p>
                   <p className="text-2xl font-bold text-green-600">{metrics.systemUptime}</p>
                 </div>
                 <Activity className="w-8 h-8 text-green-500" />
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                Temps de réponse: {metrics.avgResponseTime}ms
+                {t('kpis.responseTime')}: {metrics.avgResponseTime}ms
               </p>
             </CardContent>
           </Card>
@@ -256,11 +264,11 @@ export default function AdminTrackingDashboard() {
         {/* Contenu principal */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="fleet">Gestion Flotte</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="alerts">Alertes & Incidents</TabsTrigger>
-            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+            <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="fleet">{t('tabs.fleetManagement')}</TabsTrigger>
+            <TabsTrigger value="performance">{t('tabs.performance')}</TabsTrigger>
+            <TabsTrigger value="alerts">{t('tabs.alertsIncidents')}</TabsTrigger>
+            <TabsTrigger value="analytics">{t('tabs.analytics')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -272,16 +280,16 @@ export default function AdminTrackingDashboard() {
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-5 h-5" />
-                        Vue Globale du Réseau
+                        {t('map.globalView')}
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
                           <Filter className="w-4 h-4 mr-2" />
-                          Filtres
+                          {t('map.filters')}
                         </Button>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4 mr-2" />
-                          Vue Satellite
+                          {t('map.satelliteView')}
                         </Button>
                       </div>
                     </CardTitle>
@@ -290,7 +298,7 @@ export default function AdminTrackingDashboard() {
                     <MissionTrackingMap
                       className="h-[500px]"
                       missions={missions}
-                      onMissionClick={(mission) => console.log('Mission sélectionnée:', mission)}
+                      onMissionClick={(mission) => console.log('Selected mission:', mission)}
                       showUserLocation={false}
                       showRoutes={true}
                       showLegend={true}
@@ -299,19 +307,19 @@ export default function AdminTrackingDashboard() {
                       <div className="flex gap-4">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span>Véhicules actifs ({metrics.activeVehicles})</span>
+                          <span>{t('map.activeVehicles', { count: metrics.activeVehicles })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span>Incidents ({criticalAlerts})</span>
+                          <span>{t('map.incidents', { count: criticalAlerts })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <span>Retards ({metrics.delayedMissions})</span>
+                          <span>{t('map.delays', { count: metrics.delayedMissions || 0 })}</span>
                         </div>
                       </div>
                       <span className="text-gray-500">
-                        Dernière mise à jour: {new Date().toLocaleTimeString()}
+                        {t('map.lastUpdate', { time: new Date().toLocaleTimeString() })}
                       </span>
                     </div>
                   </CardContent>
@@ -324,7 +332,7 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
-                      Alertes Récentes
+                      {t('alerts.title')}
                       {unreadAlerts > 0 && (
                         <Badge className="bg-red-500 text-white">{unreadAlerts}</Badge>
                       )}
@@ -349,7 +357,7 @@ export default function AdminTrackingDashboard() {
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="w-full">
-                      Voir toutes les alertes
+                      {t('actions.viewAll')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -358,24 +366,26 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="w-5 h-5 text-blue-500" />
-                      Métriques Temps Réel
+                      {t('metrics.realTime')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Missions en cours</span>
+                      <span className="text-sm text-gray-600">{t('metrics.activeMissions')}</span>
                       <span className="font-medium">{metrics.activeMissions}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Taux d'occupation</span>
+                      <span className="text-sm text-gray-600">{t('metrics.occupancyRate')}</span>
                       <span className="font-medium text-green-600">71%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Revenus du jour</span>
-                      <span className="font-medium text-blue-600">2.8M FCFA</span>
+                      <span className="text-sm text-gray-600">{t('metrics.dailyRevenue')}</span>
+                      <span className="font-medium text-tsa-blue">2.8M FCFA</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Efficacité réseau</span>
+                      <span className="text-sm text-gray-600">
+                        {t('metrics.networkEfficiency')}
+                      </span>
                       <span className="font-medium text-purple-600">89%</span>
                     </div>
                   </CardContent>
@@ -385,25 +395,25 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Settings className="w-5 h-5 text-gray-500" />
-                      Actions Rapides
+                      {t('quickActions.title')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Users className="w-4 h-4 mr-2" />
-                      Gérer Chauffeurs
+                      {t('quickActions.manageDrivers')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Truck className="w-4 h-4 mr-2" />
-                      État Flotte
+                      {t('quickActions.fleetStatus')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Package className="w-4 h-4 mr-2" />
-                      Missions Urgentes
+                      {t('quickActions.urgentMissions')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <BarChart3 className="w-4 h-4 mr-2" />
-                      Rapports
+                      {t('quickActions.reports')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -454,11 +464,11 @@ export default function AdminTrackingDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Évolution des Performances</CardTitle>
+                <CardTitle>{t('performance.evolution')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-center justify-center text-gray-500">
-                  Graphique de performance sur 30 jours
+                  {t('performance.chart30Days')}
                 </div>
               </CardContent>
             </Card>
@@ -506,11 +516,11 @@ export default function AdminTrackingDashboard() {
                         <div className="flex gap-2">
                           {!alert.resolved && (
                             <Button size="sm" variant="outline">
-                              Résoudre
+                              {t('actions.resolve')}
                             </Button>
                           )}
                           <Button size="sm" variant="outline">
-                            Détails
+                            {t('actions.details')}
                           </Button>
                         </div>
                       </div>
@@ -525,22 +535,22 @@ export default function AdminTrackingDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Analyse des Revenus</CardTitle>
+                  <CardTitle>{t('analytics.revenueAnalysis')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    Graphique des revenus par région
+                    {t('analytics.revenueByRegion')}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Utilisation de la Flotte</CardTitle>
+                  <CardTitle>{t('analytics.fleetUtilization')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    Graphique d'utilisation des véhicules
+                    {t('analytics.vehicleUtilization')}
                   </div>
                 </CardContent>
               </Card>
@@ -548,24 +558,28 @@ export default function AdminTrackingDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Prédictions IA</CardTitle>
+                <CardTitle>{t('analytics.aiPredictions')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-900">Demande Prévue</h4>
-                    <p className="text-2xl font-bold text-blue-600">+23%</p>
-                    <p className="text-sm text-blue-700">Semaine prochaine</p>
+                    <h4 className="font-medium text-blue-900">{t('analytics.expectedDemand')}</h4>
+                    <p className="text-2xl font-bold text-tsa-blue">+23%</p>
+                    <p className="text-sm text-blue-700">{t('analytics.nextWeek')}</p>
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-medium text-green-900">Optimisation Route</h4>
+                    <h4 className="font-medium text-green-900">
+                      {t('analytics.routeOptimization')}
+                    </h4>
                     <p className="text-2xl font-bold text-green-600">-15%</p>
-                    <p className="text-sm text-green-700">Économie carburant</p>
+                    <p className="text-sm text-green-700">{t('analytics.fuelSavings')}</p>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
-                    <h4 className="font-medium text-purple-900">Maintenance</h4>
-                    <p className="text-2xl font-bold text-purple-600">3 véhicules</p>
-                    <p className="text-sm text-purple-700">Maintenance prévue</p>
+                    <h4 className="font-medium text-purple-900">{t('analytics.maintenance')}</h4>
+                    <p className="text-2xl font-bold text-purple-600">
+                      3 {t('analytics.vehicles')}
+                    </p>
+                    <p className="text-sm text-purple-700">{t('analytics.scheduledMaintenance')}</p>
                   </div>
                 </div>
               </CardContent>

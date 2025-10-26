@@ -13,6 +13,7 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 const INITIAL_VALUES: RegisterFormData = {
   firstName: '',
@@ -27,40 +28,33 @@ const INITIAL_VALUES: RegisterFormData = {
 
 const USER_ROLES: UserRole[] = ['affreteur', 'transporteur', 'client'];
 
-const validationSchema = Yup.object({
-  firstName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_NAME),
-  lastName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_FIRSTNAME),
-  email: Yup.string()
-    .trim()
-    .required(VALIDATION_MESSAGES.REQUIRED_EMAIL)
-    .email(VALIDATION_MESSAGES.INVALID_EMAIL),
-  password: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
-    ),
-  confirmPassword: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
-    .oneOf([Yup.ref('password')], VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH),
-  phone: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PHONE)
-    .test('isValidPhone', VALIDATION_MESSAGES.INVALID_PHONE, (value, context) => {
-      try {
-        const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
-        const countryCode = context.parent.country || 'CM'; // Default to Cameroon if not provided
-        const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
-        return phoneUtil.isValidNumber(number);
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
-    }),
+const validationSchema = (t: (key: string) => string) =>
+  Yup.object({
+    firstName: Yup.string().trim().required(t('validation.required')),
+    lastName: Yup.string().trim().required(t('validation.required')),
+    email: Yup.string().trim().required(t('validation.required')).email(t('validation.email')),
+    password: Yup.string()
+      .required(t('validation.required'))
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/, t('validation.password')),
+    confirmPassword: Yup.string()
+      .required(t('validation.required'))
+      .oneOf([Yup.ref('password')], t('validation.passwordMatch')),
+    phone: Yup.string()
+      .required(t('validation.required'))
+      .test('isValidPhone', t('validation.phone'), (value, context) => {
+        try {
+          const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
+          const countryCode = context.parent.country || 'CM'; // Default to Cameroon if not provided
+          const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
+          return phoneUtil.isValidNumber(number);
+        } catch (error) {
+          console.error(error);
+          return false;
+        }
+      }),
 
-  role: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_ROLE)
-    .oneOf(USER_ROLES, VALIDATION_MESSAGES.INVALID_ROLE),
-});
+    role: Yup.string().required(t('validation.required')).oneOf(USER_ROLES, t('validation.role')),
+  });
 
 interface RegisterFormProps {
   onSubmit: (data: CreateUserRequest) => Promise<void>;
@@ -70,11 +64,13 @@ interface RegisterFormProps {
 export default function RegisterForm({ onSubmit, isSubmitting = false }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { t: tAuth } = useAuthTranslation();
+  const { t: tForms } = useFormsTranslation();
 
   return (
     <Formik<RegisterFormData>
       initialValues={INITIAL_VALUES}
-      validationSchema={validationSchema}
+      validationSchema={validationSchema(tForms)}
       onSubmit={onSubmit}
       validateOnBlur={true}
       validateOnChange={true}
@@ -107,7 +103,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="firstName"
                   aria-label="firstName"
                   type="text"
-                  placeholder="Entrez votre Nom"
+                  placeholder={tAuth('register.firstName')}
                   value={values.firstName}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -124,7 +120,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="lastName"
                   aria-label="lastName"
                   type="text"
-                  placeholder="Entrez votre Prénom"
+                  placeholder={tAuth('register.lastName')}
                   value={values.lastName}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -143,7 +139,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 id="email"
                 aria-label="email"
                 type="email"
-                placeholder="Entrez votre Email"
+                placeholder={tAuth('register.email')}
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -162,7 +158,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="password"
                   aria-label="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Entrez votre Mot de passe"
+                  placeholder={tAuth('register.password')}
                   value={values.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -191,7 +187,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="confirmPassword"
                   aria-label="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirmez votre Mot de passe"
+                  placeholder={tAuth('register.confirmPassword')}
                   value={values.confirmPassword}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -277,7 +273,9 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium text-tsa-blue/90 flex">Votre Rôle</Label>
+              <Label className="text-sm font-medium text-tsa-blue/90 flex">
+                {tAuth('register.role')}
+              </Label>
               <div className="w-full flex flex-1 justify-between max-sm:grid max-sm:grid-cols max-sm:justify-center max-sm:gap-4">
                 {USER_ROLES.map((role) => (
                   <Checkbox
@@ -285,7 +283,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                     checked={values.role === role}
                     onCheckedChange={() => setFieldValue('role', values.role === role ? '' : role)}
                     onError={() => setFieldError('role', VALIDATION_MESSAGES.REQUIRED_ROLE)}
-                    label={role.charAt(0).toUpperCase() + role.slice(1)}
+                    label={tAuth(`roles.${role}`)}
                     className="rounded-none"
                     labelClassName="text-tsa-blue/90 text-sm font-medium"
                   />
@@ -304,13 +302,13 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               loading={isSubmitting}
               disabled={isSubmitting || Object.keys(errors).length > 0}
             >
-              JE M'INSCRIS
+              {tAuth('register.registerButton')}
             </Button>
 
             <div className="text-center">
-              <span className="text-gray-600">Un compte déjà existant ? </span>
+              <span className="text-gray-600">{tAuth('register.hasAccount')} </span>
               <Link to="/" className="text-tsa-blue hover:text-tsa-blue/95 font-medium">
-                Je me connecte
+                {tAuth('register.login')}
               </Link>
             </div>
           </Form>

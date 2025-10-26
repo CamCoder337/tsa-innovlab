@@ -43,12 +43,13 @@ import type { Payment, PaymentMethodType } from '@/types/payment.types';
 import { useOrders } from '@/hooks/useOrders';
 import { type Order, PaymentMethod } from '@/types/order.types';
 import { useAddresses } from '@/hooks/useAddresses';
+import { useShopTranslation } from '@/hooks/useTranslation';
 
 const OrderSchema = Yup.object().shape({
-  deliveryAddress: Yup.string().required("L'adresse de livraison est requise"),
-  deliveryCity: Yup.string().required('La ville est requise'),
+  deliveryAddress: Yup.string().required('validation.addressRequired'),
+  deliveryCity: Yup.string().required('validation.cityRequired'),
   deliveryPostalCode: Yup.string(),
-  deliveryNotes: Yup.string().max(200, 'Les notes ne peuvent pas dépasser 200 caractères'),
+  deliveryNotes: Yup.string().max(200, 'validation.notesMaxLength'),
   // Google Maps coordinates
   latitude: Yup.number(),
   longitude: Yup.number(),
@@ -56,6 +57,7 @@ const OrderSchema = Yup.object().shape({
 });
 
 export default function CartSummaryPage() {
+  const { t } = useShopTranslation();
   const [promoCode, setPromoCode] = useState('');
   const [deliveryOption, setDeliveryOption] = useState('standard');
   const [showPayment, setShowPayment] = useState(false);
@@ -287,12 +289,12 @@ export default function CartSummaryPage() {
               <Link to="/shop">
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <ArrowLeft className="h-4 w-4" />
-                  Continue Shopping
+                  {t('cart.continueShopping')}
                 </Button>
               </Link>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
-            <p className="text-gray-600">Review your selected parts before checkout</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('cart.title')}</h1>
+            <p className="text-gray-600">{t('cart.reviewItems')}</p>
           </div>
 
           {error && (
@@ -308,11 +310,13 @@ export default function CartSummaryPage() {
                 <Card>
                   <CardContent className="p-12 text-center">
                     <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
-                    <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {t('cart.empty.title')}
+                    </h3>
+                    <p className="text-gray-600 mb-4">{t('cart.empty.message')}</p>
                     <Link to="/app/shop">
                       <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
-                        Browse Products
+                        {t('cart.empty.browseProducts')}
                       </Button>
                     </Link>
                   </CardContent>
@@ -334,7 +338,7 @@ export default function CartSummaryPage() {
                             </h3>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className="bg-green-100 text-green-800">
-                                Ref: {item.product?.reference || ''}
+                                {t('cart.item.reference')}: {item.product?.reference || ''}
                               </Badge>
                               <Badge variant="outline">{item.product?.unit || ''}</Badge>
                             </div>
@@ -383,7 +387,7 @@ export default function CartSummaryPage() {
                                 FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.priceAtAdd.toLocaleString()} FCFA each
+                                {item.priceAtAdd.toLocaleString()} FCFA {t('cart.item.each')}
                               </p>
                             </div>
                             <Button
@@ -407,7 +411,7 @@ export default function CartSummaryPage() {
                       <CardTitle className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Truck className="h-5 w-5" />
-                          Livraison
+                          {t('cart.delivery.title')}
                         </div>
                         <Button
                           type="button"
@@ -431,7 +435,9 @@ export default function CartSummaryPage() {
                           className="text-xs"
                         >
                           <MapPin className="h-3 w-3 mr-1" />
-                          {useManualAddress ? 'Utiliser Google Maps' : 'Saisie manuelle'}
+                          {useManualAddress
+                            ? t('cart.delivery.useGoogleMaps')
+                            : t('cart.delivery.manualEntry')}
                         </Button>
                       </CardTitle>
                     </CardHeader>
@@ -439,11 +445,11 @@ export default function CartSummaryPage() {
                       {!useManualAddress ? (
                         <>
                           <div>
-                            <Label>Rechercher votre adresse de livraison *</Label>
+                            <Label>{t('cart.delivery.searchAddress')} *</Label>
                             <AddressPicker
                               onAddressSelect={selectAddress}
                               onClear={clearAddress}
-                              placeholder="Tapez votre adresse ou utilisez votre position..."
+                              placeholder={t('cart.delivery.addressPlaceholder')}
                               value={getFormattedAddress()}
                               showMap={true}
                               className="mt-2"
@@ -463,11 +469,12 @@ export default function CartSummaryPage() {
                                 <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
                                 <div className="flex-1">
                                   <p className="text-sm font-medium text-green-800">
-                                    Adresse sélectionnée
+                                    {t('cart.delivery.addressSelected')}
                                   </p>
                                   <p className="text-sm text-green-700">{getFormattedAddress()}</p>
                                   <div className="mt-1 text-xs text-green-600">
-                                    Coordonnées: {selectedAddress?.latitude.toFixed(6)},{' '}
+                                    {t('cart.delivery.coordinates')}:{' '}
+                                    {selectedAddress?.latitude.toFixed(6)},{' '}
                                     {selectedAddress?.longitude.toFixed(6)}
                                   </div>
                                 </div>
@@ -478,11 +485,11 @@ export default function CartSummaryPage() {
                       ) : (
                         <>
                           <div>
-                            <Label htmlFor="deliveryAddress">Adresse de livraison *</Label>
+                            <Label htmlFor="deliveryAddress">{t('cart.delivery.address')} *</Label>
                             <Textarea
                               id="deliveryAddress"
                               name="deliveryAddress"
-                              placeholder="Votre adresse complète..."
+                              placeholder={t('cart.delivery.fullAddress')}
                               value={formik.values.deliveryAddress}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
@@ -501,11 +508,11 @@ export default function CartSummaryPage() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="deliveryCity">Ville *</Label>
+                              <Label htmlFor="deliveryCity">{t('cart.delivery.city')} *</Label>
                               <Input
                                 id="deliveryCity"
                                 name="deliveryCity"
-                                placeholder="Votre ville"
+                                placeholder={t('cart.delivery.cityPlaceholder')}
                                 value={formik.values.deliveryCity}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -522,11 +529,13 @@ export default function CartSummaryPage() {
                               )}
                             </div>
                             <div>
-                              <Label htmlFor="deliveryPostalCode">Code postal *</Label>
+                              <Label htmlFor="deliveryPostalCode">
+                                {t('cart.delivery.postalCode')} *
+                              </Label>
                               <Input
                                 id="deliveryPostalCode"
                                 name="deliveryPostalCode"
-                                placeholder="Code postal"
+                                placeholder={t('cart.delivery.postalCodePlaceholder')}
                                 value={formik.values.deliveryPostalCode}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -548,11 +557,11 @@ export default function CartSummaryPage() {
                         </>
                       )}
                       <div>
-                        <Label htmlFor="deliveryNotes">Instructions de livraison</Label>
+                        <Label htmlFor="deliveryNotes">{t('cart.delivery.instructions')}</Label>
                         <Input
                           id="deliveryNotes"
                           name="deliveryNotes"
-                          placeholder="Code d'accès, étage, etc."
+                          placeholder={t('cart.delivery.instructionsPlaceholder')}
                           value={formik.values.deliveryNotes}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
@@ -576,53 +585,61 @@ export default function CartSummaryPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>{t('cart.orderSummary.title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span>Subtotal ({getTotalItems()} items)</span>
+                    <span>{t('cart.orderSummary.subtotal', { count: getTotalItems() })}</span>
                     <span>{subtotal.toLocaleString()} FCFA</span>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Delivery Option</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      {t('cart.orderSummary.deliveryOptions.label')}
+                    </label>
                     <Select value={deliveryOption} onValueChange={setDeliveryOption}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="standard">Standard (3-5 days) - 2,000 FCFA</SelectItem>
-                        <SelectItem value="express">Express (1-2 days) - 5,000 FCFA</SelectItem>
-                        <SelectItem value="same-day">Same Day - 10,000 FCFA</SelectItem>
+                        <SelectItem value="standard">
+                          {t('cart.orderSummary.deliveryOptions.standard')}
+                        </SelectItem>
+                        <SelectItem value="express">
+                          {t('cart.orderSummary.deliveryOptions.express')}
+                        </SelectItem>
+                        <SelectItem value="same-day">
+                          {t('cart.orderSummary.deliveryOptions.sameDay')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="flex justify-between">
-                    <span>Delivery</span>
+                    <span>{t('cart.orderSummary.delivery')}</span>
                     <span>{deliveryFee.toLocaleString()} FCFA</span>
                   </div>
 
                   <div className="flex justify-between text-sm text-gray-600">
-                    <span>Total Weight</span>
+                    <span>{t('cart.orderSummary.totalWeight')}</span>
                     <span>{totalWeight.toFixed(1)} kg</span>
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
+                    <span>{t('cart.orderSummary.total')}</span>
                     <span>{total.toLocaleString()} FCFA</span>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Promo code"
+                        placeholder={t('cart.orderSummary.promoCode')}
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                       />
-                      <Button variant="outline">Apply</Button>
+                      <Button variant="outline">{t('cart.orderSummary.apply')}</Button>
                     </div>
 
                     <Button
@@ -646,11 +663,11 @@ export default function CartSummaryPage() {
                       }}
                     >
                       <CreditCard className="h-4 w-4" />
-                      Proceed to Checkout
+                      {t('cart.orderSummary.proceedToCheckout')}
                     </Button>
                     {!useManualAddress && !isAddressSelected && (
                       <p className="text-xs text-amber-600 text-center mt-1">
-                        Veuillez sélectionner une adresse de livraison
+                        {t('cart.delivery.selectAddressRequired')}
                       </p>
                     )}
                   </div>
@@ -662,21 +679,21 @@ export default function CartSummaryPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Truck className="h-5 w-5" />
-                    Delivery Information
+                    {t('cart.deliveryInfo.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="h-4 w-4 text-green-600" />
-                    <span>All parts quality-tested and guaranteed</span>
+                    <span>{t('cart.deliveryInfo.qualityTested')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Truck className="h-4 w-4 text-blue-600" />
-                    <span>Free returns within 30 days</span>
+                    <Truck className="h-4 w-4 text-tsa-blue" />
+                    <span>{t('cart.deliveryInfo.freeReturns')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <CreditCard className="h-4 w-4 text-purple-600" />
-                    <span>Secure payment processing</span>
+                    <span>{t('cart.deliveryInfo.securePayment')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -684,7 +701,7 @@ export default function CartSummaryPage() {
               {/* Recommended Parts */}
               <Card>
                 <CardHeader>
-                  <CardTitle>You might also need</CardTitle>
+                  <CardTitle>{t('cart.recommendations.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -699,7 +716,7 @@ export default function CartSummaryPage() {
                         <p className="text-xs text-gray-500">8,500 FCFA</p>
                       </div>
                       <Button size="sm" variant="outline">
-                        Add
+                        {t('cart.recommendations.add')}
                       </Button>
                     </div>
                   </div>
@@ -718,7 +735,7 @@ export default function CartSummaryPage() {
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Finaliser le paiement
+                {t('payment.title')}
               </div>
             </DialogTitle>
           </DialogHeader>
@@ -726,14 +743,14 @@ export default function CartSummaryPage() {
           <div className="space-y-4">
             {/* Order Summary in Dialog */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-3">Résumé de la commande</h3>
+              <h3 className="font-semibold text-lg mb-3">{t('payment.orderSummary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Sous-total ({getTotalItems()} articles)</span>
+                  <span>{t('payment.subtotal', { count: getTotalItems() })}</span>
                   <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Livraison ({deliveryOption})</span>
+                  <span>{t('payment.delivery', { option: deliveryOption })}</span>
                   <span>{deliveryFee.toLocaleString()} FCFA</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold text-base">

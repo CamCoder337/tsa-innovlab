@@ -1,0 +1,238 @@
+{
+  "title": "Missions",
+  "mission": "Mission",
+  "missions": "Missions",
+  "createSimple": "Créer une mission",
+  "detailsSimple": "Détails de la mission",
+  "status": {
+    "draft": "Brouillon",
+    "published": "Publiée",
+    "pending": "En attente",
+    "accepted": "Acceptée",
+    "assigned": "Assignée",
+    "in_progress": "En cours",
+    "completed": "Terminée",
+    "rejected": "Rejetée",
+    "cancelled": "Annulée"
+  },
+  "type": {
+    "transport": "Transport",
+    "delivery": "Livraison",
+    "pickup": "Collecte",
+    "storage": "Stockage"
+  },
+  "fields": {
+    "title": "Titre",
+    "description": "Description",
+    "origin": "Point de départ",
+    "destination": "Destination",
+    "cargo": "Marchandise",
+    "weight": "Poids",
+    "volume": "Volume",
+    "budget": "Budget",
+    "deadline": "Date limite",
+    "requirements": "Exigences",
+    "transporteur": "Transporteur",
+    "affreteur": "Affréteur"
+  },
+  "tracking": {
+    "title": "Suivi de mission",
+    "currentLocation": "Position actuelle",
+    "estimatedArrival": "Arrivée estimée",
+    "progress": "Progression",
+    "updates": "Mises à jour"
+  },
+  "propositions": {
+    "title": "Propositions",
+    "submit": "Soumettre une proposition",
+    "price": "Prix proposé",
+    "timeline": "Délai proposé",
+    "accept": "Accepter",
+    "reject": "Rejeter"
+  },
+  "create": {
+    "title": "Créer une Nouvelle Mission",
+    "editTitle": "Modifier une Mission",
+    "subtitle": "Publiez vos besoins de transport et connectez-vous avec des transporteurs fiables",
+    "editSubtitle": "Modifiez les informations de votre mission"
+  },
+  "details": {
+    "title": "Mission: {{title}}",
+    "loadingMessage": "Loading mission details...",
+    "errorLoading": "Error loading mission: {{error}}",
+    "tryAgain": "Try Again",
+    "backToMissions": "Back to Missions",
+    "tabs": {
+      "details": "Détails",
+      "timeline": "Historique",
+      "appreciation": "Appréciation",
+      "financial": "Devis"
+    }
+  },
+  "myMissions": {
+    "affreteur": {
+      "title": "Mes Missions",
+      "subtitle": "Gérez et suivez vos missions de transport",
+      "newMission": "Nouvelle Mission",
+      "stats": {
+        "totalMissions": "Total Missions",
+        "inProgress": "En Cours",
+        "completed": "Terminées",
+        "totalOffers": "Total Offres"
+      },
+      "history": "Historique des Missions",
+      "tabs": {
+        "all": "Toutes",
+        "pending": "En attente",
+        "actives": "Actives",
+        "completed": "Terminées",
+        "draft": "Brouillons"
+      },
+      "emptyStates": {
+        "noMissions": "Aucune mission trouvée",
+        "noDrafts": "Vous n'avez aucun brouillon de mission",
+        "noCompleted": "Aucune mission terminée pour le moment",
+        "noFiltered": "Aucune mission ne correspond au filtre actuel"
+      }
+    },
+    "transporteur": {
+      "title": "Missions Disponibles",
+      "subtitle": "Trouvez et acceptez des missions de transport",
+      "stats": {
+        "availableMissions": "Missions Disponibles",
+        "inProgress": "En Cours",
+        "completed": "Terminées",
+        "potentialRevenue": "Revenus Potentiels"
+      },
+      "search": {
+        "placeholder": "Rechercher par titre, origine ou adresseArriveeId...",
+        "filterOrigin": "Filtrer par origine",
+        "filterUrgency": "Filtrer par urgence",
+        "allOrigins": "Toutes les origines",
+        "allUrgencies": "Toutes urgences",
+        "urgent": "Urgent",
+        "priority": "Prioritaire",
+        "standard": "Standard",
+        "unspecified": "Non spécifiée"
+      },
+      "transportMissions": "Missions de Transport",
+      "tabs": {
+        "available": "Disponibles",
+        "assigned": "En Cours",
+        "completed": "Terminées",
+        "all": "Toutes"
+      },
+      "emptyStates": {
+        "noMissions": "Aucune mission trouvée",
+        "noMatchingCriteria": "Aucune mission ne correspond aux critères de recherche actuels"
+      },
+      "apply": {
+        "dialogTitle": "Postuler à la mission",
+        "dialogDescription": "Sélectionnez un véhicule pour postuler à cette mission",
+        "requiredVehicleType": "Type de véhicule requis:",
+        "selectVehicle": "Sélectionnez un véhicule disponible *",
+        "loadingVehicles": "Chargement des véhicules...",
+        "noVehiclesAvailable": "Aucun véhicule disponible",
+        "noVehiclesMessage": "Vous devez avoir au moins un véhicule disponible pour postuler à une mission.",
+        "chooseVehicle": "Choisir un véhicule",
+        "cancel": "Annuler",
+        "apply": "Postuler"
+      }
+    }
+  },
+  "messages": {
+    "publishedSuccess": "Mission publiée avec succès",
+    "cancelledSuccess": "Mission annulée avec succès",
+    "createdSuccess": "Mission créée avec succès",
+    "modifiedSuccess": "Mission modifiée avec succès",
+    "errorOccurred": "Une erreur est survenue",
+    "statusUpdatedSuccess": "Mission {{status}} successfully",
+    "statusUpdateFailed": "Failed to update mission status",
+    "selectVehicleError": "Veuillez sélectionner un véhicule",
+    "applicationSentSuccess": "Candidature envoyée avec succès",
+    "applicationError": "Erreur lors de la candidature"
+  },
+  "appreciation": {
+    "title": "Évaluation du Transporteur",
+    "subtitle": "Partagez votre expérience avec ce transporteur",
+    "performanceMetrics": "Métriques de Performance",
+    "overallRating": "Note Globale",
+    "criteria": {
+      "punctuality": "Ponctualité",
+      "communication": "Communication",
+      "cargoHandling": "Manipulation de la Marchandise",
+      "professionalism": "Professionnalisme",
+      "vehicleCondition": "État du Véhicule"
+    },
+    "comments": "Commentaires",
+    "commentsPlaceholder": "Partagez votre expérience détaillée avec ce transporteur...",
+    "wouldRecommend": "Recommanderiez-vous ce transporteur ?",
+    "yes": "Oui",
+    "no": "Non",
+    "submitEvaluation": "Soumettre l'Évaluation",
+    "validation": {
+      "ratingRequired": "Veuillez noter tous les critères",
+      "commentsRequired": "Les commentaires sont requis",
+      "recommendationRequired": "Veuillez indiquer si vous recommandez ce transporteur"
+    },
+    "success": {
+      "submitted": "Évaluation soumise avec succès",
+      "updated": "Évaluation mise à jour avec succès"
+    },
+    "errors": {
+      "loadingError": "Erreur lors du chargement de l'évaluation",
+      "submissionError": "Erreur lors de la soumission de l'évaluation"
+    },
+    "existingEvaluation": "Votre Évaluation",
+    "submittedOn": "Soumise le",
+    "updateEvaluation": "Modifier l'Évaluation",
+    "noEvaluationYet": "Aucune évaluation pour cette mission"
+  },
+  "financial": {
+    "title": "Informations Financières",
+    "totalCost": "Coût Total",
+    "paymentStatus": "Statut de Paiement",
+    "paymentHistory": "Historique des Paiements",
+    "costBreakdown": "Détail des Coûts",
+    "baseCost": "Coût de Base",
+    "additionalFees": "Frais Supplémentaires",
+    "taxes": "Taxes",
+    "discount": "Remise",
+    "finalAmount": "Montant Final",
+    "paymentMethod": "Méthode de Paiement",
+    "transactionId": "ID de Transaction",
+    "paymentDate": "Date de Paiement",
+    "status": {
+      "pending": "En Attente",
+      "paid": "Payé",
+      "overdue": "En Retard",
+      "cancelled": "Annulé"
+    },
+    "errors": {
+      "loadingError": "Erreur lors du chargement des informations financières"
+    },
+    "noPaymentHistory": "Aucun historique de paiement disponible",
+    "downloadInvoice": "Télécharger la Facture",
+    "requestInvoice": "Demander une Facture"
+  },
+  "actions": {
+    "confirmAction": "Êtes-vous sûr de vouloir",
+    "success": {
+      "edit": "Mission modifiée avec succès",
+      "delete": "Mission supprimée avec succès",
+      "duplicate": "Mission dupliquée avec succès",
+      "publish": "Mission publiée avec succès",
+      "cancel": "Mission annulée avec succès"
+    },
+    "errors": {
+      "actionFailed": "Erreur lors de l'exécution de l'action"
+    }
+  },
+  "publish": "Publier",
+  "createdOn": "Créée le",
+  "budget": "Budget",
+  "departure": "Départ",
+  "arrival": "Arrivée",
+  "track": "Suivre",
+  "trackShipment": "Suivre l'expédition"
+}

@@ -79,7 +79,7 @@ export class DashboardUtils {
     };
   }
 
-  static getRecentMissions(missions: Mission[], limit: number = 5) {
+  static getRecentMissions(missions: Mission[], limit: number = 5, t?: (key: string) => string) {
     return missions
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, limit)
@@ -87,7 +87,7 @@ export class DashboardUtils {
         ...mission,
         route: `${mission.adresseDepart?.city || 'N/A'} → ${mission.adresseArrivee?.city || 'N/A'}`,
         statusColor: getStatusColor(mission.status),
-        statusLabel: getStatusLabel(mission.status),
+        statusLabel: getStatusLabel(mission.status, t),
         progress: this.calculateProgress(mission.status),
         timeAgo: this.getTimeAgo(mission.updatedAt),
         formattedBudget: this.formatCurrency(mission.budgetMax || 0),

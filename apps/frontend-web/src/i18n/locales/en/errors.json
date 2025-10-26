@@ -1,0 +1,40 @@
+{
+  "general": {
+    "somethingWentWrong": "Something went wrong",
+    "tryAgain": "Please try again",
+    "contactSupport": "Contact support if the problem persists"
+  },
+  "network": {
+    "connectionError": "Connection error",
+    "timeout": "Request timeout",
+    "serverError": "Server error",
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Access forbidden"
+  },
+  "validation": {
+    "invalidInput": "Invalid input",
+    "missingFields": "Required fields missing",
+    "invalidFormat": "Invalid format",
+    "duplicateEntry": "This entry already exists"
+  },
+  "auth": {
+    "invalidCredentials": "Invalid credentials",
+    "accountLocked": "Account locked",
+    "sessionExpired": "Session expired",
+    "accessDenied": "Access denied",
+    "emailNotVerified": "Email not verified"
+  },
+  "file": {
+    "uploadFailed": "Upload failed",
+    "fileTooLarge": "File too large",
+    "invalidFileType": "Unsupported file type",
+    "corruptedFile": "Corrupted file"
+  },
+  "payment": {
+    "paymentFailed": "Payment failed",
+    "insufficientFunds": "Insufficient funds",
+    "cardDeclined": "Card declined",
+    "paymentTimeout": "Payment timeout"
+  }
+}
