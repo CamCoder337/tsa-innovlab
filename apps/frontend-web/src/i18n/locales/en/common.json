@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "TSA Logistics",
+    "tagline": "Your trusted logistics partner"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "refresh": "Refresh",
+    "reset": "Reset",
+    "settings": "Settings",
+    "support": "Support",
+    "viewDetails": "View Details"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "processing": "Processing"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "thisYear": "This year",
+    "lastYear": "Last year"
+  },
+  "loading": "Loading...",
+  "noData": "No data available",
+  "error": "An error occurred",
+  "success": "Operation successful",
+  "warning": "Warning",
+  "info": "Information",
+  "yes": "Yes",
+  "no": "No",
+  "languages": {
+    "french": "French",
+    "english": "English"
+  }
+}

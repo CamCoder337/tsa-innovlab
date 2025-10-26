@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, ArrowLeft, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChatList } from '@/components/chat/ChatList';
+import ChatList from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
 import { CreateConversationModal } from '@/components/chat/CreateConversationModal';
 import { useChat } from '@/hooks/useChat';
@@ -71,7 +71,7 @@ export const ChatPage: React.FC = () => {
             <div className="flex-1 flex items-center justify-center bg-gray-50">
               <div className="text-center max-w-md mx-auto p-8">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="h-8 w-8 text-blue-600" />
+                  <MessageCircle className="h-8 w-8 text-tsa-blue" />
                 </div>
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">

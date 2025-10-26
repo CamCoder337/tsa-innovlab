@@ -9,6 +9,10 @@ import { VALIDATION_MESSAGES } from '@/lib/validation';
 import bg from '@/assets/login-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
+import { useAuthTranslation } from '@/hooks/useTranslation';
+import LanguageDropdown from '@/components/ui/LanguageDropdown';
+import { authService } from '@/services/auth.service';
+import toast from 'react-hot-toast';
 
 const INITIAL_VALUES = {
   email: '',
@@ -16,17 +20,23 @@ const INITIAL_VALUES = {
 
 const ForgotPassword: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const { t } = useAuthTranslation();
 
   return (
     <RedirectIfAuthenticated>
       <div className="min-h-screen flex">
-        <div className="flex-1 flex items-center justify-center p-8 md:mr-8">
+        <div className="flex-1 flex items-center justify-center p-8 relative">
+          {/* Language Dropdown - Bottom Right */}
+          <div className="absolute top-10 right-4">
+            <LanguageDropdown position="bottom-right" />
+          </div>
+
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">Mot de passe oublié ?</h1>
-              <p className="text-sm font-semibold text-tsa-gray">
-                Entrez votre email pour recevoir un lien de réinitialisation
-              </p>
+              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">
+                {t('forgotPassword.title')}
+              </h1>
+              <p className="text-sm font-semibold text-tsa-gray">{t('forgotPassword.subtitle')}</p>
             </div>
 
             <Card className="shadow-xl bg-[#D9D9D980]">
@@ -41,7 +51,15 @@ const ForgotPassword: React.FC = () => {
                   onSubmit={async (data, { setSubmitting }) => {
                     try {
                       setIsSubmitted(true);
-                      console.log(data);
+
+                      const response = await authService.forgotPassword(data.email);
+
+                      if (response.error) {
+                        toast.error(response.error.message);
+                        return;
+                      }
+
+                      toast.success(t('forgotPassword.successMessage'));
                     } catch (error) {
                       console.error('Forgot password failed:', error);
                     } finally {
@@ -55,11 +73,11 @@ const ForgotPassword: React.FC = () => {
                     isSubmitted || isSubmitting ? (
                       <>
                         <p className="text-gray-600 mb-6">
-                          Un lien de réinitialisation a été envoyé à <strong>{values.email}</strong>
+                          {t('forgotPassword.successMessage')} <strong>{values.email}</strong>
                         </p>
                         <Link to="/">
                           <Button className="w-full h-12 bg-tsa-blue/90 text-white font-semibold">
-                            Retour à la connexion
+                            {t('forgotPassword.returnToLogin')}
                           </Button>
                         </Link>
                       </>
@@ -69,7 +87,7 @@ const ForgotPassword: React.FC = () => {
                           <Input
                             name="email"
                             type="email"
-                            placeholder="Entrez votre Email"
+                            placeholder={t('forgotPassword.emailPlaceholder')}
                             value={values.email}
                             onChange={handleChange}
                             onBlur={handleBlur}
@@ -88,12 +106,12 @@ const ForgotPassword: React.FC = () => {
                           loading={isSubmitting}
                           disabled={isSubmitting}
                         >
-                          ENVOYER LE LIEN
+                          {t('forgotPassword.sendLink')}
                         </Button>
 
                         <div className="text-center">
                           <Link to="/" className="text-tsa-blue font-medium">
-                            ← Retour à la connexion
+                            {t('forgotPassword.backToLogin')}
                           </Link>
                         </div>
                       </Form>

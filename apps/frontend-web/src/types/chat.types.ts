@@ -20,6 +20,8 @@ export enum ConversationType {
   MISSION = 'mission',
 }
 
+export type ConversationFilter = 'all' | 'unread' | 'groups';
+
 /**
  * Message interface matching backend Message model
  */

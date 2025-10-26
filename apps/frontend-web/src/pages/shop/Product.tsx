@@ -22,7 +22,6 @@ import {
   Truck,
   Shield,
   RotateCcw,
-  Info,
   User,
   Calendar,
   Package,
@@ -34,10 +33,13 @@ import { useProducts } from '@/hooks/useProducts';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import { useShopTranslation } from '@/hooks/useTranslation';
+import { toast } from 'react-hot-toast';
 
-function ProductPage() {
+export default function ProductPage() {
+  const { t } = useShopTranslation();
   const { id } = useParams<{ id: string }>();
-  const { addToCart } = useCart();
+  const { addToCart, error } = useCart();
   const { products } = useProducts();
 
   const [qty, setQty] = useState(1);
@@ -56,6 +58,14 @@ function ProductPage() {
     setIsAddingToCart(true);
     try {
       await addToCart(product, qty);
+
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success(t('cart.addedToCart'));
+      }
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsAddingToCart(false);
     }
@@ -112,10 +122,10 @@ function ProductPage() {
         <Card>
           <CardContent className="text-center py-16">
             <Package className="h-16 w-16 text-zinc-300 mx-auto mb-6" />
-            <h1 className="text-2xl font-bold text-zinc-900 mb-2">Produit introuvable</h1>
-            <p className="text-zinc-600 mb-6">Ce produit n'existe pas ou n'est plus disponible</p>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-2">{t('product.notFound')}</h1>
+            <p className="text-zinc-600 mb-6">{t('product.notFoundDescription')}</p>
             <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to="/app/shop">Retour au catalogue</Link>
+              <Link to="/shop">{t('cart.continueShopping')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -134,8 +144,8 @@ function ProductPage() {
             to="/app/shop"
             className="flex items-center gap-1 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Catalogue
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {t('cart.continueShopping')}
           </Link>
           <span>/</span>
           {product.category?.name && (
@@ -208,7 +218,7 @@ function ProductPage() {
                   <div className="flex items-center gap-2 text-sm text-zinc-600">
                     <User className="h-4 w-4" />
                     <span>
-                      Vendu par {product.creator.firstName} {product.creator.lastName}
+                      {t('product.soldBy')} {product.creator.firstName} {product.creator.lastName}
                     </span>
                   </div>
                 )}
@@ -254,7 +264,7 @@ function ProductPage() {
           {/* Quantity & Add to Cart */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-zinc-700">Quantité:</span>
+              <span className="text-sm font-medium text-zinc-700">{t('product.quantity')}:</span>
               <div className="flex items-center border rounded-lg">
                 <Button
                   variant="ghost"
@@ -287,7 +297,8 @@ function ProductPage() {
                 </Button>
               </div>
               <span className="text-sm text-zinc-500">
-                {product.stock} disponible{product.stock > 1 ? 's' : ''}
+                {product.stock}{' '}
+                {product.stock > 1 ? t('product.availablePlural') : t('product.available')}
               </span>
             </div>
 
@@ -298,7 +309,7 @@ function ProductPage() {
                 className="flex-1 bg-green-600 hover:bg-green-700 h-12"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                {isAddingToCart ? 'Ajout...' : 'Ajouter au panier'}
+                {isAddingToCart ? t('product.adding') : t('product.addToCart')}
               </Button>
             </div>
           </div>
@@ -310,17 +321,17 @@ function ProductPage() {
                 <Truck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Livraison rapide</p>
-                <p className="text-zinc-600">2-3 jours ouvrés</p>
+                <p className="font-medium text-zinc-900">{t('product.fastDelivery')}</p>
+                <p className="text-zinc-600">{t('product.deliveryTime')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
-                <Shield className="h-5 w-5 text-blue-600" />
+                <Shield className="h-5 w-5 text-tsa-blue" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Garantie</p>
-                <p className="text-zinc-600">12 mois</p>
+                <p className="font-medium text-zinc-900">{t('product.warranty')}</p>
+                <p className="text-zinc-600">{t('product.warrantyDuration')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -328,8 +339,8 @@ function ProductPage() {
                 <RotateCcw className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Retour</p>
-                <p className="text-zinc-600">30 jours</p>
+                <p className="font-medium text-zinc-900">{t('product.returnPolicy')}</p>
+                <p className="text-zinc-600">{t('product.returnTime')}</p>
               </div>
             </div>
           </div>
@@ -338,27 +349,19 @@ function ProductPage() {
 
       {/* Product Details Tabs */}
       <div className="mt-12">
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details" className="flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              Détails
-            </TabsTrigger>
-            <TabsTrigger value="reviews" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              Avis (0)
-            </TabsTrigger>
-            <TabsTrigger value="seller" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Vendeur
-            </TabsTrigger>
+        <Tabs defaultValue="description" className="mt-8 w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="description">{t('product.description')}</TabsTrigger>
+            <TabsTrigger value="specifications">{t('product.specifications')}</TabsTrigger>
+            <TabsTrigger value="reviews">{t('product.reviews')}</TabsTrigger>
+            <TabsTrigger value="seller">{t('product.seller')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="mt-6">
+          <TabsContent value="description" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Informations détaillées</CardTitle>
-                <CardDescription>Toutes les informations techniques sur ce produit</CardDescription>
+                <CardTitle>{t('product.description')}</CardTitle>
+                <CardDescription>{t('product.descriptionInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -366,7 +369,7 @@ function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">Référence</p>
+                        <p className="font-medium text-zinc-900">{t('product.reference')}:</p>
                         <p className="text-sm text-zinc-600">{product.id}</p>
                       </div>
                     </div>
@@ -375,7 +378,7 @@ function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Package className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">Catégorie</p>
+                          <p className="font-medium text-zinc-900">{t('product.category')}:</p>
                           <p className="text-sm text-zinc-600">{product.category.name}</p>
                         </div>
                       </div>
@@ -384,7 +387,7 @@ function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">Unité de vente</p>
+                        <p className="font-medium text-zinc-900">{t('product.unit')}:</p>
                         <p className="text-sm text-zinc-600">{product.unit}</p>
                       </div>
                     </div>
@@ -394,7 +397,7 @@ function ProductPage() {
                     <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                       <Package className="h-5 w-5 text-zinc-600" />
                       <div>
-                        <p className="font-medium text-zinc-900">Stock disponible</p>
+                        <p className="font-medium text-zinc-900">{t('product.stock')}:</p>
                         <p className="text-sm text-zinc-600">
                           {product.stock} unité{product.stock > 1 ? 's' : ''}
                         </p>
@@ -405,7 +408,7 @@ function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">Ajouté le</p>
+                          <p className="font-medium text-zinc-900">{t('product.createdAt')}:</p>
                           <p className="text-sm text-zinc-600">
                             {new Date(product.createdAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -421,7 +424,7 @@ function ProductPage() {
                       <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-5 w-5 text-zinc-600" />
                         <div>
-                          <p className="font-medium text-zinc-900">Dernière mise à jour</p>
+                          <p className="font-medium text-zinc-900">{t('product.updatedAt')}:</p>
                           <p className="text-sm text-zinc-600">
                             {new Date(product.updatedAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
@@ -438,11 +441,66 @@ function ProductPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="specifications" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('product.specifications')}</CardTitle>
+                <CardDescription>{t('product.specificationsInfo')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <span className="font-medium">{t('product.reference')}:</span>{' '}
+                    {product.reference}
+                  </p>
+                  <p>
+                    <span className="font-medium">{t('product.category')}:</span>{' '}
+                    {product.category?.name}
+                  </p>
+                  {product.specifications?.brand && (
+                    <p>
+                      <span className="font-medium">{t('product.brand')}:</span>{' '}
+                      {product.specifications?.brand}
+                    </p>
+                  )}
+                  {product.specifications?.weight && (
+                    <p>
+                      <span className="font-medium">{t('product.weight')}:</span>{' '}
+                      {product.specifications.weight} kg
+                    </p>
+                  )}
+                  {product.specifications?.dimensions && (
+                    <p>
+                      <span className="font-medium">{t('product.dimensions')}:</span>{' '}
+                      {product.specifications.dimensions}
+                    </p>
+                  )}
+                  {product.specifications?.warranty && (
+                    <p>
+                      <span className="font-medium">{t('product.warranty')}:</span>{' '}
+                      {product.specifications?.warranty} mois
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-medium">{t('product.condition')}:</span>{' '}
+                    <Badge variant="outline" className="ml-1">
+                      {product.specifications?.condition === 'new'
+                        ? t('product.new')
+                        : product.specifications?.condition === 'used'
+                          ? t('product.used')
+                          : t('product.refurbished')}
+                    </Badge>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="reviews" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Avis clients</CardTitle>
-                <CardDescription>Partagez votre expérience avec ce produit</CardDescription>
+                <CardTitle>{t('product.reviews')}</CardTitle>
+                <CardDescription>{t('product.reviewsInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -450,23 +508,21 @@ function ProductPage() {
                     <div className="text-center py-8">
                       <Star className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-zinc-900 mb-2">
-                        Aucun avis pour le moment
+                        {t('product.noReviews')}
                       </h3>
-                      <p className="text-zinc-600 mb-4">
-                        Soyez le premier à donner votre avis sur ce produit
-                      </p>
+                      <p className="text-zinc-600 mb-4">{t('product.noReviewsDescription')}</p>
                       <Button
                         onClick={() => setIsWritingComment(true)}
                         className="bg-green-600 hover:bg-green-700"
                       >
-                        Écrire un avis
+                        {t('product.writeReview')}
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div>
                         <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          Votre note
+                          {t('product.rating')}:
                         </label>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -485,17 +541,17 @@ function ProductPage() {
                             </button>
                           ))}
                           <span className="ml-2 text-sm text-zinc-600">
-                            {selectedRating ? `${selectedRating}/5` : 'Cliquez pour noter'}
+                            {selectedRating ? `${selectedRating}/5` : t('product.clickToRate')}
                           </span>
                         </div>
                       </div>
 
                       <div>
                         <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          Votre avis
+                          {t('product.review')}:
                         </label>
                         <Textarea
-                          placeholder="Partagez votre expérience avec ce produit..."
+                          placeholder={t('product.reviewPlaceholder')}
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
                           className="min-h-[120px]"
@@ -513,7 +569,7 @@ function ProductPage() {
                           disabled={!selectedRating || commentText.length < 10}
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          Publier l'avis
+                          {t('product.publishReview')}
                         </Button>
                         <Button
                           variant="outline"
@@ -523,7 +579,7 @@ function ProductPage() {
                             setSelectedRating(0);
                           }}
                         >
-                          Annuler
+                          {t('product.cancel')}
                         </Button>
                       </div>
                     </div>
@@ -536,8 +592,8 @@ function ProductPage() {
           <TabsContent value="seller" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Informations vendeur</CardTitle>
-                <CardDescription>À propos du vendeur de ce produit</CardDescription>
+                <CardTitle>{t('product.seller')}</CardTitle>
+                <CardDescription>{t('product.sellerInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {product.creator ? (
@@ -550,7 +606,7 @@ function ProductPage() {
                         <h3 className="text-lg font-semibold text-zinc-900">
                           {product.creator.firstName} {product.creator.lastName}
                         </h3>
-                        <p className="text-zinc-600">Vendeur vérifié</p>
+                        <p className="text-zinc-600">{t('product.verifiedSeller')}</p>
                       </div>
                     </div>
 
@@ -559,17 +615,17 @@ function ProductPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Package className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Produits vendus</p>
+                        <p className="text-sm text-zinc-600">{t('product.soldProducts')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Star className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Note moyenne</p>
+                        <p className="text-sm text-zinc-600">{t('product.averageRating')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                       <div className="text-center p-4 bg-zinc-50 rounded-lg">
                         <Calendar className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Membre depuis</p>
+                        <p className="text-sm text-zinc-600">{t('product.memberSince')}:</p>
                         <p className="text-lg font-semibold text-zinc-900">-</p>
                       </div>
                     </div>
@@ -577,7 +633,7 @@ function ProductPage() {
                 ) : (
                   <div className="text-center py-8">
                     <User className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-                    <p className="text-zinc-600">Informations vendeur non disponibles</p>
+                    <p className="text-zinc-600">{t('product.noSellerInfo')}</p>
                   </div>
                 )}
               </CardContent>
@@ -595,5 +651,3 @@ function ProductPage() {
     </main>
   );
 }
-
-export default ProductPage;

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNotifications } from '@/hooks/useNotifications';
 import { toastNotificationService } from '@/services/toast-notification.service';
+import { useNotificationsTranslation } from '@/hooks/useTranslation';
 import type { NotificationPriority, NotificationType } from '@/types/notification.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -20,6 +21,7 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ className }) => {
+  const { t } = useNotificationsTranslation();
   const {
     notifications,
     stats,
@@ -47,10 +49,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
   const handleMarkAllRead = async () => {
     try {
       await markAllNotificationsRead();
-      toastNotificationService.showSuccess('Toutes les notifications ont été marquées comme lues');
+      toastNotificationService.showSuccess(t('markAllRead.success'));
     } catch (error) {
       console.error('Erreur lors du marquage des notifications:', error);
-      toastNotificationService.showError('Erreur lors du marquage des notifications');
+      toastNotificationService.showError(t('markAllRead.error'));
     }
   };
 
@@ -58,10 +60,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     e.stopPropagation();
     try {
       await deleteNotification(notificationId);
-      toastNotificationService.showSuccess('Notification supprimée');
+      toastNotificationService.showSuccess(t('delete.success'));
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
-      toastNotificationService.showError('Erreur lors de la suppression');
+      toastNotificationService.showError(t('delete.error'));
     }
   };
 
@@ -78,6 +80,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       default:
         return 'bg-gray-500';
     }
+  };
+
+  const getPriorityLabel = (priority: NotificationPriority) => {
+    return t(`priority.${priority}`);
   };
 
   const getTypeIcon = (type: NotificationType) => {
@@ -115,7 +121,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       <DropdownMenuContent align="end" className="w-96 max-h-96 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
-          <DropdownMenuLabel className="text-base font-semibold">Notifications</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-base font-semibold">{t('title')}</DropdownMenuLabel>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -124,12 +130,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
               className="text-xs"
             >
               <Filter className="h-3 w-3 mr-1" />
-              {filter === 'all' ? 'Toutes' : 'Non lues'}
+              {filter === 'all' ? t('filter.all') : t('filter.unread')}
             </Button>
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs">
                 <CheckCheck className="h-3 w-3 mr-1" />
-                Tout lire
+                {t('markAllRead.button')}
               </Button>
             )}
           </div>
@@ -141,7 +147,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
             <div className="p-3 text-center">
               <div className="text-red-500 text-sm mb-2">{error}</div>
               <Button variant="outline" size="sm" onClick={clearError}>
-                Réessayer
+                {t('retry')}
               </Button>
             </div>
           )}
@@ -149,14 +155,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              Chargement...
+              {t('loading')}
             </div>
           ) : filteredNotifications?.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               <Bell className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">
-                {filter === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
-              </p>
+              <p className="text-sm">{filter === 'unread' ? t('empty.unread') : t('empty.all')}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
@@ -228,7 +232,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                                       : 'bg-green-100 text-green-700'
                               }`}
                             >
-                              {notification.priority}
+                              {getPriorityLabel(notification.priority)}
                             </span>
                           </div>
                           {!notification.readAt && (
@@ -252,14 +256,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-center text-blue-600 hover:text-blue-700"
+                className="w-full text-center text-tsa-blue hover:text-blue-700"
                 onClick={() => {
                   setIsOpen(false);
                   // Navigate to full notifications page
                   window.location.href = '/notifications';
                 }}
               >
-                Voir toutes les notifications
+                {t('viewAll')}
               </Button>
             </div>
           </>

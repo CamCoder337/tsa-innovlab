@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "TSA Logistics",
+    "tagline": "Votre partenaire logistique de confiance"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "add": "Ajouter",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "export": "Exporter",
+    "import": "Importer",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "refresh": "Actualiser",
+    "reset": "Réinitialiser",
+    "settings": "Paramètres",
+    "support": "Support",
+    "viewDetails": "Voir les détails"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "pending": "En attente",
+    "approved": "Approuvé",
+    "rejected": "Rejeté",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "processing": "En cours de traitement"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain",
+    "thisWeek": "Cette semaine",
+    "lastWeek": "La semaine dernière",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Le mois dernier",
+    "thisYear": "Cette année",
+    "lastYear": "L'année dernière"
+  },
+  "loading": "Chargement...",
+  "noData": "Aucune donnée disponible",
+  "error": "Une erreur s'est produite",
+  "success": "Opération réussie",
+  "warning": "Attention",
+  "info": "Information",
+  "yes": "Oui",
+  "no": "Non",
+  "languages": {
+    "french": "Français",
+    "english": "Anglais"
+  }
+}

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
 import type { Payment } from '@/types/payment.types';
 import { paymentService } from '@/services/payment.service';
+import { useEffect, useState } from 'react';
 
 interface PaymentHistoryProps {
   missionId?: string;
@@ -170,7 +170,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                       href={payment.receiptUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-tsa-blue hover:text-blue-900"
                     >
                       Reçu
                     </a>

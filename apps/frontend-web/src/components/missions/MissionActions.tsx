@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Mission, MissionStatus } from '@/types/mission.types';
+import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface MissionActionsProps {
   mission: Mission;
@@ -28,6 +29,8 @@ export function MissionActions({
   onRefresh,
 }: MissionActionsProps) {
   const navigate = useNavigate();
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [action, setAction] = useState<{ type: string; title: string } | null>(null);
   const [comment, setComment] = useState('');
@@ -45,27 +48,14 @@ export function MissionActions({
     setIsLoading(true);
     try {
       await onStatusUpdate(action.type as MissionStatus, comment || undefined);
-      toast.success(`Mission ${getActionVerb(action.type)} successfully`);
+      toast.success(tMissions(`actions.success.${action.type}`));
       setIsDialogOpen(false);
       onRefresh();
     } catch (error) {
       console.error('Error performing action:', error);
-      toast.error(`Failed to ${action.type.toLowerCase()} mission`);
+      toast.error(tMissions(`actions.errors.${action.type}`));
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const getActionVerb = (actionType: string) => {
-    switch (actionType) {
-      case 'publish':
-        return 'published';
-      case 'cancel':
-        return 'cancelled';
-      case 'complete':
-        return 'completed';
-      default:
-        return actionType + 'ed';
     }
   };
 
@@ -75,14 +65,14 @@ export function MissionActions({
         <>
           <DropdownMenuItem onClick={() => navigate(`/missions/${mission.id}/edit`)}>
             <Edit className="mr-2 h-4 w-4" />
-            <span>Modifier</span>
+            <span>{tCommon('edit')}</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-red-600"
-            onClick={() => handleAction('delete', 'Supprimer la mission')}
+            onClick={() => handleAction('delete', tMissions('actions.deleteMission'))}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            <span>Supprimer</span>
+            <span>{tCommon('delete')}</span>
           </DropdownMenuItem>
         </>
       );
@@ -92,34 +82,38 @@ export function MissionActions({
       switch (mission.status) {
         case 'draft':
           return (
-            <DropdownMenuItem onClick={() => handleAction('publish', 'Publier la mission')}>
+            <DropdownMenuItem
+              onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
+            >
               <Send className="mr-2 h-4 w-4" />
-              <span>Publier</span>
+              <span>{tMissions('actions.publish')}</span>
             </DropdownMenuItem>
           );
         case 'published':
           return (
             <DropdownMenuItem
               className="text-red-600"
-              onClick={() => handleAction('cancel', 'Annuler la mission')}
+              onClick={() => handleAction('cancel', tMissions('actions.cancelMission'))}
             >
               <X className="mr-2 h-4 w-4" />
-              <span>Annuler</span>
+              <span>{tCommon('cancel')}</span>
             </DropdownMenuItem>
           );
         case 'assigned':
           return (
             <>
-              <DropdownMenuItem onClick={() => handleAction('complete', 'Marquer comme terminée')}>
+              <DropdownMenuItem
+                onClick={() => handleAction('complete', tMissions('actions.markAsCompleted'))}
+              >
                 <Check className="mr-2 h-4 w-4" />
-                <span>Terminer</span>
+                <span>{tMissions('actions.complete')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => handleAction('cancel', 'Annuler la mission')}
+                onClick={() => handleAction('cancel', tMissions('actions.cancelMission'))}
               >
                 <X className="mr-2 h-4 w-4" />
-                <span>Annuler</span>
+                <span>{tCommon('cancel')}</span>
               </DropdownMenuItem>
             </>
           );
@@ -133,7 +127,7 @@ export function MissionActions({
         return (
           <DropdownMenuItem onClick={() => navigate(`/missions/${mission.id}/propose`)}>
             <Send className="mr-2 h-4 w-4" />
-            <span>Faire une offre</span>
+            <span>{tMissions('actions.makeOffer')}</span>
           </DropdownMenuItem>
         );
       }
@@ -141,13 +135,17 @@ export function MissionActions({
       if (mission.status === 'assigned') {
         return (
           <>
-            <DropdownMenuItem onClick={() => handleAction('in_progress', 'Démarrer la mission')}>
+            <DropdownMenuItem
+              onClick={() => handleAction('in_progress', tMissions('actions.startMission'))}
+            >
               <Clock className="mr-2 h-4 w-4" />
-              <span>Démarrer</span>
+              <span>{tMissions('actions.start')}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAction('complete', 'Marquer comme terminée')}>
+            <DropdownMenuItem
+              onClick={() => handleAction('complete', tMissions('actions.markAsCompleted'))}
+            >
               <Check className="mr-2 h-4 w-4" />
-              <span>Terminer</span>
+              <span>{tMissions('actions.complete')}</span>
             </DropdownMenuItem>
           </>
         );
@@ -162,18 +160,18 @@ export function MissionActions({
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => onRefresh()} className="h-8">
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          Actualiser
+          {tCommon('refresh')}
         </Button>
 
         {mission.status === 'draft' && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleAction('publish', 'Publier la mission')}
+            onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
             className="h-8 bg-tsa-blue text-white"
           >
             <Send className="mr-2 h-4 w-4" />
-            <span>Publier</span>
+            <span>{tMissions('actions.publish')}</span>
           </Button>
         )}
 
@@ -182,7 +180,7 @@ export function MissionActions({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8">
                 <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{tCommon('actions')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">{getStatusActions()}</DropdownMenuContent>
@@ -197,14 +195,16 @@ export function MissionActions({
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <p>Êtes-vous sûr de vouloir {action?.title.toLowerCase()} ?</p>
+            <p>
+              {tMissions('actions.confirmAction')} {action?.title.toLowerCase()} ?
+            </p>
 
             {(action?.type === 'cancel' || action?.type === 'complete') && (
               <div className="space-y-2">
                 <Label htmlFor="comment">
                   {action.type === 'cancel'
-                    ? "Raison de l'annulation (optionnel)"
-                    : 'Commentaire (optionnel)'}
+                    ? tMissions('actions.cancellationReason')
+                    : tMissions('actions.optionalComment')}
                 </Label>
                 <Textarea
                   id="comment"
@@ -212,8 +212,8 @@ export function MissionActions({
                   onChange={(e) => setComment(e.target.value)}
                   placeholder={
                     action.type === 'cancel'
-                      ? 'Pourquoi annulez-vous cette mission ?'
-                      : 'Ajoutez des détails sur la mission...'
+                      ? tMissions('actions.whyCancelMission')
+                      : tMissions('actions.addMissionDetails')
                   }
                   rows={3}
                 />
@@ -222,22 +222,22 @@ export function MissionActions({
 
             {action?.type === 'delete' && (
               <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
-                <p className="font-medium">Attention : Cette action est irréversible</p>
-                <p>La mission et toutes les données associées seront définitivement supprimées.</p>
+                <p className="font-medium">{tMissions('actions.warningIrreversible')}</p>
+                <p>{tMissions('actions.missionDataWillBeDeleted')}</p>
               </div>
             )}
           </div>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isLoading}>
-              Annuler
+              {tCommon('cancel')}
             </Button>
             <Button
               variant={action?.type === 'delete' ? 'destructive' : 'default'}
               onClick={confirmAction}
               disabled={isLoading}
             >
-              {isLoading ? 'Traitement...' : 'Confirmer'}
+              {isLoading ? tCommon('processing') : tCommon('confirm')}
             </Button>
           </div>
         </DialogContent>

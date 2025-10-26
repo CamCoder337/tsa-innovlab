@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 interface CategoryFormProps {
   formik: FormikProps<CreateCategory | UpdateCategory>;
@@ -19,6 +20,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
   isSubmitting,
   onCancel,
 }) => {
+  const { t } = useFormsTranslation();
   const [imagePreview, setImagePreview] = useState<string | null>(
     'imageUrl' in formik.values && formik.values.imageUrl ? formik.values.imageUrl : null
   );
@@ -57,14 +59,14 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
     <form onSubmit={formik.handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Nom de la catégorie *</Label>
+          <Label htmlFor="name">{t('labels.categoryName')} *</Label>
           <Input
             id="name"
             name="name"
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="Entrez le nom de la catégorie"
+            placeholder={t('placeholders.enterCategoryName')}
           />
           {formik.touched.name && formik.errors.name && (
             <p className="text-red-500 text-sm">{formik.errors.name}</p>
@@ -72,7 +74,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="parentId">Catégorie parente</Label>
+          <Label htmlFor="parentId">{t('labels.parentCategory')}</Label>
           <select
             id="parentId"
             name="parentId"
@@ -81,7 +83,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
             onBlur={formik.handleBlur}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">Aucune (catégorie principale)</option>
+            <option value="">{t('messages.noParentCategory')}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -91,14 +93,14 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="slug">Slug</Label>
+          <Label htmlFor="slug">{t('labels.slug')}</Label>
           <Input
             id="slug"
             name="slug"
             value={formik.values.slug || ''}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="slug-de-la-categorie"
+            placeholder={t('placeholders.categorySlug')}
           />
           {formik.touched.slug && formik.errors.slug && (
             <p className="text-red-500 text-sm">{formik.errors.slug}</p>
@@ -106,7 +108,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="displayOrder">Ordre d'affichage</Label>
+          <Label htmlFor="displayOrder">{t('labels.displayOrder')}</Label>
           <Input
             id="displayOrder"
             name="displayOrder"
@@ -123,7 +125,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t('labels.description')}</Label>
         <Textarea
           id="description"
           name="description"
@@ -131,7 +133,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           rows={4}
-          placeholder="Entrez une description pour la catégorie"
+          placeholder={t('placeholders.enterCategoryDescription')}
         />
         {formik.touched.description && formik.errors.description && (
           <p className="text-red-500 text-sm">{formik.errors.description}</p>
@@ -139,7 +141,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="imageUrl">URL de l'image</Label>
+        <Label htmlFor="imageUrl">{t('labels.imageUrl')}</Label>
         <div className="flex items-center gap-4">
           <Input
             id="image"
@@ -152,7 +154,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
           {imagePreview && (
             <img
               src={imagePreview}
-              alt="Aperçu"
+              alt={t('messages.preview')}
               className="h-20 w-20 rounded object-cover border"
             />
           )}
@@ -164,10 +166,10 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
 
       <div className="flex justify-end space-x-4 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Annuler
+          {t('buttons.cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+          {isSubmitting ? t('messages.saving') : t('buttons.save')}
         </Button>
       </div>
     </form>

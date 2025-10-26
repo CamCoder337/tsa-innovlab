@@ -25,6 +25,7 @@ import { useVehicles } from '@/hooks/useVehicles';
 import toast from 'react-hot-toast';
 import MissionCard from '@/components/missions/MissionCard';
 import { VehicleTypeLabels } from '@/types/vehicle.types';
+import { useMissionsTranslation } from '@/hooks/useTranslation';
 // import { Calendar } from '@/components/ui/calendar';
 
 export default function MissionsTransporteurPage() {
@@ -38,6 +39,7 @@ export default function MissionsTransporteurPage() {
   const [filterUrgency, setFilterUrgency] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  const { t } = useMissionsTranslation();
 
   const filteredMissions = (() => {
     if (activeTab === 'all') {
@@ -58,7 +60,7 @@ export default function MissionsTransporteurPage() {
 
   const applyForMission = async () => {
     if (!currentMission || !selectedVehicleId) {
-      toast.error('Veuillez sélectionner un véhicule');
+      toast.error(t('messages.selectVehicleError'));
       return;
     }
 
@@ -67,17 +69,17 @@ export default function MissionsTransporteurPage() {
 
       if (error) {
         console.error(error);
-        toast.error(error || 'Erreur lors de la candidature');
+        toast.error(error || t('messages.applicationError'));
         return;
       }
 
-      toast.success('Candidature envoyée avec succès');
+      toast.success(t('messages.applicationSentSuccess'));
       setIsDialogOpen(false);
       setCurrentMission(null);
       setSelectedVehicleId('');
     } catch (error) {
       console.error('Error applying for mission:', error);
-      toast.error('Erreur lors de la candidature');
+      toast.error(t('messages.applicationError'));
     }
   };
 
@@ -90,8 +92,10 @@ export default function MissionsTransporteurPage() {
     <div className="flex min-h-screen bg-gray-50 p-6">
       <div className="flex-1 p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Missions Disponibles</h1>
-          <p className="text-gray-600">Trouvez et acceptez des missions de transport</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {t('myMissions.transporteur.title')}
+          </h1>
+          <p className="text-gray-600">{t('myMissions.transporteur.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -99,10 +103,12 @@ export default function MissionsTransporteurPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
+                  <Package className="h-5 w-5 text-tsa-blue" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Missions Disponibles</p>
+                  <p className="text-sm text-gray-600">
+                    {t('myMissions.transporteur.stats.availableMissions')}
+                  </p>
                   <p className="text-2xl font-bold">
                     {missions.filter((m) => m.status === 'published').length}
                   </p>
@@ -117,7 +123,9 @@ export default function MissionsTransporteurPage() {
                   <Truck className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">En Cours</p>
+                  <p className="text-sm text-gray-600">
+                    {t('myMissions.transporteur.stats.inProgress')}
+                  </p>
                   <p className="text-2xl font-bold">
                     {myMissions.filter((m) => m.status !== 'completed' || 'cancelled').length}
                   </p>
@@ -132,7 +140,9 @@ export default function MissionsTransporteurPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Terminées</p>
+                  <p className="text-sm text-gray-600">
+                    {t('myMissions.transporteur.stats.completed')}
+                  </p>
                   <p className="text-2xl font-bold">
                     {myMissions.filter((m) => m.status === 'completed').length}
                   </p>
@@ -147,7 +157,9 @@ export default function MissionsTransporteurPage() {
                   <DollarSign className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Revenus Potentiels</p>
+                  <p className="text-sm text-gray-600">
+                    {t('myMissions.transporteur.stats.potentialRevenue')}
+                  </p>
                   <p className="text-2xl font-bold">0 FCFA</p>
                 </div>
               </div>
@@ -162,7 +174,7 @@ export default function MissionsTransporteurPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Rechercher par titre, origine ou adresseArriveeId..."
+                    placeholder={t('myMissions.transporteur.search.placeholder')}
                     className="pl-10"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,29 +183,37 @@ export default function MissionsTransporteurPage() {
               </div>
               <Select value={filterOrigin} onValueChange={setFilterOrigin}>
                 <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Filtrer par origine" />
+                  <SelectValue placeholder={t('myMissions.transporteur.search.filterOrigin')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les origines</SelectItem>
+                  <SelectItem value="all">
+                    {t('myMissions.transporteur.search.allOrigins')}
+                  </SelectItem>
                   {addresses.map((adresseDepart, index) => (
                     <SelectItem
                       key={`${adresseDepart.id || 'unknown'}-${index}`}
                       value={adresseDepart.id || 'unknown'}
                     >
-                      {adresseDepart.label || 'Non spécifiée'}
+                      {adresseDepart.label || t('myMissions.transporteur.search.unspecified')}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={filterUrgency} onValueChange={setFilterUrgency}>
                 <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Filtrer par urgence" />
+                  <SelectValue placeholder={t('myMissions.transporteur.search.filterUrgency')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes urgences</SelectItem>
-                  <SelectItem value="high">Urgent</SelectItem>
-                  <SelectItem value="medium">Prioritaire</SelectItem>
-                  <SelectItem value="low">Standard</SelectItem>
+                  <SelectItem value="all">
+                    {t('myMissions.transporteur.search.allUrgencies')}
+                  </SelectItem>
+                  <SelectItem value="high">{t('myMissions.transporteur.search.urgent')}</SelectItem>
+                  <SelectItem value="medium">
+                    {t('myMissions.transporteur.search.priority')}
+                  </SelectItem>
+                  <SelectItem value="low">
+                    {t('myMissions.transporteur.search.standard')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -204,16 +224,22 @@ export default function MissionsTransporteurPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
-              Missions de Transport
+              {t('myMissions.transporteur.transportMissions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="available">Disponibles</TabsTrigger>
-                <TabsTrigger value="assigned">En Cours</TabsTrigger>
-                <TabsTrigger value="completed">Terminées</TabsTrigger>
-                <TabsTrigger value="all">Toutes</TabsTrigger>
+                <TabsTrigger value="available">
+                  {t('myMissions.transporteur.tabs.available')}
+                </TabsTrigger>
+                <TabsTrigger value="assigned">
+                  {t('myMissions.transporteur.tabs.assigned')}
+                </TabsTrigger>
+                <TabsTrigger value="completed">
+                  {t('myMissions.transporteur.tabs.completed')}
+                </TabsTrigger>
+                <TabsTrigger value="all">{t('myMissions.transporteur.tabs.all')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-6">
@@ -232,10 +258,10 @@ export default function MissionsTransporteurPage() {
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Aucune mission trouvée
+                      {t('myMissions.transporteur.emptyStates.noMissions')}
                     </h3>
                     <p className="text-gray-600">
-                      Aucune mission ne correspond aux critères de recherche actuels
+                      {t('myMissions.transporteur.emptyStates.noMatchingCriteria')}
                     </p>
                   </div>
                 )}
@@ -255,10 +281,10 @@ export default function MissionsTransporteurPage() {
             >
               <DialogContent>
                 <DialogDescription className="hidden">
-                  Sélectionnez un véhicule pour postuler à cette mission
+                  {t('myMissions.transporteur.apply.dialogDescription')}
                 </DialogDescription>
                 <DialogHeader>
-                  <DialogTitle>Postuler à la mission</DialogTitle>
+                  <DialogTitle>{t('myMissions.transporteur.apply.dialogTitle')}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
@@ -267,8 +293,8 @@ export default function MissionsTransporteurPage() {
                       <h3 className="font-medium text-gray-900">{currentMission.title}</h3>
                       <p className="text-sm text-gray-600 mt-1">{currentMission.description}</p>
                       {currentMission.requiredVehicleType && (
-                        <p className="text-sm text-blue-600 mt-2">
-                          Type de véhicule requis:{' '}
+                        <p className="text-sm text-tsa-blue mt-2">
+                          {t('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                           {VehicleTypeLabels[currentMission.requiredVehicleType]}
                         </p>
                       )}
@@ -277,25 +303,28 @@ export default function MissionsTransporteurPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sélectionnez un véhicule disponible *
+                      {t('myMissions.transporteur.apply.selectVehicle')}
                     </label>
                     {vehiclesLoading ? (
                       <div className="flex items-center justify-center p-4">
                         <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="ml-2 text-gray-600">Chargement des véhicules...</span>
+                        <span className="ml-2 text-gray-600">
+                          {t('myMissions.transporteur.apply.loadingVehicles')}
+                        </span>
                       </div>
                     ) : availableVehicles.length === 0 ? (
                       <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                        <p>Aucun véhicule disponible</p>
+                        <p>{t('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
                         <p className="text-sm mt-1">
-                          Vous devez avoir au moins un véhicule disponible pour postuler à une
-                          mission.
+                          {t('myMissions.transporteur.apply.noVehiclesMessage')}
                         </p>
                       </div>
                     ) : (
                       <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choisir un véhicule" />
+                          <SelectValue
+                            placeholder={t('myMissions.transporteur.apply.chooseVehicle')}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {availableVehicles.map((vehicle) => (
@@ -321,13 +350,13 @@ export default function MissionsTransporteurPage() {
                         setSelectedVehicleId('');
                       }}
                     >
-                      Annuler
+                      {t('myMissions.transporteur.apply.cancel')}
                     </Button>
                     <Button
                       onClick={applyForMission}
                       disabled={!selectedVehicleId || availableVehicles.length === 0}
                     >
-                      Postuler
+                      {t('myMissions.transporteur.apply.apply')}
                     </Button>
                   </div>
                 </div>

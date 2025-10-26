@@ -93,13 +93,11 @@ export interface BulkUpdateProducts {
 }
 
 export interface ProductStat {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  outOfStockProducts: number;
-  lowStockProducts: number;
-  totalValue: number;
-  categoriesWithProducts: number;
+  total: number;
+  active: number;
+  inactive: number;
+  outOfStock: number;
+  lowStock: number;
 }
 
 export interface ProductStats {

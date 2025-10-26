@@ -1,0 +1,74 @@
+{
+  "title": "Notifications",
+  "markAsRead": "Mark as read",
+  "markAllAsRead": "Mark all as read",
+  "noNotifications": "No notifications",
+  "types": {
+    "info": "Information",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
+  },
+  "messages": {
+    "orderPlaced": "Your order #{{orderNumber}} has been placed successfully",
+    "orderShipped": "Your order #{{orderNumber}} has been shipped",
+    "orderDelivered": "Your order #{{orderNumber}} has been delivered",
+    "missionAssigned": "A new mission has been assigned to you",
+    "missionCompleted": "Mission completed successfully",
+    "paymentReceived": "Payment received for order #{{orderNumber}}",
+    "lowStock": "Low stock for product {{productName}}",
+    "newUser": "New user registered: {{userName}}",
+    "documentUploaded": "Document uploaded successfully",
+    "documentVerified": "Your document has been verified",
+    "documentRejected": "Your document has been rejected"
+  },
+  "settings": {
+    "emailNotifications": "Email notifications",
+    "pushNotifications": "Push notifications",
+    "smsNotifications": "SMS notifications",
+    "frequency": "Frequency",
+    "immediate": "Immediate",
+    "daily": "Daily",
+    "weekly": "Weekly"
+  },
+  "description": "Manage your notifications and alerts",
+  "markedAsRead": "Notification marked as read",
+  "markError": "Error marking notification",
+  "allMarkedAsRead": "All notifications have been marked as read",
+  "markAllError": "Error marking notifications",
+  "deleted": "Notification deleted",
+  "deleteError": "Error deleting notification",
+  "allDeleted": "All notifications have been deleted",
+  "deleteAllError": "Error deleting notifications",
+  "deleteAll": "Delete all",
+  "viewAll": "View all notifications",
+  "filters": {
+    "all": "All",
+    "unread": "Unread",
+    "important": "Important"
+  },
+  "filter": {
+    "all": "All"
+  },
+  "markAllRead": {
+    "button": "Mark all as read",
+    "success": "All notifications have been marked as read",
+    "error": "Error marking notifications"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "delete": {
+    "success": "Notification deleted",
+    "error": "Error deleting notification"
+  },
+  "retry": "Retry",
+  "loading": "Loading...",
+  "empty": {
+    "all": "No notifications",
+    "unread": "No unread notifications"
+  }
+}

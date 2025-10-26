@@ -25,6 +25,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigationTranslation, useAuthTranslation } from '@/hooks/useTranslation';
 
 type SidebarItem = {
   id: string;
@@ -34,22 +35,22 @@ type SidebarItem = {
   children?: SidebarItem[];
 };
 
-const affreteurMenu: SidebarItem[] = [
+const getAffreteurMenu = (t: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: t('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: t('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: t('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -57,13 +58,13 @@ const affreteurMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: t('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: t('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -71,7 +72,7 @@ const affreteurMenu: SidebarItem[] = [
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: t('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -96,22 +97,22 @@ const affreteurMenu: SidebarItem[] = [
   // }
 ];
 
-const transporteurMenu: SidebarItem[] = [
+const getTransporteurMenu = (t: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: t('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: t('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: t('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -119,19 +120,19 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'vehicles',
-    label: 'Mes Véhicules',
+    label: t('menu.vehicles'),
     icon: Truck,
     href: '/app/vehicles',
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: t('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: t('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -139,7 +140,7 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: t('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -160,22 +161,22 @@ const transporteurMenu: SidebarItem[] = [
   // },
 ];
 
-const adminMenu: SidebarItem[] = [
+const getAdminMenu = (t: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: t('menu.dashboard'),
     icon: LayoutDashboard,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: t('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: t('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -183,25 +184,25 @@ const adminMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: t('menu.shop'),
     icon: ShoppingBag,
     href: '/app/products',
   },
   {
     id: 'orders',
-    label: 'Commandes',
+    label: t('menu.orders'),
     icon: ShoppingCart,
     href: '/app/orders',
   },
   {
     id: 'users',
-    label: 'Utilisateurs',
+    label: t('menu.users'),
     icon: Users,
     href: '/app/users',
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: t('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -216,10 +217,10 @@ const adminMenu: SidebarItem[] = [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
-const clientMenu: SidebarItem[] = [
+const getClientMenu = (t: (key: string) => string): SidebarItem[] => [
   {
     id: 'products',
-    label: 'Boutique',
+    label: t('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
   },
@@ -227,10 +228,12 @@ const clientMenu: SidebarItem[] = [
 
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return clientMenu;
-  if (user?.role === 'transporteur') return transporteurMenu;
-  if (user?.role === 'admin') return adminMenu;
-  return affreteurMenu;
+  const { t } = useNavigationTranslation();
+
+  if (!isAuthenticated || user?.role === 'client') return getClientMenu(t);
+  if (user?.role === 'transporteur') return getTransporteurMenu(t);
+  if (user?.role === 'admin') return getAdminMenu(t);
+  return getAffreteurMenu(t);
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
@@ -307,7 +310,10 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 
 export default function Sidebar() {
   const { user, isAuthenticated } = useAuth();
-  const role = user ? user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) : 'Invité';
+  const { t: tAuth } = useAuthTranslation();
+  const { t } = useNavigationTranslation();
+
+  const role = user ? tAuth(`roles.${user?.role}`) : tAuth('roles.guest');
   const menu = GetMenuByRole();
 
   if (!isAuthenticated) return null;
@@ -317,7 +323,7 @@ export default function Sidebar() {
       <SidebarHeader className="flex flex-row items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
-            Espace {role}
+            {t('breadcrumb.workspace', { role })}
           </div>
         </div>
         <SidebarTrigger className="ml-auto" />
