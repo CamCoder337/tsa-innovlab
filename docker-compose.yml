@@ -274,7 +274,10 @@ services:
       FASTAPI_PORT: 8000
       
       # Google Cloud Vision API
-      GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/google-credentials.json
+      # Option 1: Variable d'environnement (RECOMMANDÉ pour production)
+      GOOGLE_CREDENTIALS_JSON: ${GOOGLE_CREDENTIALS_JSON:-}
+      # Option 2: Chemin vers fichier monté en volume
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/credentials/google-credentials.json}
       
       # ML Model settings
       MODEL_CACHE_SIZE: 3
@@ -287,6 +290,8 @@ services:
     volumes:
       - ai_models:/app/ml_models
       - ai_logs:/app/logs
+      # Monter le fichier de credentials seulement s'il existe (développement)
+      # En production, utiliser GOOGLE_CREDENTIALS_JSON dans .env
       - ./services/tsa-ai/google-credentials.json:/app/credentials/google-credentials.json:ro
       - ./services/tsa-ai/data/visual_recognition:/app/data/visual_recognition
     
