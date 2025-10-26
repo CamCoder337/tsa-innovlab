@@ -55,6 +55,7 @@ import { toast } from 'react-hot-toast';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
 import { adminService } from '@/services/admin.service';
+import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 const defaultFilters: ProductFilterParams = {
   search: '',
@@ -84,6 +85,8 @@ export default function AdminProductsPage() {
     updateCategory,
     deleteCategory,
   } = useCategories();
+  const { t } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   const [filters, setFilters] = useState<ProductFilterParams>(defaultFilters);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -177,15 +180,15 @@ export default function AdminProductsPage() {
       };
 
       await toast.promise(createProduct(payload), {
-        loading: 'Création du produit...',
+        loading: t('products.creating'),
       });
 
       if (productError) {
-        toast.error('Erreur lors de la création du produit');
+        toast.error(t('products.createError'));
         return;
       }
 
-      toast.success('Produit créé avec succès');
+      toast.success(t('products.createSuccess'));
       setIsDialogOpen(false);
       productFormik.resetForm();
     } catch (error) {
@@ -201,7 +204,7 @@ export default function AdminProductsPage() {
       const originalProduct = products.find((p) => p.id === editingProduct.id);
 
       if (!originalProduct) {
-        throw new Error('Produit introuvable');
+        throw new Error(t('products.notFound'));
       }
 
       // Create a map of changed fields
@@ -237,7 +240,7 @@ export default function AdminProductsPage() {
       };
 
       await toast.promise(updateProduct(editingProduct.id, payload), {
-        loading: 'Mise à jour du produit...',
+        loading: t('products.updating'),
       });
 
       if (productError) {
@@ -245,7 +248,7 @@ export default function AdminProductsPage() {
         return;
       }
 
-      toast.success('Produit mis à jour avec succès');
+      toast.success(t('products.updateSuccess'));
       setIsDialogOpen(false);
       setEditingProduct(null);
       productFormik.resetForm();
@@ -255,19 +258,19 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
+    if (!confirm(t('products.deleteConfirm'))) return;
 
     try {
       await toast.promise(deleteProduct(id), {
-        loading: 'Suppression du produit...',
+        loading: t('products.deleting'),
       });
 
       if (productError) {
-        toast.error('Erreur lors de la suppression du produit');
+        toast.error(t('products.deleteError'));
         return;
       }
 
-      toast.success('Produit supprimé avec succès');
+      toast.success(t('products.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting product:', error);
     }
@@ -276,15 +279,15 @@ export default function AdminProductsPage() {
   const handleAddCategory = async (values: CreateCategory) => {
     try {
       await toast.promise(createCategory(values), {
-        loading: 'Création de la catégorie...',
+        loading: t('products.creatingCategory'),
       });
 
       if (categoryError) {
-        toast.error('Erreur lors de la création de la catégorie');
+        toast.error(t('products.createCategoryError'));
         return;
       }
 
-      toast.success('Catégorie créée avec succès');
+      toast.success(t('products.createCategorySuccess'));
       setIsDialogOpen(false);
       categoryFormik.resetForm();
     } catch (error) {
@@ -354,19 +357,19 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+    if (!confirm(t('products.deleteConfirm'))) return;
 
     try {
       await toast.promise(deleteCategory(id), {
-        loading: 'Suppression de la catégorie...',
+        loading: t('products.deleting'),
       });
 
       if (categoryError) {
-        toast.error('Erreur lors de la suppression de la catégorie');
+        toast.error(t('products.deleteError'));
         return;
       }
 
-      toast.success('Catégorie supprimée avec succès');
+      toast.success(t('products.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -398,8 +401,8 @@ export default function AdminProductsPage() {
           await handleAddProduct(values as CreateProduct);
         }
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde du produit:', error);
-        toast.error('Une erreur est survenue lors de la sauvegarde du produit');
+        console.error('Error saving product:', error);
+        toast.error(t('products.saveError'));
       } finally {
         setSubmitting(false);
       }
@@ -428,8 +431,8 @@ export default function AdminProductsPage() {
           await handleAddCategory(values as CreateCategory);
         }
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde de la catégorie:', error);
-        toast.error('Une erreur est survenue lors de la sauvegarde de la catégorie');
+        console.error('Error saving category:', error);
+        toast.error(t('products.saveCategoryError'));
       } finally {
         setSubmitting(false);
       }
@@ -454,10 +457,8 @@ export default function AdminProductsPage() {
       <div className="flex-1 p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Produits</h1>
-            <p className="text-gray-600">
-              Gérez le catalogue de pièces détachées et les catégories
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('products.title')}</h1>
+            <p className="text-gray-600">{t('products.subtitle')}</p>
           </div>
         </div>
 
@@ -467,13 +468,11 @@ export default function AdminProductsPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
+                  <Package className="h-5 w-5 text-tsa-blue" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Produits</p>
-                  <p className="text-2xl font-bold">
-                    {stats?.products?.totalProducts || products?.length}
-                  </p>
+                  <p className="text-sm text-gray-600">{t('products.total')}</p>
+                  <p className="text-2xl font-bold">{stats?.products?.total || products?.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -486,9 +485,9 @@ export default function AdminProductsPage() {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Produits Actifs</p>
+                  <p className="text-sm text-gray-600">{t('products.active')}</p>
                   <p className="text-2xl font-bold">
-                    {stats?.products?.activeProducts ||
+                    {stats?.products?.active ||
                       products?.filter((product) => product.isActive).length}
                   </p>
                 </div>
@@ -503,8 +502,8 @@ export default function AdminProductsPage() {
                   <AlertTriangle className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Stock Faible</p>
-                  <p className="text-2xl font-bold">{stats?.products?.lowStockProducts}</p>
+                  <p className="text-sm text-gray-600">{t('products.lowStock')}</p>
+                  <p className="text-2xl font-bold">{stats?.products?.lowStock}</p>
                 </div>
               </div>
             </CardContent>
@@ -517,9 +516,9 @@ export default function AdminProductsPage() {
                   <TrendingUp className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Revenus Total</p>
+                  <p className="text-sm text-gray-600">{t('products.totalRevenue')}</p>
                   <p className="text-2xl font-bold">
-                    {(stats?.products?.totalValue / 1000000).toFixed(1)}M
+                    {(stats?.inventory?.totalValue / 1000000).toFixed(1)}M
                   </p>
                 </div>
               </div>
@@ -531,9 +530,11 @@ export default function AdminProductsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="products">
-              Produits ({stats?.products?.totalProducts || products?.length})
+              {t('products.productsTab', { count: stats?.products?.total || products?.length })}
             </TabsTrigger>
-            <TabsTrigger value="categories">Catégories ({categories.length})</TabsTrigger>
+            <TabsTrigger value="categories">
+              {t('products.categoriesTab', { count: categories.length })}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
@@ -544,7 +545,7 @@ export default function AdminProductsPage() {
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="Rechercher par nom, desc ou catégorie..."
+                      placeholder={t('products.searchPlaceholder')}
                       value={filters.search}
                       onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                       className="pl-10"
@@ -556,20 +557,22 @@ export default function AdminProductsPage() {
                       <Button variant="outline" className="w-fit justify-start">
                         <Filter className="mr-2 h-4 w-4" />
                         {filters.categoryId?.length ? (
-                          <span>{filters.categoryId.length} catégorie(s) sélectionnée(s)</span>
+                          <span>
+                            {t('products.categoriesSelected', { count: filters.categoryId.length })}
+                          </span>
                         ) : (
-                          <span>Filtrer par catégories</span>
+                          <span>{t('products.filterByCategories')}</span>
                         )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>Filtrer par catégories</DropdownMenuLabel>
+                      <DropdownMenuLabel>{t('products.filterByCategories')}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuCheckboxItem
                         checked={filters.categoryId?.length === 0}
                         onCheckedChange={() => setFilters((prev) => ({ ...prev, categoryId: [] }))}
                       >
-                        Toutes les catégories
+                        {t('products.allCategories')}
                       </DropdownMenuCheckboxItem>
                       {categories?.map((category) => (
                         <DropdownMenuCheckboxItem
@@ -627,14 +630,14 @@ export default function AdminProductsPage() {
                     }}
                   >
                     <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Filtrer par statut" />
+                      <SelectValue placeholder={t('products.filterByStatus')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="active">Actif</SelectItem>
-                      <SelectItem value="inactive">Inactif</SelectItem>
-                      <SelectItem value="low_stock">Stock Faible</SelectItem>
-                      <SelectItem value="out_of_stock">Rupture de stock</SelectItem>
+                      <SelectItem value="all">{t('products.allStatuses')}</SelectItem>
+                      <SelectItem value="active">{t('products.active')}</SelectItem>
+                      <SelectItem value="inactive">{t('products.inactive')}</SelectItem>
+                      <SelectItem value="low_stock">{t('products.lowStock')}</SelectItem>
+                      <SelectItem value="out_of_stock">{t('products.outOfStock')}</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -647,7 +650,7 @@ export default function AdminProductsPage() {
                     }}
                   >
                     <Plus className="h-4 w-4" />
-                    Nouveau Produit
+                    {t('products.addProduct')}
                   </Button>
                   <Sheet
                     open={isDialogOpen}
@@ -662,12 +665,12 @@ export default function AdminProductsPage() {
                     <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
                       <SheetHeader>
                         <SheetTitle>
-                          {editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}
+                          {editingProduct ? t('products.editProduct') : t('products.addProduct')}
                         </SheetTitle>
                         <SheetDescription>
                           {editingProduct
-                            ? 'Modifiez les détails du produit'
-                            : 'Remplissez les informations pour créer un nouveau produit'}
+                            ? t('products.editProductDescription')
+                            : t('products.addProductDescription')}
                         </SheetDescription>
                       </SheetHeader>
                       <div className="p">
@@ -691,7 +694,9 @@ export default function AdminProductsPage() {
             {/* Liste des produits */}
             <Card>
               <CardHeader>
-                <CardTitle>{`Catalogue des Produits (${filteredProducts.length})`}</CardTitle>
+                <CardTitle>
+                  {t('products.catalogTitle', { count: filteredProducts.length })}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -717,20 +722,20 @@ export default function AdminProductsPage() {
                           <div className="min-w-0">
                             <h3 className="font-medium truncate">{product.name}</h3>
                             <p className="text-sm text-gray-500 truncate">
-                              {product.description || 'Aucune description'}
+                              {product.description || t('products.noDescription')}
                             </p>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <Badge
                                 variant={product.isActive ? 'default' : 'secondary'}
                                 className="whitespace-nowrap"
                               >
-                                {product.isActive ? 'Actif' : 'Inactif'}
+                                {product.isActive ? t('products.active') : t('products.inactive')}
                               </Badge>
                               <Badge
                                 variant={isLowStock ? 'destructive' : 'outline'}
                                 className="whitespace-nowrap"
                               >
-                                {product.stock} en stock
+                                {t('products.inStockCount', { count: product.stock })}
                               </Badge>
                               {product.category && (
                                 <Badge variant="secondary" className="whitespace-nowrap">
@@ -758,7 +763,7 @@ export default function AdminProductsPage() {
                                     isActive: !product.isActive,
                                   });
                                   if (productError) {
-                                    toast.error('Erreur lors de la mise à jour du produit');
+                                    toast.error(t('products.updateError'));
                                     return;
                                   }
                                 } catch (error) {
@@ -779,7 +784,7 @@ export default function AdminProductsPage() {
                               onClick={() => handleEditProduct(product)}
                             >
                               <Edit className="h-3 w-3" />
-                              Modifier
+                              {t('products.edit')}
                             </Button>
                             <Button
                               size="sm"
@@ -788,7 +793,7 @@ export default function AdminProductsPage() {
                               onClick={() => handleDeleteProduct(product.id)}
                             >
                               <Trash2 className="h-3 w-3" />
-                              Supprimer
+                              {t('products.delete')}
                             </Button>
                           </div>
                         </div>
@@ -799,7 +804,7 @@ export default function AdminProductsPage() {
 
                 {filteredProducts.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">Aucun produit trouvé avec ces critères.</p>
+                    <p className="text-gray-500">{t('products.noProductsFound')}</p>
                   </div>
                 )}
               </CardContent>
@@ -809,7 +814,7 @@ export default function AdminProductsPage() {
           <TabsContent value="categories" className="mt-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Gestion des Catégories</CardTitle>
+                <CardTitle>{t('products.categoryManagement')}</CardTitle>
                 <Button
                   className="gap-2 bg-tsa-blue"
                   onClick={() => {
@@ -819,7 +824,7 @@ export default function AdminProductsPage() {
                   }}
                 >
                   <Plus className="h-4 w-4" />
-                  Nouvelle Catégorie
+                  {t('products.addCategory')}
                 </Button>
                 <Sheet
                   open={isDialogOpen}
@@ -834,14 +839,12 @@ export default function AdminProductsPage() {
                   <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>
-                        {editingCategory
-                          ? 'Modifier la catégorie'
-                          : 'Ajouter une nouvelle catégorie'}
+                        {editingCategory ? t('products.editCategory') : t('products.addCategory')}
                       </SheetTitle>
                       <SheetDescription>
                         {editingCategory
-                          ? 'Modifiez les détails de la catégorie'
-                          : 'Remplissez les informations pour créer une nouvelle catégorie'}
+                          ? t('products.editCategoryDescription')
+                          : t('products.addCategoryDescription')}
                       </SheetDescription>
                     </SheetHeader>
                     <div className="p">
@@ -868,19 +871,21 @@ export default function AdminProductsPage() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Tag className="h-5 w-5 text-blue-600" />
+                          <Tag className="h-5 w-5 text-tsa-blue" />
                         </div>
 
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-gray-900">{category.name}</h4>
                             <Badge variant="outline">
-                              {category.isActive ? 'ACTIF' : 'INACTIF'}
+                              {category.isActive
+                                ? tCommon('status.active')
+                                : tCommon('status.inactive')}
                             </Badge>
                           </div>
 
                           <div className="text-sm text-gray-600">
-                            {category.products?.length || 0} produits
+                            {category.products?.length || 0} {t('dashboard.labels.products')}
                           </div>
 
                           {/*  */}
@@ -919,7 +924,7 @@ export default function AdminProductsPage() {
                           onClick={() => handleEditCategory(category)}
                         >
                           <Edit className="h-3 w-3" />
-                          Modifier
+                          {tCommon('actions.edit')}
                         </Button>
                         <Button
                           variant="outline"
@@ -928,7 +933,7 @@ export default function AdminProductsPage() {
                           onClick={() => handleDeleteCategory(category.id)}
                         >
                           <Trash2 className="h-3 w-3" />
-                          Supprimer
+                          {tCommon('actions.delete')}
                         </Button>
                       </div>
                     </div>

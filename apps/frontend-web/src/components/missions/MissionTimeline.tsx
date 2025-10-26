@@ -6,6 +6,8 @@ import { Clock, CheckCircle, AlertTriangle, FileText, MessageSquare, Loader2 } f
 import type { Mission } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import { useEffect, useState } from 'react';
+import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { getStatusLabel } from '@/lib/mission-utils';
 
 interface TimelineEvent {
   id: string;
@@ -29,6 +31,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   useEffect(() => {
     const fetchMissionHistory = async () => {
@@ -40,7 +44,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         const response = await missionService.getMissionHistory(mission.id);
 
         if (response.error) {
-          setError("Erreur lors du chargement de l'historique");
+          setError(tCommon('error.loadingHistory'));
           // Fallback to generated events
           setEvents(generateTimelineEvents());
         } else if (response.data?.missions?.data) {
@@ -61,7 +65,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           setEvents(generateTimelineEvents());
         }
       } catch {
-        setError("Erreur lors du chargement de l'historique");
+        setError(tCommon('error.loadingHistory'));
         // Fallback to generated events
         setEvents(generateTimelineEvents());
       } finally {
@@ -86,8 +90,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           historyEvents.push({
             id: `history-status-${historyMission.id}-${index}`,
             type: 'status_change',
-            title: `Statut mis à jour: ${getStatusLabel(historyMission.status)}`,
-            description: `Changement de "${getStatusLabel(previousMission.status)}" vers "${getStatusLabel(historyMission.status)}"`,
+            title: `${tMissions('timeline.statusUpdated')}: ${getStatusLabel(historyMission.status)}`,
+            description: `${tMissions('timeline.statusChange')} "${getStatusLabel(previousMission.status)}" ${tCommon('to')} "${getStatusLabel(historyMission.status)}"`,
             date: historyMission.updatedAt,
           });
         }
@@ -102,8 +106,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           historyEvents.push({
             id: `history-location-${historyMission.id}-${index}`,
             type: 'status_change',
-            title: 'Position mise à jour',
-            description: `Nouvelle position: ${historyMission.currentPosition.lat.toFixed(4)}, ${historyMission.currentPosition.lng.toFixed(4)}`,
+            title: tMissions('timeline.positionUpdated'),
+            description: `${tMissions('timeline.newPosition')}: ${historyMission.currentPosition.lat.toFixed(4)}, ${historyMission.currentPosition.lng.toFixed(4)}`,
             date: historyMission.lastPositionUpdate || historyMission.updatedAt,
           });
         }
@@ -121,11 +125,11 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     events.push({
       id: 'created',
       type: 'status_change',
-      title: 'Mission créée',
+      title: tMissions('timeline.missionCreated'),
       date: mission.createdAt,
       user: {
         id: mission.affreteurId,
-        name: 'Affréteur',
+        name: tMissions('roles.affreteur'),
         role: 'affreteur',
       },
     });
@@ -135,7 +139,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'status-update',
         type: 'status_change',
-        title: `Statut mis à jour: ${getStatusLabel(mission.status)}`,
+        title: `${tMissions('timeline.statusUpdated')}: ${getStatusLabel(mission.status)}`,
         date: mission.updatedAt,
         metadata: {
           previousStatus: 'draft',
@@ -149,8 +153,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'estimated-departure',
         type: 'status_change',
-        title: 'Date de départ estimée définie',
-        description: `Prévu le ${format(new Date(mission.dateDepartEstime), 'PPP', { locale: fr })}`,
+        title: tMissions('timeline.estimatedDepartureSet'),
+        description: `${tMissions('timeline.scheduledFor')} ${format(new Date(mission.dateDepartEstime), 'PPP', { locale: fr })}`,
         date: mission.dateDepartEstime,
       });
     }
@@ -159,8 +163,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'estimated-arrival',
         type: 'status_change',
-        title: "Date d'arrivée prévue définie",
-        description: `Prévu le ${format(new Date(mission.dateArriveePrevue), 'PPP', { locale: fr })}`,
+        title: tMissions('timeline.expectedArrivalSet'),
+        description: `${tMissions('timeline.scheduledFor')} ${format(new Date(mission.dateArriveePrevue), 'PPP', { locale: fr })}`,
         date: mission.dateArriveePrevue,
       });
     }
@@ -170,8 +174,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'actual-departure',
         type: 'status_change',
-        title: 'Départ effectif',
-        description: `Départ le ${format(new Date(mission.dateDebutReelle), 'PPPp', { locale: fr })}`,
+        title: tMissions('timeline.actualDeparture'),
+        description: `${tMissions('timeline.departedOn')} ${format(new Date(mission.dateDebutReelle), 'PPPp', { locale: fr })}`,
         date: mission.dateDebutReelle,
       });
     }
@@ -180,8 +184,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'actual-arrival',
         type: 'status_change',
-        title: 'Arrivée effective',
-        description: `Arrivée le ${format(new Date(mission.dateFinReelle), 'PPPp', { locale: fr })}`,
+        title: tMissions('timeline.actualArrival'),
+        description: `${tMissions('timeline.arrivedOn')} ${format(new Date(mission.dateFinReelle), 'PPPp', { locale: fr })}`,
         date: mission.dateFinReelle,
       });
     }
@@ -191,8 +195,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'rating-affreteur',
         type: 'note',
-        title: "Évaluation de l'affréteur",
-        description: `Note: ${'★'.repeat(mission.ratingAffreteur)}${'☆'.repeat(5 - mission.ratingAffreteur)}`,
+        title: tMissions('timeline.affreteurRating'),
+        description: `${tMissions('timeline.rating')}: ${'★'.repeat(mission.ratingAffreteur)}${'☆'.repeat(5 - mission.ratingAffreteur)}`,
         date: mission.updatedAt,
       });
     }
@@ -201,8 +205,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'rating-transporteur',
         type: 'note',
-        title: 'Évaluation du transporteur',
-        description: `Note: ${'★'.repeat(mission.ratingTransporteur)}${'☆'.repeat(5 - mission.ratingTransporteur)}`,
+        title: tMissions('timeline.transporteurRating'),
+        description: `${tMissions('timeline.rating')}: ${'★'.repeat(mission.ratingTransporteur)}${'☆'.repeat(5 - mission.ratingTransporteur)}`,
         date: mission.updatedAt,
       });
     }
@@ -212,7 +216,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'comment-affreteur',
         type: 'message',
-        title: "Commentaire de l'affréteur",
+        title: tMissions('timeline.affreteurComment'),
         description: mission.commentaireAffreteur,
         date: mission.updatedAt,
       });
@@ -222,7 +226,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       events.push({
         id: 'comment-transporteur',
         type: 'message',
-        title: 'Commentaire du transporteur',
+        title: tMissions('timeline.transporteurComment'),
         description: mission.commentaireTransporteur,
         date: mission.updatedAt,
       });
@@ -230,17 +234,6 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
     // Sort events by date (newest first)
     return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      draft: 'Brouillon',
-      published: 'Publiée',
-      assigned: 'Assignée',
-      completed: 'Terminée',
-      cancelled: 'Annulée',
-    };
-    return labels[status] || status;
   };
 
   const getEventIcon = (event: TimelineEvent) => {
@@ -262,31 +255,55 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            {tMissions('timeline.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2">{tCommon('loading')}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            {tMissions('timeline.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-red-600">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
+            <p>{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Historique de la mission</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="h-5 w-5" />
+          {tMissions('timeline.title')}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Chargement de l'historique...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-            <p className="text-muted-foreground mb-2">{error}</p>
-            <p className="text-xs text-muted-foreground">
-              Affichage des données de base disponibles
-            </p>
-          </div>
-        ) : null}
-
-        {events.length === 0 && !isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun événement à afficher pour le moment
-          </div>
+        {events.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">{tMissions('timeline.noEvents')}</p>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-6">
@@ -309,9 +326,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                       <p className="text-sm text-muted-foreground">{event.description}</p>
                     )}
                     {event.user && (
-                      <div className="text-xs text-muted-foreground">
-                        Par {event.user.name} ({event.user.role})
-                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {tMissions('timeline.by')} {event.user.name}
+                      </p>
                     )}
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import { Heart, ShoppingCart, Eye, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProductCardProps } from '@/types/product.types';
 import { Input } from '../ui/input';
+import { useShopTranslation } from '@/hooks/useTranslation';
 
 export function ProductCard({
   product,
@@ -18,6 +19,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [qty, setQty] = useState(1);
+  const { t: tShop } = useShopTranslation();
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -79,7 +81,7 @@ export function ProductCard({
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => onQuickView?.(product)}>
                     <Eye className="h-4 w-4 mr-2" />
-                    Aperçu Rapide
+                    {tShop('quickView')}
                   </Button>
                   <Button
                     size="sm"
@@ -88,7 +90,7 @@ export function ProductCard({
                     style={{ backgroundColor: product.stock ? 'var(--tsa-blue)' : undefined }}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {product.stock ? 'Ajouter au Panier' : 'Rupture de Stock'}
+                    {product.stock ? tShop('addToCart') : tShop('outOfStock')}
                   </Button>
                 </div>
               </div>
@@ -148,7 +150,7 @@ export function ProductCard({
           {/* Stock indicator */}
           {!product.stock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <Badge variant="destructive">Rupture de Stock</Badge>
+              <Badge variant="destructive">{tShop('outOfStock')}</Badge>
             </div>
           )}
         </div>
@@ -179,7 +181,7 @@ export function ProductCard({
               <Button
                 variant="outline"
                 className="w-fit h-auto has-[>svg]:px-1"
-                aria-label="Diminuer la quantité"
+                aria-label={tShop('decreaseQuantity')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setQty(qty - 1);
@@ -189,7 +191,7 @@ export function ProductCard({
                 <Minus className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Input
-                aria-label="Quantité"
+                aria-label={tShop('quantity')}
                 className="w-fit text-center h-auto"
                 type="number"
                 min={1}
@@ -205,7 +207,7 @@ export function ProductCard({
               <Button
                 className="w-fit h-auto has-[>svg]:px-1 "
                 variant="outline"
-                aria-label="Augmenter la quantité"
+                aria-label={tShop('increaseQuantity')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setQty(qty + 1);

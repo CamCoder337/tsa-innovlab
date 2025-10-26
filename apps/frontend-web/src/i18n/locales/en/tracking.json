@@ -1,0 +1,238 @@
+{
+  "title": "Tracking",
+  "dashboard": {
+    "title": "Tracking Dashboard",
+    "subtitle": "Manage your shipments and track your performance",
+    "adminTitle": "Admin Control Center",
+    "adminSubtitle": "Global supervision of TSA Logistics system"
+  },
+  "navigation": {
+    "back": "Back",
+    "backToDashboard": "Back to dashboard",
+    "newMission": "New Mission",
+    "detailedTracking": "Detailed mission tracking"
+  },
+  "status": {
+    "published": "Published",
+    "assigned": "Assigned",
+    "in_progress": "In Progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "draft": "Draft"
+  },
+  "kpis": {
+    "totalMissions": "Total Missions",
+    "activeMissions": "Active",
+    "completedMissions": "Completed",
+    "revenue": "Revenue",
+    "activeVehicles": "Active Vehicles",
+    "activeDrivers": "Active Drivers",
+    "systemUptime": "System Uptime",
+    "responseTime": "Response time",
+    "completedToday": "completed today"
+  },
+  "mission": {
+    "notFound": "Mission not found",
+    "notFoundMessage": "The mission with ID \"{{id}}\" does not exist.",
+    "status": "Status",
+    "price": "Price",
+    "merchandise": "Merchandise",
+    "deliveryScheduled": "Scheduled delivery",
+    "weight": "{{weight}} kg",
+    "information": "Mission information",
+    "description": "Description",
+    "merchandiseType": "Merchandise type",
+    "estimatedDeparture": "Estimated departure date",
+    "expectedArrival": "Expected arrival date"
+  },
+  "timeline": {
+    "title": "Mission timeline",
+    "published": {
+      "label": "Mission published",
+      "description": "Mission created and published on the platform"
+    },
+    "assigned": {
+      "label": "Transporter assigned",
+      "description": "A transporter has been assigned to this mission",
+      "pending": "Awaiting assignment"
+    },
+    "inProgress": {
+      "label": "Transport in progress",
+      "description": "Transport is currently being carried out"
+    },
+    "completed": {
+      "label": "Mission completed",
+      "description": "Mission completed successfully"
+    }
+  },
+  "transporter": {
+    "title": "Transporter information",
+    "verified": "Verified professional",
+    "call": "Call",
+    "message": "Message",
+    "lastPosition": "Last position",
+    "positionUpdate": "Updated: {{date}}",
+    "realTimePosition": "Real-time position"
+  },
+  "tabs": {
+    "realTimeTracking": "Real-time tracking",
+    "timeline": "Timeline",
+    "documents": "Documents",
+    "overview": "Overview",
+    "fleetManagement": "Fleet Management",
+    "performance": "Performance",
+    "alertsIncidents": "Alerts & Incidents",
+    "analytics": "Analytics",
+    "missionDetails": "Mission Details",
+    "currentMission": "Current Mission",
+    "myMissions": "My Missions",
+    "vehicleStatus": "Vehicle Status",
+    "earnings": "Earnings & Performance",
+    "costs": "Costs & Budget"
+  },
+  "map": {
+    "title": "Real-Time Tracking",
+    "globalView": "Global Network View",
+    "close": "Close",
+    "filters": "Filters",
+    "satelliteView": "Satellite View",
+    "activeVehicles": "Active vehicles ({{count}})",
+    "incidents": "Incidents ({{count}})",
+    "delays": "Delays ({{count}})",
+    "lastUpdate": "Last update: {{time}}"
+  },
+  "actions": {
+    "share": "Share",
+    "exportPdf": "Export PDF",
+    "fullscreen": "Fullscreen",
+    "exportReport": "Export Report",
+    "refresh": "Refresh",
+    "emergencyMode": "Emergency Mode",
+    "viewAlerts": "View Alerts",
+    "markAllRead": "Mark all read",
+    "resolve": "Resolve",
+    "details": "Details",
+    "viewAll": "View all alerts",
+    "openGPS": "Open GPS",
+    "markDelivered": "Mark Delivered",
+    "markAsDelivered": "Mark as Delivered",
+    "reportProblem": "Report Problem",
+    "viewDetails": "View details",
+    "assignMission": "Assign mission",
+    "contact": "Contact",
+    "viewHistory": "View history",
+    "editMission": "Edit mission",
+    "cancelMission": "Cancel mission",
+    "completeMission": "Complete mission"
+  },
+  "alerts": {
+    "title": "Recent Alerts",
+    "management": "Alert Management",
+    "critical": "critical alert(s) require your attention",
+    "checkTab": "Check the \"Alerts & Incidents\" tab for more details",
+    "vehicleBreakdown": "Vehicle breakdown",
+    "breakdownMessage": "Vehicle {{vehicle}} is broken down at {{location}}",
+    "maintenanceReminder": "Maintenance reminder",
+    "maintenanceMessage": "Vehicle {{vehicle}} requires maintenance in {{days}} days",
+    "fuelLow": "Low fuel",
+    "fuelMessage": "Vehicle {{vehicle}} has low fuel level ({{level}}%)",
+    "deliveryDelay": "Delivery delay",
+    "delayMessage": "Mission {{mission}} will be {{delay}} late",
+    "newDriver": "New driver",
+    "newDriverMessage": "{{name}} has joined the transport team"
+  },
+  "performance": {
+    "title": "Performance",
+    "onTimeDelivery": "On-time delivery",
+    "customerSatisfaction": "Customer satisfaction",
+    "fleetUtilization": "Fleet utilization",
+    "fuelEfficiency": "Fuel efficiency",
+    "evolution": "Performance Evolution",
+    "target": "Target: {{target}}{{unit}}",
+    "chart30Days": "30-day performance chart",
+    "basedOnReviews": "Based on {{count}} reviews",
+    "successRate": "Success rate",
+    "averageDelay": "Average delay",
+    "savings": "Savings achieved",
+    "responseTime": "Response time",
+    "monthlyBudget": "Monthly Budget",
+    "fcfaThisMonth": "FCFA this month",
+    "costPerKm": "Cost per km"
+  },
+  "metrics": {
+    "realTime": "Real-time Metrics",
+    "networkEfficiency": "Network efficiency",
+    "activeMissions": "Active missions",
+    "occupancyRate": "Occupancy rate",
+    "dailyRevenue": "Daily revenue"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "manageDrivers": "Manage Drivers",
+    "fleetStatus": "Fleet Status",
+    "urgentMissions": "Urgent Missions",
+    "reports": "Reports"
+  },
+  "analytics": {
+    "avgDeliveryTime": "2.3 days",
+    "budgetUsed": "73% of budget used",
+    "costPerTransport": "Cost per Transport",
+    "savingsRealized": "Savings Realized",
+    "fcfaSaved": "FCFA saved",
+    "vsLastMonth": "↗ +12% vs last month",
+    "revenueAnalysis": "Revenue Analysis",
+    "fleetUtilization": "Fleet Utilization",
+    "aiPredictions": "AI Predictions",
+    "expectedDemand": "Expected Demand",
+    "routeOptimization": "Route Optimization",
+    "maintenance": "Maintenance",
+    "nextWeek": "Next week",
+    "fuelSavings": "Fuel savings",
+    "scheduledMaintenance": "Scheduled maintenance",
+    "revenueByRegion": "Revenue by region chart",
+    "vehicleUtilization": "Vehicle utilization chart",
+    "vehicles": "vehicles",
+    "shipmentEvolution": "Shipment Evolution",
+    "monthlyShipmentChart": "Monthly shipment chart",
+    "destinationBreakdown": "Destination Breakdown",
+    "destinationPieChart": "Destination pie chart"
+  },
+  "documents": {
+    "title": "Mission documents",
+    "noDocuments": "No documents available for this mission",
+    "documentsWillShow": "Documents will be displayed here once uploaded"
+  },
+  "empty": {
+    "noMissions": "No missions found",
+    "noMissionsMessage": "Create your first mission to start tracking"
+  },
+  "vehicle": {
+    "speed": "Speed",
+    "status": "Vehicle Status",
+    "battery": "Battery",
+    "fuel": "Fuel",
+    "currentSpeed": "Current speed",
+    "maintenanceStatus": "Maintenance status",
+    "maintenanceGood": "Good",
+    "maintenanceWarning": "Warning",
+    "maintenanceCritical": "Critical",
+    "currentPosition": "Current position",
+    "lastUpdate": "Last update",
+    "averageSpeed": "Average speed",
+    "drivingHistory": "Driving History",
+    "kmToday": "Km driven today",
+    "drivingTime": "Driving time",
+    "consumption": "Consumption",
+    "ecoScore": "Eco-driving score"
+  },
+  "missions": {
+    "priorityMissions": "Priority Missions",
+    "list": "Mission List",
+    "myMissions": "My Missions",
+    "noActiveMission": "No active mission",
+    "noActiveMissionMessage": "You have no mission in progress. Check your assigned missions.",
+    "departure": "Departure",
+    "arrival": "Arrival",
+    "scheduledDelivery": "Scheduled delivery"
+  }
+}

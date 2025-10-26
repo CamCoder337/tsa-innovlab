@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Plus, MessageCircle, Users, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,16 +9,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { ConversationType, type ConversationListItem } from '@/types/chat.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 interface ChatListProps {
   onSelectConversation: (conversation: ConversationListItem) => void;
   onCreateConversation: () => void;
 }
 
-export const ChatList: React.FC<ChatListProps> = ({
-  onSelectConversation,
-  onCreateConversation,
-}) => {
+export default function ChatList({ onSelectConversation, onCreateConversation }: ChatListProps) {
+  const { t } = useFormsTranslation();
   const { user } = useAuth();
   const { conversations, isLoading, error, currentConversation, clearError } = useChat();
 
@@ -91,23 +90,24 @@ export const ChatList: React.FC<ChatListProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
-            Messages
+            {t('sections.messages')}
           </h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onCreateConversation}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-tsa-blue hover:text-blue-700"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4 mr-2" />
+            {t('buttons.newConversation')}
           </Button>
         </div>
 
         {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Rechercher une conversation..."
+            placeholder={t('placeholders.searchConversations')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -122,7 +122,8 @@ export const ChatList: React.FC<ChatListProps> = ({
             onClick={() => setFilterType('all')}
             className="text-xs"
           >
-            Toutes
+            <MessageCircle className="h-4 w-4 mr-2" />
+            {t('buttons.all')}
           </Button>
           <Button
             variant={filterType === ConversationType.DIRECT ? 'default' : 'ghost'}
@@ -144,6 +145,15 @@ export const ChatList: React.FC<ChatListProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="p-4">
+          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
@@ -249,7 +259,9 @@ export const ChatList: React.FC<ChatListProps> = ({
                               : 'text-gray-500'
                           }`}
                         >
-                          {conversation.lastMessage.senderId === user?.id ? 'Vous: ' : ''}
+                          {conversation.lastMessage.senderId === user?.id
+                            ? t('messages.you') + ': '
+                            : ''}
                           {conversation.lastMessage.content}
                         </p>
                       )}
@@ -263,4 +275,4 @@ export const ChatList: React.FC<ChatListProps> = ({
       </div>
     </div>
   );
-};
+}

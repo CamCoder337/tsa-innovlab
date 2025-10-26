@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 import type { ForgotPasswordRequest } from '@/types/auth.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -27,6 +28,8 @@ export default function ForgotPasswordForm({
   isSubmitting = false,
   isSubmitted = false,
 }: ForgotPasswordFormProps) {
+  const { t } = useFormsTranslation();
+
   return (
     <Formik<ForgotPasswordRequest>
       initialValues={INITIAL_VALUES}
@@ -39,11 +42,11 @@ export default function ForgotPasswordForm({
         isSubmitted ? (
           <>
             <p className="text-gray-600 mb-6">
-              Un lien de réinitialisation a été envoyé à <strong>{values.email}</strong>
+              {t('messages.resetLinkSent')} <strong>{values.email}</strong>
             </p>
             <Link to="/">
               <Button className="w-full h-12 bg-tsa-blue/90 text-white font-semibold">
-                Retour à la connexion
+                {t('actions.backToLogin')}
               </Button>
             </Link>
           </>
@@ -53,7 +56,7 @@ export default function ForgotPasswordForm({
               <Input
                 name="email"
                 type="email"
-                placeholder="Entrez votre Email"
+                placeholder={t('placeholders.enterEmail')}
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -72,12 +75,12 @@ export default function ForgotPasswordForm({
               loading={isSubmitting}
               disabled={isSubmitting}
             >
-              ENVOYER LE LIEN
+              {t('actions.sendResetLink')}
             </Button>
 
             <div className="text-center">
               <Link to="/" className="text-tsa-blue font-medium">
-                ← Retour à la connexion
+                ← {t('actions.backToLogin')}
               </Link>
             </div>
           </Form>

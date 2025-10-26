@@ -193,7 +193,7 @@ export const MyVehicles: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">En mission</p>
-              <p className="text-2xl font-bold text-blue-600">{getInUseCount()}</p>
+              <p className="text-2xl font-bold text-tsa-blue">{getInUseCount()}</p>
             </div>
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               🚚
@@ -316,7 +316,7 @@ export const MyVehicles: React.FC = () => {
             <p className="text-gray-600">Aucun véhicule trouvé</p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="mt-4 text-blue-600 hover:text-blue-800"
+              className="mt-4 text-tsa-blue hover:text-blue-800"
             >
               Ajouter votre premier véhicule
             </button>
@@ -389,7 +389,7 @@ export const MyVehicles: React.FC = () => {
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => setEditingVehicle(vehicle)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-tsa-blue hover:text-blue-900"
                           title="Modifier"
                         >
                           <Edit className="w-4 h-4" />

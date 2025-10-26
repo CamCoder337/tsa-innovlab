@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useMissions } from '@/hooks/useMissions';
+import { useMissionsTranslation } from '@/hooks/useTranslation';
 
 export default function MissionDetailsPage() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function MissionDetailsPage() {
   const { user } = useAuth();
   const { currentMission, isLoading, error, fetchMission } = useMissions();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
+  const { t } = useMissionsTranslation();
 
   // Fetch mission data when component mounts or ID changes
   useEffect(() => {
@@ -40,11 +42,11 @@ export default function MissionDetailsPage() {
         commentaire,
       });
       if (response.data) {
-        toast.success(`Mission ${status} successfully`);
+        toast.success(t('messages.statusUpdatedSuccess', { status }));
       }
     } catch (error) {
       console.error('Error updating mission status:', error);
-      toast.error('Failed to update mission status');
+      toast.error(t('messages.statusUpdateFailed'));
     }
   };
 
@@ -53,7 +55,7 @@ export default function MissionDetailsPage() {
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="flex items-center gap-2">
           <Loader2 className="animate-spin h-12 w-12 text-tsa-blue" />
-          <span>Loading mission details...</span>
+          <span>{t('details.loadingMessage')}</span>
         </div>
       </div>
     );
@@ -64,12 +66,12 @@ export default function MissionDetailsPage() {
     return (
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="text-center space-y-4">
-          <p className="text-red-600">Error loading mission: {error}</p>
+          <p className="text-red-600">{t('details.errorLoading', { error })}</p>
           <Button onClick={() => id && fetchMission(id)} variant="outline">
-            Try Again
+            {t('details.tryAgain')}
           </Button>
           <Button onClick={() => navigate('/app/missions')} variant="ghost">
-            Back to Missions
+            {t('details.backToMissions')}
           </Button>
         </div>
       </div>
@@ -92,7 +94,9 @@ export default function MissionDetailsPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-3xl font-bold">Mission: {currentMission.title}</h1>
+        <h1 className="text-3xl font-bold">
+          {t('details.title', { title: currentMission.title })}
+        </h1>
         <div className="ml-auto">
           <MissionActions
             mission={currentMission}
@@ -108,18 +112,18 @@ export default function MissionDetailsPage() {
         onValueChange={setActiveTab}
         className={currentMission.status !== 'draft' ? 'space-y-4' : ''}
       >
-        <TabsList>
+        <TabsList className={currentMission.status !== 'draft' ? 'w-full grid grid-cols-4' : ''}>
           {currentMission.status !== 'draft' && (
             <>
-              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="details">{t('details.tabs.details')}</TabsTrigger>
               {/* {user?.role !== 'transporteur' && <TabsTrigger value="offers">Offers</TabsTrigger>} */}
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
+              <TabsTrigger value="timeline">{t('details.tabs.timeline')}</TabsTrigger>
+              <TabsTrigger value="appreciation">{t('details.tabs.appreciation')}</TabsTrigger>
               {/* {currentMission.status === 'completed' && (
-                <TabsTrigger value="appreciation">Appreciation</TabsTrigger>
+                <TabsTrigger value="appreciation">{t('details.tabs.appreciation')}</TabsTrigger>
               )} */}
               {(user?.role === 'affreteur' || user?.role === 'admin') && (
-                <TabsTrigger value="financial">Financial</TabsTrigger>
+                <TabsTrigger value="financial">{t('details.tabs.financial')}</TabsTrigger>
               )}
             </>
           )}

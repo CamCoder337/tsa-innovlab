@@ -25,6 +25,7 @@ import { authService } from '@/services/auth.service';
 import type { UpdateUserRequest } from '@/types/auth.types';
 import { Link } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type DocumentStatus = 'verified' | 'pending' | 'missing';
 
@@ -39,6 +40,8 @@ export interface Document {
 function AffreteurProfile() {
   const { user, updateUser } = useAuth();
   const { myMissions } = useMissions();
+  const { t } = useProfileTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [kycUploading, setKycUploading] = useState<string | null>(null);
@@ -48,29 +51,29 @@ function AffreteurProfile() {
       status: 'verified',
       fileName: 'carte_identite.pdf',
       uploadDate: '2024-01-15',
-      label: "Carte d'identité",
-      placeholder: "Glissez votre carte d'identité ici",
+      label: t('kyc.documentTypes.identity'),
+      placeholder: t('kyc.placeholders.identity'),
     },
     businessLicense: {
       status: 'pending',
       fileName: 'licence_commerciale.pdf',
       uploadDate: '2024-01-20',
-      label: 'Licence Commerciale',
-      placeholder: 'Glissez votre licence commerciale ici',
+      label: t('kyc.documentTypes.businessLicense'),
+      placeholder: t('kyc.placeholders.businessLicense'),
     },
     taxCertificate: {
       status: 'missing',
       fileName: null,
       uploadDate: null,
-      label: 'Certificat de taxe',
-      placeholder: 'Glissez votre certificat de taxe ici',
+      label: t('kyc.documentTypes.taxCertificate'),
+      placeholder: t('kyc.placeholders.taxCertificate'),
     },
     bankStatement: {
       status: 'verified',
       fileName: 'releve_bancaire.pdf',
       uploadDate: '2024-01-10',
-      label: 'Relevé bancaire',
-      placeholder: 'Glissez votre dernier relevé bancaire trimestriel ici',
+      label: t('kyc.documentTypes.bankStatement'),
+      placeholder: t('kyc.placeholders.bankStatement'),
     },
   });
 
@@ -90,7 +93,7 @@ function AffreteurProfile() {
       }));
     } catch (error) {
       console.error(error);
-      console.error('Erreur lors du téléchargement du document');
+      console.error(t('errors.documentUploadError'));
     } finally {
       setKycUploading(null);
     }
@@ -104,18 +107,18 @@ function AffreteurProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || 'Erreur lors de la mise à jour du profil');
+        toast.error(response.error.message || t('errors.updateError'));
       }
 
       if (response.data) {
         handleKycUpload();
         updateUser(response.data);
-        toast.success('Profil mis à jour avec succès');
+        toast.success(t('updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      console.error('Erreur lors de la mise à jour du profil');
+      console.error(t('errors.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -140,7 +143,7 @@ function AffreteurProfile() {
       if (hasChanges) {
         handleSave(differences as UpdateUserRequest);
       } else {
-        toast('Aucune modification détectée');
+        toast(tCommon('messages.noChangesDetected'));
       }
     }
   };
@@ -153,14 +156,18 @@ function AffreteurProfile() {
   if (!user) return null;
 
   const stats = [
-    { label: 'Missions Créées', value: myMissions?.length || 0, icon: Package },
+    { label: t('stats.missionsCreated'), value: myMissions?.length || 0, icon: Package },
     {
-      label: 'Missions Terminées',
+      label: t('stats.missionsCompleted'),
       value: myMissions?.filter((mission) => mission.status === 'completed').length || 0,
       icon: TrendingUp,
     },
-    { label: 'Note Moyenne', value: '4.8/5', icon: Star },
-    { label: 'Membre Depuis', value: format(new Date(user.createdAt), 'MMM yyyy'), icon: Calendar },
+    { label: t('stats.averageRating'), value: '4.8/5', icon: Star },
+    {
+      label: t('stats.memberSince'),
+      value: format(new Date(user.createdAt), 'MMM yyyy'),
+      icon: Calendar,
+    },
   ];
 
   const kycProgress = Object.values(kycDocuments).filter((doc) => doc.status === 'verified').length;
@@ -171,21 +178,19 @@ function AffreteurProfile() {
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-          <p className="text-muted-foreground">
-            Gérez vos informations personnelles et vos préférences
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
             <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
               <Edit className="h-4 w-4" />
-              Modifier
+              {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
               <Button variant="outline" className="gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                Paramètres
+                {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
@@ -199,7 +204,7 @@ function AffreteurProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isLoading ? t('profile.actions.saving') : t('profile.actions.save')}
             </Button>
             <Button
               variant="outline"
@@ -208,7 +213,7 @@ function AffreteurProfile() {
               onClick={handleCancel}
             >
               <X className="h-4 w-4" />
-              Annuler
+              {tCommon('actions.cancel')}
             </Button>
           </div>
         )}
@@ -219,7 +224,7 @@ function AffreteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Informations Personnelles
+              {t('sections.personalInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 lg:grid-cols-2  gap-6 justify-between">
@@ -245,7 +250,7 @@ function AffreteurProfile() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    Statistiques
+                    {t('sections.statistics')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -298,12 +303,12 @@ function AffreteurProfile() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Documents KYC (Know Your Customer)
+              {t('sections.kycDocuments')}
               <Badge
                 variant="outline"
                 className={`ml-auto ${kycPercentage === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}
               >
-                {kycProgress}/{totalKycDocs} Vérifiés
+                {kycProgress}/{totalKycDocs} {t('kyc.verified')}
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -320,18 +325,14 @@ function AffreteurProfile() {
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-medium text-blue-900">Pourquoi ces documents ?</h4>
-                  <p className="text-sm text-blue-700">
-                    La vérification KYC nous permet de sécuriser la plateforme et de respecter les
-                    réglementations. Vos documents sont traités de manière confidentielle et
-                    sécurisée.
-                  </p>
-                  <ul className="text-xs text-blue-600 mt-2 space-y-1">
-                    <li>• Formats acceptés: PDF, JPG, PNG (max 5MB)</li>
-                    <li>• Vérification sous 24-48h ouvrées</li>
-                    <li>• Documents stockés de manière sécurisée</li>
+                  <h4 className="text-sm font-medium text-blue-900">{t('kyc.whyDocuments')}</h4>
+                  <p className="text-sm text-blue-700">{t('kyc.description')}</p>
+                  <ul className="text-xs text-tsa-blue mt-2 space-y-1">
+                    <li>• {t('kyc.acceptedFormats')}</li>
+                    <li>• {t('kyc.verificationTime')}</li>
+                    <li>• {t('kyc.secureStorage')}</li>
                   </ul>
                 </div>
               </div>

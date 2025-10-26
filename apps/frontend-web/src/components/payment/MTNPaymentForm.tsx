@@ -178,7 +178,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-tsa-blue mb-4" />
           <h3 className="text-lg font-semibold mb-2">Traitement du paiement</h3>
           <p className="text-gray-600 text-center">
             Veuillez patienter pendant que nous traitons votre paiement...
@@ -285,7 +285,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
                       <div className="font-medium">{method.name}</div>
                       <div className="text-xs text-gray-500">{method.description}</div>
                     </div>
-                    {isSelected && <CheckCircle className="h-5 w-5 text-blue-600" />}
+                    {isSelected && <CheckCircle className="h-5 w-5 text-tsa-blue" />}
                   </div>
                 </button>
               );

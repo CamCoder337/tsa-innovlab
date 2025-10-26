@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,8 @@ interface MFAStatus {
 
 function AffreteurSettings() {
   const { user } = useAuth();
+  const { t } = useProfileTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
     enabled: user?.mfaEnabled || false,
@@ -70,11 +73,11 @@ function AffreteurSettings() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Paramètres sauvegardés avec succès');
+      toast.success(t('settings.saveSuccess'));
       setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(t('settings.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -118,12 +121,12 @@ function AffreteurSettings() {
             setupRequired: false,
             backupCodes: [],
           });
-          toast.success('MFA désactivé avec succès');
+          toast.success(t('settings.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la configuration MFA');
+      toast.error(t('settings.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -149,13 +152,13 @@ function AffreteurSettings() {
           setupRequired: false,
           backupCodes: data.backupCodes || [],
         });
-        toast.success('MFA activé avec succès');
+        toast.success(t('settings.mfa.enableSuccess'));
       } else {
-        toast.error('Code invalide');
+        toast.error(t('settings.mfa.invalidCode'));
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erreur lors de l'activation MFA");
+      toast.error(t('settings.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -163,21 +166,19 @@ function AffreteurSettings() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié dans le presse-papiers');
+    toast.success(tCommon('messages.copiedToClipboard'));
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-          <p className="text-muted-foreground">
-            Configurez vos préférences et paramètres de compte
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <p className="text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+          {isLoading ? t('settings.saving') : t('settings.save')}
         </Button>
       </div>
 
@@ -186,14 +187,14 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications
+              {t('settings.notifications.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Email</span>
+                <span className="text-sm">{t('settings.notifications.email')}</span>
               </div>
               <Switch
                 checked={notifications.email}
@@ -206,7 +207,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications SMS</span>
+                <span className="text-sm">{t('settings.notifications.sms')}</span>
               </div>
               <Switch
                 checked={notifications.sms}
@@ -217,7 +218,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Push</span>
+                <span className="text-sm">{t('settings.notifications.push')}</span>
               </div>
               <Switch
                 checked={notifications.push}
@@ -228,7 +229,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Mises à jour de missions</span>
+              <span className="text-sm">{t('settings.notifications.missionUpdates')}</span>
               <Switch
                 checked={notifications.missionUpdates}
                 onCheckedChange={(checked) =>
@@ -238,7 +239,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Alertes de prix</span>
+              <span className="text-sm">{t('settings.notifications.priceAlerts')}</span>
               <Switch
                 checked={notifications.priceAlerts}
                 onCheckedChange={(checked) =>
@@ -248,7 +249,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Rapports hebdomadaires</span>
+              <span className="text-sm">{t('settings.notifications.weeklyReports')}</span>
               <Switch
                 checked={notifications.weeklyReports}
                 onCheckedChange={(checked) =>
@@ -263,13 +264,13 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Préférences
+              {t('settings.preferences.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <div className="space-y-2">
-                <Label>Langue</Label>
+                <Label>{t('settings.preferences.language')}</Label>
                 <Select
                   value={preferences.language}
                   onValueChange={(value) => setPreferences({ ...preferences, language: value })}
@@ -278,14 +279,14 @@ function AffreteurSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">{t('settings.preferences.french')}</SelectItem>
+                    <SelectItem value="en">{t('settings.preferences.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Devise</Label>
+                <Label>{t('settings.preferences.currency')}</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
@@ -302,7 +303,7 @@ function AffreteurSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fuseau Horaire</Label>
+                <Label>{t('settings.preferences.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
@@ -321,7 +322,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Attribution automatique</span>
+              <span className="text-sm">{t('settings.preferences.autoAssign')}</span>
               <Switch
                 checked={preferences.autoAssign}
                 onCheckedChange={(checked) =>
@@ -331,7 +332,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Fourchette de prix préférée</Label>
+              <Label>{t('settings.preferences.priceRange')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
                   <Currency className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -372,7 +373,7 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Sécurité
+              {t('settings.security.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -386,11 +387,9 @@ function AffreteurSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    Authentification à deux facteurs (MFA)
+                    {t('settings.security.mfa.title')}
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    Ajoutez une couche de sécurité supplémentaire à votre compte
-                  </p>
+                  <p className="text-sm text-gray-600">{t('settings.security.mfa.description')}</p>
                 </div>
                 <Switch
                   checked={mfaStatus.enabled}
@@ -402,27 +401,22 @@ function AffreteurSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    MFA est activé sur votre compte. Votre compte est protégé.
-                  </AlertDescription>
+                  <AlertDescription>{t('settings.security.mfa.enabled')}</AlertDescription>
                 </Alert>
               )}
 
               {mfaStatus.setupRequired && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">Configuration MFA</h5>
+                  <h5 className="font-medium">{t('settings.security.mfa.setup')}</h5>
 
                   {mfaStatus.qrCode && (
                     <div className="space-y-3">
-                      <p className="text-sm">
-                        1. Scannez ce QR code avec votre application d'authentification (Google
-                        Authenticator, Authy, etc.)
-                      </p>
+                      <p className="text-sm">{t('settings.security.mfa.scanQR')}</p>
                       <div className="flex justify-center">
                         <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
                       </div>
 
-                      <p className="text-sm">2. Ou entrez manuellement cette clé secrète :</p>
+                      <p className="text-sm">{t('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
                           {mfaStatus.secret}
@@ -437,9 +431,7 @@ function AffreteurSettings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="mfaCode">
-                          3. Entrez le code à 6 chiffres de votre application
-                        </Label>
+                        <Label htmlFor="mfaCode">{t('settings.security.mfa.enterCode')}</Label>
                         <div className="flex gap-2">
                           <Input
                             id="mfaCode"
@@ -462,7 +454,7 @@ function AffreteurSettings() {
                             }}
                             disabled={isLoading}
                           >
-                            Activer MFA
+                            {t('settings.security.mfa.enable')}
                           </Button>
                         </div>
                       </div>
@@ -475,11 +467,10 @@ function AffreteurSettings() {
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <h5 className="font-medium">Codes de récupération</h5>
+                    <h5 className="font-medium">{t('settings.security.mfa.backupCodes')}</h5>
                   </div>
                   <p className="text-sm text-yellow-800">
-                    Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte
-                    si vous perdez votre téléphone.
+                    {t('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {mfaStatus.backupCodes.map((code, index) => (
@@ -495,7 +486,7 @@ function AffreteurSettings() {
                   </div>
                   <Button variant="outline" size="sm">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Régénérer les codes
+                    {t('settings.security.mfa.regenerateCodes')}
                   </Button>
                 </div>
               )}

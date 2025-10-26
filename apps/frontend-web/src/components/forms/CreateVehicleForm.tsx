@@ -12,6 +12,7 @@ import type {
   UpdateVehicleRequest,
   Vehicle,
 } from '../../types/vehicle.types';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 interface CreateVehicleFormProps {
   vehicle?: Vehicle | null;
@@ -20,25 +21,25 @@ interface CreateVehicleFormProps {
   isLoading?: boolean;
 }
 
-const vehicleValidationSchema = Yup.object({
-  type: Yup.string()
-    .oneOf(Object.values(VehicleType), 'Type de véhicule invalide')
-    .required('Le type de véhicule est requis'),
-  registration: Yup.string()
-    .min(3, "L'immatriculation doit contenir au moins 3 caractères")
-    .max(50, "L'immatriculation ne peut pas dépasser 50 caractères")
-    .matches(
-      /^[A-Z0-9-]+$/i,
-      "L'immatriculation ne peut contenir que des lettres, chiffres et tirets"
-    )
-    .required("L'immatriculation est requise"),
-  description: Yup.string()
-    .max(500, 'La description ne peut pas dépasser 500 caractères')
-    .nullable(),
-  status: Yup.string()
-    .oneOf(Object.values(VehicleStatus), 'Statut invalide')
-    .required('Le statut est requis'),
-});
+const createVehicleValidationSchema = (
+  t: (key: string, options?: Record<string, unknown>) => string
+) =>
+  Yup.object({
+    type: Yup.string()
+      .oneOf(Object.values(VehicleType), t('validation.role'))
+      .required(t('validation.required')),
+    registration: Yup.string()
+      .min(3, t('validation.minLength', { min: 3 }))
+      .max(50, t('validation.maxLength', { max: 50 }))
+      .matches(/^[A-Z0-9-]+$/i, t('validation.licensePlateFormat'))
+      .required(t('validation.required')),
+    description: Yup.string()
+      .max(500, t('validation.maxLength', { max: 500 }))
+      .nullable(),
+    status: Yup.string()
+      .oneOf(Object.values(VehicleStatus), t('validation.role'))
+      .required(t('validation.required')),
+  });
 
 export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   vehicle,
@@ -46,6 +47,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useFormsTranslation();
   const isEditing = !!vehicle;
 
   const initialValues: CreateVehicleRequest = {
@@ -67,18 +69,16 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
-          {isEditing ? 'Modifier le véhicule' : 'Ajouter un nouveau véhicule'}
+          {isEditing ? t('sections.updateVehicle') : t('sections.addVehicle')}
         </h2>
         <p className="text-sm text-gray-600 mt-1">
-          {isEditing
-            ? 'Modifiez les informations de votre véhicule'
-            : 'Ajoutez un nouveau véhicule à votre flotte'}
+          {isEditing ? t('messages.updateVehicleDescription') : t('messages.addVehicleDescription')}
         </p>
       </div>
 
       <Formik
         initialValues={initialValues}
-        validationSchema={vehicleValidationSchema}
+        validationSchema={createVehicleValidationSchema(t)}
         onSubmit={handleSubmit}
         enableReinitialize
       >
@@ -87,7 +87,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
             {/* Vehicle Type */}
             <div>
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                Type de véhicule *
+                {t('labels.vehicleType')} *
               </label>
               <Field
                 as="select"
@@ -97,7 +97,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                   errors.type && touched.type ? 'border-red-300' : 'border-gray-300'
                 }`}
               >
-                <option value="">Sélectionnez un type</option>
+                <option value="">{t('messages.selectVehicleType')}</option>
                 {Object.values(VehicleType).map((type) => (
                   <option key={type} value={type}>
                     {VehicleTypeLabels[type]}
@@ -113,13 +113,13 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                 htmlFor="registration"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Immatriculation *
+                {t('labels.licensePlate')} *
               </label>
               <Field
                 type="text"
                 id="registration"
                 name="registration"
-                placeholder="Ex: AB-123-CD"
+                placeholder={t('placeholders.licensePlate')}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.registration && touched.registration ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -134,14 +134,14 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
             {/* Description */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                {t('labels.productDescription')}
               </label>
               <Field
                 as="textarea"
                 id="description"
                 name="description"
                 rows={3}
-                placeholder="Description optionnelle du véhicule..."
+                placeholder={t('placeholders.enterDescription')}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.description && touched.description ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -156,7 +156,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
             {/* Status */}
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                Statut *
+                {t('labels.status')} *
               </label>
               <Field
                 as="select"
@@ -184,7 +184,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                   disabled={isLoading}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Annuler
+                  {t('buttons.cancel')}
                 </button>
               )}
               <button
@@ -195,12 +195,12 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                 {isLoading ? (
                   <div className="flex items-center">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {isEditing ? 'Modification...' : 'Création...'}
+                    {isEditing ? t('messages.updating') : t('messages.creating')}
                   </div>
                 ) : isEditing ? (
-                  'Modifier'
+                  t('buttons.update')
                 ) : (
-                  'Créer'
+                  t('buttons.create')
                 )}
               </button>
             </div>
