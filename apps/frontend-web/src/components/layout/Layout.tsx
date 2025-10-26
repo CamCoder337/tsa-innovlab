@@ -11,11 +11,10 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
-import { webSocketService } from '@/services/websocket.service';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function Layout() {
-  const { isAuthenticated, token, user } = useAuth();
+  const { user } = useAuth();
   const { fetchCart } = useCart();
   const { fetchAdminCategories, fetchCategories } = useCategories();
   const { fetchConversations } = useChat();
@@ -55,10 +54,8 @@ export default function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated && token) webSocketService.initialize(token);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  // WebSocket initialization is now handled by NotificationProvider
+  // to avoid conflicts and page reloads on notification receive
 
   return (
     <SidebarProvider>
