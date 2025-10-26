@@ -16,28 +16,35 @@ interface NotificationProviderProps {
 }
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
-  const { user, isAuthenticated } = useAuth();
-  const { initializeWebSocketSubscriptions, cleanupWebSocketSubscriptions, handleNewNotification } =
+  const { user, isAuthenticated, token } = useAuth();
+  const { handleNewNotification } =
     useNotifications();
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      // Initialize WebSocket subscriptions for real-time notifications
-      initializeWebSocketSubscriptions();
+    if (isAuthenticated && user && token) {
+      // Initialize WebSocket connection with JWT token
+      webSocketService.initialize(token);
 
       // Set up enhanced notification event handler with toast integration
-      const enhancedNotificationHandler = (data: NotificationEventData) => {
+      // Backend sends: { type: 'notification:new', data: {...notification...}, timestamp }
+      const enhancedNotificationHandler = (notificationData: unknown) => {
+        // Extract notification from WebSocket message data
+        const notification = notificationData as NotificationEventData['notification'];
+
+        // Wrap in expected format for store
+        const eventData: NotificationEventData = { notification };
+
         // Handle the notification in the store first
-        handleNewNotification(data);
+        handleNewNotification(eventData);
 
         // Show toast notification with soft aggressiveness based on priority
-        toastNotificationService.showNotification(data.notification, {
+        toastNotificationService.showNotification(notification, {
           onClick: () => {
             // Navigate to relevant page based on notification type
-            const { type, data: notificationData } = data.notification;
-            const missionData = notificationData as MissionNotificationData;
-            const paymentData = notificationData as PaymentNotificationData;
-            const messageData = notificationData as MessageNotificationData;
+            const { type, data } = notification;
+            const missionData = data as MissionNotificationData;
+            const paymentData = data as PaymentNotificationData;
+            const messageData = data as MessageNotificationData;
 
             switch (type) {
               case 'mission_assigned':
@@ -66,16 +73,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       };
 
       // Subscribe to WebSocket notification events with our enhanced handler
-      webSocketService.subscribe('notification', enhancedNotificationHandler);
+      // Backend sends notifications with type 'notification:new'
+      webSocketService.subscribe('notification:new', enhancedNotificationHandler);
 
       return () => {
-        // Cleanup: unsubscribe from WebSocket events and cleanup store subscriptions
-        webSocketService.unsubscribe('notification', enhancedNotificationHandler);
-        cleanupWebSocketSubscriptions();
+        // Cleanup: unsubscribe from WebSocket events
+        webSocketService.unsubscribe('notification:new', enhancedNotificationHandler);
+        webSocketService.disconnect();
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, token]);
 
   return (
     <>
