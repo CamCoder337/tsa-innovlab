@@ -28,6 +28,15 @@ export default class AuthMiddleware {
       console.log('🔧 TOKEN nettoyé: Bearer double → Bearer simple')
     }
 
+    // Support WebSocket authentication via query params (?token=xxx)
+    // Navigateurs et clients WebSocket ne peuvent pas envoyer de headers custom
+    const tokenFromQuery = ctx.request.qs().token
+    if (!authHeader && tokenFromQuery) {
+      authHeader = `Bearer ${tokenFromQuery}`
+      ctx.request.headers().authorization = authHeader
+      console.log('🔧 Token extrait depuis query param pour WebSocket')
+    }
+
     // Utiliser l'authentification AdonisJS standard
     await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
 

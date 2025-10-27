@@ -209,7 +209,7 @@ export default class MissionsController {
 
       const mission = await Mission.query()
         .where('id', params.id)
-        .where('status', MissionStatus.ASSIGNED)
+        .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.IN_PROGRESS])
         .preload('vehicle')
         .first()
 
@@ -222,7 +222,12 @@ export default class MissionsController {
 
       // Vérifier les transitions de statut autorisées pour les transporteurs
       const allowedTransitions: Record<MissionStatus, MissionStatus[]> = {
-        [MissionStatus.ASSIGNED]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
+        [MissionStatus.ASSIGNED]: [
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.COMPLETED,
+          MissionStatus.CANCELLED,
+        ],
+        [MissionStatus.IN_PROGRESS]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
       } as Record<MissionStatus, MissionStatus[]>
 
       const currentAllowedStatuses = allowedTransitions[mission.status] || []
@@ -237,28 +242,47 @@ export default class MissionsController {
 
       const user = auth.getUserOrFail()
       const oldStatus = mission.status
-      const newStatus = validatedData.status as MissionStatus
+      const requestedStatus = validatedData.status as MissionStatus
+      let newStatus = requestedStatus
+
+      // 🔄 LOGIQUE INTELLIGENTE : Annulation transporteur = Republication automatique
+      const isTransporteurCancellation = requestedStatus === MissionStatus.CANCELLED
+      if (isTransporteurCancellation) {
+        newStatus = MissionStatus.PUBLISHED
+        console.log(`🔄 Transporteur ${user.fullName} annule mission ${mission.id} → PUBLISHED`)
+      }
+
+      // Sauvegarder les IDs avant désassignation
+      const previousTransporteurId = mission.transporteurId
+      const previousVehicleId = mission.vehicleId
 
       // Utiliser une transaction pour garantir la cohérence
       await Database.transaction(async (trx) => {
         // Mettre à jour le statut de la mission
         mission.status = newStatus
+
+        // 🧹 Si annulation transporteur, nettoyer l'assignation
+        if (isTransporteurCancellation) {
+          mission.transporteurId = null
+          mission.vehicleId = null
+        }
+
         await mission.useTransaction(trx).save()
 
         // 🚗 Libérer le véhicule si la mission est terminée ou annulée
         if (
-          mission.vehicleId &&
-          (newStatus === MissionStatus.COMPLETED || newStatus === MissionStatus.CANCELLED)
+          previousVehicleId &&
+          (newStatus === MissionStatus.COMPLETED || isTransporteurCancellation)
         ) {
           const vehicle = await Vehicle.query({ client: trx })
-            .where('id', mission.vehicleId)
+            .where('id', previousVehicleId)
             .first()
 
           if (vehicle && vehicle.status === VehicleStatus.IN_MISSION) {
             vehicle.status = VehicleStatus.AVAILABLE
             await vehicle.save()
             console.log(
-              `✅ Véhicule ${vehicle.registration} libéré après ${newStatus} de mission ${mission.id}`
+              `✅ Véhicule ${vehicle.registration} libéré après ${isTransporteurCancellation ? 'annulation' : newStatus} de mission ${mission.id}`
             )
           }
         }
@@ -270,28 +294,61 @@ export default class MissionsController {
       await mission.refresh() // Recharger pour avoir le véhicule mis à jour
       await mission.load('vehicle')
 
-      // 📍 Créer un MissionUpdate pour le tracking
+      // 📍 Créer des MissionUpdates pour le tracking
       try {
-        await MissionUpdate.createStatusUpdate(
-          mission.id,
-          user.id,
-          oldStatus,
-          newStatus,
-          validatedData.commentaire || 'Mise à jour de statut par le transporteur'
-        )
+        if (isTransporteurCancellation) {
+          // Événement 1 : Annulation par transporteur
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            user.id,
+            oldStatus,
+            'cancelled' as MissionStatus,
+            `Mission annulée par le transporteur ${user.fullName}. ${validatedData.commentaire || 'Aucune raison fournie'}`
+          )
+
+          // Événement 2 : Republication automatique
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            user.id,
+            'cancelled' as MissionStatus,
+            newStatus,
+            "Mission automatiquement republiée et disponible pour d'autres transporteurs"
+          )
+        } else {
+          // Mise à jour normale
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            user.id,
+            oldStatus,
+            newStatus,
+            validatedData.commentaire || 'Mise à jour de statut par le transporteur'
+          )
+        }
       } catch (updateError) {
         console.error('❌ Erreur création MissionUpdate:', updateError)
       }
 
       // 🔔 Notifier l'affreteur du changement de statut
       try {
-        await this.notificationManager.notifyMissionStatusChanged(
-          mission,
-          oldStatus,
-          newStatus,
-          user
-        )
-        console.log(`✅ Affreteur notifié du changement de statut mission ${mission.id}`)
+        if (isTransporteurCancellation) {
+          // Notification spéciale pour annulation + republication
+          await this.notificationManager.notifyMissionCancelledByTransporteur(
+            mission,
+            user,
+            previousTransporteurId!,
+            validatedData.commentaire || 'Aucune raison fournie'
+          )
+          console.log(`✅ Affreteur notifié de l'annulation par ${user.fullName}`)
+        } else {
+          // Notification normale changement statut
+          await this.notificationManager.notifyMissionStatusChanged(
+            mission,
+            oldStatus,
+            newStatus,
+            user
+          )
+          console.log(`✅ Affreteur notifié du changement de statut mission ${mission.id}`)
+        }
       } catch (notificationError) {
         console.error('❌ Erreur notification changement statut:', notificationError)
         // Ne pas faire échouer la mise à jour si les notifications échouent
@@ -299,15 +356,18 @@ export default class MissionsController {
 
       return response.json({
         success: true,
-        message: `Mission status updated from ${oldStatus} to ${newStatus}`,
+        message: isTransporteurCancellation
+          ? `Mission cancelled and republished. Now available for other transporters.`
+          : `Mission status updated from ${oldStatus} to ${newStatus}`,
         data: {
           mission,
           oldStatus,
           newStatus,
+          republished: isTransporteurCancellation,
           comment: validatedData.commentaire || null,
           vehicleReleased:
-            mission.vehicleId &&
-            (newStatus === MissionStatus.COMPLETED || newStatus === MissionStatus.CANCELLED),
+            previousVehicleId &&
+            (newStatus === MissionStatus.COMPLETED || isTransporteurCancellation),
         },
       })
     } catch (error) {

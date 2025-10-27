@@ -168,6 +168,83 @@ export default class NotificationManagerService {
   }
 
   /**
+   * Notifie l'affreteur qu'un transporteur a annulé sa mission
+   * La mission est automatiquement republiée et disponible pour d'autres transporteurs
+   */
+  async notifyMissionCancelledByTransporteur(
+    mission: Mission,
+    transporteur: User,
+    previousTransporteurId: string,
+    reason: string
+  ): Promise<void> {
+    try {
+      console.log(
+        `🔔 Notification annulation transporteur: ${mission.title} par ${transporteur.fullName}`
+      )
+
+      // Récupérer l'affreteur
+      const affreteur = await User.findOrFail(mission.affreteurId)
+
+      // Créer la notification pour l'affreteur
+      const notification = await Notification.create({
+        userId: mission.affreteurId,
+        type: NotificationType.MISSION_STATUS_CHANGED,
+        title: 'Mission annulée et republiée',
+        message: `Le transporteur ${transporteur.fullName} a annulé votre mission "${mission.title}". Elle est maintenant à nouveau disponible pour d'autres transporteurs.`,
+        priority: NotificationPriority.HIGH,
+        missionId: mission.id,
+        data: {
+          missionId: mission.id,
+          title: mission.title,
+          oldStatus: 'assigned',
+          newStatus: 'published',
+          cancelledBy: transporteur.fullName,
+          transporteurId: previousTransporteurId,
+          reason: reason,
+        },
+        actionUrl: `${env.get('FRONTEND_URL')}/missions/${mission.id}`,
+        emailSent: false,
+      })
+
+      // Diffuser en temps réel à l'affreteur
+      await this.websocketService.sendToUser(mission.affreteurId, {
+        type: 'notification:new',
+        data: notification.serialize(),
+      })
+
+      // Diffuser aussi sur le channel de tracking de la mission
+      await this.websocketService.broadcastToMission(mission.id, {
+        type: 'mission:cancelled_and_republished',
+        data: {
+          oldStatus: 'assigned',
+          newStatus: 'published',
+          transporteur: transporteur.fullName,
+          reason: reason,
+          timestamp: new Date().toISOString(),
+        },
+      })
+
+      // Email à l'affreteur
+      this.sendCancellationEmailNotification(
+        affreteur,
+        mission,
+        transporteur,
+        reason,
+        notification
+      ).catch((error) => {
+        console.error(`❌ Erreur email annulation mission ${mission.id}:`, error)
+      })
+
+      console.log(
+        `✅ Affreteur ${affreteur.email} notifié de l'annulation par ${transporteur.fullName}`
+      )
+    } catch (error) {
+      console.error('❌ Erreur notification annulation transporteur:', error)
+      throw error
+    }
+  }
+
+  /**
    * Notifie la réception d'un nouveau message
    */
   async notifyNewMessage(
@@ -287,6 +364,24 @@ export default class NotificationManagerService {
       await notification.save()
     } catch (error) {
       console.error('❌ Erreur envoi email changement statut:', error)
+    }
+  }
+
+  private async sendCancellationEmailNotification(
+    _affreteur: User,
+    _mission: Mission,
+    _transporteur: User,
+    _reason: string,
+    notification: Notification
+  ): Promise<void> {
+    try {
+      // TODO: Créer un template email spécifique pour les annulations de transporteur
+      // await this.emailService.sendMissionCancelledEmail(affreteur, mission, transporteur, reason)
+
+      notification.emailSent = true
+      await notification.save()
+    } catch (error) {
+      console.error('❌ Erreur envoi email annulation:', error)
     }
   }
 
