@@ -9,11 +9,6 @@ export enum WebSocketEventType {
   BROADCAST = 'broadcast',
   NOTIFICATION = 'notification',
 
-  // Authentication events
-  AUTH_REQUEST = 'auth:request',
-  AUTH_SUCCESS = 'auth:success',
-  AUTH_FAILED = 'auth:failed',
-
   // Chat events
   CHAT_MESSAGE = 'chat:message',
   CHAT_MESSAGE_READ = 'chat:read',
@@ -43,6 +38,27 @@ type EventCallback<T = unknown> = (data: T) => void;
 /**
  * Enhanced WebSocket Service matching backend capabilities
  * Uses native WebSocket instead of Socket.IO to match backend implementation
+ *
+ * 🔐 Authentication Flow:
+ * ----------------------
+ * 1. Frontend calls `initialize(accessToken)` with JWT token
+ * 2. Token is passed in URL query param: ws://host/ws/notifications?token=<JWT>
+ * 3. Backend authenticates via middleware.auth() which extracts token from query params
+ * 4. On success, backend sends a 'connected' message with user info:
+ *    { type: 'connected', message: '...', user: {...}, timestamp: '...' }
+ * 5. Frontend sets isAuthenticated = true and triggers CONNECTED callbacks
+ *
+ * ❤️ Heartbeat:
+ * ------------
+ * - Frontend sends 'ping' (simple string) every 30s
+ * - Backend responds with 'pong' (simple string)
+ * - Keeps connection alive and detects disconnections
+ *
+ * 📡 Message Types:
+ * ----------------
+ * - General: CONNECTED, BROADCAST, NOTIFICATION
+ * - Chat: CHAT_MESSAGE, CHAT_MESSAGE_READ, CHAT_TYPING_START/STOP
+ * - Mission: MISSION_NEW, MISSION_UPDATED, MISSION_STATUS_CHANGED
  */
 class WebSocketService {
   private ws: WebSocket | null = null;
@@ -95,27 +111,22 @@ class WebSocketService {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('✅ WebSocket connected successfully');
+      console.log('✅ WebSocket connection opened');
       this.isConnecting = false;
       this.reconnectAttempts = 0;
-      this.isAuthenticated = true; // Token was validated during connection
+      // Wait for backend 'connected' message before setting isAuthenticated
+      // and triggering callbacks - this will happen in handleMessage()
       this.startHeartbeat();
-
-      // Trigger connected event for subscribers
-      const callbacks = this.eventCallbacks.get(WebSocketEventType.CONNECTED);
-      if (callbacks) {
-        callbacks.forEach((callback) => {
-          try {
-            callback({ authenticated: true });
-          } catch (error) {
-            console.error('❌ Error in connected callback:', error);
-          }
-        });
-      }
     };
 
     this.ws.onmessage = (event) => {
       try {
+        // Handle simple string messages (e.g., 'pong' response from heartbeat)
+        if (typeof event.data === 'string' && event.data === 'pong') {
+          // Heartbeat response - no action needed
+          return;
+        }
+
         const message: WebSocketMessage = JSON.parse(event.data);
         this.handleMessage(message);
       } catch (error) {
@@ -143,6 +154,27 @@ class WebSocketService {
   }
 
   private handleMessage(message: WebSocketMessage): void {
+    // Special handling for 'connected' message from backend
+    if (message.type === WebSocketEventType.CONNECTED || message.type === 'connected') {
+      this.isAuthenticated = true;
+      console.log('✅ WebSocket authenticated successfully');
+
+      // Trigger connected callbacks with the actual backend data
+      const callbacks = this.eventCallbacks.get(WebSocketEventType.CONNECTED);
+      if (callbacks) {
+        callbacks.forEach((callback) => {
+          try {
+            // Pass the entire message (contains user info, timestamp, etc.)
+            callback(message);
+          } catch (error) {
+            console.error('❌ Error in connected callback:', error);
+          }
+        });
+      }
+      return;
+    }
+
+    // Handle all other message types
     const callbacks = this.eventCallbacks.get(message.type);
     if (callbacks) {
       callbacks.forEach((callback) => {
@@ -158,7 +190,8 @@ class WebSocketService {
   private startHeartbeat(): void {
     this.heartbeatInterval = setInterval(() => {
       if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify({ type: 'ping' }));
+        // Backend expects simple string 'ping', not JSON
+        this.ws.send('ping');
       }
     }, 30000); // 30 seconds
   }

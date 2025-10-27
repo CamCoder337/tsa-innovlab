@@ -63,7 +63,7 @@ export default class MissionNotificationService {
       console.log(`📝 ${notifications.length} notifications créées en base`)
 
       // 3. Envoyer par SSE (broadcast temps réel)
-      await this.broadcastNewMissionSSE(mission, transporteurs)
+      await this.broadcastNewMissionSSE(mission, transporteurs, notifications)
 
       // 4. Envoyer par email
       await this.sendNewMissionEmails(mission, transporteurs)
@@ -76,45 +76,47 @@ export default class MissionNotificationService {
   }
 
   /**
-   * Notifie un transporteur spécifique d'une mission assignée
+   * Notifie l'affreteur qu'un transporteur a accepté sa mission
    */
   async notifyMissionAssigned(mission: Mission, transporteurId: string): Promise<void> {
     try {
+      // Récupérer l'affreteur ET le transporteur
+      const affreteur = await User.findOrFail(mission.affreteurId)
       const transporteur = await User.findOrFail(transporteurId)
 
       // Charger les relations
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
 
-      // Créer notification en base
-      await Notification.create({
-        userId: transporteurId,
+      // Créer notification pour L'AFFRETEUR (pas le transporteur)
+      const notification = await Notification.create({
+        userId: mission.affreteurId,
         type: NotificationType.MISSION_ASSIGNED,
-        title: 'Mission assignée',
-        message: `La mission "${mission.title}" vous a été assignée`,
+        title: 'Mission acceptée',
+        message: `Un transporteur (${transporteur.fullName}) a accepté votre mission "${mission.title}"`,
         priority: NotificationPriority.HIGH,
         missionId: mission.id,
         data: {
           missionId: mission.id,
           title: mission.title,
           status: mission.status,
+          transporteurId: transporteurId,
+          transporteurName: transporteur.fullName,
         },
-        actionUrl: `/my-missions/${mission.id}`,
+        actionUrl: `/missions/${mission.id}`,
       })
 
-      // SSE
-      await this.broadcastToChannel(`notifications:user:${transporteurId}`, {
-        type: 'mission_assigned',
-        data: {
-          missionId: mission.id,
-          title: mission.title,
-          message: 'Mission assignée',
-        },
+      // SSE vers l'affreteur (pas le transporteur)
+      await this.broadcastToChannel(`notifications:user:${mission.affreteurId}`, {
+        type: 'notification:new',
+        data: notification.serialize(),
         timestamp: new Date().toISOString(),
       })
 
-      // Email - utiliser la méthode publique appropriée
-      console.log(`✅ Notification mission assignée envoyée à ${transporteur.email}`)
+      // Email
+      console.log(
+        `✅ Affreteur ${affreteur.email} notifié de l'acceptation par ${transporteur.email}`
+      )
     } catch (error) {
       console.error('❌ Erreur notification mission assignée:', error)
       throw error
@@ -204,7 +206,11 @@ export default class MissionNotificationService {
   /**
    * Diffuse la nouvelle mission via SSE
    */
-  private async broadcastNewMissionSSE(mission: Mission, transporteurs: User[]): Promise<void> {
+  private async broadcastNewMissionSSE(
+    mission: Mission,
+    transporteurs: User[],
+    notifications: Notification[]
+  ): Promise<void> {
     try {
       const sseData = {
         type: 'mission_new',
@@ -228,12 +234,17 @@ export default class MissionNotificationService {
       await this.broadcastToChannel('missions:new:transporteurs', sseData)
 
       // Broadcast sur les channels personnels de chaque transporteur
+      // Envoyer le format Notification (pas le format Mission)
       for (const transporteur of transporteurs) {
-        await this.broadcastToChannel(`notifications:user:${transporteur.id}`, {
-          ...sseData,
-          type: 'notification:new',
-          notificationId: `mission_${mission.id}_${Date.now()}`,
-        })
+        const notification = notifications.find((n) => n.userId === transporteur.id)
+
+        if (notification) {
+          await this.broadcastToChannel(`notifications:user:${transporteur.id}`, {
+            type: 'notification:new',
+            data: notification.serialize(),
+            timestamp: new Date().toISOString(),
+          })
+        }
       }
 
       console.log(`📡 SSE: Mission broadcastée à ${transporteurs.length} transporteurs`)

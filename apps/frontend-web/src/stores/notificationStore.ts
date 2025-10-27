@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { notificationService } from '@/services/notification.service';
-import { webSocketService } from '@/services/websocket.service';
 import type { NotificationEventData, NotificationStore } from '@/types/notification.types';
 
 const initialState = {
@@ -167,20 +166,14 @@ export const useNotificationStore = create<NotificationStore>()(
       reset: () => set(initialState),
 
       // WebSocket subscription management
+      // Note: WebSocket initialization and subscriptions are now handled
+      // in NotificationProvider.tsx to have access to the auth token
       initializeWebSocketSubscriptions: () => {
-        const { handleNewNotification } = get();
-
-        // Subscribe to notification events
-
-        webSocketService.connect();
-        webSocketService.subscribe('notification', handleNewNotification);
+        console.warn('WebSocket subscriptions are managed by NotificationProvider');
       },
 
       cleanupWebSocketSubscriptions: () => {
-        const { handleNewNotification } = get();
-
-        // Unsubscribe from notification events
-        webSocketService.unsubscribe('notification', handleNewNotification);
+        console.warn('WebSocket cleanup is managed by NotificationProvider');
       },
     }),
     {

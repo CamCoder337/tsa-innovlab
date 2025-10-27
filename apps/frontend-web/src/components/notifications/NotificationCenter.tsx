@@ -211,7 +211,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                             !notification.readAt ? 'text-gray-700' : 'text-gray-500'
                           }`}
                         >
-                          {notification.message}
+                          {notification.message || 'Pas de message'}
                         </p>
 
                         {/* Read status indicator */}
