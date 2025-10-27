@@ -614,10 +614,10 @@ export default function OrdersManagement() {
                       <p className="font-medium">{formatCurrency(product.revenue)}</p>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-4">
-                      {t('orders.analytics.noDataAvailable')}
-                    </p>
-                  )}
+                      <p className="text-gray-500 text-center py-4">
+                        {t('orders.analytics.noDataAvailable')}
+                      </p>
+                    )}
                 </div>
               </CardContent>
             </Card>

@@ -27,7 +27,6 @@ export default function MissionDetailsPage() {
   // Fetch mission data when component mounts or ID changes
   useEffect(() => {
     if (id && !currentMission) {
-      console.log(id);
       fetchMission(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
