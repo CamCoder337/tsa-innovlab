@@ -418,6 +418,14 @@ router
       '/notifications/read-all',
       '#controllers/http/common/notifications_controller.markAllAsRead'
     )
+
+    // Chatbot AI
+    router.post('/chatbot/query', '#controllers/http/common/chatbot_controller.query')
+    router.get(
+      '/chatbot/history/:conversationId',
+      '#controllers/http/common/chatbot_controller.history'
+    )
+    router.get('/chatbot/health', '#controllers/http/common/chatbot_controller.health')
   })
   .prefix('/api/common')
   .middleware(middleware.auth())

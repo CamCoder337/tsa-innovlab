@@ -49,6 +49,12 @@ class Settings(BaseSettings):
         default="internal-secret-key",
         alias="INTERNAL_SERVICE_SECRET"
     )
+    
+    # Monolith API URL for chatbot to call back
+    monolith_api_url: str = Field(
+        default="http://localhost:3333/api",
+        alias="MONOLITH_API_URL"
+    )
 
     # ML Model settings
     prediction_batch_size: int = Field(default=100, alias="PREDICTION_BATCH_SIZE")
@@ -56,6 +62,11 @@ class Settings(BaseSettings):
 
     # Google Cloud Vision API
     google_application_credentials: Optional[str] = Field(default=None, alias="GOOGLE_APPLICATION_CREDENTIALS")
+    
+    # LLM Configuration (Groq)
+    groq_api_key: Optional[str] = Field(default=None, alias="GROQ_API_KEY")
+    llm_model: str = Field(default="llama-3.3-70b-versatile", alias="LLM_MODEL")
+    llm_enabled: bool = Field(default=True, alias="LLM_ENABLED")
 
     class Config:
         env_file = ".env"
