@@ -60,6 +60,7 @@ async def chatbot_query(
             message=request.message,
             user_id=user_id,
             user_role=user_role,
+            user_token=request.user_token,
             conversation_id=request.conversation_id,
             context=request.context
         )

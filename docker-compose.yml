@@ -273,6 +273,9 @@ services:
       FASTAPI_HOST: 0.0.0.0
       FASTAPI_PORT: 8000
       
+      # Monolith API URL for chatbot
+      MONOLITH_API_URL: http://tsa-monolith:3333/api
+      
       # Google Cloud Vision API
       # Option 1: Variable d'environnement (RECOMMANDÉ pour production)
       GOOGLE_CREDENTIALS_JSON: ${GOOGLE_CREDENTIALS_JSON:-}

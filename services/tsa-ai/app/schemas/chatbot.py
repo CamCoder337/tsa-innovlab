@@ -11,6 +11,7 @@ class ChatbotQueryRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="User message")
     user_id: str = Field(..., description="User ID from authentication")
     user_role: Optional[str] = Field(None, description="User role (ADMIN, AFFRETEUR, TRANSPORTEUR, CLIENT)")
+    user_token: Optional[str] = Field(None, description="JWT token for API calls to monolith")
     conversation_id: Optional[str] = Field(None, description="Conversation ID for context")
     context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional context")
 

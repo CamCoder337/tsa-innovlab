@@ -62,6 +62,11 @@ class Settings(BaseSettings):
 
     # Google Cloud Vision API
     google_application_credentials: Optional[str] = Field(default=None, alias="GOOGLE_APPLICATION_CREDENTIALS")
+    
+    # LLM Configuration (Groq)
+    groq_api_key: Optional[str] = Field(default=None, alias="GROQ_API_KEY")
+    llm_model: str = Field(default="llama-3.3-70b-versatile", alias="LLM_MODEL")
+    llm_enabled: bool = Field(default=True, alias="LLM_ENABLED")
 
     class Config:
         env_file = ".env"
