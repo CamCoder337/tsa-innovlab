@@ -1,4 +1,4 @@
-import { MapPin, Package, Wallet, Truck, ArrowRight } from 'lucide-react';
+import { MapPin, Package, Truck, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Notification, MissionNotificationData } from '@/types/notification.types';
