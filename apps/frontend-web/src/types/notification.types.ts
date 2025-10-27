@@ -5,6 +5,7 @@ import type { PaginationMeta } from './common.types';
 export enum NotificationType {
   MISSION_ASSIGNED = 'mission_assigned',
   MISSION_STATUS_CHANGED = 'mission_status_changed',
+  MISSION_NEW = 'mission_new',
   NEW_MESSAGE = 'new_message',
   SYSTEM = 'system',
   PAYMENT_RECEIVED = 'payment_received',
