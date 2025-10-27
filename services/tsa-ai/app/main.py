@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, piece_scoring, mission_recommendations
 
 # Configure logging
 logging.basicConfig(
@@ -36,7 +36,7 @@ if settings.sentry_dsn:
         environment=settings.environment,
         release=settings.app_version,
     )
-    logger.info("Sentry monitoring initialized")
+    logger.info("Sentry monitoring initialized") 
 
 
 # Commented out: ml_service.py doesn't exist yet
@@ -180,8 +180,20 @@ app.include_router(
 
 app.include_router(
     pricing_simple.router,
-    prefix="/api/ai",
+    prefix="/api/ai/pricing",
     tags=["Pricing Dynamique"]
+)
+
+app.include_router(
+    piece_scoring.router,
+    prefix="/api/ai/scoring",
+    tags=["Piece Scoring"]
+)
+
+app.include_router(
+    mission_recommendations.router,
+    prefix="/api/ai/missions",
+    tags=["Mission Recommendations"]
 )
 
 # TODO: Add other AI routers
@@ -215,6 +227,10 @@ async def ai_root():
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
             "/api/ai/product-recommendations - Product recommendations ✅",
+            "/api/ai/scoring - Piece quality scoring ✅",
+            "/api/ai/missions - Mission recommendations ✅",
+            "/api/ai/visual - Visual recognition ✅",
+            "/api/ai/pricing - Dynamic pricing ✅",
             "/api/ai/predictions - General predictions (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
@@ -222,6 +238,9 @@ async def ai_root():
         "ml_models": {
             "eta": "✅ Operational",
             "product_recommendation": "✅ Operational",
+            "piece_scoring": "✅ Operational",
+            "mission_recommendation": "✅ Operational",
+            "visual_recognition": "✅ Operational",
             "anomaly": "🚧 In development"
         }
     }

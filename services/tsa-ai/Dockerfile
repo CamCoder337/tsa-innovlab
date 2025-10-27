@@ -5,6 +5,8 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV ENVIRONMENT=production
+ENV MODELS_PATH=/app/ml_models
+ENV LOG_LEVEL=INFO
 
 # Create app directory
 WORKDIR /app
@@ -29,7 +31,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Create directories for ML models, logs, and credentials
-RUN mkdir -p ml_models logs data/visual_recognition/images
+RUN mkdir -p ml_models logs data/visual_recognition/images temp \
+    && chmod 755 ml_models logs data temp
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app && \
@@ -40,9 +43,10 @@ USER app
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/ai/health || exit 1
+# Health check with scoring endpoint
+HEALTHCHECK --interval=30s --timeout=15s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/api/ai/health || \
+        curl -f http://localhost:8000/api/ai/scoring/health || exit 1
 
 # Run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

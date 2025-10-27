@@ -282,6 +282,16 @@ services:
       # ML Model settings
       MODEL_CACHE_SIZE: 3
       MODEL_PREDICTION_TIMEOUT: 30
+      MODELS_PATH: /app/ml_models
+      
+      # Scoring specific settings
+      SCORING_CACHE_TTL: 300
+      SCORING_BATCH_SIZE: 100
+      
+      # Mission recommendations settings
+      RECOMMENDATIONS_CACHE_TTL: 600
+      RECOMMENDATIONS_BATCH_SIZE: 50
+      MAX_RECOMMENDATIONS_PER_REQUEST: 10
       
       # Logging
       LOG_LEVEL: INFO
@@ -305,11 +315,11 @@ services:
         condition: service_healthy
     
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/ai/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/ai/health", "||", "curl", "-f", "http://localhost:8000/api/ai/scoring/health", "||", "curl", "-f", "http://localhost:8000/api/ai/missions/health"]
       interval: 30s
       timeout: 15s
       retries: 5
-      start_period: 45s
+      start_period: 60s
     
     # Security and performance
     security_opt:
