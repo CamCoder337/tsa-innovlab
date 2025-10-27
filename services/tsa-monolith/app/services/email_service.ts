@@ -69,11 +69,11 @@ export default class EmailService {
 
     return this.send(
       transporteur.email,
-      `Nouvelle mission disponible : ${mission.titre}`,
+      `Nouvelle mission disponible : ${mission.title}`,
       'emails/new_mission',
       {
         userName: transporteur.fullName || 'Transporteur',
-        missionTitle: mission.titre,
+        missionTitle: mission.title,
         description: mission.description,
         budget: mission.getBudgetRange(),
         departCity: mission.adresseDepart?.city,
@@ -92,7 +92,7 @@ export default class EmailService {
       'emails/proposition-accepted',
       {
         userName: user.fullName || 'Transporteur',
-        missionTitle: mission.titre,
+        missionTitle: mission.title,
         departDate: mission.dateDepartEstime?.toFormat('dd/MM/yyyy'),
         dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`,
         missionUrl,

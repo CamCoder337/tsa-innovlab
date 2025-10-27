@@ -4,6 +4,9 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Category from '#models/category'
 import User from '#models/user'
 import AuditLog from '#models/audit_log'
+import { VehicleType } from '#models/vehicle'
+import NotificationService from '#services/notification_service'
+import logger from '@adonisjs/core/services/logger'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -48,6 +51,9 @@ export default class Product extends BaseModel {
   @column()
   declare createdBy: string | null
 
+  @column()
+  declare preferredVehicleType: VehicleType | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -68,18 +74,46 @@ export default class Product extends BaseModel {
   public static async checkStockAlert(product: Product) {
     const oldStock = product.$original.stock
 
-    // Trigger alert only if stock crossed the alert threshold
-    if (product.stock <= product.stockAlert && oldStock > product.stockAlert) {
-      await AuditLog.create({
-        action: 'stock.low_alert',
-        entityType: 'products',
-        entityId: product.id,
-        newValues: {
-          productName: product.name,
-          stockCurrent: product.stock,
-          stockAlertThreshold: product.stockAlert,
-        },
-      })
+    // Trigger alert if stock is below or equal to alert threshold
+    // Alert sent on every update when stock is low (no deduplication)
+    if (product.stock <= product.stockAlert) {
+      // Create audit log only when crossing the threshold for the first time
+      if (oldStock > product.stockAlert) {
+        await AuditLog.create({
+          action: 'stock.low_alert',
+          entityType: 'products',
+          entityId: product.id,
+          newValues: {
+            productName: product.name,
+            stockCurrent: product.stock,
+            stockAlertThreshold: product.stockAlert,
+          },
+        })
+      }
+
+      // Notify all active administrators on every update when stock is low
+      try {
+        const admins = await User.query().where('role', 'admin').where('status', 'active')
+
+        if (admins.length > 0) {
+          const notificationService = new NotificationService()
+
+          for (const admin of admins) {
+            await notificationService.notify(admin, 'low_stock_alert', {
+              productName: product.name,
+              stockCurrent: product.stock,
+              stockAlertThreshold: product.stockAlert,
+              productId: product.id,
+            })
+          }
+
+          logger.info(
+            `Low stock alert sent to ${admins.length} admin(s) for product: ${product.name} (stock: ${product.stock}/${product.stockAlert})`
+          )
+        }
+      } catch (error) {
+        logger.error('Failed to send low stock notifications:', error)
+      }
     }
   }
 }

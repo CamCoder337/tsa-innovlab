@@ -5,7 +5,7 @@ import vine from '@vinejs/vine'
  */
 export const createDirectConversationValidator = vine.compile(
   vine.object({
-    userId: vine.number().min(1),
+    userId: vine.string().uuid(),
   })
 )
 
@@ -14,8 +14,8 @@ export const createDirectConversationValidator = vine.compile(
  */
 export const createMissionConversationValidator = vine.compile(
   vine.object({
-    missionId: vine.number().min(1),
-    userId: vine.number().min(1),
+    missionId: vine.string().uuid(),
+    userId: vine.string().uuid(),
   })
 )
 

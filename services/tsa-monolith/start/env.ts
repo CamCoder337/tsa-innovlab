@@ -35,6 +35,13 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
+  | WebSocket configuration
+  |----------------------------------------------------------
+  */
+  WEBSOCKET_REDIS_ENABLED: Env.schema.boolean.optional(),
+
+  /*
+  |----------------------------------------------------------
   | Variables for configuring the mail package
   |----------------------------------------------------------
   */

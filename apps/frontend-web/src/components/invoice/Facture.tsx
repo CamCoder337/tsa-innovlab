@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import type { Payment } from '@/types/payment.types';
 import type { CartItem } from '@/types/cart.types';
+import type { Order } from '@/types/order.types';
 
 interface FactureProps {
   payment: Payment;
+  order?: Order; // Optional order information
   orderNumber: string;
   items: CartItem[];
   deliveryAddress: {
@@ -42,6 +44,7 @@ interface FactureProps {
 
 export const Facture: React.FC<FactureProps> = ({
   payment,
+  order,
   orderNumber,
   items,
   deliveryAddress,
@@ -53,7 +56,10 @@ export const Facture: React.FC<FactureProps> = ({
   onEmailSend,
   onClose,
 }) => {
-  const subtotal = items.reduce((sum, item) => sum + item.priceAtTime * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + parseFloat(item.priceAtAdd) * item.quantity,
+    0
+  );
   const total = subtotal + deliveryFee;
 
   const formatDate = (date: Date) => {
@@ -130,10 +136,19 @@ export const Facture: React.FC<FactureProps> = ({
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600">Numéro de commande</p>
-              <p className="text-xl font-bold text-blue-900">{orderNumber}</p>
+              <p className="text-xl font-bold text-blue-900">{order?.orderNumber || orderNumber}</p>
               <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
-                {payment.status === 'completed' ? 'Payé' : 'En attente'}
+                {order?.paymentStatus === 'completed' || payment.status === 'completed'
+                  ? 'Payé'
+                  : 'En attente'}
               </Badge>
+              {order && (
+                <div className="mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    Statut: {order.status}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -176,15 +191,24 @@ export const Facture: React.FC<FactureProps> = ({
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>
-                  <span className="font-medium">Date:</span> {formatDate(payment.createdAt)}
+                  <span className="font-medium">Date:</span>{' '}
+                  {formatDate(new Date(order?.createdAt || payment.createdAt))}
+                </p>
+                <p>
+                  <span className="font-medium">ID Commande:</span> {order?.id || 'N/A'}
                 </p>
                 <p>
                   <span className="font-medium">ID Paiement:</span> {payment.id}
                 </p>
                 <p>
                   <span className="font-medium">Méthode:</span>{' '}
-                  {getPaymentMethodLabel(payment.paymentMethod)}
+                  {order?.paymentMethod || getPaymentMethodLabel(payment.method)}
                 </p>
+                {order?.paymentReference && (
+                  <p>
+                    <span className="font-medium">Référence:</span> {order.paymentReference}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -228,9 +252,11 @@ export const Facture: React.FC<FactureProps> = ({
                     <tr key={index} className="border-b border-gray-100">
                       <td className="py-4 px-2">
                         <div>
-                          <p className="font-medium text-gray-900">{item.product.name}</p>
-                          {item.product.description && (
-                            <p className="text-sm text-gray-500 mt-1">{item.product.description}</p>
+                          <p className="font-medium text-gray-900">{item.product?.name}</p>
+                          {item.product?.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {item.product?.description}
+                            </p>
                           )}
                         </div>
                       </td>
@@ -240,10 +266,10 @@ export const Facture: React.FC<FactureProps> = ({
                         </span>
                       </td>
                       <td className="py-4 px-2 text-right font-medium">
-                        {item.priceAtTime.toLocaleString()} FCFA
+                        {item.priceAtAdd.toLocaleString()} FCFA
                       </td>
                       <td className="py-4 px-2 text-right font-bold">
-                        {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                        {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()} FCFA
                       </td>
                     </tr>
                   ))}
@@ -289,19 +315,28 @@ export const Facture: React.FC<FactureProps> = ({
             <div className="text-sm text-gray-600 space-y-1">
               <p>
                 <span className="font-medium">Méthode:</span>{' '}
-                {getPaymentMethodLabel(payment.paymentMethod)}
+                {order?.paymentMethod || getPaymentMethodLabel(payment.method)}
               </p>
               <p>
-                <span className="font-medium">Montant:</span> {payment.amount.toLocaleString()}{' '}
-                {payment.currency.toUpperCase()}
+                <span className="font-medium">Montant:</span>{' '}
+                {order?.total
+                  ? parseFloat(order.total).toLocaleString()
+                  : payment.amount.toLocaleString()}{' '}
+                FCFA
               </p>
               <p>
                 <span className="font-medium">Date de paiement:</span>{' '}
-                {formatDate(payment.paidAt || payment.createdAt)}
+                {formatDate(new Date(order?.paidAt || payment.createdAt))}
               </p>
               <p>
-                <span className="font-medium">ID de transaction:</span> {payment.paymentIntentId}
+                <span className="font-medium">ID de transaction:</span>{' '}
+                {order?.paymentReference || payment.transactionId}
               </p>
+              {order?.status && (
+                <p>
+                  <span className="font-medium">Statut commande:</span> {order.status}
+                </p>
+              )}
             </div>
           </div>
 

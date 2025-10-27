@@ -1,0 +1,62 @@
+[
+  {
+    "id": "P001",
+    "nom": "Filtre à huile moteur diesel",
+    "reference_oem": "OE-FH-2024-D",
+    "marque": "Mann-Filter",
+    "categorie": "Filtration",
+    "modeles_camion_compatibles": ["Mercedes Actros", "Volvo FH", "Scania R-Series"],
+    "prix": 25000,
+    "stock": 45,
+    "image_path": "images/filtre_huile_001.jpg",
+    "description": "Filtre à huile haute performance pour moteurs diesel lourds"
+  },
+  {
+    "id": "P002",
+    "nom": "Plaquettes de frein avant",
+    "reference_oem": "BRK-PLQ-F-2024",
+    "marque": "Brembo",
+    "categorie": "Freinage",
+    "modeles_camion_compatibles": ["Mercedes Actros", "MAN TGX", "DAF XF"],
+    "prix": 85000,
+    "stock": 28,
+    "image_path": "images/plaquettes_frein_002.jpg",
+    "description": "Plaquettes de frein céramique pour essieu avant"
+  },
+  {
+    "id": "P003",
+    "nom": "Phare LED droit",
+    "reference_oem": "LED-PHR-D-2024",
+    "marque": "Hella",
+    "categorie": "Éclairage",
+    "modeles_camion_compatibles": ["Volvo FH", "Scania R-Series"],
+    "prix": 125000,
+    "stock": 12,
+    "image_path": "images/phare_led_003.jpg",
+    "description": "Phare LED haute intensité avec feu de jour intégré"
+  },
+  {
+    "id": "P004",
+    "nom": "Courroie de distribution",
+    "reference_oem": "CRR-DIST-2024",
+    "marque": "Gates",
+    "categorie": "Distribution",
+    "modeles_camion_compatibles": ["Mercedes Actros", "MAN TGX", "Volvo FH", "Scania R-Series"],
+    "prix": 45000,
+    "stock": 35,
+    "image_path": "images/courroie_004.jpg",
+    "description": "Courroie de distribution renforcée pour moteurs Euro 6"
+  },
+  {
+    "id": "P005",
+    "nom": "Radiateur de refroidissement",
+    "reference_oem": "RAD-REF-2024",
+    "marque": "Valeo",
+    "categorie": "Refroidissement",
+    "modeles_camion_compatibles": ["DAF XF", "Iveco Stralis"],
+    "prix": 185000,
+    "stock": 8,
+    "image_path": "images/radiateur_005.jpg",
+    "description": "Radiateur aluminium haute capacité avec ventilateur électrique"
+  }
+]

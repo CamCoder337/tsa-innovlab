@@ -1,56 +1,56 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  CheckCircle,
-  Clock,
-  Plus,
-  MapPin,
-  Calendar,
-  Package,
-  Eye,
-  Edit,
-  MessageSquare,
-} from 'lucide-react';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
+import { CheckCircle, Clock, Plus, Package, MessageSquare } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { missionService } from '@/services/mission.service';
 import { toast } from 'react-hot-toast';
+import MissionCard from '@/components/missions/MissionCard';
 
 export default function MyMissionsAffreteur() {
-  const { myMissions, updateMission } = useMissions();
-  const [activeTab, setActiveTab] = useState('all');
+  const { myMissions, error, publishMission, unpublishMission } = useMissions();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
 
   const handlePublish = async (id: string) => {
-    const response = await missionService.publishMission(id);
-    console.log(response);
+    await publishMission(id);
 
-    if (response.error) {
-      toast.error(response.error.message);
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
     }
 
-    if (response.data) {
-      updateMission(id, response.data);
-      toast.success('Mission publiée avec succès');
-      setTimeout(() => {
-        window.location.reload();
-      }, 2500);
+    toast.success('Mission publiée avec succès');
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 2500);
+  };
+
+  const handleunpublish = async (id: string) => {
+    await unpublishMission(id);
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
     }
+
+    toast.success('Mission annulée avec succès');
   };
 
   const filteredMissions = myMissions.filter((mission) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'actives') return ['published', 'assigned'].includes(mission.status);
+    if (activeTab === 'pending') return mission.status === 'published';
+    if (activeTab === 'actives') return mission.status === 'assigned';
     if (activeTab === 'completed') return mission.status === 'completed';
     if (activeTab === 'draft') return mission.status === 'draft';
     return true;
   });
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mes Missions</h1>
@@ -129,8 +129,9 @@ export default function MyMissionsAffreteur() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all">Toutes</TabsTrigger>
+              <TabsTrigger value="pending">En attente</TabsTrigger>
               <TabsTrigger value="actives">Actives</TabsTrigger>
               <TabsTrigger value="completed">Terminées</TabsTrigger>
               <TabsTrigger value="draft">Brouillons</TabsTrigger>
@@ -139,149 +140,12 @@ export default function MyMissionsAffreteur() {
             <TabsContent value={activeTab} className="mt-6">
               <div className="space-y-4">
                 {filteredMissions.map((mission) => (
-                  <Card key={mission.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <Link
-                          to={`/app/missions/${mission.id}`}
-                          aria-label={`Voir ${mission.titre}`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                  {mission.titre}
-                                </h3>
-                                <div className="flex items-center gap-4 text-sm text-gray-600">
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>
-                                      {mission.adresseDepart?.label} →{' '}
-                                      {mission.adresseArrivee?.label}
-                                    </span>
-                                  </div>
-                                  <span>•</span>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>
-                                      Crée le{' '}
-                                      {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <Badge className={getStatusColor(mission.status)}>
-                                <div className="flex items-center gap-1">
-                                  {getStatusIcon(mission.status)}
-                                  {getStatusLabel(mission.status)}
-                                </div>
-                              </Badge>
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                              <div>
-                                <span className="text-gray-500">Budget Min.:</span>
-                                <span className="ml-1 font-medium">
-                                  {mission.budgetMin?.toLocaleString() || 0} FCFA
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-gray-500">Départ:</span>
-                                <span className="ml-1 font-medium">
-                                  {mission.dateDepartEstime
-                                    ? new Date(mission.dateDepartEstime).toLocaleDateString('fr-FR')
-                                    : 'Non spécifiée'}
-                                </span>
-                              </div>
-                              {mission.dateArriveePrevue && (
-                                <div>
-                                  <span className="text-gray-500">Arrivée:</span>
-                                  <span className="ml-1 font-medium">
-                                    {mission.dateArriveePrevue
-                                      ? new Date(mission.dateArriveePrevue).toLocaleDateString(
-                                          'fr-FR'
-                                        )
-                                      : 'Non spécifiée'}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* {mission?.shipper && (
-                                                        <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                                                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                                                <span className="text-xs font-medium text-green-600">
-                                                                    {mission.shipper.name.charAt(0)}
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm font-medium text-green-800">
-                                                                    Assignée à {mission.shipper.name}
-                                                                </p>
-                                                                <div className="flex items-center gap-2 text-xs text-green-600">
-                                                                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                                                    <span>{mission.shipper.rating}</span>
-                                                                    <span>•</span>
-                                                                    <span>{mission.shipper.phone}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )} */}
-                          </div>
-                        </Link>
-
-                        <div className="flex flex-col gap-2 lg:w-48">
-                          <Link
-                            to={`/app/missions/${mission.id}`}
-                            aria-label={`Voir ${mission.titre}`}
-                          >
-                            <Button variant="outline" className="gap-2 bg-transparent w-full">
-                              <Eye className="h-4 w-4" />
-                              Voir Détails
-                            </Button>
-                          </Link>
-                          {mission.status === 'draft' && (
-                            <Button
-                              variant="outline"
-                              className="gap-2 bg-tsa-blue text-white"
-                              onClick={() => handlePublish(mission.id)}
-                            >
-                              <Edit className="h-4 w-4" />
-                              Publier
-                            </Button>
-                          )}
-                          {mission.status === 'published' && (
-                            <Link
-                              to={`/app/missions/${mission.id}?tab=offers`}
-                              aria-label={`Voir ${mission.titre}`}
-                            >
-                              <Button
-                                className="gap-2"
-                                style={{ backgroundColor: 'var(--tsa-blue)' }}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                Voir Offres ({mission.volume})
-                              </Button>
-                            </Link>
-                          )}
-                          {mission.status === 'assigned' && (
-                            <Link
-                              to={`/app/missions/${mission.id}/tracking`}
-                              aria-label={`Suivre ${mission.titre}`}
-                            >
-                              <Button
-                                className="gap-2"
-                                style={{ backgroundColor: 'var(--tsa-blue)' }}
-                              >
-                                <MapPin className="h-4 w-4" />
-                                Suivre Expédition
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <MissionCard
+                    key={mission.id}
+                    mission={mission}
+                    onPublish={handlePublish}
+                    onCancel={handleunpublish}
+                  />
                 ))}
               </div>
 

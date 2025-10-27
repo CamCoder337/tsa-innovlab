@@ -1,0 +1,163 @@
+###
+# Test du Flux E-commerce Complet
+# Utilisez ce fichier avec REST Client (VS Code) ou Postman
+###
+
+@baseUrl = http://localhost:3333
+@accessToken = YOUR_ACCESS_TOKEN_HERE
+@productId = YOUR_PRODUCT_ID_HERE
+@cartItemId = YOUR_CART_ITEM_ID_HERE
+@orderId = YOUR_ORDER_ID_HERE
+@paymentId = YOUR_PAYMENT_ID_HERE
+@addressId = YOUR_ADDRESS_ID_HERE
+
+### 1. Créer un compte CLIENT
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "client.test@tsa-logistics.com",
+  "password": "Client123!",
+  "firstName": "Jean",
+  "lastName": "Client",
+  "phone": "+237650000001",
+  "role": "client"
+}
+
+### 2. Se connecter
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "client.test@tsa-logistics.com",
+  "password": "Client123!"
+}
+
+### 3. Voir les produits disponibles (PUBLIC - pas d'auth)
+GET {{baseUrl}}/api/shop/products?page=1&limit=10&inStock=true
+
+### 4. Détails d'un produit (PUBLIC)
+GET {{baseUrl}}/api/shop/products/{{productId}}
+
+### 5. Voir les catégories (PUBLIC)
+GET {{baseUrl}}/api/shop/categories
+
+### 6. Recherche de produits (PUBLIC)
+GET {{baseUrl}}/api/shop/search?q=laptop
+
+### 7. Voir mon profil CLIENT
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{accessToken}}
+
+### 8. Voir mon panier (vide au début)
+GET {{baseUrl}}/api/client/cart
+Authorization: Bearer {{accessToken}}
+
+### 9. Ajouter un produit au panier
+POST {{baseUrl}}/api/client/cart/items
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "quantity": 2
+}
+
+### 10. Voir mon panier (avec items)
+GET {{baseUrl}}/api/client/cart
+Authorization: Bearer {{accessToken}}
+
+### 11. Modifier la quantité d'un article
+PUT {{baseUrl}}/api/client/cart/items/{{cartItemId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "quantity": 3
+}
+
+### 12. Créer une adresse de livraison (exemple)
+# NOTE: Remplacer par votre endpoint d'adresses si disponible
+# Sinon créer manuellement en base de données
+
+### 13. Créer une commande depuis le panier
+POST {{baseUrl}}/api/client/orders
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "shippingAddressId": "{{addressId}}",
+  "billingAddressId": "{{addressId}}",
+  "paymentMethod": "mtn_mobile_money",
+  "notes": "Livraison rapide SVP"
+}
+
+### 14. Voir mes commandes
+GET {{baseUrl}}/api/client/orders
+Authorization: Bearer {{accessToken}}
+
+### 15. Voir les détails d'une commande
+GET {{baseUrl}}/api/client/orders/{{orderId}}
+Authorization: Bearer {{accessToken}}
+
+### 16. Voir mes statistiques
+GET {{baseUrl}}/api/client/orders/stats
+Authorization: Bearer {{accessToken}}
+
+### 17. Initier le paiement MTN
+POST {{baseUrl}}/api/client/payments/initiate
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "orderId": "{{orderId}}",
+  "phoneNumber": "+237650000001"
+}
+
+### 18. Vérifier le statut du paiement
+GET {{baseUrl}}/api/client/payments/{{paymentId}}/status
+Authorization: Bearer {{accessToken}}
+
+### 19. Confirmer le paiement (DEV SEULEMENT)
+POST {{baseUrl}}/api/client/payments/{{paymentId}}/confirm
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "transactionId": "DEV-MTN-12345",
+  "metadata": {
+    "simulated": true
+  }
+}
+
+### 20. Voir le paiement d'une commande
+GET {{baseUrl}}/api/client/orders/{{orderId}}/payment
+Authorization: Bearer {{accessToken}}
+
+### 21. Annuler une commande (si PENDING ou PAID)
+POST {{baseUrl}}/api/client/orders/{{orderId}}/cancel
+Authorization: Bearer {{accessToken}}
+
+### 22. Retirer un article du panier
+DELETE {{baseUrl}}/api/client/cart/items/{{cartItemId}}
+Authorization: Bearer {{accessToken}}
+
+### 23. Vider complètement le panier
+DELETE {{baseUrl}}/api/client/cart
+Authorization: Bearer {{accessToken}}
+
+###
+# ADMIN ENDPOINTS (pour gestion)
+###
+
+### 24. Voir toutes les commandes (ADMIN)
+GET {{baseUrl}}/api/admin/missions
+Authorization: Bearer {{accessToken}}
+
+### 25. Voir les stats produits (ADMIN)
+GET {{baseUrl}}/api/admin/products/stats
+Authorization: Bearer {{accessToken}}
+
+### 26. Voir les produits en stock faible (ADMIN)
+GET {{baseUrl}}/api/admin/products/low-stock
+Authorization: Bearer {{accessToken}}

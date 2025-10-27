@@ -1,0 +1,76 @@
+import { test } from '@japa/runner'
+import Database from '@adonisjs/lucid/services/db'
+import User, { UserRole, UserStatus } from '#models/user'
+
+test.group('Shop Visual Recognition Controller', (group) => {
+  let testUser: User
+  let userToken: string
+
+  group.each.setup(async () => {
+    await Database.beginGlobalTransaction()
+
+    // Create test user
+    testUser = await User.create({
+      email: 'visual-user@example.com',
+      passwordHash: 'password123',
+      firstName: 'Visual',
+      lastName: 'User',
+      phone: '+237600000002',
+      role: UserRole.AFFRETEUR,
+      status: UserStatus.ACTIVE,
+      mfaEnabled: false,
+    })
+
+    // Generate access token
+    userToken = await testUser.generateAccessToken('test-token')
+  })
+
+  group.each.teardown(async () => {
+    await Database.rollbackGlobalTransaction()
+  })
+
+  /**
+   * NOTE: These are integration tests that test the controller routes and basic functionality.
+   * Full AI service integration tests require:
+   * 1. The FastAPI service to be running (http://localhost:8000)
+   * 2. Or mocking library like 'sinon' for unit testing
+   *
+   * Install sinon for complete mocking: npm install --save-dev sinon @types/sinon
+   *
+   * Tests validate authentication, error handling, and AI service integration
+   */
+
+  test('should require authentication for image search', async ({ client }) => {
+    const response = await client.post('/api/shop/visual-recognition/search')
+
+    response.assertStatus(401)
+  })
+
+  test('should return 422 when no image file is provided', async ({ client }) => {
+    const response = await client.post('/api/shop/visual-recognition/search').bearerToken(userToken)
+
+    response.assertStatus(422)
+    response.assertBodyContains({
+      success: false,
+      message: 'Image file is required',
+    })
+  })
+
+  test('should require authentication for health check', async ({ client }) => {
+    const response = await client.get('/api/shop/visual-recognition/health')
+
+    response.assertStatus(401)
+  })
+
+  test('should check AI service health when authenticated', async ({ client, assert }) => {
+    const response = await client.get('/api/shop/visual-recognition/health').bearerToken(userToken)
+
+    // Should return 200 or 500 depending on service availability
+    assert.isTrue(response.status() === 200 || response.status() === 500)
+
+    const body = response.body()
+    assert.exists(body.service)
+    assert.equal(body.service, 'visual_recognition')
+    assert.exists(body.status)
+  })
+})

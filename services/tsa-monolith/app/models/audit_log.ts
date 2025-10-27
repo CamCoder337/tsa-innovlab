@@ -26,6 +26,9 @@ export default class AuditLog extends BaseModel {
   declare newValues: Record<string, any> | null
 
   @column()
+  declare metadata: Record<string, any> | null
+
+  @column()
   declare ipAddress: string | null
 
   @column()

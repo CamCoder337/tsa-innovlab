@@ -112,7 +112,7 @@ const BillingPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto py-8 space-y-8 px-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Facturation & Devis</h1>
         <p className="text-muted-foreground">Gérez vos factures et devis en toute simplicité</p>

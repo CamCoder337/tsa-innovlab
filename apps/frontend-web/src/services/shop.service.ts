@@ -3,22 +3,12 @@
 // ============================================================================
 
 import { BaseApi } from './api';
-import type { ApiResponse, PaginatedMetaResponse } from '@/types/common.types';
-import type {
-  Category,
-  CreateCategory,
-  UpdateCategory,
-  CategoryFilterParams,
-  CategoryWithStats,
-} from '@/types/category.types';
-import type {
-  Product,
-  CreateProduct,
-  UpdateProduct,
-  ProductFilterParams,
-  ProductStats,
-} from '@/types/product.types';
+import type { ApiResponse, Paginator } from '@/types/common.types';
+import type { CategoryFilterParams, CategoryResponse } from '@/types/category.types';
+import type { Product, ProductFilterParams } from '@/types/product.types';
 import type { AxiosError } from 'axios';
+import type { AddToCartRequest, Cart, CartItem } from '@/types/cart.types';
+import type { CreateOrderRequest, Order, OrderFiltersQuery, OrderStats } from '@/types/order.types';
 
 export class ShopService extends BaseApi {
   private isAxiosError(
@@ -59,22 +49,9 @@ export class ShopService extends BaseApi {
   }
 
   // Product Operations
-  async getProducts(
-    params?: ProductFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Product, 'products'>>> {
+  async getProducts(params?: ProductFilterParams): Promise<ApiResponse<Paginator<Product>>> {
     try {
-      const response = await this.insertToken().get('/api/shop/products', { params });
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async adminGetProducts(
-    params?: ProductFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Product, 'products'>>> {
-    try {
-      const response = await this.insertToken().get('/api/admin/products', { params });
+      const response = await this.axiosInstance.get('/api/shop/products', { params });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -90,140 +67,155 @@ export class ShopService extends BaseApi {
     }
   }
 
-  async adminGetProduct(id: string): Promise<ApiResponse<Product>> {
-    try {
-      const response = await this.insertToken().get(`/api/admin/products/${id}`);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async getProductStats(): Promise<ApiResponse<ProductStats>> {
-    try {
-      const response = await this.insertToken().get(`/api/admin/stats/products`);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async getAdminProductStats(): Promise<
-    ApiResponse<{
-      stats: {
-        products: {
-          total: number;
-          active: number;
-          inactive: number;
-          lowStock: number;
-          outOfStock: number;
-        };
-        inventory: {
-          totalValue: number;
-        };
-        topCategories: Array<{
-          name: string;
-          productCount: number;
-        }>;
-      };
-    }>
-  > {
-    try {
-      const response = await this.insertToken().get('/api/admin/products/stats');
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async createProduct(data: CreateProduct): Promise<ApiResponse<Record<string, Product>>> {
-    try {
-      const response = await this.insertToken().post('/api/admin/products', data);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async updateProduct(
+  async getSimilarProducts(
     id: string,
-    data: UpdateProduct
-  ): Promise<ApiResponse<Record<string, Product>>> {
+    limit?: number
+  ): Promise<ApiResponse<{ products: Product[]; strategy: string; total?: number }>> {
     try {
-      const response = await this.insertToken().put(`/api/admin/products/${id}`, data);
+      const response = await this.insertToken().get(
+        `/api/shop/product-recommendations/similar/${id}`,
+        { params: { limit } }
+      );
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async deleteProduct(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
+  async getProductRecommendations(
+    limit?: number
+  ): Promise<ApiResponse<{ products: Product[]; strategy: string; total: number }>> {
     try {
-      const response = await this.insertToken().delete(`/api/admin/products/${id}`);
-      return { data: response.data };
+      const response = await this.insertToken().get('/api/shop/product-recommendations/popular', {
+        params: { limit },
+      });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async visualRecognitionSearch(
+    image: File
+  ): Promise<ApiResponse<{ products: Product[]; processing_time_ms: number; total: number }>> {
+    try {
+      const formData = new FormData();
+      formData.append('image', image);
+
+      const response = await this.insertToken().post(
+        '/api/shop/visual-recognition/search',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
   // Category Operations
-
-  async getCategories(
-    params?: CategoryFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Category, 'categories'>>> {
+  async getCategories(params?: CategoryFilterParams): Promise<ApiResponse<CategoryResponse>> {
     try {
-      const response = await this.insertToken().get('/api/shop/categories', { params });
+      const response = await this.axiosInstance.get('/api/shop/categories', { params });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async adminGetCategories(
-    params?: CategoryFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Category, 'categories'>>> {
+  // Cart Operations
+  async getCart(): Promise<
+    ApiResponse<{ cart: Cart; itemCount: number; totalAmount: number; totalQuantity: number }>
+  > {
     try {
-      const response = await this.insertToken().get('/api/admin/categories', { params });
+      const response = await this.insertToken().get('/api/client/cart');
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async getCategory(id: string): Promise<ApiResponse<CategoryWithStats>> {
+  async addCartItem(data: AddToCartRequest): Promise<ApiResponse<CartItem>> {
     try {
-      const response = await this.insertToken().get(`/api/admin/categories/${id}`);
+      const response = await this.insertToken().post('/api/client/cart/items', data);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async createCategory(data: CreateCategory): Promise<ApiResponse<Record<string, Category>>> {
+  async updateCartItem(id: string, quantity: number): Promise<ApiResponse<CartItem>> {
     try {
-      const response = await this.insertToken().post('/api/admin/categories', data);
+      const response = await this.insertToken().put(`/api/client/cart/items/${id}`, { quantity });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }
   }
 
-  async updateCategory(
-    id: string,
-    data: UpdateCategory
-  ): Promise<ApiResponse<Record<string, Category>>> {
+  async deleteCartItem(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
     try {
-      const response = await this.insertToken().put(`/api/admin/categories/${id}`, data);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async deleteCategory(id: string): Promise<ApiResponse<{ success: boolean; message: string }>> {
-    try {
-      const response = await this.insertToken().delete(`/api/admin/categories/${id}`);
+      const response = await this.insertToken().delete(`/api/client/cart/items/${id}`);
       return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async clearCart(): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    try {
+      const response = await this.insertToken().delete(`/api/client/cart/`);
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  // Order Operations
+  async getOrders(params?: OrderFiltersQuery): Promise<ApiResponse<Paginator<Order>>> {
+    try {
+      const response = await this.insertToken().get('/api/client/orders', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getOrder(id: string): Promise<ApiResponse<Order>> {
+    try {
+      const response = await this.insertToken().get(`/api/client/orders/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async createOrder(data: CreateOrderRequest): Promise<ApiResponse<Record<string, Order>>> {
+    try {
+      const response = await this.insertToken().post('/api/client/orders', data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async cancelOrder(id: string): Promise<ApiResponse<Record<string, Order>>> {
+    try {
+      const response = await this.insertToken().post(`/api/client/orders/${id}/cancel`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getOrdersStats(): Promise<ApiResponse<OrderStats>> {
+    try {
+      const response = await this.insertToken().get('/api/client/orders/stats');
+      return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
     }

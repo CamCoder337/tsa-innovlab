@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { VehicleType } from '#models/vehicle'
 
 /**
  * Validator for creating a new product
@@ -17,6 +18,7 @@ export const createProductValidator = vine.compile(
     images: vine.array(vine.string().url()).optional(),
     specifications: vine.record(vine.any()).optional(),
     isActive: vine.boolean().optional(),
+    preferredVehicleType: vine.enum(Object.values(VehicleType)).optional().nullable(),
   })
 )
 
@@ -37,6 +39,7 @@ export const updateProductValidator = vine.compile(
     images: vine.array(vine.string().url()).optional(),
     specifications: vine.record(vine.any()).optional(),
     isActive: vine.boolean().optional(),
+    preferredVehicleType: vine.enum(Object.values(VehicleType)).optional().nullable(),
   })
 )
 
@@ -54,6 +57,7 @@ export const productsListValidator = vine.compile(
     maxPrice: vine.number().min(0).optional(),
     inStock: vine.boolean().optional(),
     lowStock: vine.boolean().optional(),
+    preferredVehicleType: vine.enum(Object.values(VehicleType)).optional(),
     sortBy: vine.enum(['name', 'price', 'stock', 'createdAt', 'updatedAt']).optional(),
     sortOrder: vine.enum(['asc', 'desc']).optional(),
   })

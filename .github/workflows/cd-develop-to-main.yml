@@ -236,8 +236,8 @@ jobs:
           # Fetch develop
           git fetch origin develop:develop
           
-          # Merge develop into main
-          if git merge develop --no-ff -m "🚀 Release: Merge develop to main - ${{ needs.check-changes.outputs.version-bump }} update"; then
+          # Merge develop into main (allow unrelated histories for initial setup)
+          if git merge develop --no-ff --allow-unrelated-histories -m "🚀 Release: Merge develop to main - ${{ needs.check-changes.outputs.version-bump }} update"; then
             echo "✅ Merge successful"
             merge_commit=$(git rev-parse HEAD)
             echo "merge-commit=$merge_commit" >> $GITHUB_OUTPUT

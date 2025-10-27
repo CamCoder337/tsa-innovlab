@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Mission } from '@/types/mission.types';
-import type { Proposition } from '@/types/proposition.types';
 import {
   Select,
   SelectContent,
@@ -20,57 +17,36 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { PropositionForm } from '@/components/forms/PropositionForm';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
-import {
-  Calendar,
-  MapPin,
-  Package,
-  MessageSquare,
-  Eye,
-  CheckCircle,
-  Search,
-  Filter,
-  Truck,
-  DollarSign,
-  Star,
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { Badge } from '@/components/ui/badge';
 import { useAddresses } from '@/hooks/useAddresses';
-import { missionService } from '@/services/mission.service';
+import { useVehicles } from '@/hooks/useVehicles';
 import toast from 'react-hot-toast';
-import { usePropositions } from '@/hooks/usePropositions';
+import MissionCard from '@/components/missions/MissionCard';
+import { VehicleTypeLabels } from '@/types/vehicle.types';
 // import { Calendar } from '@/components/ui/calendar';
 
-interface FormValues {
-  id: string;
-  amount: number;
-  delai: number;
-  message: string;
-}
-
 export default function MissionsTransporteurPage() {
-  const { missions, myMissions, currentMission, setCurrentMission, deleteMission } = useMissions();
-  const { myPropositions, addProposition } = usePropositions();
+  const { missions, myMissions, currentMission, error, setCurrentMission, applyMission } =
+    useMissions();
   const { addresses } = useAddresses();
+  const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const [activeTab, setActiveTab] = useState('available');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterUrgency, setFilterUrgency] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
 
   const filteredMissions = (() => {
     if (activeTab === 'all') {
-      return [...missions, ...myMissions, ...myPropositions];
+      return [...missions, ...myMissions];
     }
 
     if (activeTab === 'available') {
       return missions.filter((mission) => mission.status === 'published');
     }
-
-    if (activeTab === 'pending')
-      return myPropositions.filter((proposition) => proposition.status === 'pending');
 
     // For other tabs, filter myMissions by status
     return myMissions.filter((mission) => {
@@ -80,37 +56,38 @@ export default function MissionsTransporteurPage() {
     });
   })();
 
-  const applyProposition = async (data: FormValues) => {
-    const payload = {
-      prixPropose: data.amount,
-      delaiPropose: data.delai,
-      commentaire: data.message,
-    };
+  const applyForMission = async () => {
+    if (!currentMission || !selectedVehicleId) {
+      toast.error('Veuillez sélectionner un véhicule');
+      return;
+    }
 
     try {
-      const response = await missionService.applyForMission(data.id, payload);
+      await applyMission(currentMission.id, selectedVehicleId);
 
-      if (response.error) {
-        console.log(response.error);
-        toast.error(response.error.message || 'Erreur lors de la soumission ');
+      if (error) {
+        console.error(error);
+        toast.error(error || 'Erreur lors de la candidature');
         return;
       }
 
-      if (response.data) {
-        addProposition(response.data);
-        deleteMission(data.id);
-        toast.success('Contre-proposition envoyée');
-        setIsDialogOpen(false);
-        setCurrentMission(null);
-      }
+      toast.success('Candidature envoyée avec succès');
+      setIsDialogOpen(false);
+      setCurrentMission(null);
+      setSelectedVehicleId('');
     } catch (error) {
-      console.error('Error performing action:', error);
-      toast.error('Failed to perform action');
+      console.error('Error applying for mission:', error);
+      toast.error('Erreur lors de la candidature');
     }
   };
 
+  const handleApplyToMission = (mission: Mission) => {
+    setCurrentMission(mission);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 p-6">
       <div className="flex-1 p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Missions Disponibles</h1>
@@ -171,13 +148,7 @@ export default function MissionsTransporteurPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Revenus Potentiels</p>
-                  <p className="text-2xl font-bold">
-                    {myMissions
-                      .filter((m) => m.status === 'assigned')
-                      .reduce((sum, m) => sum + (m.budgetMin ?? 0), 0)
-                      .toLocaleString()}{' '}
-                    FCFA
-                  </p>
+                  <p className="text-2xl font-bold">0 FCFA</p>
                 </div>
               </div>
             </CardContent>
@@ -204,9 +175,9 @@ export default function MissionsTransporteurPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les origines</SelectItem>
-                  {addresses.map((adresseDepart) => (
+                  {addresses.map((adresseDepart, index) => (
                     <SelectItem
-                      key={adresseDepart.id || 'unknown'}
+                      key={`${adresseDepart.id || 'unknown'}-${index}`}
                       value={adresseDepart.id || 'unknown'}
                     >
                       {adresseDepart.label || 'Non spécifiée'}
@@ -238,9 +209,8 @@ export default function MissionsTransporteurPage() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="available">Disponibles</TabsTrigger>
-                <TabsTrigger value="pending">En attente</TabsTrigger>
                 <TabsTrigger value="assigned">En Cours</TabsTrigger>
                 <TabsTrigger value="completed">Terminées</TabsTrigger>
                 <TabsTrigger value="all">Toutes</TabsTrigger>
@@ -248,191 +218,14 @@ export default function MissionsTransporteurPage() {
 
               <TabsContent value={activeTab} className="mt-6">
                 <div className="space-y-4">
-                  {filteredMissions.map((item: Mission | Proposition) => {
-                    // Type guard to check if the item is a Mission
-                    const isMission = 'titre' in item;
-                    const mission = isMission ? (item as Mission) : (item as Proposition).mission;
-                    const missionId = isMission ? item.id : (item as Proposition).missionId;
-
-                    return (
-                      <div key={item.id}>
-                        <Card className="hover:shadow-md transition-shadow py-1">
-                          <CardContent className="p-6">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                              <Link
-                                to={`/app/missions/${missionId}`}
-                                aria-label={`Voir ${mission?.titre || 'mission'}`}
-                                className="flex-1"
-                              >
-                                <div className="flex-1">
-                                  <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                                        {mission?.titre || 'Missio'}
-                                      </h3>
-                                      {mission && (
-                                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                                          <div className="flex items-center gap-1">
-                                            <MapPin className="h-4 w-4" />
-                                            <span>
-                                              {mission.adresseDepart?.label} →{' '}
-                                              {mission.adresseArrivee?.label}
-                                            </span>
-                                          </div>
-                                          <span>•</span>
-                                          <div className="flex items-center gap-1">
-                                            <Calendar className="h-4 w-4" />
-                                            <span>
-                                              Créé le{' '}
-                                              {new Date(mission.createdAt).toLocaleDateString(
-                                                'fr-FR'
-                                              )}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    <Badge className={getStatusColor(item.status)}>
-                                      <div className="flex items-center gap-1">
-                                        {getStatusIcon(item.status)}
-                                        {getStatusLabel(item.status)}
-                                      </div>
-                                    </Badge>
-                                  </div>
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                                    {!isMission && (
-                                      <div>
-                                        <span className="text-gray-500">Prix initial:</span>
-                                        <span className="ml-1 font-medium">
-                                          {Math.round(mission?.budgetMin || 0)} FCFA
-                                        </span>
-                                      </div>
-                                    )}
-                                    <div>
-                                      <span className="text-gray-500">
-                                        {isMission ? 'Prix:' : 'Prix proposé:'}
-                                      </span>
-                                      <span className="ml-1 font-medium text-green-600">
-                                        {!isMission
-                                          ? `${(item as Proposition).prixPropose} FCFA`
-                                          : `${(item as Mission).budgetMin || (item as Mission).budgetMax} FCFA`}
-                                      </span>
-                                    </div>
-                                    {isMission && (
-                                      <>
-                                        {mission?.typeMarchandise && (
-                                          <div>
-                                            <span className="text-gray-500">Type:</span>
-                                            <span className="ml-1 font-medium">
-                                              {mission?.typeMarchandise}
-                                            </span>
-                                          </div>
-                                        )}
-                                        {mission?.dateArriveePrevue && (
-                                          <div>
-                                            <span className="text-gray-500">Échéance:</span>
-                                            <span className="ml-1 font-medium">
-                                              {new Date(
-                                                mission?.dateArriveePrevue
-                                              ).toLocaleDateString('fr-FR')}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-
-                                  {mission?.affreteur && (
-                                    <div className="flex items-center gap-2 rounded-lg">
-                                      <div className="w-8 h-8 rounded-full flex items-center justify-center">
-                                        <span className="text-xs font-medium text-tsa-blue rounded-full border-1 p-2">
-                                          {mission.affreteur.firstName.charAt(0)}
-                                          {mission.affreteur.lastName.charAt(0)}
-                                        </span>
-                                      </div>
-                                      <div className="flex flex-col items-center">
-                                        <span className="text-xs font-medium text-tsa-blue">
-                                          {mission.affreteur.firstName} {mission.affreteur.lastName}
-                                        </span>
-                                        <div className="flex items-center gap-1 text-xs text-tsa-blue">
-                                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                          <span>{mission.ratingAffreteur || 0}</span>
-                                          {/* <span>•</span> */}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </Link>
-
-                              <div className="flex flex-col gap-2 lg:w-48">
-                                <Link
-                                  to={`/app/missions/${missionId}`}
-                                  aria-label={`Voir ${mission?.titre}`}
-                                >
-                                  <Button variant="outline" className="gap-2 bg-transparent w-full">
-                                    <Eye className="h-4 w-4" />
-                                    Voir Détails
-                                  </Button>
-                                </Link>
-                                {isMission && mission?.status === 'published' && (
-                                  <Button
-                                    className="gap-2"
-                                    style={{ backgroundColor: 'var(--tsa-blue)' }}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      setCurrentMission(mission);
-                                      setIsDialogOpen(true);
-                                    }}
-                                  >
-                                    <MessageSquare className="h-4 w-4" />
-                                    Postuler
-                                  </Button>
-                                )}
-                                {mission?.status === 'assigned' && (
-                                  <Button
-                                    className="gap-2"
-                                    style={{ backgroundColor: 'var(--tsa-blue)' }}
-                                  >
-                                    <Truck className="h-4 w-4" />
-                                    Gérer Transport
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Action Dialog */}
-                        <Dialog
-                          open={isDialogOpen}
-                          onOpenChange={(open) => {
-                            if (!open) {
-                              setCurrentMission(null);
-                            }
-                            setIsDialogOpen(open);
-                          }}
-                        >
-                          <DialogContent>
-                            <DialogDescription className="hidden">
-                              Vous allez postuler à une mission
-                            </DialogDescription>
-                            <DialogHeader>
-                              <DialogTitle>Postuler à la mission</DialogTitle>
-                            </DialogHeader>
-
-                            <PropositionForm
-                              action={'offer'}
-                              mission={currentMission as Mission}
-                              onSubmit={applyProposition}
-                              onCancel={() => setIsDialogOpen(false)}
-                            />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    );
-                  })}
+                  {filteredMissions.map((mission: Mission) => (
+                    <MissionCard
+                      key={mission.id}
+                      mission={mission}
+                      onApply={handleApplyToMission}
+                      showApplyButton={activeTab === 'available'}
+                    />
+                  ))}
                 </div>
 
                 {filteredMissions.length === 0 && (
@@ -448,6 +241,98 @@ export default function MissionsTransporteurPage() {
                 )}
               </TabsContent>
             </Tabs>
+
+            {/* Vehicle Selection Dialog */}
+            <Dialog
+              open={isDialogOpen}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setCurrentMission(null);
+                  setSelectedVehicleId('');
+                }
+                setIsDialogOpen(open);
+              }}
+            >
+              <DialogContent>
+                <DialogDescription className="hidden">
+                  Sélectionnez un véhicule pour postuler à cette mission
+                </DialogDescription>
+                <DialogHeader>
+                  <DialogTitle>Postuler à la mission</DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {currentMission && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900">{currentMission.title}</h3>
+                      <p className="text-sm text-gray-600 mt-1">{currentMission.description}</p>
+                      {currentMission.requiredVehicleType && (
+                        <p className="text-sm text-blue-600 mt-2">
+                          Type de véhicule requis:{' '}
+                          {VehicleTypeLabels[currentMission.requiredVehicleType]}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sélectionnez un véhicule disponible *
+                    </label>
+                    {vehiclesLoading ? (
+                      <div className="flex items-center justify-center p-4">
+                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-600">Chargement des véhicules...</span>
+                      </div>
+                    ) : availableVehicles.length === 0 ? (
+                      <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                        <p>Aucun véhicule disponible</p>
+                        <p className="text-sm mt-1">
+                          Vous devez avoir au moins un véhicule disponible pour postuler à une
+                          mission.
+                        </p>
+                      </div>
+                    ) : (
+                      <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir un véhicule" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableVehicles.map((vehicle) => (
+                            <SelectItem key={vehicle.id} value={vehicle.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{vehicle.registration}</span>
+                                <span className="text-sm text-gray-500">
+                                  ({VehicleTypeLabels[vehicle.type]})
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsDialogOpen(false);
+                        setSelectedVehicleId('');
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={applyForMission}
+                      disabled={!selectedVehicleId || availableVehicles.length === 0}
+                    >
+                      Postuler
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>

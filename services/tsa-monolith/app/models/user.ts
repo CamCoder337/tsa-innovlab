@@ -7,7 +7,7 @@ import type { HasMany } from '@adonisjs/lucid/types/relations'
 import AccessToken from '#models/access_token'
 import RefreshToken from '#models/refresh_token'
 import Mission from '#models/mission'
-import Proposition from '#models/proposition'
+import Vehicle from '#models/vehicle'
 import AuditLog from '#models/audit_log'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import string from '@adonisjs/core/helpers/string'
@@ -21,6 +21,7 @@ export enum UserRole {
   ADMIN = 'admin',
   TRANSPORTEUR = 'transporteur',
   AFFRETEUR = 'affreteur',
+  CLIENT = 'client',
 }
 
 export enum UserStatus {
@@ -86,8 +87,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare refreshTokens: HasMany<typeof RefreshToken>
   @hasMany(() => Mission, { foreignKey: 'affreteurId' })
   declare missions: HasMany<typeof Mission>
-  @hasMany(() => Proposition, { foreignKey: 'transporteurId' })
-  declare propositions: HasMany<typeof Proposition>
+  @hasMany(() => Vehicle)
+  declare vehicles: HasMany<typeof Vehicle>
   @hasMany(() => AuditLog)
   declare auditLogs: HasMany<typeof AuditLog>
 
@@ -239,8 +240,23 @@ export default class User extends compose(BaseModel, AuthFinder) {
   getAbilities(): string[] {
     const roleAbilities = {
       admin: ['manage_users', 'view_reports', 'edit_settings'],
-      transporteur: ['view_missions', 'update_status'],
-      affreteur: ['create_mission', 'view_status'],
+      transporteur: [
+        'view_missions',
+        'update_status',
+        'shop',
+        'manage_cart',
+        'place_orders',
+        'view_orders',
+      ],
+      affreteur: [
+        'create_mission',
+        'view_status',
+        'shop',
+        'manage_cart',
+        'place_orders',
+        'view_orders',
+      ],
+      client: ['shop', 'manage_cart', 'place_orders', 'view_orders'],
     }
 
     return roleAbilities[this.role] || []

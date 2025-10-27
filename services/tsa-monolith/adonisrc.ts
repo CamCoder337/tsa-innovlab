@@ -58,8 +58,8 @@ export default defineConfig({
     },
     () => import('@adonisjs/mail/mail_provider'),
     {
-      file: () => import('@adonisjs/transmit/transmit_provider'),
-      environment: ['web', 'console', 'test'],
+      file: () => import('adonisjs-websocket/websocket_provider'),
+      environment: ['web'],
     },
   ],
 
@@ -101,7 +101,7 @@ export default defineConfig({
         timeout: 30000,
       },
     ],
-    forceExit: false,
+    forceExit: true,
   },
   metaFiles: [
     {

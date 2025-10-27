@@ -23,12 +23,12 @@ import { useMissions } from '@/hooks/useMissions';
 import { getStatusColor } from '@/lib/mission-utils';
 import { useState } from 'react';
 
-const getPriorityColor = (budgetMax: number) => {
-  if (budgetMax > 200000) return 'bg-red-100 text-red-800';
-  if (budgetMax > 100000) return 'bg-orange-100 text-orange-800';
-  if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800';
-  return 'bg-green-100 text-green-800';
-};
+// const getPriorityColor = (budgetMax: number) => {
+//   if (budgetMax > 200000) return 'bg-red-100 text-red-800';
+//   if (budgetMax > 100000) return 'bg-orange-100 text-orange-800';
+//   if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800';
+//   return 'bg-green-100 text-green-800';
+// };
 
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
@@ -134,7 +134,7 @@ export default function MissionTrackingPage() {
               Retour
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{mission.titre}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{mission.title}</h1>
               <p className="text-gray-600">Suivi détaillé de la mission</p>
             </div>
           </div>
@@ -174,9 +174,9 @@ export default function MissionTrackingPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Budget</p>
+                  <p className="text-sm font-medium text-gray-600">Prix</p>
                   <p className="text-lg font-bold text-green-600">
-                    {mission.budgetMin.toLocaleString()}-{mission.budgetMax.toLocaleString()} FCFA
+                    {mission.budgetMin?.toLocaleString() || 0} FCFA
                   </p>
                 </div>
                 <DollarSign className="w-6 h-6 text-green-500" />
@@ -203,7 +203,7 @@ export default function MissionTrackingPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Livraison prévue</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {new Date(mission.dateArriveePrevue).toLocaleDateString()}
+                    {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
                   </p>
                 </div>
                 <Calendar className="w-6 h-6 text-orange-500" />
@@ -277,7 +277,7 @@ export default function MissionTrackingPage() {
                         Date de départ estimée
                       </label>
                       <p className="text-gray-900">
-                        {new Date(mission.dateDepartEstime).toLocaleDateString()}
+                        {new Date(mission.dateDepartEstime || '').toLocaleDateString()}
                       </p>
                     </div>
                     <div>
@@ -285,16 +285,16 @@ export default function MissionTrackingPage() {
                         Date d'arrivée prévue
                       </label>
                       <p className="text-gray-900">
-                        {new Date(mission.dateArriveePrevue).toLocaleDateString()}
+                        {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="text-sm font-medium text-gray-600">Priorité</label>
                     <Badge className={getPriorityColor(mission.budgetMax)}>
                       {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
                     </Badge>
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
 

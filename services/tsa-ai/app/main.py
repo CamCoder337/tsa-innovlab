@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple
 
 # Configure logging
 logging.basicConfig(
@@ -39,18 +39,20 @@ if settings.sentry_dsn:
     logger.info("Sentry monitoring initialized")
 
 
-async def load_ml_models():
-    """
-    Load ML models at startup
-    """
-    try:
-        from app.services.ml_service import ml_service
-        await ml_service.load_all_models()
-        logger.info("ML models loaded successfully")
-    except Exception as e:
-        logger.error(f"Failed to load ML models: {e}")
-        # Don't fail startup if models can't be loaded
-        pass
+# Commented out: ml_service.py doesn't exist yet
+# Each service (eta_service, product_recommendation_service) manages its own models
+# async def load_ml_models():
+#     """
+#     Load ML models at startup
+#     """
+#     try:
+#         from app.services.ml_service import ml_service
+#         await ml_service.load_all_models()
+#         logger.info("ML models loaded successfully")
+#     except Exception as e:
+#         logger.error(f"Failed to load ML models: {e}")
+#         # Don't fail startup if models can't be loaded
+#         pass
 
 
 @asynccontextmanager
@@ -66,13 +68,25 @@ async def lifespan(app: FastAPI):
     try:
         await init_db()
         logger.info("Database initialized")
+        
+        # Initialize pricing config
+        from app.services.pricing_config_service import init_pricing_config
+        from app.core.database import SessionLocal
+        db = SessionLocal()
+        try:
+            init_pricing_config(db)
+            logger.info("Pricing configuration initialized")
+        except Exception as e:
+            logger.warning(f"Pricing configuration skipped: {e}")
+        finally:
+            db.close()
 
         # Load ML models
-        await load_ml_models()
+        # await load_ml_models()  # Commented out: ml_service.py doesn't exist yet
 
     except Exception as e:
-        logger.error(f"Startup failed: {e}")
-        raise
+        logger.warning(f"Startup warning (DB not available): {e}")
+        logger.info("Continuing without database - chatbot will work in stateless mode")
 
     yield
 
@@ -152,9 +166,26 @@ app.include_router(
     tags=["ETA Prediction"]
 )
 
+app.include_router(
+    product_recommendations.router,
+    prefix="/api/ai/product-recommendations",
+    tags=["Product Recommendations"]
+)
+
+app.include_router(
+    visual_recognition.router,
+    prefix="/api/ai/visual",
+    tags=["Visual Recognition"]
+)
+
+app.include_router(
+    pricing_simple.router,
+    prefix="/api/ai",
+    tags=["Pricing Dynamique"]
+)
+
 # TODO: Add other AI routers
 # app.include_router(predictions.router, prefix="/api/ai/predictions", tags=["Predictions"])
-# app.include_router(recommendations.router, prefix="/api/ai/recommendations", tags=["Recommendations"])
 # app.include_router(anomalies.router, prefix="/api/ai/anomalies", tags=["Anomaly Detection"])
 
 
@@ -183,14 +214,14 @@ async def ai_root():
         "available_endpoints": [
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
+            "/api/ai/product-recommendations - Product recommendations ✅",
             "/api/ai/predictions - General predictions (TODO)",
-            "/api/ai/recommendations - Product recommendations (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
         "auth_note": "User authentication handled by Adonis service via Nginx headers",
         "ml_models": {
             "eta": "✅ Operational",
-            "anomaly": "🚧 In development",
-            "recommendation": "🚧 In development"
+            "product_recommendation": "✅ Operational",
+            "anomaly": "🚧 In development"
         }
     }

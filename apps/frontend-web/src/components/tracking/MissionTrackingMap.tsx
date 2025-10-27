@@ -87,11 +87,11 @@ export default function MissionTrackingMap({
       // Ajouter les marqueurs pour chaque mission
       filteredMissions.forEach((mission) => {
         // Marqueur de départ
-        const departPosition = getCityFromAddressId(mission.adresseDepartId);
+        const departPosition = getCityFromAddressId(mission.adresseDepartId ?? '');
         const departMarkerData: MarkerData = {
           id: `${mission.id}-depart`,
           position: departPosition,
-          title: `Départ: ${mission.titre}`,
+          title: `Départ: ${mission.title}`,
           type: 'origin',
           data: {
             mission,
@@ -111,11 +111,11 @@ export default function MissionTrackingMap({
         }
 
         // Marqueur d'arrivée
-        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId);
+        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId ?? '');
         const arriveeMarkerData: MarkerData = {
           id: `${mission.id}-arrivee`,
           position: arriveePosition,
-          title: `Arrivée: ${mission.titre}`,
+          title: `Arrivée: ${mission.title}`,
           type: 'destination',
           data: {
             mission,
@@ -148,7 +148,7 @@ export default function MissionTrackingMap({
           const transporteurMarkerData: MarkerData = {
             id: `${mission.id}-transporteur`,
             position: mission.currentPosition,
-            title: `Transporteur: ${mission.titre}`,
+            title: `Transporteur: ${mission.title}`,
             type: 'vehicle',
             data: {
               mission,
@@ -169,8 +169,8 @@ export default function MissionTrackingMap({
       // Ajuster la vue pour inclure toutes les missions
       if (filteredMissions.length > 0) {
         const allPositions = filteredMissions.flatMap((mission) => [
-          getCityFromAddressId(mission.adresseDepartId),
-          getCityFromAddressId(mission.adresseArriveeId),
+          getCityFromAddressId(mission.adresseDepartId ?? ''),
+          getCityFromAddressId(mission.adresseArriveeId ?? ''),
         ]);
         mapsService.fitBounds(allPositions);
       }

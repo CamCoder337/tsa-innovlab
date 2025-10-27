@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,139 +15,100 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Search,
   Users,
   UserCheck,
   UserX,
-  Clock,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
   Shield,
+  Building,
   Mail,
   Phone,
-  Building,
   Calendar,
+  Trash2,
+  Plus,
+  Clock,
+  Loader2,
   Eye,
+  Edit,
 } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'ADMIN' | 'AFFRETEUR' | 'TRANSPORTEUR';
-  status: 'active' | 'pending' | 'inactive' | 'suspended';
-  company?: string;
-  phone?: string;
-  createdAt: Date;
-  lastLogin?: Date;
-  kycStatus: 'pending' | 'approved' | 'rejected';
-  totalMissions: number;
-  revenue: number;
-}
+import { useUsers } from '@/hooks/useUsers';
+import type { UserRole } from '@/types/auth.types';
+import type { UserStatus } from '@/types/user.types';
 
 export default function AdminUsersPage() {
+  const { users, userStats, isLoading, error, fetchUsers, suspendUser, activateUser, deleteUser } =
+    useUsers();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('all');
 
-  // Données de démonstration
-  const users: User[] = [
-    {
-      id: '1',
-      name: 'Jean Dupont',
-      email: 'jean.dupont@tsa-logistics.com',
-      role: 'ADMIN',
-      status: 'active',
-      company: 'TSA Logistics',
-      phone: '+237 677 123 456',
-      createdAt: new Date('2024-01-15'),
-      lastLogin: new Date('2025-01-18'),
-      kycStatus: 'approved',
-      totalMissions: 0,
-      revenue: 0,
-    },
-    {
-      id: '2',
-      name: 'Marie Fotso',
-      email: 'marie.fotso@example.com',
-      role: 'AFFRETEUR',
-      status: 'active',
-      company: 'Fotso Transport SARL',
-      phone: '+237 677 234 567',
-      createdAt: new Date('2024-02-20'),
-      lastLogin: new Date('2025-01-17'),
-      kycStatus: 'approved',
-      totalMissions: 45,
-      revenue: 12500000,
-    },
-    {
-      id: '3',
-      name: 'Paul Mbarga',
-      email: 'paul.mbarga@example.com',
-      role: 'TRANSPORTEUR',
-      status: 'active',
-      phone: '+237 677 345 678',
-      createdAt: new Date('2024-03-10'),
-      lastLogin: new Date('2025-01-18'),
-      kycStatus: 'approved',
-      totalMissions: 38,
-      revenue: 8750000,
-    },
-    {
-      id: '4',
-      name: 'Fatou Sall',
-      email: 'fatou.sall@example.com',
-      role: 'AFFRETEUR',
-      status: 'pending',
-      company: 'Sall Logistics',
-      phone: '+237 677 456 789',
-      createdAt: new Date('2025-01-10'),
-      kycStatus: 'pending',
-      totalMissions: 0,
-      revenue: 0,
-    },
-    {
-      id: '5',
-      name: 'Ibrahim Diallo',
-      email: 'ibrahim.diallo@example.com',
-      role: 'TRANSPORTEUR',
-      status: 'suspended',
-      phone: '+237 677 567 890',
-      createdAt: new Date('2024-06-15'),
-      lastLogin: new Date('2025-01-05'),
-      kycStatus: 'rejected',
-      totalMissions: 12,
-      revenue: 2100000,
-    },
-  ];
-
-  const filteredUsers = users.filter((user) => {
+  // Filter users based on search and filters
+  const filteredUsers = users?.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.company?.toLowerCase().includes(searchQuery.toLowerCase());
+      searchQuery === '' ||
+      [user.firstName, user.lastName, user.email, user.phone].some((field) =>
+        field?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesTab =
       activeTab === 'all' ||
-      (activeTab === 'affreteurs' && user.role === 'AFFRETEUR') ||
-      (activeTab === 'transporteurs' && user.role === 'TRANSPORTEUR') ||
-      (activeTab === 'admins' && user.role === 'ADMIN');
+      (activeTab === 'affreteurs' && user.role === 'affreteur') ||
+      (activeTab === 'transporteurs' && user.role === 'transporteur') ||
+      (activeTab === 'admins' && user.role === 'admin');
 
     return matchesSearch && matchesStatus && matchesRole && matchesTab;
   });
 
   const stats = {
-    total: users.length,
-    active: users.filter((u) => u.status === 'active').length,
-    pending: users.filter((u) => u.status === 'pending').length,
-    suspended: users.filter((u) => u.status === 'suspended').length,
-    affreteurs: users.filter((u) => u.role === 'AFFRETEUR').length,
-    transporteurs: users.filter((u) => u.role === 'TRANSPORTEUR').length,
+    total: userStats?.total || users?.length,
+    active: userStats?.byStatus?.active || users?.filter((u) => u.status === 'active').length,
+    pending: userStats?.byStatus?.pending || users?.filter((u) => u.status === 'pending').length,
+    suspended:
+      userStats?.byStatus?.suspended || users?.filter((u) => u.status === 'suspended').length,
+    affreteurs: userStats?.byRole?.affreteur || users?.filter((u) => u.role === 'affreteur').length,
+    transporteurs:
+      userStats?.byRole?.transporteur || users?.filter((u) => u.role === 'transporteur').length,
   };
+
+  const handleSuspendUser = async (userId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir suspendre cet utilisateur ?')) {
+      await suspendUser(userId, { status: 'suspended', reason: 'Suspended by admin' });
+    }
+  };
+
+  const handleActivateUser = async (userId: string) => {
+    await activateUser(userId, { status: 'active', reason: 'Activated by admin' });
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (
+      window.confirm(
+        'Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.'
+      )
+    ) {
+      await deleteUser(userId);
+    }
+  };
+
+  // Mock data removed - now using real API data
+  if (error) {
+    return (
+      <div className="flex min-h-screen bg-gray-50 p-6">
+        <div className="flex-1 p-6">
+          <div className="text-center py-8">
+            <p className="text-red-500">Erreur: {error}</p>
+            <Button onClick={() => fetchUsers()} className="mt-4">
+              Réessayer
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -154,22 +116,7 @@ export default function AdminUsersPage() {
         return 'bg-green-100 text-green-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800';
       case 'suspended':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getKycStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -178,25 +125,39 @@ export default function AdminUsersPage() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'ADMIN':
+      case 'admin':
         return <Shield className="h-4 w-4" />;
-      case 'AFFRETEUR':
+      case 'affreteur':
         return <Building className="h-4 w-4" />;
-      case 'TRANSPORTEUR':
+      case 'transporteur':
         return <Users className="h-4 w-4" />;
       default:
         return <Users className="h-4 w-4" />;
     }
   };
 
+  const formatUserName = (user: { firstName?: string; lastName?: string }) => {
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR');
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="flex-1 p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Utilisateurs</h1>
-          <p className="text-gray-600">
-            Gérez les utilisateurs, rôles et permissions de la plateforme
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion des Utilisateurs</h1>
+            <p className="text-gray-600 mt-1">Gérez les comptes utilisateurs de la plateforme</p>
+          </div>
+          <Link to="/admin/users/add">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ajouter un utilisateur
+            </Button>
+          </Link>
         </div>
 
         {/* Statistiques */}
@@ -272,7 +233,10 @@ export default function AdminUsersPage() {
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as UserStatus | 'all')}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Filtrer par statut" />
                 </SelectTrigger>
@@ -280,20 +244,23 @@ export default function AdminUsersPage() {
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="active">Actif</SelectItem>
                   <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
                   <SelectItem value="suspended">Suspendu</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <Select
+                value={roleFilter}
+                onValueChange={(value) => setRoleFilter(value as UserRole | 'all')}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Filtrer par rôle" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="ADMIN">Administrateur</SelectItem>
-                  <SelectItem value="AFFRETEUR">Affréteur</SelectItem>
-                  <SelectItem value="TRANSPORTEUR">Transporteur</SelectItem>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                  <SelectItem value="affreteur">Affréteur</SelectItem>
+                  <SelectItem value="transporteur">Transporteur</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -311,7 +278,7 @@ export default function AdminUsersPage() {
             <TabsTrigger value="all">Tous ({stats.total})</TabsTrigger>
             <TabsTrigger value="affreteurs">Affréteurs ({stats.affreteurs})</TabsTrigger>
             <TabsTrigger value="transporteurs">Transporteurs ({stats.transporteurs})</TabsTrigger>
-            <TabsTrigger value="admins">Admins (1)</TabsTrigger>
+            <TabsTrigger value="admins">Admins ({userStats?.byRole?.admin || 0})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
@@ -320,91 +287,110 @@ export default function AdminUsersPage() {
                 <CardTitle>Liste des Utilisateurs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {filteredUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          {getRoleIcon(user.role)}
-                        </div>
-
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900">{user.name}</h4>
-                            <Badge className={getStatusColor(user.status)}>
-                              {user.status.toUpperCase()}
-                            </Badge>
-                            <Badge className={getKycStatusColor(user.kycStatus)}>
-                              KYC: {user.kycStatus.toUpperCase()}
-                            </Badge>
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <span className="ml-2">Chargement des utilisateurs...</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredUsers?.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            {getRoleIcon(user.role)}
                           </div>
 
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {user.email}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-gray-900">{formatUserName(user)}</h4>
+                              <Badge className={getStatusColor(user.status)}>
+                                {user.status.toUpperCase()}
+                              </Badge>
+                              <Badge className="bg-blue-100 text-blue-800">
+                                {user.role.toUpperCase()}
+                              </Badge>
                             </div>
-                            {user.phone && (
-                              <div className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {user.phone}
-                              </div>
-                            )}
-                            {user.company && (
-                              <div className="flex items-center gap-1">
-                                <Building className="h-3 w-3" />
-                                {user.company}
-                              </div>
-                            )}
-                          </div>
 
-                          <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              Inscrit le {user.createdAt.toLocaleDateString('fr-FR')}
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </div>
+                              {user.phone && (
+                                <div className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  {user.phone}
+                                </div>
+                              )}
                             </div>
-                            {user.lastLogin && (
-                              <span>
-                                Dernière connexion: {user.lastLogin.toLocaleDateString('fr-FR')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center gap-4">
-                        <div className="text-right text-sm">
-                          <p className="font-medium">{user.totalMissions} missions</p>
-                          <p className="text-gray-600">{user.revenue.toLocaleString()} FCFA</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Inscrit le {formatDate(user.createdAt)}
+                              </div>
+                              {user.lastLoginAt && (
+                                <span>Dernière connexion: {formatDate(user.lastLoginAt)}</span>
+                              )}
+                            </div>
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" className="gap-1 bg-transparent">
-                            <Eye className="h-3 w-3" />
-                            Voir
-                          </Button>
-                          <Button variant="outline" size="sm" className="gap-1 bg-transparent">
+                          <Link to={`/app/users/${user.id}`}>
+                            <Button variant="outline" size="sm" className="gap-1">
+                              <Eye className="h-3 w-3" />
+                              Voir
+                            </Button>
+                          </Link>
+                          <Button variant="outline" size="sm" className="gap-1">
                             <Edit className="h-3 w-3" />
                             Modifier
                           </Button>
+                          {user.status === 'active' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-orange-600 hover:text-orange-700"
+                              onClick={() => handleSuspendUser(user.id)}
+                              disabled={isLoading}
+                            >
+                              <UserX className="h-3 w-3" />
+                              Suspendre
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-green-600 hover:text-green-700"
+                              onClick={() => handleActivateUser(user.id)}
+                              disabled={isLoading}
+                            >
+                              <UserCheck className="h-3 w-3" />
+                              Activer
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1 text-red-600 hover:text-red-700 bg-transparent"
+                            className="gap-1 text-red-600 hover:text-red-700"
+                            onClick={() => handleDeleteUser(user.id)}
+                            disabled={isLoading}
                           >
                             <Trash2 className="h-3 w-3" />
                             Supprimer
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
-                {filteredUsers.length === 0 && (
+                {!isLoading && filteredUsers?.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-gray-500">Aucun utilisateur trouvé avec ces critères.</p>
                   </div>

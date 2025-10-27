@@ -12,7 +12,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Trash2,
   Plus,
@@ -26,7 +32,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
-import Header from '@/components/layout/Header';
 import { Label } from '@/components/ui/label';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -34,12 +39,15 @@ import AddressPicker from '@/components/maps/AddressPicker';
 import { useAddressSelection } from '@/hooks/useAddressSelection';
 import PaymentForm from '@/components/forms/PaymentForm';
 import Facture from '@/components/invoice/Facture';
-import type { Payment } from '@/types/payment.types';
+import type { Payment, PaymentMethodType } from '@/types/payment.types';
+import { useOrders } from '@/hooks/useOrders';
+import { type Order, PaymentMethod } from '@/types/order.types';
+import { useAddresses } from '@/hooks/useAddresses';
 
 const OrderSchema = Yup.object().shape({
   deliveryAddress: Yup.string().required("L'adresse de livraison est requise"),
   deliveryCity: Yup.string().required('La ville est requise'),
-  deliveryPostalCode: Yup.string().required('Le code postal est requis'),
+  deliveryPostalCode: Yup.string(),
   deliveryNotes: Yup.string().max(200, 'Les notes ne peuvent pas dépasser 200 caractères'),
   // Google Maps coordinates
   latitude: Yup.number(),
@@ -53,8 +61,10 @@ export default function CartSummaryPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [completedPayment, setCompletedPayment] = useState<Payment | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [useManualAddress, setUseManualAddress] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('cash');
 
   const {
     cart,
@@ -65,7 +75,11 @@ export default function CartSummaryPage() {
     isEmpty,
     isLoading,
     error,
+    clearCart,
   } = useCart();
+
+  const { createOrder } = useOrders();
+  const { createAddress } = useAddresses();
 
   const {
     selectedAddress,
@@ -116,7 +130,8 @@ export default function CartSummaryPage() {
         placeId: selectedAddress.place_id,
       });
     }
-  }, [formik, getAddressComponents, getFormattedAddress, selectedAddress, useManualAddress]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAddress, useManualAddress]);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -126,9 +141,90 @@ export default function CartSummaryPage() {
     removeFromCart(productId);
   };
 
+  const handleCreateOrder = async (payment: Payment): Promise<Order | null> => {
+    try {
+      // Map payment method from Payment to OrderPaymentMethod
+      const getPaymentMethod = (method: string): PaymentMethod => {
+        switch (method) {
+          case 'mobile':
+            return PaymentMethod.MTN_MOMO; // Default to MTN for mobile
+          case 'card':
+            return PaymentMethod.BANK_TRANSFER;
+          case 'cash':
+            return PaymentMethod.CASH_ON_DELIVERY;
+          default:
+            return PaymentMethod.MTN_MOMO;
+        }
+      };
+
+      // Generate UUIDs for addresses (since we don't have real API yet)
+      const generateUUID = () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c == 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      };
+
+      const shippingAddressId = generateUUID();
+      const billingAddressId = generateUUID();
+
+      // Create shipping address first
+      const shippingAddressData = {
+        id: shippingAddressId,
+        street: formik.values.deliveryAddress,
+        city: formik.values.deliveryCity,
+        region: formik.values.deliveryCity, // Using city as region for now
+        country: 'Cameroun', // Default country
+        postalCode: formik.values.deliveryPostalCode || '',
+        latitude: formik.values.latitude || 0,
+        longitude: formik.values.longitude || 0,
+        label: formik.values.deliveryAddress,
+        placeId: formik.values.placeId, // Store Google Places ID separately
+      };
+
+      const shippingAddressCreated = await createAddress(shippingAddressData);
+      if (!shippingAddressCreated) {
+        throw new Error('Failed to create shipping address');
+      }
+
+      // For billing, use the same address data but with different ID and label
+      const billingAddressData = {
+        id: billingAddressId,
+        street: formik.values.deliveryAddress,
+        city: formik.values.deliveryCity,
+        region: formik.values.deliveryCity,
+        country: 'Cameroun',
+        postalCode: formik.values.deliveryPostalCode || '',
+        latitude: formik.values.latitude || 0,
+        longitude: formik.values.longitude || 0,
+        label: 'Billing Address',
+        placeId: formik.values.placeId,
+      };
+
+      const billingAddressCreated = await createAddress(billingAddressData);
+      if (!billingAddressCreated) {
+        throw new Error('Failed to create billing address');
+      }
+
+      const orderData = {
+        shippingAddressId: shippingAddressId, // Use the generated UUID
+        billingAddressId: billingAddressId, // Use the generated UUID
+        paymentMethod: getPaymentMethod(payment.method),
+        notes: formik.values.deliveryNotes || undefined,
+      };
+
+      const order = await createOrder(orderData);
+      return order;
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      return null;
+    }
+  };
+
   const subtotal = getTotalPrice();
   const totalWeight = cart.items.reduce((sum, item) => {
-    const weight = item.product.specifications?.weight;
+    const weight = item.product?.specifications?.weight;
     const weightValue = weight ? parseFloat(String(weight)) : 0.5;
     return sum + (isNaN(weightValue) ? 0.5 : weightValue) * item.quantity;
   }, 0);
@@ -136,55 +232,53 @@ export default function CartSummaryPage() {
     deliveryOption === 'express' ? 5000 : deliveryOption === 'same-day' ? 10000 : 2000;
   const total = subtotal + deliveryFee;
 
-  if (paymentSuccess && completedPayment) {
+  if (paymentSuccess && completedPayment && createdOrder) {
     return (
-      <div className="flex h-screen flex-1 flex-col">
-        <Header />
-        {/* <main className="flex"> */}
-        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <Facture
-            payment={completedPayment}
-            orderNumber={orderNumber}
-            items={cart.items}
-            deliveryAddress={{
-              address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
-              city: formik.values.deliveryCity,
-              postalCode: formik.values.deliveryPostalCode,
-              country: 'Cameroun',
-            }}
-            deliveryOption={deliveryOption}
-            deliveryFee={deliveryFee}
-            customerInfo={{
-              name: 'Client TSA', // You can get this from auth context
-              email: 'client@example.com', // You can get this from auth context
-              phone: '+237 6XX XXX XXX', // You can get this from form or auth context
-            }}
-            onDownload={() => {
-              console.log('Download PDF');
-              // Implement PDF download functionality
-            }}
-            onPrint={() => {
-              window.print();
-            }}
-            onEmailSend={() => {
-              console.log('Send email');
-              // Implement email sending functionality
-            }}
-            onClose={() => {
-              setPaymentSuccess(false);
-              setCompletedPayment(null);
-              setOrderNumber('');
-              // Optionally clear cart after successful order
-              // clearCart()
-            }}
-          />
-        </main>
-      </div>
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <Facture
+          payment={completedPayment}
+          order={createdOrder}
+          orderNumber={createdOrder.orderNumber}
+          items={cart.items}
+          deliveryAddress={{
+            address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
+            city: formik.values.deliveryCity,
+            postalCode: formik.values.deliveryPostalCode,
+            country: 'Cameroun',
+          }}
+          deliveryOption={deliveryOption}
+          deliveryFee={deliveryFee}
+          customerInfo={{
+            name: 'Client TSA', // You can get this from auth context
+            email: 'client@example.com', // You can get this from auth context
+            phone: '+237 6XX XXX XXX', // You can get this from form or auth context
+          }}
+          onDownload={() => {
+            console.log('Download PDF');
+            // Implement PDF download functionality
+          }}
+          onPrint={() => {
+            window.print();
+          }}
+          onEmailSend={() => {
+            console.log('Send email');
+            // Implement email sending functionality
+          }}
+          onClose={() => {
+            setPaymentSuccess(false);
+            setCompletedPayment(null);
+            setCreatedOrder(null);
+            setOrderNumber('');
+            // Clear cart after successful order
+            clearCart();
+          }}
+        />
+      </main>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-1 flex-col">
+    <div className="flex h-screen bg-gray-50 flex-1 flex-col p-6">
       <div className="w-full">
         <div className="container mx-auto px-4">
           {/* Header */}
@@ -216,7 +310,7 @@ export default function CartSummaryPage() {
                     <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
                     <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
-                    <Link to="/shop">
+                    <Link to="/app/shop">
                       <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
                         Browse Products
                       </Button>
@@ -230,26 +324,26 @@ export default function CartSummaryPage() {
                       <CardContent className="p-6">
                         <div className="flex items-center gap-4">
                           <img
-                            src={item.product.images[0] || item.product.imageUrl || ''}
-                            alt={item.product.name}
+                            src={item.product?.images[0] || item.product?.imageUrl || ''}
+                            alt={item.product?.name || ''}
                             className="w-20 h-20 object-cover rounded-lg"
                           />
                           <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
+                            <h3 className="font-semibold text-lg mb-1">
+                              {item.product?.name || ''}
+                            </h3>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className="bg-green-100 text-green-800">
-                                Ref: {item.product.reference}
+                                Ref: {item.product?.reference || ''}
                               </Badge>
-                              <Badge variant="outline">{item.product.unit}</Badge>
+                              <Badge variant="outline">{item.product?.unit || ''}</Badge>
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity - 1)
-                                  }
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                   disabled={item.quantity <= 1 || isLoading}
                                 >
                                   <Minus className="h-3 w-3" />
@@ -259,22 +353,22 @@ export default function CartSummaryPage() {
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleUpdateQuantity(
-                                      item.productId,
+                                      item.id,
                                       Number.parseInt(e.target.value) || 1
                                     )
                                   }
                                   className="w-16 text-center"
                                   min="1"
-                                  max={item.product.stock}
+                                  max={item.product?.stock || 0}
                                   disabled={isLoading}
                                 />
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() =>
-                                    handleUpdateQuantity(item.productId, item.quantity + 1)
+                                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                  disabled={
+                                    item.quantity >= (item.product?.stock || 0) || isLoading
                                   }
-                                  disabled={item.quantity >= item.product.stock || isLoading}
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
@@ -285,16 +379,17 @@ export default function CartSummaryPage() {
                           <div className="text-right">
                             <div className="flex flex-col items-end gap-1">
                               <p className="text-lg font-bold">
-                                {(item.priceAtTime * item.quantity).toLocaleString()} FCFA
+                                {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
+                                FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.priceAtTime.toLocaleString()} FCFA each
+                                {item.priceAtAdd.toLocaleString()} FCFA each
                               </p>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleRemoveItem(item.productId)}
+                              onClick={() => handleRemoveItem(item.id)}
                               className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                               disabled={isLoading}
                             >
@@ -536,7 +631,9 @@ export default function CartSummaryPage() {
                       style={{ backgroundColor: 'var(--tsa-blue)' }}
                       disabled={isEmpty() || isLoading || (!useManualAddress && !isAddressSelected)}
                       onClick={() => {
+                        console.log('Test');
                         const validationErrors = formik.validateForm();
+                        console.error(validationErrors);
                         if (Object.keys(validationErrors).length === 0) {
                           formik.handleSubmit();
                         } else {
@@ -615,6 +712,7 @@ export default function CartSummaryPage() {
 
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogDescription className="hidden"> Finaliser le paiement </DialogDescription>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
@@ -648,15 +746,26 @@ export default function CartSummaryPage() {
             {/* Payment Form */}
             <PaymentForm
               amount={total}
-              currency="fcfa"
-              onSuccess={(payment) => {
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              orderId={orderNumber}
+              onSuccess={async (payment) => {
                 console.log('Payment successful:', payment);
-                // Generate order number
-                const orderNum = `TSA-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-                setOrderNumber(orderNum);
-                setCompletedPayment(payment);
-                setPaymentSuccess(true);
-                setShowPayment(false);
+
+                // Create order after successful payment
+                const order = await handleCreateOrder(payment);
+
+                if (order) {
+                  setCreatedOrder(order);
+                  setOrderNumber(order.orderNumber);
+                  setCompletedPayment(payment);
+                  setPaymentSuccess(true);
+                  setShowPayment(false);
+                } else {
+                  console.error('Failed to create order');
+                  // Handle order creation failure
+                  setShowPayment(false);
+                }
               }}
               onError={(error) => {
                 console.error('Payment error:', error);

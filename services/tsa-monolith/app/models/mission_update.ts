@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Mission from './mission.js'
 import User from './user.js'
@@ -153,6 +153,7 @@ export default class MissionUpdate extends BaseModel {
         : null,
       attachments: this.attachments,
       isPublic: this.isPublic,
+      transporteur: this.transporteur ? this.transporteur.serialize() : undefined,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     }

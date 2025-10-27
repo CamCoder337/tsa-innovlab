@@ -39,9 +39,11 @@ export interface UpdateCategory {
 
 export interface CategoryTreeItem extends Category {
   children: CategoryTreeItem[];
-  parent: CategoryTreeItem | null;
-  expanded?: boolean;
-  level?: number; // For UI purposes
+}
+
+export interface CategoryResponse {
+  categories: Category[];
+  tree: CategoryTreeItem[];
 }
 
 export interface CategoryFilterParams {
@@ -74,12 +76,20 @@ export interface CategoryState {
 
 export interface CategoryActions {
   setCategories: (categories: Category[]) => void;
-  addCategory: (category: Category) => void;
-  updateCategory: (id: string, updates: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
   setCurrentCategory: (category: Category | null) => void;
+
+  fetchAdminCategories: () => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  fetchCategory: (id: string) => Promise<void>;
+  createCategory: (category: CreateCategory) => Promise<void>;
+  updateCategory: (id: string, data: UpdateCategory) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+
+  // Utility actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
 }
 
 export interface CategoryStoreExtended extends CategoryState, CategoryActions {

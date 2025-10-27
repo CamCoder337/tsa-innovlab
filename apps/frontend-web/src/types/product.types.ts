@@ -1,6 +1,7 @@
 import type { Category } from './category.types';
 import type { Timestamps } from './common.types';
 import type { User } from './auth.types';
+import type { VehicleType } from './vehicle.types';
 
 export interface ProductImage {
   url: string;
@@ -11,8 +12,8 @@ export interface ProductImage {
 export interface Product extends Timestamps {
   id: string;
   name: string;
-  description: string;
-  reference: string;
+  description: string | null;
+  reference: string | null;
   price: string;
   stock: number;
   stockAlert: number;
@@ -21,41 +22,44 @@ export interface Product extends Timestamps {
   images: string[];
   specifications: Record<string, string | number | boolean | null>;
   isActive: boolean;
-  categoryId: string;
+  categoryId: string | null;
   category?: Category;
-  createdBy: string;
+  createdBy: string | null;
   creator?: Partial<User>;
+  preferredVehicleType: VehicleType | null;
 }
 
 export interface CreateProduct {
   name: string;
-  description: string;
-  categoryId: string;
+  description?: string | null;
+  categoryId?: string | null;
   price: number;
   stock: number;
-  reference?: string;
+  reference?: string | null;
   stockAlert?: number;
   unit?: string;
   imageUrl?: string | null;
   images?: string[];
   specifications?: Record<string, string | number | boolean | null>;
   isActive?: boolean;
+  preferredVehicleType?: VehicleType | null;
 }
 
 export interface UpdateProduct {
   id: string;
   name?: string;
-  description?: string;
+  description?: string | null;
   categoryId?: string | null;
   price?: number;
   stock?: number;
-  reference?: string;
+  reference?: string | null;
   stockAlert?: number;
   unit?: string;
   imageUrl?: string | null;
   images?: string[];
   specifications?: Record<string, string | number | boolean | null>;
   isActive?: boolean;
+  preferredVehicleType?: VehicleType | null;
 }
 
 export interface ProductFilterParams {
@@ -66,6 +70,7 @@ export interface ProductFilterParams {
   inStock?: boolean;
   lowStock?: boolean;
   isActive?: boolean;
+  preferredVehicleType?: VehicleType | VehicleType[];
   sortBy?: 'name' | 'price' | 'stock' | 'createdAt' | 'updatedAt' | string | null;
   sortOrder?: 'asc' | 'desc' | null;
   page?: number | null;
@@ -113,13 +118,27 @@ export interface ProductState {
 
 export interface ProductActions {
   setProducts: (products: Product[]) => void;
-  addProduct: (product: Product) => void;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
   setCurrentProduct: (product: Product | null) => void;
+  setStats: (stats: ProductStats) => void;
+
+  fetchAdminProducts: () => Promise<void>;
+  fetchProducts: () => Promise<void>;
+  fetchProduct: (id: string) => Promise<void>;
+  createProduct: (product: CreateProduct) => Promise<void>;
+  updateProduct: (id: string, data: UpdateProduct) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  fetchProductStats: () => Promise<void>;
+
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setStats: (stats: ProductStats) => void;
+  clearError: () => void;
+  reset: () => void;
+
+  filterProducts: (filters: ProductFilterParams) => Product[];
+  searchProducts: (query: string) => Product[];
+  getProductsByCategory: (categoryId: string) => Product[];
+  getLowStockProducts: () => Product[];
+  getOutOfStockProducts: () => Product[];
 }
 
 export type ProductStoreExtended = ProductState & ProductActions;

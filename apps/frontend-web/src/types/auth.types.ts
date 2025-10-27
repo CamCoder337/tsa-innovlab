@@ -1,8 +1,7 @@
 import type { Timestamps } from './common.types';
+import type { UserStatus } from './user.types';
 
-export type UserRole = 'admin' | 'transporteur' | 'affreteur';
-
-export type UserStatus = 'pending' | 'active' | 'suspended';
+export type UserRole = 'admin' | 'transporteur' | 'affreteur' | 'client';
 
 export interface User extends Timestamps {
   id: string;
@@ -30,6 +29,15 @@ export interface CreateUserRequest {
   role: UserRole;
 }
 
+export interface UpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  role?: UserRole;
+  status?: UserStatus;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -41,12 +49,10 @@ export interface ForgotPasswordRequest {
 }
 
 export interface AuthTokens {
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-    tokenType: string;
-  };
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
 }
 
 export interface MFARequiredResponse {
@@ -57,18 +63,41 @@ export interface MFARequiredResponse {
   };
 }
 
+export interface MFAStatus {
+  mfaEnabled: boolean;
+  mfaRequired?: boolean;
+  mustEnableMFA?: boolean;
+}
+
+export interface MFASetupResponse {
+  secret: string;
+  manualEntryKey: string;
+  recoveryCodes: string[];
+  instructions: string;
+}
+
+export interface MFARegenCodes {
+  recoveryCodes: string[];
+  warning: string;
+}
+
 export interface AuthState {
   currentUser: User | null;
   token: string | null;
   refreshToken: string | null;
+  error: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 export interface AuthActions {
-  login: (user: User, token?: string) => void;
+  signup: (data: CreateUserRequest) => Promise<boolean | undefined>;
+  login: (data: LoginCredentials) => Promise<boolean | 'mfa_required' | undefined>;
+  getUser: () => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   setToken: (token: string, expiresIn?: number, refreshToken?: string) => void;
+  initializeTokenManagement: () => void;
 }
 
 export type AuthStore = AuthState & AuthActions;

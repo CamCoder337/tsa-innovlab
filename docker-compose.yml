@@ -2,7 +2,6 @@
 # TSA Logistics - Docker Compose Configuration
 # ================================
 # Development and staging environment setup
-version: '3.8'
 
 # =====================================
 # Shared Network Configuration
@@ -36,10 +35,10 @@ volumes:
 # =====================================
 services:
   # ===================
-  # PostgreSQL Database
+  # PostgreSQL Database with PostGIS
   # ===================
   postgres:
-    image: postgres:16-alpine
+    image: postgis/postgis:16-3.4-alpine
     container_name: tsa-postgres
     restart: unless-stopped
     
@@ -162,6 +161,7 @@ services:
       PORT: 3333
       TZ: UTC
       APP_KEY: ${APP_KEY:-your-32-character-secret-key-here}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       
       # Database
       DB_HOST: postgres
@@ -185,9 +185,19 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       MAIL_FROM: ${MAIL_FROM:-noreply@tsa-logistics.com}
       
+      # Resend API
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_DOMAIN: ${MAIL_DOMAIN:-tsa-logistics.com}
+      
+      # Admin
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@tsa-logistics.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support@tsa-logistics.com}
+      
       # URLs
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       API_BASE_URL: ${API_BASE_URL:-http://localhost:3333}
+      FASTAPI_BASE_URL: http://tsa-ai:8000
       
       # Security
       SECURE_COOKIES: true
@@ -213,9 +223,9 @@ services:
         echo '📊 Waiting for database connection...' &&
         timeout 60 sh -c 'until nc -z postgres 5432; do sleep 1; done' &&
         echo '🗄️ Running database migrations...' &&
-        node ace migration:run --force &&
+        node build/bin/console.js migration:run --force &&
         echo '🌱 Seeding database (if needed)...' &&
-        node ace db:seed --force || true &&
+        node build/bin/console.js db:seed --force || true &&
         echo '✅ Starting application server...' &&
         node build/bin/server.js
       "
@@ -257,11 +267,17 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       PYTHONDONTWRITEBYTECODE: 1
-      ENVIRONMENT: production
+      ENVIRONMENT: development
       DATABASE_URL: postgresql://${POSTGRES_USER:-tsa_user}:${POSTGRES_PASSWORD:-tsa_strong_password_2024!}@postgres:5432/${POSTGRES_DB:-tsa_contest}
       REDIS_URL: redis://:${REDIS_PASSWORD:-tsa_redis_strong_password_2024!}@redis:6379/1
       FASTAPI_HOST: 0.0.0.0
       FASTAPI_PORT: 8000
+      
+      # Google Cloud Vision API
+      # Option 1: Variable d'environnement (RECOMMANDÉ pour production)
+      GOOGLE_CREDENTIALS_JSON: ${GOOGLE_CREDENTIALS_JSON:-}
+      # Option 2: Chemin vers fichier monté en volume
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/credentials/google-credentials.json}
       
       # ML Model settings
       MODEL_CACHE_SIZE: 3
@@ -274,6 +290,10 @@ services:
     volumes:
       - ai_models:/app/ml_models
       - ai_logs:/app/logs
+      # Monter le fichier de credentials seulement s'il existe (développement)
+      # En production, utiliser GOOGLE_CREDENTIALS_JSON dans .env
+      - ./services/tsa-ai/google-credentials.json:/app/credentials/google-credentials.json:ro
+      - ./services/tsa-ai/data/visual_recognition:/app/data/visual_recognition
     
     ports:
       - "${AI_PORT:-8000}:8000"
@@ -282,8 +302,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      tsa-monolith:
         condition: service_healthy
     
     healthcheck:
