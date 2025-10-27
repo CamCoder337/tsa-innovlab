@@ -16,9 +16,9 @@ export default class ChatbotController {
   async query({ request, response, auth }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const { message, conversation_id, context } = request.only([
+      const { message, conversationId, context } = request.only([
         'message',
-        'conversation_id',
+        'conversationId',
         'context',
       ])
 
@@ -42,7 +42,7 @@ export default class ChatbotController {
         user_id: user.id.toString(),
         user_role: user.role,
         user_token: authToken, // Pass token for API calls
-        conversation_id: conversation_id || user.id.toString(),
+        conversation_id: conversationId || user.id.toString(),
         context: context || {},
       })
 
