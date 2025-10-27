@@ -312,7 +312,7 @@ export default class MissionsController {
             user.id,
             'cancelled' as MissionStatus,
             newStatus,
-            'Mission automatiquement republiée et disponible pour d\'autres transporteurs'
+            "Mission automatiquement republiée et disponible pour d'autres transporteurs"
           )
         } else {
           // Mise à jour normale

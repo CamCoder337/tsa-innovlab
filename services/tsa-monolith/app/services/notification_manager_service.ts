@@ -225,10 +225,15 @@ export default class NotificationManagerService {
       })
 
       // Email à l'affreteur
-      this.sendCancellationEmailNotification(affreteur, mission, transporteur, reason, notification)
-        .catch((error) => {
-          console.error(`❌ Erreur email annulation mission ${mission.id}:`, error)
-        })
+      this.sendCancellationEmailNotification(
+        affreteur,
+        mission,
+        transporteur,
+        reason,
+        notification
+      ).catch((error) => {
+        console.error(`❌ Erreur email annulation mission ${mission.id}:`, error)
+      })
 
       console.log(
         `✅ Affreteur ${affreteur.email} notifié de l'annulation par ${transporteur.fullName}`
