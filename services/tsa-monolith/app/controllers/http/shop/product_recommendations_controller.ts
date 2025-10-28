@@ -185,7 +185,11 @@ export default class ProductRecommendationsController {
   async submitFeedback({ auth, request, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const { product_id, action, context } = request.only(['product_id', 'action', 'context'])
+      const {
+        product_id: productId,
+        action,
+        context,
+      } = request.only(['product_id', 'action', 'context'])
 
       // Validate action
       const validActions = ['view', 'click', 'add_to_cart', 'purchase', 'ignore', 'remove']
@@ -200,7 +204,7 @@ export default class ProductRecommendationsController {
       // Submit feedback to AI service
       const success = await this.aiService.submitRecommendationFeedback({
         userId: user.id,
-        productId: product_id,
+        productId,
         action,
         context,
       })
@@ -217,7 +221,7 @@ export default class ProductRecommendationsController {
         message: 'Feedback submitted successfully',
         data: {
           action,
-          product_id,
+          product_id: productId,
           timestamp: new Date().toISOString(),
         },
       })

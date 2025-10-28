@@ -71,6 +71,7 @@ curl -X GET "http://localhost:3333/api/shop/product-recommendations?limit=10&con
 ```
 
 **Paramètres de requête** :
+
 - `limit` (optionnel) : Nombre de produits (défaut: 10)
 - `context` (optionnel) : homepage | product | cart | checkout
 
@@ -92,7 +93,7 @@ curl -X GET "http://localhost:3333/api/shop/product-recommendations?limit=10&con
           "id": "uuid-categorie",
           "name": "Électronique"
         },
-        "recommendation_score": 0.850,
+        "recommendation_score": 0.85,
         "recommendation_reason": "Aimé par des utilisateurs similaires (15 achats)"
       }
     ],
@@ -103,6 +104,7 @@ curl -X GET "http://localhost:3333/api/shop/product-recommendations?limit=10&con
 ```
 
 **Stratégies possibles** :
+
 - `collaborative_filtering` : Utilisateur avec ≥3 achats
 - `content_based` : Utilisateur avec ≥1 achat
 - `popularity_based` : Nouvel utilisateur
@@ -136,7 +138,7 @@ curl -X GET "http://localhost:3333/api/shop/product-recommendations/similar/$PRO
         "id": "uuid-produit-similaire",
         "name": "iPhone 14",
         "price": 500000,
-        "similarity_score": 0.920,
+        "similarity_score": 0.92,
         "similarity_reason": "Même catégorie et prix similaire"
       }
     ],
@@ -198,6 +200,7 @@ curl -X POST http://localhost:3333/api/shop/product-recommendations/feedback \
 ```
 
 **Actions possibles** :
+
 - `view` : L'utilisateur a vu le produit
 - `click` : L'utilisateur a cliqué
 - `add_to_cart` : Ajouté au panier
@@ -299,6 +302,7 @@ curl -X GET http://localhost:3333/api/shop/product-recommendations/stats \
 ```
 
 **Métriques** :
+
 - **CTR** (Click-Through Rate) : % de clics sur les vues
 - **Conversion Rate** : % d'achats sur les clics
 
@@ -409,16 +413,19 @@ curl -X GET http://localhost:3333/api/shop/product-recommendations/ab-test-resul
 ### 5.2 Configuration des groupes
 
 **Control (34%)** : Configuration standard
+
 - min_purchases_collaborative = 3
 - min_common_products = 2
 - similar_users_limit = 20
 
 **Variant A (33%)** : Plus agressif ⚡
+
 - min_purchases_collaborative = 2
 - min_common_products = 1
 - similar_users_limit = 20
 
 **Variant B (33%)** : Plus conservateur 🎯
+
 - min_purchases_collaborative = 4
 - min_common_products = 2
 - similar_users_limit = 30
@@ -516,16 +523,17 @@ time curl -X GET "http://localhost:3333/api/shop/product-recommendations/popular
 
 ## 📈 Métriques de Succès
 
-| Métrique | Objectif | Interprétation |
-|----------|----------|----------------|
-| **Latence** | <200ms | Temps de réponse depuis AdonisJS |
-| **CTR Global** | >12% | Taux de clic sur les recommandations |
-| **Conversion Rate** | >20% | Taux d'achat sur les clics |
-| **Disponibilité** | >99% | Service AI accessible |
+| Métrique            | Objectif | Interprétation                       |
+| ------------------- | -------- | ------------------------------------ |
+| **Latence**         | <200ms   | Temps de réponse depuis AdonisJS     |
+| **CTR Global**      | >12%     | Taux de clic sur les recommandations |
+| **Conversion Rate** | >20%     | Taux d'achat sur les clics           |
+| **Disponibilité**   | >99%     | Service AI accessible                |
 
 ### Critères de validation
 
 ✅ **Test réussi** :
+
 - Toutes les routes retournent 200 OK
 - Latence < 200ms depuis AdonisJS
 - Feedback stocké correctement
@@ -533,6 +541,7 @@ time curl -X GET "http://localhost:3333/api/shop/product-recommendations/popular
 - A/B testing différencie les groupes
 
 ❌ **Test échoué** :
+
 - Erreurs 503 (AI service indisponible)
 - Erreurs 401/403 (problème d'auth)
 - Latence > 500ms
@@ -560,6 +569,7 @@ curl http://localhost:8000/api/ai/health
 ```
 
 **Solution** :
+
 ```bash
 cd services/tsa-ai
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -618,15 +628,15 @@ REC_MIN_COMMON_PRODUCTS=2
 
 ## 📚 Endpoints Résumé
 
-| Endpoint | Méthode | Auth | Description |
-|----------|---------|------|-------------|
-| `/product-recommendations` | GET | ✅ | Recommandations personnalisées |
-| `/product-recommendations/similar/:id` | GET | ✅ | Produits similaires |
-| `/product-recommendations/popular` | GET | ❌ | Produits populaires (public) |
-| `/product-recommendations/feedback` | POST | ✅ | Soumettre feedback |
-| `/product-recommendations/stats` | GET | ✅ | Statistiques système |
-| `/product-recommendations/analyze-thresholds` | GET | ✅ | Auto-tuning |
-| `/product-recommendations/ab-test-results` | GET | ✅ | Résultats A/B |
+| Endpoint                                      | Méthode | Auth | Description                    |
+| --------------------------------------------- | ------- | ---- | ------------------------------ |
+| `/product-recommendations`                    | GET     | ✅   | Recommandations personnalisées |
+| `/product-recommendations/similar/:id`        | GET     | ✅   | Produits similaires            |
+| `/product-recommendations/popular`            | GET     | ❌   | Produits populaires (public)   |
+| `/product-recommendations/feedback`           | POST    | ✅   | Soumettre feedback             |
+| `/product-recommendations/stats`              | GET     | ✅   | Statistiques système           |
+| `/product-recommendations/analyze-thresholds` | GET     | ✅   | Auto-tuning                    |
+| `/product-recommendations/ab-test-results`    | GET     | ✅   | Résultats A/B                  |
 
 **Base URL** : `http://localhost:3333/api/shop`
 

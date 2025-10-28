@@ -514,13 +514,16 @@ export default class AIService {
     try {
       logger.info('Requesting A/B test results')
 
-      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/ab-test-results`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(this.timeout),
-      })
+      const response = await fetch(
+        `${this.baseUrl}/api/ai/product-recommendations/ab-test-results`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(this.timeout),
+        }
+      )
 
       if (!response.ok) {
         throw new Error(`AI Service responded with status ${response.status}`)

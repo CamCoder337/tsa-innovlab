@@ -51,7 +51,7 @@ export default class ChatbotController {
           success: false,
           message: 'Chatbot service is temporarily unavailable',
           fallback_message:
-            "Désolé, je ne suis pas disponible pour le moment. Veuillez contacter le support.",
+            'Désolé, je ne suis pas disponible pour le moment. Veuillez contacter le support.',
         })
       }
 
