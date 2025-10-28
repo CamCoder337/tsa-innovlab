@@ -317,6 +317,30 @@ router
       '#controllers/http/shop/product_recommendations_controller.similar'
     )
 
+    // Feedback sur les recommandations
+    router.post(
+      '/product-recommendations/feedback',
+      '#controllers/http/shop/product_recommendations_controller.submitFeedback'
+    )
+
+    // Statistiques du système de recommandation
+    router.get(
+      '/product-recommendations/stats',
+      '#controllers/http/shop/product_recommendations_controller.stats'
+    )
+
+    // Analyse des seuils (auto-tuning)
+    router.get(
+      '/product-recommendations/analyze-thresholds',
+      '#controllers/http/shop/product_recommendations_controller.analyzeThresholds'
+    )
+
+    // Résultats des tests A/B
+    router.get(
+      '/product-recommendations/ab-test-results',
+      '#controllers/http/shop/product_recommendations_controller.abTestResults'
+    )
+
     // Reconnaissance visuelle (authentifié)
     router.post(
       '/visual-recognition/search',

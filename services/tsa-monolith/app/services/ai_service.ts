@@ -82,6 +82,41 @@ export interface ChatbotResponse {
   timestamp: string
 }
 
+export interface RecommendationFeedbackRequest {
+  userId: string
+  productId: string
+  action: 'view' | 'click' | 'add_to_cart' | 'purchase' | 'ignore' | 'remove'
+  context?: string
+}
+
+export interface RecommendationStatsResponse {
+  total_recommendations_served: number
+  total_users_recommended: number
+  total_views: number
+  total_clicks: number
+  total_purchases: number
+  strategies_performance: Record<string, any>
+  last_updated: string
+  status: string
+}
+
+export interface ThresholdAnalysisResponse {
+  current_thresholds: Record<string, number>
+  performance_metrics: Record<string, number>
+  suggested_adjustments: Record<string, number>
+  reasoning: string[]
+  recommendation: string
+}
+
+export interface ABTestResultsResponse {
+  enabled: boolean
+  period: string
+  groups: Record<string, any>
+  winner: string | null
+  best_conversion_rate: number
+  recommendation: string
+}
+
 export default class AIService {
   private readonly baseUrl: string
   private readonly timeout: number = 10000 // 10 seconds
@@ -375,6 +410,127 @@ export default class AIService {
     } catch (error) {
       logger.warn('AI service health check failed', { error })
       return false
+    }
+  }
+
+  /**
+   * Submit feedback for a product recommendation
+   */
+  async submitRecommendationFeedback(request: RecommendationFeedbackRequest): Promise<boolean> {
+    try {
+      logger.info('Submitting recommendation feedback', {
+        userId: request.userId,
+        productId: request.productId,
+        action: request.action,
+      })
+
+      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: request.userId,
+          product_id: request.productId,
+          action: request.action,
+          context: request.context,
+          timestamp: new Date().toISOString(),
+        }),
+        signal: AbortSignal.timeout(this.timeout),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      return true
+    } catch (error) {
+      logger.error('Failed to submit recommendation feedback', { error })
+      return false
+    }
+  }
+
+  /**
+   * Get recommendation system statistics
+   */
+  async getRecommendationStats(): Promise<RecommendationStatsResponse | null> {
+    try {
+      logger.info('Requesting recommendation statistics')
+
+      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/stats`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(this.timeout),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as RecommendationStatsResponse
+      return data
+    } catch (error) {
+      logger.error('Failed to get recommendation stats from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Analyze recommendation thresholds and get suggestions
+   */
+  async analyzeRecommendationThresholds(): Promise<ThresholdAnalysisResponse | null> {
+    try {
+      logger.info('Requesting threshold analysis')
+
+      const response = await fetch(
+        `${this.baseUrl}/api/ai/product-recommendations/analyze-thresholds`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(this.timeout),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as ThresholdAnalysisResponse
+      return data
+    } catch (error) {
+      logger.error('Failed to analyze recommendation thresholds from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Get A/B test results for recommendation strategies
+   */
+  async getABTestResults(): Promise<ABTestResultsResponse | null> {
+    try {
+      logger.info('Requesting A/B test results')
+
+      const response = await fetch(`${this.baseUrl}/api/ai/product-recommendations/ab-test-results`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(this.timeout),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as ABTestResultsResponse
+      return data
+    } catch (error) {
+      logger.error('Failed to get A/B test results from AI service', { error })
+      return null
     }
   }
 }

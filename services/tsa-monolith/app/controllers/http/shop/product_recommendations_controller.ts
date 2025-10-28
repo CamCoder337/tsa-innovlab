@@ -180,6 +180,141 @@ export default class ProductRecommendationsController {
   }
 
   /**
+   * Submit feedback for a product recommendation
+   */
+  async submitFeedback({ auth, request, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const { product_id, action, context } = request.only(['product_id', 'action', 'context'])
+
+      // Validate action
+      const validActions = ['view', 'click', 'add_to_cart', 'purchase', 'ignore', 'remove']
+      if (!validActions.includes(action)) {
+        return response.status(422).json({
+          success: false,
+          message: 'Invalid action',
+          errors: [`Action must be one of: ${validActions.join(', ')}`],
+        })
+      }
+
+      // Submit feedback to AI service
+      const success = await this.aiService.submitRecommendationFeedback({
+        userId: user.id,
+        productId: product_id,
+        action,
+        context,
+      })
+
+      if (!success) {
+        return response.status(500).json({
+          success: false,
+          message: 'Failed to submit feedback',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'Feedback submitted successfully',
+        data: {
+          action,
+          product_id,
+          timestamp: new Date().toISOString(),
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to submit feedback',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
+   * Get recommendation system statistics
+   */
+  async stats({ response }: HttpContext) {
+    try {
+      const stats = await this.aiService.getRecommendationStats()
+
+      if (!stats) {
+        return response.status(503).json({
+          success: false,
+          message: 'AI service unavailable',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'Statistics retrieved successfully',
+        data: stats,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve statistics',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
+   * Analyze recommendation thresholds and get optimization suggestions
+   */
+  async analyzeThresholds({ response }: HttpContext) {
+    try {
+      const analysis = await this.aiService.analyzeRecommendationThresholds()
+
+      if (!analysis) {
+        return response.status(503).json({
+          success: false,
+          message: 'AI service unavailable',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'Threshold analysis retrieved successfully',
+        data: analysis,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to analyze thresholds',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
+   * Get A/B test results
+   */
+  async abTestResults({ response }: HttpContext) {
+    try {
+      const results = await this.aiService.getABTestResults()
+
+      if (!results) {
+        return response.status(503).json({
+          success: false,
+          message: 'AI service unavailable',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'A/B test results retrieved successfully',
+        data: results,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve A/B test results',
+        errors: [error.message],
+      })
+    }
+  }
+
+  /**
    * Get popular/trending products
    */
   async popular({ request, response }: HttpContext) {
