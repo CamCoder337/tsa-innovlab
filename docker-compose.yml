@@ -225,7 +225,7 @@ services:
         echo '🗄️ Running database migrations...' &&
         node build/bin/console.js migration:run --force &&
         echo '🌱 Seeding database (if needed)...' &&
-        node build/bin/console.js db:seed --force || true &&
+        node build/bin/console.js db:seed || true &&
         echo '✅ Starting application server...' &&
         node build/bin/server.js
       "
@@ -272,6 +272,9 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD:-tsa_redis_strong_password_2024!}@redis:6379/1
       FASTAPI_HOST: 0.0.0.0
       FASTAPI_PORT: 8000
+      
+      # Monolith API URL for chatbot
+      MONOLITH_API_URL: http://tsa-monolith:3333/api
       
       # Google Cloud Vision API
       # Option 1: Variable d'environnement (RECOMMANDÉ pour production)
