@@ -15,7 +15,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
-from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot
 
 # Configure logging
 logging.basicConfig(
@@ -184,6 +184,12 @@ app.include_router(
     tags=["Pricing Dynamique"]
 )
 
+app.include_router(
+    chatbot.router,
+    prefix="/api/ai/chatbot",
+    tags=["Chatbot"]
+)
+
 # TODO: Add other AI routers
 # app.include_router(predictions.router, prefix="/api/ai/predictions", tags=["Predictions"])
 # app.include_router(anomalies.router, prefix="/api/ai/anomalies", tags=["Anomaly Detection"])
@@ -215,6 +221,7 @@ async def ai_root():
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
             "/api/ai/product-recommendations - Product recommendations ✅",
+            "/api/ai/chatbot - Chatbot assistant ✅",
             "/api/ai/predictions - General predictions (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
@@ -222,6 +229,7 @@ async def ai_root():
         "ml_models": {
             "eta": "✅ Operational",
             "product_recommendation": "✅ Operational",
+            "chatbot": "✅ Operational",
             "anomaly": "🚧 In development"
         }
     }
