@@ -178,7 +178,14 @@ async def submit_product_recommendation_feedback(
             f"product={feedback.product_id}, action={feedback.action}"
         )
 
+        # Determine A/B test group for this user
+        ab_group = product_recommendation_service._get_ab_test_group(feedback.user_id)
+
         # Store feedback in database for algorithm improvement
+        metadata = {
+            'ab_test_group': ab_group if product_recommendation_service.ab_testing_enabled else None
+        }
+
         success = await product_recommendation_service.store_feedback(
             user_id=feedback.user_id,
             product_id=feedback.product_id,
@@ -186,7 +193,7 @@ async def submit_product_recommendation_feedback(
             context=feedback.context,
             strategy_used=None,  # Could be passed from frontend if tracked
             recommendation_score=None,  # Could be passed from frontend if tracked
-            metadata=None
+            metadata=metadata
         )
 
         if not success:
@@ -225,6 +232,51 @@ async def get_product_recommendation_stats(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur lors de la récupération des statistiques",
+        )
+
+
+@router.get("/analyze-thresholds")
+async def analyze_recommendation_thresholds(db: Session = Depends(get_db)):
+    """
+    Analyser les performances et suggérer des ajustements de seuils
+
+    Analyse les données de feedback sur 30 jours et recommande des ajustements
+    automatiques pour optimiser les performances du système.
+    """
+    try:
+        analysis = await product_recommendation_service.analyze_and_adjust_thresholds()
+        return analysis
+
+    except Exception as e:
+        logger.error(f"Failed to analyze thresholds: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'analyse des seuils",
+        )
+
+
+@router.get("/ab-test-results")
+async def get_ab_test_results(db: Session = Depends(get_db)):
+    """
+    Obtenir les résultats des tests A/B
+
+    Compare les performances entre les différents groupes de test
+    (control, variant_a, variant_b) sur les 30 derniers jours.
+
+    Configuration A/B :
+    - **Control** : Configuration standard
+    - **Variant A** : Collaborative filtering plus agressif (seuils plus bas)
+    - **Variant B** : Plus conservateur (seuils plus hauts, plus d'utilisateurs similaires)
+    """
+    try:
+        results = await product_recommendation_service.get_ab_test_results()
+        return results
+
+    except Exception as e:
+        logger.error(f"Failed to get A/B test results: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de la récupération des résultats A/B",
         )
 
 

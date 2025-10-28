@@ -1,0 +1,27 @@
+# Crontab configuration for recommendation statistics calculation
+# Add this to your crontab with: crontab -e
+#
+# Format: minute hour day month weekday command
+#
+# Make sure to:
+# 1. Update the path to your project directory
+# 2. Activate virtual environment if using one
+# 3. Ensure proper permissions: chmod +x calculate_recommendation_stats.py
+
+# Calculate hourly stats every hour at minute 5
+5 * * * * cd /path/to/tsa-innovlab/services/tsa-ai && python3 scripts/calculate_recommendation_stats.py --period hourly >> /var/log/recommendation_stats_hourly.log 2>&1
+
+# Calculate daily stats every day at 1:00 AM
+0 1 * * * cd /path/to/tsa-innovlab/services/tsa-ai && python3 scripts/calculate_recommendation_stats.py --period daily >> /var/log/recommendation_stats_daily.log 2>&1
+
+# Calculate weekly stats every Monday at 2:00 AM
+0 2 * * 1 cd /path/to/tsa-innovlab/services/tsa-ai && python3 scripts/calculate_recommendation_stats.py --period weekly >> /var/log/recommendation_stats_weekly.log 2>&1
+
+# Calculate monthly stats on the 1st of each month at 3:00 AM
+0 3 1 * * cd /path/to/tsa-innovlab/services/tsa-ai && python3 scripts/calculate_recommendation_stats.py --period monthly >> /var/log/recommendation_stats_monthly.log 2>&1
+
+# Alternative with virtualenv activation:
+# 0 1 * * * cd /path/to/tsa-innovlab/services/tsa-ai && source venv/bin/activate && python scripts/calculate_recommendation_stats.py --period daily >> /var/log/recommendation_stats.log 2>&1
+
+# Windows Task Scheduler equivalent:
+# schtasks /create /tn "RecommendationStatsDaily" /tr "C:\path\to\python.exe C:\path\to\calculate_recommendation_stats.py --period daily" /sc daily /st 01:00

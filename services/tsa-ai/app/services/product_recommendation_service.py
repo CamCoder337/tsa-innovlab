@@ -40,9 +40,65 @@ class ProductRecommendationService:
         self.similar_product_price_range = float(os.getenv("REC_SIMILAR_PRICE_RANGE", "0.3"))
         self.default_time_window_days = int(os.getenv("REC_DEFAULT_TIME_WINDOW_DAYS", "30"))
 
+        # A/B testing configuration
+        self.ab_testing_enabled = os.getenv("REC_AB_TESTING_ENABLED", "false").lower() == "true"
+
         logger.info(f"ProductRecommendationService initialized with version {self.model_version}")
         logger.info(f"Thresholds: collaborative={self.min_purchases_collaborative}, "
                    f"content={self.min_purchases_content}, similar_users={self.similar_users_limit}")
+        logger.info(f"A/B Testing: {'enabled' if self.ab_testing_enabled else 'disabled'}")
+
+    def _get_ab_test_group(self, user_id: str) -> str:
+        """
+        Assign user to A/B test group based on user_id hash
+        This ensures consistent assignment across requests
+
+        Returns: 'control', 'variant_a', 'variant_b'
+        """
+        if not self.ab_testing_enabled:
+            return 'control'
+
+        # Use hash to consistently assign users to groups
+        import hashlib
+        hash_value = int(hashlib.md5(user_id.encode()).hexdigest(), 16)
+
+        # Split traffic: 34% control, 33% variant_a, 33% variant_b
+        group_num = hash_value % 100
+
+        if group_num < 34:
+            return 'control'
+        elif group_num < 67:
+            return 'variant_a'
+        else:
+            return 'variant_b'
+
+    def _apply_ab_test_config(self, group: str) -> Dict[str, Any]:
+        """
+        Apply different configuration based on A/B test group
+
+        Control: Standard configuration
+        Variant A: More aggressive collaborative filtering (lower thresholds)
+        Variant B: More conservative (higher thresholds, larger user pool)
+        """
+        configs = {
+            'control': {
+                'min_purchases_collaborative': self.min_purchases_collaborative,
+                'min_common_products': self.min_common_products,
+                'similar_users_limit': self.similar_users_limit,
+            },
+            'variant_a': {
+                'min_purchases_collaborative': max(2, self.min_purchases_collaborative - 1),
+                'min_common_products': max(1, self.min_common_products - 1),
+                'similar_users_limit': self.similar_users_limit,
+            },
+            'variant_b': {
+                'min_purchases_collaborative': self.min_purchases_collaborative + 1,
+                'min_common_products': self.min_common_products,
+                'similar_users_limit': min(50, self.similar_users_limit + 10),
+            }
+        }
+
+        return configs.get(group, configs['control'])
 
     def _log_error(self, context: str, err: Exception) -> None:
         """
@@ -63,11 +119,28 @@ class ProductRecommendationService:
         """
         Get personalized recommendations for a user
         Uses multiple strategies based on available data
+        Supports A/B testing when enabled
         """
         start_time = datetime.utcnow()
 
         try:
             db = SessionLocal()
+
+            # A/B testing: assign user to test group
+            ab_group = self._get_ab_test_group(request.user_id)
+            ab_config = self._apply_ab_test_config(ab_group)
+
+            # Store original thresholds
+            original_min_purchases = self.min_purchases_collaborative
+            original_min_common = self.min_common_products
+            original_similar_limit = self.similar_users_limit
+
+            # Apply A/B test configuration temporarily
+            if self.ab_testing_enabled:
+                self.min_purchases_collaborative = ab_config['min_purchases_collaborative']
+                self.min_common_products = ab_config['min_common_products']
+                self.similar_users_limit = ab_config['similar_users_limit']
+                logger.info(f"User {request.user_id} assigned to A/B group: {ab_group}")
 
             # Get user purchase history
             user_history = await self._get_user_history(db, request.user_id)
@@ -94,7 +167,19 @@ class ProductRecommendationService:
 
             db.close()
 
+            # Restore original thresholds
+            if self.ab_testing_enabled:
+                self.min_purchases_collaborative = original_min_purchases
+                self.min_common_products = original_min_common
+                self.similar_users_limit = original_similar_limit
+
             processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+
+            # Add A/B test metadata
+            metadata = {}
+            if self.ab_testing_enabled:
+                metadata['ab_test_group'] = ab_group
+                metadata['ab_test_config'] = ab_config
 
             return ProductRecommendationResponse(
                 success=True,
@@ -102,10 +187,18 @@ class ProductRecommendationService:
                 strategy_used=strategy,
                 total=len(recommendations),
                 processing_time_ms=round(processing_time, 2),
+                metadata=metadata if metadata else None
             )
 
         except Exception as e:
             self._log_error("Personalized product recommendations failed", e)
+
+            # Restore original thresholds even on error
+            if self.ab_testing_enabled:
+                self.min_purchases_collaborative = original_min_purchases
+                self.min_common_products = original_min_common
+                self.similar_users_limit = original_similar_limit
+
             # Return empty recommendations on failure
             return ProductRecommendationResponse(
                 success=False,
@@ -564,6 +657,218 @@ class ProductRecommendationService:
         except Exception as e:
             self._log_error("Popularity-based recommendations failed", e)
             return []
+
+    async def get_ab_test_results(self) -> Dict[str, Any]:
+        """
+        Get A/B test results comparing performance across test groups
+        """
+        try:
+            if not self.ab_testing_enabled:
+                return {
+                    "enabled": False,
+                    "message": "A/B testing is not enabled. Set REC_AB_TESTING_ENABLED=true to enable."
+                }
+
+            db = SessionLocal()
+
+            # Query to get stats for each A/B test group
+            # Note: We need to store ab_test_group in feedback metadata
+            query = text("""
+                WITH group_stats AS (
+                    SELECT
+                        metadata->>'ab_test_group' as test_group,
+                        strategy_used,
+                        COUNT(DISTINCT user_id) as users,
+                        COUNT(*) as impressions,
+                        SUM(CASE WHEN action = 'view' THEN 1 ELSE 0 END) as views,
+                        SUM(CASE WHEN action = 'click' THEN 1 ELSE 0 END) as clicks,
+                        SUM(CASE WHEN action = 'purchase' THEN 1 ELSE 0 END) as purchases
+                    FROM product_recommendation_feedbacks
+                    WHERE created_at >= NOW() - INTERVAL '30 days'
+                    AND metadata IS NOT NULL
+                    AND metadata->>'ab_test_group' IS NOT NULL
+                    GROUP BY metadata->>'ab_test_group', strategy_used
+                )
+                SELECT
+                    test_group,
+                    strategy_used,
+                    users,
+                    impressions,
+                    views,
+                    clicks,
+                    purchases,
+                    CASE WHEN views > 0 THEN (clicks::FLOAT / views * 100) ELSE 0 END as ctr,
+                    CASE WHEN clicks > 0 THEN (purchases::FLOAT / clicks * 100) ELSE 0 END as conversion_rate
+                FROM group_stats
+                ORDER BY test_group, strategy_used
+            """)
+
+            results = db.execute(query).fetchall()
+            db.close()
+
+            # Organize results by group
+            groups = {}
+            for row in results:
+                test_group = row[0]
+                if test_group not in groups:
+                    groups[test_group] = {
+                        'group': test_group,
+                        'total_users': 0,
+                        'total_impressions': 0,
+                        'strategies': {}
+                    }
+
+                strategy = row[1]
+                groups[test_group]['total_users'] += int(row[2])
+                groups[test_group]['total_impressions'] += int(row[3])
+                groups[test_group]['strategies'][strategy] = {
+                    'users': int(row[2]),
+                    'impressions': int(row[3]),
+                    'views': int(row[4]),
+                    'clicks': int(row[5]),
+                    'purchases': int(row[6]),
+                    'ctr': round(float(row[7]), 2),
+                    'conversion_rate': round(float(row[8]), 2)
+                }
+
+            # Determine winner based on overall conversion rate
+            winner = None
+            best_conversion = 0
+            for group_name, group_data in groups.items():
+                total_clicks = sum(s.get('clicks', 0) for s in group_data['strategies'].values())
+                total_purchases = sum(s.get('purchases', 0) for s in group_data['strategies'].values())
+                overall_conversion = (total_purchases / total_clicks * 100) if total_clicks > 0 else 0
+                group_data['overall_conversion_rate'] = round(overall_conversion, 2)
+
+                if overall_conversion > best_conversion:
+                    best_conversion = overall_conversion
+                    winner = group_name
+
+            return {
+                "enabled": True,
+                "period": "last_30_days",
+                "groups": groups,
+                "winner": winner,
+                "best_conversion_rate": round(best_conversion, 2),
+                "recommendation": f"Group '{winner}' performs best with {best_conversion:.2f}% conversion rate" if winner else "Insufficient data"
+            }
+
+        except Exception as e:
+            self._log_error("Failed to get A/B test results", e)
+            return {
+                "enabled": self.ab_testing_enabled,
+                "error": "Failed to retrieve A/B test results",
+                "recommendation": "Check that feedback metadata includes ab_test_group"
+            }
+
+    async def analyze_and_adjust_thresholds(self) -> Dict[str, Any]:
+        """
+        Analyze feedback data and suggest threshold adjustments
+        Returns recommended threshold values based on performance metrics
+        """
+        try:
+            db = SessionLocal()
+
+            # Analyze collaborative filtering performance
+            collab_query = text("""
+                WITH user_purchase_counts AS (
+                    SELECT
+                        f.user_id,
+                        COUNT(DISTINCT CASE WHEN f.action = 'purchase' THEN f.product_id END) as purchases,
+                        COUNT(DISTINCT CASE WHEN f.action = 'click' THEN f.product_id END) as clicks
+                    FROM product_recommendation_feedbacks f
+                    WHERE f.strategy_used = 'collaborative_filtering'
+                    AND f.created_at >= NOW() - INTERVAL '30 days'
+                    GROUP BY f.user_id
+                )
+                SELECT
+                    AVG(CASE WHEN clicks > 0 THEN purchases::FLOAT / clicks ELSE 0 END) as avg_conversion,
+                    COUNT(*) as user_count
+                FROM user_purchase_counts
+            """)
+
+            collab_result = db.execute(collab_query).fetchone()
+            collab_conversion = float(collab_result[0]) if collab_result and collab_result[0] else 0
+
+            # Analyze content-based performance
+            content_query = text("""
+                SELECT
+                    COUNT(CASE WHEN action = 'purchase' THEN 1 END)::FLOAT / NULLIF(COUNT(CASE WHEN action = 'click' THEN 1 END), 0) as conversion,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM product_recommendation_feedbacks
+                WHERE strategy_used = 'content_based'
+                AND created_at >= NOW() - INTERVAL '30 days'
+            """)
+
+            content_result = db.execute(content_query).fetchone()
+            content_conversion = float(content_result[0]) if content_result and content_result[0] else 0
+
+            # Analyze popularity performance
+            popularity_query = text("""
+                SELECT
+                    COUNT(CASE WHEN action = 'purchase' THEN 1 END)::FLOAT / NULLIF(COUNT(CASE WHEN action = 'click' THEN 1 END), 0) as conversion,
+                    COUNT(DISTINCT user_id) as user_count
+                FROM product_recommendation_feedbacks
+                WHERE strategy_used = 'popularity_based'
+                AND created_at >= NOW() - INTERVAL '30 days'
+            """)
+
+            popularity_result = db.execute(popularity_query).fetchone()
+            popularity_conversion = float(popularity_result[0]) if popularity_result and popularity_result[0] else 0
+
+            db.close()
+
+            # Suggest adjustments based on performance
+            recommendations = {
+                "current_thresholds": {
+                    "min_purchases_collaborative": self.min_purchases_collaborative,
+                    "min_purchases_content": self.min_purchases_content,
+                    "similar_users_limit": self.similar_users_limit,
+                    "min_common_products": self.min_common_products,
+                },
+                "performance_metrics": {
+                    "collaborative_conversion": round(collab_conversion * 100, 2),
+                    "content_conversion": round(content_conversion * 100, 2),
+                    "popularity_conversion": round(popularity_conversion * 100, 2),
+                },
+                "suggested_adjustments": {},
+                "reasoning": []
+            }
+
+            # If collaborative filtering performs well, potentially lower threshold
+            if collab_conversion > 0.05:  # 5% conversion
+                if self.min_purchases_collaborative > 2:
+                    recommendations["suggested_adjustments"]["min_purchases_collaborative"] = max(2, self.min_purchases_collaborative - 1)
+                    recommendations["reasoning"].append("Collaborative filtering performs well - consider lowering threshold to serve more users")
+
+            # If collaborative performs poorly, increase threshold
+            elif collab_conversion < 0.02:  # 2% conversion
+                recommendations["suggested_adjustments"]["min_purchases_collaborative"] = self.min_purchases_collaborative + 1
+                recommendations["reasoning"].append("Collaborative filtering underperforms - increase threshold for better quality")
+
+            # If content-based outperforms collaborative, suggest using it more
+            if content_conversion > collab_conversion * 1.5:
+                recommendations["reasoning"].append("Content-based significantly outperforms collaborative - consider prioritizing it")
+
+            # If popularity performs best, users might be too diverse
+            if popularity_conversion > max(collab_conversion, content_conversion) * 1.3:
+                recommendations["suggested_adjustments"]["similar_users_limit"] = min(50, self.similar_users_limit + 10)
+                recommendations["reasoning"].append("Popularity performs best - increase similar_users_limit to find more patterns")
+
+            recommendations["recommendation"] = "Apply suggested adjustments and monitor for 7 days" if recommendations["suggested_adjustments"] else "Current thresholds are optimal"
+
+            return recommendations
+
+        except Exception as e:
+            self._log_error("Failed to analyze thresholds", e)
+            return {
+                "error": "Failed to analyze feedback data",
+                "current_thresholds": {
+                    "min_purchases_collaborative": self.min_purchases_collaborative,
+                    "min_purchases_content": self.min_purchases_content,
+                },
+                "recommendation": "Insufficient data for analysis"
+            }
 
     async def get_recommendation_stats(self) -> Dict[str, Any]:
         """
