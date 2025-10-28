@@ -176,6 +176,11 @@ services:
       # Internal service communication
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key-change-in-production}
 
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
+      LLM_ENABLED: ${LLM_ENABLED:-true}
+      GOOGLE_CREDENTIALS_JSON: ${GOOGLE_CREDENTIALS_JSON}
+
     ports:
       - '${AI_PORT:-30002}:8000'
 
