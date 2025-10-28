@@ -168,7 +168,7 @@ app.include_router(
 
 app.include_router(
     product_recommendations.router,
-    prefix="/api/ai/recommendations",
+    prefix="/api/ai/product-recommendations",
     tags=["Product Recommendations"]
 )
 
@@ -220,7 +220,7 @@ async def ai_root():
         "available_endpoints": [
             "/api/ai/health - Health checks",
             "/api/ai/eta - ETA predictions ✅",
-            "/api/ai/recommendations - Product recommendations ✅",
+            "/api/ai/product-recommendations - Product recommendations ✅",
             "/api/ai/chatbot - Chatbot assistant ✅",
             "/api/ai/predictions - General predictions (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
