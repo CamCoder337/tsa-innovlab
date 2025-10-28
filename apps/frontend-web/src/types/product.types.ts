@@ -85,6 +85,7 @@ export interface ProductCardProps {
   onQuickView?: (product: Product) => void;
   isInWishlist?: boolean;
   className?: string;
+  recommendationContext?: 'popular' | 'personalized' | 'similar';
 }
 
 export interface BulkUpdateProducts {

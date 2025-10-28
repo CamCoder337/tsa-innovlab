@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -99,6 +100,12 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     }
   };
 
+  const handleProductClick = (productId: string) => {
+    if (isAuthenticated) {
+      shopService.submitRecommendationFeedback(productId, 'click', type);
+    }
+  };
+
   const getTitle = () => {
     switch (type) {
       case 'popular':
@@ -178,24 +185,34 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 key={product.id}
                 className="group border rounded-lg p-4 hover:shadow-md transition-shadow"
               >
-                <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                  {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Eye className="h-8 w-8" />
-                    </div>
-                  )}
-                </div>
+                <Link
+                  to={`/app/shop/product/${product.id}`}
+                  onClick={() => handleProductClick(product.id)}
+                >
+                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <Eye className="h-8 w-8" />
+                      </div>
+                    )}
+                  </div>
+                </Link>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {product.name}
-                  </h4>
+                  <Link
+                    to={`/app/shop/product/${product.id}`}
+                    onClick={() => handleProductClick(product.id)}
+                  >
+                    <h4 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {product.name}
+                    </h4>
+                  </Link>
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">

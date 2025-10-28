@@ -7,6 +7,8 @@ import { Heart, ShoppingCart, Eye, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProductCardProps } from '@/types/product.types';
 import { Input } from '../ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import { shopService } from '@/services/shop.service';
 
 export function ProductCard({
   product,
@@ -15,9 +17,18 @@ export function ProductCard({
   onToggleWishlist,
   onQuickView,
   isInWishlist = false,
+  recommendationContext,
 }: ProductCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [qty, setQty] = useState(1);
+  const { isAuthenticated } = useAuth();
+
+  // Track click on product when it's from a recommendation
+  const handleProductClick = () => {
+    if (recommendationContext && isAuthenticated) {
+      shopService.submitRecommendationFeedback(product.id, 'click', recommendationContext);
+    }
+  };
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
@@ -33,7 +44,7 @@ export function ProductCard({
         <CardContent className="p-4">
           <div className="flex gap-4">
             <div className="relative w-32 h-32 flex-shrink-0">
-              <Link to={`/app/shop/product/${product.id}`}>
+              <Link to={`/app/shop/product/${product.id}`} onClick={handleProductClick}>
                 <img
                   src={product.images[currentImageIndex] || '/placeholder.svg?height=128&width=128'}
                   alt={product.name}
@@ -50,7 +61,7 @@ export function ProductCard({
             <div className="flex-1 space-y-2">
               <div className="flex items-start justify-between">
                 <div>
-                  <Link to={`/app/shop/product/${product.id}`}>
+                  <Link to={`/app/shop/product/${product.id}`} onClick={handleProductClick}>
                     <h3 className="font-semibold text-lg">{product.name}</h3>
                   </Link>
                 </div>
@@ -103,7 +114,7 @@ export function ProductCard({
     <Card className="group hover:shadow-lg transition-all duration-300">
       <CardContent className="p-0">
         <div className="relative overflow-hidden">
-          <Link to={`/app/shop/product/${product.id}`}>
+          <Link to={`/app/shop/product/${product.id}`} onClick={handleProductClick}>
             <img
               src={product.images[currentImageIndex] || '/placeholder.svg?height=200&width=300'}
               alt={product.name}
@@ -155,7 +166,7 @@ export function ProductCard({
 
         <div className="p-2 space-y-4">
           <div className="space-y-1 h-12">
-            <Link to={`/app/shop/product/${product.id}`}>
+            <Link to={`/app/shop/product/${product.id}`} onClick={handleProductClick}>
               <h3 className="font-semibold line-clamp-2">{product.name}</h3>
             </Link>
           </div>
