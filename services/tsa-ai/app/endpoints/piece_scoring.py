@@ -264,28 +264,4 @@ async def get_scoring_methods():
 
 
 # Error handlers
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors"""
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "detail": "Erreur de validation",
-            "message": str(exc),
-            "type": "validation_error"
-        }
-    )
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions"""
-    logger.error(f"Unhandled exception in piece scoring: {exc}")
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "detail": "Erreur interne du serveur",
-            "message": "Une erreur inattendue s'est produite",
-            "type": "internal_error"
-        }
-    )
+# Note: Exception handlers are registered in main.py, not on individual routers
