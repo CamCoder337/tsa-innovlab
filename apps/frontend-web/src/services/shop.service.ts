@@ -95,6 +95,37 @@ export class ShopService extends BaseApi {
     }
   }
 
+  async getPersonalizedRecommendations(
+    limit?: number,
+    context?: string
+  ): Promise<ApiResponse<{ products: Product[]; strategy: string; total: number }>> {
+    try {
+      const response = await this.insertToken().get('/api/shop/product-recommendations', {
+        params: { limit, context },
+      });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async submitRecommendationFeedback(
+    productId: string,
+    action: 'view' | 'click' | 'add_to_cart' | 'purchase' | 'ignore' | 'remove',
+    context?: string
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    try {
+      const response = await this.insertToken().post('/api/shop/product-recommendations/feedback', {
+        product_id: productId,
+        action,
+        context,
+      });
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
   async visualRecognitionSearch(
     image: File
   ): Promise<ApiResponse<{ products: Product[]; processing_time_ms: number; total: number }>> {

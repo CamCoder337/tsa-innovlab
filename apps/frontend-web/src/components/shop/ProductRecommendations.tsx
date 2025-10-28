@@ -46,7 +46,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           response = await shopService.getProductRecommendations(limit);
           break;
         case 'personalized':
-          response = await shopService.getProductRecommendations(limit);
+          response = await shopService.getPersonalizedRecommendations(limit, 'homepage');
           break;
         case 'similar':
           if (!productId) {
@@ -54,6 +54,8 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           }
           response = await shopService.getSimilarProducts(productId, limit);
           break;
+        default:
+          throw new Error(`Unknown recommendation type: ${type}`);
       }
 
       if (response.error) {
@@ -74,9 +76,24 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Track product views when recommendations are loaded
+  useEffect(() => {
+    if (recommendations?.products && recommendations.products.length > 0 && isAuthenticated) {
+      recommendations.products.forEach((product) => {
+        // Track view event for each recommended product
+        shopService.submitRecommendationFeedback(product.id, 'view', type);
+      });
+    }
+  }, [recommendations, isAuthenticated, type]);
+
   const handleAddToCart = async (product: Product) => {
     try {
       await addToCart(product, 1);
+
+      // Track add to cart event if user is authenticated
+      if (isAuthenticated) {
+        await shopService.submitRecommendationFeedback(product.id, 'add_to_cart', type);
+      }
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
