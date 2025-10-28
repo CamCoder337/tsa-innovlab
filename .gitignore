@@ -70,7 +70,7 @@ docker-compose.override.yml
 # ================================
 # AI / ML Models
 # ================================
-services/tsa-ai/ml_models/*.pkl
+# services/tsa-ai/ml_models/*.pkl  # Temporarily allow .pkl files for ML integration
 services/tsa-ai/ml_models/*.h5
 services/tsa-ai/ml_models/*.pt
 services/tsa-ai/data/visual_recognition/images/
