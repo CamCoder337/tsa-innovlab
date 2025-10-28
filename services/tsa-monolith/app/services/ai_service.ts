@@ -60,6 +60,28 @@ export interface VisualRecognitionResponse {
   processing_time_ms: number
 }
 
+export interface ChatbotQueryRequest {
+  message: string
+  user_id: string
+  user_role?: string
+  user_token?: string
+  conversation_id?: string
+  context?: Record<string, any>
+}
+
+export interface ChatbotResponse {
+  message: string
+  intent: {
+    name: string
+    confidence: number
+    entities: Record<string, any>
+  }
+  suggestions: string[]
+  data?: Record<string, any>
+  requires_human: boolean
+  timestamp: string
+}
+
 export default class AIService {
   private readonly baseUrl: string
   private readonly timeout: number = 10000 // 10 seconds
@@ -264,6 +286,78 @@ export default class AIService {
     } catch (error) {
       logger.error('Failed to perform visual recognition from AI service', { error })
       return null
+    }
+  }
+
+  /**
+   * Query the chatbot with a user message
+   */
+  async queryChatbot(request: ChatbotQueryRequest): Promise<ChatbotResponse | null> {
+    try {
+      logger.info('Querying chatbot', {
+        userId: request.user_id,
+        messageLength: request.message.length,
+      })
+
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(15000), // 15 seconds for LLM responses
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      const data = (await response.json()) as ChatbotResponse
+      return data
+    } catch (error) {
+      logger.error('Failed to query chatbot from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Get chatbot conversation history
+   */
+  async getChatbotHistory(conversationId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/history/${conversationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      logger.error('Failed to get chatbot history from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Check chatbot health
+   */
+  async checkChatbotHealth(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000),
+      })
+
+      return response.ok
+    } catch (error) {
+      logger.warn('Chatbot health check failed', { error })
+      return false
     }
   }
 
