@@ -26,20 +26,36 @@ class ProductRecommendationService:
     Service for product recommendations using multiple strategies
     """
 
-    def _init_(self):
+    def __init__(self):
         self.model_version = "1.0.0"
         self.cache = {}  # Simple in-memory cache for product similarities
 
+        # Configurable thresholds (can be overridden by env vars)
+        import os
+        self.min_purchases_collaborative = int(os.getenv("REC_MIN_PURCHASES_COLLABORATIVE", "3"))
+        self.min_purchases_content = int(os.getenv("REC_MIN_PURCHASES_CONTENT", "1"))
+        self.similar_users_limit = int(os.getenv("REC_SIMILAR_USERS_LIMIT", "20"))
+        self.min_common_products = int(os.getenv("REC_MIN_COMMON_PRODUCTS", "2"))
+        self.price_range_multiplier = float(os.getenv("REC_PRICE_RANGE_MULTIPLIER", "0.5"))
+        self.similar_product_price_range = float(os.getenv("REC_SIMILAR_PRICE_RANGE", "0.3"))
+        self.default_time_window_days = int(os.getenv("REC_DEFAULT_TIME_WINDOW_DAYS", "30"))
+
+        logger.info(f"ProductRecommendationService initialized with version {self.model_version}")
+        logger.info(f"Thresholds: collaborative={self.min_purchases_collaborative}, "
+                   f"content={self.min_purchases_content}, similar_users={self.similar_users_limit}")
+
     def _log_error(self, context: str, err: Exception) -> None:
         """
-        Log errors without leaking SQL statements or parameters.
-        Only the error type is recorded to keep logs clean.
+        Log errors with full details for debugging
         """
-        try:
-            err_type = err._class.name_
-        except Exception:
-            err_type = "UnknownError"
-        logger.error(f"{context}: {err_type}")
+        err_type = err.__class__.__name__
+        err_msg = str(err)
+
+        # Log full error details for debugging
+        logger.error(f"{context}: {err_type} - {err_msg}", exc_info=True)
+
+        # Also log a summary without stack trace for quick scanning
+        logger.error(f"ERROR SUMMARY - {context}: {err_type}")
 
     async def get_personalized_recommendations(
         self, request: PersonalizedProductRecommendationRequest
@@ -57,13 +73,13 @@ class ProductRecommendationService:
             user_history = await self._get_user_history(db, request.user_id)
 
             # Choose strategy based on user history
-            if len(user_history) >= 3:
+            if len(user_history) >= self.min_purchases_collaborative:
                 # User has enough history - use collaborative filtering
                 recommendations = await self._collaborative_filtering_recommendations(
                     db, request.user_id, user_history, request.limit, request.exclude_product_ids
                 )
                 strategy = "collaborative_filtering"
-            elif len(user_history) >= 1:
+            elif len(user_history) >= self.min_purchases_content:
                 # User has some history - use content-based recommendations
                 recommendations = await self._content_based_recommendations(
                     db, user_history, request.limit, request.exclude_product_ids
@@ -260,60 +276,69 @@ class ProductRecommendationService:
     ) -> List[ProductRecommendation]:
         """
         Collaborative filtering: find similar users and recommend their purchases
+        Optimized with single query using CTEs and JOINs
         """
         try:
             # Get product IDs from user history
             user_product_ids = [item["product_id"] for item in user_history]
 
-            # Find other users who bought similar products
-            query = text("""
-                SELECT DISTINCT o.user_id, COUNT(DISTINCT oi.product_id) as common_products
-                FROM orders o
-                JOIN order_items oi ON o.id = oi.order_id
-                WHERE oi.product_id IN :product_ids
-                AND o.user_id != :user_id
-                AND o.status IN ('paid', 'processing', 'shipped', 'delivered')
-                GROUP BY o.user_id
-                HAVING COUNT(DISTINCT oi.product_id) >= 2
-                ORDER BY common_products DESC
-                LIMIT 20
-            """)
-
-            result = db.execute(
-                query, {"product_ids": tuple(user_product_ids), "user_id": user_id}
-            )
-            similar_users = [str(row[0]) for row in result.fetchall()]
-
-            if not similar_users:
-                # Fallback to content-based if no similar users found
-                return await self._content_based_recommendations(db, user_history, limit, exclude_ids)
-
-            # Get products purchased by similar users but not by current user
+            # Build optimized query with CTEs (Common Table Expressions)
             base_sql = """
-                SELECT
-                    oi.product_id,
-                    p.name,
-                    COUNT(*) as purchase_count,
-                    AVG(p.price) as avg_price
-                FROM order_items oi
-                JOIN orders o ON oi.order_id = o.id
-                JOIN products p ON oi.product_id = p.id
-                WHERE o.user_id IN :similar_users
-                AND oi.product_id NOT IN :user_products
+                WITH similar_users AS (
+                    -- Find users who bought similar products
+                    SELECT o.user_id, COUNT(DISTINCT oi.product_id) as common_products
+                    FROM orders o
+                    JOIN order_items oi ON o.id = oi.order_id
+                    WHERE oi.product_id IN :product_ids
+                    AND o.user_id != :user_id
+                    AND o.status IN ('paid', 'processing', 'shipped', 'delivered')
+                    GROUP BY o.user_id
+                    HAVING COUNT(DISTINCT oi.product_id) >= :min_common
+                    ORDER BY common_products DESC
+                    LIMIT :similar_users_limit
+                ),
+                similar_user_purchases AS (
+                    -- Get what similar users bought
+                    SELECT
+                        oi.product_id,
+                        p.name,
+                        COUNT(*) as purchase_count,
+                        AVG(p.price) as avg_price,
+                        MAX(o.created_at) as last_purchase_date
+                    FROM similar_users su
+                    JOIN orders o ON su.user_id = o.user_id
+                    JOIN order_items oi ON o.id = oi.order_id
+                    JOIN products p ON oi.product_id = p.id
+                    WHERE oi.product_id NOT IN :user_products
             """
+
             params = {
-                "similar_users": tuple(similar_users),
+                "product_ids": tuple(user_product_ids),
+                "user_id": user_id,
+                "min_common": self.min_common_products,
+                "similar_users_limit": self.similar_users_limit,
                 "user_products": tuple(user_product_ids),
                 "limit": limit,
             }
+
             if exclude_ids:
-                base_sql += "\n                AND oi.product_id NOT IN :exclude_ids"
+                base_sql += "\n                    AND oi.product_id NOT IN :exclude_ids"
                 params["exclude_ids"] = tuple(exclude_ids)
+
             base_sql += """
-                AND p.is_active = true
-                AND p.stock > 0
-                GROUP BY oi.product_id, p.name
-                ORDER BY purchase_count DESC
+                    AND p.is_active = true
+                    AND p.stock > 0
+                    AND o.status IN ('paid', 'processing', 'shipped', 'delivered')
+                    GROUP BY oi.product_id, p.name
+                )
+                SELECT
+                    product_id,
+                    name,
+                    purchase_count,
+                    avg_price,
+                    last_purchase_date
+                FROM similar_user_purchases
+                ORDER BY purchase_count DESC, last_purchase_date DESC
                 LIMIT :limit
             """
 
@@ -321,17 +346,38 @@ class ProductRecommendationService:
             result = db.execute(query, params)
             rows = result.fetchall()
 
-            # Calculate scores based on purchase frequency
+            if not rows:
+                # Fallback to content-based if no similar users found
+                return await self._content_based_recommendations(db, user_history, limit, exclude_ids)
+
+            # Calculate scores based on purchase frequency with temporal weighting
             max_count = rows[0][2] if rows else 1
+            now = datetime.utcnow()
             recommendations = []
 
             for row in rows:
                 product_id = str(row[0])
                 product_name = row[1]
                 purchase_count = int(row[2])
+                last_purchase_date = row[4]
 
-                score = purchase_count / max_count  # Normalize to 0-1
+                # Base score from purchase frequency
+                frequency_score = purchase_count / max_count
+
+                # Temporal weighting: recent purchases are more relevant
+                if last_purchase_date:
+                    days_ago = (now - last_purchase_date).days
+                    # Decay factor: 1.0 for recent (0-7 days), 0.5 for old (>180 days)
+                    temporal_weight = max(0.5, 1.0 - (days_ago / 365))
+                else:
+                    temporal_weight = 0.5
+
+                # Combined score
+                score = frequency_score * temporal_weight
+
                 reason = f"Aimé par des utilisateurs similaires ({purchase_count} achats)"
+                if days_ago <= 7:
+                    reason += " - Tendance récente"
 
                 recommendations.append(
                     ProductRecommendation(
@@ -366,8 +412,8 @@ class ProductRecommendationService:
 
             # Calculate average price range
             avg_price = sum(prices) / len(prices) if prices else 0
-            price_min = avg_price * 0.5
-            price_max = avg_price * 2.0
+            price_min = avg_price * self.price_range_multiplier
+            price_max = avg_price * (2.0 / self.price_range_multiplier)
 
             # Get products from purchased history
             purchased_ids = [item["product_id"] for item in user_history]
@@ -519,6 +565,142 @@ class ProductRecommendationService:
             self._log_error("Popularity-based recommendations failed", e)
             return []
 
+    async def get_recommendation_stats(self) -> Dict[str, Any]:
+        """
+        Get real-time statistics from feedback data
+        """
+        try:
+            db = SessionLocal()
+
+            # Get overall stats
+            overall_query = text("""
+                SELECT
+                    COUNT(DISTINCT user_id) as total_users,
+                    COUNT(*) as total_recommendations,
+                    SUM(CASE WHEN action = 'view' THEN 1 ELSE 0 END) as total_views,
+                    SUM(CASE WHEN action = 'click' THEN 1 ELSE 0 END) as total_clicks,
+                    SUM(CASE WHEN action = 'add_to_cart' THEN 1 ELSE 0 END) as total_add_to_cart,
+                    SUM(CASE WHEN action = 'purchase' THEN 1 ELSE 0 END) as total_purchases
+                FROM product_recommendation_feedbacks
+                WHERE created_at >= NOW() - INTERVAL '30 days'
+            """)
+
+            overall_result = db.execute(overall_query).fetchone()
+
+            # Get stats by strategy
+            strategy_query = text("""
+                SELECT
+                    strategy_used,
+                    COUNT(*) as usage_count,
+                    SUM(CASE WHEN action = 'view' THEN 1 ELSE 0 END) as views,
+                    SUM(CASE WHEN action = 'click' THEN 1 ELSE 0 END) as clicks,
+                    SUM(CASE WHEN action = 'purchase' THEN 1 ELSE 0 END) as purchases
+                FROM product_recommendation_feedbacks
+                WHERE strategy_used IS NOT NULL
+                AND created_at >= NOW() - INTERVAL '30 days'
+                GROUP BY strategy_used
+            """)
+
+            strategy_results = db.execute(strategy_query).fetchall()
+            db.close()
+
+            # Calculate CTR and conversion rates
+            strategies_performance = {}
+            for row in strategy_results:
+                strategy = row[0]
+                usage_count = row[1]
+                views = row[2]
+                clicks = row[3]
+                purchases = row[4]
+
+                ctr = (clicks / views * 100) if views > 0 else 0
+                conversion = (purchases / clicks * 100) if clicks > 0 else 0
+
+                strategies_performance[strategy] = {
+                    "usage_count": usage_count,
+                    "avg_ctr": round(ctr, 2),
+                    "avg_conversion": round(conversion, 2),
+                }
+
+            # Fill in missing strategies with zeros
+            for strategy in ["collaborative_filtering", "content_based", "popularity_based"]:
+                if strategy not in strategies_performance:
+                    strategies_performance[strategy] = {
+                        "usage_count": 0,
+                        "avg_ctr": 0.0,
+                        "avg_conversion": 0.0,
+                    }
+
+            return {
+                "total_recommendations_served": overall_result[1] if overall_result else 0,
+                "total_users_recommended": overall_result[0] if overall_result else 0,
+                "total_views": overall_result[2] if overall_result else 0,
+                "total_clicks": overall_result[3] if overall_result else 0,
+                "total_purchases": overall_result[5] if overall_result else 0,
+                "strategies_performance": strategies_performance,
+                "last_updated": datetime.utcnow().isoformat(),
+                "status": "operational",
+            }
+
+        except Exception as e:
+            self._log_error("Failed to get recommendation stats", e)
+            # Return empty stats on error
+            return {
+                "total_recommendations_served": 0,
+                "total_users_recommended": 0,
+                "total_views": 0,
+                "total_clicks": 0,
+                "total_purchases": 0,
+                "strategies_performance": {
+                    "collaborative_filtering": {"usage_count": 0, "avg_ctr": 0.0, "avg_conversion": 0.0},
+                    "content_based": {"usage_count": 0, "avg_ctr": 0.0, "avg_conversion": 0.0},
+                    "popularity_based": {"usage_count": 0, "avg_ctr": 0.0, "avg_conversion": 0.0},
+                },
+                "last_updated": datetime.utcnow().isoformat(),
+                "status": "error",
+            }
+
+    async def store_feedback(
+        self, user_id: str, product_id: str, action: str, context: str = None,
+        strategy_used: str = None, recommendation_score: float = None, metadata: Dict = None
+    ) -> bool:
+        """
+        Store recommendation feedback in database for learning and metrics
+        """
+        try:
+            db = SessionLocal()
+
+            query = text("""
+                INSERT INTO product_recommendation_feedbacks
+                (user_id, product_id, action, context, strategy_used, recommendation_score, metadata, created_at, updated_at)
+                VALUES (:user_id, :product_id, :action, :context, :strategy_used, :recommendation_score, :metadata, NOW(), NOW())
+                RETURNING id
+            """)
+
+            result = db.execute(query, {
+                "user_id": user_id,
+                "product_id": product_id,
+                "action": action,
+                "context": context,
+                "strategy_used": strategy_used,
+                "recommendation_score": recommendation_score,
+                "metadata": metadata
+            })
+
+            db.commit()
+            feedback_id = result.fetchone()[0]
+            db.close()
+
+            logger.info(f"Feedback stored successfully: {feedback_id} - user={user_id}, product={product_id}, action={action}")
+            return True
+
+        except Exception as e:
+            self._log_error("Failed to store feedback", e)
+            if db:
+                db.rollback()
+                db.close()
+            return False
+
     async def _find_similar_products(
         self, db, base_product: Dict, limit: int, exclude_ids: List[str]
     ) -> List[ProductRecommendation]:
@@ -530,8 +712,8 @@ class ProductRecommendationService:
 
             # Find products in same category with similar price
             price = base_product["price"]
-            price_min = price * 0.7
-            price_max = price * 1.3
+            price_min = price * (1.0 - self.similar_product_price_range)
+            price_max = price * (1.0 + self.similar_product_price_range)
 
             base_sql = """
                 SELECT

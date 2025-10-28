@@ -178,20 +178,26 @@ async def submit_product_recommendation_feedback(
             f"product={feedback.product_id}, action={feedback.action}"
         )
 
-        # TODO: Store feedback in database for algorithm improvement
-        # In a production environment, this would:
-        # 1. Store feedback in a dedicated table
-        # 2. Update user preference vectors
-        # 3. Retrain models periodically based on feedback
+        # Store feedback in database for algorithm improvement
+        success = await product_recommendation_service.store_feedback(
+            user_id=feedback.user_id,
+            product_id=feedback.product_id,
+            action=feedback.action,
+            context=feedback.context,
+            strategy_used=None,  # Could be passed from frontend if tracked
+            recommendation_score=None,  # Could be passed from frontend if tracked
+            metadata=None
+        )
 
-        # For now, just log and acknowledge
-        logger.info("Feedback stored successfully")
+        if not success:
+            logger.warning(f"Failed to store feedback but will acknowledge to user")
 
         return {
             "message": "Feedback reçu avec succès",
             "status": "success",
             "action": feedback.action,
             "timestamp": feedback.timestamp.isoformat(),
+            "stored": success
         }
 
     except Exception as e:
@@ -207,35 +213,12 @@ async def get_product_recommendation_stats(db: Session = Depends(get_db)):
     """
     Obtenir les statistiques du système de recommandations
 
-    Informations sur les performances et l'utilisation.
+    Informations sur les performances et l'utilisation basées sur les feedbacks réels.
+    Période analysée : 30 derniers jours
     """
     try:
-        # TODO: Query actual stats from database
-        # For now, return mock stats
-
-        return {
-            "total_recommendations_served": 0,
-            "total_users_recommended": 0,
-            "strategies_performance": {
-                "collaborative_filtering": {
-                    "usage_count": 0,
-                    "avg_ctr": 0.0,
-                    "avg_conversion": 0.0,
-                },
-                "content_based": {
-                    "usage_count": 0,
-                    "avg_ctr": 0.0,
-                    "avg_conversion": 0.0,
-                },
-                "popularity_based": {
-                    "usage_count": 0,
-                    "avg_ctr": 0.0,
-                    "avg_conversion": 0.0,
-                },
-            },
-            "last_updated": "2024-12-19T10:00:00Z",
-            "status": "operational",
-        }
+        stats = await product_recommendation_service.get_recommendation_stats()
+        return stats
 
     except Exception as e:
         logger.error(f"Failed to get recommendation stats: {e}")
