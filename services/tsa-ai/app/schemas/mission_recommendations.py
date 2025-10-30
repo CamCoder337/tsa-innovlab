@@ -93,17 +93,19 @@ class MissionInfo(BaseModel):
 
 
 class TransporterProfile(BaseModel):
-    """Profile of a transporter for recommendations"""
+    """Profile of a transporter for recommendations - champs optionnels pour inférence automatique"""
     transporter_id: str = Field(..., description="Identifiant unique du transporteur")
-    max_weight: float = Field(..., gt=0, description="Capacité maximale en kg")
-    max_distance: float = Field(..., gt=0, description="Distance maximale en km")
-    min_budget: float = Field(..., gt=0, description="Budget minimum accepté en FCFA")
-    experience_years: int = Field(..., ge=0, description="Années d'expérience")
-    reputation_score: float = Field(70.0, ge=0, le=100, description="Score de réputation (0-100)")
-    preferred_merchandise_types: List[str] = Field(default=[], description="Types de marchandises préférés")
-    known_cities: List[str] = Field(default=[], description="Villes connues du transporteur")
-    preferred_delay_days: int = Field(7, ge=1, description="Délai préféré en jours")
-    vehicle_type: Optional[str] = Field(None, description="Type de véhicule")
+    vehicles: Optional[List[Dict[str, Any]]] = Field(None, description="Liste des véhicules du transporteur")
+    # Champs optionnels - seront inférés depuis l'historique si absents
+    max_weight: Optional[float] = Field(None, gt=0, description="Capacité maximale en kg (inféré si absent)")
+    max_distance: Optional[float] = Field(None, gt=0, description="Distance maximale en km (inféré si absent)")
+    min_budget: Optional[float] = Field(None, gt=0, description="Budget minimum accepté en FCFA (inféré si absent)")
+    experience_years: Optional[int] = Field(None, ge=0, description="Années d'expérience (inféré si absent)")
+    reputation_score: Optional[float] = Field(None, ge=0, le=100, description="Score de réputation 0-100 (inféré si absent)")
+    preferred_merchandise_types: Optional[List[str]] = Field(None, description="Types de marchandises préférés (inféré si absent)")
+    known_cities: Optional[List[str]] = Field(None, description="Villes connues du transporteur (inféré si absent)")
+    preferred_delay_days: Optional[int] = Field(None, ge=1, description="Délai préféré en jours (inféré si absent)")
+    vehicle_type: Optional[str] = Field(None, description="Type de véhicule (inféré si absent)")
     
     @validator('preferred_merchandise_types')
     def validate_preferred_types(cls, v):

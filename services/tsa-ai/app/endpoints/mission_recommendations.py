@@ -116,18 +116,63 @@ async def recommend_missions(request: MissionRecommendationRequest):
     """
     Recommend missions for a transporter using the specified method
     
+    🔍 **INFÉRENCE AUTOMATIQUE DE PROFIL** :
+    Le système infère automatiquement les préférences depuis l'historique :
+    - Types de marchandise préférés (taux de succès >= 90%)
+    - Villes connues (routes fréquentes avec bon taux de succès)
+    - Distance maximale (basée sur diversité des routes)
+    - Expérience (calculée depuis nombre de missions)
+    
+    Pour nouveau transporteur : utilise valeurs par défaut + données véhicules
+    
     - **rule_based**: Uses business rules for recommendations
     - **ml_based**: Uses machine learning model for recommendations
     - **both**: Returns comparison between both methods
     """
     try:
-        logger.info(f"Recommending missions for transporter {request.transporter_profile.transporter_id} using method {request.method}")
+        transporter_id = request.transporter_profile.transporter_id
+        logger.info(f"Recommending missions for transporter {transporter_id} using method {request.method}")
+        
+        # 🔍 INFÉRENCE DE PROFIL DEPUIS HISTORIQUE
+        from app.services.transporter_profile_inference import infer_transporter_profile
+        from app.services.mission_recommendation_service import mission_recommendation_service as recommender
+        
+        # Récupérer historique depuis DB
+        history = recommender.recommender._get_transporter_history_from_db(transporter_id)
+        
+        # Extraire véhicules si disponibles dans la requête
+        vehicles = []
+        profile_dict = request.transporter_profile.dict()
+        if 'vehicles' in profile_dict and profile_dict['vehicles']:
+            vehicles = profile_dict['vehicles']
+        
+        # Inférer profil complet
+        inferred_profile = infer_transporter_profile(
+            transporter_id=transporter_id,
+            history=history,
+            vehicles=vehicles if vehicles else None
+        )
+        
+        # Log de l'inférence
+        metadata = inferred_profile['_inference_metadata']
+        logger.info(
+            f"Profile inferred: confidence={metadata['confidence']:.2f}, "
+            f"missions={metadata['completed_missions']}, "
+            f"preferred={inferred_profile['preferred_merchandise_types']}, "
+            f"known_cities={len(inferred_profile['known_cities'])} cities"
+        )
+        
+        # Remplacer le profil par le profil inféré
+        request.transporter_profile = TransporterProfile(**inferred_profile)
+        
+        # Recommandations avec profil inféré
         result = await mission_recommendation_service.recommend_missions(request)
         return result
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in recommend_missions: {e}")
+        logger.error(f"Unexpected error in recommend_missions: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur inattendue lors des recommandations: {str(e)}"

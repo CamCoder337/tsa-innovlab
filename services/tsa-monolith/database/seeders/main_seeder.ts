@@ -28,6 +28,9 @@ export default class MainSeeder extends BaseSeeder {
     // 4. Puis les produits qui dépendent des catégories et de l'admin
     await this.runSeeder('./product_seeder.js')
 
+    // 5. Créer les missions pour les tests de recommandations
+    await this.runSeeder('./mission_seeder.js')
+
     console.log('🌱 Database seeding completed!')
   }
 }

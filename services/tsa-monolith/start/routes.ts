@@ -13,6 +13,11 @@ import { UserRole } from '#models/user'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
 
+// ===== HEALTH CHECKS (Sans authentification) =====
+router.get('/health', '#controllers/http/health_controller.index')
+router.get('/health/live', '#controllers/http/health_controller.live')
+router.get('/health/ready', '#controllers/http/health_controller.ready')
+
 // Helper function pour créer un middleware de rôle
 function roleGuard(role: UserRole) {
   return async (ctx: any, next: any) => {
@@ -73,14 +78,6 @@ router.get('/', async () => {
     message: 'TSA Logistics API',
     version: '1.0.0',
     status: 'active',
-  }
-})
-
-// Health check for ensuring that the app is online
-router.get('/health', async () => {
-  return {
-    status: 'ok',
-    timestamp: new Date().toISOString(),
   }
 })
 
@@ -281,6 +278,20 @@ router
       '/missions/:id/proof',
       '#controllers/http/transporteur/missions_controller.uploadProof'
     )
+
+    // AI - Recommandations de missions personnalisées
+    router.get(
+      '/mission-recommendations/profile',
+      '#controllers/http/logistics/mission_recommendations_controller.profile'
+    )
+    router.get(
+      '/mission-recommendations',
+      '#controllers/http/logistics/mission_recommendations_controller.index'
+    )
+    router.get(
+      '/mission-recommendations/similar/:id',
+      '#controllers/http/logistics/mission_recommendations_controller.similar'
+    )
   })
   .prefix('/api/transporteur')
   .middleware([middleware.auth(), roleGuard(UserRole.TRANSPORTEUR)])
@@ -326,6 +337,13 @@ router
       '/visual-recognition/health',
       '#controllers/http/shop/visual_recognition_controller.health'
     )
+
+    // AI - Scoring de pièces (authentifié)
+    router.post('/pieces/score/validate', '#controllers/http/shop/piece_scoring_controller.validate')
+    router.post('/pieces/score', '#controllers/http/shop/piece_scoring_controller.score')
+    router.post('/pieces/score/batch', '#controllers/http/shop/piece_scoring_controller.scoreBatch')
+    router.get('/pieces/score/categories', '#controllers/http/shop/piece_scoring_controller.categories')
+    router.get('/pieces/score/methods', '#controllers/http/shop/piece_scoring_controller.methods')
   })
   .prefix('/api/shop')
   .middleware(middleware.auth())

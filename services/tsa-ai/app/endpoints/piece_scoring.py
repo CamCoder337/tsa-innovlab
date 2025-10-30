@@ -112,9 +112,43 @@ async def score_piece(request: PieceScoreRequest):
     - **rule_based**: Uses business rules for scoring
     - **ml_based**: Uses machine learning model for scoring
     - **both**: Returns comparison between both methods
+    
+    Auto-enrichment: If piece_id looks like a UUID, the system will automatically
+    enrich missing data from the database.
     """
     try:
         logger.info(f"Scoring piece {request.piece_info.piece_id} using method {request.method}")
+        
+        # 🔍 Auto-enrichment: Si le piece_id ressemble à un UUID, enrichir depuis la DB
+        piece_id = request.piece_info.piece_id
+        if piece_id and len(piece_id) == 36 and '-' in piece_id:  # UUID format
+            logger.info(f"Attempting auto-enrichment for product {piece_id}")
+            try:
+                from app.core.database import get_db
+                from app.services.product_enrichment_service import get_enrichment_service
+                
+                # Obtenir une session DB
+                async for db in get_db():
+                    enrichment_service = get_enrichment_service(db)
+                    
+                    # Enrichir les données
+                    enriched_data = await enrichment_service.enrich_product_data(
+                        piece_id,
+                        request.piece_info.dict()
+                    )
+                    
+                    # Mettre à jour la requête avec les données enrichies
+                    for key, value in enriched_data.items():
+                        if not key.startswith('_') and value is not None:
+                            setattr(request.piece_info, key, value)
+                    
+                    logger.info(f"Product {piece_id} auto-enriched successfully")
+                    break
+                    
+            except Exception as enrich_error:
+                logger.warning(f"Auto-enrichment failed for {piece_id}: {enrich_error}")
+                # Continue sans enrichissement en cas d'erreur
+        
         result = await piece_scoring_service.score_piece(request)
         return result
     except HTTPException:

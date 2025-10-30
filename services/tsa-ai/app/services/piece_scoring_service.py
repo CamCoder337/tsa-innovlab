@@ -49,12 +49,13 @@ class PieceQualityScorer:
             'faible': 30
         }
         
-        # Facteurs de pondération
+        # Facteurs de pondération optimisés
         self.weights = {
-            'age_factor': 0.25,
-            'supplier_reliability': 0.30,
-            'customer_feedback': 0.25,
-            'physical_condition': 0.20
+            'age_factor': 0.20,              # Âge de la pièce
+            'supplier_reliability': 0.25,    # Fiabilité fournisseur
+            'customer_feedback': 0.25,       # Avis clients
+            'physical_condition': 0.20,      # État physique
+            'brand_reputation': 0.10         # Réputation marque
         }
         
         # Chargement automatique du modèle
@@ -88,56 +89,130 @@ class PieceQualityScorer:
     
     def calculate_age_factor(self, piece_age_months: int, estimated_lifetime_months: int) -> float:
         """
-        Calcule le facteur d'âge de la pièce
+        Calcule le facteur d'âge de la pièce avec courbe dégressive
+        Score optimal pour pièces neuves/récentes, décroissance progressive
         """
         if estimated_lifetime_months <= 0:
             return 0.0
         
         age_ratio = piece_age_months / estimated_lifetime_months
         
-        if age_ratio <= 0.2:  # Très récent
-            return 95.0
-        elif age_ratio <= 0.4:  # Récent
-            return 85.0
-        elif age_ratio <= 0.6:  # Moyen
-            return 70.0
-        elif age_ratio <= 0.8:  # Ancien
-            return 50.0
-        else:  # Très ancien
-            return 30.0
+        # Courbe dégressive plus réaliste
+        if age_ratio <= 0.1:  # Quasi neuf (0-10% de vie)
+            return 100.0
+        elif age_ratio <= 0.25:  # Très récent (10-25%)
+            return 95.0 - (age_ratio - 0.1) * 33.3  # 95 → 90
+        elif age_ratio <= 0.5:  # Récent à moyen (25-50%)
+            return 90.0 - (age_ratio - 0.25) * 40  # 90 → 80
+        elif age_ratio <= 0.75:  # Moyen à ancien (50-75%)
+            return 80.0 - (age_ratio - 0.5) * 60  # 80 → 65
+        elif age_ratio <= 0.9:  # Ancien (75-90%)
+            return 65.0 - (age_ratio - 0.75) * 100  # 65 → 50
+        else:  # Fin de vie (>90%)
+            return max(20.0, 50.0 - (age_ratio - 0.9) * 300)  # 50 → 20
     
     def calculate_supplier_reliability(self, supplier_rating: float, supplier_years: int) -> float:
         """
-        Calcule la fiabilité du fournisseur
+        Calcule la fiabilité du fournisseur avec pondération expérience
         """
-        # Score de base sur la note
-        base_score = (supplier_rating / 5.0) * 80
+        # Score de base sur la note (0-5 → 0-85)
+        base_score = (supplier_rating / 5.0) * 85
         
-        # Bonus d'expérience
-        experience_bonus = min(supplier_years * 2, 20)
+        # Bonus d'expérience progressif (max 15 points)
+        if supplier_years >= 10:
+            experience_bonus = 15
+        elif supplier_years >= 5:
+            experience_bonus = 10 + (supplier_years - 5)  # 10-15
+        elif supplier_years >= 2:
+            experience_bonus = 5 + (supplier_years - 2) * 1.67  # 5-10
+        else:
+            experience_bonus = supplier_years * 2.5  # 0-5
+        
+        # Pénalité pour fournisseur très nouveau (<1 an) avec mauvaise note
+        if supplier_years < 1 and supplier_rating < 3.5:
+            base_score *= 0.8  # -20% de pénalité
         
         return min(base_score + experience_bonus, 100.0)
     
     def calculate_customer_feedback(self, avg_rating: float, num_reviews: int) -> float:
         """
-        Calcule le score basé sur les avis clients
+        Calcule le score basé sur les avis clients avec facteur de confiance
+        Plus d'avis = plus de confiance dans la note
         """
         if num_reviews == 0:
-            return 50.0  # Score neutre sans avis
+            return 60.0  # Score neutre-positif sans avis (bénéfice du doute)
         
-        # Score de base sur la note moyenne
+        # Score de base sur la note moyenne (0-5 → 0-100)
         base_score = (avg_rating / 5.0) * 100
         
-        # Facteur de confiance basé sur le nombre d'avis
-        confidence_factor = min(num_reviews / 10, 1.0)
+        # Facteur de confiance progressif selon nombre d'avis
+        if num_reviews >= 50:
+            confidence_factor = 1.0  # Confiance totale
+        elif num_reviews >= 20:
+            confidence_factor = 0.9 + (num_reviews - 20) * 0.0033  # 0.9-1.0
+        elif num_reviews >= 10:
+            confidence_factor = 0.75 + (num_reviews - 10) * 0.015  # 0.75-0.9
+        elif num_reviews >= 5:
+            confidence_factor = 0.6 + (num_reviews - 5) * 0.03  # 0.6-0.75
+        else:
+            confidence_factor = num_reviews * 0.12  # 0.12-0.6
         
-        return base_score * confidence_factor + 50.0 * (1 - confidence_factor)
+        # Score pondéré : plus d'avis = plus de poids à la note réelle
+        weighted_score = base_score * confidence_factor + 60.0 * (1 - confidence_factor)
+        
+        # Bonus pour excellente note avec beaucoup d'avis
+        if avg_rating >= 4.5 and num_reviews >= 20:
+            weighted_score = min(weighted_score + 5, 100.0)
+        
+        # Pénalité pour mauvaise note même avec peu d'avis
+        if avg_rating < 2.5 and num_reviews >= 3:
+            weighted_score *= 0.85  # -15%
+        
+        return weighted_score
     
     def calculate_physical_condition(self, condition_score: float) -> float:
         """
         Calcule le score de condition physique
         """
         return max(0.0, min(condition_score, 100.0))
+    
+    def calculate_brand_reputation(self, brand_score: float, price: float, category_code: int) -> float:
+        """
+        Calcule le score de réputation de marque avec ajustement prix
+        """
+        # Score de base de la marque (0-100)
+        base_score = max(0.0, min(brand_score, 100.0))
+        
+        # Ajustement selon rapport qualité/prix
+        # Prix élevé avec bonne marque = cohérent
+        # Prix bas avec mauvaise marque = cohérent aussi
+        # Prix élevé avec mauvaise marque = suspect
+        
+        # Catégories de prix approximatives (à ajuster selon vos données)
+        price_categories = {
+            1: 100,   # Fournitures bureau - prix moyen
+            2: 500,   # Mobilier - prix moyen
+            3: 1000,  # Équipements industriels - prix moyen
+            4: 300,   # Électronique - prix moyen
+            5: 5000   # Véhicules - prix moyen
+        }
+        
+        expected_price = price_categories.get(category_code, 500)
+        price_ratio = price / expected_price if expected_price > 0 else 1.0
+        
+        # Cohérence prix/marque
+        if brand_score >= 80:  # Marque premium
+            if price_ratio >= 1.2:  # Prix élevé = cohérent
+                base_score = min(base_score + 5, 100.0)
+            elif price_ratio < 0.6:  # Prix trop bas = suspect
+                base_score *= 0.9
+        elif brand_score <= 50:  # Marque bas de gamme
+            if price_ratio <= 0.8:  # Prix bas = cohérent
+                base_score = min(base_score + 3, 100.0)
+            elif price_ratio > 1.5:  # Prix élevé = suspect
+                base_score *= 0.85
+        
+        return base_score
     
     def score_rule_based(self, piece_data: Dict) -> Dict:
         """
@@ -153,18 +228,25 @@ class PieceQualityScorer:
             num_reviews = piece_data.get('number_of_reviews', 0)
             condition = piece_data.get('physical_condition_score', 70.0)
             
+            # Extraction données supplémentaires
+            price = piece_data.get('price', 100.0)
+            category_code = piece_data.get('category_code', 1)
+            brand_score = piece_data.get('brand_reputation_score', 70.0)
+            
             # Calcul des facteurs individuels
             age_score = self.calculate_age_factor(piece_age, lifetime)
             supplier_score = self.calculate_supplier_reliability(supplier_rating, supplier_years)
             feedback_score = self.calculate_customer_feedback(avg_rating, num_reviews)
             condition_score = self.calculate_physical_condition(condition)
+            brand_reputation_score = self.calculate_brand_reputation(brand_score, price, category_code)
             
             # Score final pondéré
             final_score = (
                 age_score * self.weights['age_factor'] +
                 supplier_score * self.weights['supplier_reliability'] +
                 feedback_score * self.weights['customer_feedback'] +
-                condition_score * self.weights['physical_condition']
+                condition_score * self.weights['physical_condition'] +
+                brand_reputation_score * self.weights['brand_reputation']
             )
             
             # Détermination de la catégorie
@@ -177,7 +259,8 @@ class PieceQualityScorer:
                     'age_score': round(age_score, 2),
                     'supplier_score': round(supplier_score, 2),
                     'feedback_score': round(feedback_score, 2),
-                    'condition_score': round(condition_score, 2)
+                    'condition_score': round(condition_score, 2),
+                    'brand_reputation_score': round(brand_reputation_score, 2)
                 },
                 'method': 'rule_based',
                 'model_version': self.model_version
