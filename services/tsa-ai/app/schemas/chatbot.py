@@ -31,12 +31,20 @@ class Intent(BaseModel):
     entities: Dict[str, Any] = Field(default_factory=dict, description="Extracted entities")
 
 
+class NavigationInfo(BaseModel):
+    """Navigation information for frontend routing"""
+    path: str = Field(..., description="Frontend route path")
+    description: str = Field(..., description="Human-readable description")
+    filters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Optional filters to apply")
+
+
 class ChatbotResponse(BaseModel):
     """Response schema for chatbot"""
     message: str = Field(..., description="Bot response message")
     intent: Optional[Intent] = Field(None, description="Detected intent")
     suggestions: List[str] = Field(default_factory=list, description="Suggested follow-up questions")
     data: Optional[Dict[str, Any]] = Field(None, description="Additional data (tracking info, pricing, etc.)")
+    navigation: Optional[NavigationInfo] = Field(None, description="Frontend navigation info (V3)")
     requires_human: bool = Field(False, description="Whether human support is needed")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
