@@ -266,7 +266,11 @@ export default class AIService {
         destination: request.destination,
       })
 
-      const response = await fetch(`${this.baseUrl}/api/ai/pricing/calculate`, {
+      const url = `${this.baseUrl}/api/ai/pricing/calculate`
+      console.log('[PRICING] Calling:', url)
+      console.log('[PRICING] Request:', JSON.stringify(request, null, 2))
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,14 +279,24 @@ export default class AIService {
         signal: AbortSignal.timeout(this.timeout),
       })
 
+      console.log('[PRICING] Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error(`AI Service responded with status ${response.status}`)
+        const errorText = await response.text()
+        console.log('[PRICING] Error response:', errorText)
+        throw new Error(`AI Service responded with status ${response.status}: ${errorText}`)
       }
 
       const data = (await response.json()) as DynamicPricingResponse
+      console.log('[PRICING] Success! Price:', data.calculated_price)
       return data
     } catch (error) {
-      logger.error('Failed to calculate dynamic pricing from AI service', { error })
+      console.error('[PRICING] Exception:', error)
+      logger.error('Failed to calculate dynamic pricing from AI service', {
+        error: error.message,
+        stack: error.stack,
+        url: `${this.baseUrl}/api/ai/pricing/calculate`
+      })
       return null
     }
   }
@@ -476,7 +490,7 @@ export default class AIService {
       return data
     } catch (error) {
       console.error('[MISSION_REC] Exception:', error)
-      logger.error('Failed to get mission recommendations from AI service', { 
+      logger.error('Failed to get mission recommendations from AI service', {
         error: error.message,
         stack: error.stack,
         url: `${this.baseUrl}/api/ai/missions/recommend`
@@ -553,14 +567,14 @@ export default class AIService {
       }
 
       const data = await response.json()
-      
+
       // 🔍 DEBUG: Log de la réponse réussie
       console.log('[AI SERVICE DEBUG] Réponse du service Python:')
       console.log(JSON.stringify(data, null, 2))
-      
+
       return data as any
     } catch (error) {
-      logger.error('Failed to score piece from AI service', { 
+      logger.error('Failed to score piece from AI service', {
         error: error.message,
         pieceId: request.pieceInfo.piece_id,
         stack: error.stack

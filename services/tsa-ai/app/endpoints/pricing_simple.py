@@ -10,7 +10,7 @@ from app.services.dynamic_pricing_service import get_dynamic_pricing_service
 from app.services import pricing_config_service
 from app.core.database import get_db
 
-router = APIRouter(prefix="/pricing", tags=["Pricing Dynamique"])
+router = APIRouter(tags=["Pricing Dynamique"])
 
 
 class UpdateConfigRequest(BaseModel):
@@ -145,5 +145,18 @@ def calculate_dynamic_price(request: DynamicPriceRequest, db: Session = Depends(
         "margin_calculation": f"±({margin_base}% base + {margin_distance_factor}% × {request.distance_km}km + {margin_weight_factor}% × {request.weight_tons}t) = ±{margin_percentage:.2f}%",
         "reason": result["negotiation_range"]["reason"]
     }
+    
+    # Ajouter le champ success pour compatibilité avec le monolithe
+    result["success"] = True
+    
+    # Ajouter breakdown pour compatibilité
+    if "breakdown" not in result:
+        result["breakdown"] = {
+            "base_cost": result.get("base_subtotal", 0),
+            "distance_factor": 1.0,
+            "weight_factor": 1.0,
+            "cargo_type_multiplier": 1.0,
+            "urgency_multiplier": 1.0
+        }
     
     return result
