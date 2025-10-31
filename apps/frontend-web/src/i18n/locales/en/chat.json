@@ -1,0 +1,45 @@
+{
+  "title": "Messaging",
+  "labels": {
+    "searchUser": "Search user",
+    "direct": "Direct",
+    "missions": "Missions"
+  },
+  "placeholders": {
+    "searchConversations": "Search conversations...",
+    "searchUsers": "Search users...",
+    "sendMessageTo": "Send message to {{name}}..."
+  },
+  "buttons": {
+    "newConversation": "New Conversation",
+    "all": "All",
+    "direct": "Direct",
+    "mission": "Missions",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "createConversation": "Create conversation",
+    "loadingError": "Failed to load conversations",
+    "backToConversations": "Back to conversations"
+  },
+  "welcome": {
+    "title": "Welcome to TSA Chat",
+    "description": "Communicate in real-time with your colleagues and partners. Select an existing conversation or create a new one.",
+    "selectHint": "Or select a conversation from the left list"
+  },
+  "messages": {
+    "you": "You",
+    "unknownUser": "Unknown user",
+    "with": "with",
+    "loading": "Loading...",
+    "noConversationFound": "No conversation found",
+    "noConversationsForNow": "No conversations for now",
+    "loadingMessages": "Loading messages...",
+    "noMessagesInConversation": "No messages in this conversation",
+    "sendFirstMessage": "Send the first message to start",
+    "isTyping": "{{ name }} is typing...",
+    "peopleTyping": "{{ count }} people are typing...",
+    "noUsersFound": "No users found",
+    "tryDifferentSearch": "Try a different search",
+    "sharedMissions": "{{count}} shared mission(s)"
+  }
+}

@@ -9,7 +9,7 @@
  *
  * Pour ajouter une nouvelle variable d'environnement (ex: VITE_NEW_API_KEY):
  *
- * 📝 ÉTAPE 1 : Ajouter la variable dans src/env.d.ts
+ * ÉTAPE 1 : Ajouter la variable dans src/env.d.ts
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *   interface ImportMetaEnv {
  *     readonly VITE_NEW_API_KEY: string;  // ← Ajouter ici
@@ -21,20 +21,20 @@
  *     // ... autres variables
  *   }
  *
- * 📝 ÉTAPE 2 : Créer une fonction getter dans ce fichier
+ * ÉTAPE 2 : Créer une fonction getter dans ce fichier
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *   export const getNewApiKey = (): string => {
  *     return window._env_?.VITE_NEW_API_KEY || import.meta.env.VITE_NEW_API_KEY || '';
  *   };
  *
- * 📝 ÉTAPE 3 : Ajouter dans l'objet env (optionnel mais recommandé)
+ * ÉTAPE 3 : Ajouter dans l'objet env (optionnel mais recommandé)
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *   export const env = {
  *     newApiKey: getNewApiKey,  // ← Ajouter ici
  *     // ... autres variables
  *   } as const;
  *
- * 📝 ÉTAPE 4 : Ajouter dans docker-entrypoint.sh
+ * ÉTAPE 4 : Ajouter dans docker-entrypoint.sh
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *   Dans apps/frontend-web/docker-entrypoint.sh :
  *
@@ -45,7 +45,7 @@
  *
  *   echo "   VITE_NEW_API_KEY = ${VITE_NEW_API_KEY:-(not set)}"  // ← Et ici
  *
- * 📝 ÉTAPE 5 : Utiliser dans votre code
+ * ÉTAPE 5 : Utiliser dans votre code
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *   import { getNewApiKey } from '@/config/env';
  *
@@ -54,7 +54,7 @@
  *   import { env } from '@/config/env';
  *   const apiKey = env.newApiKey();
  *
- * ⚠️  IMPORTANT : Ne jamais utiliser directement import.meta.env ou window._env_
+ *  IMPORTANT : Ne jamais utiliser directement import.meta.env ou window._env_
  *    dans votre code. Toujours passer par les getters pour garantir la priorité
  *    runtime > build-time.
  */
@@ -73,6 +73,10 @@ export const getSupabaseAnonKey = (): string => {
 
 export const getGoogleMapsApiKey = (): string => {
   return window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+};
+
+export const getGoogleMapsMapId = (): string => {
+  return window._env_?.VITE_GOOGLE_MAPS_MAP_ID || import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || '';
 };
 
 export const getWebSocketUrl = (token?: string): string => {
@@ -95,5 +99,6 @@ export const env = {
   supabaseUrl: getSupabaseUrl,
   supabaseAnonKey: getSupabaseAnonKey,
   googleMapsApiKey: getGoogleMapsApiKey,
+  googleMapsMapId: getGoogleMapsMapId,
   webSocketUrl: getWebSocketUrl,
 } as const;

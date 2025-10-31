@@ -11,6 +11,7 @@ export interface DeliveryAddress {
   latitude: number;
   longitude: number;
   place_id: string;
+  label: string;
 }
 
 interface UseAddressSelectionReturn {
@@ -43,6 +44,7 @@ export function useAddressSelection(): UseAddressSelectionReturn {
       latitude: address.latitude,
       longitude: address.longitude,
       place_id: address.place_id,
+      label: address.label || '',
     };
 
     setSelectedAddress(deliveryAddress);
@@ -53,7 +55,7 @@ export function useAddressSelection(): UseAddressSelectionReturn {
   }, []);
 
   const getFormattedAddress = useCallback(() => {
-    return selectedAddress?.formatted_address || '';
+    return selectedAddress?.label || selectedAddress?.formatted_address || '';
   }, [selectedAddress]);
 
   const getAddressComponents = useCallback(() => {

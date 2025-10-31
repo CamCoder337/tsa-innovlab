@@ -21,8 +21,6 @@ const Login: React.FC = () => {
   const handleLogin = async (data: LoginCredentials) => {
     const response = await login(data);
 
-    console.log(response);
-
     // Handle login failure
     if (error) {
       toast.error(error);

@@ -6,8 +6,13 @@ import { Clock, CheckCircle, AlertTriangle, FileText, MessageSquare, Loader2 } f
 import type { Mission } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import { useEffect, useState } from 'react';
-import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useMissionsTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+} from '@/hooks/useTranslation';
 import { getStatusLabel } from '@/lib/mission-utils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface TimelineEvent {
   id: string;
@@ -28,11 +33,13 @@ interface MissionTimelineProps {
 }
 
 export function MissionTimeline({ mission }: MissionTimelineProps) {
+  const { user } = useAuth();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
 
   useEffect(() => {
     const fetchMissionHistory = async () => {
@@ -41,33 +48,26 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
       try {
         // Fetch mission history from API
-        const response = await missionService.getMissionHistory(mission.id);
+        const response =
+          user?.role === 'transporteur'
+            ? await missionService.getTransporteurMissionHistory(mission.id)
+            : await missionService.getMissionHistory(mission.id);
 
         if (response.error) {
-          setError(tCommon('error.loadingHistory'));
-          // Fallback to generated events
-          setEvents(generateTimelineEvents());
+          setError(tErrors('missions.timelineLoadingError'));
         } else if (response.data?.missions?.data) {
           // Transform API response to timeline events
           const historyEvents = transformHistoryToEvents(response.data.missions.data);
-          // Combine with basic mission events
-          const basicEvents = generateTimelineEvents();
-          const allEvents = [...historyEvents, ...basicEvents];
           // Remove duplicates and sort
-          const uniqueEvents = allEvents.filter(
+          const uniqueEvents = historyEvents.filter(
             (event, index, self) => index === self.findIndex((e) => e.id === event.id)
           );
           setEvents(
             uniqueEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           );
-        } else {
-          // Fallback to generated events if no data
-          setEvents(generateTimelineEvents());
         }
       } catch {
-        setError(tCommon('error.loadingHistory'));
-        // Fallback to generated events
-        setEvents(generateTimelineEvents());
+        setError(tErrors('missions.timelineLoadingError'));
       } finally {
         setIsLoading(false);
       }
@@ -90,8 +90,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           historyEvents.push({
             id: `history-status-${historyMission.id}-${index}`,
             type: 'status_change',
-            title: `${tMissions('timeline.statusUpdated')}: ${getStatusLabel(historyMission.status)}`,
-            description: `${tMissions('timeline.statusChange')} "${getStatusLabel(previousMission.status)}" ${tCommon('to')} "${getStatusLabel(historyMission.status)}"`,
+            title: `${tMissions('timeline.statusUpdated', { status: getStatusLabel(historyMission.status, tCommon) })}`,
+            description: `${tMissions('timeline.statusChange', { oldStatus: getStatusLabel(previousMission.status, tCommon), newStatus: getStatusLabel(historyMission.status, tCommon) })}`,
             date: historyMission.updatedAt,
           });
         }
@@ -115,125 +115,6 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     });
 
     return historyEvents;
-  };
-
-  // Generate timeline events based on mission data (fallback)
-  const generateTimelineEvents = (): TimelineEvent[] => {
-    const events: TimelineEvent[] = [];
-
-    // Add creation event
-    events.push({
-      id: 'created',
-      type: 'status_change',
-      title: tMissions('timeline.missionCreated'),
-      date: mission.createdAt,
-      user: {
-        id: mission.affreteurId,
-        name: tMissions('roles.affreteur'),
-        role: 'affreteur',
-      },
-    });
-
-    // Add status changes
-    if (mission.updatedAt !== mission.createdAt) {
-      events.push({
-        id: 'status-update',
-        type: 'status_change',
-        title: `${tMissions('timeline.statusUpdated')}: ${getStatusLabel(mission.status)}`,
-        date: mission.updatedAt,
-        metadata: {
-          previousStatus: 'draft',
-          newStatus: mission.status,
-        },
-      });
-    }
-
-    // Add estimated dates
-    if (mission.dateDepartEstime) {
-      events.push({
-        id: 'estimated-departure',
-        type: 'status_change',
-        title: tMissions('timeline.estimatedDepartureSet'),
-        description: `${tMissions('timeline.scheduledFor')} ${format(new Date(mission.dateDepartEstime), 'PPP', { locale: fr })}`,
-        date: mission.dateDepartEstime,
-      });
-    }
-
-    if (mission.dateArriveePrevue) {
-      events.push({
-        id: 'estimated-arrival',
-        type: 'status_change',
-        title: tMissions('timeline.expectedArrivalSet'),
-        description: `${tMissions('timeline.scheduledFor')} ${format(new Date(mission.dateArriveePrevue), 'PPP', { locale: fr })}`,
-        date: mission.dateArriveePrevue,
-      });
-    }
-
-    // Add real dates if available
-    if (mission.dateDebutReelle) {
-      events.push({
-        id: 'actual-departure',
-        type: 'status_change',
-        title: tMissions('timeline.actualDeparture'),
-        description: `${tMissions('timeline.departedOn')} ${format(new Date(mission.dateDebutReelle), 'PPPp', { locale: fr })}`,
-        date: mission.dateDebutReelle,
-      });
-    }
-
-    if (mission.dateFinReelle) {
-      events.push({
-        id: 'actual-arrival',
-        type: 'status_change',
-        title: tMissions('timeline.actualArrival'),
-        description: `${tMissions('timeline.arrivedOn')} ${format(new Date(mission.dateFinReelle), 'PPPp', { locale: fr })}`,
-        date: mission.dateFinReelle,
-      });
-    }
-
-    // Add ratings if available
-    if (mission.ratingAffreteur) {
-      events.push({
-        id: 'rating-affreteur',
-        type: 'note',
-        title: tMissions('timeline.affreteurRating'),
-        description: `${tMissions('timeline.rating')}: ${'★'.repeat(mission.ratingAffreteur)}${'☆'.repeat(5 - mission.ratingAffreteur)}`,
-        date: mission.updatedAt,
-      });
-    }
-
-    if (mission.ratingTransporteur) {
-      events.push({
-        id: 'rating-transporteur',
-        type: 'note',
-        title: tMissions('timeline.transporteurRating'),
-        description: `${tMissions('timeline.rating')}: ${'★'.repeat(mission.ratingTransporteur)}${'☆'.repeat(5 - mission.ratingTransporteur)}`,
-        date: mission.updatedAt,
-      });
-    }
-
-    // Add comments if available
-    if (mission.commentaireAffreteur) {
-      events.push({
-        id: 'comment-affreteur',
-        type: 'message',
-        title: tMissions('timeline.affreteurComment'),
-        description: mission.commentaireAffreteur,
-        date: mission.updatedAt,
-      });
-    }
-
-    if (mission.commentaireTransporteur) {
-      events.push({
-        id: 'comment-transporteur',
-        type: 'message',
-        title: tMissions('timeline.transporteurComment'),
-        description: mission.commentaireTransporteur,
-        date: mission.updatedAt,
-      });
-    }
-
-    // Sort events by date (newest first)
-    return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
   const getEventIcon = (event: TimelineEvent) => {
@@ -312,7 +193,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                   key={event.id}
                   className="relative pb-6 pl-8 border-l-2 border-gray-200 dark:border-gray-700"
                 >
-                  <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-blue-500 flex items-center justify-center">
+                  <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-tsa-blue/90 flex items-center justify-center">
                     {getEventIcon(event)}
                   </div>
                   <div className="space-y-1">
@@ -327,7 +208,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                     )}
                     {event.user && (
                       <p className="text-xs text-gray-500 mt-1">
-                        {tMissions('timeline.by')} {event.user.name}
+                        {tCommon('by')} {event.user.name}
                       </p>
                     )}
                   </div>

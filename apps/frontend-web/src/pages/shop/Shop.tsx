@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 import { useShopTranslation } from '@/hooks/useTranslation';
 
 export default function ShopPage() {
-  const { t } = useShopTranslation();
+  const { t: tShop } = useShopTranslation();
   const { products, isLoading, error } = useProducts();
   const { addToCart, error: cartError } = useCart();
   const { isAuthenticated } = useAuth();
@@ -131,9 +131,9 @@ export default function ShopPage() {
         toast.error(cartError);
         return;
       }
-      toast.success(`${product.name} ${t('product.addedToCart')}`);
+      toast.success(`${product.name} ${tShop('product.addedToCart')}`);
     } catch (error) {
-      // toast.error(t('product.errorAddingToCart'));
+      // toast.error(tShop('product.errorAddingToCart'));
       console.error(error);
     }
   };
@@ -171,8 +171,8 @@ export default function ShopPage() {
     <div className="container mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('title')} TSA</h1>
-        <p className="text-gray-600 text-lg">{t('subtitle')}</p>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">{tShop('title')} TSA</h1>
+        <p className="text-gray-600 text-lg">{tShop('subtitle')}</p>
       </div>
 
       {/* AI Recommendations */}
@@ -186,13 +186,13 @@ export default function ShopPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
-              <h3 className="font-medium text-orange-800">{t('alerts.lowStockTitle')}</h3>
+              <h3 className="font-medium text-orange-800">{tShop('alerts.lowStockTitle')}</h3>
             </div>
             <div className="space-y-1">
               {lowStockProducts.map((product) => (
                 <p key={product.id} className="text-sm text-orange-700">
                   <strong>{product.name}</strong> -{' '}
-                  {t('alerts.lowStockMessage', { count: product.stock })}
+                  {tShop('alerts.lowStockMessage', { count: product.stock })}
                 </p>
               ))}
             </div>
@@ -227,13 +227,13 @@ export default function ShopPage() {
           onClick={() => setShowFilters(!showFilters)}
         >
           <SlidersHorizontal className="h-4 w-4 mr-2" />
-          {t('filters.title')} {hasActiveFilters && '•'}
+          {tShop('filters.title')} {hasActiveFilters && '•'}
         </Button>
         {/* Search */}
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder={t('search.placeholder')}
+            placeholder={tShop('search.placeholder')}
             className="pl-9"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -245,13 +245,13 @@ export default function ShopPage() {
           onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={t('sorting.sortBy')} />
+            <SelectValue placeholder={tShop('sorting.sortBy')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="updatedAt">{t('sorting.newest')}</SelectItem>
-            <SelectItem value="price">{t('sorting.priceAsc')}</SelectItem>
-            <SelectItem value="name">{t('sorting.nameAZ')}</SelectItem>
-            <SelectItem value="stock">{t('sorting.stockAvailable')}</SelectItem>
+            <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
+            <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
+            <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
+            <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2">
@@ -286,8 +286,8 @@ export default function ShopPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <p className="text-sm text-gray-500">
               {filteredProducts.length === 1
-                ? t('results.found', { count: filteredProducts.length })
-                : t('results.foundPlural', { count: filteredProducts.length })}
+                ? tShop('results.found', { count: filteredProducts.length })
+                : tShop('results.foundPlural', { count: filteredProducts.length })}
             </p>
             <div className="hidden md:flex items-center gap-4 w-full md:w-auto">
               <Select
@@ -295,13 +295,13 @@ export default function ShopPage() {
                 onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
               >
                 <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder={t('sorting.sortBy')} />
+                  <SelectValue placeholder={tShop('sorting.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="updatedAt">{t('sorting.newest')}</SelectItem>
-                  <SelectItem value="price">{t('sorting.priceAsc')}</SelectItem>
-                  <SelectItem value="name">{t('sorting.nameAZ')}</SelectItem>
-                  <SelectItem value="stock">{t('sorting.stockAvailable')}</SelectItem>
+                  <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
+                  <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
+                  <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
+                  <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1 border rounded-md p-1">
@@ -354,14 +354,14 @@ export default function ShopPage() {
             (results ? (
               <div className="text-center py-8 text-gray-500">
                 <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>{t('search.noVisualResults')}</p>
-                <p className="text-sm">{t('search.tryAnotherImage')}</p>
+                <p>{tShop('search.noVisualResults')}</p>
+                <p className="text-sm">{tShop('search.tryAnotherImage')}</p>
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">{t('search.noResults')}</p>
+                <p className="text-muted-foreground mb-4">{tShop('search.noResults')}</p>
                 <Button onClick={clearFilters} variant="outline">
-                  {t('filters.clearFilters')}
+                  {tShop('filters.clearFilters')}
                 </Button>
               </div>
             ))}

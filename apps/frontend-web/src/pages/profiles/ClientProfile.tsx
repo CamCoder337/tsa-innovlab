@@ -15,7 +15,7 @@ import ProfileForm from '@/components/forms/ProfileForm';
 
 export default function ClientProfile() {
   const { user, updateUser } = useAuth();
-  const { t } = useProfileTranslation();
+  const { t: tProfile } = useProfileTranslation();
   const { t: tCommon } = useCommonTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,17 +29,17 @@ export default function ClientProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || t('profile.errors.updateError'));
+        toast.error(response.error.message || tProfile('profile.errors.updateError'));
       }
 
       if (response.data) {
         updateUser(response.data);
-        toast.success(t('profile.updateSuccess'));
+        toast.success(tProfile('profile.updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      toast.error(t('profile.errors.updateError'));
+      toast.error(tProfile('profile.errors.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -80,8 +80,8 @@ export default function ClientProfile() {
     <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('profile.title')}</h1>
-          <p className="text-muted-foreground">{t('profile.client.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{tProfile('profile.title')}</h1>
+          <p className="text-muted-foreground">{tProfile('profile.client.subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
@@ -106,7 +106,7 @@ export default function ClientProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? t('profile.actions.saving') : t('profile.actions.save')}
+              {isLoading ? tProfile('profile.actions.saving') : tProfile('profile.actions.save')}
             </Button>
             <Button
               variant="outline"
@@ -126,7 +126,7 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {t('profile.sections.personalInfo')}
+            {tProfile('profile.sections.personalInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -154,9 +154,9 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            {t('profile.client.paymentMethods')}
+            {tProfile('profile.client.paymentMethods')}
           </CardTitle>
-          <CardDescription>{t('profile.client.paymentMethodsDescription')}</CardDescription>
+          <CardDescription>{tProfile('profile.client.paymentMethodsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -168,16 +168,18 @@ export default function ClientProfile() {
                 <div>
                   <div className="font-medium">MTN Mobile Money</div>
                   <div className="text-sm text-gray-600">
-                    {user.phone ? `****${user.phone.slice(-4)}` : t('profile.client.notConfigured')}
+                    {user.phone
+                      ? `****${user.phone.slice(-4)}`
+                      : tProfile('profile.client.notConfigured')}
                   </div>
                 </div>
               </div>
-              <Badge variant="secondary">{t('profile.client.primary')}</Badge>
+              <Badge variant="secondary">{tProfile('profile.client.primary')}</Badge>
             </div>
 
             <Button variant="outline" className="w-full">
               <CreditCard className="h-4 w-4 mr-2" />
-              {t('profile.client.addPaymentMethod')}
+              {tProfile('profile.client.addPaymentMethod')}
             </Button>
           </div>
         </CardContent>
@@ -188,18 +190,18 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            {t('profile.client.addresses')}
+            {tProfile('profile.client.addresses')}
           </CardTitle>
-          <CardDescription>{t('profile.client.addressesDescription')}</CardDescription>
+          <CardDescription>{tProfile('profile.client.addressesDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="text-center py-8 text-gray-500">
               <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-sm mb-4">{t('profile.client.noAddresses')}</p>
+              <p className="text-sm mb-4">{tProfile('profile.client.noAddresses')}</p>
               <Button variant="outline">
                 <MapPin className="h-4 w-4 mr-2" />
-                {t('profile.client.addAddress')}
+                {tProfile('profile.client.addAddress')}
               </Button>
             </div>
           </div>

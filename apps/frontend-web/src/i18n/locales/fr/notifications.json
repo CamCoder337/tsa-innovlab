@@ -1,8 +1,15 @@
 {
   "title": "Notifications",
+  "description": "Gérez vos notifications et alertes",
   "markAsRead": "Marquer comme lu",
-  "markAllAsRead": "Tout marquer comme lu",
-  "noNotifications": "Aucune notification",
+  "markAllRead": {
+    "button": "Tout marquer comme lu",
+    "success": "Toutes les notifications ont été marquées comme lues"
+  },
+  "empty": {
+    "all": "Aucune notification",
+    "unread": "Aucune notification non lue"
+  },
   "types": {
     "info": "Information",
     "success": "Succès",
@@ -22,24 +29,9 @@
     "documentVerified": "Votre document a été vérifié",
     "documentRejected": "Votre document a été rejeté"
   },
-  "settings": {
-    "emailNotifications": "Notifications par e-mail",
-    "pushNotifications": "Notifications push",
-    "smsNotifications": "Notifications SMS",
-    "frequency": "Fréquence",
-    "immediate": "Immédiat",
-    "daily": "Quotidien",
-    "weekly": "Hebdomadaire"
-  },
-  "description": "Gérez vos notifications et alertes",
   "markedAsRead": "Notification marquée comme lue",
-  "markError": "Erreur lors du marquage de la notification",
-  "allMarkedAsRead": "Toutes les notifications ont été marquées comme lues",
-  "markAllError": "Erreur lors du marquage des notifications",
   "deleted": "Notification supprimée",
-  "deleteError": "Erreur lors de la suppression",
   "allDeleted": "Toutes les notifications ont été supprimées",
-  "deleteAllError": "Erreur lors de la suppression",
   "deleteAll": "Tout supprimer",
   "viewAll": "Voir toutes les notifications",
   "filters": {
@@ -47,28 +39,10 @@
     "unread": "Non lues",
     "important": "Importantes"
   },
-  "filter": {
-    "all": "Toutes"
-  },
-  "markAllRead": {
-    "button": "Tout marquer comme lu",
-    "success": "Toutes les notifications ont été marquées comme lues",
-    "error": "Erreur lors du marquage des notifications"
-  },
   "priority": {
     "urgent": "Urgent",
     "high": "Élevé",
-    "medium": "Moyen",
+    "normal": "Moyen",
     "low": "Faible"
-  },
-  "delete": {
-    "success": "Notification supprimée",
-    "error": "Erreur lors de la suppression"
-  },
-  "retry": "Réessayer",
-  "loading": "Chargement...",
-  "empty": {
-    "all": "Aucune notification",
-    "unread": "Aucune notification non lue"
   }
 }

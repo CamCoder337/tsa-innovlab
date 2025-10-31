@@ -24,12 +24,10 @@
       "averageCost": "Average Cost",
       "pendingMissions": "Pending Missions",
       "successRate": "Success Rate",
-      "total": "total",
-      "thisMonth": "this month",
-      "inProgress": "in progress"
+      "total": "total"
     },
     "sections": {
-      "recentMissions": "Recent Missions",
+      "recentMissions": "My Recent Missions",
       "quickActions": "Quick Actions",
       "recommendations": "Recommendations",
       "monthlySummary": "Monthly Summary"
@@ -52,8 +50,7 @@
     },
     "emptyStates": {
       "noRecentMissions": "No recent missions",
-      "createFirstMission": "Create your first mission to get started",
-      "notAssigned": "Not assigned"
+      "createFirstMission": "Create your first mission to get started"
     },
     "alerts": {
       "platformOperational": "Platform Operational",
@@ -72,10 +69,8 @@
       "activeMissions": "Active Missions",
       "successRate": "Success Rate",
       "new": "new",
-      "inProgress": "In progress",
       "todayEarnings": "Today's Earnings",
-      "vsYesterday": "vs yesterday",
-      "thisMonth": "this month"
+      "vsYesterday": "vs yesterday"
     },
     "sections": {
       "myActiveMissions": "My Active Missions",
@@ -97,13 +92,14 @@
       "dailyEarnings": "Daily Earnings"
     },
     "alerts": {
-      "newMission": "New Mission Available",
-      "urgentMission": "Urgent mission in your area - Accept now for bonus pay",
-      "fuel": "Fuel Alert",
-      "fuelLevel": "Fuel level at 15% - Plan refueling stop",
-      "rating": "New Rating",
+      "newMission": "New Mission",
+      "urgentMission": "Urgent mission Douala → Yaoundé available (3,500 FCFA)",
+      "fuel": "Fuel",
+      "fuelLevel": "Fuel level at 85% - Recommended station 2km away",
+      "clientRating": "Client Rating",
       "newRating": "New 5/5 rating received for your last delivery",
-      "clientRating": "Client Rating"
+      "allCaughtUp": "You're all caught up",
+      "noNotifications": "No notifications"
     },
     "monthlyStats": {
       "missionsThisMonth": "Missions This Month",
@@ -115,9 +111,6 @@
       "noActiveMissions": "No active missions",
       "searchAvailableMissions": "Search for available missions",
       "undefinedClient": "Undefined client"
-    },
-    "missionDetails": {
-      "for": "for"
     }
   },
   "charts": {

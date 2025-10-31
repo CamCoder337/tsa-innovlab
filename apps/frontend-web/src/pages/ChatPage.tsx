@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import ChatList from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
@@ -8,6 +9,7 @@ import { useChat } from '@/hooks/useChat';
 import type { ConversationListItem } from '@/types/chat.types';
 
 export const ChatPage: React.FC = () => {
+  const { t } = useTranslation('chat');
   const { currentConversation, setCurrentConversation } = useChat();
   const [showMobileChatList, setShowMobileChatList] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -32,25 +34,25 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="bg-gray-50 flex flex-1 flex-col">
       {/* Main Chat Interface */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex flex-1">
         {/* Sidebar - Chat List */}
-        <div
-          className={`${
-            showMobileChatList ? 'flex' : 'hidden'
-          } md:flex w-full md:w-80 lg:w-96 border-r border-gray-200 bg-white flex-col`}
+        <aside
+          className={`
+          ${showMobileChatList ? 'flex' : 'hidden'}
+          md:flex w-full md:w-80 lg:w-96
+          border-r border-gray-200 bg-white flex-col
+        `}
         >
           <ChatList
             onSelectConversation={handleSelectConversation}
             onCreateConversation={handleCreateConversation}
           />
-        </div>
+        </aside>
 
         {/* Main Chat Area */}
-        <div
-          className={`${!showMobileChatList ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-white`}
-        >
+        <div className="w-full flex flex-1 flex-col bg-white">
           {currentConversation ? (
             <>
               {/* Mobile Back Button */}
@@ -58,13 +60,13 @@ export const ChatPage: React.FC = () => {
                 <Button variant="ghost" size="sm" onClick={handleBackToList} className="mr-2">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <span className="font-medium">Retour aux conversations</span>
+                <span className="font-medium">
+                  {t('buttons.backToConversations', 'Retour aux conversations')}
+                </span>
               </div>
 
               {/* Chat Window */}
-              <div className="flex-1">
-                <ChatWindow conversation={currentConversation} onClose={handleBackToList} />
-              </div>
+              <ChatWindow conversation={currentConversation} onClose={handleBackToList} />
             </>
           ) : (
             /* Empty State */
@@ -75,22 +77,27 @@ export const ChatPage: React.FC = () => {
                 </div>
 
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Bienvenue dans TSA Chat
+                  {t('welcome.title', 'Bienvenue dans TSA Chat')}
                 </h3>
 
                 <p className="text-gray-600 mb-6">
-                  Communiquez en temps réel avec vos collègues et partenaires. Sélectionnez une
-                  conversation existante ou créez-en une nouvelle.
+                  {t(
+                    'welcome.description',
+                    'Communiquez en temps réel avec vos collègues et partenaires. Sélectionnez une conversation existante ou créez-en une nouvelle.'
+                  )}
                 </p>
 
                 <div className="space-y-3">
                   <Button onClick={handleCreateConversation} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
-                    Nouvelle conversation
+                    {t('buttons.newConversation', 'Nouvelle conversation')}
                   </Button>
 
                   <p className="text-sm text-gray-500">
-                    Ou sélectionnez une conversation dans la liste de gauche
+                    {t(
+                      'welcome.selectHint',
+                      'Ou sélectionnez une conversation dans la liste de gauche'
+                    )}
                   </p>
                 </div>
               </div>

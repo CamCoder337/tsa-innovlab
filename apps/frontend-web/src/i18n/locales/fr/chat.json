@@ -1,0 +1,45 @@
+{
+  "title": "Messagerie",
+  "labels": {
+    "searchUser": "Rechercher un utilisateur",
+    "direct": "Directes",
+    "missions": "Missions"
+  },
+  "placeholders": {
+    "searchConversations": "Rechercher des conversations...",
+    "searchUsers": "Rechercher des utilisateurs...",
+    "sendMessageTo": "Envoyer un message à {{name}}..."
+  },
+  "buttons": {
+    "newConversation": "Nouvelle Conversation",
+    "all": "Toutes",
+    "direct": "Directes",
+    "mission": "Missions",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "createConversation": "Créer une conversation",
+    "loadingError": "Échec du chargement des conversations",
+    "backToConversations": "Retour aux conversations"
+  },
+  "welcome": {
+    "title": "Bienvenue dans TSA Chat",
+    "description": "Communiquez en temps réel avec vos collègues et partenaires. Sélectionnez une conversation existante ou créez-en une nouvelle.",
+    "selectHint": "Ou sélectionnez une conversation dans la liste de gauche"
+  },
+  "messages": {
+    "you": "Vous",
+    "unknownUser": "Utilisateur inconnu",
+    "with": "avec",
+    "loading": "Chargement...",
+    "noConversationFound": "Aucune conversation trouvée",
+    "noConversationsForNow": "Aucune conversation pour le moment",
+    "loadingMessages": "Chargement des messages...",
+    "noMessagesInConversation": "Aucun message dans cette conversation",
+    "sendFirstMessage": "Envoyez le premier message pour commencer",
+    "isTyping": "{{ name }} est en train d'écrire...",
+    "peopleTyping": "{{ count }} personnes sont en train d'écrire...",
+    "noUsersFound": "Aucun utilisateur trouvé",
+    "tryDifferentSearch": "Essayez une recherche différente",
+    "sharedMissions": "{{count}} mission(s) partagée(s)"
+  }
+}

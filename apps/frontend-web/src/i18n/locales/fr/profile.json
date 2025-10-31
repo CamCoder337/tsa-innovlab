@@ -8,21 +8,6 @@
   "language": "Langue",
   "timezone": "Fuseau horaire",
   "theme": "Thème",
-  "avatar": "Photo de profil",
-  "fields": {
-    "firstName": "Prénom",
-    "lastName": "Nom",
-    "email": "Email",
-    "phone": "Téléphone",
-    "address": "Adresse",
-    "city": "Ville",
-    "country": "Pays",
-    "postalCode": "Code postal",
-    "bio": "Biographie",
-    "website": "Site web",
-    "company": "Entreprise",
-    "position": "Poste"
-  },
   "updateProfile": "Mettre à jour le profil",
   "deleteAccount": "Supprimer le compte",
   "updateSuccess": "Profil mis à jour avec succès",
@@ -36,9 +21,6 @@
     "title": "Documents KYC",
     "status": "Statut de vérification",
     "verified": "Vérifiés",
-    "pending": "En attente",
-    "rejected": "Rejeté",
-    "missing": "Manquant",
     "uploadDocument": "Téléverser un document",
     "acceptedFormats": "Formats acceptés: PDF, JPG, PNG (max 5MB)",
     "verificationTime": "Vérification sous 24-48h ouvrées",
@@ -74,21 +56,6 @@
     "averageRating": "Note moyenne",
     "successRate": "Taux de réussite",
     "memberSince": "Membre depuis"
-  },
-  "actions": {
-    "save": "Sauvegarder",
-    "saving": "Sauvegarde..."
-  },
-  "errors": {
-    "documentUploadError": "Erreur lors du téléchargement du document",
-    "updateError": "Erreur lors de la mise à jour du profil"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "email": "Notifications par email",
-    "sms": "Notifications SMS",
-    "push": "Notifications push",
-    "marketing": "Communications marketing"
   },
   "transporteur": {
     "subtitle": "Gérez vos informations personnelles et votre véhicule",
@@ -150,12 +117,15 @@
     "save": "Sauvegarder",
     "saving": "Sauvegarde...",
     "saveSuccess": "Paramètres sauvegardés avec succès",
-    "saveError": "Erreur lors de la sauvegarde",
     "notifications": {
       "title": "Notifications",
       "email": "Notifications Email",
       "sms": "Notifications SMS",
       "push": "Notifications Push",
+      "frequency": "Fréquence",
+      "immediate": "Immédiat",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
       "missionUpdates": "Mises à jour de missions",
       "priceAlerts": "Alertes de prix",
       "weeklyReports": "Rapports hebdomadaires"
@@ -185,10 +155,7 @@
         "backupCodesDescription": "Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte si vous perdez votre téléphone.",
         "regenerateCodes": "Régénérer les codes",
         "enableSuccess": "MFA activé avec succès",
-        "disableSuccess": "MFA désactivé avec succès",
-        "configError": "Erreur lors de la configuration MFA",
-        "enableError": "Erreur lors de l'activation MFA",
-        "invalidCode": "Code invalide"
+        "disableSuccess": "MFA désactivé avec succès"
       }
     }
   },

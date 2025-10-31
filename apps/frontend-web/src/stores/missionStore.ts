@@ -8,6 +8,7 @@ import type {
   MissionFeedback,
   FeedbackFilterParams,
   FeedbackStats,
+  UpdateMissionStatus,
 } from '@/types/mission.types';
 import type { MissionStoreExtended } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
@@ -302,14 +303,17 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.createMission(data);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminCreateMission(data)
+              : await missionService.createMission(data);
 
           if (response.error) {
             set({
               error: response.error.message,
               isLoading: false,
             });
-            return null;
+            return;
           }
 
           if (response.data) {
@@ -323,13 +327,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
             return response.data;
           }
 
-          return null;
+          return;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to create mission',
             isLoading: false,
           });
-          return null;
+          return;
         }
       },
 
@@ -360,6 +364,45 @@ export const useMissionStore = create<MissionStoreExtended>()(
               ),
               currentMission:
                 get().currentMission?.id === id ? response.data : get().currentMission,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to update mission',
+            isLoading: false,
+          });
+        }
+      },
+
+      updateMissionStatus: async (id: string, data: UpdateMissionStatus) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await missionService.updateMissionStatus(id, data);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            const currentMissions = get().missions;
+            const currentMyMissions = get().myMissions;
+
+            set({
+              missions: currentMissions?.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
+              ),
+              myMissions: currentMyMissions?.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
+              ),
+              currentMission:
+                get().currentMission?.id === id ? response.data.mission : get().currentMission,
               isLoading: false,
               error: null,
             });

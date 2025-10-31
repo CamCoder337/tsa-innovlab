@@ -1,0 +1,19 @@
+{
+  "title": "Cartes et Géolocalisation",
+  "labels": {
+    "myLocation": "Ma position",
+    "deliveryAddress": "Adresse de livraison"
+  },
+  "placeholders": {
+    "searchAddress": "Rechercher une adresse...",
+    "manualAddressEntry": "Saisie manuelle de l'adresse (Entrée pour valider)..."
+  },
+  "buttons": {
+    "myLocation": "Ma position",
+    "retry": "Réessayer",
+    "locating": "Localisation..."
+  },
+  "messages": {
+    "loadingGoogleMaps": "Chargement de Google Maps..."
+  }
+}

@@ -86,9 +86,9 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
   // Statistiques temps réel
   const stats = {
     total: missions.length,
-    assigned: missions.filter((m) => m.status === 'assigned').length,
+    inProgress: missions.filter((m) => m.status === 'in_progress').length,
     completed: missions.filter((m) => m.status === 'completed').length,
-    inProgress: missions.filter((m) => ['assigned', 'published'].includes(m.status)).length,
+    published: missions.filter((m) => m.status === 'published').length,
     highPriority: missions.filter((m) => m.budgetMax! > 200000).length,
   };
 
@@ -172,8 +172,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Assignées</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.assigned}</p>
+                <p className="text-sm font-medium text-gray-600">Publiées</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.published}</p>
               </div>
               <MapPin className="w-8 h-8 text-orange-500" />
             </div>
@@ -239,7 +239,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                   <Badge
                     className={`
                       ${selectedMission.status === 'completed' ? 'bg-green-500' : ''}
-                      ${selectedMission.status === 'assigned' ? 'bg-blue-500' : ''}
+                      ${selectedMission.status === 'in_progress' ? 'bg-tsa-blue/90' : ''}
                       ${selectedMission.status === 'published' ? 'bg-yellow-500' : ''}
                       ${selectedMission.status === 'draft' ? 'bg-gray-500' : ''}
                       ${selectedMission.status === 'cancelled' ? 'bg-red-500' : ''}
@@ -328,8 +328,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                         className={`w-2 h-2 rounded-full ${
                           mission.status === 'completed'
                             ? 'bg-green-500'
-                            : mission.status === 'assigned'
-                              ? 'bg-blue-500'
+                            : mission.status === 'in_progress'
+                              ? 'bg-tsa-blue/90'
                               : mission.status === 'published'
                                 ? 'bg-yellow-500'
                                 : 'bg-gray-500'

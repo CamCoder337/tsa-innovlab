@@ -25,50 +25,19 @@
     "shipping": "Livraison",
     "returns": "Retours"
   },
-  "filters": {
-    "title": "Filtres",
-    "reset": "Réinitialiser",
-    "searchPlaceholder": "Rechercher des produits...",
-    "categories": "Catégories",
-    "noCategoriesAvailable": "Aucune catégorie disponible",
-    "priceRange": "Fourchette de prix",
-    "category": "Catégorie",
-    "brand": "Marque",
-    "condition": "État",
-    "availability": "Disponibilité",
-    "inStock": "En stock",
-    "outOfStock": "Rupture de stock",
-    "lowStock": "Stock faible",
-    "applyFilters": "Appliquer les filtres",
-    "clearFilters": "Effacer les filtres",
-    "showMore": "Voir plus",
-    "showLess": "Voir moins"
-  },
-  "search": {
-    "placeholder": "Rechercher...",
-    "noResults": "Aucun produit trouvé",
-    "noVisualResults": "Aucun produit similaire trouvé",
-    "tryAnotherImage": "Essayez avec une autre image"
-  },
-  "sorting": {
-    "sortBy": "Trier par",
-    "newest": "Nouveautés",
-    "priceAsc": "Prix croissant",
-    "nameAZ": "Nom (A-Z)",
-    "stockAvailable": "Stock disponible"
-  },
-  "alerts": {
-    "lowStockTitle": "Alerte Stock Faible",
-    "lowStockMessage": "Plus que {{count}} en stock!"
-  },
-  "results": {
-    "found": "{{count}} produit trouvé",
-    "foundPlural": "{{count}} produits trouvés"
-  },
   "product": {
+    "title": "Produits",
+    "product": "Produit",
+    "name": "Nom du produit",
+    "images": "Images",
+    "availability": "Disponibilité",
+    "viewDetails": "Voir les détails",
+    "rating": "Note",
     "addToCart": "Ajouter au panier",
     "buyNow": "Acheter maintenant",
     "quantity": "Quantité",
+    "decreaseQuantity": "Diminuer la quantité",
+    "increaseQuantity": "Augmenter la quantité",
     "price": "Prix",
     "originalPrice": "Prix original",
     "discount": "Réduction",
@@ -182,45 +151,42 @@
       "add": "Ajouter"
     }
   },
-  "recommendations": {
-    "title": "Recommandations",
-    "popularProducts": "Produits Populaires",
-    "recommendedForYou": "Recommandé pour vous",
-    "similarProducts": "Produits Similaires",
-    "popularDescription": "Les produits les plus demandés par nos clients",
-    "personalizedDescription": "Sélection personnalisée basée sur vos préférences",
-    "similarDescription": "D'autres produits qui pourraient vous intéresser",
-    "defaultDescription": "Découvrez nos recommandations",
-    "ai": "IA",
-    "addedToCart": "{{productName}} a été ajouté à votre panier",
-    "noRecommendations": "Aucune recommandation disponible"
-  },
-  "visualSearch": {
-    "title": "Recherche visuelle",
-    "searchByImage": "Recherche par image",
-    "selectImage": "Sélectionner une image",
-    "takePhoto": "Prendre une photo",
-    "instruction": "Sélectionnez ou prenez une photo du produit que vous recherchez",
-    "selectImageFirst": "Veuillez sélectionner une image d'abord",
-    "searchCompleted": "Recherche terminée !",
-    "searchError": "Erreur lors de la recherche visuelle",
-    "imageTooLarge": "L'image est trop volumineuse (max 5MB)",
-    "invalidImage": "Format d'image non valide",
-    "selectedImage": "Image sélectionnée"
-  },
-  "stock": "Stock",
-  "outOfStock": "Rupture",
-  "payment": {
-    "title": "Finaliser le paiement",
-    "orderSummary": "Résumé de la commande",
-    "subtotal": "Sous-total ({{count}} articles)",
-    "delivery": "Livraison ({{option}})",
-    "total": "Total"
-  },
   "orders": {
     "title": "Mes commandes",
     "subtitle": "Suivez l'état de vos commandes et téléchargez vos factures",
     "refresh": "Actualiser",
+    "order": "Commande",
+    "orders": "Commandes",
+    "orderNumber": "Numéro de commande",
+    "orderDate": "Date de commande",
+    "items": "Articles",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "subtotal": "Sous-total",
+    "total": "Total",
+    "tax": "Taxes",
+    "viewDetails": "Voir les détails",
+    "trackOrder": "Suivre la commande",
+    "cancelOrder": "Annuler la commande",
+    "reorder": "Commander à nouveau",
+    "payment": {
+      "method": "Méthode de paiement",
+      "status": "Statut du paiement",
+      "methods": {
+        "orange_money": "Orange Money",
+        "mtn_momo": "MTN Mobile Money",
+        "wave": "Wave",
+        "bank_transfer": "Paiement bancaire",
+        "cash_on_delivery": "Cash à la livraison"
+      }
+    },
+    "shipping": {
+      "address": "Adresse de livraison",
+      "method": "Méthode de livraison",
+      "cost": "Frais de livraison",
+      "tracking": "Suivi",
+      "estimatedDelivery": "Livraison estimée"
+    },
     "search": {
       "placeholder": "Rechercher par numéro de commande, nom ou produit...",
       "filterByStatus": "Filtrer par statut",
@@ -245,7 +211,7 @@
       "noResultsMessage": "Aucune commande ne correspond à vos critères de recherche. Essayez de modifier vos filtres.",
       "discoverProducts": "Découvrir les produits"
     },
-    "order": {
+    "orderItem": {
       "number": "Commande {{number}}",
       "items": "{{count}} article",
       "itemsPlural": "{{count}} articles",
@@ -345,10 +311,81 @@
       "viewOrders": "Voir mes commandes"
     }
   },
-  "validation": {
-    "addressRequired": "L'adresse de livraison est requise",
-    "cityRequired": "La ville est requise",
-    "notesMaxLength": "Les notes ne peuvent pas dépasser 200 caractères"
+  "filters": {
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "searchPlaceholder": "Rechercher des produits...",
+    "categories": "Catégories",
+    "noCategoriesAvailable": "Aucune catégorie disponible",
+    "priceRange": "Fourchette de prix",
+    "category": "Catégorie",
+    "brand": "Marque",
+    "condition": "État",
+    "availability": "Disponibilité",
+    "inStock": "En stock",
+    "outOfStock": "Rupture de stock",
+    "lowStock": "Stock faible",
+    "applyFilters": "Appliquer les filtres",
+    "clearFilters": "Effacer les filtres",
+    "showMore": "Voir plus",
+    "showLess": "Voir moins",
+    "rating": "Note minimale"
+  },
+  "search": {
+    "placeholder": "Rechercher...",
+    "noResults": "Aucun produit trouvé",
+    "noVisualResults": "Aucun produit similaire trouvé",
+    "tryAnotherImage": "Essayez avec une autre image"
+  },
+  "sorting": {
+    "sortBy": "Trier par",
+    "newest": "Nouveautés",
+    "priceAsc": "Prix croissant",
+    "nameAZ": "Nom (A-Z)",
+    "stockAvailable": "Stock disponible",
+    "priceDesc": "Prix décroissant",
+    "rating": "Note",
+    "popularity": "Popularité"
+  },
+  "alerts": {
+    "lowStockTitle": "Alerte Stock Faible",
+    "lowStockMessage": "Plus que {{count}} en stock!"
+  },
+  "results": {
+    "found": "{{count}} produit trouvé",
+    "foundPlural": "{{count}} produits trouvés"
+  },
+  "recommendations": {
+    "title": "Recommandations",
+    "popularProducts": "Produits Populaires",
+    "recommendedForYou": "Recommandé pour vous",
+    "similarProducts": "Produits Similaires",
+    "popularDescription": "Les produits les plus demandés par nos clients",
+    "personalizedDescription": "Sélection personnalisée basée sur vos préférences",
+    "similarDescription": "D'autres produits qui pourraient vous intéresser",
+    "defaultDescription": "Découvrez nos recommandations",
+    "ai": "IA",
+    "addedToCart": "{{productName}} a été ajouté à votre panier",
+    "noRecommendations": "Aucune recommandation disponible"
+  },
+  "visualSearch": {
+    "title": "Recherche visuelle",
+    "searchByImage": "Recherche par image",
+    "selectImage": "Sélectionner une image",
+    "takePhoto": "Prendre une photo",
+    "instruction": "Sélectionnez ou prenez une photo du produit que vous recherchez",
+    "selectImageFirst": "Veuillez sélectionner une image d'abord",
+    "searchCompleted": "Recherche terminée !",
+    "imageTooLarge": "L'image est trop volumineuse (max 5MB)",
+    "invalidImage": "Format d'image non valide",
+    "selectedImage": "Image sélectionnée"
+  },
+  "payment": {
+    "title": "Finaliser le paiement",
+    "orderSummary": "Résumé de la commande",
+    "subtotal": "Sous-total ({{count}} articles)",
+    "delivery": "Livraison ({{option}})",
+    "total": "Total"
   },
   "checkout": {
     "title": "Commande",

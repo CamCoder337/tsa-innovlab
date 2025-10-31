@@ -13,7 +13,11 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
+import {
+  useAuthTranslation,
+  useCommonTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 
 const INITIAL_VALUES: RegisterFormData = {
   firstName: '',
@@ -65,6 +69,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { t: tAuth } = useAuthTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const { t: tForms } = useFormsTranslation();
 
   return (
@@ -103,7 +108,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="firstName"
                   aria-label="firstName"
                   type="text"
-                  placeholder={tAuth('register.firstName')}
+                  placeholder={tForms('labels.firstName')}
                   value={values.firstName}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -120,7 +125,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="lastName"
                   aria-label="lastName"
                   type="text"
-                  placeholder={tAuth('register.lastName')}
+                  placeholder={tForms('labels.lastName')}
                   value={values.lastName}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -139,7 +144,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 id="email"
                 aria-label="email"
                 type="email"
-                placeholder={tAuth('register.email')}
+                placeholder={tForms('labels.email')}
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -158,7 +163,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="password"
                   aria-label="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={tAuth('register.password')}
+                  placeholder={tForms('labels.password')}
                   value={values.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -187,7 +192,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   id="confirmPassword"
                   aria-label="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder={tAuth('register.confirmPassword')}
+                  placeholder={tForms('labels.confirmPassword')}
                   value={values.confirmPassword}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -283,7 +288,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                     checked={values.role === role}
                     onCheckedChange={() => setFieldValue('role', values.role === role ? '' : role)}
                     onError={() => setFieldError('role', VALIDATION_MESSAGES.REQUIRED_ROLE)}
-                    label={tAuth(`roles.${role}`)}
+                    label={tCommon(`roles.${role}`)}
                     className="rounded-none"
                     labelClassName="text-tsa-blue/90 text-sm font-medium"
                   />
@@ -302,13 +307,13 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               loading={isSubmitting}
               disabled={isSubmitting || Object.keys(errors).length > 0}
             >
-              {tAuth('register.registerButton')}
+              {isSubmitting ? tAuth('register.loading') : tAuth('register.button')}
             </Button>
 
             <div className="text-center">
               <span className="text-gray-600">{tAuth('register.hasAccount')} </span>
               <Link to="/" className="text-tsa-blue hover:text-tsa-blue/95 font-medium">
-                {tAuth('register.login')}
+                {tAuth('login.label')}
               </Link>
             </div>
           </Form>

@@ -14,6 +14,11 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useCommonTranslation,
+  useChatTranslation,
+  useErrorsTranslation,
+} from '@/hooks/useTranslation';
 import type { ConversationListItem, Message } from '@/types/chat.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -24,6 +29,7 @@ interface ChatWindowProps {
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose }) => {
+  const { t: tChat } = useChatTranslation();
   const { user } = useAuth();
   const {
     messages,
@@ -85,13 +91,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.id]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [currentMessages, typingUsers]);
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [currentMessages, typingUsers]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // const scrollToBottom = () => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +138,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     }
     return (
       conversation.otherParticipant?.firstName + ' ' + conversation.otherParticipant?.lastName ||
-      'Utilisateur inconnu'
+      tChat('messages.unknownUser')
     );
   };
 
@@ -157,19 +163,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
 
   if (error) {
     return (
-      <div className="flex flex-col h-full items-center justify-center p-8 bg-gray-50">
+      <div className="flex flex-col h-fit items-center justify-center p-8 bg-gray-50">
         <div className="text-red-500 text-sm mb-4">{error}</div>
         <Button variant="outline" onClick={() => clearError()}>
-          Réessayer
+          {tChat('buttons.retry')}
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col bg-white h-[calc(100vh-120px)]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+    <div className="flex flex-1 flex-col bg-white justify-between">
+      {/* Header - Fixed Height */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Avatar className="h-10 w-10">
@@ -218,18 +224,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages - Scrollable Area */}
+      <div className="flex-1 flex flex-col justify-end py-2 gap-2">
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-8 h-full">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-500">Chargement des messages...</span>
+            <span className="ml-2 text-gray-500">{tChat('messages.loadingMessages')}</span>
           </div>
         ) : currentMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-gray-500">
             <MessageCircle className="h-12 w-12 mb-4 text-gray-300" />
-            <p className="text-sm">Aucun message dans cette conversation</p>
-            <p className="text-xs mt-1">Envoyez le premier message pour commencer</p>
+            <p className="text-sm">{tChat('messages.noMessagesInConversation')}</p>
+            <p className="text-xs mt-1">{tChat('messages.sendFirstMessage')}</p>
           </div>
         ) : (
           <>
@@ -266,8 +272,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
                 </div>
                 <span>
                   {typingUsers.length === 1
-                    ? `${typingUsers[0]?.firstName} est en train d'écrire...`
-                    : `${typingUsers.length} personnes sont en train d'écrire...`}
+                    ? tChat('messages.isTyping', { name: typingUsers[0]?.firstName })
+                    : tChat('messages.peopleTyping', { count: typingUsers.length })}
                 </span>
               </div>
             )}
@@ -276,13 +282,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="border-t border-gray-200 p-4 bg-white">
+      {/* Message Input - Fixed Height */}
+      <div className="border-t border-gray-200 px-8 py-2 bg-white shrink-0">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             value={newMessage}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={`Envoyer un message à ${conversation.otherParticipant?.firstName || "l'utilisateur"}...`}
+            placeholder={tChat('placeholders.sendMessageTo', {
+              name: conversation.otherParticipant?.firstName || tChat('user'),
+            })}
             className="flex-1"
             disabled={isLoading}
           />
@@ -312,19 +320,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   showAvatar,
   otherParticipant,
 }) => {
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const getMessageStatusIcon = () => {
     if (!isCurrentUser) return null;
 
-    if (message.readAt) {
-      return <CheckCheck className="h-3 w-3 text-blue-500" />;
+    if (message.isRead) {
+      return <CheckCheck className="h-3 w-3 text-tsa-white" />;
     }
-    return <Check className="h-3 w-3 text-gray-400" />;
+    return <Check className="h-3 w-3 text-tsa-white" />;
   };
 
   const formatMessageTime = (createdAt: string) => {
     // Handle null, undefined, or empty string
     if (!createdAt) {
-      return 'Maintenant';
+      return tCommon('time.now');
     }
 
     const messageDate = new Date(createdAt);
@@ -332,7 +342,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     // Check if the date is valid
     if (isNaN(messageDate.getTime())) {
       console.warn('Invalid date format received:', createdAt);
-      return 'Date invalide';
+      return tErrors('general.invalidDate');
     }
 
     const now = new Date();
@@ -371,24 +381,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       )}
 
-      <div className={`max-w-xs lg:max-w-md ${isCurrentUser ? 'order-1' : ''}`}>
+      <div className={`max-w-xs lg:max-w-md min-w-28 ${isCurrentUser ? 'order-1' : ''}`}>
         <div
           className={`px-4 py-2 rounded-2xl ${
             isCurrentUser
-              ? 'bg-blue-600 text-white rounded-br-md'
-              : 'bg-gray-100 text-gray-900 rounded-bl-md'
+              ? 'bg-tsa-blue text-white rounded-br-md'
+              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-md'
           }`}
         >
           <div className="text-sm whitespace-pre-wrap break-words">{message.content}</div>
-        </div>
 
-        <div
-          className={`flex items-center gap-1 mt-1 text-xs text-gray-500 ${
-            isCurrentUser ? 'justify-end' : 'justify-start'
-          }`}
-        >
-          <span>{formatMessageTime(message.createdAt)}</span>
-          {getMessageStatusIcon()}
+          <div className={`flex items-center gap-1 mt-1 text-xs text-gray-500 justify-end`}>
+            <span>{formatMessageTime(message.createdAt)}</span>
+            {getMessageStatusIcon()}
+          </div>
         </div>
       </div>
     </div>

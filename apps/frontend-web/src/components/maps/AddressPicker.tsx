@@ -4,6 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Navigation, X, AlertCircle } from 'lucide-react';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
+import {
+  useErrorsTranslation,
+  useFormsTranslation,
+  useMapsTranslation,
+} from '@/hooks/useTranslation';
+import i18n from '@/i18n';
 
 export interface AddressDetails {
   formatted_address: string;
@@ -13,6 +19,7 @@ export interface AddressDetails {
   administrative_area_level_1?: string;
   country?: string;
   postal_code?: string;
+  label?: string;
   latitude: number;
   longitude: number;
   place_id: string;
@@ -31,12 +38,16 @@ interface AddressPickerProps {
 export default function AddressPicker({
   onAddressSelect,
   onClear,
-  placeholder = 'Rechercher une adresse...',
+  placeholder,
   value = '',
   className = '',
   showMap = false,
   disabled = false,
 }: AddressPickerProps) {
+  const { t: tForms } = useFormsTranslation();
+  const { t: tErrors } = useErrorsTranslation();
+  const { t: tMaps } = useMapsTranslation();
+  const defaultPlaceholder = placeholder || tMaps('placeholders.searchAddress');
   const inputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -52,35 +63,36 @@ export default function AddressPicker({
   useEffect(() => {
     const loadGoogleMaps = async () => {
       try {
-        console.log('🗺️ Chargement de Google Maps...');
+        // console.log('🗺️ Chargement de Google Maps...');
 
         // Check if API key is available
         const apiKey =
           window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
-          throw new Error('Clé API Google Maps manquante');
+          throw new Error(tErrors('maps.googleMapsApiKeyMissing'));
         }
 
-        console.log('🔑 Clé API Google Maps trouvée');
+        // console.log('🔑 Clé API Google Maps trouvée');
 
         await googleMapsLoader.load({ libraries: ['places', 'marker'] });
 
         // Verify Google Maps is actually loaded
         if (!window.google?.maps) {
-          throw new Error('Google Maps API non disponible après le chargement');
+          throw new Error(tErrors('maps.googleMapsNotAvailable'));
         }
 
-        console.log('✅ Google Maps chargé avec succès');
+        // console.log('✅ Google Maps chargé avec succès');
         setIsLoaded(true);
         setError(null);
       } catch (error) {
         console.error('❌ Erreur lors du chargement de Google Maps:', error);
         const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-        setError(`Impossible de charger Google Maps: ${errorMessage}`);
+        setError(tErrors('maps.googleMapsLoadError', { error: errorMessage }));
       }
     };
 
     loadGoogleMaps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update input value when prop changes
@@ -96,6 +108,7 @@ export default function AddressPicker({
         latitude: place.geometry!.location!.lat(),
         longitude: place.geometry!.location!.lng(),
         place_id: place.place_id || '',
+        label: place.name || '',
       };
 
       components.forEach((component) => {
@@ -103,15 +116,22 @@ export default function AddressPicker({
 
         if (types.includes('street_number')) {
           details.street_number = component.long_name;
-        } else if (types.includes('route')) {
+        } else if (types.includes('plus_code')) {
+          details.street_number = component.long_name;
+        }
+        if (types.includes('route')) {
           details.route = component.long_name;
-        } else if (types.includes('locality')) {
+        }
+        if (types.includes('locality')) {
           details.locality = component.long_name;
-        } else if (types.includes('administrative_area_level_1')) {
+        }
+        if (types.includes('administrative_area_level_1')) {
           details.administrative_area_level_1 = component.long_name;
-        } else if (types.includes('country')) {
+        }
+        if (types.includes('country')) {
           details.country = component.long_name;
-        } else if (types.includes('postal_code')) {
+        }
+        if (types.includes('postal_code')) {
           details.postal_code = component.long_name;
         }
       });
@@ -161,23 +181,39 @@ export default function AddressPicker({
         markerRef.current = new google.maps.marker.AdvancedMarkerElement({
           position,
           map: mapInstanceRef.current,
-          title: 'Adresse de livraison',
+          title: tForms('labels.deliveryAddress'),
         });
       } catch (fallbackError) {
         console.error('Error creating basic AdvancedMarkerElement:', fallbackError);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initialize modern autocomplete with fallback
   useEffect(() => {
     if (!isLoaded || !inputRef.current || disabled || error) return;
+    if (!window.google?.maps?.places?.Autocomplete) {
+      setError(tErrors('maps.googleMapsNotAvailable'));
+      return;
+    }
 
     try {
       const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
-        fields: ['formatted_address', 'address_components', 'geometry', 'place_id'],
+        types: ['establishment'],
+        fields: [
+          'name',
+          'formatted_address',
+          'vicinity',
+          'address_components',
+          'geometry',
+          'place_id',
+        ],
         componentRestrictions: { country: ['cm'] },
+        bounds: new google.maps.LatLngBounds(
+          { lat: 1.5, lng: 8.2 }, // SW corner
+          { lat: 13.5, lng: 16.2 } // NE corner
+        ),
       });
 
       autocompleteRef.current = autocomplete;
@@ -186,14 +222,15 @@ export default function AddressPicker({
         const place = autocomplete.getPlace();
 
         if (!place.geometry?.location) {
-          console.error('No geometry data for selected place');
-          setError('Adresse invalide sélectionnée');
+          setError(tErrors('maps.invalidAddressSelected'));
           return;
         }
 
+        // console.log(place);
+
         try {
           const addressDetails = extractAddressDetails(place);
-          setInputValue(addressDetails.formatted_address);
+          setInputValue(addressDetails.label || addressDetails.formatted_address);
           onAddressSelect(addressDetails);
           setError(null);
 
@@ -214,9 +251,10 @@ export default function AddressPicker({
         }
       };
     } catch (err) {
-      console.error('Error initializing autocomplete:', err);
-      setError("Erreur d'initialisation de la recherche d'adresse. Utilisez la saisie manuelle.");
+      console.error('Autocomplete init error:', err);
+      setError(tErrors('maps.addressSearchInitError'));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isLoaded,
     disabled,
@@ -230,6 +268,13 @@ export default function AddressPicker({
   // Initialize map
   useEffect(() => {
     if (!isLoaded || !showMap || !mapRef.current || error) return;
+
+    // Double-check that Google Maps API is available before initializing
+    if (!window.google?.maps?.Map) {
+      console.error('Google Maps Map constructor not available');
+      setError(tErrors('maps.googleMapsNotAvailable'));
+      return;
+    }
 
     try {
       // Ensure the map container has proper dimensions
@@ -267,13 +312,14 @@ export default function AddressPicker({
       };
     } catch (err) {
       console.error('Error initializing map:', err);
-      setError("Erreur d'initialisation de la carte");
+      setError(tErrors('maps.mapInitError'));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, showMap, error]);
 
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setError("La géolocalisation n'est pas supportée par ce navigateur");
+      setError(tErrors('maps.geolocationNotSupported'));
       return;
     }
 
@@ -281,111 +327,63 @@ export default function AddressPicker({
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
 
-        console.log(
-          `Position détectée: ${latitude}, ${longitude} (précision: ±${Math.round(accuracy)}m)`
-        );
+        // Check accuracy but be more lenient
+        if (!accuracy || accuracy <= 0) {
+          setError(tErrors('maps.geolocationNoAccuracy'));
+          setIsLoadingLocation(false);
+          return;
+        }
+
+        // Show warning for moderate accuracy but continue
+        if (accuracy > 1000) {
+          console.warn(`⚠️ Low GPS accuracy: ${Math.round(accuracy)}m`);
+        }
 
         try {
-          // Wait for Google Maps to be loaded
-          if (!window.google?.maps?.Geocoder) {
-            await googleMapsLoader.load({ libraries: ['places', 'marker'] });
-          }
-
-          // Reverse geocoding to get address
           const geocoder = new google.maps.Geocoder();
-          const result = await geocoder.geocode({
+          const { results } = await geocoder.geocode({
+            language: i18n.language,
             location: { lat: latitude, lng: longitude },
-            region: 'CM', // Prioritize Côte d'Ivoire results
+            region: 'cm',
           });
 
-          if (result.results && result.results.length > 0) {
-            // Try to find the most specific address first
-            let bestResult = result.results[0];
+          // console.log(results);
 
-            // Look for a more specific address (with street number or route)
-            for (const res of result.results) {
-              const hasStreetInfo = res.address_components?.some(
-                (comp) => comp.types.includes('street_number') || comp.types.includes('route')
-              );
-              if (hasStreetInfo) {
-                bestResult = res;
-                break;
-              }
-            }
+          const place = results[0];
 
-            const place = bestResult;
-            const addressDetails: AddressDetails = {
-              formatted_address: place.formatted_address,
-              latitude,
-              longitude,
-              place_id: place.place_id || '',
-            };
+          console.log(place);
+          if (!place) throw new Error();
 
-            // Extract components
-            place.address_components?.forEach((component) => {
-              const types = component.types;
+          const details = extractAddressDetails(place);
+          details.latitude = latitude;
+          details.longitude = longitude;
 
-              if (types.includes('street_number')) {
-                addressDetails.street_number = component.long_name;
-              } else if (types.includes('route')) {
-                addressDetails.route = component.long_name;
-              } else if (types.includes('locality')) {
-                addressDetails.locality = component.long_name;
-              } else if (types.includes('administrative_area_level_1')) {
-                addressDetails.administrative_area_level_1 = component.long_name;
-              } else if (types.includes('country')) {
-                addressDetails.country = component.long_name;
-              } else if (types.includes('postal_code')) {
-                addressDetails.postal_code = component.long_name;
-              }
-            });
+          setInputValue(details.formatted_address);
+          onAddressSelect(details);
 
-            console.log('Adresse trouvée:', addressDetails);
-            setInputValue(addressDetails.formatted_address);
-            onAddressSelect(addressDetails);
-
-            if (showMap && mapInstanceRef.current) {
-              updateMapLocation(latitude, longitude);
-            }
-          } else {
-            setError('Aucune adresse trouvée pour votre position');
+          if (showMap && mapInstanceRef.current) {
+            updateMapLocation(latitude, longitude);
           }
-        } catch (error) {
-          console.error('Erreur lors de la géolocalisation inverse:', error);
-          setError("Impossible de récupérer l'adresse de votre position");
+        } catch {
+          setError(tErrors('maps.cannotGetAddress'));
         } finally {
           setIsLoadingLocation(false);
         }
       },
-      (error) => {
-        console.error('Erreur de géolocalisation:', error);
-        let errorMessage = "Impossible d'accéder à votre position";
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Permission de géolocalisation refusée';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Position non disponible';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Délai de géolocalisation dépassé';
-            break;
-        }
-
-        setError(errorMessage);
+      () => {
+        setError(tErrors('maps.cannotAccessLocation'));
         setIsLoadingLocation(false);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000, // Increased timeout
-        maximumAge: 60000, // Reduced cache time for more accurate results
+        enableHighAccuracy: true, // Enable GPS for better accuracy
+        timeout: 30000, // Increase timeout for GPS lock
+        maximumAge: 60000, // Reduce cache time for fresher location
       }
     );
-  }, [onAddressSelect, showMap, updateMapLocation]);
+  }, [onAddressSelect, showMap, updateMapLocation, tErrors, extractAddressDetails]);
 
   const handleClear = useCallback(() => {
     setInputValue('');
@@ -427,7 +425,7 @@ export default function AddressPicker({
           place_id: `manual_${Date.now()}`,
         };
 
-        console.log('📝 Adresse manuelle soumise:', manualAddress);
+        // console.log('📝 Adresse manuelle soumise:', manualAddress);
         onAddressSelect(manualAddress);
       }
     },
@@ -443,9 +441,7 @@ export default function AddressPicker({
             <Input
               ref={inputRef}
               type="text"
-              placeholder={
-                error ? "Saisie manuelle de l'adresse (Entrée pour valider)..." : placeholder
-              }
+              placeholder={error ? tMaps('placeholders.manualAddressEntry') : defaultPlaceholder}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleManualSubmit}
@@ -474,12 +470,12 @@ export default function AddressPicker({
             className="flex items-center gap-1 px-3"
           >
             <Navigation className={`h-4 w-4 ${isLoadingLocation ? 'animate-spin' : ''}`} />
-            {isLoadingLocation ? 'Localisation...' : 'Ma position'}
+            {isLoadingLocation ? tMaps('buttons.locating') : tMaps('buttons.myLocation')}
           </Button>
         </div>
 
         {!isLoaded && !error && (
-          <p className="text-xs text-gray-500 mt-1">Chargement de Google Maps...</p>
+          <p className="text-xs text-gray-500 mt-1">{tMaps('messages.loadingGoogleMaps')}</p>
         )}
 
         {error && (
@@ -498,7 +494,7 @@ export default function AddressPicker({
                 // Retry loading Google Maps
                 const loadGoogleMaps = async () => {
                   try {
-                    console.log('🔄 Nouvelle tentative de chargement de Google Maps...');
+                    // console.log('🔄 Nouvelle tentative de chargement de Google Maps...');
                     await googleMapsLoader.load({ libraries: ['places', 'marker'] });
                     if (window.google?.maps) {
                       setIsLoaded(true);
@@ -506,14 +502,14 @@ export default function AddressPicker({
                     }
                   } catch (retryError) {
                     console.error('❌ Échec de la nouvelle tentative:', retryError);
-                    setError('Échec du rechargement. Vérifiez votre connexion internet.');
+                    setError(tErrors('maps.retryGoogleMaps'));
                   }
                 };
                 loadGoogleMaps();
               }}
               className="text-xs px-2 py-1 h-auto"
             >
-              Réessayer
+              {tMaps('buttons.retry')}
             </Button>
           </div>
         )}

@@ -60,7 +60,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
       id: 'wave' as PaymentMethod,
       name: 'Wave',
       icon: Smartphone,
-      color: 'bg-blue-500',
+      color: 'bg-tsa-blue/90',
       description: 'Paiement via Wave',
     },
     {

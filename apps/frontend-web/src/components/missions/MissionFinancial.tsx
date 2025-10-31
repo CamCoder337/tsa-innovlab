@@ -16,7 +16,11 @@ import {
 import type { Mission } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useMissionsTranslation,
+  useCommonTranslation,
+  usePaymentTranslation,
+} from '@/hooks/useTranslation';
 
 interface MissionFinancialProps {
   mission: Mission;
@@ -48,6 +52,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
   const { user } = useAuth();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tPayment } = usePaymentTranslation();
   const [financialData, setFinancialData] = useState<FinancialData>({
     totalCost: mission.budgetMax || 0,
     transporterPayment: 0,
@@ -269,17 +274,14 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
               {getPaymentStatusIcon(financialData.paymentStatus)}
               <div>
                 <Badge className={getPaymentStatusColor(financialData.paymentStatus)}>
-                  {financialData.paymentStatus === 'completed' &&
-                    tMissions('financial.status.paid')}
-                  {financialData.paymentStatus === 'pending' &&
-                    tMissions('financial.status.pending')}
-                  {financialData.paymentStatus === 'partial' &&
-                    tMissions('financial.status.partial')}
-                  {financialData.paymentStatus === 'overdue' &&
-                    tMissions('financial.status.overdue')}
+                  {financialData.paymentStatus === 'completed' && tCommon('status.paid')}
+                  {financialData.paymentStatus === 'pending' && tCommon('status.pending')}
+                  {financialData.paymentStatus === 'partial' && tCommon('status.partial')}
+                  {financialData.paymentStatus === 'overdue' && tCommon('status.overdue')}
                 </Badge>
                 <p className="text-sm text-gray-600 mt-1">
-                  {tMissions('financial.method')}: {financialData.paymentMethod}
+                  {tMissions('financial.paymentMethod')}:{' '}
+                  {tPayment(`labels.${financialData.paymentMethod}`)}
                 </p>
               </div>
             </div>
@@ -335,9 +337,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   </div>
                   <div className="text-right">
                     <Badge className={getPaymentStatusColor(payment.status)}>
-                      {payment.status === 'completed' && tMissions('financial.status.completed')}
-                      {payment.status === 'pending' && tMissions('financial.status.pending')}
-                      {payment.status === 'failed' && tMissions('financial.status.failed')}
+                      {payment.status === 'completed' && tCommon('status.completed')}
+                      {payment.status === 'pending' && tCommon('status.pending')}
+                      {payment.status === 'failed' && tCommon('status.failed')}
                     </Badge>
                     <p className="text-xs text-gray-500 mt-1">
                       {tMissions('financial.reference')}: {payment.reference}
@@ -367,13 +369,13 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         <CardContent>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">{tMissions('financial.baseAmount')}</span>
+              <span className="text-gray-600">{tMissions('financial.baseCost')}</span>
               <span className="font-medium">
                 {(financialData.totalCost - financialData.taxes).toLocaleString()} FCFA
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">{tMissions('financial.platformFeePercent')}</span>
+              <span className="text-gray-600">{tMissions('financial.platformFee')}</span>
               <span className="font-medium">{financialData.platformFee.toLocaleString()} FCFA</span>
             </div>
             <div className="flex justify-between items-center">

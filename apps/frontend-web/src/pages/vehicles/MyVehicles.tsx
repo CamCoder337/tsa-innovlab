@@ -15,8 +15,26 @@ import {
   type VehicleFiltersQuery,
 } from '../../types/vehicle.types';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 export const MyVehicles: React.FC = () => {
+  const { t: tForms } = useFormsTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -117,50 +135,60 @@ export const MyVehicles: React.FC = () => {
     return colorClasses[colors as keyof typeof colorClasses] || colorClasses.gray;
   };
 
-  if (showCreateForm) {
-    return (
-      <div className="p-6">
-        <CreateVehicleForm
-          onSubmit={
-            handleCreateVehicle as (
-              data: CreateVehicleRequest | UpdateVehicleRequest
-            ) => Promise<void>
-          }
-          onCancel={() => setShowCreateForm(false)}
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
-  if (editingVehicle) {
-    return (
-      <div className="p-6">
-        <CreateVehicleForm
-          vehicle={editingVehicle}
-          onSubmit={handleUpdateVehicle}
-          onCancel={() => setEditingVehicle(null)}
-          isLoading={isLoading}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 flex flex-col flex-1">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mes Véhicules</h1>
           <p className="text-gray-600">Gérez votre flotte de véhicules</p>
         </div>
-        <button
+        <Button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center px-4 py-2 bg-tsa-blue text-white rounded-lg hover:bg-tsa-blue transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
           Ajouter un véhicule
-        </button>
+        </Button>
+
+        <Sheet
+          open={showCreateForm}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingVehicle(null);
+            }
+            setShowCreateForm(open);
+          }}
+        >
+          <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="text-xl font-semibold text-gray-900">
+                {editingVehicle ? tForms('sections.updateVehicle') : tForms('sections.addVehicle')}
+              </SheetTitle>
+              <SheetDescription className="text-sm text-gray-600 mt-1">
+                {editingVehicle
+                  ? tForms('messages.updateVehicleDescription')
+                  : tForms('messages.addVehicleDescription')}
+              </SheetDescription>
+            </SheetHeader>
+            <div>
+              <CreateVehicleForm
+                vehicle={editingVehicle ?? null}
+                onSubmit={(data) => {
+                  if (editingVehicle) handleUpdateVehicle(data as UpdateVehicleRequest);
+                  else {
+                    handleCreateVehicle(data as CreateVehicleRequest);
+                  }
+                }}
+                onCancel={() => {
+                  setShowCreateForm(false);
+                  setEditingVehicle(null);
+                }}
+                isLoading={isLoading}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Stats Cards */}
@@ -245,47 +273,50 @@ export const MyVehicles: React.FC = () => {
         {showFilters && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Type de véhicule
-                </label>
-                <select
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Type de véhicule</Label>
+                <Select
                   value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value as VehicleType | '')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onValueChange={(value) => setTypeFilter(value as VehicleType | '')}
                 >
-                  <option value="">Tous les types</option>
-                  {Object.values(VehicleType).map((type) => (
-                    <option key={type} value={type}>
-                      {VehicleTypeLabels[type]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tous les types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tous les types</SelectItem>
+                    {Object.values(VehicleType).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {VehicleTypeLabels[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                <select
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Statut</Label>
+                <Select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as VehicleStatus | '')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onValueChange={(value) => setStatusFilter(value as VehicleStatus | '')}
                 >
-                  <option value="">Tous les statuts</option>
-                  {Object.values(VehicleStatus).map((status) => (
-                    <option key={status} value={status}>
-                      {VehicleStatusLabels[status]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tous les statuts</SelectItem>
+                    {Object.values(VehicleStatus).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {VehicleStatusLabels[status]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-end">
-                <button
-                  onClick={resetFilters}
-                  className="w-full px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                >
+                <Button variant="outline" onClick={resetFilters} className="w-full">
                   Réinitialiser
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -365,20 +396,26 @@ export const MyVehicles: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
+                      <Select
                         value={vehicle.status}
-                        onChange={(e) =>
-                          handleStatusChange(vehicle.id, e.target.value as VehicleStatus)
+                        onValueChange={(value) =>
+                          handleStatusChange(vehicle.id, value as VehicleStatus)
                         }
-                        className={`text-xs px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeColor(vehicle.status)}`}
                         disabled={isLoading}
                       >
-                        {Object.values(VehicleStatus).map((status) => (
-                          <option key={status} value={status}>
-                            {VehicleStatusLabels[status]}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger
+                          className={`text-xs px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeColor(vehicle.status)} h-auto min-h-0`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(VehicleStatus).map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {VehicleStatusLabels[status]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
