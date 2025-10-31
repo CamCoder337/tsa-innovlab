@@ -2,10 +2,11 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import GoogleMapsService, { type MarkerData } from '@/services/google-maps.service';
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
+import type { Address } from '@/types/address.types';
 import { getGoogleMapsApiKey, getGoogleMapsMapId } from '@/config/env';
 // Badge supprimé - plus utilisé
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Package, AlertTriangle } from 'lucide-react';
+import { MapPin, Package, AlertTriangle, Clock } from 'lucide-react';
 import MapLegend from './MapLegend';
 
 interface MissionTrackingMapProps {
@@ -18,24 +19,21 @@ interface MissionTrackingMapProps {
   showLegend?: boolean;
 }
 
-// Coordonnées des principales villes du Cameroun
-const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  douala: { lat: 4.0511, lng: 9.7679 },
-  yaounde: { lat: 3.848, lng: 11.5021 },
-  bafoussam: { lat: 5.4737, lng: 10.4158 },
-  garoua: { lat: 9.3265, lng: 13.3958 },
-  bamenda: { lat: 5.9597, lng: 10.1453 },
-  maroua: { lat: 10.5906, lng: 14.3159 },
-  ngaoundere: { lat: 7.3167, lng: 13.5833 },
-  bertoua: { lat: 4.5833, lng: 13.6833 },
-  kribi: { lat: 2.9333, lng: 9.9167 },
-  edea: { lat: 3.8, lng: 10.1333 },
-};
+interface RouteInfo {
+  distance: number; // in km
+  duration: number; // in minutes
+  eta: Date;
+}
 
-// Fonction pour extraire la ville d'un ID d'adresse
-const getCityFromAddressId = (addressId: string): { lat: number; lng: number } => {
-  const cityName = addressId.split('-')[1]?.toLowerCase() || 'douala';
-  return CITY_COORDINATES[cityName] || CITY_COORDINATES['douala'];
+// Helper function to get coordinates from address
+const getCoordinatesFromAddress = (address: Address | undefined): { lat: number; lng: number } | null => {
+  if (!address || address.latitude === undefined || address.longitude === undefined) {
+    return null;
+  }
+  return {
+    lat: Number(address.latitude),
+    lng: Number(address.longitude),
+  };
 };
 
 // Fonction supprimée - plus utilisée
@@ -57,6 +55,7 @@ export default function MissionTrackingMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
+  const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
 
   // Pas de filtrage par statut - afficher toutes les missions
   const filteredMissions = missions;
@@ -86,9 +85,20 @@ export default function MissionTrackingMap({
       });
 
       // Ajouter les marqueurs pour chaque mission
-      filteredMissions.forEach((mission) => {
+      const newRouteInfo = new Map<string, RouteInfo>();
+
+      for (const mission of filteredMissions) {
+        // Get real coordinates from addresses
+        const departPosition = getCoordinatesFromAddress(mission.adresseDepart);
+        const arriveePosition = getCoordinatesFromAddress(mission.adresseArrivee);
+
+        // Skip mission if coordinates are invalid
+        if (!departPosition || !arriveePosition) {
+          console.warn(`Mission ${mission.id} has invalid coordinates, skipping`);
+          continue;
+        }
+
         // Marqueur de départ
-        const departPosition = getCityFromAddressId(mission.adresseDepartId ?? '');
         const departMarkerData: MarkerData = {
           id: `${mission.id}-depart`,
           position: departPosition,
@@ -112,7 +122,6 @@ export default function MissionTrackingMap({
         }
 
         // Marqueur d'arrivée
-        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId ?? '');
         const arriveeMarkerData: MarkerData = {
           id: `${mission.id}-arrivee`,
           position: arriveePosition,
@@ -135,13 +144,36 @@ export default function MissionTrackingMap({
           });
         }
 
-        // Afficher la route pour toutes les missions si demandé
+        // Calculate route and ETA
         if (showRoutes) {
-          mapsService.displayRoute(departPosition, arriveePosition, {
-            strokeColor: '#2563eb',
-            strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
-            strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
-          });
+          try {
+            // Calculate distance and duration using Google Directions API
+            const routeData = await mapsService.calculateDistanceWithDirections(
+              departPosition,
+              arriveePosition
+            );
+
+            if (routeData) {
+              // Calculate ETA based on current time
+              const eta = new Date();
+              eta.setMinutes(eta.getMinutes() + routeData.duration);
+
+              newRouteInfo.set(mission.id, {
+                distance: routeData.distance,
+                duration: routeData.duration,
+                eta,
+              });
+            }
+
+            // Display route on map
+            mapsService.displayRoute(departPosition, arriveePosition, {
+              strokeColor: '#2563eb',
+              strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
+              strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+            });
+          } catch (err) {
+            console.error(`Failed to calculate route for mission ${mission.id}:`, err);
+          }
         }
 
         // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
@@ -165,15 +197,23 @@ export default function MissionTrackingMap({
             });
           }
         }
-      });
+      }
+
+      // Update route info state
+      setRouteInfo(newRouteInfo);
 
       // Ajuster la vue pour inclure toutes les missions
       if (filteredMissions.length > 0) {
-        const allPositions = filteredMissions.flatMap((mission) => [
-          getCityFromAddressId(mission.adresseDepartId ?? ''),
-          getCityFromAddressId(mission.adresseArriveeId ?? ''),
-        ]);
-        mapsService.fitBounds(allPositions);
+        const allPositions = filteredMissions
+          .flatMap((mission) => [
+            getCoordinatesFromAddress(mission.adresseDepart),
+            getCoordinatesFromAddress(mission.adresseArrivee),
+          ])
+          .filter((pos): pos is { lat: number; lng: number } => pos !== null);
+
+        if (allPositions.length > 0) {
+          mapsService.fitBounds(allPositions);
+        }
       }
 
       setIsLoading(false);
@@ -270,7 +310,7 @@ export default function MissionTrackingMap({
       <div ref={mapRef} className="w-full h-full rounded-lg" style={{ minHeight: '400px' }} />
 
       {/* Informations missions */}
-      <div className="absolute top-4 right-4 space-y-2">
+      <div className="absolute top-4 right-4 space-y-2 max-w-xs">
         <Card className="bg-white/95 backdrop-blur">
           <CardContent className="p-3">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -283,6 +323,42 @@ export default function MissionTrackingMap({
             </div>
           </CardContent>
         </Card>
+
+        {/* ETA Information for selected mission */}
+        {selectedMission && routeInfo.has(selectedMission.id) && (
+          <Card className="bg-white/95 backdrop-blur">
+            <CardContent className="p-3">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" />
+                Informations de trajet
+              </h4>
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Distance:</span>
+                  <span className="font-medium">
+                    {routeInfo.get(selectedMission.id)?.distance} km
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Durée:</span>
+                  <span className="font-medium">
+                    {Math.floor((routeInfo.get(selectedMission.id)?.duration || 0) / 60)}h{' '}
+                    {(routeInfo.get(selectedMission.id)?.duration || 0) % 60}min
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ETA:</span>
+                  <span className="font-medium text-green-600">
+                    {routeInfo.get(selectedMission.id)?.eta.toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Indicateur de position utilisateur */}
         {showUserLocation && userPosition && (
