@@ -177,7 +177,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
     }),
     {
-      name: 'notification-store',
+      name: 'tsa_notifications',
       partialize: (state) => ({
         // Only persist notifications and stats, not loading/error states
         notifications: state.notifications,

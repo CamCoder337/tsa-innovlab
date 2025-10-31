@@ -305,7 +305,6 @@ export const useCartStore = create<CartStore>()(
         try {
           set({ isLoading: true, error: null });
 
-          console.log('fetchCart');
           if (currentUser) {
             if (!localCart.id && localCart.items.length > 0) {
               await syncWithServer();

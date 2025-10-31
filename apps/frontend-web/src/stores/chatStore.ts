@@ -203,7 +203,7 @@ export const useChatStore = create<ChatState>()(
             throw new Error('Mission ID is required for mission conversations');
           }
           const request: CreateMissionConversationRequest = {
-            missionId: parseInt(missionId),
+            missionId: missionId,
             userId,
           };
           const response = await chatService.createMissionConversation(request);
@@ -383,7 +383,7 @@ export const useChatStore = create<ChatState>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'chat-store',
+      name: 'tsa_chat',
       partialize: (state) => ({
         // Only persist conversations and current conversation
         conversations: state.conversations,

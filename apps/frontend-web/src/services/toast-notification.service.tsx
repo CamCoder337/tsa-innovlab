@@ -18,8 +18,8 @@ class ToastNotificationService {
       }
 
       // Ensure message exists (use description as fallback)
-      if (!notification.message && (notification as any).description) {
-        notification.message = (notification as any).description;
+      if (!notification.message && notification.description) {
+        notification.message = notification.description;
       }
 
       const duration = this.getDurationByPriority(notification.priority);

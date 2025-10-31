@@ -8,8 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
-import toast from 'react-hot-toast';
-import { useShopTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
+import { useShopTranslation } from '@/hooks/useTranslation';
 
 interface ProductRecommendationsProps {
   type: 'popular' | 'personalized' | 'similar';
@@ -33,7 +33,6 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const { isAuthenticated } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
   const { t: tShop } = useShopTranslation();
-  const { t: tCommon } = useCommonTranslation();
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -213,7 +212,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>
-                      {tShop('stock')}: {product.stock}
+                      {tShop('product.stock')}: {product.stock}
                     </span>
                     {product.category && (
                       <Badge variant="outline" className="text-xs">
@@ -229,7 +228,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                     disabled={cartLoading || product.stock === 0}
                   >
                     <ShoppingCart className="h-3 w-3 mr-2" />
-                    {product.stock === 0 ? tShop('outOfStock') : tCommon('add')}
+                    {product.stock === 0 ? tShop('product.outOfStock') : tShop('product.addToCart')}
                   </Button>
                 </div>
               </div>
@@ -257,7 +256,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-1.5 mt-1">
                   <div
-                    className="bg-blue-600 h-1.5 rounded-full transition-all"
+                    className="bg-tsa-blue h-1.5 rounded-full transition-all"
                     style={{ width: `${recommendations.confidence * 100}%` }}
                   />
                 </div>

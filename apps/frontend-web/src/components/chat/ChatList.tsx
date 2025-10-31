@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, MessageCircle, Users, Hash } from 'lucide-react';
+import { Search, Plus, MessageCircle, Clock, Hash, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { ConversationType, type ConversationListItem } from '@/types/chat.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+import { useChatTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 interface ChatListProps {
   onSelectConversation: (conversation: ConversationListItem) => void;
@@ -17,20 +17,21 @@ interface ChatListProps {
 }
 
 export default function ChatList({ onSelectConversation, onCreateConversation }: ChatListProps) {
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tChat } = useChatTranslation();
   const { user } = useAuth();
-  const { conversations, isLoading, error, currentConversation, clearError } = useChat();
-
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
+
+  const { conversations, isLoading, error, currentConversation, clearError } = useChat();
 
   // Filter conversations based on search and type
   const filteredConversations = conversations.filter((conv) => {
     const matchesSearch =
-      searchQuery === '' ||
-      conv.otherParticipant?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.otherParticipant?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.mission?.title?.toLowerCase().includes(searchQuery.toLowerCase());
+      searchTerm === '' ||
+      conv.otherParticipant?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      conv.otherParticipant?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      conv.mission?.title?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesType = filterType === 'all' || conv.type === filterType;
 
@@ -72,12 +73,19 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     return 'Utilisateur inconnu';
   };
 
+  const formatMessageTime = (date: string) => {
+    return formatDistanceToNow(new Date(date), {
+      addSuffix: true,
+      locale: fr,
+    });
+  };
+
   if (error) {
     return (
       <div className="p-4 text-center">
         <div className="text-red-500 text-sm mb-2">{error}</div>
         <Button variant="outline" size="sm" onClick={clearError}>
-          Réessayer
+          {tChat('buttons.retry')}
         </Button>
       </div>
     );
@@ -90,7 +98,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
-            {t('sections.messages')}
+            {tForms('sections.messages')}
           </h2>
           <Button
             variant="ghost"
@@ -99,7 +107,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             className="text-tsa-blue hover:text-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
-            {t('buttons.newConversation')}
+            {tChat('buttons.newConversation')}
           </Button>
         </div>
 
@@ -107,9 +115,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder={t('placeholders.searchConversations')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={tChat('placeholders.searchConversations')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -123,7 +131,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             className="text-xs"
           >
             <MessageCircle className="h-4 w-4 mr-2" />
-            {t('buttons.all')}
+            {tChat('buttons.all')}
           </Button>
           <Button
             variant={filterType === ConversationType.DIRECT ? 'default' : 'ghost'}
@@ -132,7 +140,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             className="text-xs"
           >
             <Users className="h-3 w-3 mr-1" />
-            Directes
+            {tChat('buttons.direct')}
           </Button>
           <Button
             variant={filterType === ConversationType.MISSION ? 'default' : 'ghost'}
@@ -141,37 +149,39 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             className="text-xs"
           >
             <Hash className="h-3 w-3 mr-1" />
-            Missions
+            {tChat('buttons.mission')}
           </Button>
         </div>
       </div>
 
       {/* Error Display */}
       {error && (
-        <div className="p-4">
-          <div className="bg-red-50 border border-red-200 rounded-md p-3">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
+        <div className="text-center py-8">
+          <MessageCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <p className="text-red-600 font-medium">{tChat('messages.loadingError')}</p>
+          <p className="text-sm text-red-500 mt-1">{error}</p>
         </div>
       )}
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="p-4 text-center text-gray-500">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            Chargement...
+          <div className="p-4 flex items-center justify-center text-gray-500 h-full">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            {tChat('messages.loading')}
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
             <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
             <p className="text-sm">
-              {searchQuery ? 'Aucune conversation trouvée' : 'Aucune conversation pour le moment'}
+              {searchTerm
+                ? tChat('messages.noConversationFound')
+                : tChat('messages.noConversationsForNow')}
             </p>
-            {!searchQuery && (
+            {!searchTerm && (
               <Button variant="outline" size="sm" onClick={onCreateConversation} className="mt-2">
                 <Plus className="h-4 w-4 mr-1" />
-                Nouvelle conversation
+                {tChat('buttons.newConversation')}
               </Button>
             )}
           </div>
@@ -180,10 +190,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             {filteredConversations.map((conversation) => {
               const isActive = currentConversation?.id === conversation.id;
               const lastMessageTime = conversation.lastMessage?.createdAt
-                ? formatDistanceToNow(new Date(conversation.lastMessage.createdAt), {
-                    addSuffix: true,
-                    locale: fr,
-                  })
+                ? formatMessageTime(conversation.lastMessage.createdAt)
                 : '';
 
               return (
@@ -228,7 +235,10 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                         </h4>
                         <div className="flex items-center gap-1">
                           {lastMessageTime && (
-                            <span className="text-xs text-gray-400">{lastMessageTime}</span>
+                            <p className="text-xs text-gray-500 flex items-center mt-1">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {lastMessageTime}
+                            </p>
                           )}
                           {conversation.unreadMessagesCount &&
                             conversation.unreadMessagesCount > 0 && (
@@ -260,7 +270,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                           }`}
                         >
                           {conversation.lastMessage.senderId === user?.id
-                            ? t('messages.you') + ': '
+                            ? tForms('messages.you') + ': '
                             : ''}
                           {conversation.lastMessage.content}
                         </p>

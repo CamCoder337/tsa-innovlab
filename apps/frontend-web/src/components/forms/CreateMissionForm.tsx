@@ -39,24 +39,22 @@ import type { Address } from '@/types/address.types';
 import { useMissions } from '@/hooks/useMissions';
 import { missionService } from '@/services/mission.service';
 import { GoogleMapsService } from '@/services/google-maps.service';
-import toast from 'react-hot-toast';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
+import { useErrorsTranslation, useFormsTranslation } from '@/hooks/useTranslation';
+import type { AddressDetails } from '@/components/maps/AddressPicker';
 
-// Lazy load AddressPicker with Suspense for client-side rendering
+// Lazy load ModernAddressPicker with Suspense for client-side rendering
 const AddressPicker = lazy(() => import('@/components/maps/AddressPicker'));
 
 // Loading component for Suspense fallback
 const AddressPickerLoading = () => {
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
   return (
     <div className="h-64 w-full bg-gray-100 flex items-center justify-center">
-      <div className="animate-pulse">{t('messages.loadingAddressPicker')}</div>
+      <div className="animate-pulse">{tForms('messages.loadingAddressPicker')}</div>
     </div>
   );
 };
-
-// Import AddressDetails type
-import type { AddressDetails } from '@/components/maps/AddressPicker';
 
 // Define props type for ClientSideAddressPicker
 interface AddressPickerProps {
@@ -101,42 +99,44 @@ const ClientSideAddressPicker = ({
   );
 };
 
-const validationSchema = (t: (key: string) => string) =>
+const validationSchema = (tForms: (key: string) => string) =>
   Yup.object({
-    title: Yup.string().required(t('validation.required')),
+    title: Yup.string().required(tForms('validation.required')),
     affreteurId: Yup.string().when('$isAdmin', {
       is: true,
-      then: (schema) => schema.required(t('validation.required')),
+      then: (schema) => schema.required(tForms('validation.required')),
       otherwise: (schema) => schema.optional(),
     }),
     description: Yup.string(),
     typeMarchandise: Yup.string(),
-    poids: Yup.number().min(0, t('validation.positive')),
-    volume: Yup.number().min(0, t('validation.positive')),
-    dateDepartEstime: Yup.date().required(t('validation.required')).typeError(t('validation.date')),
-    dateArriveePrevue: Yup.date().typeError(t('validation.date')),
+    poids: Yup.number().min(0, tForms('validation.positive')),
+    volume: Yup.number().min(0, tForms('validation.positive')),
+    dateDepartEstime: Yup.date()
+      .required(tForms('validation.required'))
+      .typeError(tForms('validation.date')),
+    dateArriveePrevue: Yup.date().typeError(tForms('validation.date')),
     adresseDepart: Yup.object({
-      street: Yup.string().required(t('validation.required')),
-      city: Yup.string().required(t('validation.required')),
+      street: Yup.string().required(tForms('validation.required')),
+      city: Yup.string().required(tForms('validation.required')),
       postalCode: Yup.string(),
-      country: Yup.string().required(t('validation.required')),
-      label: Yup.string().required(t('validation.required')),
-      region: Yup.string().required(t('validation.required')),
-      latitude: Yup.number().required(t('validation.coordinatesRequired')),
-      longitude: Yup.number().required(t('validation.coordinatesRequired')),
-    }).required(t('validation.addressRequired')),
+      country: Yup.string().required(tForms('validation.required')),
+      label: Yup.string().required(tForms('validation.required')),
+      region: Yup.string().required(tForms('validation.required')),
+      latitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+      longitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+    }).required(tForms('validation.addressRequired')),
     adresseArrivee: Yup.object({
-      street: Yup.string().required(t('validation.required')),
-      city: Yup.string().required(t('validation.required')),
+      street: Yup.string().required(tForms('validation.required')),
+      city: Yup.string().required(tForms('validation.required')),
       postalCode: Yup.string(),
-      country: Yup.string().required(t('validation.required')),
-      label: Yup.string().required(t('validation.required')),
-      region: Yup.string().required(t('validation.required')),
-      latitude: Yup.number().required(t('validation.coordinatesRequired')),
-      longitude: Yup.number().required(t('validation.coordinatesRequired')),
-    }).required(t('validation.addressRequired')),
-    budgetMin: Yup.number().min(0, t('validation.positive')),
-    budgetMax: Yup.number().min(Yup.ref('budgetMin'), t('validation.budgetMaxGreaterThanMin')),
+      country: Yup.string().required(tForms('validation.required')),
+      label: Yup.string().required(tForms('validation.required')),
+      region: Yup.string().required(tForms('validation.required')),
+      latitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+      longitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+    }).required(tForms('validation.addressRequired')),
+    budgetMin: Yup.number().min(0, tForms('validation.positive')),
+    budgetMax: Yup.number().min(Yup.ref('budgetMin'), tForms('validation.budgetMaxGreaterThanMin')),
   });
 
 export interface CreateMissionFormProps {
@@ -151,18 +151,12 @@ type NewAddressFormData = Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
 // Helper function to convert AddressDetails to Address format
 const convertAddressDetailsToAddress = (addressDetails: AddressDetails): NewAddressFormData => {
   return {
-    label:
-      addressDetails.locality ||
-      addressDetails.formatted_address.split(',')[0] ||
-      'Nouvelle adresse',
-    street:
-      `${addressDetails.street_number || ''} ${addressDetails.route || ''}`.trim() ||
-      addressDetails.formatted_address.split(',')[0] ||
-      '',
+    label: addressDetails.label || addressDetails.formatted_address || 'Nouvelle adresse',
+    street: `${addressDetails.street_number || ''} ${addressDetails.route || ''}`.trim() || '',
     city: addressDetails.locality || '',
     region: addressDetails.administrative_area_level_1 || '',
     country: addressDetails.country || '',
-    postalCode: addressDetails.postal_code || '',
+    postalCode: addressDetails.postal_code || addressDetails.street_number || '',
     latitude: addressDetails.latitude,
     longitude: addressDetails.longitude,
   };
@@ -176,7 +170,8 @@ export default function CreateMissionForm({
   const { user } = useAuth();
   const { getUsersByRole } = useUsers();
   const { currentMission } = useMissions();
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tErrors } = useErrorsTranslation();
 
   const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
     null
@@ -220,7 +215,7 @@ export default function CreateMissionForm({
       !formValues.poids ||
       !formValues.volume
     ) {
-      toast.error(t('messages.fillAddressesForPricing'));
+      toast.error(tErrors('missions.fillAddressesForPricing'));
       return;
     }
 
@@ -231,7 +226,7 @@ export default function CreateMissionForm({
       !formValues.adresseArrivee.latitude ||
       !formValues.adresseArrivee.longitude
     ) {
-      toast.error(t('messages.addressesNeedCoordinates'));
+      toast.error(tErrors('missions.addressesNeedCoordinates'));
       return;
     }
 
@@ -264,7 +259,7 @@ export default function CreateMissionForm({
         );
 
         if (!straightLineDistance) {
-          toast.error(t('messages.cannotCalculateDistance'));
+          toast.error(tErrors('missions.cannotCalculateDistance'));
           return;
         }
 
@@ -294,7 +289,7 @@ export default function CreateMissionForm({
           setDynamicPricing(response.data);
           setShowDynamicPricing(true);
           toast.success(
-            `${t('messages.dynamicPricingCalculated')} (Distance estimée: ${estimatedDistance} km)`
+            `${tForms('messages.dynamicPricingCalculated')} (Distance estimée: ${estimatedDistance} km)`
           );
         }
       } else {
@@ -322,13 +317,13 @@ export default function CreateMissionForm({
           setDynamicPricing(response.data);
           setShowDynamicPricing(true);
           toast.success(
-            `${t('messages.dynamicPricingCalculated')} (Distance: ${distanceResult.distance} km, Durée: ${Math.round(distanceResult.duration / 60)}h${distanceResult.duration % 60}min)`
+            `${tForms('messages.dynamicPricingCalculated')} (Distance: ${distanceResult.distance} km, Durée: ${Math.round(distanceResult.duration / 60)}h${distanceResult.duration % 60}min)`
           );
         }
       }
     } catch (error) {
       console.error('Error calculating dynamic pricing:', error);
-      toast.error(t('messages.dynamicPricingError'));
+      toast.error(tErrors('missions.dynamicPricingError'));
     } finally {
       setIsCalculatingPrice(false);
     }
@@ -338,8 +333,7 @@ export default function CreateMissionForm({
   const applyDynamicPricing = (setFieldValue: (field: string, value: number) => void) => {
     if (dynamicPricing) {
       setFieldValue('budgetMin', dynamicPricing.calculated_price * 0.8); // 20% below estimated
-      setFieldValue('budgetMax', dynamicPricing.calculated_price * 1.2); // 20% above estimated
-      toast.success(t('messages.dynamicPricingApplied'));
+      toast.success(tForms('messages.dynamicPricingApplied'));
     }
   };
 
@@ -387,7 +381,7 @@ export default function CreateMissionForm({
   return (
     <Formik<CreateMissionDto>
       initialValues={INITIAL_VALUES}
-      validationSchema={validationSchema}
+      validationSchema={validationSchema(tForms)}
       onSubmit={(values) => {
         console.log(values);
         onSubmit(
@@ -405,7 +399,7 @@ export default function CreateMissionForm({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                {t('sections.missionDetails')}
+                {tForms('sections.missionDetails')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -415,11 +409,11 @@ export default function CreateMissionForm({
                 })}
               >
                 <div>
-                  <Label htmlFor="title">{t('fields.missionTitle')}</Label>
+                  <Label htmlFor="title">{tForms('labels.missionTitle')}</Label>
                   <Input
                     id="title"
                     name="title"
-                    placeholder={t('placeholders.missionTitle')}
+                    placeholder={tForms('placeholders.missionTitle')}
                     value={values.title}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -432,7 +426,7 @@ export default function CreateMissionForm({
                 </div>
                 {user?.role === 'admin' && (
                   <div>
-                    <Label htmlFor="affreteurId">{t('fields.affreteur')}</Label>
+                    <Label htmlFor="affreteurId">{tForms('labels.affreteur')}</Label>
                     <Select
                       value={values.affreteurId || ''}
                       onValueChange={(value) => {
@@ -445,7 +439,7 @@ export default function CreateMissionForm({
                           touched.affreteurId && errors.affreteurId && 'border-red-500'
                         )}
                       >
-                        <SelectValue placeholder={t('placeholders.selectAffreteur')} />
+                        <SelectValue placeholder={tForms('placeholders.selectAffreteur')} />
                       </SelectTrigger>
                       <SelectContent>
                         {getUsersByRole('affreteur').map((affreteur) => (
@@ -464,11 +458,11 @@ export default function CreateMissionForm({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="adresseDepart">{t('fields.departureAddress')}</Label>
+                  <Label htmlFor="adresseDepart">{tForms('labels.departureAddress')}</Label>
                   {showNewAddressForm === 'departure' ? (
                     <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
                       <div className="flex justify-between items-center">
-                        <h4 className="font-medium">{t('labels.newAddress')}</h4>
+                        <h4 className="font-medium">{tForms('labels.newAddress')}</h4>
                         <Button
                           type="button"
                           variant="ghost"
@@ -480,12 +474,12 @@ export default function CreateMissionForm({
                       </div>
                       <div className="flex justify-between gap-4">
                         <div className="flex space-y-2 items-center gap-2 w-full">
-                          <Label htmlFor="label">{t('fields.label')}</Label>
+                          <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
                           <Input
                             name="label"
                             value={newAddress.label}
                             onChange={handleNewAddressChange}
-                            placeholder={t('placeholders.addressLabel')}
+                            placeholder={tForms('placeholders.addressLabel')}
                             className="w-full"
                           />
                         </div>
@@ -496,13 +490,13 @@ export default function CreateMissionForm({
                             onClick={() => saveNewAddress('departure', setFieldValue)}
                             disabled={!newAddress.street || !newAddress.city}
                           >
-                            {t('actions.save')}
+                            {tForms('buttons.save')}
                           </Button>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <Label>{t('labels.selectAddressWithMaps')}</Label>
+                          <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
                           <div className="mt-2">
                             <ClientSideAddressPicker
                               onAddressSelect={(addressDetails) => {
@@ -522,7 +516,7 @@ export default function CreateMissionForm({
                                   longitude: 11.5021,
                                 });
                               }}
-                              placeholder={t('placeholders.searchDepartureAddress')}
+                              placeholder={tForms('placeholders.searchDepartureAddress')}
                               showMap={true}
                               className="w-full"
                             />
@@ -557,7 +551,7 @@ export default function CreateMissionForm({
                           >
                             <SelectValue
                               placeholder={
-                                values.adresseDepart?.label || t('placeholders.selectAddress')
+                                values.adresseDepart?.label || tForms('placeholders.selectAddress')
                               }
                             />
                           </SelectTrigger>
@@ -574,7 +568,7 @@ export default function CreateMissionForm({
                                 onClick={() => setShowNewAddressForm('departure')}
                               >
                                 <Plus className="h-4 w-4" />
-                                <span>{t('labels.newAddress')}</span>
+                                <span>{tForms('labels.newAddress')}</span>
                               </button>
                             </div>
                           </SelectContent>
@@ -590,7 +584,7 @@ export default function CreateMissionForm({
                           {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
                           <p>{values.adresseDepart.country}</p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {t('labels.coordinates')}:{' '}
+                            {tForms('labels.coordinates')}:{' '}
                             {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
                             {Number(values.adresseDepart.longitude)?.toFixed(6)}
                           </p>
@@ -600,18 +594,18 @@ export default function CreateMissionForm({
                         <div className="text-sm text-red-600 mt-1">
                           {typeof errors.adresseDepart === 'string'
                             ? errors.adresseDepart
-                            : t('validation.departureAddressRequired')}
+                            : tForms('validation.departureAddressRequired')}
                         </div>
                       )}
                     </div>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="adresseArrivee">{t('fields.arrivalAddress')}</Label>
+                  <Label htmlFor="adresseArrivee">{tForms('labels.arrivalAddress')}</Label>
                   {showNewAddressForm === 'arrival' ? (
                     <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
                       <div className="flex justify-between items-center">
-                        <h4 className="font-medium">{t('labels.newAddress')}</h4>
+                        <h4 className="font-medium">{tForms('labels.newAddress')}</h4>
                         <Button
                           type="button"
                           variant="ghost"
@@ -623,12 +617,12 @@ export default function CreateMissionForm({
                       </div>
                       <div className="flex justify-between gap-4">
                         <div className="flex space-y-2 items-center gap-2 w-full">
-                          <Label htmlFor="label">{t('fields.label')}</Label>
+                          <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
                           <Input
                             name="label"
                             value={newAddress.label}
                             onChange={handleNewAddressChange}
-                            placeholder={t('placeholders.addressLabel')}
+                            placeholder={tForms('placeholders.addressLabel')}
                             className="w-full"
                           />
                         </div>
@@ -639,13 +633,13 @@ export default function CreateMissionForm({
                             onClick={() => saveNewAddress('arrival', setFieldValue)}
                             disabled={!newAddress.street || !newAddress.city}
                           >
-                            {t('actions.save')}
+                            {tForms('buttons.save')}
                           </Button>
                         </div>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <Label>{t('labels.selectAddressWithMaps')}</Label>
+                          <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
                           <div className="mt-2">
                             <ClientSideAddressPicker
                               onAddressSelect={(addressDetails) => {
@@ -665,7 +659,7 @@ export default function CreateMissionForm({
                                   longitude: 11.5021,
                                 });
                               }}
-                              placeholder={t('placeholders.searchArrivalAddress')}
+                              placeholder={tForms('placeholders.searchArrivalAddress')}
                               showMap={true}
                               className="w-full"
                             />
@@ -700,7 +694,7 @@ export default function CreateMissionForm({
                           >
                             <SelectValue
                               placeholder={
-                                values.adresseArrivee?.label || t('placeholders.selectAddress')
+                                values.adresseArrivee?.label || tForms('placeholders.selectAddress')
                               }
                             />
                           </SelectTrigger>
@@ -717,7 +711,7 @@ export default function CreateMissionForm({
                                 onClick={() => setShowNewAddressForm('arrival')}
                               >
                                 <Plus className="h-4 w-4" />
-                                <span>{t('labels.newAddress')}</span>
+                                <span>{tForms('labels.newAddress')}</span>
                               </button>
                             </div>
                           </SelectContent>
@@ -733,7 +727,7 @@ export default function CreateMissionForm({
                           {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
                           <p>{values.adresseArrivee.country}</p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {t('labels.coordinates')}:{' '}
+                            {tForms('labels.coordinates')}:{' '}
                             {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
                             {Number(values.adresseArrivee.longitude)?.toFixed(6)}
                           </p>
@@ -743,7 +737,7 @@ export default function CreateMissionForm({
                         <div className="text-sm text-red-600 mt-1">
                           {typeof errors.adresseArrivee === 'string'
                             ? errors.adresseArrivee
-                            : t('validation.arrivalAddressRequired')}
+                            : tForms('validation.arrivalAddressRequired')}
                         </div>
                       )}
                     </div>
@@ -753,12 +747,12 @@ export default function CreateMissionForm({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="typeMarchandise">{t('fields.cargoType')}</Label>
+                  <Label htmlFor="typeMarchandise">{tForms('labels.cargoType')}</Label>
                   <Input
                     id="typeMarchandise"
                     name="typeMarchandise"
                     type="text"
-                    placeholder={t('placeholders.cargoType')}
+                    placeholder={tForms('placeholders.cargoType')}
                     value={values.typeMarchandise || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -771,7 +765,7 @@ export default function CreateMissionForm({
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="poids">{t('fields.weight')}</Label>
+                  <Label htmlFor="poids">{tForms('labels.weight')}</Label>
                   <Input
                     id="poids"
                     name="poids"
@@ -791,7 +785,7 @@ export default function CreateMissionForm({
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="volume">{t('fields.volume')}</Label>
+                  <Label htmlFor="volume">{tForms('labels.volume')}</Label>
                   <Input
                     id="volume"
                     name="volume"
@@ -813,11 +807,11 @@ export default function CreateMissionForm({
               </div>
 
               <div>
-                <Label htmlFor="description">{t('fields.missionDescription')}</Label>
+                <Label htmlFor="description">{tForms('labels.missionDescription')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder={t('placeholders.missionDescription')}
+                  placeholder={tForms('placeholders.missionDescription')}
                   value={values.description}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -835,13 +829,13 @@ export default function CreateMissionForm({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                {t('sections.missionDates')}
+                {tForms('sections.missionDates')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>{t('fields.estimatedDepartureDate')}</Label>
+                  <Label>{tForms('labels.estimatedDepartureDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -855,7 +849,7 @@ export default function CreateMissionForm({
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateDepartEstime
                           ? format(new Date(values.dateDepartEstime), 'dd MMM yyyy')
-                          : t('placeholders.selectDate')}
+                          : tForms('placeholders.selectDate')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -885,7 +879,7 @@ export default function CreateMissionForm({
                   )}
                 </div>
                 <div>
-                  <Label>{t('fields.expectedArrivalDate')}</Label>
+                  <Label>{tForms('labels.expectedArrivalDate')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -899,7 +893,7 @@ export default function CreateMissionForm({
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateArriveePrevue
                           ? format(new Date(values.dateArriveePrevue), 'dd MMM yyyy')
-                          : t('placeholders.selectDate')}
+                          : tForms('placeholders.selectDate')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -934,7 +928,7 @@ export default function CreateMissionForm({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                {t('sections.budget')}
+                {tForms('sections.dynamicPricing')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -943,7 +937,9 @@ export default function CreateMissionForm({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Calculator className="h-5 w-5 text-tsa-blue" />
-                    <h4 className="font-medium text-blue-900">{t('labels.dynamicPricing')}</h4>
+                    <p className="text-sm text-blue-700 mb-3">
+                      {tForms('messages.dynamicPricingDescription')}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -962,37 +958,34 @@ export default function CreateMissionForm({
                     {isCalculatingPrice ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {t('actions.calculating')}
+                        {tForms('messages.calculating')}
                       </>
                     ) : (
                       <>
                         <Calculator className="h-4 w-4 mr-2" />
-                        {t('actions.calculatePrice')}
+                        {tForms('buttons.calculatePrice')}
                       </>
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-blue-700 mb-3">
-                  {t('messages.dynamicPricingDescription')}
-                </p>
 
                 {dynamicPricing && showDynamicPricing && (
                   <div className="bg-white p-3 rounded border border-blue-200">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-600">{t('labels.distance')}</p>
+                        <p className="text-gray-600">{tForms('labels.distance')}</p>
                         <p className="font-medium">
                           {dynamicPricing.breakdown.distance_factor.toFixed(1)} km
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600">{t('labels.estimatedPrice')}</p>
+                        <p className="text-gray-600">{tForms('labels.estimatedPrice')}</p>
                         <p className="font-medium text-green-600">
                           {dynamicPricing.calculated_price.toLocaleString()} FCFA
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-600">{t('labels.priceRange')}</p>
+                        <p className="text-gray-600">{tForms('labels.priceRange')}</p>
                         <p className="font-medium">
                           {(dynamicPricing.calculated_price * 0.8).toLocaleString()} -{' '}
                           {(dynamicPricing.calculated_price * 1.2).toLocaleString()} FCFA
@@ -1005,7 +998,7 @@ export default function CreateMissionForm({
                           onClick={() => applyDynamicPricing(setFieldValue)}
                           className="bg-green-600 hover:bg-green-700 text-white"
                         >
-                          {t('actions.apply')}
+                          {tForms('buttons.apply')}
                         </Button>
                       </div>
                     </div>
@@ -1031,7 +1024,7 @@ export default function CreateMissionForm({
               {/* Manual Budget Section */}
               <div className="flex justify-center w-1/2 gap-4">
                 <div>
-                  <Label htmlFor="budgetMin">{t('fields.price')}</Label>
+                  <Label htmlFor="budgetMin">{tForms('labels.price')}</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -1109,7 +1102,7 @@ export default function CreateMissionForm({
                   }}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  {isSubmitting ? t('actions.publishing') : t('actions.publishMission')}
+                  {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publishMission')}
                 </Button>
                 <Button
                   type="button"
@@ -1120,7 +1113,7 @@ export default function CreateMissionForm({
                   }}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? t('actions.saving') : t('actions.saveAsDraft')}
+                  {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
                 </Button>
               </>
             )}
@@ -1138,11 +1131,11 @@ export default function CreateMissionForm({
                   <Package className="h-4 w-4 mr-2" />
                   {isSubmitting
                     ? currentMission?.status === 'draft'
-                      ? t('actions.updatingAndPublishing')
-                      : t('actions.updating')
+                      ? tForms('messages.updatingAndPublishing')
+                      : tForms('messages.updating')
                     : currentMission?.status === 'draft'
-                      ? t('actions.updateAndPublishMission')
-                      : t('actions.updateMission')}
+                      ? tForms('buttons.updateAndPublishMission')
+                      : tForms('buttons.updateMission')}
                 </Button>
                 {currentMission?.status === 'draft' && (
                   <Button
@@ -1154,7 +1147,7 @@ export default function CreateMissionForm({
                     }}
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? t('actions.updating') : t('actions.updateDraft')}
+                    {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
                   </Button>
                 )}
               </>

@@ -1,73 +1,159 @@
 {
   "title": "Missions",
   "mission": "Mission",
-  "missions": "Missions",
-  "createSimple": "Create mission",
+  "missionSummary": "Mission Summary",
   "detailsSimple": "Mission details",
-  "status": {
-    "draft": "Draft",
-    "published": "Published",
-    "pending": "Pending",
-    "accepted": "Accepted",
-    "assigned": "Assigned",
-    "in_progress": "In progress",
-    "completed": "Completed",
-    "rejected": "Rejected",
-    "cancelled": "Cancelled"
-  },
   "type": {
     "transport": "Transport",
     "delivery": "Delivery",
     "pickup": "Pickup",
     "storage": "Storage"
   },
-  "fields": {
-    "title": "Title",
-    "description": "Description",
-    "origin": "Origin",
-    "destination": "Destination",
-    "cargo": "Cargo",
-    "weight": "Weight",
-    "volume": "Volume",
-    "budget": "Budget",
-    "deadline": "Deadline",
-    "requirements": "Requirements",
-    "transporteur": "Carrier",
-    "affreteur": "Shipper"
-  },
-  "tracking": {
-    "title": "Mission tracking",
-    "currentLocation": "Current location",
-    "estimatedArrival": "Estimated arrival",
-    "progress": "Progress",
-    "updates": "Updates"
-  },
-  "propositions": {
-    "title": "Offers",
-    "submit": "Submit offer",
-    "price": "Proposed price",
-    "timeline": "Proposed timeline",
-    "accept": "Accept",
-    "reject": "Reject"
-  },
   "create": {
     "title": "Create New Mission",
     "editTitle": "Edit Mission",
-    "subtitle": "Publish your transport needs and connect with reliable carriers",
-    "editSubtitle": "Modify your mission information"
+    "subtitle": "Post your transport needs and connect with reliable carriers",
+    "editSubtitle": "Edit your mission information"
   },
   "details": {
     "title": "Mission: {{title}}",
     "loadingMessage": "Loading mission details...",
-    "errorLoading": "Error loading mission: {{error}}",
-    "tryAgain": "Try Again",
     "backToMissions": "Back to Missions",
     "tabs": {
       "details": "Details",
       "timeline": "Timeline",
       "appreciation": "Appreciation",
-      "financial": "Financial"
-    }
+      "financial": "Quote"
+    },
+    "cargoType": "Cargo type",
+    "flexibleDates": "Flexible dates",
+    "flexibleRoute": "Flexible route",
+    "typeNotSpecified": "Type not specified",
+    "route": "Route",
+    "dates": "Dates",
+    "estimatedDeparture": "Estimated departure",
+    "expectedArrival": "Expected arrival",
+    "additionalNotes": "Additional notes",
+    "documents": "Documents"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "statusChange": "Changed from {{ old_status }} to {{ new_status }}",
+    "statusUpdated": "Status updated: {{ status }}",
+    "positionUpdated": "Position updated",
+    "newPosition": "New position",
+    "message": "Message",
+    "document": "Document",
+    "note": "Note",
+    "scheduled_for": "Scheduled for",
+    "noEvents": "No events to display at the moment"
+  },
+  "appreciation": {
+    "title": "Carrier Evaluation",
+    "title2": "Appreciations",
+    "subtitle": "Share your experience with this carrier",
+    "loading": "Loading appreciations",
+    "performanceMetrics": "Performance Metrics",
+    "overallRating": "Overall Rating",
+    "averageRating": "Average rating",
+    "evaluateThisMission": "Evaluate this mission",
+    "detailedEvaluation": "Detailed evaluation",
+    "rateEachCriteria": "Rate each criteria",
+    "criteria": {
+      "punctuality": {
+        "title": "Punctuality",
+        "description": "On-time delivery, ETA compliance, delay management",
+        "ratings": {
+          "1": "Always late",
+          "2": "Often late",
+          "3": "Sometimes late",
+          "4": "Generally punctual",
+          "5": "Always punctual"
+        }
+      },
+      "reliability": {
+        "title": "Reliability",
+        "description": "Availability, responsiveness, commitment compliance",
+        "ratings": {
+          "1": "Unreliable",
+          "2": "Sometimes reliable",
+          "3": "Moderately reliable",
+          "4": "Very reliable",
+          "5": "Completely reliable"
+        }
+      },
+      "serviceQuality": {
+        "title": "Service quality",
+        "description": "Professionalism, package condition, communication, delivery proof",
+        "ratings": {
+          "1": "Disappointing service",
+          "2": "Insufficient service",
+          "3": "Adequate service",
+          "4": "Good service",
+          "5": "Excellent service"
+        }
+      },
+      "incidentManagement": {
+        "title": "Incident management",
+        "description": "Problem response, proactive reporting, quick resolution",
+        "ratings": {
+          "1": "Poor management",
+          "2": "Slow management",
+          "3": "Adequate management",
+          "4": "Good management",
+          "5": "Exemplary management"
+        }
+      }
+    },
+    "calculatedAutomatically": "Calculated automatically from your evaluations",
+    "comments": "Comments",
+    "commentsPlaceholder": "Share your detailed experience with this carrier...",
+    "wouldRecommend": "Would you recommend this carrier?",
+    "recommendTransporter": "Recommend this carrier",
+    "iRecommendTransporter": "I recommend this carrier",
+    "submitEvaluation": "Submit Evaluation",
+    "success": {
+      "submitted": "Evaluation submitted successfully",
+      "updated": "Evaluation updated successfully"
+    },
+    "existingEvaluation": "Your Evaluation",
+    "submittedOn": "Submitted on",
+    "updateEvaluation": "Update Evaluation",
+    "noAppreciations": "No appreciations yet",
+    "appreciationsWillAppear": "Appreciations will appear here once submitted",
+    "notYetRated": "Not yet rated",
+    "noEvaluationYet": "No evaluation for this mission yet"
+  },
+  "financial": {
+    "title": "Financial Information",
+    "loading": "Loading financial information",
+    "totalCost": "Total Cost",
+    "transporterPayment": "Carrier Payment",
+    "platformFee": "Platform fee",
+    "paymentStatus": "Payment Status",
+    "paymentHistory": "Payment History",
+    "costBreakdown": "Cost Breakdown",
+    "baseCost": "Base Cost",
+    "additionalFees": "Additional Fees",
+    "taxes": "Taxes",
+    "discount": "Discount",
+    "finalAmount": "Final Amount",
+    "paymentMethod": "Payment Method",
+    "transactionId": "Transaction ID",
+    "paymentDate": "Payment Date",
+    "reference": "Reference",
+    "additionalCosts": "Additional Costs",
+    "vatPercent": "VAT",
+    "success": {
+      "invoiceGenerated": "Invoice generated successfully",
+      "downloadingInvoice": "Invoice downloaded successfully"
+    },
+    "noPayments": "No payments recorded",
+    "paymentsWillAppear": "Payments will appear here once submitted",
+    "noPaymentHistory": "No payment history available",
+    "generateInvoice": "Generate Invoice",
+    "downloadInvoice": "Download Invoice",
+    "requestInvoice": "Request Invoice"
   },
   "myMissions": {
     "affreteur": {
@@ -76,17 +162,11 @@
       "newMission": "New Mission",
       "stats": {
         "totalMissions": "Total Missions",
-        "inProgress": "In Progress",
-        "completed": "Completed",
         "totalOffers": "Total Offers"
       },
       "history": "Mission History",
       "tabs": {
-        "all": "All",
-        "pending": "Pending",
-        "actives": "Active",
-        "completed": "Completed",
-        "draft": "Drafts"
+        "all": "All"
       },
       "emptyStates": {
         "noMissions": "No missions found",
@@ -100,8 +180,8 @@
       "subtitle": "Find and accept transport missions",
       "stats": {
         "availableMissions": "Available Missions",
-        "inProgress": "In Progress",
-        "completed": "Completed",
+        "activeMissions": "Active Missions",
+        "completedMissions": "Completed Missions",
         "potentialRevenue": "Potential Revenue"
       },
       "search": {
@@ -117,9 +197,6 @@
       },
       "transportMissions": "Transport Missions",
       "tabs": {
-        "available": "Available",
-        "assigned": "In Progress",
-        "completed": "Completed",
         "all": "All"
       },
       "emptyStates": {
@@ -127,16 +204,14 @@
         "noMatchingCriteria": "No missions match the current search criteria"
       },
       "apply": {
-        "dialogTitle": "Apply for mission",
-        "dialogDescription": "Select a vehicle to apply for this mission",
+        "dialogTitle": "Apply to mission",
+        "dialogDescription": "Select a vehicle to apply to this mission",
         "requiredVehicleType": "Required vehicle type:",
         "selectVehicle": "Select an available vehicle *",
         "loadingVehicles": "Loading vehicles...",
         "noVehiclesAvailable": "No vehicles available",
-        "noVehiclesMessage": "You must have at least one available vehicle to apply for a mission.",
-        "chooseVehicle": "Choose a vehicle",
-        "cancel": "Cancel",
-        "apply": "Apply"
+        "noVehiclesMessage": "You must have at least one available vehicle to apply to a mission.",
+        "chooseVehicle": "Choose a vehicle"
       }
     }
   },
@@ -145,78 +220,16 @@
     "cancelledSuccess": "Mission cancelled successfully",
     "createdSuccess": "Mission created successfully",
     "modifiedSuccess": "Mission modified successfully",
-    "errorOccurred": "An error occurred",
     "statusUpdatedSuccess": "Mission {{status}} successfully",
-    "statusUpdateFailed": "Failed to update mission status",
-    "selectVehicleError": "Please select a vehicle",
-    "applicationSentSuccess": "Application sent successfully",
-    "applicationError": "Error during application"
-  },
-  "appreciation": {
-    "title": "Carrier Evaluation",
-    "subtitle": "Share your experience with this carrier",
-    "performanceMetrics": "Performance Metrics",
-    "overallRating": "Overall Rating",
-    "criteria": {
-      "punctuality": "Punctuality",
-      "communication": "Communication",
-      "cargoHandling": "Cargo Handling",
-      "professionalism": "Professionalism",
-      "vehicleCondition": "Vehicle Condition"
-    },
-    "comments": "Comments",
-    "commentsPlaceholder": "Share your detailed experience with this carrier...",
-    "wouldRecommend": "Would you recommend this carrier?",
-    "yes": "Yes",
-    "no": "No",
-    "submitEvaluation": "Submit Evaluation",
-    "validation": {
-      "ratingRequired": "Please rate all criteria",
-      "commentsRequired": "Comments are required",
-      "recommendationRequired": "Please indicate if you recommend this carrier"
-    },
-    "success": {
-      "submitted": "Evaluation submitted successfully",
-      "updated": "Evaluation updated successfully"
-    },
-    "errors": {
-      "loadingError": "Error loading evaluation",
-      "submissionError": "Error submitting evaluation"
-    },
-    "existingEvaluation": "Your Evaluation",
-    "submittedOn": "Submitted on",
-    "updateEvaluation": "Update Evaluation",
-    "noEvaluationYet": "No evaluation for this mission yet"
-  },
-  "financial": {
-    "title": "Financial Information",
-    "totalCost": "Total Cost",
-    "paymentStatus": "Payment Status",
-    "paymentHistory": "Payment History",
-    "costBreakdown": "Cost Breakdown",
-    "baseCost": "Base Cost",
-    "additionalFees": "Additional Fees",
-    "taxes": "Taxes",
-    "discount": "Discount",
-    "finalAmount": "Final Amount",
-    "paymentMethod": "Payment Method",
-    "transactionId": "Transaction ID",
-    "paymentDate": "Payment Date",
-    "status": {
-      "pending": "Pending",
-      "paid": "Paid",
-      "overdue": "Overdue",
-      "cancelled": "Cancelled"
-    },
-    "errors": {
-      "loadingError": "Error loading financial information"
-    },
-    "noPaymentHistory": "No payment history available",
-    "downloadInvoice": "Download Invoice",
-    "requestInvoice": "Request Invoice"
+    "applicationSentSuccess": "Application sent successfully"
   },
   "actions": {
-    "confirmAction": "Are you sure you want to",
+    "start": "Start mission",
+    "complete": "Complete mission",
+    "delete": "Delete Mission",
+    "deleting": "Deleting...",
+    "confirmDelete": "delete mission {{ mission }}",
+    "warning": "The mission and all associated data will be permanently deleted",
     "success": {
       "edit": "Mission edited successfully",
       "delete": "Mission deleted successfully",
@@ -228,11 +241,19 @@
       "actionFailed": "Error executing action"
     }
   },
-  "publish": "Publish",
   "createdOn": "Created on",
   "budget": "Budget",
+  "distance": "Distance",
+  "duration": "Duration",
   "departure": "Departure",
   "arrival": "Arrival",
   "track": "Track",
-  "trackShipment": "Track Shipment"
+  "trackShipment": "Track shipment",
+  "tracking": {
+    "title": "Mission tracking",
+    "currentLocation": "Current location",
+    "estimatedArrival": "Estimated arrival",
+    "progress": "Progress",
+    "updates": "Updates"
+  }
 }

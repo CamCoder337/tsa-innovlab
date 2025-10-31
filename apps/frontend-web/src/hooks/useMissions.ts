@@ -69,8 +69,8 @@ export const useMissions = () => {
   }, [store.missions, store.myMissions]);
 
   const getInProgressMissions = useCallback(() => {
-    return [...store.missions, ...store.myMissions].filter(
-      (mission) => mission.status === 'assigned'
+    return [...store.missions, ...store.myMissions].filter((mission) =>
+      ['assigned', 'in_progress'].includes(mission.status)
     ).length;
   }, [store.missions, store.myMissions]);
 
@@ -78,8 +78,8 @@ export const useMissions = () => {
   const fetchMissionMemoized = useCallback(
     (id: string) => {
       store.fetchMission(id);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [store.currentMission]
   );
 
@@ -104,6 +104,7 @@ export const useMissions = () => {
     fetchMissionsStats: store.fetchMissionsStats,
     createMission: store.createMission,
     updateMission: store.updateMission,
+    updateMissionStatus: store.updateMissionStatus,
     deleteMission: store.deleteMission,
     publishMission: store.publishMission,
     unpublishMission: store.unpublishMission,

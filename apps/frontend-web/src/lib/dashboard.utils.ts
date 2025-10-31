@@ -90,7 +90,7 @@ export class DashboardUtils {
         statusLabel: getStatusLabel(mission.status, t),
         progress: this.calculateProgress(mission.status),
         timeAgo: this.getTimeAgo(mission.updatedAt),
-        formattedBudget: this.formatCurrency(mission.budgetMax || 0),
+        formattedBudget: this.formatCurrency(mission.budgetMin || 0),
       }));
   }
 

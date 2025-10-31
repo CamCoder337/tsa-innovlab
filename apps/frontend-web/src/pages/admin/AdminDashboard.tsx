@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +23,7 @@ import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
 import { useMissions } from '@/hooks/useMissions';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
-import { useAdminTranslation } from '@/hooks/useTranslation';
+import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -32,7 +31,8 @@ export default function AdminDashboard() {
   const { stats: missionStats, isLoading: missionLoading } = useMissions();
   const { stats: productStats, isLoading: productLoading } = useProducts();
   const { userStats, isLoading: userLoading } = useUsers();
-  const { t } = useAdminTranslation();
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   // Show loading state
   if (allStats.isLoading || missionLoading || productLoading || userLoading) {
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-tsa-blue mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('dashboard.loading')}</p>
+          <p className="text-gray-600">{tAdmin('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -91,17 +91,17 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('dashboard.title')}</h1>
-        <p className="text-gray-600">{t('dashboard.overview.subtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAdmin('dashboard.title')}</h1>
+        <p className="text-gray-600">{tAdmin('dashboard.overview.subtitle')}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">{t('dashboard.overview.title')}</TabsTrigger>
-          <TabsTrigger value="users">{t('users.users')}</TabsTrigger>
-          <TabsTrigger value="missions">{t('missions.title')}</TabsTrigger>
-          <TabsTrigger value="boutique">{t('dashboard.shop.title')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('analytics.title')}</TabsTrigger>
+          <TabsTrigger value="overview">{tAdmin('dashboard.overview.title')}</TabsTrigger>
+          <TabsTrigger value="users">{tAdmin('users.users')}</TabsTrigger>
+          <TabsTrigger value="missions">{tAdmin('missions.title')}</TabsTrigger>
+          <TabsTrigger value="boutique">{tAdmin('dashboard.shop.title')}</TabsTrigger>
+          <TabsTrigger value="analytics">{tAdmin('analytics.title')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
@@ -113,7 +113,9 @@ export default function AdminDashboard() {
                     <Users className="h-5 w-5 text-tsa-blue" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.overview.totalUsers')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.overview.totalUsers')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.overview.stats?.quickStats.totalUsers.toLocaleString() ||
                         userStats?.total ||
@@ -131,7 +133,9 @@ export default function AdminDashboard() {
                     <Package className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.overview.totalMissions')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.overview.totalMissions')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.overview.stats?.quickStats.totalMissions.toLocaleString() ||
                         missionStats?.totals?.missions?.toLocaleString() ||
@@ -149,7 +153,9 @@ export default function AdminDashboard() {
                     <DollarSign className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.overview.totalRevenue')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.overview.totalRevenue')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M FCFA
                     </p>
@@ -165,7 +171,7 @@ export default function AdminDashboard() {
                     <AlertTriangle className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.overview.lowStock')}</p>
+                    <p className="text-sm text-gray-600">{tAdmin('dashboard.overview.lowStock')}</p>
                     <p className="text-2xl font-bold">
                       {allStats.products.stats?.lowStockCount ||
                         productStats?.products?.lowStock ||
@@ -182,7 +188,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  {t('dashboard.topShippers')}
+                  {tAdmin('dashboard.labels.topShipper')}s
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -195,13 +201,15 @@ export default function AdminDashboard() {
                       <div>
                         <p className="font-medium text-sm">{item.userName}</p>
                         <p className="text-xs text-gray-500">
-                          {item.missionCount} {t('dashboard.labels.missions')}
+                          {item.missionCount} {tAdmin('dashboard.labels.missions')}
                         </p>
                       </div>
-                      <Badge variant="secondary">{t('dashboard.labels.topShipper')}</Badge>
+                      <Badge variant="secondary">{tAdmin('dashboard.labels.topShipper')}</Badge>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-4">{t('dashboard.labels.recent')}</p>
+                    <p className="text-gray-500 text-center py-4">
+                      {tAdmin('dashboard.labels.recent')}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -211,7 +219,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-5 w-5" />
-                  {t('dashboard.topCarriers')}
+                  {tAdmin('dashboard.labels.topCarrier')}s
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -224,13 +232,15 @@ export default function AdminDashboard() {
                       <div>
                         <p className="font-medium text-sm">{item.userName}</p>
                         <p className="text-xs text-gray-500">
-                          {item.missionCount} {t('dashboard.labels.missions')}
+                          {item.missionCount} {tAdmin('dashboard.labels.missions')}
                         </p>
                       </div>
-                      <Badge variant="secondary">{t('dashboard.labels.topCarrier')}</Badge>
+                      <Badge variant="secondary">{tAdmin('dashboard.labels.topCarrier')}</Badge>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-4">{t('dashboard.labels.recent')}</p>
+                    <p className="text-gray-500 text-center py-4">
+                      {tAdmin('dashboard.labels.recent')}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -240,7 +250,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  {t('dashboard.quickStats')}
+                  {tAdmin('dashboard.quickStats')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -251,19 +261,21 @@ export default function AdminDashboard() {
                         userStats?.byRole?.transporteur ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.carriers')}</p>
+                    <p className="text-sm text-gray-600">{tCommon('roles.affreteur')}s</p>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <p className="text-2xl font-bold text-green-600">
                       {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.shippers')}</p>
+                    <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}s</p>
                   </div>
                   <div className="text-center p-3 bg-purple-50 rounded-lg">
                     <p className="text-2xl font-bold text-purple-600">
                       {allStats.products.stats?.active || productStats?.products?.active || 0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.active')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.shop.activeProducts')}
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-orange-50 rounded-lg">
                     <p className="text-2xl font-bold text-orange-600">
@@ -271,7 +283,9 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.completed ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.completedMissions')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.missions.completedMissions')}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -280,7 +294,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('dashboard.recentMissions')}</CardTitle>
+              <CardTitle>{tAdmin('dashboard.recentMissions')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -295,7 +309,7 @@ export default function AdminDashboard() {
                         {activity.affreteur && (
                           <>
                             <span>
-                              {t('dashboard.labels.by')} {activity.affreteur}
+                              {tAdmin('dashboard.labels.by')} {activity.affreteur}
                             </span>
                             <span>•</span>
                           </>
@@ -305,7 +319,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge className={getStatusColor(activity.status)}>
-                        {getStatusLabel(activity.status)}
+                        {getStatusLabel(activity.status, tCommon)}
                       </Badge>
                     </div>
                   </div>
@@ -324,7 +338,9 @@ export default function AdminDashboard() {
                     <Users className="h-5 w-5 text-tsa-blue" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.users.activeShippers')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.users.activeShippers')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.users.stats?.byRole.affreteur.toLocaleString() ||
                         userStats?.byRole?.affreteur?.toLocaleString() ||
@@ -342,7 +358,9 @@ export default function AdminDashboard() {
                     <Truck className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.users.activeCarriers')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.users.activeCarriers')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.users.stats?.byRole.transporteur.toLocaleString() ||
                         userStats?.byRole?.transporteur?.toLocaleString() ||
@@ -360,7 +378,9 @@ export default function AdminDashboard() {
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.users.monthlyGrowth')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.users.monthlyGrowth')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {DashboardUtils.calculateGrowthPercentage(
                         allStats.users.stats?.byPeriod.last7Days || 0,
@@ -376,10 +396,10 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                {t('dashboard.users.userManagement')}
+                {tAdmin('dashboard.users.userManagement')}
                 <Link to="/app/users">
                   <Button variant="outline" size="sm">
-                    {t('dashboard.users.viewAllUsers')}
+                    {tAdmin('dashboard.users.viewAllUsers')}
                   </Button>
                 </Link>
               </CardTitle>
@@ -390,13 +410,13 @@ export default function AdminDashboard() {
                   <p className="text-2xl font-bold text-tsa-blue">
                     {allStats.users.stats?.byRole.admin || userStats?.byRole?.admin || 0}
                   </p>
-                  <p className="text-sm text-gray-600">{t('dashboard.users.administrators')}</p>
+                  <p className="text-sm text-gray-600">{tCommon('roles.admin')}s</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <p className="text-2xl font-bold text-green-600">
                     {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
                   </p>
-                  <p className="text-sm text-gray-600">{t('dashboard.shippers')}</p>
+                  <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}s</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <p className="text-2xl font-bold text-purple-600">
@@ -404,19 +424,19 @@ export default function AdminDashboard() {
                       userStats?.byRole?.transporteur ||
                       0}
                   </p>
-                  <p className="text-sm text-gray-600">{t('dashboard.carriers')}</p>
+                  <p className="text-sm text-gray-600">{tCommon('roles.affreteur')}s</p>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <p className="text-2xl font-bold text-orange-600">
                     {allStats.users.stats?.byRole.client || userStats?.byRole?.client || 0}
                   </p>
-                  <p className="text-sm text-gray-600">{t('dashboard.users.clients')}</p>
+                  <p className="text-sm text-gray-600">{tCommon('roles.client')}s</p>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    {t('dashboard.users.newUsersThisMonth')}
+                    {tAdmin('dashboard.users.newUsersThisMonth')}
                   </span>
                   <span className="font-medium text-green-600">
                     +{allStats.users.stats?.byPeriod.last30Days || 0}
@@ -437,7 +457,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">
-                      {t('dashboard.missions.activeMissions')}
+                      {tAdmin('dashboard.missions.activeMissions')}
                     </p>
                     <p className="text-2xl font-bold">
                       {allStats.missions.stats?.byStatus.assigned.toLocaleString() ||
@@ -457,7 +477,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">
-                      {t('dashboard.missions.completedMissions')}
+                      {tAdmin('dashboard.missions.completedMissions')}
                     </p>
                     <p className="text-2xl font-bold">
                       {allStats.missions.stats?.byStatus.completed ||
@@ -476,7 +496,9 @@ export default function AdminDashboard() {
                     <BarChart3 className="h-5 w-5 text-tsa-blue" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.missions.successRate')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.missions.successRate')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {DashboardUtils.calculateSuccessRate(
                         allStats.missions.stats?.byStatus.completed || 0,
@@ -492,7 +514,7 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('dashboard.missions.missionSupervision')}</CardTitle>
+              <CardTitle>{tAdmin('dashboard.missions.missionSupervision')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -503,7 +525,7 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.published ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.missions.published')}</p>
+                    <p className="text-sm text-gray-600">{getStatusLabel('published', tCommon)}</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <p className="text-2xl font-bold text-tsa-blue">
@@ -511,7 +533,7 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.assigned ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.missions.assigned')}</p>
+                    <p className="text-sm text-gray-600">{getStatusLabel('assigned', tCommon)}</p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <p className="text-2xl font-bold text-green-600">
@@ -519,7 +541,7 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.completed ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.missions.completed')}</p>
+                    <p className="text-sm text-gray-600">{getStatusLabel('completed', tCommon)}</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-2xl font-bold text-red-600">
@@ -527,11 +549,13 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.cancelled ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.missions.cancelled')}</p>
+                    <p className="text-sm text-gray-600">{getStatusLabel('cancelled', tCommon)}</p>
                   </div>
                 </div>
                 <div className="mt-6">
-                  <h4 className="font-medium mb-3">{t('dashboard.missions.recentMissions')}</h4>
+                  <h4 className="font-medium mb-3">
+                    {tAdmin('dashboard.missions.recentMissions')}
+                  </h4>
                   <div className="space-y-2">
                     {missionStats?.recentMissions?.slice(0, 5)?.map((mission) => (
                       <div
@@ -545,7 +569,7 @@ export default function AdminDashboard() {
                           </p>
                         </div>
                         <Badge className={getStatusColor(mission.status)}>
-                          {getStatusLabel(mission.status)}
+                          {getStatusLabel(mission.status, tCommon)}
                         </Badge>
                       </div>
                     ))}
@@ -566,7 +590,9 @@ export default function AdminDashboard() {
                     <Package className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.total')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.shop.totalProducts')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.products.stats?.total || productStats?.products?.total || 0}
                     </p>
@@ -583,7 +609,9 @@ export default function AdminDashboard() {
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.active')}</p>
+                    <p className="text-sm text-gray-600">
+                      {tAdmin('dashboard.shop.activeProducts')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {allStats.products.stats?.active || productStats?.products?.active || 0}
                     </p>
@@ -600,7 +628,7 @@ export default function AdminDashboard() {
                     <AlertTriangle className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.lowStock')}</p>
+                    <p className="text-sm text-gray-600">{tAdmin('dashboard.shop.lowStock')}</p>
                     <p className="text-2xl font-bold">
                       {allStats.products.stats?.lowStockCount ||
                         productStats?.products?.lowStock ||
@@ -619,7 +647,7 @@ export default function AdminDashboard() {
                     <DollarSign className="h-5 w-5 text-tsa-blue" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.totalOrders')}</p>
+                    <p className="text-sm text-gray-600">{tAdmin('dashboard.shop.totalOrders')}</p>
                     <p className="text-2xl font-bold">
                       {allStats.overview.stats?.orders.total || 0}
                     </p>
@@ -635,7 +663,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Package className="h-5 w-5" />
-                  {t('dashboard.shop.productStats')}
+                  {tAdmin('dashboard.shop.productStats')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -644,13 +672,13 @@ export default function AdminDashboard() {
                     <p className="text-2xl font-bold text-green-600">
                       {allStats.products.stats?.active || productStats?.products?.active || 0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.active')}</p>
+                    <p className="text-sm text-gray-600">{tCommon('status.active')}s</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
                     <p className="text-2xl font-bold text-gray-600">
                       {allStats.products.stats?.inactive || productStats?.products?.inactive || 0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.inactive')}</p>
+                    <p className="text-sm text-gray-600">{tCommon('status.inactive')}s</p>
                   </div>
                   <div className="text-center p-4 bg-orange-50 rounded-lg">
                     <p className="text-2xl font-bold text-orange-600">
@@ -658,18 +686,18 @@ export default function AdminDashboard() {
                         productStats?.products?.lowStock ||
                         0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.lowStock')}</p>
+                    <p className="text-sm text-gray-600">{tAdmin('dashboard.shop.lowStock')}</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-2xl font-bold text-red-600">
                       {productStats?.products?.outOfStock || 0}
                     </p>
-                    <p className="text-sm text-gray-600">{t('dashboard.shop.outOfStock')}</p>
+                    <p className="text-sm text-gray-600">{tAdmin('dashboard.shop.outOfStock')}</p>
                   </div>
                 </div>
 
                 <div className="mt-6">
-                  <h4 className="font-medium mb-3">{t('dashboard.shop.topCategories')}</h4>
+                  <h4 className="font-medium mb-3">{tAdmin('dashboard.shop.topCategories')}</h4>
                   <div className="space-y-2">
                     {productStats?.topCategories?.slice(0, 5)?.map((category) => (
                       <div
@@ -679,14 +707,14 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium text-sm">{category.name}</p>
                           <p className="text-xs text-gray-500">
-                            {category.productCount} {t('dashboard.labels.products')}
+                            {category.productCount} {tAdmin('dashboard.labels.products')}
                           </p>
                         </div>
                         <Badge variant="secondary">{category.productCount}</Badge>
                       </div>
                     )) || (
                       <p className="text-gray-500 text-center py-4">
-                        {t('dashboard.shop.noCategoriesFound')}
+                        {tAdmin('dashboard.shop.noCategoriesFound')}
                       </p>
                     )}
                   </div>
@@ -699,14 +727,14 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  {t('dashboard.shop.valueAndOrders')}
+                  {tAdmin('dashboard.shop.valueAndOrders')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      {t('dashboard.shop.totalInventoryValue')}
+                      {tAdmin('dashboard.shop.totalInventoryValue')}
                     </p>
                     <p className="text-2xl font-bold text-tsa-blue">
                       {productStats?.inventory?.totalValue
@@ -720,7 +748,7 @@ export default function AdminDashboard() {
                       <p className="text-xl font-bold text-green-600">
                         {allStats.overview.stats?.orders.total || 0}
                       </p>
-                      <p className="text-sm text-gray-600">{t('dashboard.shop.orders')}</p>
+                      <p className="text-sm text-gray-600">{tAdmin('dashboard.shop.orders')}</p>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-lg">
                       <p className="text-xl font-bold text-purple-600">
@@ -728,20 +756,22 @@ export default function AdminDashboard() {
                           ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
                           : '0'}
                       </p>
-                      <p className="text-sm text-gray-600">{t('dashboard.shop.revenueFcfa')}</p>
+                      <p className="text-sm text-gray-600">
+                        {tAdmin('dashboard.shop.revenueFcfa')}
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">
-                        {t('dashboard.shop.popularProducts')}
+                        {tAdmin('dashboard.shop.popularProducts')}
                       </span>
                       <span className="font-medium">{productStats?.products?.active || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">
-                        {t('dashboard.shop.activeCategories')}
+                        {tAdmin('dashboard.shop.activeCategories')}
                       </span>
                       <span className="font-medium">
                         {productStats?.topCategories?.length || 0}
@@ -749,7 +779,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">
-                        {t('dashboard.shop.lowStockRate')}
+                        {tAdmin('dashboard.shop.lowStockRate')}
                       </span>
                       <span className="font-medium">
                         {productStats?.products?.total
@@ -769,16 +799,18 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
-                  {t('dashboard.shop.shopSummary')}
+                  {tAdmin('dashboard.shop.shopSummary')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <h4 className="font-medium mb-3">{t('dashboard.shop.productDistribution')}</h4>
+                    <h4 className="font-medium mb-3">
+                      {tAdmin('dashboard.shop.productDistribution')}
+                    </h4>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">{t('dashboard.shop.active')}</span>
+                        <span className="text-sm text-gray-600">{tCommon('status.active')}s</span>
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
                             <div
@@ -795,7 +827,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.lowStock')}
+                          {tAdmin('dashboard.shop.lowStock')}
                         </span>
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -815,7 +847,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.outOfStockShort')}
+                          {tAdmin('dashboard.shop.outOfStockShort')}
                         </span>
                         <div className="flex items-center gap-2">
                           <div className="w-16 bg-gray-200 rounded-full h-2">
@@ -835,13 +867,17 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-3">{t('dashboard.shop.salesPerformance')}</h4>
+                    <h4 className="font-medium mb-3">
+                      {tAdmin('dashboard.shop.salesPerformance')}
+                    </h4>
                     <div className="space-y-3">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
                         <p className="text-lg font-bold text-tsa-blue">
                           {allStats.overview.stats?.orders.total || 0}
                         </p>
-                        <p className="text-sm text-gray-600">{t('dashboard.shop.totalOrders')}</p>
+                        <p className="text-sm text-gray-600">
+                          {tAdmin('dashboard.shop.totalOrders')}
+                        </p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
                         <p className="text-lg font-bold text-green-600">
@@ -849,17 +885,19 @@ export default function AdminDashboard() {
                             ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
                             : '0'}
                         </p>
-                        <p className="text-sm text-gray-600">{t('dashboard.shop.revenueFcfa')}</p>
+                        <p className="text-sm text-gray-600">
+                          {tAdmin('dashboard.shop.revenueFcfa')}
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-3">{t('dashboard.shop.keyIndicators')}</h4>
+                    <h4 className="font-medium mb-3">{tAdmin('dashboard.shop.keyIndicators')}</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.availabilityRate')}
+                          {tAdmin('dashboard.shop.availabilityRate')}
                         </span>
                         <span className="font-medium text-green-600">
                           {productStats?.products?.total
@@ -869,7 +907,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.activeCategories')}
+                          {tAdmin('dashboard.shop.activeCategories')}
                         </span>
                         <span className="font-medium">
                           {productStats?.topCategories?.length || 0}
@@ -877,7 +915,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.averageValuePerProduct')}
+                          {tAdmin('dashboard.shop.averageValuePerProduct')}
                         </span>
                         <span className="font-medium">
                           {productStats?.inventory?.totalValue && productStats?.products?.total
@@ -899,7 +937,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  {t('dashboard.shop.analytics.performanceAnalysis')}
+                  {tAdmin('dashboard.shop.analytics.performanceAnalysis')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -912,7 +950,7 @@ export default function AdminDashboard() {
                           0}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {t('dashboard.shop.analytics.completedMissions')}
+                        {tAdmin('dashboard.shop.analytics.completedMissions')}
                       </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -920,18 +958,18 @@ export default function AdminDashboard() {
                         {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M
                       </p>
                       <p className="text-sm text-gray-600">
-                        {t('dashboard.shop.analytics.totalRevenue')}
+                        {tAdmin('dashboard.shop.analytics.totalRevenue')}
                       </p>
                     </div>
                   </div>
                   <div className="mt-4">
                     <h4 className="font-medium mb-2">
-                      {t('dashboard.shop.analytics.performanceMetrics')}
+                      {tAdmin('dashboard.shop.analytics.performanceMetrics')}
                     </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.analytics.publishedMissions')}
+                          {tAdmin('dashboard.shop.analytics.publishedMissions')}
                         </span>
                         <span className="font-medium">
                           {allStats.missions.stats?.byStatus.published ||
@@ -941,7 +979,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.analytics.assignedMissions')}
+                          {tAdmin('dashboard.shop.analytics.assignedMissions')}
                         </span>
                         <span className="font-medium">
                           {allStats.missions.stats?.byStatus.assigned ||
@@ -951,7 +989,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.analytics.completionRate')}
+                          {tAdmin('dashboard.shop.analytics.completionRate')}
                         </span>
                         <span className="font-medium">
                           {DashboardUtils.calculateSuccessRate(
@@ -965,7 +1003,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
-                          {t('dashboard.shop.analytics.activeUsers')}
+                          {tAdmin('dashboard.shop.analytics.activeUsers')}
                         </span>
                         <span className="font-medium">
                           {allStats.users.stats?.active || userStats?.byStatus.active || 0}
@@ -981,7 +1019,7 @@ export default function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
-                  {t('dashboard.shop.analytics.revenueDistribution')}
+                  {tAdmin('dashboard.shop.analytics.revenueDistribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -989,17 +1027,17 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 gap-4">
                     <div>
                       <h4 className="font-medium mb-3">
-                        {t('dashboard.shop.analytics.distributionByRole')}
+                        {tAdmin('dashboard.shop.analytics.distributionByRole')}
                       </h4>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.shippers')}
+                            {tCommon('roles.affreteur')}s
                           </span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-gray-200 rounded-full h-2">
                               <div
-                                className="bg-blue-600 h-2 rounded-full"
+                                className="bg-tsa-blue h-2 rounded-full"
                                 style={{
                                   width: `${((allStats.users.stats?.byRole?.affreteur || userStats?.byRole.affreteur || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
                                 }}
@@ -1014,7 +1052,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.carriers')}
+                            {tCommon('roles.transporteur')}s
                           </span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -1033,9 +1071,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.clients')}
-                          </span>
+                          <span className="text-sm text-gray-600">{tCommon('roles.client')}s</span>
                           <div className="flex items-center gap-2">
                             <div className="w-20 bg-gray-200 rounded-full h-2">
                               <div
@@ -1056,12 +1092,12 @@ export default function AdminDashboard() {
                     </div>
                     <div className="pt-4 border-t">
                       <h4 className="font-medium mb-3">
-                        {t('dashboard.shop.analytics.revenueByPeriod')}
+                        {tAdmin('dashboard.shop.analytics.revenueByPeriod')}
                       </h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.today')}
+                            {tAdmin('dashboard.shop.analytics.today')}
                           </span>
                           <span className="font-medium">
                             {DashboardUtils.formatCurrency(
@@ -1071,7 +1107,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.last7Days')}
+                            {tAdmin('dashboard.shop.analytics.last7Days')}
                           </span>
                           <span className="font-medium">
                             {DashboardUtils.formatCurrency(
@@ -1081,7 +1117,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.last30Days')}
+                            {tAdmin('dashboard.shop.analytics.last30Days')}
                           </span>
                           <span className="font-medium">
                             {DashboardUtils.formatCurrency(
@@ -1091,7 +1127,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">
-                            {t('dashboard.shop.analytics.total')}
+                            {tAdmin('dashboard.shop.analytics.total')}
                           </span>
                           <span className="font-medium text-green-600">
                             {DashboardUtils.formatCurrency(
