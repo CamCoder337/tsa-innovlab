@@ -19,8 +19,8 @@ export class GoogleMapsService {
   private map: google.maps.Map | null = null;
   private markers: Map<string, google.maps.marker.AdvancedMarkerElement | google.maps.Marker> =
     new Map();
+  private polylines: Map<string, google.maps.Polyline> = new Map();
   private directionsService: google.maps.DirectionsService | null = null;
-  private directionsRenderer: google.maps.DirectionsRenderer | null = null;
   private useAdvancedMarkers: boolean = false;
 
   async initializeMap(container: HTMLElement, config: MapConfig): Promise<google.maps.Map> {
@@ -55,18 +55,6 @@ export class GoogleMapsService {
       }
 
       this.directionsService = new google.maps.DirectionsService();
-      this.directionsRenderer = new google.maps.DirectionsRenderer({
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#2563eb',
-          strokeWeight: 4,
-          strokeOpacity: 0.8,
-        },
-      });
-
-      if (this.map) {
-        this.directionsRenderer.setMap(this.map);
-      }
 
       if (!this.map) {
         throw new Error('Failed to initialize map');
@@ -167,34 +155,25 @@ export class GoogleMapsService {
     this.markers.clear();
   }
 
-  clearRoute(): void {
-    if (this.directionsRenderer) {
-      this.directionsRenderer.setMap(null);
-      this.directionsRenderer = new google.maps.DirectionsRenderer({
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#2563eb',
-          strokeWeight: 4,
-          strokeOpacity: 0.8,
-        },
-      });
-      if (this.map) {
-        this.directionsRenderer.setMap(this.map);
-      }
-    }
+  clearRoutes(): void {
+    this.polylines.forEach((polyline) => {
+      polyline.setMap(null);
+    });
+    this.polylines.clear();
   }
 
   async displayRoute(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
     options?: {
+      routeId?: string;
       waypoints?: { lat: number; lng: number }[];
       strokeColor?: string;
       strokeWeight?: number;
       strokeOpacity?: number;
     }
   ): Promise<google.maps.DirectionsResult | null> {
-    if (!this.directionsService || !this.directionsRenderer) return null;
+    if (!this.directionsService || !this.map) return null;
 
     try {
       const request: google.maps.DirectionsRequest = {
@@ -208,19 +187,22 @@ export class GoogleMapsService {
 
       const result = await this.directionsService.route(request);
 
-      // Update renderer options if provided
-      if (options?.strokeColor || options?.strokeWeight || options?.strokeOpacity) {
-        this.directionsRenderer.setOptions?.({
-          suppressMarkers: true,
-          polylineOptions: {
-            strokeColor: options?.strokeColor || '#2563eb',
-            strokeWeight: options?.strokeWeight || 4,
-            strokeOpacity: options?.strokeOpacity || 0.8,
-          },
+      if (result.routes && result.routes[0] && result.routes[0].overview_path) {
+        const routeId = options?.routeId || `route-${Date.now()}`;
+
+        // Create polyline from the route
+        const polyline = new google.maps.Polyline({
+          path: result.routes[0].overview_path,
+          strokeColor: options?.strokeColor || '#2563eb',
+          strokeWeight: options?.strokeWeight || 4,
+          strokeOpacity: options?.strokeOpacity || 0.8,
+          map: this.map,
         });
+
+        // Store the polyline for later removal
+        this.polylines.set(routeId, polyline);
       }
 
-      this.directionsRenderer.setDirections(result);
       return result;
     } catch (error) {
       console.error('Error displaying route:', error);
@@ -428,9 +410,14 @@ export class GoogleMapsService {
       }
     });
     this.markers.clear();
+
+    this.polylines.forEach((polyline) => {
+      polyline.setMap(null);
+    });
+    this.polylines.clear();
+
     this.map = null;
     this.directionsService = null;
-    this.directionsRenderer = null;
   }
 }
 

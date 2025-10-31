@@ -94,7 +94,7 @@ export default function MissionTrackingMap({
 
       // Nettoyer les marqueurs et routes existants
       mapsService.clearMarkers();
-      mapsService.clearRoute();
+      mapsService.clearRoutes();
 
       // Ajouter les marqueurs pour chaque mission
       const newRouteInfo = new Map<string, RouteInfo>();
@@ -179,6 +179,7 @@ export default function MissionTrackingMap({
 
             // Display route on map
             mapsService.displayRoute(departPosition, arriveePosition, {
+              routeId: `route-${mission.id}`,
               strokeColor: '#2563eb',
               strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
               strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
