@@ -10,6 +10,7 @@ import type { Mission, MissionStatus } from '@/types/mission.types';
 import { VehicleType, VehicleTypeLabels } from '@/types/vehicle.types';
 import { Link } from 'react-router-dom';
 import MissionCard from '@/components/missions/MissionCard';
+import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import {
   Select,
   SelectContent,
@@ -21,9 +22,11 @@ import {
 export default function MissionsManagement() {
   const { missions = [], isLoading, error } = useMissions();
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<VehicleType | 'all'>('all');
   // const [statusFilter, setStatusFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<MissionStatus | 'all'>('all');
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   const filteredMissions = missions.filter((mission: Mission) => {
     const matchesSearch =
@@ -36,7 +39,10 @@ export default function MissionsManagement() {
       mission.adresseDepart?.region?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (mission.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
 
-    const matchesType = typeFilter === 'all' || mission.requiredVehicleType === typeFilter;
+    const matchesType =
+      typeFilter === 'all' ||
+      mission.requiredVehicleType === typeFilter ||
+      mission.requiredVehicleType === null;
     const matchesTab = activeTab === 'all' || mission.status === activeTab;
 
     return matchesSearch && matchesType && matchesTab;
@@ -66,30 +72,30 @@ export default function MissionsManagement() {
   );
 
   if (isLoading) {
-    return <div>Chargement des missions...</div>;
+    return <div>{tAdmin('missions.loading')}</div>;
   }
 
   if (error) {
-    return <div>Erreur lors du chargement des missions</div>;
+    return <div>{tAdmin('missions.error')}</div>;
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Gestion des Missions</h1>
+        <h1 className="text-3xl font-bold">{tAdmin('missions.title')}</h1>
         <Link to="/app/missions/create">
           <Button className="bg-tsa-blue hover:bg-tsa-blue/90">
             <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Mission
+            {tAdmin('missions.newMission')}
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5 mb-6">
+      <div className="grid gap-4 md:grid-cols-6 mb-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground h-5">
-              Total des Missions
+              {tAdmin('missions.stats.totalMissions')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -100,7 +106,7 @@ export default function MissionsManagement() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <Package className="h-4 w-4 mr-1 text-gray-500" />
-              Brouillons
+              {tCommon('status.draft')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -111,7 +117,7 @@ export default function MissionsManagement() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <AlertTriangle className="h-4 w-4 mr-1 text-blue-500" />
-              Publiées
+              {tCommon('status.published')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -122,7 +128,7 @@ export default function MissionsManagement() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <Clock className="h-4 w-4 mr-1 text-yellow-500" />
-              Assignées
+              {tCommon('status.assigned')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -132,8 +138,19 @@ export default function MissionsManagement() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
+              <Clock className="h-4 w-4 mr-1 text-yellow-500" />
+              {tCommon('status.in_progress')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{statusCounts.in_progress || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center h-5">
               <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-              Terminées
+              {tCommon('status.completed')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -149,7 +166,7 @@ export default function MissionsManagement() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher une mission..."
+                  placeholder={tAdmin('missions.searchPlaceholder')}
                   className="pl-9"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,12 +174,15 @@ export default function MissionsManagement() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select
+                value={typeFilter}
+                onValueChange={(value) => setTypeFilter(value as VehicleType | 'all')}
+              >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Type de vehicule" />
+                  <SelectValue placeholder={tAdmin('missions.vehicleTypePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all"> Tous les véhicules </SelectItem>
+                  <SelectItem value="all">{tAdmin('missions.allVehicles')}</SelectItem>
                   {Object.values(VehicleType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {VehicleTypeLabels[type]}
@@ -172,7 +192,7 @@ export default function MissionsManagement() {
               </Select>
               <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
-                Exporter
+                {tCommon('actions.export')}
               </Button>
             </div>
           </div>
@@ -186,23 +206,26 @@ export default function MissionsManagement() {
       >
         <TabsList className="w-full grid grid-cols-5">
           <TabsTrigger value="all" className="flex items-center gap-1">
-            Toutes <Badge variant="secondary">{statusCounts.total}</Badge>
+            {tAdmin('missions.tabs.all')} <Badge variant="secondary">{statusCounts.total}</Badge>
           </TabsTrigger>
           <TabsTrigger value="draft" className="flex items-center gap-1">
             <Package className="h-4 w-4 mr-1 text-gray-500" />
-            Brouillons <Badge variant="secondary">{statusCounts.draft || 0}</Badge>
+            {tCommon('status.draft')} <Badge variant="secondary">{statusCounts.draft || 0}</Badge>
           </TabsTrigger>
           <TabsTrigger value="published" className="flex items-center gap-1">
             <AlertTriangle className="h-4 w-4 mr-1 text-blue-500" />
-            Publiées <Badge variant="secondary">{statusCounts.published || 0}</Badge>
+            {tCommon('status.published')}{' '}
+            <Badge variant="secondary">{statusCounts.published || 0}</Badge>
           </TabsTrigger>
           <TabsTrigger value="assigned" className="flex items-center gap-1">
             <Clock className="h-4 w-4 mr-1 text-yellow-500" />
-            Assignées <Badge variant="secondary">{statusCounts.assigned || 0}</Badge>
+            {tCommon('status.assigned')}{' '}
+            <Badge variant="secondary">{statusCounts.assigned || 0}</Badge>
           </TabsTrigger>
           <TabsTrigger value="completed" className="flex items-center gap-1">
             <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
-            Terminées <Badge variant="secondary">{statusCounts.completed || 0}</Badge>
+            {tCommon('status.completed')}{' '}
+            <Badge variant="secondary">{statusCounts.completed || 0}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -212,17 +235,12 @@ export default function MissionsManagement() {
               {filteredMissions.length > 0 ? (
                 <div className="space-y-4 p-4">
                   {filteredMissions.map((mission) => (
-                    <MissionCard
-                      key={mission.id}
-                      mission={mission}
-                      showApplyButton={false}
-                      showPublishButton={false}
-                    />
+                    <MissionCard key={mission.id} mission={mission} />
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">Aucune mission trouvée avec ces critères.</p>
+                  <p className="text-gray-500">{tAdmin('missions.empty')}</p>
                 </div>
               )}
             </CardContent>

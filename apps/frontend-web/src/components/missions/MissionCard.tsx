@@ -6,29 +6,28 @@ import { MapPin, Calendar, Eye, Edit, MessageSquare } from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission } from '@/types/mission.types';
+import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 interface MissionCardProps {
   mission: Mission;
   onPublish?: (id: string) => void;
-  onApply?: (mission: Mission) => void;
+  onStart?: () => void;
+  onApply?: () => void;
   onCancel?: (id: string) => void;
-  showApplyButton?: boolean;
-  showPublishButton?: boolean;
   className?: string;
 }
 
 export default function MissionCard({
   mission,
   onPublish,
+  onStart,
   onApply,
   onCancel,
   className = '',
 }: MissionCardProps) {
   const { setCurrentMission } = useMissions();
-
-  const handleMissionClick = () => {
-    setCurrentMission(mission);
-  };
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   // const fetchPropositions = useCallback(async () => {
   //   const response = await missionService.getMissionPropositions(mission.id);
@@ -51,8 +50,10 @@ export default function MissionCard({
           <Link
             to={`/app/missions/${mission.id}`}
             className="flex flex-col flex-1"
-            aria-label={`Voir ${mission.title}`}
-            onClick={handleMissionClick}
+            aria-label={`${tCommon('actions.view')} ${mission.title}`}
+            onClick={() => {
+              setCurrentMission(mission);
+            }}
           >
             <div className="flex flex-col flex-1">
               <div className="flex flex-1 items-start justify-between mb-3">
@@ -61,47 +62,50 @@ export default function MissionCard({
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      <span>
+                      <span className="max-w-sm">
                         {mission.adresseDepart?.label} → {mission.adresseArrivee?.label}
                       </span>
                     </div>
                     <span>•</span>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>Crée le {new Date(mission.createdAt).toLocaleDateString('fr-FR')}</span>
+                      <span>
+                        {tMissions('createdOn')}{' '}
+                        {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                      </span>
                     </div>
                   </div>
                 </div>
                 <Badge className={getStatusColor(mission.status)}>
                   <div className="flex items-center gap-1">
                     {getStatusIcon(mission.status)}
-                    {getStatusLabel(mission.status)}
+                    {getStatusLabel(mission.status, tCommon)}
                   </div>
                 </Badge>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
                 <div>
-                  <span className="text-gray-500">Tarif:</span>
+                  <span className="text-gray-500">{tMissions('budget')}:</span>
                   <span className="ml-1 font-medium">
                     {mission.budgetMin?.toLocaleString() || 0} FCFA
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Départ:</span>
+                  <span className="text-gray-500">{tMissions('departure')}:</span>
                   <span className="ml-1 font-medium">
                     {mission.dateDepartEstime
                       ? new Date(mission.dateDepartEstime).toLocaleDateString('fr-FR')
-                      : 'Non spécifiée'}
+                      : tMissions('notSpecified')}
                   </span>
                 </div>
                 {mission.dateArriveePrevue && (
                   <div>
-                    <span className="text-gray-500">Arrivée:</span>
+                    <span className="text-gray-500">{tMissions('arrival')}:</span>
                     <span className="ml-1 font-medium">
                       {mission.dateArriveePrevue
                         ? new Date(mission.dateArriveePrevue).toLocaleDateString('fr-FR')
-                        : 'Non spécifiée'}
+                        : tMissions('notSpecified')}
                     </span>
                   </div>
                 )}
@@ -112,14 +116,17 @@ export default function MissionCard({
           <div className="flex flex-col gap-2 lg:w-48">
             <Link
               to={`/app/missions/${mission.id}`}
-              aria-label={`Voir ${mission.title}`}
-              onClick={handleMissionClick}
+              aria-label={`${tCommon('actions.view')} ${mission.title}`}
+              onClick={() => {
+                setCurrentMission(mission);
+              }}
             >
               <Button variant="outline" className="gap-2 bg-transparent w-full">
                 <Eye className="h-4 w-4" />
-                Voir Détails
+                {tCommon('actions.viewDetails')}
               </Button>
             </Link>
+
             {mission.status === 'draft' && onPublish && (
               <Button
                 variant="outline"
@@ -127,19 +134,21 @@ export default function MissionCard({
                 onClick={() => onPublish(mission.id)}
               >
                 <Edit className="h-4 w-4" />
-                Publier
+                {tCommon('actions.publish')}
               </Button>
             )}
+
             {mission.status === 'published' && onApply && (
               <Button
                 className="gap-2 w-full"
                 style={{ backgroundColor: 'var(--tsa-blue)' }}
-                onClick={() => onApply(mission)}
+                onClick={onApply}
               >
                 <MessageSquare className="h-4 w-4" />
-                Postuler
+                {tCommon('actions.apply')}
               </Button>
             )}
+
             {mission.status === 'published' && onCancel && (
               <Button
                 className="gap-2 w-full"
@@ -147,18 +156,32 @@ export default function MissionCard({
                 onClick={() => onCancel(mission.id)}
               >
                 <MessageSquare className="h-4 w-4" />
-                Annuler la Mission
+                {tCommon('actions.cancel')}
               </Button>
             )}
-            {mission.status === 'assigned' && (
+
+            {mission.status === 'assigned' && onStart && (
+              <Button
+                className="gap-2 w-full"
+                style={{ backgroundColor: 'var(--tsa-blue)' }}
+                onClick={onStart}
+              >
+                <MapPin className="h-4 w-4" />
+                {tMissions('actions.start')}
+              </Button>
+            )}
+
+            {mission.status === 'in_progress' && (
               <Link
-                to={`/app/missions/${mission.id}/tracking`}
-                aria-label={`Suivre ${mission.title}`}
-                onClick={handleMissionClick}
+                to={`/app/mission/${mission.id}/tracking`}
+                aria-label={`${tMissions('track')} ${mission.title}`}
+                onClick={() => {
+                  setCurrentMission(mission);
+                }}
               >
                 <Button className="gap-2 w-full" style={{ backgroundColor: 'var(--tsa-blue)' }}>
                   <MapPin className="h-4 w-4" />
-                  Suivre Expédition
+                  {tMissions('trackShipment')}
                 </Button>
               </Link>
             )}

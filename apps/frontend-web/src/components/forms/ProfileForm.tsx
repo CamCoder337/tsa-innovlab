@@ -6,9 +6,9 @@ import { useState, type ChangeEvent, forwardRef } from 'react';
 import { Formik, Form, type FormikHelpers, type FormikProps } from 'formik';
 import * as Yup from 'yup';
 import type { User as UserType } from '@/types/auth.types';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
 import libphonenumber from 'google-libphonenumber';
 import { FormField } from '../FormField';
+import { useFormsTranslation } from '@/hooks/useTranslation';
 
 export interface ProfileFormValues {
   firstName: string;
@@ -18,28 +18,31 @@ export interface ProfileFormValues {
 }
 
 // Validation schema using Yup
-const validationSchema = Yup.object({
-  firstName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_NAME),
-  lastName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_FIRSTNAME),
-  email: Yup.string()
-    .trim()
-    .email(VALIDATION_MESSAGES.INVALID_EMAIL)
-    .required(VALIDATION_MESSAGES.REQUIRED_EMAIL),
-  phone: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PHONE)
-    .test('isValidPhone', VALIDATION_MESSAGES.INVALID_PHONE, function (value) {
-      if (!value) return false;
-      try {
-        const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
-        const countryCode = this.parent.country || 'CM'; // Default to Cameroon if not provided
-        const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
-        return phoneUtil.isValidNumber(number);
-      } catch (error) {
-        console.error('Phone validation error:', error);
-        return false;
-      }
-    }),
-});
+const createValidationSchema = (
+  tForms: (key: string, options?: Record<string, unknown>) => string
+) =>
+  Yup.object({
+    firstName: Yup.string().trim().required(tForms('validation.required')),
+    lastName: Yup.string().trim().required(tForms('validation.required')),
+    email: Yup.string()
+      .trim()
+      .email(tForms('validation.email'))
+      .required(tForms('validation.required')),
+    phone: Yup.string()
+      .required(tForms('validation.required'))
+      .test('isValidPhone', tForms('validation.phone'), function (value) {
+        if (!value) return false;
+        try {
+          const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
+          const countryCode = this.parent.country || 'CM'; // Default to Cameroon if not provided
+          const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
+          return phoneUtil.isValidNumber(number);
+        } catch (error) {
+          console.error('Phone validation error:', error);
+          return false;
+        }
+      }),
+  });
 
 export interface ProfileFormProps {
   user: UserType;
@@ -54,6 +57,7 @@ export interface ProfileFormProps {
 
 const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>(
   ({ user, isEditing, isLoading = false, onSubmit, additionalFields }, ref) => {
+    const { t: tForms } = useFormsTranslation();
     const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
 
     const initialValues: ProfileFormValues = {
@@ -90,7 +94,7 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
     return (
       <Formik
         initialValues={initialValues}
-        validationSchema={validationSchema}
+        validationSchema={createValidationSchema(tForms)}
         onSubmit={handleFormSubmit}
         enableReinitialize
         innerRef={ref}
@@ -131,7 +135,8 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
                     </Badge>
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR')}
+                    {tForms('messages.memberSince')}{' '}
+                    {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               </div>
@@ -141,60 +146,60 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
                   <>
                     <FormField
                       name="firstName"
-                      label="Prénom"
+                      label={tForms('labels.firstName')}
                       icon={User}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="lastName"
-                      label="Nom"
+                      label={tForms('labels.lastName')}
                       icon={User}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="email"
-                      label="Email"
+                      label={tForms('labels.email')}
                       type="email"
                       icon={Mail}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="phone"
-                      label="Téléphone"
+                      label={tForms('labels.phone')}
                       type="tel"
                       icon={Phone}
                       disabled={isLoading || isSubmitting}
-                      placeholder="+237 6XX XXX XXX"
+                      placeholder={tForms('placeholders.phoneNumber')}
                     />
                   </>
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label>Prénom</Label>
+                      <Label>{tForms('labels.firstName')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{values.firstName}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Nom</Label>
+                      <Label>{tForms('labels.lastName')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{values.lastName}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Email</Label>
+                      <Label>{tForms('labels.email')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span>{values.email}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Téléphone</Label>
+                      <Label>{tForms('labels.phone')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{values.phone || 'Non renseigné'}</span>
+                        <span>{values.phone || tForms('messages.notProvided')}</span>
                       </div>
                     </div>
                   </>

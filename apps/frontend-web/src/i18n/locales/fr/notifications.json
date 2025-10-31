@@ -1,0 +1,48 @@
+{
+  "title": "Notifications",
+  "description": "Gérez vos notifications et alertes",
+  "markAsRead": "Marquer comme lu",
+  "markAllRead": {
+    "button": "Tout marquer comme lu",
+    "success": "Toutes les notifications ont été marquées comme lues"
+  },
+  "empty": {
+    "all": "Aucune notification",
+    "unread": "Aucune notification non lue"
+  },
+  "types": {
+    "info": "Information",
+    "success": "Succès",
+    "warning": "Attention",
+    "error": "Erreur"
+  },
+  "messages": {
+    "orderPlaced": "Votre commande #{{orderNumber}} a été passée avec succès",
+    "orderShipped": "Votre commande #{{orderNumber}} a été expédiée",
+    "orderDelivered": "Votre commande #{{orderNumber}} a été livrée",
+    "missionAssigned": "Une nouvelle mission vous a été assignée",
+    "missionCompleted": "Mission terminée avec succès",
+    "paymentReceived": "Paiement reçu pour la commande #{{orderNumber}}",
+    "lowStock": "Stock faible pour le produit {{productName}}",
+    "newUser": "Nouvel utilisateur inscrit: {{userName}}",
+    "documentUploaded": "Document téléversé avec succès",
+    "documentVerified": "Votre document a été vérifié",
+    "documentRejected": "Votre document a été rejeté"
+  },
+  "markedAsRead": "Notification marquée comme lue",
+  "deleted": "Notification supprimée",
+  "allDeleted": "Toutes les notifications ont été supprimées",
+  "deleteAll": "Tout supprimer",
+  "viewAll": "Voir toutes les notifications",
+  "filters": {
+    "all": "Toutes",
+    "unread": "Non lues",
+    "important": "Importantes"
+  },
+  "priority": {
+    "urgent": "Urgent",
+    "high": "Élevé",
+    "normal": "Moyen",
+    "low": "Faible"
+  }
+}

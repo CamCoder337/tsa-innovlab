@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,88 +19,12 @@ import {
   Filter,
   Download,
   RefreshCw,
+  Loader2,
 } from 'lucide-react';
+import { useTrackingTranslation } from '@/hooks/useTranslation';
 import { useMissions } from '@/hooks/useMissions';
 
-interface SystemMetrics {
-  totalVehicles: number;
-  activeVehicles: number;
-  totalDrivers: number;
-  activeDrivers: number;
-  totalMissions: number;
-  activeMissions: number;
-  completedToday: number;
-  delayedMissions: number;
-  systemUptime: string;
-  avgResponseTime: number;
-}
-
-interface Alert {
-  id: string;
-  type: 'critical' | 'warning' | 'info';
-  title: string;
-  description: string;
-  timestamp: string;
-  resolved: boolean;
-}
-
-interface Performance {
-  metric: string;
-  current: number;
-  target: number;
-  trend: 'up' | 'down' | 'stable';
-  unit: string;
-}
-
-const SYSTEM_METRICS: SystemMetrics = {
-  totalVehicles: 45,
-  activeVehicles: 32,
-  totalDrivers: 67,
-  activeDrivers: 28,
-  totalMissions: 1247,
-  activeMissions: 18,
-  completedToday: 23,
-  delayedMissions: 3,
-  systemUptime: '99.8%',
-  avgResponseTime: 245,
-};
-
-const ALERTS: Alert[] = [
-  {
-    id: '1',
-    type: 'critical',
-    title: 'Véhicule en panne',
-    description: 'Camion CM-1234-AB signale une panne moteur à Edéa',
-    timestamp: '2024-10-03T18:30:00Z',
-    resolved: false,
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'Retard de livraison',
-    description: 'Mission TSA-2024-003 accusera 2h de retard',
-    timestamp: '2024-10-03T17:45:00Z',
-    resolved: false,
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'Nouveau chauffeur',
-    description: "Paul Nkomo a rejoint l'équipe transport",
-    timestamp: '2024-10-03T16:20:00Z',
-    resolved: true,
-  },
-];
-
-const PERFORMANCE_METRICS: Performance[] = [
-  { metric: 'Taux de livraison à temps', current: 94.2, target: 95, trend: 'up', unit: '%' },
-  { metric: 'Satisfaction client', current: 4.7, target: 4.8, trend: 'stable', unit: '/5' },
-  { metric: 'Utilisation flotte', current: 71, target: 75, trend: 'up', unit: '%' },
-  { metric: 'Coût par km', current: 125, target: 120, trend: 'down', unit: 'FCFA' },
-  { metric: 'Temps de réponse', current: 2.3, target: 2.0, trend: 'down', unit: 'min' },
-];
-
-const getAlertColor = (type: Alert['type']) => {
+const getAlertColor = (type: 'critical' | 'warning' | 'info') => {
   switch (type) {
     case 'critical':
       return 'bg-red-100 text-red-800 border-red-200';
@@ -113,7 +37,7 @@ const getAlertColor = (type: Alert['type']) => {
   }
 };
 
-const getTrendIcon = (trend: Performance['trend']) => {
+const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
   switch (trend) {
     case 'up':
       return <TrendingUp className="w-4 h-4 text-green-500" />;
@@ -125,38 +49,237 @@ const getTrendIcon = (trend: Performance['trend']) => {
 };
 
 export default function AdminTrackingDashboard() {
-  const { missions } = useMissions();
-  const [alerts] = useState<Alert[]>(ALERTS);
-  const [metrics] = useState<SystemMetrics>(SYSTEM_METRICS);
-  const [performance] = useState<Performance[]>(PERFORMANCE_METRICS);
+  const { t: tTracking } = useTrackingTranslation();
+  const { missions, myMissions, isLoading, error, fetchAllMissions, fetchMyMissions, clearError } =
+    useMissions();
+
+  // Combine all missions for admin view
+  const allMissions = useMemo(() => {
+    return [...missions, ...myMissions];
+  }, [missions, myMissions]);
+
+  // Filter for trackable missions (in_progress status)
+  const trackableMissions = useMemo(() => {
+    return allMissions.filter((mission) => mission.status === 'in_progress');
+  }, [allMissions]);
+
+  const systemMetrics = useMemo(() => {
+    const inProgressMissions = allMissions.filter((m) => m.status === 'in_progress');
+    const completedMissions = allMissions.filter((m) => m.status === 'completed');
+
+    // Mock vehicle and driver data - in real app this would come from separate hooks
+    const totalVehicles = 50;
+    const totalDrivers = 45;
+    const activeVehicles = inProgressMissions.length;
+    const activeDrivers = inProgressMissions.filter((m) => m.transporteurId).length;
+
+    const today = new Date().toISOString().split('T')[0];
+    const completedToday = completedMissions.filter(
+      (m) => m.updatedAt && m.updatedAt.startsWith(today)
+    ).length;
+
+    return {
+      totalVehicles,
+      totalDrivers,
+      activeVehicles,
+      activeDrivers,
+      activeMissions: inProgressMissions.length,
+      completedToday,
+      delayedMissions: 0, // Would need delay tracking in mission data
+      systemUptime: '99.8%',
+      avgResponseTime: 120,
+    };
+  }, [allMissions]);
+
+  // Mock alerts based on mission data
+  const alerts: {
+    id: string;
+    type: 'critical' | 'warning' | 'info';
+    title: string;
+    description: string;
+    timestamp: string;
+    resolved: boolean;
+  }[] = useMemo(() => {
+    const mockAlerts: {
+      id: string;
+      type: 'critical' | 'warning' | 'info';
+      title: string;
+      description: string;
+      timestamp: string;
+      resolved: boolean;
+    }[] = [];
+
+    // Create alerts for high-value missions
+    allMissions.forEach((mission) => {
+      if (mission.budgetMax && mission.budgetMax > 500000) {
+        mockAlerts.push({
+          id: `alert-${mission.id}`,
+          type: 'warning',
+          title: `Mission haute valeur: ${mission.title}`,
+          description: `Budget de ${mission.budgetMax?.toLocaleString()} FCFA nécessite un suivi renforcé`,
+          timestamp: new Date().toISOString(),
+          resolved: false,
+        });
+      }
+    });
+
+    // Add system alerts
+    if (systemMetrics.activeVehicles < 5) {
+      mockAlerts.push({
+        id: 'low-capacity',
+        type: 'critical',
+        title: 'Capacité faible',
+        description: 'Moins de 5 véhicules actifs détectés',
+        timestamp: new Date().toISOString(),
+        resolved: false,
+      });
+    }
+
+    return mockAlerts.slice(0, 10); // Limit to 10 alerts
+  }, [allMissions, systemMetrics.activeVehicles]);
+
+  const performance: {
+    metric: string;
+    current: number;
+    target: number;
+    unit: string;
+    trend: 'up' | 'down' | 'stable';
+  }[] = useMemo(() => {
+    const occupancyRate =
+      systemMetrics.totalVehicles > 0
+        ? (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
+        : 0;
+
+    const completionRate =
+      allMissions.length > 0
+        ? (allMissions.filter((m) => m.status === 'completed').length / allMissions.length) * 100
+        : 0;
+
+    return [
+      {
+        metric: "Taux d'occupation",
+        current: Math.round(occupancyRate),
+        target: 80,
+        unit: '%',
+        trend: occupancyRate >= 80 ? 'up' : occupancyRate >= 60 ? 'stable' : 'down',
+      },
+      {
+        metric: 'Missions actives',
+        current: systemMetrics.activeMissions,
+        target: 20,
+        unit: '',
+        trend:
+          systemMetrics.activeMissions >= 20
+            ? 'up'
+            : systemMetrics.activeMissions >= 10
+              ? 'stable'
+              : 'down',
+      },
+      {
+        metric: 'Taux de completion',
+        current: Math.round(completionRate),
+        target: 95,
+        unit: '%',
+        trend: completionRate >= 95 ? 'up' : completionRate >= 80 ? 'stable' : 'down',
+      },
+      {
+        metric: 'Revenus journaliers',
+        current: 850000,
+        target: 1000000,
+        unit: 'FCFA',
+        trend: 'down',
+      },
+    ];
+  }, [allMissions, systemMetrics]);
 
   const unreadAlerts = alerts.filter((a) => !a.resolved).length;
   const criticalAlerts = alerts.filter((a) => a.type === 'critical' && !a.resolved).length;
+
+  // Handle refresh button click
+  const handleRefresh = async () => {
+    await Promise.all([fetchAllMissions(), fetchMyMissions()]);
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    handleRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Clear error when component mounts
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
+
+  // Loading state
+  if (isLoading && allMissions.length === 0) {
+    return (
+      <div className="flex flex-col flex-1 bg-gray-50 p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-tsa-blue" />
+            <span className="text-lg text-gray-600">Chargement du tableau de bord...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* En-tête */}
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Centre de Contrôle Admin</h1>
-            <p className="text-gray-600">Supervision globale du système TSA Logistics</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {tTracking('dashboard.adminTitle')}
+            </h1>
+            <p className="text-gray-600 mt-2">{tTracking('dashboard.adminSubtitle')}</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" className="flex items-center gap-2">
               <Download className="w-4 h-4" />
-              Exporter Rapport
+              {tTracking('actions.exportReport')}
             </Button>
-            <Button variant="outline" className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Actualiser
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {tTracking('actions.refresh')}
             </Button>
             <Button className="bg-red-600 hover:bg-red-700">
               <Shield className="w-4 h-4 mr-2" />
-              Mode Urgence
+              {tTracking('actions.emergencyMode')}
             </Button>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <div>
+                  <h3 className="font-semibold text-red-900">Erreur de chargement</h3>
+                  <p className="text-red-700">{error}</p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="ml-auto bg-red-600 hover:bg-red-700"
+                >
+                  Réessayer
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Alertes critiques */}
         {criticalAlerts > 0 && (
@@ -166,14 +289,12 @@ export default function AdminTrackingDashboard() {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
                 <div>
                   <h3 className="font-semibold text-red-900">
-                    {criticalAlerts} alerte(s) critique(s) nécessitent votre attention
+                    {tTracking('alerts.critical', { count: criticalAlerts })}
                   </h3>
-                  <p className="text-red-700">
-                    Vérifiez l'onglet "Alertes & Incidents" pour plus de détails
-                  </p>
+                  <p className="text-red-700">{tTracking('alerts.checkTab')}</p>
                 </div>
                 <Button size="sm" className="ml-auto bg-red-600 hover:bg-red-700">
-                  Voir Alertes
+                  {tTracking('actions.viewAlerts')}
                 </Button>
               </div>
             </CardContent>
@@ -186,17 +307,21 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Véhicules Actifs</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {metrics.activeVehicles}/{metrics.totalVehicles}
+                  <p className="text-sm font-medium text-gray-600">
+                    {tTracking('kpis.activeVehicles')}
+                  </p>
+                  <p className="text-2xl font-bold text-tsa-blue">
+                    {systemMetrics.activeVehicles}/{systemMetrics.totalVehicles}
                   </p>
                 </div>
                 <Truck className="w-8 h-8 text-blue-500" />
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${(metrics.activeVehicles / metrics.totalVehicles) * 100}%` }}
+                  className="bg-tsa-blue h-2 rounded-full"
+                  style={{
+                    width: `${systemMetrics.totalVehicles > 0 ? (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100 : 0}%`,
+                  }}
                 ></div>
               </div>
             </CardContent>
@@ -206,9 +331,11 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Chauffeurs Actifs</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {tTracking('kpis.activeDrivers')}
+                  </p>
                   <p className="text-2xl font-bold text-green-600">
-                    {metrics.activeDrivers}/{metrics.totalDrivers}
+                    {systemMetrics.activeDrivers}/{systemMetrics.totalDrivers}
                   </p>
                 </div>
                 <Users className="w-8 h-8 text-green-500" />
@@ -216,7 +343,9 @@ export default function AdminTrackingDashboard() {
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-green-600 h-2 rounded-full"
-                  style={{ width: `${(metrics.activeDrivers / metrics.totalDrivers) * 100}%` }}
+                  style={{
+                    width: `${systemMetrics.totalDrivers > 0 ? (systemMetrics.activeDrivers / systemMetrics.totalDrivers) * 100 : 0}%`,
+                  }}
                 ></div>
               </div>
             </CardContent>
@@ -226,13 +355,17 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Missions Actives</p>
-                  <p className="text-2xl font-bold text-purple-600">{metrics.activeMissions}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {tTracking('kpis.activeMissions')}
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {systemMetrics.activeMissions}
+                  </p>
                 </div>
                 <Package className="w-8 h-8 text-purple-500" />
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                {metrics.completedToday} terminées aujourd'hui
+                {tTracking('kpis.completedToday', { count: systemMetrics.completedToday })}
               </p>
             </CardContent>
           </Card>
@@ -241,13 +374,15 @@ export default function AdminTrackingDashboard() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Disponibilité Système</p>
-                  <p className="text-2xl font-bold text-green-600">{metrics.systemUptime}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {tTracking('kpis.systemUptime')}
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">{systemMetrics.systemUptime}</p>
                 </div>
                 <Activity className="w-8 h-8 text-green-500" />
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                Temps de réponse: {metrics.avgResponseTime}ms
+                {tTracking('kpis.responseTime')}: {systemMetrics.avgResponseTime}ms
               </p>
             </CardContent>
           </Card>
@@ -256,11 +391,11 @@ export default function AdminTrackingDashboard() {
         {/* Contenu principal */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="fleet">Gestion Flotte</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="alerts">Alertes & Incidents</TabsTrigger>
-            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+            <TabsTrigger value="overview">{tTracking('tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="fleet">{tTracking('tabs.fleetManagement')}</TabsTrigger>
+            <TabsTrigger value="performance">{tTracking('tabs.performance')}</TabsTrigger>
+            <TabsTrigger value="alerts">{tTracking('tabs.alertsIncidents')}</TabsTrigger>
+            <TabsTrigger value="analytics">{tTracking('tabs.analytics')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -272,16 +407,16 @@ export default function AdminTrackingDashboard() {
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-5 h-5" />
-                        Vue Globale du Réseau
+                        {tTracking('map.globalView')}
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm">
                           <Filter className="w-4 h-4 mr-2" />
-                          Filtres
+                          {tTracking('map.filters')}
                         </Button>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4 mr-2" />
-                          Vue Satellite
+                          {tTracking('map.satelliteView')}
                         </Button>
                       </div>
                     </CardTitle>
@@ -289,8 +424,8 @@ export default function AdminTrackingDashboard() {
                   <CardContent>
                     <MissionTrackingMap
                       className="h-[500px]"
-                      missions={missions}
-                      onMissionClick={(mission) => console.log('Mission sélectionnée:', mission)}
+                      missions={trackableMissions}
+                      onMissionClick={(mission) => console.log('Selected mission:', mission)}
                       showUserLocation={false}
                       showRoutes={true}
                       showLegend={true}
@@ -298,20 +433,26 @@ export default function AdminTrackingDashboard() {
                     <div className="mt-4 flex justify-between items-center text-sm">
                       <div className="flex gap-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                          <span>Véhicules actifs ({metrics.activeVehicles})</span>
+                          <div className="w-3 h-3 bg-tsa-blue/90 rounded-full"></div>
+                          <span>
+                            {tTracking('map.activeVehicles', {
+                              count: systemMetrics.activeVehicles,
+                            })}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <span>Incidents ({criticalAlerts})</span>
+                          <span>{tTracking('map.incidents', { count: criticalAlerts })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <span>Retards ({metrics.delayedMissions})</span>
+                          <span>
+                            {tTracking('map.delays', { count: systemMetrics.delayedMissions || 0 })}
+                          </span>
                         </div>
                       </div>
                       <span className="text-gray-500">
-                        Dernière mise à jour: {new Date().toLocaleTimeString()}
+                        {tTracking('map.lastUpdate', { time: new Date().toLocaleTimeString() })}
                       </span>
                     </div>
                   </CardContent>
@@ -324,7 +465,7 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
-                      Alertes Récentes
+                      {tTracking('alerts.title')}
                       {unreadAlerts > 0 && (
                         <Badge className="bg-red-500 text-white">{unreadAlerts}</Badge>
                       )}
@@ -349,7 +490,7 @@ export default function AdminTrackingDashboard() {
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="w-full">
-                      Voir toutes les alertes
+                      {tTracking('actions.viewAll')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -358,25 +499,40 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BarChart3 className="w-5 h-5 text-blue-500" />
-                      Métriques Temps Réel
+                      {tTracking('metrics.realTime')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Missions en cours</span>
-                      <span className="font-medium">{metrics.activeMissions}</span>
+                      <span className="text-sm text-gray-600">
+                        {tTracking('metrics.activeMissions')}
+                      </span>
+                      <span className="font-medium">{systemMetrics.activeMissions}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Taux d'occupation</span>
-                      <span className="font-medium text-green-600">71%</span>
+                      <span className="text-sm text-gray-600">
+                        {tTracking('metrics.occupancyRate')}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {systemMetrics.totalVehicles > 0
+                          ? Math.round(
+                              (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
+                            )
+                          : 0}
+                        %
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Revenus du jour</span>
-                      <span className="font-medium text-blue-600">2.8M FCFA</span>
+                      <span className="text-sm text-gray-600">
+                        {tTracking('metrics.dailyRevenue')}
+                      </span>
+                      <span className="font-medium text-tsa-blue">{850000} FCFA</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Efficacité réseau</span>
-                      <span className="font-medium text-purple-600">89%</span>
+                      <span className="text-sm text-gray-600">
+                        {tTracking('metrics.networkEfficiency')}
+                      </span>
+                      <span className="font-medium text-purple-600">{95}%</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -385,25 +541,25 @@ export default function AdminTrackingDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Settings className="w-5 h-5 text-gray-500" />
-                      Actions Rapides
+                      {tTracking('quickActions.title')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Users className="w-4 h-4 mr-2" />
-                      Gérer Chauffeurs
+                      {tTracking('quickActions.manageDrivers')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Truck className="w-4 h-4 mr-2" />
-                      État Flotte
+                      {tTracking('quickActions.fleetStatus')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <Package className="w-4 h-4 mr-2" />
-                      Missions Urgentes
+                      {tTracking('quickActions.urgentMissions')}
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-start">
                       <BarChart3 className="w-4 h-4 mr-2" />
-                      Rapports
+                      {tTracking('quickActions.reports')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -454,11 +610,11 @@ export default function AdminTrackingDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Évolution des Performances</CardTitle>
+                <CardTitle>{tTracking('performance.evolution')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-center justify-center text-gray-500">
-                  Graphique de performance sur 30 jours
+                  {tTracking('performance.chart30Days')}
                 </div>
               </CardContent>
             </Card>
@@ -506,11 +662,11 @@ export default function AdminTrackingDashboard() {
                         <div className="flex gap-2">
                           {!alert.resolved && (
                             <Button size="sm" variant="outline">
-                              Résoudre
+                              {tTracking('actions.resolve')}
                             </Button>
                           )}
                           <Button size="sm" variant="outline">
-                            Détails
+                            {tTracking('actions.details')}
                           </Button>
                         </div>
                       </div>
@@ -525,22 +681,22 @@ export default function AdminTrackingDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Analyse des Revenus</CardTitle>
+                  <CardTitle>{tTracking('analytics.revenueAnalysis')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    Graphique des revenus par région
+                    {tTracking('analytics.revenueByRegion')}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Utilisation de la Flotte</CardTitle>
+                  <CardTitle>{tTracking('analytics.fleetUtilization')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center text-gray-500">
-                    Graphique d'utilisation des véhicules
+                    {tTracking('analytics.vehicleUtilization')}
                   </div>
                 </CardContent>
               </Card>
@@ -548,24 +704,34 @@ export default function AdminTrackingDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Prédictions IA</CardTitle>
+                <CardTitle>{tTracking('analytics.aiPredictions')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-900">Demande Prévue</h4>
-                    <p className="text-2xl font-bold text-blue-600">+23%</p>
-                    <p className="text-sm text-blue-700">Semaine prochaine</p>
+                    <h4 className="font-medium text-blue-900">
+                      {tTracking('analytics.expectedDemand')}
+                    </h4>
+                    <p className="text-2xl font-bold text-tsa-blue">+23%</p>
+                    <p className="text-sm text-blue-700">{tTracking('analytics.nextWeek')}</p>
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-medium text-green-900">Optimisation Route</h4>
+                    <h4 className="font-medium text-green-900">
+                      {tTracking('analytics.routeOptimization')}
+                    </h4>
                     <p className="text-2xl font-bold text-green-600">-15%</p>
-                    <p className="text-sm text-green-700">Économie carburant</p>
+                    <p className="text-sm text-green-700">{tTracking('analytics.fuelSavings')}</p>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-lg">
-                    <h4 className="font-medium text-purple-900">Maintenance</h4>
-                    <p className="text-2xl font-bold text-purple-600">3 véhicules</p>
-                    <p className="text-sm text-purple-700">Maintenance prévue</p>
+                    <h4 className="font-medium text-purple-900">
+                      {tTracking('analytics.maintenance')}
+                    </h4>
+                    <p className="text-2xl font-bold text-purple-600">
+                      3 {tTracking('analytics.vehicles')}
+                    </p>
+                    <p className="text-sm text-purple-700">
+                      {tTracking('analytics.scheduledMaintenance')}
+                    </p>
                   </div>
                 </div>
               </CardContent>

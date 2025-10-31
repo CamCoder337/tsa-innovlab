@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Phone, MapPin, CreditCard, Save, X, Edit, Settings } from 'lucide-react';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { FormikProps } from 'formik';
 import type { ProfileFormValues } from '@/components/forms/ProfileForm';
 import type { UpdateUserRequest } from '@/types/auth.types';
@@ -14,6 +15,8 @@ import ProfileForm from '@/components/forms/ProfileForm';
 
 export default function ClientProfile() {
   const { user, updateUser } = useAuth();
+  const { t: tProfile } = useProfileTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const formikRef = useRef<FormikProps<ProfileFormValues>>(null);
@@ -26,17 +29,17 @@ export default function ClientProfile() {
 
       if (response.error) {
         console.error(response.error);
-        toast.error(response.error.message || 'Erreur lors de la mise à jour du profil');
+        toast.error(response.error.message || tProfile('profile.errors.updateError'));
       }
 
       if (response.data) {
         updateUser(response.data);
-        toast.success('Profil mis à jour avec succès');
+        toast.success(tProfile('profile.updateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
       console.error(error);
-      console.error('Erreur lors de la mise à jour du profil');
+      toast.error(tProfile('profile.errors.updateError'));
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +64,7 @@ export default function ClientProfile() {
       if (hasChanges) {
         handleSave(differences as UpdateUserRequest);
       } else {
-        toast('Aucune modification détectée');
+        toast(tCommon('messages.noChangesDetected'));
       }
     }
   };
@@ -77,21 +80,19 @@ export default function ClientProfile() {
     <div className="max-w-4xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mon Profil</h1>
-          <p className="text-muted-foreground">
-            Gérez vos informations personnelles et préférences
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{tProfile('profile.title')}</h1>
+          <p className="text-muted-foreground">{tProfile('profile.client.subtitle')}</p>
         </div>
         {!isEditing ? (
           <div className="flex gap-2">
             <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
               <Edit className="h-4 w-4" />
-              Modifier
+              {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
               <Button variant="outline" className="gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                Paramètres
+                {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
@@ -105,7 +106,7 @@ export default function ClientProfile() {
               form="profile-form"
             >
               <Save className="h-4 w-4" />
-              {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              {isLoading ? tProfile('profile.actions.saving') : tProfile('profile.actions.save')}
             </Button>
             <Button
               variant="outline"
@@ -114,7 +115,7 @@ export default function ClientProfile() {
               onClick={handleCancel}
             >
               <X className="h-4 w-4" />
-              Annuler
+              {tCommon('actions.cancel')}
             </Button>
           </div>
         )}
@@ -125,7 +126,7 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Informations Personnelles
+            {tProfile('profile.sections.personalInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -153,9 +154,9 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            Méthodes de Paiement
+            {tProfile('profile.client.paymentMethods')}
           </CardTitle>
-          <CardDescription>Gérez vos méthodes de paiement préférées</CardDescription>
+          <CardDescription>{tProfile('profile.client.paymentMethodsDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -167,16 +168,18 @@ export default function ClientProfile() {
                 <div>
                   <div className="font-medium">MTN Mobile Money</div>
                   <div className="text-sm text-gray-600">
-                    {user.phone ? `****${user.phone.slice(-4)}` : 'Non configuré'}
+                    {user.phone
+                      ? `****${user.phone.slice(-4)}`
+                      : tProfile('profile.client.notConfigured')}
                   </div>
                 </div>
               </div>
-              <Badge variant="secondary">Principal</Badge>
+              <Badge variant="secondary">{tProfile('profile.client.primary')}</Badge>
             </div>
 
             <Button variant="outline" className="w-full">
               <CreditCard className="h-4 w-4 mr-2" />
-              Ajouter une méthode de paiement
+              {tProfile('profile.client.addPaymentMethod')}
             </Button>
           </div>
         </CardContent>
@@ -187,18 +190,18 @@ export default function ClientProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Adresses
+            {tProfile('profile.client.addresses')}
           </CardTitle>
-          <CardDescription>Gérez vos adresses de livraison et de facturation</CardDescription>
+          <CardDescription>{tProfile('profile.client.addressesDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="text-center py-8 text-gray-500">
               <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-sm mb-4">Aucune adresse enregistrée</p>
+              <p className="text-sm mb-4">{tProfile('profile.client.noAddresses')}</p>
               <Button variant="outline">
                 <MapPin className="h-4 w-4 mr-2" />
-                Ajouter une adresse
+                {tProfile('profile.client.addAddress')}
               </Button>
             </div>
           </div>

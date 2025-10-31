@@ -4,6 +4,7 @@ import { Upload, CheckCircle, AlertCircle, Clock, FileText, Loader2 } from 'luci
 import { useState, type ChangeEvent } from 'react';
 import { Formik, Form, type FormikHelpers } from 'formik';
 import { Label } from '../ui/label';
+import { useCommonTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 type DocumentStatus = 'verified' | 'pending' | 'rejected' | 'missing';
 
@@ -22,6 +23,8 @@ export interface KYCFormProps {
 }
 
 const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps) => {
+  const { t: tForms } = useFormsTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [uploadingDocument, setUploadingDocument] = useState<string | null>(null);
 
   const handleFileUpload = async (
@@ -68,7 +71,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
           color: 'text-green-600',
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200',
-          label: 'Vérifié',
+          label: tCommon('status.verified'),
         };
       case 'pending':
         return {
@@ -76,7 +79,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
           color: 'text-yellow-600',
           bgColor: 'bg-yellow-50',
           borderColor: 'border-yellow-200',
-          label: 'En attente',
+          label: tCommon('status.pending'),
         };
       case 'rejected':
         return {
@@ -84,7 +87,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
           color: 'text-red-600',
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
-          label: 'Rejeté',
+          label: tCommon('status.rejected'),
         };
       default:
         return {
@@ -92,7 +95,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
           color: 'text-gray-600',
           bgColor: 'bg-gray-50',
           borderColor: 'border-gray-200',
-          label: 'Manquant',
+          label: tCommon('status.missing'),
         };
     }
   };
@@ -117,10 +120,11 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-44">
                     {doc.fileName ? (
                       <div className="space-y-2">
-                        <FileText className="h-8 w-8 mx-auto text-blue-600" />
+                        <FileText className="h-8 w-8 mx-auto text-tsa-blue" />
                         <p className="text-sm font-medium">{doc.fileName}</p>
                         <p className="text-xs text-muted-foreground">
-                          Téléchargé le {new Date(doc.uploadDate!).toLocaleDateString('fr-FR')}
+                          {tForms('kyc.messages.uploadedOn')}{' '}
+                          {new Date(doc.uploadDate!).toLocaleDateString('fr-FR')}
                         </p>
                         <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                           <label
@@ -128,7 +132,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
                             className="cursor-pointer flex items-center"
                           >
                             <Upload className="h-4 w-4 mr-2" />
-                            Remplacer
+                            {tForms('kyc.buttons.replace')}
                           </label>
                         </Button>
                       </div>
@@ -146,7 +150,9 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
                             className="cursor-pointer flex items-center"
                           >
                             <Upload className="h-4 w-4 mr-2" />
-                            {kycUploading === docType ? 'Téléchargement...' : 'Choisir un fichier'}
+                            {kycUploading === docType
+                              ? tForms('kyc.messages.uploading')
+                              : tForms('kyc.buttons.chooseFile')}
                           </label>
                         </Button>
                       </div>

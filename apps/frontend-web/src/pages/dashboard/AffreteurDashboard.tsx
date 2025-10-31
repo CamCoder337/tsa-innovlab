@@ -10,16 +10,20 @@ import {
   Clock,
   CheckCircle,
   TrendingUp,
+  Loader,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMissions } from '@/hooks/useMissions';
 import { DashboardUtils } from '@/lib/dashboard.utils';
 import { useMemo } from 'react';
+import { useCommonTranslation, useDashboardTranslation } from '@/hooks/useTranslation';
 
 function AffreteurDashboard() {
   const { user } = useAuth();
-  const { myMissions } = useMissions();
+  const { myMissions, isLoading, setCurrentMission } = useMissions();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tDash } = useDashboardTranslation();
 
   // Calculate real metrics from mission data
   const metrics = useMemo(() => {
@@ -28,7 +32,8 @@ function AffreteurDashboard() {
   }, [myMissions]);
 
   const recentMissions = useMemo(() => {
-    return DashboardUtils.getRecentMissions(myMissions, 3);
+    return DashboardUtils.getRecentMissions(myMissions, 3, tCommon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myMissions]);
 
   const recommendations = useMemo(() => {
@@ -41,42 +46,42 @@ function AffreteurDashboard() {
 
   const affreteurInsights = [
     {
-      title: 'Missions Actives',
+      title: tDash('affreteur.insights.activeMissions'),
       icon: Package,
       value: metrics?.activeMissions || 0,
-      change: `${myMissions.length} au total`,
+      change: `${myMissions.length} ${tDash('affreteur.insights.total')}`,
       color: 'blue',
       href: '/app/missions?tab=actives',
     },
     {
-      title: 'Coût Moyen',
+      title: tDash('affreteur.insights.averageCost'),
       icon: Euro,
       value: DashboardUtils.formatCurrency(metrics?.averageCost || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.averageCost || 0,
           (metrics?.averageCost || 0) * 1.05
-        ) + ' ce mois',
+        ) + ` ${tCommon('time.thisMonth')}`,
       color: 'green',
       href: '/app/reports/costs',
     },
     {
-      title: 'Missions en Attente',
+      title: tDash('affreteur.insights.pendingMissions'),
       icon: Clock,
       value: myMissions.filter((m) => m.status === 'published').length,
-      change: `${myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status)).length} en cours`,
+      change: `${myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status)).length} ${tCommon('status.in_progress')}`,
       color: 'purple',
       href: '/app/missions?tab=pending',
     },
     {
-      title: 'Taux de Réussite',
+      title: tDash('affreteur.insights.successRate'),
       icon: CheckCircle,
       value: DashboardUtils.formatPercentage(metrics?.successRate || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.successRate || 0,
           (metrics?.successRate || 0) - 2
-        ) + ' ce mois',
+        ) + ` ${tCommon('time.thisMonth')}`,
       color: 'green',
       href: '/app',
     },
@@ -84,32 +89,37 @@ function AffreteurDashboard() {
 
   if (!user) return null;
 
+  if (isLoading && myMissions.length === 0)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader className="animate-spin h-12 w-12 text-tsa-blue" />
+      </div>
+    );
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            Bonjour, {user.fullName}
+            {tDash('affreteur.welcome', { name: user.fullName })}
             <div
               className="w-2 h-2 bg-green-500 rounded-full animate-pulse"
-              title="Système en ligne"
+              title={tDash('affreteur.systemOnline')}
             />
           </h1>
-          <p className="text-muted-foreground">
-            Gérez vos expéditions et suivez vos missions en temps réel.
-          </p>
+          <p className="text-muted-foreground">{tDash('affreteur.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Link to="/app/missions/create">
             <Button className="gap-2" style={{ backgroundColor: 'var(--tsa-blue)' }}>
               <Plus className="h-4 w-4" />
-              Créer Mission
+              {tDash('affreteur.actions.createMission')}
             </Button>
           </Link>
           <Link to="/app/missions/reports">
             <Button variant="outline" className="gap-2 bg-transparent">
               <FileText className="h-4 w-4" />
-              Mes Rapports
+              {tDash('affreteur.actions.myReports')}
             </Button>
           </Link>
         </div>
@@ -120,9 +130,9 @@ function AffreteurDashboard() {
           <div className="flex items-center gap-3">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <div>
-              <p className="font-medium text-green-800">Plateforme Opérationnelle</p>
+              <p className="font-medium text-green-800">{tDash('affreteur.alerts.platformOperational')}</p>
               <p className="text-sm text-green-600">
-                Tous vos transporteurs sont disponibles • Suivi temps réel actif
+                {tDash('affreteur.alerts.allTransporteursAvailable')}
               </p>
             </div>
           </div>
@@ -153,8 +163,8 @@ function AffreteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Mes Missions Récentes
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              {tDash('affreteur.sections.recentMissions')}
+              <div className="w-2 h-2 bg-tsa-blue/90 rounded-full animate-pulse" />
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -165,6 +175,7 @@ function AffreteurDashboard() {
                     to={`/app/missions/${mission.id}`}
                     key={mission.id}
                     className="flex items-center justify-between p-3 border rounded-lg"
+                    onClick={() => setCurrentMission(mission)}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
@@ -174,7 +185,7 @@ function AffreteurDashboard() {
                         <p className="text-xs text-muted-foreground">
                           {mission.transporteur
                             ? `par ${mission.transporteur.fullName}`
-                            : 'Non assigné'}
+                            : tCommon('status.notAssigned')}
                         </p>
                       </div>
                     </div>
@@ -189,8 +200,8 @@ function AffreteurDashboard() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Aucune mission récente</p>
-                  <p className="text-sm">Créez votre première mission pour commencer</p>
+                  <p>{tDash('affreteur.emptyStates.noRecentMissions')}</p>
+                  <p className="text-sm">{tDash('affreteur.emptyStates.createFirstMission')}</p>
                 </div>
               )}
             </div>
@@ -201,26 +212,26 @@ function AffreteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Actions Rapides
+              {tDash('affreteur.sections.quickActions')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Link to="/app/missions/create">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Plus className="h-4 w-4" />
-                Nouvelle Mission
+                {tDash('affreteur.quickActions.newMission')}
               </Button>
             </Link>
             <Link to="/app/tracking-dashboard">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <MapPin className="h-4 w-4" />
-                Suivi Expéditions
+                {tDash('affreteur.quickActions.trackShipments')}
               </Button>
             </Link>
             <Link to="/app">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Euro className="h-4 w-4" />
-                Analyse Coûts
+                {tDash('affreteur.quickActions.costAnalysis')}
               </Button>
             </Link>
           </CardContent>
@@ -232,7 +243,7 @@ function AffreteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-tsa-blue" />
-              Recommandations
+              {tDash('affreteur.sections.recommendations')}
               <div className="w-2 h-2 bg-tsa-blue rounded-full animate-pulse" />
             </CardTitle>
           </CardHeader>
@@ -252,7 +263,7 @@ function AffreteurDashboard() {
                     orange: 'bg-orange-50 border-orange-200 text-orange-800',
                   };
                   const iconColors = {
-                    blue: 'text-blue-600',
+                    blue: 'text-tsa-blue',
                     green: 'text-green-600',
                     orange: 'text-orange-600',
                   };
@@ -275,8 +286,8 @@ function AffreteurDashboard() {
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Aucune recommandation disponible</p>
-                  <p className="text-xs">Créez plus de missions pour obtenir des insights</p>
+                  <p className="text-sm">{tDash('affreteur.recommendations.noRecommendations')}</p>
+                  <p className="text-xs">{tDash('affreteur.recommendations.createMoreMissions')}</p>
                 </div>
               )}
             </div>
@@ -287,34 +298,42 @@ function AffreteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Résumé Mensuel
+              {tDash('affreteur.sections.monthlySummary')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Missions Créées</span>
+              <span className="text-sm text-muted-foreground">
+                {tDash('affreteur.monthlySummary.createdMissions')}
+              </span>
               <span className="font-semibold">{monthlySummary?.created || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Missions Terminées</span>
+              <span className="text-sm text-muted-foreground">
+                {tDash('affreteur.monthlySummary.completedMissions')}
+              </span>
               <span className="font-semibold text-green-600">{monthlySummary?.completed || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Coût Total</span>
+              <span className="text-sm text-muted-foreground">
+                {tDash('affreteur.monthlySummary.totalCost')}
+              </span>
               <span className="font-semibold">
                 {DashboardUtils.formatCurrency(monthlySummary?.totalCost || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Économies Réalisées</span>
+              <span className="text-sm text-muted-foreground">
+                {tDash('affreteur.monthlySummary.savingsRealized')}
+              </span>
               <span className="font-semibold text-green-600">
                 {DashboardUtils.formatCurrency(monthlySummary?.savings || 0)}
               </span>
             </div>
             <Progress value={monthlySummary?.onTimeRate || 0} className="w-full" />
             <p className="text-xs text-muted-foreground text-center">
-              {DashboardUtils.formatPercentage(monthlySummary?.onTimeRate || 0)} de vos missions
-              livrées à temps
+              {DashboardUtils.formatPercentage(monthlySummary?.onTimeRate || 0)}{' '}
+              {tDash('affreteur.monthlySummary.onTimeDelivery')}
             </p>
           </CardContent>
         </Card>

@@ -1,0 +1,19 @@
+{
+  "title": "Maps and Geolocation",
+  "labels": {
+    "myLocation": "My location",
+    "deliveryAddress": "Delivery address"
+  },
+  "placeholders": {
+    "searchAddress": "Search address...",
+    "manualAddressEntry": "Manual address entry (Enter to validate)..."
+  },
+  "buttons": {
+    "myLocation": "My location",
+    "retry": "Retry",
+    "locating": "Locating..."
+  },
+  "messages": {
+    "loadingGoogleMaps": "Loading Google Maps..."
+  }
+}

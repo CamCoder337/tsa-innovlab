@@ -1,0 +1,125 @@
+{
+  "title": "Tableau de bord",
+  "welcome": "Bienvenue, {{name}}",
+  "overview": {
+    "totalUsers": "Utilisateurs totaux",
+    "activeUsers": "Utilisateurs actifs",
+    "totalMissions": "Missions totales",
+    "activeMissions": "Missions actives",
+    "totalProducts": "Produits totaux",
+    "activeProducts": "Produits actifs",
+    "totalOrders": "Commandes totales",
+    "pendingOrders": "Commandes en attente"
+  },
+  "affreteur": {
+    "welcome": "Bonjour, {{name}}",
+    "subtitle": "Gérez vos expéditions et suivez vos missions en temps réel.",
+    "systemOnline": "Système en ligne",
+    "actions": {
+      "createMission": "Créer Mission",
+      "myReports": "Mes Rapports"
+    },
+    "insights": {
+      "activeMissions": "Missions Actives",
+      "averageCost": "Coût Moyen",
+      "pendingMissions": "Missions en Attente",
+      "successRate": "Taux de Réussite",
+      "total": "au total"
+    },
+    "sections": {
+      "recentMissions": "Mes Missions Récentes",
+      "quickActions": "Actions Rapides",
+      "recommendations": "Recommandations",
+      "monthlySummary": "Résumé Mensuel"
+    },
+    "quickActions": {
+      "newMission": "Nouvelle Mission",
+      "trackShipments": "Suivi Expéditions",
+      "costAnalysis": "Analyse Coûts"
+    },
+    "recommendations": {
+      "noRecommendations": "Aucune recommandation disponible",
+      "createMoreMissions": "Créez plus de missions pour obtenir des insights"
+    },
+    "monthlySummary": {
+      "createdMissions": "Missions Créées",
+      "completedMissions": "Missions Terminées",
+      "totalCost": "Coût Total",
+      "savingsRealized": "Économies Réalisées",
+      "onTimeDelivery": "de vos missions livrées à temps"
+    },
+    "emptyStates": {
+      "noRecentMissions": "Aucune mission récente",
+      "createFirstMission": "Créez votre première mission pour commencer"
+    },
+    "alerts": {
+      "platformOperational": "Plateforme Opérationnelle",
+      "allTransporteursAvailable": "Tous vos transporteurs sont disponibles • Suivi temps réel actif"
+    }
+  },
+  "transporteur": {
+    "welcome": "Bonjour, {{name}}",
+    "subtitle": "Trouvez de nouvelles missions et gérez vos livraisons.",
+    "vehicleOnline": "Véhicule en ligne",
+    "actions": {
+      "availableMissions": "Missions Disponibles"
+    },
+    "insights": {
+      "availableMissions": "Missions Disponibles",
+      "activeMissions": "Missions Actives",
+      "successRate": "Taux de Réussite",
+      "new": "nouvelles",
+      "todayEarnings": "Gains Aujourd'hui",
+      "vsYesterday": "vs hier"
+    },
+    "sections": {
+      "myActiveMissions": "Mes Missions Actives",
+      "quickActions": "Actions Rapides",
+      "alertsNotifications": "Alertes & Notifications",
+      "monthlyStats": "Statistiques Mensuelles"
+    },
+    "vehicle": {
+      "operational": "Véhicule Opérationnel",
+      "locationActive": "Localisation active",
+      "fuel": "Carburant",
+      "nextMaintenance": "Prochaine maintenance dans",
+      "days": "jours"
+    },
+    "quickActions": {
+      "searchMissions": "Chercher Missions",
+      "gpsTracking": "Suivi GPS",
+      "vehicleStatus": "État Véhicule",
+      "dailyEarnings": "Gains du Jour"
+    },
+    "alerts": {
+      "newMission": "Nouvelle Mission",
+      "urgentMission": "Mission urgente Douala → Yaoundé disponible (3,500 FCFA)",
+      "fuel": "Carburant",
+      "fuelLevel": "Niveau carburant à 85% - Station recommandée à 2km",
+      "clientRating": "Évaluation Client",
+      "newRating": "Nouvelle note 5/5 reçue pour votre dernière livraison",
+      "allCaughtUp": "Vous êtes à jour",
+      "noNotifications": "Aucune notification"
+    },
+    "monthlyStats": {
+      "missionsThisMonth": "Missions Ce Mois",
+      "completedMissions": "Missions Terminées",
+      "earningsThisMonth": "Gains Ce Mois",
+      "viewProfile": "Voir Profil"
+    },
+    "emptyStates": {
+      "noActiveMissions": "Aucune mission active",
+      "searchAvailableMissions": "Recherchez des missions disponibles",
+      "undefinedClient": "Client non défini"
+    }
+  },
+  "charts": {
+    "missionsOverTime": "Évolution des missions",
+    "revenueOverTime": "Évolution du chiffre d'affaires",
+    "topCategories": "Catégories populaires",
+    "orderStatus": "Statut des commandes"
+  },
+  "recentActivity": "Activité récente",
+  "quickActions": "Actions rapides",
+  "notifications": "Notifications"
+}

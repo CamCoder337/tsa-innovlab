@@ -317,7 +317,7 @@ const BillingPage: React.FC = () => {
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
+              <div className="flex-shrink-0 bg-tsa-blue/90 rounded-md p-3">
                 <svg
                   className="h-6 w-6 text-white"
                   xmlns="http://www.w3.org/2000/svg"
@@ -351,7 +351,7 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="#" className="font-medium text-tsa-blue hover:text-blue-500">
                 Voir toutes les factures<span className="sr-only">Factures en attente</span>
               </a>
             </div>
@@ -393,7 +393,7 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="#" className="font-medium text-tsa-blue hover:text-blue-500">
                 Voir l'historique<span className="sr-only">Factures payées</span>
               </a>
             </div>
@@ -435,7 +435,7 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a href="#" className="font-medium text-tsa-blue hover:text-blue-500">
                 Voir tous les devis<span className="sr-only">Devis en attente</span>
               </a>
             </div>

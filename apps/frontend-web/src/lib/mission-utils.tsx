@@ -35,13 +35,20 @@ export function getStatusIcon(status: string) {
   }
 }
 
-export function getStatusLabel(status: MissionStatus) {
+// Utility function that accepts a translation function
+export function getStatusLabel(status: MissionStatus, t?: (key: string) => string) {
+  if (t) {
+    return t(`status.${status}`).toUpperCase() || status.toUpperCase();
+  }
+
+  // Fallback to French labels if no translation function provided
   const labels = {
     draft: 'BROUILLON',
     published: 'OUVERTE',
     pending: 'EN ATTENTE',
     accepted: 'ACCEPTÉE',
     assigned: 'ASSIGNÉE',
+    in_progress: 'EN COURS',
     completed: 'TERMINÉE',
     rejected: 'REJETÉE',
     cancelled: 'ANNULÉE',

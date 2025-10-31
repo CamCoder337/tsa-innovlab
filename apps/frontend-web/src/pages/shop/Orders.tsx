@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from '../../components/ui/select';
 import {
-  Loader2,
   Package,
   Calendar,
   MapPin,
@@ -29,62 +28,68 @@ import {
   XCircle,
   Clock,
   CreditCard,
+  Loader,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderStatus } from '@/types/order.types';
+import { useShopTranslation } from '@/hooks/useTranslation';
 
-const statusConfig = {
-  [OrderStatus.PENDING]: {
-    label: 'En attente',
-    color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    icon: Clock,
-    description: 'Commande en attente de paiement',
-  },
-  [OrderStatus.PAID]: {
-    label: 'Payée',
-    color: 'bg-blue-50 text-blue-700 border-blue-200',
-    icon: CreditCard,
-    description: 'Paiement confirmé',
-  },
-  [OrderStatus.PROCESSING]: {
-    label: 'En préparation',
-    color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    icon: Package,
-    description: 'Commande en cours de préparation',
-  },
-  [OrderStatus.SHIPPED]: {
-    label: 'Expédiée',
-    color: 'bg-purple-50 text-purple-700 border-purple-200',
-    icon: Truck,
-    description: 'Commande expédiée',
-  },
-  [OrderStatus.DELIVERED]: {
-    label: 'Livrée',
-    color: 'bg-green-50 text-green-700 border-green-200',
-    icon: CheckCircle2,
-    description: 'Commande livrée avec succès',
-  },
-  [OrderStatus.CANCELLED]: {
-    label: 'Annulée',
-    color: 'bg-red-50 text-red-700 border-red-200',
-    icon: XCircle,
-    description: 'Commande annulée',
-  },
-  [OrderStatus.REFUNDED]: {
-    label: 'Remboursée',
-    color: 'bg-orange-50 text-orange-700 border-orange-200',
-    icon: RefreshCw,
-    description: 'Commande remboursée',
-  },
-};
+// Status config will be created dynamically using translations
 
 export default function OrdersPage() {
+  const { t: tShop } = useShopTranslation();
   const { orders, isLoading, error, fetchOrders } = useOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'total' | 'status'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Create status config with translations
+  const statusConfig = {
+    [OrderStatus.PENDING]: {
+      label: tShop('orders.status.pending.label'),
+      color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      icon: Clock,
+      description: tShop('orders.status.pending.description'),
+    },
+    [OrderStatus.PAID]: {
+      label: tShop('orders.status.paid.label'),
+      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      icon: CreditCard,
+      description: tShop('orders.status.paid.description'),
+    },
+    [OrderStatus.PROCESSING]: {
+      label: tShop('orders.status.processing.label'),
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      icon: Package,
+      description: tShop('orders.status.processing.description'),
+    },
+    [OrderStatus.SHIPPED]: {
+      label: tShop('orders.status.shipped.label'),
+      color: 'bg-purple-50 text-purple-700 border-purple-200',
+      icon: Truck,
+      description: tShop('orders.status.shipped.description'),
+    },
+    [OrderStatus.DELIVERED]: {
+      label: tShop('orders.status.delivered.label'),
+      color: 'bg-green-50 text-green-700 border-green-200',
+      icon: CheckCircle2,
+      description: tShop('orders.status.delivered.description'),
+    },
+    [OrderStatus.CANCELLED]: {
+      label: tShop('orders.status.cancelled.label'),
+      color: 'bg-red-50 text-red-700 border-red-200',
+      icon: XCircle,
+      description: tShop('orders.status.cancelled.description'),
+    },
+    [OrderStatus.REFUNDED]: {
+      label: tShop('orders.status.refunded.label'),
+      color: 'bg-orange-50 text-orange-700 border-orange-200',
+      icon: RefreshCw,
+      description: tShop('orders.status.refunded.description'),
+    },
+  };
 
   // Filter and sort orders
   const filteredAndSortedOrders = useMemo(() => {
@@ -122,24 +127,22 @@ export default function OrdersPage() {
 
   if (isLoading && !error) {
     return (
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+      <main className="flex items-center justify-center mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Loader className="h-8 w-8 animate-spin" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <main className="flex flex-col flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">Mes commandes</h1>
-            <p className="text-zinc-600 mt-1">
-              Suivez l'état de vos commandes et téléchargez vos factures
-            </p>
+            <h1 className="text-3xl font-bold text-zinc-900">{tShop('orders.title')}</h1>
+            <p className="text-zinc-600 mt-1">{tShop('orders.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -149,7 +152,7 @@ export default function OrdersPage() {
               className="flex items-center gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Actualiser
+              {tShop('orders.refresh')}
             </Button>
           </div>
         </div>
@@ -163,7 +166,7 @@ export default function OrdersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
                 <Input
-                  placeholder="Rechercher par numéro de commande, nom ou produit..."
+                  placeholder={tShop('orders.search.placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -177,10 +180,10 @@ export default function OrdersPage() {
               >
                 <SelectTrigger className="w-full sm:w-48">
                   <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filtrer par statut" />
+                  <SelectValue placeholder={tShop('orders.search.filterByStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="all">{tShop('orders.search.allStatuses')}</SelectItem>
                   {Object.entries(statusConfig).map(([status, config]) => (
                     <SelectItem key={status} value={status}>
                       <div className="flex items-center gap-2">
@@ -203,14 +206,14 @@ export default function OrdersPage() {
                 }}
               >
                 <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={tShop('orders.search.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="date-desc">Plus récent</SelectItem>
-                  <SelectItem value="date-asc">Plus ancien</SelectItem>
-                  <SelectItem value="total-desc">Montant décroissant</SelectItem>
-                  <SelectItem value="total-asc">Montant croissant</SelectItem>
-                  <SelectItem value="status-asc">Statut A-Z</SelectItem>
+                  <SelectItem value="date-desc">{tShop('orders.search.newest')}</SelectItem>
+                  <SelectItem value="date-asc">{tShop('orders.search.oldest')}</SelectItem>
+                  <SelectItem value="total-desc">{tShop('orders.search.amountDesc')}</SelectItem>
+                  <SelectItem value="total-asc">{tShop('orders.search.amountAsc')}</SelectItem>
+                  <SelectItem value="status-asc">{tShop('orders.search.statusAZ')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -222,11 +225,12 @@ export default function OrdersPage() {
       {filteredAndSortedOrders.length > 0 && (
         <div className="mb-6">
           <p className="text-sm text-zinc-600">
-            {filteredAndSortedOrders.length} commande{filteredAndSortedOrders.length > 1 ? 's' : ''}{' '}
-            trouvée{filteredAndSortedOrders.length > 1 ? 's' : ''}
-            {searchTerm && ` pour "${searchTerm}"`}
+            {filteredAndSortedOrders.length === 1
+              ? tShop('orders.results.found', { count: filteredAndSortedOrders.length })
+              : tShop('orders.results.foundPlural', { count: filteredAndSortedOrders.length })}
+            {searchTerm && ` ${tShop('orders.results.forSearch', { term: searchTerm })}`}
             {statusFilter !== 'all' &&
-              ` avec le statut "${statusConfig[statusFilter as OrderStatus]?.label}"`}
+              ` ${tShop('orders.results.withStatus', { status: statusConfig[statusFilter as OrderStatus]?.label })}`}
           </p>
         </div>
       )}
@@ -237,16 +241,18 @@ export default function OrdersPage() {
           <CardContent className="text-center py-16">
             <Package className="h-16 w-16 text-zinc-300 mx-auto mb-6" />
             <h3 className="text-xl font-semibold text-zinc-900 mb-2">
-              {orders.length === 0 ? 'Aucune commande' : 'Aucun résultat'}
+              {orders.length === 0
+                ? tShop('orders.empty.noOrders')
+                : tShop('orders.empty.noResults')}
             </h3>
             <p className="text-zinc-600 mb-6 max-w-md mx-auto">
               {orders.length === 0
-                ? "Vous n'avez pas encore passé de commande. Découvrez notre catalogue pour commencer vos achats."
-                : 'Aucune commande ne correspond à vos critères de recherche. Essayez de modifier vos filtres.'}
+                ? tShop('orders.empty.noOrdersMessage')
+                : tShop('orders.empty.noResultsMessage')}
             </p>
             {orders.length === 0 && (
               <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link to="/app/shop">Découvrir les produits</Link>
+                <Link to="/app/shop">{tShop('orders.empty.discoverProducts')}</Link>
               </Button>
             )}
           </CardContent>
@@ -265,7 +271,7 @@ export default function OrdersPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <CardTitle className="text-lg font-semibold">
-                            Commande {order.orderNumber}
+                            {tShop('orders.orderItem.number', { number: order.orderNumber })}
                           </CardTitle>
                           <Badge
                             className={`${statusInfo.color} border flex items-center gap-1.5 px-2.5 py-1`}
@@ -290,7 +296,11 @@ export default function OrdersPage() {
                           </span>
                           {order.items && (
                             <span className="text-zinc-500">
-                              {order.items.length} article{order.items.length > 1 ? 's' : ''}
+                              {order.items.length === 1
+                                ? tShop('orders.orderItem.items', { count: order.items.length })
+                                : tShop('orders.orderItem.itemsPlural', {
+                                    count: order.items.length,
+                                  })}
                             </span>
                           )}
                         </CardDescription>
@@ -303,7 +313,7 @@ export default function OrdersPage() {
                     {order.items && order.items.length > 0 && (
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm text-zinc-600 border-t pt-4">
-                          <span>Articles commandés:</span>
+                          <span>{tShop('orders.orderItem.orderedItems')}</span>
                         </div>
                         <div className="space-y-2">
                           {order.items.slice(0, 2).map((item) => (
@@ -337,8 +347,13 @@ export default function OrdersPage() {
                           ))}
                           {order.items.length > 2 && (
                             <p className="text-xs text-zinc-500 text-center py-2">
-                              +{order.items.length - 2} autre{order.items.length - 2 > 1 ? 's' : ''}{' '}
-                              article{order.items.length - 2 > 1 ? 's' : ''}
+                              {order.items.length - 2 === 1
+                                ? tShop('orders.orderItem.moreItems', {
+                                    count: order.items.length - 2,
+                                  })
+                                : tShop('orders.orderItem.moreItemsPlural', {
+                                    count: order.items.length - 2,
+                                  })}
                             </p>
                           )}
                         </div>
@@ -351,14 +366,22 @@ export default function OrdersPage() {
                         <MapPin className="h-4 w-4" />
                         {order.deliveredAt ? (
                           <span>
-                            Livrée le {new Date(order.deliveredAt).toLocaleDateString('fr-FR')}
+                            {tShop('orders.orderItem.deliveredOn', {
+                              date: new Date(order.deliveredAt).toLocaleDateString('fr-FR'),
+                            })}
                           </span>
                         ) : order.shippedAt ? (
                           <span>
-                            Expédiée le {new Date(order.shippedAt).toLocaleDateString('fr-FR')}
+                            {tShop('orders.orderItem.shippedOn', {
+                              date: new Date(order.shippedAt).toLocaleDateString('fr-FR'),
+                            })}
                           </span>
                         ) : order.trackingNumber ? (
-                          <span>Numéro de suivi: {order.trackingNumber}</span>
+                          <span>
+                            {tShop('orders.orderItem.trackingNumber', {
+                              number: order.trackingNumber,
+                            })}
+                          </span>
                         ) : null}
                       </div>
                     )}

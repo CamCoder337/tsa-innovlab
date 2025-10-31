@@ -59,7 +59,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   return (
     <>
       {children}
-      <Toaster position="top-right" expand={false} richColors closeButton duration={4000} />
+      <Toaster
+        position="top-center"
+        expand={true}
+        theme="light"
+        richColors
+        closeButton
+        duration={3000}
+      />
     </>
   );
 };

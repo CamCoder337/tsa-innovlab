@@ -20,6 +20,8 @@ export enum ConversationType {
   MISSION = 'mission',
 }
 
+export type ConversationFilter = 'all' | 'unread' | 'groups';
+
 /**
  * Message interface matching backend Message model
  */
@@ -30,6 +32,7 @@ export interface Message extends Timestamps {
   missionId?: number;
   content: string;
   type: MessageType;
+  isRead: boolean;
   readAt?: string;
   // Relations (optional when populated)
   sender?: User;
@@ -45,7 +48,7 @@ export interface Conversation extends Timestamps {
   type: ConversationType;
   user1Id: string;
   user2Id: string;
-  missionId?: number;
+  missionId?: string;
   lastActivityAt: string;
   // Relations (optional when populated)
   user1?: User;
@@ -66,7 +69,7 @@ export interface CreateDirectConversationRequest {
 }
 
 export interface CreateMissionConversationRequest {
-  missionId: number;
+  missionId: string;
   userId: string;
 }
 

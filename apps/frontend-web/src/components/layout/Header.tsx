@@ -27,14 +27,26 @@ import { useCart } from '@/hooks/useCart';
 import CartDrawer from '@/components/shop/CartDrawer';
 import { NotificationCenter } from '../notifications/NotificationCenter';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useCommonTranslation, useAuthTranslation } from '@/hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 
-export default function Header() {
+export default function Header({ className }: { className?: string }) {
   const { user, logout } = useAuth();
   const { cart } = useCart();
-  const displayName = user ? `${user.fullName}` : 'Invité';
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tAuth } = useAuthTranslation();
+  const { i18n } = useTranslation();
+
+  const displayName = user ? `${user.fullName}` : tCommon('roles.guest', 'Invité');
   const displayRole = user?.role ?? '';
   const isInvite = !user;
   const navigate = useNavigate();
+
+  const currentLanguage = i18n.language || 'fr';
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -42,7 +54,9 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed inset-y-0 z-10 h-fit w-full border-b bg-white flex items-center justify-between md:px-6">
+    <header
+      className={`h-16 flex items-center justify-between px-6 bg-white border-b ${className}`}
+    >
       {/* Logo and Mobile Sidebar Trigger */}
       <div className="flex items-center gap-1">
         {/* Mobile Sidebar Trigger - only show when user is authenticated */}
@@ -56,9 +70,9 @@ export default function Header() {
         </div>
         <div className="rounded-lg hidden md:flex flex-col justify-center">
           <h1 className="font-semibold text-xl" style={{ color: 'var(--tsa-blue)' }}>
-            TSA-Logistics
+            {tCommon('app.name')}
           </h1>
-          <p className="text-sm text-muted-foreground">Plateforme de Gestion Logistique</p>
+          <p className="text-sm text-muted-foreground">{tCommon('app.tagline')}</p>
         </div>
       </div>
 
@@ -68,13 +82,17 @@ export default function Header() {
           <DropdownMenuTrigger asChild className="max-sm:p-0">
             <Button variant="ghost" size="sm" className="gap-1">
               <Globe className="h-7 w-7" />
-              FR
+              {currentLanguage.slice(0, 2).toUpperCase()}
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>🇫🇷 Français</DropdownMenuItem>
-            <DropdownMenuItem>🇺🇸 English</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+              🇫🇷 {tCommon('languages.french')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => changeLanguage('en')}>
+              🇺🇸 {tCommon('languages.english')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -105,9 +123,7 @@ export default function Header() {
               </Avatar>
               <div className="text-left hidden md:flex flex-col">
                 <p className="text-sm font-medium">{displayName}</p>
-                <p className="text-xs text-muted-foreground">
-                  {displayRole.charAt(0).toUpperCase() + displayRole.slice(1)}
-                </p>
+                <p className="text-xs text-muted-foreground">{tCommon(`roles.${displayRole}`)}</p>
               </div>
               <ChevronDown className="h-3 w-3" />
             </Button>
@@ -118,13 +134,13 @@ export default function Header() {
                 <Link to="/">
                   <DropdownMenuItem>
                     <LogIn className="mr-2 h-4 w-4" />
-                    Se connecter
+                    {tAuth('login.label')}
                   </DropdownMenuItem>
                 </Link>
                 <Link to="/register">
                   <DropdownMenuItem>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    S'inscrire
+                    {tAuth('register.label')}
                   </DropdownMenuItem>
                 </Link>
               </>
@@ -133,19 +149,19 @@ export default function Header() {
                 <Link to="/app/profile">
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
-                    Profil
+                    {tAuth('profile')}
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />
                 <Link to="/app/settings">
                   <DropdownMenuItem>
                     <Settings className="mr-2 h-4 w-4" />
-                    Paramètres
+                    {tCommon('actions.settings', 'Paramètres')}
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuItem>
                   <Headset className="mr-2 h-4 w-4" />
-                  Support
+                  {tCommon('actions.support', 'Support')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -154,7 +170,7 @@ export default function Header() {
                   role="menuitem"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Déconnexion
+                  {tAuth('logout')}
                 </DropdownMenuItem>
               </>
             )}

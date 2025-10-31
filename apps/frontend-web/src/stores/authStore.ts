@@ -8,8 +8,9 @@ import type {
 } from '@/types/auth.types';
 import { tokenManager } from '@/services/token-manager.service';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 interface CookieOptions {
   days?: number;
@@ -211,9 +212,10 @@ export const useAuthStore = create<AuthStore>()(
         try {
           await toast.promise(authService.logout(), {
             loading: 'Déconnexion...',
+            success: 'Déconnexion réussie',
+            error: 'Erreur lors de la déconnexion',
           });
 
-          toast.success('Déconnexion réussie');
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
           set({
@@ -222,7 +224,8 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: null,
             isAuthenticated: false,
           });
-          localStorage.clear();
+          // Clear only TSA-specific localStorage items instead of all localStorage
+          clearTSALocalStorage();
         } catch (error) {
           console.error(error);
           toast.error('Erreur lors de la déconnexion');

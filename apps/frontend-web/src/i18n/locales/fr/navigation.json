@@ -1,0 +1,39 @@
+{
+  "menu": {
+    "dashboard": "Tableau de bord",
+    "missions": "Missions",
+    "products": "Produits",
+    "orders": "Commandes",
+    "shop": "Boutique",
+    "cart": "Panier",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "admin": "Administration",
+    "users": "Utilisateurs",
+    "categories": "Catégories",
+    "vehicles": "Véhicules",
+    "chat": "Chat",
+    "reports": "Rapports",
+    "analytics": "Analyses",
+    "tracking": "Suivi Temps Réel"
+  },
+  "breadcrumb": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "workspace": "Espace {{role}}",
+    "admin": "Administration",
+    "shop": "Boutique",
+    "cart": "Panier",
+    "checkout": "Commande",
+    "profile": "Profil",
+    "settings": "Paramètres"
+  },
+  "footer": {
+    "about": "À propos",
+    "contact": "Contact",
+    "privacy": "Confidentialité",
+    "terms": "Conditions d'utilisation",
+    "help": "Aide",
+    "support": "Support"
+  }
+}

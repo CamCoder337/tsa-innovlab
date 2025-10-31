@@ -1,8 +1,10 @@
 import './App.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import { Loader } from 'lucide-react';
+import { getCookie } from '@/stores/authStore';
+import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 // Lazy-loaded components
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -15,8 +17,10 @@ const MySettings = lazy(() => import('./pages/settings/MySettings'));
 const Layout = lazy(() => import('./components/layout/Layout'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const ProductsManagement = lazy(() => import('./pages/admin/ProductsManagement'));
+const OrdersManagement = lazy(() => import('./pages/admin/OrdersManagement'));
 const Users = lazy(() => import('./pages/admin/UsersManagement'));
 const User = lazy(() => import('./pages/admin/UserProfile'));
+const AddUser = lazy(() => import('./pages/admin/AddUser'));
 
 const CreateMission = lazy(() => import('./pages/missions/CreateMission'));
 const MyMissions = lazy(() => import('./pages/missions/MyMissions'));
@@ -41,7 +45,22 @@ const LoadingFallback = () => (
   </div>
 );
 
+const LoadingFallback2 = () => (
+  <div className="flex h-full w-full items-center justify-center bg-gray-50">
+    <Loader className="h-12 w-12 animate-spin text-tsa-blue" />
+  </div>
+);
+
 function App() {
+  const [token, setToken] = useState(getCookie('tsa_access_token'));
+
+  useEffect(() => {
+    if (!token) {
+      clearTSALocalStorage();
+      setToken(null);
+    }
+  }, [token]);
+
   return (
     <Routes>
       <Route
@@ -92,7 +111,7 @@ function App() {
         <Route
           path=""
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <Dashboard />
             </Suspense>
           }
@@ -100,7 +119,7 @@ function App() {
         <Route
           path="profile"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <MyProfile />
             </Suspense>
           }
@@ -108,7 +127,7 @@ function App() {
         <Route
           path="settings"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <MySettings />
             </Suspense>
           }
@@ -118,7 +137,7 @@ function App() {
           <Route
             path=""
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <MyMissions />
               </Suspense>
             }
@@ -126,7 +145,7 @@ function App() {
           <Route
             path="create"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <CreateMission />
               </Suspense>
             }
@@ -134,7 +153,7 @@ function App() {
           <Route
             path=":id"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Mission />
               </Suspense>
             }
@@ -142,7 +161,7 @@ function App() {
           <Route
             path=":id/edit"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <CreateMission />
               </Suspense>
             }
@@ -152,7 +171,7 @@ function App() {
         <Route
           path="transactions"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <Transactions />
             </Suspense>
           }
@@ -162,7 +181,7 @@ function App() {
           <Route
             path=""
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Users />
               </Suspense>
             }
@@ -170,8 +189,16 @@ function App() {
           <Route
             path=":id"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <User />
+              </Suspense>
+            }
+          />
+          <Route
+            path="add"
+            element={
+              <Suspense fallback={<LoadingFallback2 />}>
+                <AddUser />
               </Suspense>
             }
           />
@@ -181,7 +208,7 @@ function App() {
           <Route
             path=""
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Shop />
               </Suspense>
             }
@@ -189,7 +216,7 @@ function App() {
           <Route
             path="product/:id"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Product />
               </Suspense>
             }
@@ -197,7 +224,7 @@ function App() {
           <Route
             path="cart"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <CartSummary />
               </Suspense>
             }
@@ -205,7 +232,7 @@ function App() {
           <Route
             path="orders"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Orders />
               </Suspense>
             }
@@ -213,7 +240,7 @@ function App() {
           <Route
             path="order/:id"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <Suspense fallback={<LoadingFallback2 />}>
                 <Order />
               </Suspense>
             }
@@ -223,15 +250,25 @@ function App() {
         <Route
           path="products"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <ProductsManagement />
             </Suspense>
           }
         />
+
+        <Route
+          path="orders"
+          element={
+            <Suspense fallback={<LoadingFallback2 />}>
+              <OrdersManagement />
+            </Suspense>
+          }
+        />
+
         <Route
           path="vehicles"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <Vehicles />
             </Suspense>
           }
@@ -239,7 +276,7 @@ function App() {
         <Route
           path="chat"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <Chat />
             </Suspense>
           }
@@ -247,7 +284,7 @@ function App() {
         <Route
           path="tracking-dashboard"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <TrackingDashboardPage />
             </Suspense>
           }
@@ -255,7 +292,7 @@ function App() {
         <Route
           path="mission/:id/tracking"
           element={
-            <Suspense fallback={<LoadingFallback />}>
+            <Suspense fallback={<LoadingFallback2 />}>
               <MissionTrackingPage />
             </Suspense>
           }
