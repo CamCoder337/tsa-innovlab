@@ -159,31 +159,29 @@ export default function MissionTrackingMap({
         // Calculate route and ETA
         if (showRoutes) {
           try {
-            // Calculate distance and duration using Google Directions API
-            const routeData = await mapsService.calculateDistanceWithDirections(
-              departPosition,
-              arriveePosition
-            );
-
-            if (routeData) {
-              // Calculate ETA based on current time
-              const eta = new Date();
-              eta.setMinutes(eta.getMinutes() + routeData.duration);
-
-              newRouteInfo.set(mission.id, {
-                distance: routeData.distance,
-                duration: routeData.duration,
-                eta,
-              });
-            }
-
-            // Display route on map
-            mapsService.displayRoute(departPosition, arriveePosition, {
+            // Display route on map (this also calculates distance and duration)
+            const result = await mapsService.displayRoute(departPosition, arriveePosition, {
               routeId: `route-${mission.id}`,
               strokeColor: '#2563eb',
               strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
               strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
             });
+
+            if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+              const leg = result.routes[0].legs[0];
+              const distance = Math.round((leg.distance?.value || 0) / 1000); // km
+              const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
+
+              // Calculate ETA based on current time
+              const eta = new Date();
+              eta.setMinutes(eta.getMinutes() + duration);
+
+              newRouteInfo.set(mission.id, {
+                distance,
+                duration,
+                eta,
+              });
+            }
           } catch (err) {
             console.error(`Failed to calculate route for mission ${mission.id}:`, err);
           }

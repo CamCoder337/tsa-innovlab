@@ -187,20 +187,37 @@ export class GoogleMapsService {
 
       const result = await this.directionsService.route(request);
 
-      if (result.routes && result.routes[0] && result.routes[0].overview_path) {
+      if (result.routes && result.routes[0]) {
+        const route = result.routes[0];
         const routeId = options?.routeId || `route-${Date.now()}`;
 
-        // Create polyline from the route
-        const polyline = new google.maps.Polyline({
-          path: result.routes[0].overview_path,
-          strokeColor: options?.strokeColor || '#2563eb',
-          strokeWeight: options?.strokeWeight || 4,
-          strokeOpacity: options?.strokeOpacity || 0.8,
-          map: this.map,
-        });
+        // Get the path from overview_path or decode from overview_polyline
+        let path: google.maps.LatLng[] = [];
 
-        // Store the polyline for later removal
-        this.polylines.set(routeId, polyline);
+        if (route.overview_path && route.overview_path.length > 0) {
+          path = route.overview_path;
+        } else if (route.overview_polyline) {
+          // Decode polyline if overview_path is not available
+          path = google.maps.geometry.encoding.decodePath(route.overview_polyline);
+        }
+
+        if (path.length > 0) {
+          // Create polyline from the route
+          const polyline = new google.maps.Polyline({
+            path: path,
+            strokeColor: options?.strokeColor || '#2563eb',
+            strokeWeight: options?.strokeWeight || 4,
+            strokeOpacity: options?.strokeOpacity || 0.8,
+            geodesic: true,
+            map: this.map,
+          });
+
+          // Store the polyline for later removal
+          this.polylines.set(routeId, polyline);
+          console.log(`Route ${routeId} displayed with ${path.length} points`);
+        } else {
+          console.warn(`No path found for route ${routeId}`);
+        }
       }
 
       return result;
