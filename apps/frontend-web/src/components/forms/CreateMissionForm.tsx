@@ -332,7 +332,7 @@ export default function CreateMissionForm({
   // Apply dynamic pricing to form
   const applyDynamicPricing = (setFieldValue: (field: string, value: number) => void) => {
     if (dynamicPricing) {
-      setFieldValue('budgetMin', dynamicPricing.calculated_price * 0.8); // 20% below estimated
+      setFieldValue('budgetMin', dynamicPricing.calculated_price);
       toast.success(tForms('messages.dynamicPricingApplied'));
     }
   };
@@ -970,120 +970,88 @@ export default function CreateMissionForm({
                 </div>
 
                 {dynamicPricing && showDynamicPricing && (
-                  <div className="bg-white p-3 rounded border border-blue-200">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="bg-white p-4 rounded-lg border border-blue-200 space-y-3">
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-gray-600">{tForms('labels.distance')}</p>
-                        <p className="font-medium">
-                          {dynamicPricing.breakdown.distance_factor.toFixed(1)} km
+                        <p className="text-sm text-gray-600">Distance calculée</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {dynamicPricing.distance_km.toFixed(1)} km
                         </p>
                       </div>
-                      <div>
-                        <p className="text-gray-600">{tForms('labels.estimatedPrice')}</p>
-                        <p className="font-medium text-green-600">
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">Prix estimé</p>
+                        <p className="text-2xl font-bold text-green-600">
                           {dynamicPricing.calculated_price.toLocaleString()} FCFA
                         </p>
                       </div>
-                      <div>
-                        <p className="text-gray-600">{tForms('labels.priceRange')}</p>
-                        <p className="font-medium">
-                          {(dynamicPricing.calculated_price * 0.8).toLocaleString()} -{' '}
-                          {(dynamicPricing.calculated_price * 1.2).toLocaleString()} FCFA
-                        </p>
-                      </div>
-                      <div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => applyDynamicPricing(setFieldValue)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          {tForms('buttons.apply')}
-                        </Button>
-                      </div>
                     </div>
-                    {/* {dynamicPricing.factors && (
-                      <div className="mt-3 pt-3 border-t border-blue-100">
-                        <p className="text-xs text-gray-600 mb-2">Facteurs de prix:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(dynamicPricing.factors).map(([key, value]) => (
-                            <span
-                              key={key}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-                            >
-                              {key}: {typeof value === 'number' ? value.toFixed(2) : value}
-                            </span>
-                          ))}
-                        </div>
+
+                    <div className="bg-blue-50 p-3 rounded-md space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">Fourchette de négociation</span>
+                        <span className="font-medium text-blue-900">
+                          {dynamicPricing.negotiation_range.min_price.toLocaleString()} -{' '}
+                          {dynamicPricing.negotiation_range.max_price.toLocaleString()} FCFA
+                        </span>
                       </div>
-                    )} */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">Marge</span>
+                        <span className="font-medium text-gray-700">
+                          ±{dynamicPricing.negotiation_range.margin_percentage}%
+                        </span>
+                      </div>
+                      {dynamicPricing.negotiation_range.reason && (
+                        <div className="text-xs text-gray-600 italic">
+                          {dynamicPricing.negotiation_range.reason}
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => applyDynamicPricing(setFieldValue)}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Calculator className="h-4 w-4 mr-2" />
+                      Appliquer ce prix
+                    </Button>
                   </div>
                 )}
               </div>
 
               {/* Manual Budget Section */}
-              <div className="flex justify-center w-1/2 gap-4">
-                <div>
-                  <Label htmlFor="budgetMin">{tForms('labels.price')}</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="budgetMin"
-                      name="budgetMin"
-                      type="number"
-                      min="0"
-                      step="1000"
-                      placeholder="0"
-                      value={values.budgetMin || ''}
-                      onChange={(e) =>
-                        setFieldValue(
-                          'budgetMin',
-                          e.target.value ? parseFloat(e.target.value) : null
-                        )
-                      }
-                      onBlur={handleBlur}
-                      className={cn(
-                        'pl-10',
-                        touched.budgetMin && errors.budgetMin && 'border-red-500'
-                      )}
-                    />
-                  </div>
-                  {touched.budgetMin && errors.budgetMin && (
-                    <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
-                  )}
-                  {/* <p className="text-xs text-gray-500 mt-1">
-                    Les transporteurs peuvent négocier ce prix
-                  </p> */}
+              <div>
+                <Label htmlFor="budgetMin">Prix que vous êtes prêt à payer (FCFA)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="budgetMin"
+                    name="budgetMin"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    placeholder="Ex: 850000"
+                    value={values.budgetMin || ''}
+                    onChange={(e) =>
+                      setFieldValue(
+                        'budgetMin',
+                        e.target.value ? parseFloat(e.target.value) : null
+                      )
+                    }
+                    onBlur={handleBlur}
+                    className={cn(
+                      'pl-10',
+                      touched.budgetMin && errors.budgetMin && 'border-red-500'
+                    )}
+                  />
                 </div>
-                {/* <div>
-                  <Label htmlFor="budgetMax">Budget Maximum (FCFA)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="budgetMax"
-                      name="budgetMax"
-                      type="number"
-                      min={values.budgetMin || 0}
-                      step="1000"
-                      placeholder="0"
-                      value={values.budgetMax || ''}
-                      onChange={(e) =>
-                        setFieldValue(
-                          'budgetMax',
-                          e.target.value ? parseFloat(e.target.value) : null
-                        )
-                      }
-                      onBlur={handleBlur}
-                      className={cn(
-                        'pl-10',
-                        touched.budgetMax && errors.budgetMax && 'border-red-500'
-                      )}
-                    />
-                  </div>
-                  {touched.budgetMax && errors.budgetMax && (
-                    <div className="text-sm text-red-600 mt-1">{errors.budgetMax}</div>
-                  )}
-                </div> */}
+                {touched.budgetMin && errors.budgetMin && (
+                  <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Saisissez le montant que vous souhaitez payer pour cette mission
+                </p>
               </div>
             </CardContent>
           </Card>

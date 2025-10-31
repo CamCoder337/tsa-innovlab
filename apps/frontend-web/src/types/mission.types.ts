@@ -290,15 +290,31 @@ export interface DynamicPricingRequest {
 }
 
 export interface DynamicPricingResponse {
-  success: boolean;
+  calculation_id: string;
+  timestamp: string;
+  base_rate_per_ton_km: number;
+  distance_km: number;
+  weight_tons: number;
+  base_subtotal: number;
+  distance_discount: number;
+  weight_discount: number;
+  total_adjustments: number;
   calculated_price: number;
+  currency: string;
+  formatted_price: string;
   negotiation_range: {
     min_price: number;
     max_price: number;
     margin_percentage: number;
+    margin_calculation?: string;
     reason: string;
   };
-  breakdown: {
+  origin: string;
+  destination: string;
+  cargo_type: string;
+  urgency: string;
+  // Legacy fields for backward compatibility
+  breakdown?: {
     base_cost: number;
     distance_factor: number;
     weight_factor: number;
