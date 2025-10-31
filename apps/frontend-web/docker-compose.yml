@@ -27,11 +27,9 @@ services:
     ports:
       - '${FRONTEND_HOST_PORT:-30001}:80'
 
-    # Networks - utilisation des réseaux InnovlabG1 et tsa-network
+    # Networks - utilisation des réseaux InnovlabG1
     networks:
       - InnovlabG1
-      - tsa-network
-
     # Health check
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:80/health']
