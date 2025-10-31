@@ -15,7 +15,7 @@ import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
