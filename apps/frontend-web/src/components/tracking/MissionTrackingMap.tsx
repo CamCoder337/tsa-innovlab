@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import GoogleMapsService, { type MarkerData } from '@/services/google-maps.service';
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
@@ -58,7 +58,10 @@ export default function MissionTrackingMap({
   const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
 
   // Afficher uniquement la mission sélectionnée, sinon toutes les missions
-  const filteredMissions = selectedMission ? [selectedMission] : missions;
+  // Utiliser useMemo pour éviter de recréer le tableau à chaque rendu
+  const filteredMissions = useMemo(() => {
+    return selectedMission ? [selectedMission] : missions;
+  }, [selectedMission, missions]);
 
   const initializeMap = useCallback(async () => {
     if (!mapRef.current) return;
@@ -74,15 +77,24 @@ export default function MissionTrackingMap({
         );
       }
 
-      const mapsService = new GoogleMapsService();
-      mapsServiceRef.current = mapsService;
+      // N'initialiser la carte qu'une seule fois
+      if (!mapsServiceRef.current) {
+        const mapsService = new GoogleMapsService();
+        mapsServiceRef.current = mapsService;
 
-      // Initialiser la carte centrée sur le Cameroun
-      await mapsService.initializeMap(mapRef.current, {
-        center: { lat: 6.0, lng: 12.0 }, // Centre du Cameroun
-        zoom: 6,
-        mapId: getGoogleMapsMapId(),
-      });
+        // Initialiser la carte centrée sur le Cameroun
+        await mapsService.initializeMap(mapRef.current, {
+          center: { lat: 6.0, lng: 12.0 }, // Centre du Cameroun
+          zoom: 6,
+          mapId: getGoogleMapsMapId(),
+        });
+      }
+
+      const mapsService = mapsServiceRef.current;
+
+      // Nettoyer les marqueurs et routes existants
+      mapsService.clearMarkers();
+      mapsService.clearRoute();
 
       // Ajouter les marqueurs pour chaque mission
       const newRouteInfo = new Map<string, RouteInfo>();

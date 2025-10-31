@@ -156,6 +156,34 @@ export class GoogleMapsService {
     }
   }
 
+  clearMarkers(): void {
+    this.markers.forEach((marker) => {
+      if (marker instanceof google.maps.marker.AdvancedMarkerElement) {
+        marker.map = null;
+      } else {
+        marker.setMap(null);
+      }
+    });
+    this.markers.clear();
+  }
+
+  clearRoute(): void {
+    if (this.directionsRenderer) {
+      this.directionsRenderer.setMap(null);
+      this.directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#2563eb',
+          strokeWeight: 4,
+          strokeOpacity: 0.8,
+        },
+      });
+      if (this.map) {
+        this.directionsRenderer.setMap(this.map);
+      }
+    }
+  }
+
   async displayRoute(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },
