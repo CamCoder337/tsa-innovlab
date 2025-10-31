@@ -72,7 +72,6 @@ export default function TransporteurTrackingDashboard() {
   const { myMissions: missions } = useMissions();
   const { t: tCommon } = useCommonTranslation();
   const { t: tTracking } = useTrackingTranslation();
-  const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(null);
 
   // Calculs des KPIs
   const activeAssignments = missions.filter((m) => m.status === 'in_progress');
@@ -80,6 +79,11 @@ export default function TransporteurTrackingDashboard() {
   const totalDistance = 0; // Calculé à partir des adresses
   const totalEarnings = 0;
   const driverRating = 0;
+
+  // Initialiser avec la première mission active si elle existe
+  const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
+    activeAssignments.length > 0 ? activeAssignments[0] : null
+  );
 
   return (
     <div className="flex flex-col flex-1 bg-gray-50 p-6">
@@ -183,7 +187,34 @@ export default function TransporteurTrackingDashboard() {
           {currentAssignment ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Carte de navigation */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 space-y-4">
+                {/* Sélecteur de mission */}
+                {activeAssignments.length > 1 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Mission à suivre:
+                        </label>
+                        <select
+                          value={currentAssignment.id}
+                          onChange={(e) => {
+                            const selected = activeAssignments.find((m) => m.id === e.target.value);
+                            if (selected) setCurrentAssignment(selected);
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {activeAssignments.map((mission) => (
+                            <option key={mission.id} value={mission.id}>
+                              {mission.title} - {mission.adresseDepart?.city} → {mission.adresseArrivee?.city}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

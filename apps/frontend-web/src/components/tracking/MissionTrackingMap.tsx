@@ -57,8 +57,8 @@ export default function MissionTrackingMap({
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
   const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
 
-  // Pas de filtrage par statut - afficher toutes les missions
-  const filteredMissions = missions;
+  // Afficher uniquement la mission sélectionnée, sinon toutes les missions
+  const filteredMissions = selectedMission ? [selectedMission] : missions;
 
   const initializeMap = useCallback(async () => {
     if (!mapRef.current) return;
