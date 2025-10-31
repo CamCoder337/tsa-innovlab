@@ -17,25 +17,30 @@ Frontend → Monolith (AdonisJS) → tsa-ai (FastAPI) → Groq LLM
 ## Fichiers créés/modifiés
 
 ### Nouveaux fichiers
+
 - `app/controllers/http/common/chatbot_controller.ts` - Contrôleur chatbot
 - `tests/unit/common/chatbot_controller.spec.ts` - Tests unitaires
 
 ### Fichiers modifiés
+
 - `app/services/ai_service.ts` - Ajout méthodes chatbot
 - `start/routes.ts` - Ajout routes chatbot
 
 ## Routes disponibles
 
 ### POST /api/common/chatbot/query
+
 Envoyer un message au chatbot
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
 **Body:**
+
 ```json
 {
   "message": "Bonjour",
@@ -47,6 +52,7 @@ Content-Type: application/json
 ```
 
 **Response 200:**
+
 ```json
 {
   "success": true,
@@ -56,17 +62,14 @@ Content-Type: application/json
     "confidence": 0.95,
     "entities": {}
   },
-  "suggestions": [
-    "Suivre un colis",
-    "Calculer un tarif",
-    "Voir catalogue"
-  ],
+  "suggestions": ["Suivre un colis", "Calculer un tarif", "Voir catalogue"],
   "requires_human": false,
   "timestamp": "2025-10-26T..."
 }
 ```
 
 **Response 503:**
+
 ```json
 {
   "success": false,
@@ -76,14 +79,17 @@ Content-Type: application/json
 ```
 
 ### GET /api/common/chatbot/history/:conversationId
+
 Récupérer l'historique de conversation
 
 **Headers:**
+
 ```
 Authorization: Bearer <token>
 ```
 
 **Response 200:**
+
 ```json
 {
   "success": true,
@@ -105,9 +111,11 @@ Authorization: Bearer <token>
 ```
 
 ### GET /api/common/chatbot/health
+
 Vérifier la santé du chatbot
 
 **Response 200:**
+
 ```json
 {
   "success": true,
@@ -130,7 +138,7 @@ const response = await aiService.queryChatbot({
   user_id: user.id.toString(),
   user_role: user.role,
   conversation_id: conversationId,
-  context: {}
+  context: {},
 })
 
 if (response) {
@@ -148,12 +156,12 @@ const response = await fetch('/api/common/chatbot/query', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     message: userMessage,
-    conversation_id: conversationId
-  })
+    conversation_id: conversationId,
+  }),
 })
 
 const data = await response.json()
@@ -219,14 +227,17 @@ Le contrôleur retourne automatiquement un fallback :
 ## Sécurité
 
 ### Authentification
+
 - Toutes les routes nécessitent un token JWT valide
 - Le middleware `auth()` est appliqué
 
 ### Autorisation
+
 - Les utilisateurs ne peuvent accéder qu'à leur propre historique
 - Le `user_id` est extrait du token, pas du body
 
 ### Validation
+
 - Les messages vides sont rejetés
 - Les messages sont trimés avant envoi
 - Timeout de 15s sur les appels LLM
@@ -235,11 +246,11 @@ Le contrôleur retourne automatiquement un fallback :
 
 ### Temps de réponse
 
-| Type de requête | Méthode | Temps |
-|-----------------|---------|-------|
-| Questions simples | Règles | <100ms |
-| Questions complexes | LLM | 1-2s |
-| Historique | Cache | <50ms |
+| Type de requête     | Méthode | Temps  |
+| ------------------- | ------- | ------ |
+| Questions simples   | Règles  | <100ms |
+| Questions complexes | LLM     | 1-2s   |
+| Historique          | Cache   | <50ms  |
 
 ### Optimisations
 
@@ -256,7 +267,7 @@ Le service log automatiquement :
 ```typescript
 logger.info('Chatbot query received', {
   userId: user.id,
-  messageLength: message.length
+  messageLength: message.length,
 })
 
 logger.error('Failed to query chatbot from AI service', { error })
@@ -292,14 +303,14 @@ Pour des conversations en temps réel :
 router.ws('/ws/chatbot', async (ctx) => {
   const { ws, auth } = ctx
   const user = auth.getUserOrFail()
-  
+
   ws.on('message', async (message) => {
     const response = await aiService.queryChatbot({
       message: message.toString(),
       user_id: user.id.toString(),
-      user_role: user.role
+      user_role: user.role,
     })
-    
+
     ws.send(JSON.stringify(response))
   })
 })
@@ -314,7 +325,7 @@ router.ws('/ws/chatbot', async (ctx) => {
 const ChatWidget = () => {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  
+
   const sendMessage = async () => {
     const response = await fetch('/api/common/chatbot/query', {
       method: 'POST',
@@ -324,18 +335,18 @@ const ChatWidget = () => {
       },
       body: JSON.stringify({ message: input })
     })
-    
+
     const data = await response.json()
-    
+
     setMessages([
       ...messages,
       { role: 'user', text: input },
       { role: 'bot', text: data.message }
     ])
-    
+
     setInput('')
   }
-  
+
   return (
     <div className="chat-widget">
       {messages.map((msg, i) => (
@@ -356,7 +367,7 @@ const ChatWidget = () => {
 // pages/Support.tsx
 const SupportPage = () => {
   const [chatbotResponse, setChatbotResponse] = useState(null)
-  
+
   const askQuestion = async (question: string) => {
     const response = await fetch('/api/common/chatbot/query', {
       method: 'POST',
@@ -369,11 +380,11 @@ const SupportPage = () => {
         context: { page: 'support' }
       })
     })
-    
+
     const data = await response.json()
     setChatbotResponse(data)
   }
-  
+
   return (
     <div>
       <h1>Support</h1>
@@ -407,11 +418,13 @@ const SupportPage = () => {
 ### Erreur : "Chatbot service is temporarily unavailable"
 
 **Causes possibles :**
+
 - Service tsa-ai non démarré
 - URL incorrecte dans FASTAPI_BASE_URL
 - Firewall bloque la connexion
 
 **Solution :**
+
 ```bash
 # Vérifier que tsa-ai tourne
 curl http://localhost:8000/api/ai/chatbot/health

@@ -30,12 +30,9 @@ test.group('Chatbot Controller', (group) => {
   })
 
   test('should query chatbot successfully', async ({ client, assert }) => {
-    const response = await client
-      .post('/api/common/chatbot/query')
-      .bearerToken(userToken)
-      .json({
-        message: 'Bonjour',
-      })
+    const response = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
+      message: 'Bonjour',
+    })
 
     // Should return 200 or 503 (if AI service is down)
     assert.oneOf(response.status(), [200, 503])
@@ -50,12 +47,9 @@ test.group('Chatbot Controller', (group) => {
   })
 
   test('should reject empty message', async ({ client, assert }) => {
-    const response = await client
-      .post('/api/common/chatbot/query')
-      .bearerToken(userToken)
-      .json({
-        message: '',
-      })
+    const response = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
+      message: '',
+    })
 
     response.assertStatus(400)
     assert.isFalse(response.body().success)
@@ -126,24 +120,18 @@ test.group('Chatbot Controller', (group) => {
     const conversationId = `conv_${testUser.id}_${Date.now()}`
 
     // First message
-    const response1 = await client
-      .post('/api/common/chatbot/query')
-      .bearerToken(userToken)
-      .json({
-        message: 'Bonjour',
-        conversation_id: conversationId,
-      })
+    const response1 = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
+      message: 'Bonjour',
+      conversation_id: conversationId,
+    })
 
     assert.oneOf(response1.status(), [200, 503])
 
     // Second message in same conversation
-    const response2 = await client
-      .post('/api/common/chatbot/query')
-      .bearerToken(userToken)
-      .json({
-        message: 'Où est mon colis #12345 ?',
-        conversation_id: conversationId,
-      })
+    const response2 = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
+      message: 'Où est mon colis #12345 ?',
+      conversation_id: conversationId,
+    })
 
     assert.oneOf(response2.status(), [200, 503])
 
