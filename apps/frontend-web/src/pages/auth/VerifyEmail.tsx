@@ -18,7 +18,7 @@ const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [initialValues, setInitialValues] = useState<VerifyEmailFormData>(INITIAL_VALUES);
   const [isAutoVerifying, setIsAutoVerifying] = useState(false);
-  const { t } = useAuthTranslation();
+  const { t: tAuth } = useAuthTranslation();
 
   const handleAutoVerification = useCallback(
     async (values: VerifyEmailFormData) => {
@@ -29,23 +29,23 @@ const VerifyEmail: React.FC = () => {
         if (response.error) {
           console.error('Auto verification failed:', response.error);
           if (response.error.errors?.[0] === 'Invalid or expired token') {
-            toast.error(t('verifyEmail.invalidToken'));
+            toast.error(tAuth('verifyEmail.invalidToken'));
           }
           return;
         }
 
-        toast.success(t('verifyEmail.successMessage'));
+        toast.success(tAuth('verifyEmail.successMessage'));
         localStorage.removeItem('verificationEmail');
         navigate('/');
       } catch (error) {
         console.error('Verification error:', error);
-        toast.error(t('verifyEmail.errorMessage'));
+        toast.error(tAuth('verifyEmail.errorMessage'));
         return;
       } finally {
         setIsAutoVerifying(false);
       }
     },
-    [navigate, t]
+    [navigate, tAuth]
   );
 
   useEffect(() => {
@@ -75,8 +75,10 @@ const VerifyEmail: React.FC = () => {
 
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">{t('verifyEmail.title')}</h1>
-              <p className="text-sm font-semibold text-tsa-gray">{t('verifyEmail.subtitle')}</p>
+              <h1 className="text-4xl font-medium mb-2 text-tsa-blue">
+                {tAuth('verifyEmail.title')}
+              </h1>
+              <p className="text-sm font-semibold text-tsa-gray">{tAuth('verifyEmail.subtitle')}</p>
             </div>
 
             <Card className="shadow-xl bg-[#D9D9D980]">

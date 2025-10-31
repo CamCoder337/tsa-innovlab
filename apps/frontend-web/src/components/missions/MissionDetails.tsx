@@ -13,11 +13,15 @@ import { Button } from '../ui/button';
 import { Link } from 'react-router-dom';
 import { getStatusColor } from '@/lib/mission-utils';
 import { getStatusLabel } from '@/lib/mission-utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useMissions } from '@/hooks/useMissions';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
-import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useMissionsTranslation,
+  useCommonTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 
 interface MissionDetailsProps {
   mission: Mission;
@@ -28,8 +32,9 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   const { deleteMission, error } = useMissions();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tMissions } = useMissionsTranslation();
 
   const handleDelete = async (id: string) => {
     setIsLoading(true);
@@ -49,7 +54,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       return;
     }
 
-    toast.success(tMissions('actions.deleteSuccess'));
+    toast.success(tMissions('actions.success.delete'));
   };
 
   return (
@@ -61,7 +66,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
               <CardTitle className="text-2xl flex items-center gap-2">
                 {mission.title}
                 <Badge className={getStatusColor(mission.status)}>
-                  {getStatusLabel(mission.status, tMissions)}
+                  {getStatusLabel(mission.status, tCommon)}
                 </Badge>
                 {mission.isFlexibleDates && (
                   <Badge variant="outline" className="text-xs">
@@ -81,14 +86,14 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
             {user?.role !== 'transporteur' && (
               <div className="space-x-4">
                 <Link to={`/app/missions/${mission.id}/edit`}>
-                  <Button variant="outline">{tMissions('actions.edit')}</Button>
+                  <Button variant="outline">{tCommon('actions.edit')}</Button>
                 </Link>
                 <Button
                   variant="destructive"
                   className="text-white"
                   onClick={() => setIsDialogOpen(true)}
                 >
-                  {tMissions('actions.delete')}
+                  {tCommon('actions.delete')}
                 </Button>
               </div>
             )}
@@ -98,7 +103,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           {mission.description && (
             <div>
               <h3 className="font-medium mb-2 flex items-center gap-2">
-                <Info className="h-4 w-4" /> {tMissions('details.description')}
+                <Info className="h-4 w-4" /> {tForms('labels.description')}
               </h3>
               <p className="text-sm text-muted-foreground">{mission.description}</p>
             </div>
@@ -110,11 +115,11 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                 <MapPin className="h-4 w-4" /> {tMissions('details.route')}
               </h3>
               <div className="text-sm space-y-1">
-                <div className="font-medium">{tMissions('details.departure')}</div>
+                <div className="font-medium">{tMissions('departure')}</div>
                 <p className="text-muted-foreground">
                   {mission.adresseDepart?.label || tCommon('notSpecified')}
                 </p>
-                <div className="font-medium mt-2">{tMissions('details.arrival')}</div>
+                <div className="font-medium mt-2">{tMissions('arrival')}</div>
                 <p className="text-muted-foreground">
                   {mission.adresseArrivee?.label || tCommon('notSpecified')}
                 </p>
@@ -147,11 +152,11 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
             <div className="space-y-2">
               <h3 className="font-medium flex items-center gap-2">
-                <DollarSign className="h-4 w-4" /> {tMissions('details.budget')}
+                <DollarSign className="h-4 w-4" /> {tMissions('budget')}
               </h3>
               <div className="text-sm">
                 <div>
-                  <span className="font-medium">{tMissions('details.budget')}:</span>{' '}
+                  <span className="font-medium">{tMissions('budget')}:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.budgetMin?.toLocaleString() || 'N/A'} -{' '}
                     {mission.budgetMax?.toLocaleString() || 'N/A'} FCFA
@@ -164,13 +169,13 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className="font-medium">{tMissions('details.weight')}:</span>{' '}
+                  <span className="font-medium">{tForms('labels.weight')}:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.poids ? `${mission.poids} kg` : tCommon('notSpecified')}
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className="font-medium">{tMissions('details.volume')}:</span>{' '}
+                  <span className="font-medium">{tForms('labels.volume')}:</span>{' '}
                   <span className="text-muted-foreground">
                     {mission.volume ? `${mission.volume} m³` : tCommon('notSpecified')}
                   </span>
@@ -212,18 +217,21 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogDescription className="hidden">{tMissions('actions.delete')}</DialogDescription>
+        <DialogDescription className="hidden">{tCommon('actions.delete')}</DialogDescription>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{tMissions('actions.delete')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <p>{tMissions('actions.deleteConfirmation')}</p>
+            <p>
+              {tCommon('actions.warning.confirmAction')}{' '}
+              {tMissions('actions.confirmDelete', { mission: mission.title })}
+            </p>
 
             <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
-              <p className="font-medium">{tCommon('warning.irreversible')}</p>
-              <p>{tMissions('actions.deleteWarning')}</p>
+              <p className="font-medium">{tCommon('actions.warning.irreversible')}</p>
+              <p>{tMissions('actions.warning')}</p>
             </div>
           </div>
 

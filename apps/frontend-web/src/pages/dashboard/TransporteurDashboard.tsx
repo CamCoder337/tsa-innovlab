@@ -10,7 +10,6 @@ import {
   Euro,
   CheckCircle,
   TrendingUp,
-  Fuel,
   Settings,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,13 +17,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMissions } from '@/hooks/useMissions';
 import { DashboardUtils } from '@/lib/dashboard.utils';
 import { useMemo } from 'react';
-import { useDashboardTranslation, useMissionsTranslation } from '@/hooks/useTranslation';
+import { useCommonTranslation, useDashboardTranslation } from '@/hooks/useTranslation';
+import { useNotifications } from '@/hooks/useNotifications';
 
 function TransporteurDashboard() {
   const { user } = useAuth();
-  const { missions, myMissions } = useMissions();
-  const { t } = useDashboardTranslation();
-  const { t: tMissions } = useMissionsTranslation();
+  const { missions, myMissions, setCurrentMission } = useMissions();
+  const { notifications } = useNotifications();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tDash } = useDashboardTranslation();
 
   // Calculate real metrics from mission data
   const metrics = useMemo(() => {
@@ -38,47 +39,48 @@ function TransporteurDashboard() {
   }, [myMissions]);
 
   const recentMissions = useMemo(() => {
-    return DashboardUtils.getRecentMissions(myMissions, 3, tMissions);
-  }, [myMissions, tMissions]);
+    return DashboardUtils.getRecentMissions(myMissions, 3, tCommon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myMissions]);
 
   const transporteurInsights = [
     {
-      title: t('transporteur.insights.availableMissions'),
+      title: tDash('transporteur.insights.availableMissions'),
       icon: Search,
       value: missions.length,
-      change: `+${Math.max(0, missions.length - 8)} ${t('transporteur.insights.new')}`,
+      change: `+${Math.max(0, missions.length - 8)} ${tDash('transporteur.insights.new')}`,
       color: 'blue',
-      href: 'app/missions',
+      href: '/app/missions',
     },
     {
-      title: t('transporteur.insights.todayEarnings'),
+      title: tDash('transporteur.insights.todayEarnings'),
       icon: Euro,
       value: DashboardUtils.formatCurrency(earnings?.today || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           earnings?.today || 0,
           (earnings?.today || 0) * 0.85
-        ) + ` ${t('transporteur.insights.vsYesterday')}`,
+        ) + ` ${tDash('transporteur.insights.vsYesterday')}`,
       color: 'green',
       href: '/transporteur/earnings/current',
     },
     {
-      title: t('transporteur.insights.activeMissions'),
+      title: tDash('transporteur.insights.activeMissions'),
       icon: Truck,
       value: metrics?.activeMissions || 0,
-      change: t('transporteur.insights.inProgress'),
+      change: `${myMissions?.filter((m) => m.status === 'in_progress').length || 0} ${tCommon('status.in_progress')}`,
       color: 'orange',
-      href: 'app/missions',
+      href: '/app/missions?tab=active',
     },
     {
-      title: t('transporteur.insights.successRate'),
+      title: tDash('transporteur.insights.successRate'),
       icon: CheckCircle,
       value: 0, // DashboardUtils.formatPercentage(metrics?.successRate || 0)
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.successRate || 0,
           (metrics?.successRate || 0) - 2
-        ) + ` ${t('transporteur.insights.thisMonth')}`,
+        ) + ` ${tCommon('time.thisMonth')}`,
       color: 'green',
       href: '/transporteur/profile',
     },
@@ -88,6 +90,88 @@ function TransporteurDashboard() {
     return DashboardUtils.getMonthlySummary(myMissions);
   }, [myMissions]);
 
+  const latestNotification = useMemo(() => {
+    return (
+      notifications
+        .filter((notification) => notification.readAt === null)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ||
+      null
+    );
+  }, [notifications]);
+
+  const displayNotifications = useMemo(() => {
+    return notifications.slice(0, 3).map((notification) => {
+      // Map notification types to appropriate icons and colors
+      const getNotificationStyle = (type: string, priority: string, read: boolean) => {
+        switch (type) {
+          case 'mission_assigned':
+          case 'mission_new':
+            return {
+              icon: Package,
+              bgColor: 'bg-blue-50',
+              borderColor: read ? null : 'border-blue-200',
+              textColor: 'text-blue-800',
+              iconColor: 'text-tsa-blue',
+            };
+          case 'mission_status_changed':
+            return {
+              icon: Truck,
+              bgColor: 'bg-orange-50',
+              borderColor: 'border-orange-200',
+              textColor: 'text-orange-800',
+              iconColor: 'text-orange-600',
+            };
+          case 'mission_completed':
+          case 'payment_received':
+            return {
+              icon: CheckCircle,
+              bgColor: 'bg-green-50',
+              borderColor: 'border-green-200',
+              textColor: 'text-green-800',
+              iconColor: 'text-green-600',
+            };
+          case 'system':
+            if (priority === 'urgent' || priority === 'high') {
+              return {
+                icon: AlertTriangle,
+                bgColor: 'bg-red-50',
+                borderColor: 'border-red-200',
+                textColor: 'text-red-800',
+                iconColor: 'text-red-600',
+              };
+            }
+            return {
+              icon: Settings,
+              bgColor: 'bg-gray-50',
+              borderColor: 'border-gray-200',
+              textColor: 'text-gray-800',
+              iconColor: 'text-gray-600',
+            };
+          default:
+            return {
+              icon: Package,
+              bgColor: 'bg-blue-50',
+              borderColor: 'border-blue-200',
+              textColor: 'text-blue-800',
+              iconColor: 'text-tsa-blue',
+            };
+        }
+      };
+
+      const style = getNotificationStyle(
+        notification.type,
+        notification.priority,
+        notification.readAt !== null
+      );
+
+      return {
+        ...notification,
+        ...style,
+        timeAgo: new Date(notification.createdAt).toLocaleString(),
+      };
+    });
+  }, [notifications]);
+
   if (!user) return null;
 
   return (
@@ -95,19 +179,19 @@ function TransporteurDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            {t('transporteur.welcome', { name: user.fullName })}
+            {tDash('transporteur.welcome', { name: user.fullName })}
             <div
               className="w-2 h-2 bg-green-500 rounded-full animate-pulse"
-              title={t('transporteur.vehicleOnline')}
+              title={tDash('transporteur.vehicleOnline')}
             />
           </h1>
-          <p className="text-muted-foreground">{t('transporteur.subtitle')}</p>
+          <p className="text-muted-foreground">{tDash('transporteur.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Link to="/app/missions/">
             <Button className="gap-2" style={{ backgroundColor: 'var(--tsa-blue)' }}>
               <Search className="h-4 w-4" />
-              {t('transporteur.actions.availableMissions')}
+              {tDash('transporteur.actions.availableMissions')}
             </Button>
           </Link>
           {/* <Link to="/transporteur/earnings">
@@ -119,20 +203,22 @@ function TransporteurDashboard() {
         </div>
       </div>
 
-      <Card className="border-green-200 bg-green-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Truck className="h-5 w-5 text-green-600" />
-            <div>
-              <p className="font-medium text-green-800">{t('transporteur.vehicle.operational')}</p>
-              <p className="text-sm text-green-600">
-                {t('transporteur.vehicle.locationActive')} • {t('transporteur.vehicle.fuel')}: 85% •{' '}
-                {t('transporteur.vehicle.nextMaintenance')} 15 {t('transporteur.vehicle.days')}
-              </p>
+      {latestNotification && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Truck className="h-5 w-5 text-green-600" />
+              <div className="flex-1">
+                <p className="font-medium text-green-800">{latestNotification.title}</p>
+                <p className="text-sm text-green-600">{latestNotification.message}</p>
+                <p className="text-xs text-green-500 mt-1">
+                  {new Date(latestNotification.createdAt).toLocaleString()}
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {transporteurInsights.map((insight, index) => (
@@ -158,17 +244,21 @@ function TransporteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              {t('transporteur.sections.myActiveMissions')}
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              {tDash('transporteur.sections.myActiveMissions')}
+              <div className="w-2 h-2 bg-tsa-blue/90 rounded-full animate-pulse" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentMissions.length > 0 ? (
                 recentMissions.map((mission) => (
-                  <div
+                  <Link
                     key={mission.id}
+                    to={`/app/missions/${mission.id}`}
                     className="flex items-center justify-between p-3 border rounded-lg"
+                    onClick={() => {
+                      setCurrentMission(mission);
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${mission.statusColor}`}></div>
@@ -177,8 +267,8 @@ function TransporteurDashboard() {
                         <p className="text-sm text-muted-foreground">{mission.route}</p>
                         <p className="text-xs text-muted-foreground">
                           {mission.affreteur
-                            ? `${t('transporteur.missionDetails.for')} ${mission.affreteur.firstName}  ${mission.affreteur.lastName}`
-                            : t('transporteur.emptyStates.undefinedClient')}
+                            ? `${tCommon('for')} ${mission.affreteur.firstName}  ${mission.affreteur.lastName}`
+                            : tDash('transporteur.emptyStates.undefinedClient')}
                         </p>
                       </div>
                     </div>
@@ -190,13 +280,15 @@ function TransporteurDashboard() {
                       </p>
                       <Progress value={mission.progress} className="w-20 h-1" />
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>{t('transporteur.emptyStates.noActiveMissions')}</p>
-                  <p className="text-sm">{t('transporteur.emptyStates.searchAvailableMissions')}</p>
+                  <p>{tDash('transporteur.emptyStates.noActiveMissions')}</p>
+                  <p className="text-sm">
+                    {tDash('transporteur.emptyStates.searchAvailableMissions')}
+                  </p>
                 </div>
               )}
             </div>
@@ -207,32 +299,32 @@ function TransporteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              {t('transporteur.sections.quickActions')}
+              {tDash('transporteur.sections.quickActions')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Link to="/app/missions">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Search className="h-4 w-4" />
-                {t('transporteur.quickActions.searchMissions')}
+                {tDash('transporteur.quickActions.searchMissions')}
               </Button>
             </Link>
             <Link to="/app/tracking-dashboard">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <MapPin className="h-4 w-4" />
-                {t('transporteur.quickActions.gpsTracking')}
+                {tDash('transporteur.quickActions.gpsTracking')}
               </Button>
             </Link>
-            <Link to="/app/profile">
+            <Link to="/app/vehicles">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Truck className="h-4 w-4" />
-                {t('transporteur.quickActions.vehicleStatus')}
+                {tDash('transporteur.quickActions.vehicleStatus')}
               </Button>
             </Link>
             <Link to="/app">
               <Button variant="outline" className="w-full justify-start gap-2 bg-transparent">
                 <Euro className="h-4 w-4" />
-                {t('transporteur.quickActions.dailyEarnings')}
+                {tDash('transporteur.quickActions.dailyEarnings')}
               </Button>
             </Link>
           </CardContent>
@@ -244,39 +336,51 @@ function TransporteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              {t('transporteur.sections.alertsNotifications')}
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              {tDash('transporteur.sections.alertsNotifications')}
+              {notifications.some((n) => !n.readAt) && (
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <Package className="h-4 w-4 text-tsa-blue" />
-                  <p className="text-sm font-medium text-blue-800">
-                    {t('transporteur.alerts.newMission')}
+              {displayNotifications.length > 0 ? (
+                displayNotifications.map((notification) => {
+                  const IconComponent = notification.icon;
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`p-3 ${notification.bgColor} border ${notification.borderColor} rounded-lg ${!notification.readAt ? 'ring-1 ring-blue-200' : ''}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <IconComponent className={`h-4 w-4 ${notification.iconColor}`} />
+                        <p className={`text-sm font-medium ${notification.textColor}`}>
+                          {notification.title}
+                        </p>
+                        {!notification.readAt && (
+                          <div className="w-2 h-2 bg-tsa-blue/90 rounded-full ml-auto" />
+                        )}
+                      </div>
+                      <p className={`text-xs ${notification.iconColor}`}>{notification.message}</p>
+                      <p className={`text-xs ${notification.iconColor} opacity-75 mt-1`}>
+                        {notification.timeAgo}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="h-4 w-4 text-gray-600" />
+                    <p className="text-sm font-medium text-gray-800">
+                      {tDash('transporteur.alerts.noNotifications')}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    {tDash('transporteur.alerts.allCaughtUp')}
                   </p>
                 </div>
-                <p className="text-xs text-tsa-blue">{t('transporteur.alerts.urgentMission')}</p>
-              </div>
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <Fuel className="h-4 w-4 text-orange-600" />
-                  <p className="text-sm font-medium text-orange-800">
-                    {t('transporteur.alerts.fuel')}
-                  </p>
-                </div>
-                <p className="text-xs text-orange-600">{t('transporteur.alerts.fuelLevel')}</p>
-              </div>
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <p className="text-sm font-medium text-green-800">
-                    {t('transporteur.alerts.clientRating')}
-                  </p>
-                </div>
-                <p className="text-xs text-green-600">{t('transporteur.alerts.newRating')}</p>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -285,25 +389,25 @@ function TransporteurDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              {t('transporteur.sections.monthlyStats')}
+              {tDash('transporteur.sections.monthlyStats')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {t('transporteur.monthlyStats.missionsThisMonth')}
+                {tDash('transporteur.monthlyStats.missionsThisMonth')}
               </span>
               <span className="font-semibold">{monthlySummary.created}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {t('transporteur.monthlyStats.completedMissions')}
+                {tDash('transporteur.monthlyStats.completedMissions')}
               </span>
               <span className="font-semibold text-green-600">{monthlySummary?.completed || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {t('transporteur.monthlyStats.earningsThisMonth')}
+                {tDash('transporteur.monthlyStats.earningsThisMonth')}
               </span>
               <span className="font-semibold">
                 {DashboardUtils.formatCurrency(monthlySummary?.totalCost || 0)}
@@ -311,7 +415,7 @@ function TransporteurDashboard() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {t('transporteur.insights.successRate')}
+                {tDash('transporteur.insights.successRate')}
               </span>
               <span className="font-semibold text-green-600">
                 {monthlySummary?.successRate || 0}
@@ -321,7 +425,7 @@ function TransporteurDashboard() {
             <Link to="/app/profile">
               <Button variant="outline" className="w-full gap-2 bg-transparent">
                 <Settings className="h-4 w-4" />
-                {t('transporteur.monthlyStats.viewProfile')}
+                {tDash('transporteur.monthlyStats.viewProfile')}
               </Button>
             </Link>
           </CardContent>

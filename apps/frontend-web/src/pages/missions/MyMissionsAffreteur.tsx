@@ -7,13 +7,14 @@ import { CheckCircle, Clock, Plus, Package, MessageSquare } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
-import { useMissionsTranslation } from '@/hooks/useTranslation';
+import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 export default function MyMissionsAffreteur() {
   const { myMissions, error, publishMission, unpublishMission } = useMissions();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
-  const { t } = useMissionsTranslation();
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   const handlePublish = async (id: string) => {
     await publishMission(id);
@@ -24,7 +25,7 @@ export default function MyMissionsAffreteur() {
       return;
     }
 
-    toast.success(t('messages.publishedSuccess'));
+    toast.success(tMissions('messages.publishedSuccess'));
     // setTimeout(() => {
     //   window.location.reload();
     // }, 2500);
@@ -39,7 +40,7 @@ export default function MyMissionsAffreteur() {
       return;
     }
 
-    toast.success(t('messages.cancelledSuccess'));
+    toast.success(tMissions('messages.cancelledSuccess'));
   };
 
   const filteredMissions = myMissions.filter((mission) => {
@@ -52,18 +53,18 @@ export default function MyMissionsAffreteur() {
   });
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex flex-1 flex-col p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('myMissions.affreteur.title')}
+            {tMissions('myMissions.affreteur.title')}
           </h1>
-          <p className="text-gray-600">{t('myMissions.affreteur.subtitle')}</p>
+          <p className="text-gray-600">{tMissions('myMissions.affreteur.subtitle')}</p>
         </div>
         <Link to="/app/missions/create">
           <Button className="gap-2" style={{ backgroundColor: 'var(--tsa-blue)' }}>
             <Plus className="h-4 w-4" />
-            {t('myMissions.affreteur.newMission')}
+            {tMissions('myMissions.affreteur.newMission')}
           </Button>
         </Link>
       </div>
@@ -77,7 +78,7 @@ export default function MyMissionsAffreteur() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  {t('myMissions.affreteur.stats.totalMissions')}
+                  {tMissions('myMissions.affreteur.stats.totalMissions')}
                 </p>
                 <p className="text-2xl font-bold">{myMissions.length}</p>
               </div>
@@ -91,9 +92,7 @@ export default function MyMissionsAffreteur() {
                 <Clock className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">
-                  {t('myMissions.affreteur.stats.inProgress')}
-                </p>
+                <p className="text-sm text-gray-600">{tCommon('status.in_progress')}</p>
                 <p className="text-2xl font-bold">
                   {myMissions.filter((m) => ['published', 'assigned'].includes(m.status)).length}
                 </p>
@@ -108,7 +107,7 @@ export default function MyMissionsAffreteur() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">{t('myMissions.affreteur.stats.completed')}</p>
+                <p className="text-sm text-gray-600">{tCommon('status.completed')}s</p>
                 <p className="text-2xl font-bold">
                   {myMissions.filter((m) => m.status === 'completed').length}
                 </p>
@@ -124,7 +123,7 @@ export default function MyMissionsAffreteur() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  {t('myMissions.affreteur.stats.totalOffers')}
+                  {tMissions('myMissions.affreteur.stats.totalOffers')}
                 </p>
                 <p className="text-2xl font-bold">{0}</p>
               </div>
@@ -135,18 +134,16 @@ export default function MyMissionsAffreteur() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('myMissions.affreteur.history')}</CardTitle>
+          <CardTitle>{tMissions('myMissions.affreteur.history')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">{t('myMissions.affreteur.tabs.all')}</TabsTrigger>
-              <TabsTrigger value="pending">{t('myMissions.affreteur.tabs.pending')}</TabsTrigger>
-              <TabsTrigger value="actives">{t('myMissions.affreteur.tabs.actives')}</TabsTrigger>
-              <TabsTrigger value="completed">
-                {t('myMissions.affreteur.tabs.completed')}
-              </TabsTrigger>
-              <TabsTrigger value="draft">{t('myMissions.affreteur.tabs.draft')}</TabsTrigger>
+              <TabsTrigger value="all">{tMissions('myMissions.affreteur.tabs.all')}</TabsTrigger>
+              <TabsTrigger value="pending">{tCommon('status.pending')}</TabsTrigger>
+              <TabsTrigger value="actives">{tCommon('status.active')}s</TabsTrigger>
+              <TabsTrigger value="completed">{tCommon('status.completed')}s</TabsTrigger>
+              <TabsTrigger value="draft">{tCommon('status.draft')}s</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-6">
@@ -165,14 +162,14 @@ export default function MyMissionsAffreteur() {
                 <div className="text-center py-12">
                   <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {t('myMissions.affreteur.emptyStates.noMissions')}
+                    {tMissions('myMissions.affreteur.emptyStates.noMissions')}
                   </h3>
                   <p className="text-gray-600">
                     {activeTab === 'draft'
-                      ? t('myMissions.affreteur.emptyStates.noDrafts')
+                      ? tMissions('myMissions.affreteur.emptyStates.noDrafts')
                       : activeTab === 'completed'
-                        ? t('myMissions.affreteur.emptyStates.noCompleted')
-                        : t('myMissions.affreteur.emptyStates.noFiltered')}
+                        ? tMissions('myMissions.affreteur.emptyStates.noCompleted')
+                        : tMissions('myMissions.affreteur.emptyStates.noFiltered')}
                   </p>
                 </div>
               )}

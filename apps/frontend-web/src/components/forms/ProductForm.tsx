@@ -17,7 +17,7 @@ import { handleSupabaseError } from '@/services/supabase';
 import type { CreateProduct, UpdateProduct } from '@/types/product.types';
 import type { Category } from '@/types/category.types';
 import { toast } from 'sonner';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+import { useFormsTranslation, useErrorsTranslation } from '@/hooks/useTranslation';
 
 interface ProductFormProps {
   formik: FormikProps<CreateProduct | UpdateProduct>;
@@ -32,7 +32,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isSubmitting,
   onCancel,
 }) => {
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { upload, isUploading } = useFileUpload();
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -55,13 +56,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error(t('validation.fileType'));
+      toast.error(tForms('validation.fileType'));
       return;
     }
 
     // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(t('validation.fileSize'));
+      toast.error(tForms('validation.fileSize'));
       return;
     }
 
@@ -97,7 +98,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       return imageUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error(t('messages.uploadError'));
+      toast.error(tErrors('file.uploadError'));
       throw error;
     }
   };
@@ -136,7 +137,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     <form onSubmit={handleFormSubmit} className="space-y-4">
       {/* Image Upload */}
       <div className="space-y-2">
-        <Label>{t('labels.productImages')}</Label>
+        <Label>{tForms('labels.productImages')}</Label>
         <div className="flex justify-center items-center gap-4">
           <div className="relative">
             {imagePreview ? (
@@ -170,8 +171,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
           <div className="text-sm text-gray-500">
             <p>
-              {t('labels.supportedFormats', { formats: 'JPG, PNG' })} (
-              {t('labels.maxFileSize', { size: '5MB' })})
+              {tForms('labels.supportedFormats', { formats: 'JPG, PNG' })} (
+              {tForms('labels.maxFileSize', { size: '5MB' })})
             </p>
             <p>Recommandé: 800x800px</p>
           </div>
@@ -179,7 +180,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         {isUploading && (
           <div className="flex items-center gap-2 text-sm text-tsa-blue">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {t('messages.uploading')}...
+            {tForms('messages.uploading')}...
           </div>
         )}
       </div>
@@ -188,7 +189,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">
-            {t('labels.productName')} <span className="text-red-700">*</span>
+            {tForms('labels.productName')} <span className="text-red-700">*</span>
           </Label>
           <Input
             id="name"
@@ -196,7 +197,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder={t('placeholders.productName')}
+            placeholder={tForms('placeholders.productName')}
             required
           />
           {formik.touched.name && formik.errors.name && (
@@ -206,7 +207,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="reference">
-            {t('labels.productReference')} <span className="text-red-700">*</span>
+            {tForms('labels.productReference')} <span className="text-red-700">*</span>
           </Label>
           <Input
             id="reference"
@@ -214,7 +215,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={formik.values.reference || ''}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder={t('placeholders.productReference')}
+            placeholder={tForms('placeholders.enterProductReference')}
             required
           />
           {formik.touched.reference && formik.errors.reference && (
@@ -226,7 +227,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="categoryId">
-            {t('labels.productCategory')}
+            {tForms('labels.productCategory')}
             <span className="text-red-700">*</span>
           </Label>
           <Select
@@ -235,7 +236,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             onValueChange={(value) => formik.setFieldValue('categoryId', value)}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={t('messages.selectCategory')} />
+              <SelectValue placeholder={tForms('messages.selectCategory')} />
             </SelectTrigger>
             <SelectContent>
               {categories &&
@@ -253,7 +254,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="price">
-            {t('labels.productPrice')} <span className="text-red-700">*</span>
+            {tForms('labels.productPrice')} <span className="text-red-700">*</span>
           </Label>
           <Input
             id="price"
@@ -276,7 +277,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="unit">
-            {t('labels.unit')} <span className="text-red-700">*</span>
+            {tForms('labels.unit')} <span className="text-red-700">*</span>
           </Label>
           <Select
             name="unit"
@@ -284,7 +285,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             onValueChange={(value) => formik.setFieldValue('unit', value)}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={t('messages.selectUnit')} />
+              <SelectValue placeholder={tForms('messages.selectUnit')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="boîte">Boîte</SelectItem>
@@ -304,7 +305,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="stock">
-            {t('labels.productStock')} <span className="text-red-700">*</span>
+            {tForms('labels.productStock')} <span className="text-red-700">*</span>
           </Label>
           <Input
             id="stock"
@@ -323,7 +324,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="stockAlert">
-            {t('labels.stockAlert')} <span className="text-red-700">*</span>
+            {tForms('labels.stockAlert')} <span className="text-red-700">*</span>
           </Label>
           <Input
             id="stockAlert"
@@ -344,7 +345,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="description">
-          {t('labels.productDescription')} <span className="text-red-700">*</span>
+          {tForms('labels.description')} <span className="text-red-700">*</span>
         </Label>
         <Textarea
           id="description"
@@ -352,7 +353,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           value={formik.values.description || ''}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          placeholder={t('placeholders.enterDescription')}
+          placeholder={tForms('placeholders.enterDescription')}
           rows={4}
           required
         />
@@ -369,7 +370,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           onClick={onCancel}
           disabled={isSubmitting || isUploading}
         >
-          {t('buttons.cancel')}
+          {tForms('buttons.cancel')}
         </Button>
         <Button
           type="submit"
@@ -379,10 +380,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           {isSubmitting || isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {isUploading ? t('messages.uploading') : t('messages.saving')}
+              {isUploading ? tForms('messages.uploading') : tForms('messages.saving')}
             </>
           ) : (
-            t('buttons.save')
+            tForms('buttons.save')
           )}
         </Button>
       </div>

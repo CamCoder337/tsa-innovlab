@@ -67,7 +67,7 @@ function CartDrawer({ children }: CartDrawerProps) {
       <SheetContent className="w-full sm:max-w-md p-4">
         <SheetHeader>
           <SheetTitle>
-            <h2 className="text-xl font-semibold">{tCart('title')}</h2>
+            <p className="text-xl font-semibold">{tCart('title')}</p>
           </SheetTitle>
         </SheetHeader>
         {error && (

@@ -56,22 +56,28 @@ export default function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // WebSocket initialization is now handled by NotificationProvider
-  // to avoid conflicts and page reloads on notification receive
-
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-gray-50 flex-1 flex-col">
-        <Header />
-        <main className="flex h-full">
-          <div>
-            <Sidebar />
-          </div>
-          <div className="w-full top-16 relative">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      <>
+        {/* FIXED HEADER - MUST HAVE HEIGHT */}
+        <Header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-white" />
+
+        {/* MAIN APP - Full height, starts below header */}
+        <div className="flex-1 pt-16 flex flex-col bg-gray-50">
+          {/* MAIN CONTENT - TAKES REMAINING HEIGHT */}
+          <main className="flex flex-1 overflow-hidden">
+            {/* SIDEBAR */}
+            <aside className="flex-shrink-0 overflow-y-auto border-r bg-white">
+              <Sidebar />
+            </aside>
+
+            {/* OUTLET CONTENT - FULL HEIGHT & WIDTH */}
+            <section className="flex flex-1 overflow-y-auto bg-gray-50">
+              <Outlet /> {/* Renders Chat, Dashboard, etc. */}
+            </section>
+          </main>
+        </div>
+      </>
     </SidebarProvider>
   );
 }

@@ -6,9 +6,7 @@ export type Namespace =
   | 'auth'
   | 'navigation'
   | 'dashboard'
-  | 'products'
   | 'missions'
-  | 'orders'
   | 'cart'
   | 'profile'
   | 'admin'
@@ -16,7 +14,10 @@ export type Namespace =
   | 'forms'
   | 'errors'
   | 'notifications'
-  | 'tracking';
+  | 'tracking'
+  | 'payment'
+  | 'maps'
+  | 'chat';
 
 // Enhanced useTranslation hook with TypeScript support
 export function useTranslation(
@@ -31,10 +32,11 @@ export const useCommonTranslation = () => useTranslation('common');
 export const useAuthTranslation = () => useTranslation('auth');
 export const useNavigationTranslation = () => useTranslation('navigation');
 export const useDashboardTranslation = () => useTranslation('dashboard');
-export const useProductsTranslation = () => useTranslation('products');
 export const useMissionsTranslation = () => useTranslation('missions');
-export const useOrdersTranslation = () => useTranslation('orders');
 export const useCartTranslation = () => useTranslation('cart');
+export const usePaymentTranslation = () => useTranslation('payment');
+export const useMapsTranslation = () => useTranslation('maps');
+export const useChatTranslation = () => useTranslation('chat');
 export const useProfileTranslation = () => useTranslation('profile');
 export const useAdminTranslation = () => useTranslation('admin');
 export const useShopTranslation = () => useTranslation('shop');

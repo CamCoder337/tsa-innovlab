@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import GoogleMapsService, { type MarkerData } from '@/services/google-maps.service';
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
-import { getGoogleMapsApiKey } from '@/config/env';
+import { getGoogleMapsApiKey, getGoogleMapsMapId } from '@/config/env';
 // Badge supprimé - plus utilisé
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Package, AlertTriangle } from 'lucide-react';
@@ -82,6 +82,7 @@ export default function MissionTrackingMap({
       await mapsService.initializeMap(mapRef.current, {
         center: { lat: 6.0, lng: 12.0 }, // Centre du Cameroun
         zoom: 6,
+        mapId: getGoogleMapsMapId(),
       });
 
       // Ajouter les marqueurs pour chaque mission
@@ -143,8 +144,8 @@ export default function MissionTrackingMap({
           });
         }
 
-        // Ajouter marqueur transporteur si la mission est assignée et a une position réelle
-        if (mission.status === 'assigned' && mission.transporteurId && mission.currentPosition) {
+        // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
+        if (mission.status === 'in_progress' && mission.transporteurId && mission.currentPosition) {
           const transporteurMarkerData: MarkerData = {
             id: `${mission.id}-transporteur`,
             position: mission.currentPosition,
@@ -246,7 +247,7 @@ export default function MissionTrackingMap({
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors"
           >
             Réessayer
           </button>

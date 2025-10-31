@@ -25,7 +25,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigationTranslation, useAuthTranslation } from '@/hooks/useTranslation';
+import { useNavigationTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type SidebarItem = {
   id: string;
@@ -35,22 +35,22 @@ type SidebarItem = {
   children?: SidebarItem[];
 };
 
-const getAffreteurMenu = (t: (key: string) => string): SidebarItem[] => [
+const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: t('menu.dashboard'),
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: t('menu.missions'),
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: t('menu.tracking'),
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -58,13 +58,13 @@ const getAffreteurMenu = (t: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'products',
-    label: t('menu.shop'),
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: t('menu.orders'),
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -72,7 +72,7 @@ const getAffreteurMenu = (t: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'chat',
-    label: t('menu.chat'),
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -97,22 +97,22 @@ const getAffreteurMenu = (t: (key: string) => string): SidebarItem[] => [
   // }
 ];
 
-const getTransporteurMenu = (t: (key: string) => string): SidebarItem[] => [
+const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: t('menu.dashboard'),
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: t('menu.missions'),
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: t('menu.tracking'),
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -120,19 +120,19 @@ const getTransporteurMenu = (t: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'vehicles',
-    label: t('menu.vehicles'),
+    label: tNav('menu.vehicles'),
     icon: Truck,
     href: '/app/vehicles',
   },
   {
     id: 'products',
-    label: t('menu.shop'),
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: t('menu.orders'),
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -140,7 +140,7 @@ const getTransporteurMenu = (t: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'chat',
-    label: t('menu.chat'),
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -161,22 +161,22 @@ const getTransporteurMenu = (t: (key: string) => string): SidebarItem[] => [
   // },
 ];
 
-const getAdminMenu = (t: (key: string) => string): SidebarItem[] => [
+const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: t('menu.dashboard'),
+    label: tNav('menu.dashboard'),
     icon: LayoutDashboard,
     href: '/app',
   },
   {
     id: 'missions',
-    label: t('menu.missions'),
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: t('menu.tracking'),
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -184,25 +184,25 @@ const getAdminMenu = (t: (key: string) => string): SidebarItem[] => [
   },
   {
     id: 'products',
-    label: t('menu.shop'),
+    label: tNav('menu.shop'),
     icon: ShoppingBag,
     href: '/app/products',
   },
   {
     id: 'orders',
-    label: t('menu.orders'),
+    label: tNav('menu.orders'),
     icon: ShoppingCart,
     href: '/app/orders',
   },
   {
     id: 'users',
-    label: t('menu.users'),
+    label: tNav('menu.users'),
     icon: Users,
     href: '/app/users',
   },
   {
     id: 'chat',
-    label: t('menu.chat'),
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -217,10 +217,10 @@ const getAdminMenu = (t: (key: string) => string): SidebarItem[] => [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
-const getClientMenu = (t: (key: string) => string): SidebarItem[] => [
+const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'products',
-    label: t('menu.shop'),
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
   },
@@ -228,12 +228,12 @@ const getClientMenu = (t: (key: string) => string): SidebarItem[] => [
 
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
-  const { t } = useNavigationTranslation();
+  const { t: tNav } = useNavigationTranslation();
 
-  if (!isAuthenticated || user?.role === 'client') return getClientMenu(t);
-  if (user?.role === 'transporteur') return getTransporteurMenu(t);
-  if (user?.role === 'admin') return getAdminMenu(t);
-  return getAffreteurMenu(t);
+  if (!isAuthenticated || user?.role === 'client') return getClientMenu(tNav);
+  if (user?.role === 'transporteur') return getTransporteurMenu(tNav);
+  if (user?.role === 'admin') return getAdminMenu(tNav);
+  return getAffreteurMenu(tNav);
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
@@ -310,10 +310,10 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 
 export default function Sidebar() {
   const { user, isAuthenticated } = useAuth();
-  const { t: tAuth } = useAuthTranslation();
-  const { t } = useNavigationTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tNav } = useNavigationTranslation();
 
-  const role = user ? tAuth(`roles.${user?.role}`) : tAuth('roles.guest');
+  const role = user ? tCommon(`roles.${user?.role}`) : tCommon('roles.guest');
   const menu = GetMenuByRole();
 
   if (!isAuthenticated) return null;
@@ -323,7 +323,7 @@ export default function Sidebar() {
       <SidebarHeader className="flex flex-row items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
-            {t('breadcrumb.workspace', { role })}
+            {tNav('breadcrumb.workspace', { role })}
           </div>
         </div>
         <SidebarTrigger className="ml-auto" />

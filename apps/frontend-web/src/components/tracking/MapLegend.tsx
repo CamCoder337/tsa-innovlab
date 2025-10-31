@@ -94,7 +94,7 @@ export default function MapLegend({ showUserLocation = false, className = '' }: 
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center">
-                    <div className="w-8 h-1 bg-blue-500 rounded-full shadow-sm"></div>
+                    <div className="w-8 h-1 bg-tsa-blue/90 rounded-full shadow-sm"></div>
                   </div>
                   <span className="text-sm font-medium text-gray-800">Tracé de l'itinéraire</span>
                 </div>
@@ -114,7 +114,7 @@ export default function MapLegend({ showUserLocation = false, className = '' }: 
               </h5>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
+                  <div className="w-3 h-3 bg-tsa-blue/90 rounded-full shadow-sm"></div>
                   <span className="text-xs text-gray-700">Publiée</span>
                 </div>
                 <div className="flex items-center gap-3">

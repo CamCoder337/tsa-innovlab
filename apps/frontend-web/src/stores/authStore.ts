@@ -9,6 +9,7 @@ import type {
 import { tokenManager } from '@/services/token-manager.service';
 import { authService } from '@/services/auth.service';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 interface CookieOptions {
   days?: number;
@@ -218,7 +219,8 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: null,
             isAuthenticated: false,
           });
-          localStorage.clear();
+          // Clear only TSA-specific localStorage items instead of all localStorage
+          clearTSALocalStorage();
         } catch (error) {
           console.error(error);
         }

@@ -1,6 +1,9 @@
 {
   "general": {
+    "error": "Error",
     "somethingWentWrong": "Something went wrong",
+    "saveError": "Error saving",
+    "invalidDate": "Invalid date",
     "tryAgain": "Please try again",
     "contactSupport": "Contact support if the problem persists"
   },
@@ -27,14 +30,80 @@
   },
   "file": {
     "uploadFailed": "Upload failed",
+    "uploadError": "Error uploading",
     "fileTooLarge": "File too large",
     "invalidFileType": "Unsupported file type",
-    "corruptedFile": "Corrupted file"
+    "corruptedFile": "Corrupted file",
+    "noImageSelected": "No image selected"
   },
   "payment": {
     "paymentFailed": "Payment failed",
     "insufficientFunds": "Insufficient funds",
     "cardDeclined": "Card declined",
-    "paymentTimeout": "Payment timeout"
+    "paymentTimeout": "Payment timeout",
+    "paymentMethodInvalid": "Invalid payment method",
+    "expiryDateInvalid": "Invalid format (MM/YY)",
+    "cvvInvalid": "Invalid CVV",
+    "paymentError": "An error occurred while processing the payment",
+    "paymentHistoryLoadError": "Error loading payment history"
+  },
+  "shop": {
+    "searchError": "Error during visual search"
+  },
+  "profile": {
+    "documentUploadError": "Error uploading document",
+    "updateError": "Error updating profile",
+    "configError": "Error configuring MFA",
+    "enableError": "Error enabling MFA",
+    "invalidCode": "Invalid code"
+  },
+  "notifications": {
+    "markError": "Error marking notification",
+    "markAllError": "Error marking notifications",
+    "deleteError": "Error deleting"
+  },
+  "missions": {
+    "errorLoading": "Error loading mission: {{error}}",
+    "statusUpdateFailed": "Failed to update mission status",
+    "timelineLoadingError": "Error loading timeline",
+    "evaluationLoadingError": "Error loading evaluation",
+    "evaluationSubmitError": "Error submitting evaluation",
+    "financialLoadingError": "Error loading financial information",
+    "invoiceGenerationError": "Error generating invoice",
+    "financialAccessDenied": "Access denied to financial information",
+    "downloadError": "Error downloading invoice",
+    "selectVehicleError": "Please select a vehicle",
+    "applicationError": "Error submitting application",
+    "fillAddressesForPricing": "Please fill in addresses, weight and volume to calculate dynamic pricing",
+    "addressesNeedCoordinates": "Addresses must have valid coordinates to calculate distance",
+    "cannotCalculateDistance": "Cannot calculate distance between addresses",
+    "dynamicPricingError": "Error calculating dynamic pricing"
+  },
+  "maps": {
+    "geolocationLowAccuracy": "Accuracy too low ({{accuracy}} m). Try moving or enabling GPS.",
+    "cannotAccessLocation": "Cannot access your location.",
+    "googleMapsApiKeyMissing": "Google Maps API key missing",
+    "googleMapsNotAvailable": "Google Maps API not available after loading",
+    "googleMapsLoadError": "Unable to load Google Maps",
+    "invalidAddressSelected": "Invalid address selected",
+    "addressProcessingError": "Error processing address",
+    "addressSearchInitError": "Error initializing address search. Use manual input.",
+    "mapInitError": "Error initializing map",
+    "geolocationNotSupported": "Geolocation is not supported by this browser",
+    "geolocationPermissionDenied": "Geolocation permission denied",
+    "geolocationUnavailable": "Position unavailable",
+    "geolocationTimeout": "Geolocation timeout",
+    "noAddressFound": "No address found for your position",
+    "cannotGetAddress": "Cannot retrieve address for your position",
+    "retryGoogleMaps": "Reload failed. Check your internet connection."
+  },
+  "admin": {
+    "userSuspendError": "Error suspending user",
+    "userActivateError": "Error activating user",
+    "userDeleteError": "Error deleting user",
+    "createError": "Error creating user",
+    "downloadError": "Error downloading",
+    "documentValidateError": "Error validating document",
+    "documentRejectError": "Error rejecting document"
   }
 }

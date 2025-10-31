@@ -35,9 +35,7 @@ i18n
       'auth',
       'navigation',
       'dashboard',
-      'products',
       'missions',
-      'orders',
       'cart',
       'profile',
       'admin',
@@ -46,6 +44,9 @@ i18n
       'errors',
       'notifications',
       'tracking',
+      'payment',
+      'maps',
+      'chat',
     ],
   });
 
