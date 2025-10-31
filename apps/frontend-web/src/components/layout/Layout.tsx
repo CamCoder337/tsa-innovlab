@@ -11,12 +11,11 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
-import { webSocketService } from '@/services/websocket.service';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
 
 export default function Layout() {
-  const { isAuthenticated, token, user } = useAuth();
+  const { user } = useAuth();
   const { fetchAllStats } = useAllAdminStats();
   const { fetchCart } = useCart();
   const { fetchAdminCategories, fetchCategories } = useCategories();
@@ -57,24 +56,28 @@ export default function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated && token) webSocketService.initialize(token);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
-
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-gray-50 flex-1 flex-col">
-        <Header />
-        <main className="flex h-full">
-          <div>
-            <Sidebar />
-          </div>
-          <div className="w-full top-16 relative">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      <>
+        {/* FIXED HEADER - MUST HAVE HEIGHT */}
+        <Header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-white" />
+
+        {/* MAIN APP - Full height, starts below header */}
+        <div className="flex-1 pt-16 flex flex-col bg-gray-50">
+          {/* MAIN CONTENT - TAKES REMAINING HEIGHT */}
+          <main className="flex flex-1 overflow-hidden">
+            {/* SIDEBAR */}
+            <aside className="flex-shrink-0 overflow-y-auto border-r bg-white">
+              <Sidebar />
+            </aside>
+
+            {/* OUTLET CONTENT - FULL HEIGHT & WIDTH */}
+            <section className="flex flex-1 overflow-y-auto bg-gray-50">
+              <Outlet /> {/* Renders Chat, Dashboard, etc. */}
+            </section>
+          </main>
+        </div>
+      </>
     </SidebarProvider>
   );
 }

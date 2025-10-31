@@ -1,5 +1,6 @@
 import { authService } from './auth.service';
 import { useAuthStore } from '@/stores/authStore';
+import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 interface TokenManagerConfig {
   /** Durée d'inactivité avant d'arrêter le refresh automatique (en ms) */
@@ -184,7 +185,7 @@ export class TokenManagerService {
 
     if (this.retryCount >= this.config.maxRetryAttempts) {
       console.error('Max retry attempts reached, logging out user');
-      useAuthStore.getState().logout();
+      this.handleLogout();
       return false;
     }
 
@@ -210,7 +211,7 @@ export class TokenManagerService {
 
         // Si on a atteint le maximum de tentatives, déconnecter l'utilisateur
         if (this.retryCount >= this.config.maxRetryAttempts || !useAuthStore.getState().token) {
-          useAuthStore.getState().logout();
+          this.handleLogout();
         }
         return false;
       }
@@ -220,11 +221,20 @@ export class TokenManagerService {
 
       // Si on a atteint le maximum de tentatives, déconnecter l'utilisateur
       if (this.retryCount >= this.config.maxRetryAttempts || !useAuthStore.getState().token) {
-        useAuthStore.getState().logout();
+        this.handleLogout();
       }
 
       return false;
     }
+  }
+
+  /**
+   * Handles logout with TSA-specific localStorage cleanup
+   */
+  private handleLogout(): void {
+    console.log('Token management: Logging out user due to token issues');
+    clearTSALocalStorage();
+    useAuthStore.getState().logout();
   }
 
   /**

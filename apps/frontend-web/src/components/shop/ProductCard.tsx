@@ -90,7 +90,7 @@ export function ProductCard({
                     style={{ backgroundColor: product.stock ? 'var(--tsa-blue)' : undefined }}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {product.stock ? tShop('addToCart') : tShop('outOfStock')}
+                    {product.stock ? tShop('addToCart') : tShop('product.outOfStock')}
                   </Button>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export function ProductCard({
           {/* Stock indicator */}
           {!product.stock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <Badge variant="destructive">{tShop('outOfStock')}</Badge>
+              <Badge variant="destructive">{tShop('product.outOfStock')}</Badge>
             </div>
           )}
         </div>
@@ -181,7 +181,7 @@ export function ProductCard({
               <Button
                 variant="outline"
                 className="w-fit h-auto has-[>svg]:px-1"
-                aria-label={tShop('decreaseQuantity')}
+                aria-label={tShop('product.decreaseQuantity')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setQty(qty - 1);
@@ -191,7 +191,7 @@ export function ProductCard({
                 <Minus className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Input
-                aria-label={tShop('quantity')}
+                aria-label={tShop('product.quantity')}
                 className="w-fit text-center h-auto"
                 type="number"
                 min={1}
@@ -207,7 +207,7 @@ export function ProductCard({
               <Button
                 className="w-fit h-auto has-[>svg]:px-1 "
                 variant="outline"
-                aria-label={tShop('increaseQuantity')}
+                aria-label={tShop('product.increaseQuantity')}
                 onClick={(e) => {
                   e.stopPropagation();
                   setQty(qty + 1);

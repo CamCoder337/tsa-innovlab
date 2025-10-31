@@ -18,14 +18,19 @@ export interface ProfileFormValues {
 }
 
 // Validation schema using Yup
-const createValidationSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
+const createValidationSchema = (
+  tForms: (key: string, options?: Record<string, unknown>) => string
+) =>
   Yup.object({
-    firstName: Yup.string().trim().required(t('validation.required')),
-    lastName: Yup.string().trim().required(t('validation.required')),
-    email: Yup.string().trim().email(t('validation.email')).required(t('validation.required')),
+    firstName: Yup.string().trim().required(tForms('validation.required')),
+    lastName: Yup.string().trim().required(tForms('validation.required')),
+    email: Yup.string()
+      .trim()
+      .email(tForms('validation.email'))
+      .required(tForms('validation.required')),
     phone: Yup.string()
-      .required(t('validation.required'))
-      .test('isValidPhone', t('validation.phone'), function (value) {
+      .required(tForms('validation.required'))
+      .test('isValidPhone', tForms('validation.phone'), function (value) {
         if (!value) return false;
         try {
           const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
@@ -52,7 +57,7 @@ export interface ProfileFormProps {
 
 const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>(
   ({ user, isEditing, isLoading = false, onSubmit, additionalFields }, ref) => {
-    const { t } = useFormsTranslation();
+    const { t: tForms } = useFormsTranslation();
     const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
 
     const initialValues: ProfileFormValues = {
@@ -89,7 +94,7 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
     return (
       <Formik
         initialValues={initialValues}
-        validationSchema={createValidationSchema(t)}
+        validationSchema={createValidationSchema(tForms)}
         onSubmit={handleFormSubmit}
         enableReinitialize
         innerRef={ref}
@@ -130,7 +135,7 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
                     </Badge>
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {t('messages.memberSince')}{' '}
+                    {tForms('messages.memberSince')}{' '}
                     {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
@@ -141,60 +146,60 @@ const ProfileForm = forwardRef<FormikProps<ProfileFormValues>, ProfileFormProps>
                   <>
                     <FormField
                       name="firstName"
-                      label={t('labels.firstName')}
+                      label={tForms('labels.firstName')}
                       icon={User}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="lastName"
-                      label={t('labels.lastName')}
+                      label={tForms('labels.lastName')}
                       icon={User}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="email"
-                      label={t('labels.email')}
+                      label={tForms('labels.email')}
                       type="email"
                       icon={Mail}
                       disabled={isLoading || isSubmitting}
                     />
                     <FormField
                       name="phone"
-                      label={t('labels.phone')}
+                      label={tForms('labels.phone')}
                       type="tel"
                       icon={Phone}
                       disabled={isLoading || isSubmitting}
-                      placeholder={t('placeholders.phoneNumber')}
+                      placeholder={tForms('placeholders.phoneNumber')}
                     />
                   </>
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label>{t('labels.firstName')}</Label>
+                      <Label>{tForms('labels.firstName')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{values.firstName}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('labels.lastName')}</Label>
+                      <Label>{tForms('labels.lastName')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <User className="h-4 w-4 text-muted-foreground" />
                         <span>{values.lastName}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('labels.email')}</Label>
+                      <Label>{tForms('labels.email')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         <span>{values.email}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>{t('labels.phone')}</Label>
+                      <Label>{tForms('labels.phone')}</Label>
                       <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
                         <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{values.phone || t('messages.notProvided')}</span>
+                        <span>{values.phone || tForms('messages.notProvided')}</span>
                       </div>
                     </div>
                   </>

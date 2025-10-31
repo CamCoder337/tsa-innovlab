@@ -1,8 +1,15 @@
 {
   "title": "Notifications",
+  "description": "Manage your notifications and alerts",
   "markAsRead": "Mark as read",
-  "markAllAsRead": "Mark all as read",
-  "noNotifications": "No notifications",
+  "markAllRead": {
+    "button": "Mark all as read",
+    "success": "All notifications have been marked as read"
+  },
+  "empty": {
+    "all": "No notifications",
+    "unread": "No unread notifications"
+  },
   "types": {
     "info": "Information",
     "success": "Success",
@@ -22,24 +29,9 @@
     "documentVerified": "Your document has been verified",
     "documentRejected": "Your document has been rejected"
   },
-  "settings": {
-    "emailNotifications": "Email notifications",
-    "pushNotifications": "Push notifications",
-    "smsNotifications": "SMS notifications",
-    "frequency": "Frequency",
-    "immediate": "Immediate",
-    "daily": "Daily",
-    "weekly": "Weekly"
-  },
-  "description": "Manage your notifications and alerts",
   "markedAsRead": "Notification marked as read",
-  "markError": "Error marking notification",
-  "allMarkedAsRead": "All notifications have been marked as read",
-  "markAllError": "Error marking notifications",
   "deleted": "Notification deleted",
-  "deleteError": "Error deleting notification",
   "allDeleted": "All notifications have been deleted",
-  "deleteAllError": "Error deleting notifications",
   "deleteAll": "Delete all",
   "viewAll": "View all notifications",
   "filters": {
@@ -47,28 +39,10 @@
     "unread": "Unread",
     "important": "Important"
   },
-  "filter": {
-    "all": "All"
-  },
-  "markAllRead": {
-    "button": "Mark all as read",
-    "success": "All notifications have been marked as read",
-    "error": "Error marking notifications"
-  },
   "priority": {
     "urgent": "Urgent",
     "high": "High",
-    "medium": "Medium",
+    "normal": "Medium",
     "low": "Low"
-  },
-  "delete": {
-    "success": "Notification deleted",
-    "error": "Error deleting notification"
-  },
-  "retry": "Retry",
-  "loading": "Loading...",
-  "empty": {
-    "all": "No notifications",
-    "unread": "No unread notifications"
   }
 }

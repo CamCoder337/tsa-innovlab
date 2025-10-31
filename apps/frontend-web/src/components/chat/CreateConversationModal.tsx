@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Users, Hash, Info } from 'lucide-react';
+import { Search, X, Users, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,7 +16,11 @@ import { type ConversationListItem, ConversationType, type SearchUser } from '@/
 import { useMissionStore } from '@/stores/missionStore';
 import { useAuthStore } from '@/stores/authStore';
 import { type Mission } from '@/types/mission.types';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+import {
+  useChatTranslation,
+  useCommonTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 
 interface CreateConversationModalProps {
   isOpen: boolean;
@@ -33,7 +37,9 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
   onClose,
   onConversationCreated,
 }) => {
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tChat } = useChatTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const { searchUsers, isLoading, createDirectConversation, createMissionConversation } = useChat();
   const { myMissions } = useMissionStore();
   const { currentUser } = useAuthStore();
@@ -104,11 +110,12 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
       if (conversationType === ConversationType.DIRECT) {
         conversation = await createDirectConversation(selectedUser.id);
       } else {
-        const finalMissionId = missionId || selectedMissionId;
+        const finalMissionId = selectedMissionId || missionId;
         if (!finalMissionId) {
           console.error('Mission ID is required for mission conversations');
           return;
         }
+        console.log(finalMissionId);
         conversation = await createMissionConversation(selectedUser.id, finalMissionId);
       }
 
@@ -164,7 +171,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            {t('buttons.newConversation')}
+            {tForms('buttons.newConversation')}
           </DialogTitle>
         </DialogHeader>
 
@@ -178,7 +185,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               className="flex-1"
             >
               <Users className="h-4 w-4 mr-2" />
-              {t('buttons.direct')}
+              {tForms('buttons.direct')}
             </Button>
             <Button
               variant={conversationType === ConversationType.MISSION ? 'default' : 'outline'}
@@ -187,17 +194,17 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               className="flex-1"
             >
               <Hash className="h-4 w-4 mr-2" />
-              {t('buttons.mission')}
+              {tForms('buttons.mission')}
             </Button>
           </div>
 
           {/* User Search */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('labels.searchUser')}</label>
+            <label className="text-sm font-medium">{tChat('labels.searchUser')}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder={t('placeholders.searchUserByNameOrEmail')}
+                placeholder={tForms('placeholders.searchUserByNameOrEmail')}
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
@@ -241,7 +248,23 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
             <div className="max-h-48 overflow-y-auto border rounded-lg">
               {searchResults.map((user) => (
                 <div key={user.id} className="p-3 hover:bg-gray-50 border-b last:border-b-0">
-                  <div className="flex items-center gap-3">
+                  <div
+                    className="flex items-center gap-3"
+                    onClick={() => {
+                      console.log(user);
+                      console.log(conversationType);
+                      console.log(user.relatedMissions);
+                      if (
+                        conversationType === ConversationType.MISSION &&
+                        user.relatedMissions &&
+                        user.relatedMissions.length > 0
+                      ) {
+                        handleShowMissions(user);
+                      } else {
+                        setSelectedUser(user);
+                      }
+                    }}
+                  >
                     <Avatar className="h-8 w-8">
                       {/* <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} /> */}
                       <AvatarFallback>
@@ -258,7 +281,9 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <p className="text-xs text-gray-600 truncate">{user.email}</p>
                       {conversationType === ConversationType.MISSION && user.relatedMissions && (
                         <p className="text-xs text-tsa-blue mt-1">
-                          {t('messages.sharedMissions', { count: user.relatedMissions.length })}
+                          {tForms('messages.sharedMissions', {
+                            count: user.relatedMissions.length,
+                          })}
                         </p>
                       )}
                     </div>
@@ -266,18 +291,6 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <Badge variant="secondary" className="text-xs">
                         {user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || ''}
                       </Badge>
-                      {conversationType === ConversationType.MISSION &&
-                        user.relatedMissions &&
-                        user.relatedMissions.length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleShowMissions(user)}
-                            className="h-6 w-6 p-0 hover:bg-blue-100"
-                          >
-                            <Info className="h-3 w-3 text-tsa-blue" />
-                          </Button>
-                        )}
                     </div>
                   </div>
                 </div>
@@ -289,14 +302,14 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
           {searchQuery.length >= 2 && searchResults.length === 0 && !isSearching && (
             <div className="text-center py-4 text-gray-500">
               <Users className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">{t('messages.noUsersFound')}</p>
+              <p className="text-sm">{tForms('messages.noUsersFound')}</p>
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-4">
             <Button variant="outline" onClick={handleClose} className="flex-1">
-              {t('buttons.cancel')}
+              {tForms('buttons.cancel')}
             </Button>
             <Button
               onClick={() => handleCreateConversation()}
@@ -310,10 +323,10 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {t('messages.creating')}
+                  {tForms('messages.creating')}
                 </>
               ) : (
-                t('buttons.createConversation')
+                tForms('buttons.createConversation')
               )}
             </Button>
           </div>
@@ -326,10 +339,10 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Hash className="h-5 w-5" />
-                  {t('labels.selectMission')}
+                  {tForms('labels.selectMission')}
                 </DialogTitle>
                 <DialogDescription>
-                  {t('messages.chooseMissionForConversation', {
+                  {tForms('messages.chooseMissionForConversation', {
                     name: `${selectedUser?.firstName} ${selectedUser?.lastName}`,
                   })}
                 </DialogDescription>
@@ -361,7 +374,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                             }
                             className="text-xs"
                           >
-                            {mission.status}
+                            {tCommon(`status.${mission.status}`)}
                           </Badge>
                           {mission.budgetMin && mission.budgetMax && (
                             <span className="text-xs text-gray-500">

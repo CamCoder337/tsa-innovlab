@@ -25,6 +25,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigationTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type SidebarItem = {
   id: string;
@@ -34,22 +35,22 @@ type SidebarItem = {
   children?: SidebarItem[];
 };
 
-const affreteurMenu: SidebarItem[] = [
+const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -57,13 +58,13 @@ const affreteurMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -71,7 +72,7 @@ const affreteurMenu: SidebarItem[] = [
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -96,22 +97,22 @@ const affreteurMenu: SidebarItem[] = [
   // }
 ];
 
-const transporteurMenu: SidebarItem[] = [
+const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -119,19 +120,19 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'vehicles',
-    label: 'Mes Véhicules',
+    label: tNav('menu.vehicles'),
     icon: Truck,
     href: '/app/vehicles',
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -139,7 +140,7 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -160,22 +161,22 @@ const transporteurMenu: SidebarItem[] = [
   // },
 ];
 
-const adminMenu: SidebarItem[] = [
+const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: tNav('menu.dashboard'),
     icon: LayoutDashboard,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -183,25 +184,25 @@ const adminMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingBag,
     href: '/app/products',
   },
   {
     id: 'orders',
-    label: 'Commandes',
+    label: tNav('menu.orders'),
     icon: ShoppingCart,
     href: '/app/orders',
   },
   {
     id: 'users',
-    label: 'Utilisateurs',
+    label: tNav('menu.users'),
     icon: Users,
     href: '/app/users',
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -216,10 +217,10 @@ const adminMenu: SidebarItem[] = [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
-const clientMenu: SidebarItem[] = [
+const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
   },
@@ -227,10 +228,12 @@ const clientMenu: SidebarItem[] = [
 
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return clientMenu;
-  if (user?.role === 'transporteur') return transporteurMenu;
-  if (user?.role === 'admin') return adminMenu;
-  return affreteurMenu;
+  const { t: tNav } = useNavigationTranslation();
+
+  if (!isAuthenticated || user?.role === 'client') return getClientMenu(tNav);
+  if (user?.role === 'transporteur') return getTransporteurMenu(tNav);
+  if (user?.role === 'admin') return getAdminMenu(tNav);
+  return getAffreteurMenu(tNav);
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
@@ -307,7 +310,10 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 
 export default function Sidebar() {
   const { user, isAuthenticated } = useAuth();
-  const role = user ? user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) : 'Invité';
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tNav } = useNavigationTranslation();
+
+  const role = user ? tCommon(`roles.${user?.role}`) : tCommon('roles.guest');
   const menu = GetMenuByRole();
 
   if (!isAuthenticated) return null;
@@ -317,7 +323,7 @@ export default function Sidebar() {
       <SidebarHeader className="flex flex-row items-center justify-between p-2">
         <div className="flex items-center gap-2">
           <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
-            Espace {role}
+            {tNav('breadcrumb.workspace', { role })}
           </div>
         </div>
         <SidebarTrigger className="ml-auto" />

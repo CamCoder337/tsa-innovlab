@@ -5,7 +5,7 @@ import bg from '@/assets/login-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import { useAuth } from '@/hooks/useAuth';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import LoginForm from '@/components/forms/LoginForm';
 import type { LoginCredentials } from '@/types/auth.types';
 
@@ -16,8 +16,6 @@ const Login: React.FC = () => {
 
   const handleLogin = async (data: LoginCredentials) => {
     const response = await login(data);
-
-    console.log(response);
 
     // Handle login failure
     if (error) {

@@ -8,6 +8,7 @@ import type {
 } from '@/types/auth.types';
 import { tokenManager } from '@/services/token-manager.service';
 import { authService } from '@/services/auth.service';
+import { toast } from 'sonner';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
@@ -209,7 +210,11 @@ export const useAuthStore = create<AuthStore>()(
         // Arrêter la gestion automatique des tokens
         tokenManager.stopTokenManagement();
         try {
-          await authService.logout();
+          await toast.promise(authService.logout(), {
+            loading: 'Déconnexion...',
+            success: 'Déconnexion réussie',
+            error: 'Erreur lors de la déconnexion',
+          });
 
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
@@ -223,6 +228,7 @@ export const useAuthStore = create<AuthStore>()(
           clearTSALocalStorage();
         } catch (error) {
           console.error(error);
+          toast.error('Erreur lors de la déconnexion');
         }
       },
 

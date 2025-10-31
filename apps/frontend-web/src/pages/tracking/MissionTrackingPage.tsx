@@ -19,8 +19,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMissions } from '@/hooks/useMissions';
-import { useTrackingTranslation } from '@/hooks/useTranslation';
-import { toast } from 'react-hot-toast';
+import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
 
 const getStatusBadgeColor = (status: string) => {
@@ -40,18 +40,18 @@ const getStatusBadgeColor = (status: string) => {
   }
 };
 
-const getStatusLabel = (status: string, t: (key: string) => string) => {
+const getStatusLabel = (status: string, tCommon: (key: string) => string) => {
   switch (status) {
     case 'published':
-      return t('status.published');
+      return tCommon('status.published');
     case 'assigned':
-      return t('status.assigned');
+      return tCommon('status.assigned');
     case 'in_progress':
-      return t('status.in_progress');
+      return tCommon('status.in_progress');
     case 'completed':
-      return t('status.completed');
+      return tCommon('status.completed');
     case 'cancelled':
-      return t('status.cancelled');
+      return tCommon('status.cancelled');
     default:
       return status;
   }
@@ -61,7 +61,8 @@ export default function MissionTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { myMissions: missions } = useMissions();
-  const { t } = useTrackingTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tTracking } = useTrackingTranslation();
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const mission = missions.find((m) => m.id === id);
@@ -70,11 +71,11 @@ export default function MissionTrackingPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('mission.notFound')}</h1>
-          <p className="text-gray-600 mb-8">{t('mission.notFoundMessage', { id })}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{tTracking('mission.notFound')}</h1>
+          <p className="text-gray-600 mb-8">{tTracking('mission.notFoundMessage', { id })}</p>
           <Button onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('navigation.backToDashboard')}
+            {tTracking('navigation.backToDashboard')}
           </Button>
         </div>
       </div>
@@ -82,39 +83,39 @@ export default function MissionTrackingPage() {
   }
 
   const handleExportPDF = () => {
-    toast.success(t('actions.exportPdf'));
+    toast.success(tTracking('actions.exportPdf'));
   };
 
   const timeline = [
     {
       status: 'published',
-      label: t('timeline.published.label'),
+      label: tTracking('timeline.published.label'),
       date: mission.createdAt,
       completed: true,
-      description: t('timeline.published.description'),
+      description: tTracking('timeline.published.description'),
     },
     {
       status: 'assigned',
-      label: t('timeline.assigned.label'),
+      label: tTracking('timeline.assigned.label'),
       date: mission.transporteurId ? new Date().toISOString() : null,
       completed: !!mission.transporteurId,
       description: mission.transporteurId
-        ? t('timeline.assigned.description')
-        : t('timeline.assigned.pending'),
+        ? tTracking('timeline.assigned.description')
+        : tTracking('timeline.assigned.pending'),
     },
     {
       status: 'assigned',
-      label: t('timeline.inProgress.label'),
+      label: tTracking('timeline.inProgress.label'),
       date: mission.status === 'assigned' ? new Date().toISOString() : null,
       completed: mission.status === 'assigned' || mission.status === 'completed',
-      description: t('timeline.inProgress.description'),
+      description: tTracking('timeline.inProgress.description'),
     },
     {
       status: 'completed',
-      label: t('timeline.completed.label'),
+      label: tTracking('timeline.completed.label'),
       date: mission.status === 'completed' ? mission.dateArriveePrevue : null,
       completed: mission.status === 'completed',
-      description: t('timeline.completed.description'),
+      description: tTracking('timeline.completed.description'),
     },
   ];
 
@@ -126,11 +127,11 @@ export default function MissionTrackingPage() {
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={() => navigate('/app/tracking-dashboard')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('navigation.back')}
+              {tCommon('actions.back')}
             </Button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{mission.title}</h1>
-              <p className="text-gray-600">{t('navigation.detailedTracking')}</p>
+              <p className="text-gray-600">{tTracking('navigation.detailedTracking')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -140,15 +141,15 @@ export default function MissionTrackingPage() {
               onClick={() => navigator.clipboard.writeText(window.location.href)}
             >
               <Share2 className="w-4 h-4 mr-2" />
-              {t('actions.share')}
+              {tTracking('actions.share')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportPDF}>
               <Download className="w-4 h-4 mr-2" />
-              {t('actions.exportPdf')}
+              {tTracking('actions.exportPdf')}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)}>
               <Maximize2 className="w-4 h-4 mr-2" />
-              {t('actions.fullscreen')}
+              {tTracking('actions.fullscreen')}
             </Button>
           </div>
         </div>
@@ -159,13 +160,13 @@ export default function MissionTrackingPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('mission.status')}</p>
+                  <p className="text-sm font-medium text-gray-600">{tTracking('mission.status')}</p>
                   <Badge className={getStatusBadgeColor(mission.status)}>
-                    {getStatusLabel(mission.status, t)}
+                    {getStatusLabel(mission.status, tCommon)}
                   </Badge>
                 </div>
                 <div
-                  className={`w-3 h-3 rounded-full ${getStatusBadgeColor(mission.status).includes('blue') ? 'bg-blue-500' : getStatusBadgeColor(mission.status).includes('yellow') ? 'bg-yellow-500' : getStatusBadgeColor(mission.status).includes('orange') ? 'bg-orange-500' : getStatusBadgeColor(mission.status).includes('green') ? 'bg-green-500' : 'bg-red-500'}`}
+                  className={`w-3 h-3 rounded-full ${getStatusBadgeColor(mission.status).includes('blue') ? 'bg-tsa-blue/90' : getStatusBadgeColor(mission.status).includes('yellow') ? 'bg-yellow-500' : getStatusBadgeColor(mission.status).includes('orange') ? 'bg-orange-500' : getStatusBadgeColor(mission.status).includes('green') ? 'bg-green-500' : 'bg-red-500'}`}
                 />
               </div>
             </CardContent>
@@ -175,7 +176,7 @@ export default function MissionTrackingPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('mission.price')}</p>
+                  <p className="text-sm font-medium text-gray-600">{tTracking('mission.price')}</p>
                   <p className="text-lg font-bold text-green-600">
                     {mission.budgetMin?.toLocaleString() || 0} FCFA
                   </p>
@@ -189,9 +190,11 @@ export default function MissionTrackingPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{t('mission.merchandise')}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    {tTracking('mission.merchandise')}
+                  </p>
                   <p className="text-lg font-bold text-gray-900">
-                    {t('mission.weight', { weight: mission.poids })}
+                    {tTracking('mission.weight', { weight: mission.poids })}
                   </p>
                   <p className="text-sm text-gray-600">{mission.typeMarchandise}</p>
                 </div>
@@ -205,7 +208,7 @@ export default function MissionTrackingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">
-                    {t('mission.deliveryScheduled')}
+                    {tTracking('mission.deliveryScheduled')}
                   </p>
                   <p className="text-lg font-bold text-gray-900">
                     {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
@@ -219,10 +222,10 @@ export default function MissionTrackingPage() {
 
         <Tabs defaultValue="tracking" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="tracking">{t('tabs.realTimeTracking')}</TabsTrigger>
-            <TabsTrigger value="details">{t('tabs.missionDetails')}</TabsTrigger>
-            <TabsTrigger value="timeline">{t('tabs.timeline')}</TabsTrigger>
-            <TabsTrigger value="documents">{t('tabs.documents')}</TabsTrigger>
+            <TabsTrigger value="tracking">{tTracking('tabs.realTimeTracking')}</TabsTrigger>
+            <TabsTrigger value="details">{tTracking('tabs.missionDetails')}</TabsTrigger>
+            <TabsTrigger value="timeline">{tTracking('tabs.timeline')}</TabsTrigger>
+            <TabsTrigger value="documents">{tTracking('tabs.documents')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tracking" className="space-y-4">
@@ -231,11 +234,11 @@ export default function MissionTrackingPage() {
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5" />
-                    {t('map.title')}
+                    {tTracking('map.title')}
                   </div>
                   {isFullscreen && (
                     <Button variant="outline" size="sm" onClick={() => setIsFullscreen(false)}>
-                      {t('map.close')}
+                      {tTracking('map.close')}
                     </Button>
                   )}
                 </CardTitle>
@@ -257,35 +260,35 @@ export default function MissionTrackingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('mission.information')}</CardTitle>
+                  <CardTitle>{tTracking('mission.information')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">
-                      {t('mission.description')}
+                      {tTracking('mission.description')}
                     </label>
                     <p className="text-gray-900">{mission.description}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        {t('mission.merchandiseType')}
+                        {tTracking('mission.merchandiseType')}
                       </label>
                       <p className="text-gray-900">{mission.typeMarchandise}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        {t('mission.weight', { weight: '' })}
+                        {tTracking('mission.weight', { weight: '' })}
                       </label>
                       <p className="text-gray-900">
-                        {t('mission.weight', { weight: mission.poids })}
+                        {tTracking('mission.weight', { weight: mission.poids })}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        {t('mission.estimatedDeparture')}
+                        {tTracking('mission.estimatedDeparture')}
                       </label>
                       <p className="text-gray-900">
                         {new Date(mission.dateDepartEstime || '').toLocaleDateString()}
@@ -293,7 +296,7 @@ export default function MissionTrackingPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        {t('mission.expectedArrival')}
+                        {tTracking('mission.expectedArrival')}
                       </label>
                       <p className="text-gray-900">
                         {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
@@ -314,7 +317,7 @@ export default function MissionTrackingPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Truck className="w-5 h-5" />
-                      {t('transporter.title')}
+                      {tTracking('transporter.title')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -324,30 +327,30 @@ export default function MissionTrackingPage() {
                       </div>
                       <div>
                         <p className="font-medium">Transporteur #{mission.transporteurId}</p>
-                        <p className="text-sm text-gray-600">{t('transporter.verified')}</p>
+                        <p className="text-sm text-gray-600">{tTracking('transporter.verified')}</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <Button variant="outline" size="sm">
                         <Phone className="w-4 h-4 mr-2" />
-                        {t('transporter.call')}
+                        {tTracking('transporter.call')}
                       </Button>
                       <Button variant="outline" size="sm">
                         <Mail className="w-4 h-4 mr-2" />
-                        {t('transporter.message')}
+                        {tTracking('transporter.message')}
                       </Button>
                     </div>
                     {mission.currentPosition && (
                       <div>
                         <label className="text-sm font-medium text-gray-600">
-                          {t('transporter.lastPosition')}
+                          {tTracking('transporter.lastPosition')}
                         </label>
                         <p className="text-gray-900">
                           {mission.lastPositionUpdate
-                            ? t('transporter.positionUpdate', {
+                            ? tTracking('transporter.positionUpdate', {
                                 date: new Date(mission.lastPositionUpdate).toLocaleString(),
                               })
-                            : t('transporter.realTimePosition')}
+                            : tTracking('transporter.realTimePosition')}
                         </p>
                       </div>
                     )}
@@ -360,7 +363,7 @@ export default function MissionTrackingPage() {
           <TabsContent value="timeline" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>{t('timeline.title')}</CardTitle>
+                <CardTitle>{tTracking('timeline.title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -413,13 +416,13 @@ export default function MissionTrackingPage() {
           <TabsContent value="documents" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>{t('documents.title')}</CardTitle>
+                <CardTitle>{tTracking('documents.title')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12 text-gray-500">
                   <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p>{t('documents.noDocuments')}</p>
-                  <p className="text-sm">{t('documents.documentsWillShow')}</p>
+                  <p>{tTracking('documents.noDocuments')}</p>
+                  <p className="text-sm">{tTracking('documents.documentsWillShow')}</p>
                 </div>
               </CardContent>
             </Card>

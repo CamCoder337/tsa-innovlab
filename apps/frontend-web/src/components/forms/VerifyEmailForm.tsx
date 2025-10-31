@@ -6,10 +6,13 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useFormsTranslation } from '@/hooks/useTranslation';
 
-const createValidationSchema = (t: (key: string) => string) =>
+const createValidationSchema = (tForms: (key: string) => string) =>
   Yup.object({
-    email: Yup.string().trim().required(t('validation.required')).email(t('validation.email')),
-    token: Yup.string().trim().required(t('validation.required')),
+    email: Yup.string()
+      .trim()
+      .required(tForms('validation.required'))
+      .email(tForms('validation.email')),
+    token: Yup.string().trim().required(tForms('validation.required')),
   });
 
 interface VerifyEmailFormProps {
@@ -23,12 +26,12 @@ export default function VerifyEmailForm({
   onSubmit,
   isAutoVerifying = false,
 }: VerifyEmailFormProps) {
-  const { t } = useFormsTranslation();
+  const { t: tForms } = useFormsTranslation();
 
   return (
     <Formik<VerifyEmailFormData>
       initialValues={initialValues}
-      validationSchema={createValidationSchema(t)}
+      validationSchema={createValidationSchema(tForms)}
       enableReinitialize={true}
       onSubmit={onSubmit}
       validateOnBlur={true}
@@ -39,7 +42,7 @@ export default function VerifyEmailForm({
         if (isSubmitting || isAutoVerifying) {
           return (
             <div className="space-y-6 text-center">
-              <div className="text-tsa-blue font-medium">{t('messages.autoVerifying')}</div>
+              <div className="text-tsa-blue font-medium">{tForms('messages.autoVerifying')}</div>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tsa-blue mx-auto"></div>
             </div>
           );
@@ -51,7 +54,7 @@ export default function VerifyEmailForm({
               <Input
                 name="email"
                 type="email"
-                placeholder={t('placeholders.enterEmail')}
+                placeholder={tForms('placeholders.enterEmail')}
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -68,7 +71,7 @@ export default function VerifyEmailForm({
               <Input
                 name="token"
                 type="text"
-                placeholder={t('placeholders.enterVerificationCode')}
+                placeholder={tForms('placeholders.enterVerificationCode')}
                 value={values.token}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -86,12 +89,12 @@ export default function VerifyEmailForm({
               className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 text-white font-semibold text-2xl p-10"
               disabled={isSubmitting}
             >
-              {t('buttons.verify')}
+              {tForms('buttons.verify')}
             </Button>
 
             <div className="text-center">
               <Link to="/" className="text-tsa-blue font-medium">
-                {t('buttons.backToLogin')}
+                {tForms('buttons.backToLogin')}
               </Link>
             </div>
           </Form>

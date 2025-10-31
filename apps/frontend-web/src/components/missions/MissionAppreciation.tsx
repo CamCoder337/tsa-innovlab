@@ -6,8 +6,13 @@ import { Star, MessageSquare, ThumbsUp, Award, Loader2, AlertTriangle } from 'lu
 import type { Mission, MissionFeedback } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
-import toast from 'react-hot-toast';
-import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
+import {
+  useMissionsTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 
 interface MissionAppreciationProps {
   mission: Mission;
@@ -31,6 +36,8 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
   const { user } = useAuth();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
+  const { t: tForms } = useFormsTranslation();
   const [appreciation, setAppreciation] = useState<AppreciationData>({
     ponctualite: 0,
     fiabilite: 0,
@@ -54,7 +61,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         const response = await missionService.getMissionFeedback(mission.id);
 
         if (response.error) {
-          setFeedbackError(tCommon('errors.loadingError'));
+          setFeedbackError(tErrors('missions.evaluationLoadingError'));
           return;
         }
 
@@ -70,7 +77,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
           }
         }
       } catch {
-        setFeedbackError(tCommon('errors.loadingError'));
+        setFeedbackError(tErrors('missions.evaluationLoadingError'));
       } finally {
         setIsLoadingFeedback(false);
       }
@@ -119,7 +126,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
       appreciation.gestionIncidents > 0;
 
     if (!hasRatings) {
-      toast.error(tMissions('appreciation.validation.ratingRequired'));
+      toast.error(tForms('validation.ratingRequired'));
       return;
     }
 
@@ -134,7 +141,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
       const response = await missionService.createMissionFeedback(mission.id, feedbackData);
 
       if (response.error) {
-        toast.error(response.error.message || tMissions('appreciation.errors.submitError'));
+        toast.error(response.error.message || tErrors('missions.evaluationSubmitError'));
       }
 
       if (response.data) {
@@ -143,7 +150,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         onUpdate?.();
       }
     } catch {
-      toast.error(tMissions('appreciation.errors.submitError'));
+      toast.error(tErrors('missions.evaluationSubmitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -169,18 +176,18 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               <div className="text-2xl font-bold text-green-600">
                 {mission.status === 'completed' ? '✓' : '⏳'}
               </div>
-              <p className="text-sm text-gray-600 mt-1">{tCommon('status')}</p>
-              <p className="font-medium capitalize">{tMissions(`status.${mission.status}`)}</p>
+              <p className="text-sm text-gray-600 mt-1">{tCommon('status.title')}</p>
+              <p className="font-medium capitalize">{tCommon(`status.${mission.status}`)}</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-tsa-blue">
                 {mission.dateFinReelle ? '100%' : '0%'}
               </div>
-              <p className="text-sm text-gray-600 mt-1">{tMissions('progress')}</p>
+              <p className="text-sm text-gray-600 mt-1">{tMissions('tracking.progress')}</p>
               <p className="font-medium">
                 {mission.dateFinReelle
-                  ? tMissions('status.completed')
-                  : tMissions('status.inProgress')}
+                  ? tCommon('status.completed')
+                  : tCommon('status.in_progress')}
               </p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -205,11 +212,11 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">{tMissions('transporter')}</p>
+              <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}</p>
               <p className="font-medium">
                 {mission.transporteur?.fullName ||
                   `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
-                  tMissions('notAssigned')}
+                  tCommon('status.notAssigned')}
               </p>
             </div>
             <div>
@@ -217,7 +224,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               <p className="font-medium">
                 {mission.dateFinReelle && mission.dateDebutReelle
                   ? `${Math.ceil((new Date(mission.dateFinReelle).getTime() - new Date(mission.dateDebutReelle).getTime()) / (1000 * 60 * 60 * 24))} jours`
-                  : tCommon('notAvailable')}
+                  : tCommon('status.notAvailable')}
               </p>
             </div>
             <div>
@@ -226,7 +233,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div>
               <p className="text-sm text-gray-600">{tMissions('distance')}</p>
-              <p className="font-medium">{tCommon('notAvailable')} km</p>
+              <p className="font-medium">{tCommon('status.notAvailable')}</p>
             </div>
           </div>
         </CardContent>
@@ -465,9 +472,11 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
 
             {/* Comment */}
             <div>
-              <label className="block text-sm font-medium mb-2">{tCommon('comment')}</label>
+              <label className="block text-sm font-medium mb-2">
+                {tMissions('appreciation.comments')}
+              </label>
               <Textarea
-                placeholder={tMissions('appreciation.commentPlaceholder')}
+                placeholder={tMissions('appreciation.commentsPlaceholder')}
                 value={appreciation.comment}
                 onChange={(e) => setAppreciation((prev) => ({ ...prev, comment: e.target.value }))}
                 rows={4}
@@ -501,9 +510,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               }
               className="w-full"
             >
-              {isSubmitting
-                ? tCommon('submitting')
-                : tMissions('appreciation.submitDetailedEvaluation')}
+              {isSubmitting ? tCommon('submitting') : tMissions('appreciation.submitEvaluation')}
             </Button>
           </CardContent>
         </Card>
@@ -514,7 +521,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            {tMissions('appreciation.title')}
+            {tMissions('appreciation.title2')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -532,7 +539,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{tMissions('appreciation.submitted')}</h4>
+                  <h4 className="font-medium">{tMissions('appreciation.success.submitted')}</h4>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star

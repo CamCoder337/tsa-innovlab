@@ -21,12 +21,13 @@ import { cn } from '@/lib/utils';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
+import { useShopTranslation } from '@/hooks/useTranslation';
 
-export default function Shop() {
-  // Store hooks
-  const { products = [], isLoading } = useProducts();
-  const { error, addToCart } = useCart();
+export default function ShopPage() {
+  const { t: tShop } = useShopTranslation();
+  const { products, isLoading, error } = useProducts();
+  const { addToCart, error: cartError } = useCart();
   const { isAuthenticated } = useAuth();
   const { results, error: VisualError } = useVisualRecognitionSearch();
   const lowStockProducts = products?.filter((p) => p.stock <= p.stockAlert);
@@ -124,22 +125,23 @@ export default function Shop() {
   }, [products, filters, results]);
 
   const handleAddToCart = async (product: Product, quantity: number) => {
-    await addToCart(product, quantity);
-    if (error) {
-      toast.error(error);
-      return;
+    try {
+      await addToCart(product, quantity);
+      if (cartError) {
+        toast.error(cartError);
+        return;
+      }
+      toast.success(`${product.name} ${tShop('product.addedToCart')}`);
+    } catch (error) {
+      // toast.error(tShop('product.errorAddingToCart'));
+      console.error(error);
     }
-    toast.success(`${product.name} a été ajouté à votre panier`);
   };
 
   const handleToggleWishlist = (productId: string) => {
     setWishlist((prev) =>
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
-  };
-
-  const handleQuickView = (product: Product) => {
-    console.log('Quick view:', product.name);
   };
 
   const clearFilters = () => {
@@ -169,10 +171,8 @@ export default function Shop() {
     <div className="container mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-tsa-blue/90 mb-2">TSA MARKET</h1>
-        <p className="text-gray-600">
-          Parcourez notre collection de pièces reconditionnées de qualité par tous vos fournisseurs
-        </p>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">{tShop('title')} TSA</h1>
+        <p className="text-gray-600 text-lg">{tShop('subtitle')}</p>
       </div>
 
       {/* AI Recommendations */}
@@ -186,17 +186,25 @@ export default function Shop() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
-              <h3 className="font-medium text-orange-800">Alerte Stock Faible</h3>
+              <h3 className="font-medium text-orange-800">{tShop('alerts.lowStockTitle')}</h3>
             </div>
             <div className="space-y-1">
               {lowStockProducts.map((product) => (
                 <p key={product.id} className="text-sm text-orange-700">
-                  <strong>{product.name}</strong> - Plus que {product.stock} en stock!
+                  <strong>{product.name}</strong> -{' '}
+                  {tShop('alerts.lowStockMessage', { count: product.stock })}
                 </p>
               ))}
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <span className="text-red-800">{error}</span>
+        </div>
       )}
 
       {VisualError && (
@@ -219,13 +227,13 @@ export default function Shop() {
           onClick={() => setShowFilters(!showFilters)}
         >
           <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Filtres {hasActiveFilters && '•'}
+          {tShop('filters.title')} {hasActiveFilters && '•'}
         </Button>
         {/* Search */}
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
-            placeholder="Rechercher..."
+            placeholder={tShop('search.placeholder')}
             className="pl-9"
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -237,13 +245,13 @@ export default function Shop() {
           onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
         >
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Trier par" />
+            <SelectValue placeholder={tShop('sorting.sortBy')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="updatedAt">Nouveautés</SelectItem>
-            <SelectItem value="price">Prix croissant</SelectItem>
-            <SelectItem value="name">Nom (A-Z)</SelectItem>
-            <SelectItem value="stock">Stock disponible</SelectItem>
+            <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
+            <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
+            <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
+            <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2">
@@ -277,8 +285,9 @@ export default function Shop() {
           {/* Toolbar */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <p className="text-sm text-gray-500">
-              {filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''} trouvé
-              {filteredProducts.length !== 1 ? 's' : ''}
+              {filteredProducts.length === 1
+                ? tShop('results.found', { count: filteredProducts.length })
+                : tShop('results.foundPlural', { count: filteredProducts.length })}
             </p>
             <div className="hidden md:flex items-center gap-4 w-full md:w-auto">
               <Select
@@ -286,13 +295,13 @@ export default function Shop() {
                 onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
               >
                 <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={tShop('sorting.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="updatedAt">Nouveautés</SelectItem>
-                  <SelectItem value="price">Prix croissant</SelectItem>
-                  <SelectItem value="name">Nom (A-Z)</SelectItem>
-                  <SelectItem value="stock">Stock disponible</SelectItem>
+                  <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
+                  <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
+                  <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
+                  <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1 border rounded-md p-1">
@@ -333,7 +342,6 @@ export default function Shop() {
                   viewMode={viewMode}
                   onAddToCart={handleAddToCart}
                   onToggleWishlist={handleToggleWishlist}
-                  onQuickView={handleQuickView}
                   isInWishlist={wishlist.includes(product.id)}
                 />
               ))}
@@ -346,14 +354,14 @@ export default function Shop() {
             (results ? (
               <div className="text-center py-8 text-gray-500">
                 <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Aucun produit similaire trouvé</p>
-                <p className="text-sm">Essayez avec une autre image</p>
+                <p>{tShop('search.noVisualResults')}</p>
+                <p className="text-sm">{tShop('search.tryAnotherImage')}</p>
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">Aucun produit trouvé</p>
+                <p className="text-muted-foreground mb-4">{tShop('search.noResults')}</p>
                 <Button onClick={clearFilters} variant="outline">
-                  Effacer les filtres
+                  {tShop('filters.clearFilters')}
                 </Button>
               </div>
             ))}
