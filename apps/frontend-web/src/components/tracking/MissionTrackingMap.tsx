@@ -96,9 +96,10 @@ export default function MissionTrackingMap({
       mapsService.clearMarkers();
       mapsService.clearRoutes();
 
-      // Ajouter les marqueurs pour chaque mission
-      const newRouteInfo = new Map<string, RouteInfo>();
+      // Réinitialiser routeInfo
+      setRouteInfo(new Map());
 
+      // Ajouter les marqueurs pour chaque mission
       for (const mission of filteredMissions) {
         // Get real coordinates from addresses
         const departPosition = getCoordinatesFromAddress(mission.adresseDepart);
@@ -158,33 +159,39 @@ export default function MissionTrackingMap({
 
         // Calculate route and ETA
         if (showRoutes) {
-          try {
-            // Display route on map (this also calculates distance and duration)
-            const result = await mapsService.displayRoute(departPosition, arriveePosition, {
+          // Display route on map (this also calculates distance and duration)
+          mapsService
+            .displayRoute(departPosition, arriveePosition, {
               routeId: `route-${mission.id}`,
               strokeColor: '#2563eb',
               strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
               strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+            })
+            .then((result) => {
+              if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+                const leg = result.routes[0].legs[0];
+                const distance = Math.round((leg.distance?.value || 0) / 1000); // km
+                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
+
+                // Calculate ETA based on current time
+                const eta = new Date();
+                eta.setMinutes(eta.getMinutes() + duration);
+
+                // Update route info using functional form to avoid race conditions
+                setRouteInfo((prev) => {
+                  const updated = new Map(prev);
+                  updated.set(mission.id, {
+                    distance,
+                    duration,
+                    eta,
+                  });
+                  return updated;
+                });
+              }
+            })
+            .catch((err) => {
+              console.error(`Failed to calculate route for mission ${mission.id}:`, err);
             });
-
-            if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
-              const leg = result.routes[0].legs[0];
-              const distance = Math.round((leg.distance?.value || 0) / 1000); // km
-              const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
-
-              // Calculate ETA based on current time
-              const eta = new Date();
-              eta.setMinutes(eta.getMinutes() + duration);
-
-              newRouteInfo.set(mission.id, {
-                distance,
-                duration,
-                eta,
-              });
-            }
-          } catch (err) {
-            console.error(`Failed to calculate route for mission ${mission.id}:`, err);
-          }
         }
 
         // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
@@ -209,9 +216,6 @@ export default function MissionTrackingMap({
           }
         }
       }
-
-      // Update route info state
-      setRouteInfo(newRouteInfo);
 
       // Ajuster la vue pour inclure toutes les missions
       if (filteredMissions.length > 0) {

@@ -191,14 +191,11 @@ export class GoogleMapsService {
         const route = result.routes[0];
         const routeId = options?.routeId || `route-${Date.now()}`;
 
-        // Get the path from overview_path or decode from overview_polyline
+        // Get the path from overview_path
         let path: google.maps.LatLng[] = [];
 
         if (route.overview_path && route.overview_path.length > 0) {
           path = route.overview_path;
-        } else if (route.overview_polyline) {
-          // Decode polyline if overview_path is not available
-          path = google.maps.geometry.encoding.decodePath(route.overview_polyline);
         }
 
         if (path.length > 0) {
@@ -214,7 +211,6 @@ export class GoogleMapsService {
 
           // Store the polyline for later removal
           this.polylines.set(routeId, polyline);
-          console.log(`Route ${routeId} displayed with ${path.length} points`);
         } else {
           console.warn(`No path found for route ${routeId}`);
         }
