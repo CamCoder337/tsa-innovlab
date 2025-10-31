@@ -78,8 +78,8 @@ export const useMissions = () => {
   const fetchMissionMemoized = useCallback(
     (id: string) => {
       store.fetchMission(id);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [store.currentMission]
   );
 
