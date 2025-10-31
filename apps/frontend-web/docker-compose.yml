@@ -52,6 +52,3 @@ services:
 networks:
   InnovlabG1:
     external: true
-  tsa-network:
-    external: true
-    name: tsa-innovlab_tsa-network
