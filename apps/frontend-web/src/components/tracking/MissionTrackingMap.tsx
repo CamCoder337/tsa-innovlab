@@ -54,6 +54,7 @@ export default function MissionTrackingMap({
   const geolocationServiceRef = useRef<GeolocationService | null>(null);
   const missionMarkerIdsRef = useRef<Set<string>>(new Set());
   const hasInitializedGeolocationRef = useRef(false);
+  const hasAddedUserMarkerRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
@@ -250,13 +251,29 @@ export default function MissionTrackingMap({
         }
       }
 
+      // Ajouter le marqueur utilisateur s'il existe déjà (géolocalisation terminée avant la carte)
+      if (userPosition && !hasAddedUserMarkerRef.current) {
+        const userMarkerData: MarkerData = {
+          id: 'user-location',
+          position: { lat: userPosition.lat, lng: userPosition.lng },
+          title: 'Votre position',
+          type: 'user',
+          data: {
+            accuracy: userPosition.accuracy,
+            timestamp: new Date(userPosition.timestamp).toISOString(),
+          },
+        };
+        mapsService.addMarker(userMarkerData);
+        hasAddedUserMarkerRef.current = true;
+      }
+
       setIsLoading(false);
     } catch (err) {
       console.error("Erreur lors de l'initialisation de la carte:", err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
       setIsLoading(false);
     }
-  }, [filteredMissions, selectedMission, showRoutes, onMissionClick]);
+  }, [filteredMissions, selectedMission, showRoutes, onMissionClick, userPosition]);
 
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
@@ -271,7 +288,7 @@ export default function MissionTrackingMap({
       const position = await geolocationService.getCurrentPosition({
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 60000,
+        maximumAge: 0, // Ne pas utiliser de position en cache
       });
 
       setUserPosition(position);
@@ -290,6 +307,7 @@ export default function MissionTrackingMap({
         };
 
         mapsServiceRef.current.addMarker(userMarkerData);
+        hasAddedUserMarkerRef.current = true;
       }
     } catch (err) {
       console.warn("Impossible d'obtenir la position de l'utilisateur:", err);
@@ -299,21 +317,28 @@ export default function MissionTrackingMap({
 
   // Fonctions supprimées - plus de filtrage par statut
 
+  // Effect 1: Initialiser la géolocalisation une seule fois au montage
   useEffect(() => {
-    const init = async () => {
-      await initializeMap();
-      await initializeUserLocation();
-    };
-    init();
+    void initializeUserLocation();
+
+    // Cleanup uniquement au démontage du composant
     return () => {
       if (mapsServiceRef.current) {
         mapsServiceRef.current.destroy();
+        mapsServiceRef.current = null;
       }
       if (geolocationServiceRef.current) {
         geolocationServiceRef.current.destroy();
+        geolocationServiceRef.current = null;
       }
     };
-  }, [initializeMap, initializeUserLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dépendances vides = exécution unique au montage
+
+  // Effect 2: Initialiser/mettre à jour la carte quand les missions ou la sélection changent
+  useEffect(() => {
+    void initializeMap();
+  }, [initializeMap]);
 
   if (error) {
     return (
