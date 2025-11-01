@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import GoogleMapsService, { type MarkerData } from '@/services/google-maps.service';
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
+import type { Address } from '@/types/address.types';
 import { getGoogleMapsApiKey, getGoogleMapsMapId } from '@/config/env';
 import { useTrackingTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Package, AlertTriangle } from 'lucide-react';
+import { MapPin, Package, AlertTriangle, Clock } from 'lucide-react';
 import MapLegend from './MapLegend';
 
 interface MissionTrackingMapProps {
@@ -18,24 +19,21 @@ interface MissionTrackingMapProps {
   showLegend?: boolean;
 }
 
-// Coordonnées des principales villes du Cameroun
-const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  douala: { lat: 4.0511, lng: 9.7679 },
-  yaounde: { lat: 3.848, lng: 11.5021 },
-  bafoussam: { lat: 5.4737, lng: 10.4158 },
-  garoua: { lat: 9.3265, lng: 13.3958 },
-  bamenda: { lat: 5.9597, lng: 10.1453 },
-  maroua: { lat: 10.5906, lng: 14.3159 },
-  ngaoundere: { lat: 7.3167, lng: 13.5833 },
-  bertoua: { lat: 4.5833, lng: 13.6833 },
-  kribi: { lat: 2.9333, lng: 9.9167 },
-  edea: { lat: 3.8, lng: 10.1333 },
-};
+interface RouteInfo {
+  distance: number; // in km
+  duration: number; // in minutes
+  eta: Date;
+}
 
-// Fonction pour extraire la ville d'un ID d'adresse
-const getCityFromAddressId = (addressId: string): { lat: number; lng: number } => {
-  const cityName = addressId.split('-')[1]?.toLowerCase() || 'douala';
-  return CITY_COORDINATES[cityName] || CITY_COORDINATES['douala'];
+// Helper function to get coordinates from address
+const getCoordinatesFromAddress = (address: Address | undefined): { lat: number; lng: number } | null => {
+  if (!address || address.latitude === undefined || address.longitude === undefined) {
+    return null;
+  }
+  return {
+    lat: Number(address.latitude),
+    lng: Number(address.longitude),
+  };
 };
 
 export default function MissionTrackingMap({
@@ -50,10 +48,22 @@ export default function MissionTrackingMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapsServiceRef = useRef<GoogleMapsService | null>(null);
   const geolocationServiceRef = useRef<GeolocationService | null>(null);
+  const missionMarkerIdsRef = useRef<Set<string>>(new Set());
+  const hasInitializedGeolocationRef = useRef(false);
+  const hasAddedUserMarkerRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
+  const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
+
+  // Translation hook
   const { t } = useTrackingTranslation();
+
+  // Afficher uniquement la mission sélectionnée, sinon toutes les missions
+  // Utiliser useMemo pour éviter de recréer le tableau à chaque rendu
+  const filteredMissions = useMemo(() => {
+    return selectedMission ? [selectedMission] : missions;
+  }, [selectedMission, missions]);
 
   const initializeMap = useCallback(async () => {
     if (!mapRef.current) return;
@@ -69,20 +79,46 @@ export default function MissionTrackingMap({
         );
       }
 
-      const mapsService = new GoogleMapsService();
-      mapsServiceRef.current = mapsService;
+      // N'initialiser la carte qu'une seule fois
+      if (!mapsServiceRef.current) {
+        const mapsService = new GoogleMapsService();
+        mapsServiceRef.current = mapsService;
 
-      // Initialiser la carte centrée sur le Cameroun
-      await mapsService.initializeMap(mapRef.current, {
-        center: { lat: 6.0, lng: 12.0 }, // Centre du Cameroun
-        zoom: 6,
-        mapId: getGoogleMapsMapId(),
+        // Initialiser la carte centrée sur le Cameroun
+        await mapsService.initializeMap(mapRef.current, {
+          center: { lat: 6.0, lng: 12.0 }, // Centre du Cameroun
+          zoom: 6,
+          mapId: getGoogleMapsMapId(),
+        });
+      }
+
+      const mapsService = mapsServiceRef.current;
+
+      // Nettoyer seulement les marqueurs de missions (pas le marqueur utilisateur)
+      missionMarkerIdsRef.current.forEach((markerId) => {
+        mapsService.removeMarker(markerId);
       });
+      missionMarkerIdsRef.current.clear();
+
+      // Nettoyer les routes existantes
+      mapsService.clearRoutes();
+
+      // Tableau pour stocker les promesses de calcul de routes
+      const routeCalculations: Promise<void>[] = [];
 
       // Ajouter les marqueurs pour chaque mission
-      missions.forEach((mission) => {
+      for (const mission of filteredMissions) {
+        // Get real coordinates from addresses
+        const departPosition = getCoordinatesFromAddress(mission.adresseDepart);
+        const arriveePosition = getCoordinatesFromAddress(mission.adresseArrivee);
+
+        // Skip mission if coordinates are invalid
+        if (!departPosition || !arriveePosition) {
+          console.warn(`Mission ${mission.id} has invalid coordinates, skipping`);
+          continue;
+        }
+
         // Marqueur de départ
-        const departPosition = getCityFromAddressId(mission.adresseDepartId ?? '');
         const departMarkerData: MarkerData = {
           id: `${mission.id}-depart`,
           position: departPosition,
@@ -99,6 +135,7 @@ export default function MissionTrackingMap({
         };
 
         const departMarker = mapsService.addMarker(departMarkerData);
+        missionMarkerIdsRef.current.add(departMarkerData.id);
         if (departMarker && onMissionClick) {
           departMarker.addListener('click', () => {
             onMissionClick(mission);
@@ -106,7 +143,6 @@ export default function MissionTrackingMap({
         }
 
         // Marqueur d'arrivée
-        const arriveePosition = getCityFromAddressId(mission.adresseArriveeId ?? '');
         const arriveeMarkerData: MarkerData = {
           id: `${mission.id}-arrivee`,
           position: arriveePosition,
@@ -123,19 +159,57 @@ export default function MissionTrackingMap({
         };
 
         const arriveeMarker = mapsService.addMarker(arriveeMarkerData);
+        missionMarkerIdsRef.current.add(arriveeMarkerData.id);
         if (arriveeMarker && onMissionClick) {
           arriveeMarker.addListener('click', () => {
             onMissionClick(mission);
           });
         }
 
-        // Afficher la route pour toutes les missions si demandé
+        // Calculate route and ETA
         if (showRoutes) {
-          mapsService.displayRoute(departPosition, arriveePosition, {
-            strokeColor: '#2563eb',
-            strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
-            strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
-          });
+          // Créer une promesse avec délai pour éviter rate limiting
+          const routePromise = (async () => {
+            try {
+              // Ajouter un délai basé sur l'index pour échelonner les requêtes
+              const delayMs = routeCalculations.length * 300; // 300ms entre chaque requête
+              if (delayMs > 0) {
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+              }
+
+              const result = await mapsService.displayRoute(departPosition, arriveePosition, {
+                routeId: `route-${mission.id}`,
+                strokeColor: '#2563eb',
+                strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
+                strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+              });
+
+              if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+                const leg = result.routes[0].legs[0];
+                const distance = Math.round((leg.distance?.value || 0) / 1000); // km
+                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
+
+                // Calculate ETA based on current time
+                const eta = new Date();
+                eta.setMinutes(eta.getMinutes() + duration);
+
+                // Update route info using functional form to avoid race conditions
+                setRouteInfo((prev) => {
+                  const updated = new Map(prev);
+                  updated.set(mission.id, {
+                    distance,
+                    duration,
+                    eta,
+                  });
+                  return updated;
+                });
+              }
+            } catch (err) {
+              console.error(`Failed to calculate route for mission ${mission.id}:`, err);
+            }
+          })();
+
+          routeCalculations.push(routePromise);
         }
 
         // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
@@ -153,21 +227,43 @@ export default function MissionTrackingMap({
           };
 
           const transporteurMarker = mapsService.addMarker(transporteurMarkerData);
+          missionMarkerIdsRef.current.add(transporteurMarkerData.id);
           if (transporteurMarker && onMissionClick) {
             transporteurMarker.addListener('click', () => {
               onMissionClick(mission);
             });
           }
         }
-      });
+      }
 
       // Ajuster la vue pour inclure toutes les missions
-      if (missions.length > 0) {
-        const allPositions = missions.flatMap((mission) => [
-          getCityFromAddressId(mission.adresseDepartId ?? ''),
-          getCityFromAddressId(mission.adresseArriveeId ?? ''),
-        ]);
-        mapsService.fitBounds(allPositions);
+      if (filteredMissions.length > 0) {
+        const allPositions = filteredMissions
+          .flatMap((mission) => [
+            getCoordinatesFromAddress(mission.adresseDepart),
+            getCoordinatesFromAddress(mission.adresseArrivee),
+          ])
+          .filter((pos): pos is { lat: number; lng: number } => pos !== null);
+
+        if (allPositions.length > 0) {
+          mapsService.fitBounds(allPositions);
+        }
+      }
+
+      // Ajouter le marqueur utilisateur s'il existe déjà (géolocalisation terminée avant la carte)
+      if (userPosition && !hasAddedUserMarkerRef.current) {
+        const userMarkerData: MarkerData = {
+          id: 'user-location',
+          position: { lat: userPosition.lat, lng: userPosition.lng },
+          title: 'Votre position',
+          type: 'user',
+          data: {
+            accuracy: userPosition.accuracy,
+            timestamp: new Date(userPosition.timestamp).toISOString(),
+          },
+        };
+        mapsService.addMarker(userMarkerData);
+        hasAddedUserMarkerRef.current = true;
       }
 
       setIsLoading(false);
@@ -176,10 +272,13 @@ export default function MissionTrackingMap({
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
       setIsLoading(false);
     }
-  }, [missions, selectedMission, showRoutes, onMissionClick]);
+  }, [filteredMissions, selectedMission, showRoutes, onMissionClick, userPosition]);
 
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
+
+    // Ne pas réinitialiser si déjà fait
+    if (hasInitializedGeolocationRef.current) return;
 
     try {
       const geolocationService = new GeolocationService();
@@ -187,11 +286,12 @@ export default function MissionTrackingMap({
 
       const position = await geolocationService.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
+        timeout: 30000, // Augmenté à 30 secondes pour laisser le temps au GPS
+        maximumAge: 5000, // Accepter une position de moins de 5 secondes
       });
 
       setUserPosition(position);
+      hasInitializedGeolocationRef.current = true;
 
       if (mapsServiceRef.current) {
         const userMarkerData: MarkerData = {
@@ -206,29 +306,38 @@ export default function MissionTrackingMap({
         };
 
         mapsServiceRef.current.addMarker(userMarkerData);
+        hasAddedUserMarkerRef.current = true;
       }
     } catch (err) {
       console.warn("Impossible d'obtenir la position de l'utilisateur:", err);
+      hasInitializedGeolocationRef.current = true; // Marquer comme tenté même en cas d'échec
     }
   }, [showUserLocation]);
 
   // Fonctions supprimées - plus de filtrage par statut
 
+  // Effect 1: Initialiser la géolocalisation une seule fois au montage
   useEffect(() => {
-    const init = async () => {
-      await initializeMap();
-      await initializeUserLocation();
-    };
-    init();
+    void initializeUserLocation();
+
+    // Cleanup uniquement au démontage du composant
     return () => {
       if (mapsServiceRef.current) {
         mapsServiceRef.current.destroy();
+        mapsServiceRef.current = null;
       }
       if (geolocationServiceRef.current) {
         geolocationServiceRef.current.destroy();
+        geolocationServiceRef.current = null;
       }
     };
-  }, [initializeMap, initializeUserLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dépendances vides = exécution unique au montage
+
+  // Effect 2: Initialiser/mettre à jour la carte quand les missions ou la sélection changent
+  useEffect(() => {
+    void initializeMap();
+  }, [initializeMap]);
 
   if (error) {
     return (
@@ -277,7 +386,7 @@ export default function MissionTrackingMap({
       <div ref={mapRef} className="w-full h-full rounded-lg" style={{ minHeight: '400px' }} />
 
       {/* Informations missions */}
-      <div className="absolute top-4 right-4 space-y-2">
+      <div className="absolute top-4 right-4 space-y-2 max-w-xs">
         <Card className="bg-white/95 backdrop-blur">
           <CardContent className="p-3">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -294,6 +403,42 @@ export default function MissionTrackingMap({
             </div>
           </CardContent>
         </Card>
+
+        {/* ETA Information for selected mission */}
+        {selectedMission && routeInfo.has(selectedMission.id) && (
+          <Card className="bg-white/95 backdrop-blur">
+            <CardContent className="p-3">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-500" />
+                Informations de trajet
+              </h4>
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Distance:</span>
+                  <span className="font-medium">
+                    {routeInfo.get(selectedMission.id)?.distance} km
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Durée:</span>
+                  <span className="font-medium">
+                    {Math.floor((routeInfo.get(selectedMission.id)?.duration || 0) / 60)}h{' '}
+                    {(routeInfo.get(selectedMission.id)?.duration || 0) % 60}min
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">ETA:</span>
+                  <span className="font-medium text-green-600">
+                    {routeInfo.get(selectedMission.id)?.eta.toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Indicateur de position utilisateur */}
         {showUserLocation && userPosition && (

@@ -217,7 +217,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
             </CardHeader>
             <CardContent>
               <MissionTrackingMap
-                className="h-[600px]"
+                className="h-[800px]"
                 missions={missions}
                 selectedMission={selectedMission}
                 onMissionClick={setSelectedMission}

@@ -76,11 +76,11 @@ function CartDrawer({ children }: CartDrawerProps) {
             {error}
           </div>
         )}
-        <div className="mt-4 grid gap-4">
+        <div className="mt-4 grid gap-4 overflow-y-auto max-h-[calc(100vh-280px)]">
           {isEmpty() ? (
             <p className=" text-tsa-gray text-center">{tCart('empty')}</p>
           ) : (
-            <ul className="grid gap-4">
+            <ul className="grid gap-4 pr-2">
               {cart.items.map((item) => (
                 <li key={item.productId} className="flex items-center gap-3">
                   <img
