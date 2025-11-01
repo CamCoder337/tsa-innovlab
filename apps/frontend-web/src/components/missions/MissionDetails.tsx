@@ -16,12 +16,14 @@ import { getStatusLabel } from '@/lib/mission-utils';
 import { toast } from 'sonner';
 import { useMissions } from '@/hooks/useMissions';
 import { useAuth } from '@/hooks/useAuth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useMissionsTranslation,
   useCommonTranslation,
   useFormsTranslation,
 } from '@/hooks/useTranslation';
+import { useUserSearch } from '@/hooks/useUserSearch';
+import { useVehicleInfo } from '@/hooks/useVehicleInfo';
 
 interface MissionDetailsProps {
   mission: Mission;
@@ -30,16 +32,55 @@ interface MissionDetailsProps {
 export function MissionDetails({ mission }: MissionDetailsProps) {
   const { user } = useAuth();
   const { deleteMission, error } = useMissions();
+  const { getUserName } = useUserSearch();
+  const { getVehicleRegistration } = useVehicleInfo();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [transporteurName, setTransporteurName] = useState<string>('');
+  const [affreteurName, setAffreteurName] = useState<string>('');
+  const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
   const { t: tCommon } = useCommonTranslation();
   const { t: tForms } = useFormsTranslation();
   const { t: tMissions } = useMissionsTranslation();
 
+  // Fetch user names and vehicle info
+  useEffect(() => {
+    const fetchInfo = async () => {
+      if (mission.transporteurId) {
+        const name = await getUserName(mission.transporteurId);
+        setTransporteurName(name);
+      }
+
+      if (mission.affreteurId) {
+        const name = await getUserName(mission.affreteurId);
+        setAffreteurName(name);
+      }
+
+      if (mission.vehicleId) {
+        const registration = await getVehicleRegistration(mission.vehicleId);
+        setVehicleRegistration(registration);
+      }
+    };
+
+    fetchInfo();
+  }, [
+    mission.transporteurId,
+    mission.affreteurId,
+    mission.vehicleId,
+    getUserName,
+    getVehicleRegistration,
+  ]);
+
   const handleDelete = async (id: string) => {
     setIsLoading(true);
 
+    toast.loading(tMissions('actions.deletingMission'), {
+      duration: 30000,
+    });
+
     await deleteMission(id);
+
+    toast.dismiss();
 
     setIsLoading(false);
 
@@ -175,6 +216,34 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Mission participants section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+            <div className="space-y-2">
+              <h3 className="font-medium">{tCommon('roles.affreteur')}</h3>
+              <p className="text-sm text-muted-foreground">
+                {affreteurName ||
+                  mission.affreteur?.fullName ||
+                  `${mission.affreteur?.firstName} ${mission.affreteur?.lastName}` ||
+                  tCommon('status.notAssigned')}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-medium">{tCommon('roles.transporteur')}</h3>
+              <p className="text-sm text-muted-foreground">
+                {transporteurName ||
+                  mission.transporteur?.fullName ||
+                  `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
+                  tCommon('status.notAssigned')}
+              </p>
+              {vehicleRegistration && (
+                <div className="mt-1">
+                  <span className="text-xs text-gray-500">Véhicule: </span>
+                  <span className="text-xs font-medium">{vehicleRegistration}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -3,7 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Camera, X, Clock } from 'lucide-react';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
-import { useShopTranslation, useErrorsTranslation } from '@/hooks/useTranslation';
+import {
+  useShopTranslation,
+  useErrorsTranslation,
+  useCommonTranslation,
+} from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 
 interface VisualSearchProps {
@@ -14,6 +18,7 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
   className = '',
 }: VisualSearchProps) => {
   const { t: tShop } = useShopTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -128,7 +133,10 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
               <Clock className="h-4 w-4" />
               {results.processing_time_ms}ms
               <Badge variant="outline">
-                {tShop('results.foundPlural', { count: results.total })}
+                {tCommon('search.results.foundPlural', {
+                  count: results.total,
+                  type: tShop('product.title').toLowerCase(),
+                })}
               </Badge>
             </div>
           </div>

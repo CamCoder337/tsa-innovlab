@@ -85,7 +85,7 @@
   "map": {
     "title": "Real-Time Tracking",
     "globalView": "Global Network View",
-    "noLocation": "Position not available",
+    "noLocation": "Location not available",
     "estimatedArrival": "Estimated arrival",
     "currentLocation": "Current location",
     "route": "Route",
@@ -96,7 +96,16 @@
     "activeVehicles": "Active vehicles ({{count}})",
     "incidents": "Incidents ({{count}})",
     "delays": "Delays ({{count}})",
-    "lastUpdate": "Last update: {{time}}"
+    "lastUpdate": "Last update: {{time}}",
+    "noMissionsToDisplay": "No missions to display",
+    "noMissionsMessage": "There are currently no missions to track on the map.",
+    "errorLoadingMap": "Map loading error",
+    "retry": "Retry",
+    "loadingMap": "Loading mission map...",
+    "missions": "Missions",
+    "totalMissions": "Total: {{count}} missions",
+    "assignedMissions": "Assigned: {{count}}",
+    "detectedPosition": "Position detected"
   },
   "actions": {
     "share": "Share",

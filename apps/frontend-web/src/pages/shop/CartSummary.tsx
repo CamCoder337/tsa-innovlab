@@ -44,6 +44,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { type Order, PaymentMethod } from '@/types/order.types';
 import { useAddresses } from '@/hooks/useAddresses';
 import { useShopTranslation } from '@/hooks/useTranslation';
+import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
 const OrderSchema = Yup.object().shape({
   deliveryAddress: Yup.string().required('validation.addressRequired'),
@@ -704,29 +705,7 @@ export default function CartSummaryPage() {
               </Card>
 
               {/* Recommended Parts */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>{tShop('cart.recommendations.title')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 border rounded-lg">
-                      <img
-                        src="/air-filter.png"
-                        alt="Air Filter"
-                        className="w-10 h-10 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Air Filter</p>
-                        <p className="text-xs text-gray-500">8,500 FCFA</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        {tShop('cart.recommendations.add')}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductRecommendations type="cart" limit={3} view="compact" />
             </div>
           </div>
         </div>

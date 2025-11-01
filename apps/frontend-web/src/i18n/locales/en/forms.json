@@ -110,7 +110,7 @@
     "departureAddress": "Departure Address",
     "arrivalAddress": "Arrival Address",
     "cargoType": "Cargo Type",
-    "weight": "Weight (kg)",
+    "weight": "Weight (t)",
     "volume": "Volume (m³)",
     "missionDescription": "Mission Description",
     "estimatedDepartureDate": "Estimated Departure Date",

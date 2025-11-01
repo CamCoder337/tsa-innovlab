@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { VisualSearch } from '@/components/shop/VisualSearch';
@@ -12,7 +12,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, Eye, Grid, List, Search, SlidersHorizontal } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import { AlertTriangle, Eye, Grid, List, Loader, Search, SlidersHorizontal } from 'lucide-react';
 import type { Product } from '@/types/product.types';
 import { useProducts } from '@/hooks/useProducts';
 import type { ProductFilterParams } from '@/types/product.types';
@@ -22,9 +31,11 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
 import { toast } from 'sonner';
-import { useShopTranslation } from '@/hooks/useTranslation';
+import { useCommonTranslation, useShopTranslation } from '@/hooks/useTranslation';
+import { matchesSearchQuery } from '@/utils/search.utils';
 
 export default function ShopPage() {
+  const { t: tCommon } = useCommonTranslation();
   const { t: tShop } = useShopTranslation();
   const { products, isLoading, error } = useProducts();
   const { addToCart, error: cartError } = useCart();
@@ -36,6 +47,8 @@ export default function ShopPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   const [filters, setFilters] = useState<ProductFilterParams>({
     search: '',
     categoryId: [],
@@ -58,12 +71,14 @@ export default function ShopPage() {
         } else {
           // Search filter
           if (filters.search) {
-            const query = filters.search.toLowerCase();
-            const matchesName = product.name.toLowerCase().includes(query);
-            const matchesDescription = product.description?.toLowerCase().includes(query) ?? false;
-            const matchesCategory = product.category?.name.toLowerCase().includes(query) ?? false;
+            const matchesSearch = matchesSearchQuery(
+              filters.search,
+              product.name,
+              product.description,
+              product.category?.name
+            );
 
-            if (!matchesName && !matchesDescription && !matchesCategory) {
+            if (!matchesSearch) {
               return false;
             }
           }
@@ -124,6 +139,61 @@ export default function ShopPage() {
       });
   }, [products, filters, results]);
 
+  // Pagination calculations
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+  const indexOfLastProduct = currentPage * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  // Reset to first page when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
+
+  // Update filters and reset pagination
+  const updateFilters = (newFilters: ProductFilterParams) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const paginate = (pageNumber: number) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPage = Math.max(1, currentPage - 2);
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      if (startPage > 1) {
+        pages.push(1);
+        if (startPage > 2) pages.push('ellipsis-start');
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) pages.push('ellipsis-end');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
   const handleAddToCart = async (product: Product, quantity: number) => {
     try {
       await addToCart(product, quantity);
@@ -167,16 +237,22 @@ export default function ShopPage() {
     filters.inStock ||
     filters.lowStock;
 
+  useEffect(() => {
+    resetPagination();
+  }, [filters]);
+
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">{tShop('title')} TSA</h1>
-        <p className="text-gray-600 text-lg">{tShop('subtitle')}</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+          {tShop('title')} TSA
+        </h1>
+        <p className="text-gray-600 text-base sm:text-lg">{tShop('subtitle')}</p>
       </div>
 
       {/* AI Recommendations */}
-      <div className="mb-8 space-y-6">
+      <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-6">
         <ProductRecommendations type={isAuthenticated ? 'personalized' : 'popular'} limit={4} />
       </div>
 
@@ -219,82 +295,106 @@ export default function ShopPage() {
       )}
 
       {/* Mobile Filters */}
-      <div className="md:hidden flex items-center justify-between gap-4 mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-fit"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          {tShop('filters.title')} {hasActiveFilters && '•'}
-        </Button>
-        {/* Search */}
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder={tShop('search.placeholder')}
-            className="pl-9"
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-          />
-          <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="md:hidden mb-6">
+        {/* Mobile Filter Toggle and Search Row */}
+        <div className="flex items-center gap-3 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-shrink-0"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
+            {tShop('filters.title')} {hasActiveFilters && '•'}
+          </Button>
+          {/* Mobile Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder={tShop('search.placeholder')}
+              className="pl-9 pr-10"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            />
+            <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
         </div>
-        <Select
-          value={filters.sortBy || 'updatedAt'}
-          onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder={tShop('sorting.sortBy')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
-            <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
-            <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
-            <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="icon"
-            onClick={() => setViewMode('grid')}
+
+        {/* Mobile Sort and View Controls */}
+        <div className="flex items-center justify-between gap-3">
+          <Select
+            value={filters.sortBy || 'updatedAt'}
+            onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
           >
-            <Grid className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="icon"
-            onClick={() => setViewMode('list')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
+            <SelectTrigger className="flex-1 min-w-0">
+              <SelectValue placeholder={tShop('sorting.sortBy')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt">{tShop('sorting.newest')}</SelectItem>
+              <SelectItem value="price">{tShop('sorting.priceAsc')}</SelectItem>
+              <SelectItem value="name">{tShop('sorting.nameAZ')}</SelectItem>
+              <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-1 border rounded-md p-1 flex-shrink-0">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Desktop Filters */}
         <div
-          className={`${showFilters ? 'block' : 'hidden'} md:block w-full md:w-80 flex-shrink-0`}
+          className={`${showFilters ? 'block' : 'hidden'} md:block w-full lg:w-80 flex-shrink-0`}
         >
           <ProductFilters filters={filters} onFiltersChange={setFilters} />
         </div>
 
         {/* Products Grid */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {/* Toolbar */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <p className="text-sm text-gray-500">
-              {filteredProducts.length === 1
-                ? tShop('results.found', { count: filteredProducts.length })
-                : tShop('results.foundPlural', { count: filteredProducts.length })}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <p className="text-sm text-gray-500 order-2 sm:order-1">
+              {isLoading
+                ? tCommon('loading')
+                : totalProducts === 0
+                  ? tCommon('search.results.noResults', {
+                      type: tShop('product.title').toLowerCase(),
+                    })
+                  : totalProducts === 1
+                    ? tCommon('search.results.found', {
+                        count: totalProducts,
+                        type: tShop('product.title').toLowerCase(),
+                      })
+                    : tCommon('search.pagination.showingResults', {
+                        start: indexOfFirstProduct + 1,
+                        end: Math.min(indexOfLastProduct, totalProducts),
+                        total: totalProducts,
+                      })}
             </p>
-            <div className="hidden md:flex items-center gap-4 w-full md:w-auto">
+
+            <div className="hidden md:flex items-center gap-4 w-full sm:w-auto order-1 sm:order-2">
               <Select
                 value={filters.sortBy || 'updatedAt'}
-                onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
+                onValueChange={(value: string) => updateFilters({ ...filters, sortBy: value })}
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-[180px] lg:w-[200px]">
                   <SelectValue placeholder={tShop('sorting.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -325,17 +425,23 @@ export default function ShopPage() {
             </div>
           </div>
 
+          {isLoading && (
+            <div className="flex h-full w-full items-center justify-center bg-gray-50">
+              <Loader className="h-12 w-12 animate-spin text-tsa-blue" />
+            </div>
+          )}
+
           {/* Products */}
           {!isLoading && (
             <div
               className={cn(
-                'grid gap-6',
+                'grid gap-4 sm:gap-6',
                 viewMode === 'grid'
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                  ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
                   : 'grid-cols-1'
               )}
             >
-              {filteredProducts.map((product) => (
+              {currentProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -348,19 +454,75 @@ export default function ShopPage() {
             </div>
           )}
 
+          {/* Pagination */}
+          {!isLoading && totalProducts > 0 && totalPages > 1 && (
+            <div className="mt-8">
+              <Pagination className="justify-center">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      label={tCommon('search.pagination.previous')}
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    />
+                  </PaginationItem>
+
+                  {getPageNumbers().map((pageNumber, index) => (
+                    <PaginationItem key={index}>
+                      {pageNumber === 'ellipsis-start' || pageNumber === 'ellipsis-end' ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          onClick={() => paginate(pageNumber as number)}
+                          isActive={currentPage === pageNumber}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      label={tCommon('search.pagination.next')}
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+
+              {/* Pagination Info */}
+              <div className="text-center mt-4 text-sm text-gray-500">
+                {tCommon('search.pagination.showingResults', {
+                  start: indexOfFirstProduct + 1,
+                  end: Math.min(indexOfLastProduct, totalProducts),
+                  total: totalProducts,
+                })}
+              </div>
+            </div>
+          )}
+
           {/* No Results */}
           {!isLoading &&
             filteredProducts.length === 0 &&
             (results ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 sm:py-12 text-gray-500">
                 <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>{tShop('search.noVisualResults')}</p>
+                <p className="text-base sm:text-lg">{tShop('search.noVisualResults')}</p>
                 <p className="text-sm">{tShop('search.tryAnotherImage')}</p>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">{tShop('search.noResults')}</p>
-                <Button onClick={clearFilters} variant="outline">
+              <div className="text-center py-8 sm:py-12">
+                <p className="text-muted-foreground mb-4 text-base sm:text-lg">
+                  {tShop('search.noResults')}
+                </p>
+                <Button
+                  onClick={clearFilters}
+                  variant="outline"
+                  size="sm"
+                  className="sm:size-default"
+                >
                   {tShop('filters.clearFilters')}
                 </Button>
               </div>

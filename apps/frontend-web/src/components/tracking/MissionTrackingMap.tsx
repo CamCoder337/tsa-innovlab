@@ -3,7 +3,7 @@ import GoogleMapsService, { type MarkerData } from '@/services/google-maps.servi
 import GeolocationService, { type GeolocationPosition } from '@/services/geolocation.service';
 import type { Mission } from '@/types/mission.types';
 import { getGoogleMapsApiKey, getGoogleMapsMapId } from '@/config/env';
-// Badge supprimé - plus utilisé
+import { useTrackingTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Package, AlertTriangle } from 'lucide-react';
 import MapLegend from './MapLegend';
@@ -38,10 +38,6 @@ const getCityFromAddressId = (addressId: string): { lat: number; lng: number } =
   return CITY_COORDINATES[cityName] || CITY_COORDINATES['douala'];
 };
 
-// Fonction supprimée - plus utilisée
-
-// Fonction supprimée - plus utilisée
-
 export default function MissionTrackingMap({
   className = '',
   missions = [],
@@ -57,9 +53,7 @@ export default function MissionTrackingMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
-
-  // Pas de filtrage par statut - afficher toutes les missions
-  const filteredMissions = missions;
+  const { t } = useTrackingTranslation();
 
   const initializeMap = useCallback(async () => {
     if (!mapRef.current) return;
@@ -86,7 +80,7 @@ export default function MissionTrackingMap({
       });
 
       // Ajouter les marqueurs pour chaque mission
-      filteredMissions.forEach((mission) => {
+      missions.forEach((mission) => {
         // Marqueur de départ
         const departPosition = getCityFromAddressId(mission.adresseDepartId ?? '');
         const departMarkerData: MarkerData = {
@@ -168,8 +162,8 @@ export default function MissionTrackingMap({
       });
 
       // Ajuster la vue pour inclure toutes les missions
-      if (filteredMissions.length > 0) {
-        const allPositions = filteredMissions.flatMap((mission) => [
+      if (missions.length > 0) {
+        const allPositions = missions.flatMap((mission) => [
           getCityFromAddressId(mission.adresseDepartId ?? ''),
           getCityFromAddressId(mission.adresseArriveeId ?? ''),
         ]);
@@ -182,7 +176,7 @@ export default function MissionTrackingMap({
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
       setIsLoading(false);
     }
-  }, [filteredMissions, selectedMission, showRoutes, onMissionClick]);
+  }, [missions, selectedMission, showRoutes, onMissionClick]);
 
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
@@ -241,16 +235,29 @@ export default function MissionTrackingMap({
       <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
         <div className="text-center p-8">
           <AlertTriangle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Erreur de chargement de la carte
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('map.errorLoadingMap')}</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}
             className="px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors"
           >
-            Réessayer
+            {t('map.retry')}
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Si aucune mission, afficher un message au lieu de la carte
+  if (missions.length === 0) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-50 rounded-lg ${className}`}>
+        <div className="text-center p-8">
+          <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {t('map.noMissionsToDisplay')}
+          </h3>
+          <p className="text-gray-600">{t('map.noMissionsMessage')}</p>
         </div>
       </div>
     );
@@ -262,7 +269,7 @@ export default function MissionTrackingMap({
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Chargement de la carte des missions...</p>
+            <p className="text-gray-600">{t('map.loadingMap')}</p>
           </div>
         </div>
       )}
@@ -275,11 +282,15 @@ export default function MissionTrackingMap({
           <CardContent className="p-3">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
               <Package className="w-4 h-4" />
-              Missions
+              {t('map.missions')}
             </h4>
             <div className="text-sm text-gray-600">
-              <p>Total: {missions.length} missions</p>
-              <p>Assignées: {missions.filter((m) => m.status === 'assigned').length}</p>
+              <p>{t('map.totalMissions', { count: missions.length })}</p>
+              <p>
+                {t('map.assignedMissions', {
+                  count: missions.filter((m) => m.status === 'assigned').length,
+                })}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -291,7 +302,7 @@ export default function MissionTrackingMap({
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-green-500" />
                 <div>
-                  <p className="text-sm font-medium">Position détectée</p>
+                  <p className="text-sm font-medium">{t('map.detectedPosition')}</p>
                   <p className="text-xs text-gray-600">±{Math.round(userPosition.accuracy)}m</p>
                 </div>
               </div>
