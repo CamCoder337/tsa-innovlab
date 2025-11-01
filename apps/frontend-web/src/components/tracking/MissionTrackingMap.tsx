@@ -52,8 +52,6 @@ export default function MissionTrackingMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapsServiceRef = useRef<GoogleMapsService | null>(null);
   const geolocationServiceRef = useRef<GeolocationService | null>(null);
-  const isInitializedRef = useRef(false);
-  const routeInfoCacheRef = useRef<Map<string, RouteInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
@@ -94,20 +92,12 @@ export default function MissionTrackingMap({
 
       const mapsService = mapsServiceRef.current;
 
-      // Nettoyer seulement les marqueurs de missions (pas le marqueur utilisateur)
-      // On retire tous les marqueurs sauf 'user-location'
-      const allMarkerIds = Array.from(mapsService['markers'].keys());
-      allMarkerIds.forEach((id) => {
-        if (id !== 'user-location') {
-          mapsService.removeMarker(id);
-        }
-      });
-
-      // Nettoyer les routes existantes
+      // Nettoyer les marqueurs et routes existants
+      mapsService.clearMarkers();
       mapsService.clearRoutes();
 
-      // Utiliser le cache ref pour éviter les re-renders
-      const cachedRoutes = routeInfoCacheRef.current;
+      // Réinitialiser routeInfo
+      setRouteInfo(new Map());
 
       // Ajouter les marqueurs pour chaque mission
       for (const mission of filteredMissions) {
@@ -169,26 +159,15 @@ export default function MissionTrackingMap({
 
         // Calculate route and ETA
         if (showRoutes) {
-          try {
-            // Vérifier si on a déjà les données en cache
-            const cachedRoute = cachedRoutes.get(mission.id);
-            if (cachedRoute) {
-              // Afficher la route avec les données en cache
-              await mapsService.displayRoute(departPosition, arriveePosition, {
-                routeId: `route-${mission.id}`,
-                strokeColor: '#2563eb',
-                strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
-                strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
-              });
-            } else {
-              // Calculer la route (await pour séquencer les appels API)
-              const result = await mapsService.displayRoute(departPosition, arriveePosition, {
-                routeId: `route-${mission.id}`,
-                strokeColor: '#2563eb',
-                strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
-                strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
-              });
-
+          // Display route on map (this also calculates distance and duration)
+          mapsService
+            .displayRoute(departPosition, arriveePosition, {
+              routeId: `route-${mission.id}`,
+              strokeColor: '#2563eb',
+              strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
+              strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+            })
+            .then((result) => {
               if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
                 const leg = result.routes[0].legs[0];
                 const distance = Math.round((leg.distance?.value || 0) / 1000); // km
@@ -198,17 +177,21 @@ export default function MissionTrackingMap({
                 const eta = new Date();
                 eta.setMinutes(eta.getMinutes() + duration);
 
-                // Stocker dans le cache ref
-                cachedRoutes.set(mission.id, {
-                  distance,
-                  duration,
-                  eta,
+                // Update route info using functional form to avoid race conditions
+                setRouteInfo((prev) => {
+                  const updated = new Map(prev);
+                  updated.set(mission.id, {
+                    distance,
+                    duration,
+                    eta,
+                  });
+                  return updated;
                 });
               }
-            }
-          } catch (err) {
-            console.error(`Failed to calculate route for mission ${mission.id}:`, err);
-          }
+            })
+            .catch((err) => {
+              console.error(`Failed to calculate route for mission ${mission.id}:`, err);
+            });
         }
 
         // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
@@ -233,9 +216,6 @@ export default function MissionTrackingMap({
           }
         }
       }
-
-      // Mettre à jour le state routeInfo avec les données du cache pour déclencher le re-render
-      setRouteInfo(new Map(cachedRoutes));
 
       // Ajuster la vue pour inclure toutes les missions
       if (filteredMissions.length > 0) {
@@ -262,25 +242,18 @@ export default function MissionTrackingMap({
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
 
-    // Ne réinitialiser la géolocalisation qu'une seule fois
-    if (isInitializedRef.current) return;
-
     try {
-      // Créer le service de géolocalisation une seule fois
-      if (!geolocationServiceRef.current) {
-        geolocationServiceRef.current = new GeolocationService();
-      }
+      const geolocationService = new GeolocationService();
+      geolocationServiceRef.current = geolocationService;
 
-      const position = await geolocationServiceRef.current.getCurrentPosition({
+      const position = await geolocationService.getCurrentPosition({
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 60000,
       });
 
       setUserPosition(position);
-      isInitializedRef.current = true;
 
-      // Attendre que la carte soit prête avant d'ajouter le marqueur
       if (mapsServiceRef.current) {
         const userMarkerData: MarkerData = {
           id: 'user-location',
@@ -297,38 +270,26 @@ export default function MissionTrackingMap({
       }
     } catch (err) {
       console.warn("Impossible d'obtenir la position de l'utilisateur:", err);
-      isInitializedRef.current = true; // Marquer comme initialisé même en cas d'échec pour ne pas retry
     }
   }, [showUserLocation]);
 
   // Fonctions supprimées - plus de filtrage par statut
 
-  // Effect pour initialiser la carte et la géolocalisation (une seule fois au montage)
   useEffect(() => {
     const init = async () => {
       await initializeMap();
-      // Lancer la géolocalisation après l'initialisation de la carte
-      if (showUserLocation && mapsServiceRef.current) {
-        await initializeUserLocation();
-      }
+      await initializeUserLocation();
     };
     init();
-
-    // Cleanup au démontage du composant
     return () => {
+      if (mapsServiceRef.current) {
+        mapsServiceRef.current.destroy();
+      }
       if (geolocationServiceRef.current) {
         geolocationServiceRef.current.destroy();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Dépendances vides = exécution une seule fois au montage
-
-  // Effect pour mettre à jour la carte quand les missions changent
-  useEffect(() => {
-    if (mapsServiceRef.current && !isLoading) {
-      void initializeMap();
-    }
-  }, [initializeMap, isLoading]);
+  }, [initializeMap, initializeUserLocation]);
 
   if (error) {
     return (
