@@ -380,7 +380,7 @@ export default function AddressPicker({
       {
         enableHighAccuracy: true, // Enable GPS for better accuracy
         timeout: 30000, // Increase timeout for GPS lock
-        maximumAge: 60000, // Reduce cache time for fresher location
+        maximumAge: 0, // Ne jamais utiliser de cache - toujours demander une nouvelle position
       }
     );
   }, [onAddressSelect, showMap, updateMapLocation, tErrors, extractAddressDetails]);
