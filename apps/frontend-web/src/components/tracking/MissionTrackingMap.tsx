@@ -56,6 +56,9 @@ export default function MissionTrackingMap({
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
   const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
 
+  // Translation hook
+  const { t } = useTrackingTranslation();
+
   // Afficher uniquement la mission sélectionnée, sinon toutes les missions
   // Utiliser useMemo pour éviter de recréer le tableau à chaque rendu
   const filteredMissions = useMemo(() => {
