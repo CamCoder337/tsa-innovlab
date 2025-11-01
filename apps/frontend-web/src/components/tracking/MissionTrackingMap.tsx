@@ -52,6 +52,8 @@ export default function MissionTrackingMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapsServiceRef = useRef<GoogleMapsService | null>(null);
   const geolocationServiceRef = useRef<GeolocationService | null>(null);
+  const missionMarkerIdsRef = useRef<Set<string>>(new Set());
+  const hasInitializedGeolocationRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosition, setUserPosition] = useState<GeolocationPosition | null>(null);
@@ -92,12 +94,17 @@ export default function MissionTrackingMap({
 
       const mapsService = mapsServiceRef.current;
 
-      // Nettoyer les marqueurs et routes existants
-      mapsService.clearMarkers();
+      // Nettoyer seulement les marqueurs de missions (pas le marqueur utilisateur)
+      missionMarkerIdsRef.current.forEach((markerId) => {
+        mapsService.removeMarker(markerId);
+      });
+      missionMarkerIdsRef.current.clear();
+
+      // Nettoyer les routes existantes
       mapsService.clearRoutes();
 
-      // Réinitialiser routeInfo
-      setRouteInfo(new Map());
+      // Tableau pour stocker les promesses de calcul de routes
+      const routeCalculations: Promise<void>[] = [];
 
       // Ajouter les marqueurs pour chaque mission
       for (const mission of filteredMissions) {
@@ -128,6 +135,7 @@ export default function MissionTrackingMap({
         };
 
         const departMarker = mapsService.addMarker(departMarkerData);
+        missionMarkerIdsRef.current.add(departMarkerData.id);
         if (departMarker && onMissionClick) {
           departMarker.addListener('click', () => {
             onMissionClick(mission);
@@ -151,6 +159,7 @@ export default function MissionTrackingMap({
         };
 
         const arriveeMarker = mapsService.addMarker(arriveeMarkerData);
+        missionMarkerIdsRef.current.add(arriveeMarkerData.id);
         if (arriveeMarker && onMissionClick) {
           arriveeMarker.addListener('click', () => {
             onMissionClick(mission);
@@ -159,15 +168,22 @@ export default function MissionTrackingMap({
 
         // Calculate route and ETA
         if (showRoutes) {
-          // Display route on map (this also calculates distance and duration)
-          mapsService
-            .displayRoute(departPosition, arriveePosition, {
-              routeId: `route-${mission.id}`,
-              strokeColor: '#2563eb',
-              strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
-              strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
-            })
-            .then((result) => {
+          // Créer une promesse avec délai pour éviter rate limiting
+          const routePromise = (async () => {
+            try {
+              // Ajouter un délai basé sur l'index pour échelonner les requêtes
+              const delayMs = routeCalculations.length * 300; // 300ms entre chaque requête
+              if (delayMs > 0) {
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+              }
+
+              const result = await mapsService.displayRoute(departPosition, arriveePosition, {
+                routeId: `route-${mission.id}`,
+                strokeColor: '#2563eb',
+                strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
+                strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+              });
+
               if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
                 const leg = result.routes[0].legs[0];
                 const distance = Math.round((leg.distance?.value || 0) / 1000); // km
@@ -188,10 +204,12 @@ export default function MissionTrackingMap({
                   return updated;
                 });
               }
-            })
-            .catch((err) => {
+            } catch (err) {
               console.error(`Failed to calculate route for mission ${mission.id}:`, err);
-            });
+            }
+          })();
+
+          routeCalculations.push(routePromise);
         }
 
         // Ajouter marqueur transporteur si la mission est en cours et a une position réelle
@@ -209,6 +227,7 @@ export default function MissionTrackingMap({
           };
 
           const transporteurMarker = mapsService.addMarker(transporteurMarkerData);
+          missionMarkerIdsRef.current.add(transporteurMarkerData.id);
           if (transporteurMarker && onMissionClick) {
             transporteurMarker.addListener('click', () => {
               onMissionClick(mission);
@@ -242,6 +261,9 @@ export default function MissionTrackingMap({
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
 
+    // Ne pas réinitialiser si déjà fait
+    if (hasInitializedGeolocationRef.current) return;
+
     try {
       const geolocationService = new GeolocationService();
       geolocationServiceRef.current = geolocationService;
@@ -253,6 +275,7 @@ export default function MissionTrackingMap({
       });
 
       setUserPosition(position);
+      hasInitializedGeolocationRef.current = true;
 
       if (mapsServiceRef.current) {
         const userMarkerData: MarkerData = {
@@ -270,6 +293,7 @@ export default function MissionTrackingMap({
       }
     } catch (err) {
       console.warn("Impossible d'obtenir la position de l'utilisateur:", err);
+      hasInitializedGeolocationRef.current = true; // Marquer comme tenté même en cas d'échec
     }
   }, [showUserLocation]);
 
