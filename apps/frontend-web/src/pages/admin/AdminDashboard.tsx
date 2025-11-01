@@ -67,26 +67,6 @@ export default function AdminDashboard() {
   //     </div>
   //   );
   // }
-  // if (getStatsError()) {
-  //   return (
-  //     <div className="flex-1 flex items-center justify-center h-full">
-  //       <div className="text-center">
-  //         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-  //         <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
-  //         <p className="text-gray-600 text-sm">
-  //           {getStatsError()}
-  //         </p>
-  //         <Button
-  //           onClick={allStats.fetchAllStats}
-  //           className="mt-4"
-  //           variant="outline"
-  //         >
-  //           Réessayer
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="flex-1 p-6">

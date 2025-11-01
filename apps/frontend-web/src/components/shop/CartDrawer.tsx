@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useCartTranslation } from '@/hooks/useTranslation';
 
 interface CartDrawerProps {
@@ -33,6 +33,7 @@ function CartDrawer({ children }: CartDrawerProps) {
     error,
   } = useCart();
   const { t: tCart } = useCartTranslation();
+  const navigate = useNavigate();
 
   const handleUpdateQuantity = useCallback(
     async (itemId: string, newQuantity: number) => {
@@ -178,15 +179,17 @@ function CartDrawer({ children }: CartDrawerProps) {
               >
                 {tCart('clear')}
               </Button>
-              <Link to={'/app/shop/cart'}>
-                <Button
-                  className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
-                  onClick={(e) => e.stopPropagation()}
-                  disabled={isEmpty() || isLoading}
-                >
-                  {tCart('checkout')}
-                </Button>
-              </Link>
+              <Button
+                className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/app/shop/cart');
+                  setOpen(false);
+                }}
+                disabled={isEmpty() || isLoading}
+              >
+                {tCart('checkout')}
+              </Button>
             </div>
           </div>
         </SheetFooter>

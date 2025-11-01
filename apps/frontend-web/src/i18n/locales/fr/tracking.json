@@ -96,7 +96,16 @@
     "activeVehicles": "Véhicules actifs ({{count}})",
     "incidents": "Incidents ({{count}})",
     "delays": "Retards ({{count}})",
-    "lastUpdate": "Dernière mise à jour: {{time}}"
+    "lastUpdate": "Dernière mise à jour: {{time}}",
+    "noMissionsToDisplay": "Aucune mission à afficher",
+    "noMissionsMessage": "Il n'y a actuellement aucune mission à suivre sur la carte.",
+    "errorLoadingMap": "Erreur de chargement de la carte",
+    "retry": "Réessayer",
+    "loadingMap": "Chargement de la carte des missions...",
+    "missions": "Missions",
+    "totalMissions": "Total: {{count}} missions",
+    "assignedMissions": "Assignées: {{count}}",
+    "detectedPosition": "Position détectée"
   },
   "actions": {
     "share": "Partager",

@@ -10,6 +10,7 @@ import {
   useMapsTranslation,
 } from '@/hooks/useTranslation';
 import i18n from '@/i18n';
+import { toast } from 'sonner';
 
 export interface AddressDetails {
   formatted_address: string;
@@ -118,7 +119,7 @@ export default function AddressPicker({
           details.street_number = component.long_name;
         } else if (types.includes('plus_code')) {
           details.street_number = component.long_name;
-        }
+        } else details.street_number = place.plus_code?.global_code;
         if (types.includes('route')) {
           details.route = component.long_name;
         }
@@ -332,13 +333,14 @@ export default function AddressPicker({
 
         // Check accuracy but be more lenient
         if (!accuracy || accuracy <= 0) {
-          setError(tErrors('maps.geolocationNoAccuracy'));
+          setError(tErrors('maps.geolocationTooLowAccuracy', { accuracy: accuracy }));
           setIsLoadingLocation(false);
           return;
         }
 
         // Show warning for moderate accuracy but continue
         if (accuracy > 1000) {
+          toast.warning(tErrors('maps.geolocationLowAccuracy', { accuracy: Math.round(accuracy) }));
           console.warn(`⚠️ Low GPS accuracy: ${Math.round(accuracy)}m`);
         }
 

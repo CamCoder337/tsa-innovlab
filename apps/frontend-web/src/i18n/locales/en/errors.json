@@ -23,10 +23,12 @@
   },
   "auth": {
     "invalidCredentials": "Invalid credentials",
+    "accountInactive": "Inacive account. Please check your emails and get your validation code",
     "accountLocked": "Account locked",
     "sessionExpired": "Session expired",
     "accessDenied": "Access denied",
-    "emailNotVerified": "Email not verified"
+    "invalidMFA": "Invalid MFA code",
+    "loginFailed": "Login Failed. Check your internet network and retry please"
   },
   "file": {
     "uploadFailed": "Upload failed",
@@ -80,7 +82,8 @@
     "dynamicPricingError": "Error calculating dynamic pricing"
   },
   "maps": {
-    "geolocationLowAccuracy": "Accuracy too low ({{accuracy}} m). Try moving or enabling GPS.",
+    "geolocationLowAccuracy": "Low GPS accuracy: {{accuracy}}m. \n Please check your internet network",
+    "geolocationTooLowAccuracy": "Accuracy too low ({{accuracy}} m). Try moving or enabling GPS.",
     "cannotAccessLocation": "Cannot access your location.",
     "googleMapsApiKeyMissing": "Google Maps API key missing",
     "googleMapsNotAvailable": "Google Maps API not available after loading",

@@ -102,6 +102,27 @@
     "deleting": "Suppression...",
     "noChanges": "Aucune modification détectée"
   },
+  "search": {
+    "title": "Recherche",
+    "placeholder": "Recherche...",
+    "result": "Résultat",
+    "results": {
+      "found": "{{count}} {{type}} trouvé",
+      "foundPlural": "{{count}} {{type}}s trouvés",
+      "showing": "Affichage de {{start}} à {{end}} sur {{total}} {{type}}s",
+      "noResults": "Aucun {{type}} trouvé"
+    },
+    "pagination": {
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page {{page}}",
+      "goToPage": "Aller à la page {{page}}",
+      "firstPage": "Première page",
+      "lastPage": "Dernière page",
+      "showingResults": "Affichage de {{start}} à {{end}} sur {{total}} résultats",
+      "itemsPerPage": "{{count}} par page"
+    }
+  },
   "total": "Totale",
   "loading": "Chargement...",
   "submission": "Soumission...",
@@ -117,6 +138,7 @@
   "with": "avec",
   "notSpecified": "Non spécifié",
   "notProvided": "Non renseigné",
+  "notDefined": "Non défini",
   "languages": {
     "french": "Français",
     "english": "Anglais"

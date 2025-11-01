@@ -65,10 +65,6 @@
     "lowStockTitle": "Low Stock Alert",
     "lowStockMessage": "Only {{count}} left in stock!"
   },
-  "results": {
-    "found": "{{count}} product found",
-    "foundPlural": "{{count}} products found"
-  },
   "product": {
     "title": "Products",
     "product": "Product",

@@ -12,17 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  CalendarIcon,
-  MapPin,
-  Package,
-  DollarSign,
-  Clock,
-  Plus,
-  X,
-  Calculator,
-  Loader2,
-} from 'lucide-react';
+import { CalendarIcon, Package, DollarSign, Clock, X, Calculator, Loader2 } from 'lucide-react';
 import type {
   CreateMissionDto,
   DynamicPricingRequest,
@@ -99,22 +89,33 @@ const ClientSideAddressPicker = ({
   );
 };
 
-const validationSchema = (tForms: (key: string) => string) =>
+const validationSchema = (tForms: (key: string, options?: Record<string, unknown>) => string) =>
   Yup.object({
-    title: Yup.string().required(tForms('validation.required')),
+    title: Yup.string()
+      .min(5, tForms('validation.minLength', { min: 5 }))
+      .required(tForms('validation.required'))
+      .nullable(),
     affreteurId: Yup.string().when('$isAdmin', {
       is: true,
       then: (schema) => schema.required(tForms('validation.required')),
       otherwise: (schema) => schema.optional(),
     }),
-    description: Yup.string(),
-    typeMarchandise: Yup.string(),
-    poids: Yup.number().min(0, tForms('validation.positive')),
-    volume: Yup.number().min(0, tForms('validation.positive')),
+    description: Yup.string().nullable(),
+    typeMarchandise: Yup.string().nullable(),
+    poids: Yup.number()
+      .min(0, tForms('validation.positive'))
+      .required(tForms('validation.required'))
+      .nullable(),
+    volume: Yup.number()
+      .min(0, tForms('validation.positive'))
+      .required(tForms('validation.required'))
+      .nullable(),
     dateDepartEstime: Yup.date()
       .required(tForms('validation.required'))
       .typeError(tForms('validation.date')),
-    dateArriveePrevue: Yup.date().typeError(tForms('validation.date')),
+    dateArriveePrevue: Yup.date()
+      .required(tForms('validation.required'))
+      .typeError(tForms('validation.date')),
     adresseDepart: Yup.object({
       street: Yup.string().required(tForms('validation.required')),
       city: Yup.string().required(tForms('validation.required')),
@@ -126,7 +127,7 @@ const validationSchema = (tForms: (key: string) => string) =>
       longitude: Yup.number().required(tForms('validation.coordinatesRequired')),
     }).required(tForms('validation.addressRequired')),
     adresseArrivee: Yup.object({
-      street: Yup.string().required(tForms('validation.required')),
+      street: Yup.string(),
       city: Yup.string().required(tForms('validation.required')),
       postalCode: Yup.string(),
       country: Yup.string().required(tForms('validation.required')),
@@ -135,8 +136,10 @@ const validationSchema = (tForms: (key: string) => string) =>
       latitude: Yup.number().required(tForms('validation.coordinatesRequired')),
       longitude: Yup.number().required(tForms('validation.coordinatesRequired')),
     }).required(tForms('validation.addressRequired')),
-    budgetMin: Yup.number().min(0, tForms('validation.positive')),
-    budgetMax: Yup.number().min(Yup.ref('budgetMin'), tForms('validation.budgetMaxGreaterThanMin')),
+    budgetMin: Yup.number()
+      .min(1, tForms('validation.positive'))
+      .required(tForms('validation.required'))
+      .nullable(),
   });
 
 export interface CreateMissionFormProps {
@@ -162,30 +165,12 @@ const convertAddressDetailsToAddress = (addressDetails: AddressDetails): NewAddr
   };
 };
 
-export default function CreateMissionForm({
-  onSubmit,
-  isSubmitting,
-  addresses,
-}: CreateMissionFormProps) {
+export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMissionFormProps) {
   const { user } = useAuth();
   const { getUsersByRole } = useUsers();
   const { currentMission } = useMissions();
   const { t: tForms } = useFormsTranslation();
   const { t: tErrors } = useErrorsTranslation();
-
-  const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
-    null
-  );
-  const [newAddress, setNewAddress] = useState<NewAddressFormData>({
-    label: '',
-    street: '',
-    city: '',
-    region: '',
-    country: 'Cameroun',
-    postalCode: '00000',
-    latitude: 3.848, // Default to Yaoundé, Cameroon
-    longitude: 11.5021,
-  });
 
   // Dynamic pricing state
   const [dynamicPricing, setDynamicPricing] = useState<DynamicPricingResponse | null>(null);
@@ -197,12 +182,30 @@ export default function CreateMissionForm({
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
     description: currentMission?.description || '',
     typeMarchandise: currentMission?.typeMarchandise || '',
-    poids: currentMission?.poids || 0,
-    volume: currentMission?.volume || 0,
+    poids: currentMission?.poids || undefined,
+    volume: currentMission?.volume || undefined,
     dateDepartEstime: currentMission?.dateDepartEstime || '',
     dateArriveePrevue: currentMission?.dateArriveePrevue || '',
-    adresseDepart: currentMission?.adresseDepart || undefined,
-    adresseArrivee: currentMission?.adresseArrivee || undefined,
+    adresseDepart: currentMission?.adresseDepart || {
+      street: '',
+      city: '',
+      region: '',
+      country: '',
+      postalCode: '',
+      label: '',
+      latitude: 3.848,
+      longitude: 11.5021,
+    },
+    adresseArrivee: currentMission?.adresseArrivee || {
+      street: '',
+      city: '',
+      region: '',
+      country: '',
+      postalCode: '',
+      label: '',
+      latitude: 3.848,
+      longitude: 11.5021,
+    },
     budgetMin: currentMission?.budgetMin || 0,
     budgetMax: currentMission?.budgetMax || 0,
   };
@@ -337,45 +340,14 @@ export default function CreateMissionForm({
     }
   };
 
-  const handleNewAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setNewAddress((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const saveNewAddress = (
+  const handleNewAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     type: 'departure' | 'arrival',
-    setFieldValue: (field: string, value: NewAddressFormData) => void
+    setFieldValue: (field: string, value: string | number) => void
   ) => {
-    // Create a new address object with all required fields
-    const newAddressData: NewAddressFormData = {
-      street: newAddress.street,
-      city: newAddress.city,
-      region: newAddress.region,
-      country: newAddress.country,
-      postalCode: newAddress.postalCode,
-      label: newAddress.label,
-      latitude: newAddress.latitude,
-      longitude: newAddress.longitude,
-    };
+    const { name, value } = e.target;
 
-    // Set the selected address in the form
-    setFieldValue(type === 'departure' ? 'adresseDepart' : 'adresseArrivee', newAddressData);
-
-    // Reset the form
-    setShowNewAddressForm(null);
-    setNewAddress({
-      street: '',
-      city: '',
-      region: '',
-      country: 'Cameroun',
-      postalCode: '00000',
-      label: '',
-      latitude: 3.848,
-      longitude: 11.5021,
-    });
+    setFieldValue(type === 'departure' ? `adresseDepart.${name}` : `adresseArrivee.${name}`, value);
   };
 
   return (
@@ -392,8 +364,9 @@ export default function CreateMissionForm({
       }}
       validateOnBlur={true}
       validateOnChange={true}
+      validateOnMount={true}
     >
-      {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
+      {({ values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched }) => (
         <Form className="space-y-6">
           <Card>
             <CardHeader>
@@ -431,6 +404,7 @@ export default function CreateMissionForm({
                       value={values.affreteurId || ''}
                       onValueChange={(value) => {
                         setFieldValue('affreteurId', value);
+                        setFieldTouched('affreteurId', true);
                       }}
                     >
                       <SelectTrigger
@@ -438,6 +412,7 @@ export default function CreateMissionForm({
                           'w-full',
                           touched.affreteurId && errors.affreteurId && 'border-red-500'
                         )}
+                        onBlur={() => setFieldTouched('affreteurId', true)}
                       >
                         <SelectValue placeholder={tForms('placeholders.selectAffreteur')} />
                       </SelectTrigger>
@@ -458,288 +433,156 @@ export default function CreateMissionForm({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="adresseDepart">{tForms('labels.departureAddress')}</Label>
-                  {showNewAddressForm === 'departure' ? (
-                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium">{tForms('labels.newAddress')}</h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowNewAddressForm(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex flex-1 justify-between items-center">
+                      <h1 className="font-medium">{tForms('labels.departureAddress')}</h1>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <div className="flex space-y-2 items-center gap-2 w-full">
+                        <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
+                        <Input
+                          name="label"
+                          value={values.adresseDepart!.label}
+                          onChange={(e) => handleNewAddressChange(e, 'departure', setFieldValue)}
+                          placeholder={tForms('placeholders.addressLabel')}
+                          className={cn(
+                            'w-full',
+                            touched.typeMarchandise && errors.adresseDepart && 'border-red-500'
+                          )}
+                        />
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <div className="flex space-y-2 items-center gap-2 w-full">
-                          <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
-                          <Input
-                            name="label"
-                            value={newAddress.label}
-                            onChange={handleNewAddressChange}
-                            placeholder={tForms('placeholders.addressLabel')}
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <div className="mt-2">
+                          <ClientSideAddressPicker
+                            onAddressSelect={(addressDetails) => {
+                              const convertedAddress =
+                                convertAddressDetailsToAddress(addressDetails);
+                              setFieldValue('adresseDepart', convertedAddress);
+                              setFieldTouched('adresseDepart', true);
+                            }}
+                            onClear={() =>
+                              setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart)
+                            }
+                            placeholder={tForms('placeholders.searchDepartureAddress')}
+                            showMap={true}
                             className="w-full"
                           />
                         </div>
-
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            type="button"
-                            onClick={() => saveNewAddress('departure', setFieldValue)}
-                            disabled={!newAddress.street || !newAddress.city}
-                          >
-                            {tForms('buttons.save')}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
-                          <div className="mt-2">
-                            <ClientSideAddressPicker
-                              onAddressSelect={(addressDetails) => {
-                                const convertedAddress =
-                                  convertAddressDetailsToAddress(addressDetails);
-                                setNewAddress(convertedAddress);
-                              }}
-                              onClear={() => {
-                                setNewAddress({
-                                  label: '',
-                                  street: '',
-                                  city: '',
-                                  region: '',
-                                  country: 'Cameroun',
-                                  postalCode: '00000',
-                                  latitude: 3.848,
-                                  longitude: 11.5021,
-                                });
-                              }}
-                              placeholder={tForms('placeholders.searchDepartureAddress')}
-                              showMap={true}
-                              className="w-full"
-                            />
-                          </div>
-                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Select
-                          value={values.adresseDepart?.id || ''}
-                          onValueChange={(value) => {
-                            if (value === 'new') {
-                              setShowNewAddressForm('departure');
-                            } else {
-                              const selectedAddress = addresses.find((addr) => addr.id === value);
-                              if (selectedAddress) {
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                const { id, ...addressWithoutId } = selectedAddress;
-                                setFieldValue('adresseDepart', addressWithoutId);
-                              }
-                            }
-                          }}
-                        >
-                          <SelectTrigger
-                            className={cn(
-                              'pl-10',
-                              touched.adresseDepart && errors.adresseDepart && 'border-red-500'
-                            )}
-                          >
-                            <SelectValue
-                              placeholder={
-                                values.adresseDepart?.label || tForms('placeholders.selectAddress')
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {addresses.map((address) => (
-                              <SelectItem key={address.id} value={address.id}>
-                                {address.label}
-                              </SelectItem>
-                            ))}
-                            <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
-                              <button
-                                type="button"
-                                className="flex w-full items-center gap-2 text-primary"
-                                onClick={() => setShowNewAddressForm('departure')}
-                              >
-                                <Plus className="h-4 w-4" />
-                                <span>{tForms('labels.newAddress')}</span>
-                              </button>
-                            </div>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {values.adresseDepart && (
-                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
-                          <p className="font-medium">{values.adresseDepart.label}</p>
-                          <p>{values.adresseDepart.street}</p>
-                          <p>
-                            {values.adresseDepart.postalCode} {values.adresseDepart.city}
-                          </p>
-                          {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
-                          <p>{values.adresseDepart.country}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {tForms('labels.coordinates')}:{' '}
-                            {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
-                            {Number(values.adresseDepart.longitude)?.toFixed(6)}
-                          </p>
-                        </div>
-                      )}
-                      {touched.adresseDepart && errors.adresseDepart && (
-                        <div className="text-sm text-red-600 mt-1">
-                          {typeof errors.adresseDepart === 'string'
-                            ? errors.adresseDepart
-                            : tForms('validation.departureAddressRequired')}
-                        </div>
-                      )}
+                  </div>
+
+                  {values.adresseDepart && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                      <p className="font-medium">{values.adresseDepart.label}</p>
+                      <p>{values.adresseDepart.street}</p>
+                      <p>
+                        {values.adresseDepart.postalCode} {values.adresseDepart.city}
+                      </p>
+                      {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
+                      <p>{values.adresseDepart.country}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {tForms('labels.coordinates')}:{' '}
+                        {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
+                        {Number(values.adresseDepart.longitude)?.toFixed(6)}
+                      </p>
+                    </div>
+                  )}
+                  {touched.typeMarchandise && errors.adresseDepart && (
+                    <div className="text-sm text-red-600 mt-1">
+                      {tForms('validation.addressRequired')}
                     </div>
                   )}
                 </div>
+
                 <div>
-                  <Label htmlFor="adresseArrivee">{tForms('labels.arrivalAddress')}</Label>
-                  {showNewAddressForm === 'arrival' ? (
-                    <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <h4 className="font-medium">{tForms('labels.newAddress')}</h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowNewAddressForm(null)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <div className="p-4 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <h1 className="font-medium">{tForms('labels.arrivalAddress')}</h1>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee)
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <div className="flex space-y-2 items-center gap-2 w-full">
+                        <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
+                        <Input
+                          name="label"
+                          value={values.adresseArrivee!.label}
+                          onBlur={(e) => {
+                            handleBlur(e);
+                            setFieldTouched('adresseArrivee.label', true);
+                          }}
+                          onChange={(e) => handleNewAddressChange(e, 'arrival', setFieldValue)}
+                          placeholder={tForms('placeholders.addressLabel')}
+                          className={cn(
+                            'w-full',
+                            touched.typeMarchandise && errors.adresseArrivee && 'border-red-500'
+                          )}
+                        />
                       </div>
-                      <div className="flex justify-between gap-4">
-                        <div className="flex space-y-2 items-center gap-2 w-full">
-                          <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
-                          <Input
-                            name="label"
-                            value={newAddress.label}
-                            onChange={handleNewAddressChange}
-                            placeholder={tForms('placeholders.addressLabel')}
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <div className="mt-2">
+                          <ClientSideAddressPicker
+                            onAddressSelect={(addressDetails) => {
+                              const convertedAddress =
+                                convertAddressDetailsToAddress(addressDetails);
+                              setFieldValue('adresseArrivee', convertedAddress);
+                              setFieldTouched('adresseArrivee', true);
+                            }}
+                            onClear={() =>
+                              setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee)
+                            }
+                            placeholder={tForms('placeholders.searchArrivalAddress')}
+                            showMap={true}
                             className="w-full"
                           />
                         </div>
-
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            type="button"
-                            onClick={() => saveNewAddress('arrival', setFieldValue)}
-                            disabled={!newAddress.street || !newAddress.city}
-                          >
-                            {tForms('buttons.save')}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
-                          <div className="mt-2">
-                            <ClientSideAddressPicker
-                              onAddressSelect={(addressDetails) => {
-                                const convertedAddress =
-                                  convertAddressDetailsToAddress(addressDetails);
-                                setNewAddress(convertedAddress);
-                              }}
-                              onClear={() => {
-                                setNewAddress({
-                                  label: '',
-                                  street: '',
-                                  city: '',
-                                  region: '',
-                                  country: 'Cameroun',
-                                  postalCode: '00000',
-                                  latitude: 3.848,
-                                  longitude: 11.5021,
-                                });
-                              }}
-                              placeholder={tForms('placeholders.searchArrivalAddress')}
-                              showMap={true}
-                              className="w-full"
-                            />
-                          </div>
-                        </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Select
-                          value={values.adresseArrivee?.id || ''}
-                          onValueChange={(value) => {
-                            if (value === 'new') {
-                              setShowNewAddressForm('arrival');
-                            } else {
-                              const selectedAddress = addresses.find((addr) => addr.id === value);
-                              if (selectedAddress) {
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                const { id, ...addressWithoutId } = selectedAddress;
-                                setFieldValue('adresseArrivee', addressWithoutId);
-                              }
-                            }
-                          }}
-                        >
-                          <SelectTrigger
-                            className={cn(
-                              'pl-10',
-                              touched.adresseArrivee && errors.adresseArrivee && 'border-red-500'
-                            )}
-                          >
-                            <SelectValue
-                              placeholder={
-                                values.adresseArrivee?.label || tForms('placeholders.selectAddress')
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {addresses.map((address) => (
-                              <SelectItem key={address.id} value={address.id}>
-                                {address.label}
-                              </SelectItem>
-                            ))}
-                            <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
-                              <button
-                                type="button"
-                                className="flex w-full items-center gap-2 text-primary"
-                                onClick={() => setShowNewAddressForm('arrival')}
-                              >
-                                <Plus className="h-4 w-4" />
-                                <span>{tForms('labels.newAddress')}</span>
-                              </button>
-                            </div>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {values.adresseArrivee && (
-                        <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
-                          <p className="font-medium">{values.adresseArrivee.label}</p>
-                          <p>{values.adresseArrivee.street}</p>
-                          <p>
-                            {values.adresseArrivee.postalCode} {values.adresseArrivee.city}
-                          </p>
-                          {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
-                          <p>{values.adresseArrivee.country}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {tForms('labels.coordinates')}:{' '}
-                            {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
-                            {Number(values.adresseArrivee.longitude)?.toFixed(6)}
-                          </p>
-                        </div>
-                      )}
-                      {touched.adresseArrivee && errors.adresseArrivee && (
-                        <div className="text-sm text-red-600 mt-1">
-                          {typeof errors.adresseArrivee === 'string'
-                            ? errors.adresseArrivee
-                            : tForms('validation.arrivalAddressRequired')}
-                        </div>
-                      )}
+                  </div>
+
+                  {values.adresseArrivee && (
+                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
+                      <p className="font-medium">{values.adresseArrivee.label}</p>
+                      <p>{values.adresseArrivee.street}</p>
+                      <p>
+                        {values.adresseArrivee.postalCode} {values.adresseArrivee.city}
+                      </p>
+                      {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
+                      <p>{values.adresseArrivee.country}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {tForms('labels.coordinates')}:{' '}
+                        {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
+                        {Number(values.adresseArrivee.longitude)?.toFixed(6)}
+                      </p>
+                    </div>
+                  )}
+
+                  {touched.typeMarchandise && errors.adresseArrivee && (
+                    <div className="text-sm text-red-600 mt-1">
+                      {tForms('validation.addressRequired')}
                     </div>
                   )}
                 </div>
@@ -774,9 +617,7 @@ export default function CreateMissionForm({
                     step="0.01"
                     placeholder="0.00"
                     value={values.poids || ''}
-                    onChange={(e) =>
-                      setFieldValue('poids', e.target.value ? parseFloat(e.target.value) : null)
-                    }
+                    onChange={handleChange}
                     onBlur={handleBlur}
                     className={cn(touched.poids && errors.poids && 'border-red-500')}
                   />
@@ -797,7 +638,10 @@ export default function CreateMissionForm({
                     onChange={(e) =>
                       setFieldValue('volume', e.target.value ? parseFloat(e.target.value) : null)
                     }
-                    onBlur={handleBlur}
+                    onBlur={(e) => {
+                      handleBlur(e);
+                      setFieldTouched('volume', true);
+                    }}
                     className={cn(touched.volume && errors.volume && 'border-red-500')}
                   />
                   {touched.volume && errors.volume && (
@@ -845,6 +689,7 @@ export default function CreateMissionForm({
                           !values.dateDepartEstime && 'text-muted-foreground',
                           touched.dateDepartEstime && errors.dateDepartEstime && 'border-red-500'
                         )}
+                        onBlur={() => setFieldTouched('dateDepartEstime', true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateDepartEstime
@@ -889,6 +734,7 @@ export default function CreateMissionForm({
                           !values.dateArriveePrevue && 'text-muted-foreground',
                           touched.dateArriveePrevue && errors.dateArriveePrevue && 'border-red-500'
                         )}
+                        onBlur={() => setFieldTouched('dateArriveePrevue', true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {values.dateArriveePrevue
@@ -905,6 +751,7 @@ export default function CreateMissionForm({
                         onSelect={(date) => {
                           if (date) {
                             setFieldValue('dateArriveePrevue', date);
+                            setFieldTouched('dateArriveePrevue', true);
                           }
                         }}
                         initialFocus
@@ -1063,7 +910,7 @@ export default function CreateMissionForm({
                   type="submit"
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || Object.keys(errors).length > 0}
                   onClick={() => {
                     // Set status to 'draft' and submit
                     onSubmit({ ...values }, 'create', true);
@@ -1079,7 +926,7 @@ export default function CreateMissionForm({
                     // Set status to 'draft' and submit
                     onSubmit({ ...values }, 'create', false);
                   }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || Object.keys(errors).length > 0}
                 >
                   {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
                 </Button>
@@ -1090,7 +937,7 @@ export default function CreateMissionForm({
                 <Button
                   className="flex-1"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || Object.keys(errors).length > 0}
                   onClick={() => {
                     // Set status to 'draft' and submit
                     onSubmit({ ...values }, 'update', currentMission.status === 'draft');
@@ -1113,7 +960,7 @@ export default function CreateMissionForm({
                       // Set status to 'draft' and submit
                       onSubmit({ ...values }, 'update', false);
                     }}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || Object.keys(errors).length > 0}
                   >
                     {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
                   </Button>

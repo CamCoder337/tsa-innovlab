@@ -304,11 +304,13 @@ export const MyVehicles: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Tous les statuts</SelectItem>
-                    {Object.values(VehicleStatus).map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {VehicleStatusLabels[status]}
-                      </SelectItem>
-                    ))}
+                    {Object.values(VehicleStatus)
+                      .filter((status) => status !== 'in_mission')
+                      .map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {VehicleStatusLabels[status]}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -401,7 +403,7 @@ export const MyVehicles: React.FC = () => {
                         onValueChange={(value) =>
                           handleStatusChange(vehicle.id, value as VehicleStatus)
                         }
-                        disabled={isLoading}
+                        disabled={isLoading || vehicle.status === 'in_mission'}
                       >
                         <SelectTrigger
                           className={`text-xs px-2 py-1 rounded-full border-0 focus:ring-2 focus:ring-blue-500 ${getStatusBadgeColor(vehicle.status)} h-auto min-h-0`}
@@ -409,11 +411,13 @@ export const MyVehicles: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.values(VehicleStatus).map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {VehicleStatusLabels[status]}
-                            </SelectItem>
-                          ))}
+                          {Object.values(VehicleStatus)
+                            .filter((status) => status !== 'in_mission')
+                            .map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {VehicleStatusLabels[status]}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </td>
