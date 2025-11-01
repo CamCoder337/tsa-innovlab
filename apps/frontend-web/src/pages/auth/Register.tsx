@@ -10,15 +10,18 @@ import RegisterForm from '@/components/forms/RegisterForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import LanguageDropdown from '@/components/ui/LanguageDropdown';
+import { useAuthStore } from '@/stores/authStore';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { signup, error } = useAuth();
+  const { signup } = useAuth();
   const { t: tAuth } = useAuthTranslation();
   const { t: tCommon } = useCommonTranslation();
 
   const handleRegister = async (data: CreateUserRequest) => {
     const response = await signup(data);
+
+    const { error } = useAuthStore.getState();
 
     if (!response) {
       if (error) {

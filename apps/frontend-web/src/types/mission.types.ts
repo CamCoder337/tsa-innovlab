@@ -71,8 +71,8 @@ export interface CreateMissionDto {
   volume?: number;
   dateDepartEstime?: string;
   dateArriveePrevue?: string;
-  adresseDepart?: Address;
-  adresseArrivee?: Address;
+  adresseDepart?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
+  adresseArrivee?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
   budgetMin?: number;
   budgetMax?: number;
   requiredVehicleType?: VehicleType;

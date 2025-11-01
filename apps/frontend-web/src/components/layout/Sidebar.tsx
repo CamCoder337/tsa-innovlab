@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -11,6 +11,10 @@ import {
   MapPin,
   MessagesSquare,
   Truck,
+  User,
+  Headset,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -23,9 +27,15 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
   SidebarTrigger,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigationTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useNavigationTranslation,
+  useCommonTranslation,
+  useAuthTranslation,
+} from '@/hooks/useTranslation';
+import { toast } from 'sonner';
 
 type SidebarItem = {
   id: string;
@@ -309,12 +319,27 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 }
 
 export default function Sidebar() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { t: tAuth } = useAuthTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tNav } = useNavigationTranslation();
 
-  const role = user ? tCommon(`roles.${user?.role}`) : tCommon('roles.guest');
+  const displayName = user?.fullName;
+  const role = tCommon(`roles.${user?.role}`);
   const menu = GetMenuByRole();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    toast.loading(tAuth('loggingOut'), {
+      duration: 30000,
+    });
+
+    await logout();
+
+    toast.dismiss();
+    toast.success('Déconnexion réussie');
+    navigate('/');
+  };
 
   if (!isAuthenticated) return null;
 
@@ -336,6 +361,44 @@ export default function Sidebar() {
         </SidebarGroup>
         <SidebarSeparator />
       </SidebarContent>
+      <SidebarFooter>
+        <div className="md:hidden">
+          {/* Mobile-only user info display */}
+          <div className="pb-2 border-b">
+            <p className="px-2 text-sm font-medium truncate">{displayName}</p>
+            <p className="px-2 text-xs text-muted-foreground truncate">{role}</p>
+          </div>
+
+          <Link to="/app/profile" className="h-fit pt-8">
+            <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
+              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{tAuth('profile')}</span>
+            </div>
+          </Link>
+
+          <Link to="/app/settings" className="h-fit">
+            <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
+              <Settings className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{tCommon('actions.settings', 'Paramètres')}</span>
+            </div>
+          </Link>
+
+          <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
+            <Headset className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{tCommon('actions.support', 'Support')}</span>
+          </div>
+
+          <div
+            onClick={handleLogout}
+            data-testid="logout-button"
+            role="menuitem"
+            className="cursor-pointer flex items-center px-2 py-1 gap-2 text-red-600 focus:text-red-600"
+          >
+            <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{tAuth('logout')}</span>
+          </div>
+        </div>
+      </SidebarFooter>
     </UISidebar>
   );
 }

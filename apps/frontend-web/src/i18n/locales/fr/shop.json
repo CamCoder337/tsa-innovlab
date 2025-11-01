@@ -147,7 +147,7 @@
       "securePayment": "Paiement sécurisé"
     },
     "recommendations": {
-      "title": "Vous pourriez aussi avoir besoin",
+      "title": "Vous pourriez aussi aimer",
       "add": "Ajouter"
     }
   },
@@ -350,10 +350,6 @@
   "alerts": {
     "lowStockTitle": "Alerte Stock Faible",
     "lowStockMessage": "Plus que {{count}} en stock!"
-  },
-  "results": {
-    "found": "{{count}} produit trouvé",
-    "foundPlural": "{{count}} produits trouvés"
   },
   "recommendations": {
     "title": "Recommandations",

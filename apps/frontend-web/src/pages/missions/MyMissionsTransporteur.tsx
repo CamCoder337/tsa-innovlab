@@ -31,6 +31,7 @@ import {
   useCommonTranslation,
 } from '@/hooks/useTranslation';
 import { useSearchParams } from 'react-router-dom';
+import { useMissionStore } from '@/stores/missionStore';
 // import { Calendar } from '@/components/ui/calendar';
 
 export default function MissionsTransporteurPage() {
@@ -38,7 +39,6 @@ export default function MissionsTransporteurPage() {
     missions,
     myMissions,
     currentMission,
-    error,
     setCurrentMission,
     applyMission,
     updateMissionStatus,
@@ -89,6 +89,8 @@ export default function MissionsTransporteurPage() {
     try {
       await applyMission(currentMission.id, selectedVehicleId);
 
+      const { error } = useMissionStore.getState();
+
       if (error) {
         console.error(error);
         toast.error(error || tErrors('missions.applicationError'));
@@ -114,6 +116,8 @@ export default function MissionsTransporteurPage() {
     setIsLoading(true);
     try {
       await updateMissionStatus(currentMission.id, { status: 'in_progress' });
+
+      const { error } = useMissionStore.getState();
 
       if (error) {
         toast.error(tErrors('missions.statusUpdateFailed'));

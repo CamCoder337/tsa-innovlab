@@ -91,7 +91,7 @@ function AffreteurDashboard() {
 
   if (isLoading && myMissions.length === 0)
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex flex-1 flex-col items-center justify-center h-screen">
         <Loader className="animate-spin h-12 w-12 text-tsa-blue" />
       </div>
     );

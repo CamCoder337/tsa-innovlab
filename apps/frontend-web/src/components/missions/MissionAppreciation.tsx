@@ -13,6 +13,7 @@ import {
   useErrorsTranslation,
   useFormsTranslation,
 } from '@/hooks/useTranslation';
+import { useUserSearch } from '@/hooks/useUserSearch';
 
 interface MissionAppreciationProps {
   mission: Mission;
@@ -34,6 +35,7 @@ interface AppreciationData {
 
 export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ mission, onUpdate }) => {
   const { user } = useAuth();
+  const { getUserName } = useUserSearch();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
@@ -51,6 +53,8 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
   const [existingFeedback, setExistingFeedback] = useState<MissionFeedback | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [transporteurName, setTransporteurName] = useState<string>('');
+  const [affreteurName, setAffreteurName] = useState<string>('');
 
   useEffect(() => {
     const fetchExistingFeedback = async () => {
@@ -86,6 +90,22 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
     fetchExistingFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mission.id]);
+
+  // Fetch user names
+  useEffect(() => {
+    const fetchUserNames = async () => {
+      if (mission.transporteurId) {
+        const name = await getUserName(mission.transporteurId);
+        setTransporteurName(name);
+      }
+      if (mission.affreteurId) {
+        const name = await getUserName(mission.affreteurId);
+        setAffreteurName(name);
+      }
+    };
+
+    fetchUserNames();
+  }, [mission.transporteurId, mission.affreteurId, getUserName]);
 
   // Calcul automatique de la note générale
   const calculateOverallRating = (
@@ -214,8 +234,18 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             <div>
               <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}</p>
               <p className="font-medium">
-                {mission.transporteur?.fullName ||
+                {transporteurName ||
+                  mission.transporteur?.fullName ||
                   `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
+                  tCommon('status.notAssigned')}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">{tCommon('roles.affreteur')}</p>
+              <p className="font-medium">
+                {affreteurName ||
+                  mission.affreteur?.fullName ||
+                  `${mission.affreteur?.firstName} ${mission.affreteur?.lastName}` ||
                   tCommon('status.notAssigned')}
               </p>
             </div>

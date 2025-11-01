@@ -67,6 +67,8 @@ export default function CreateMission() {
         if (publish && missionId) {
           await publishMission(missionId);
 
+          const { error } = useMissionStore.getState();
+
           if (error) {
             toast.error(error || tErrors('general.somethingWentWrong'));
             return;
@@ -81,8 +83,8 @@ export default function CreateMission() {
         console.error('Error in handleCreateMission:', err);
         toast.error(tErrors('general.somethingWentWrong'));
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentMission, createMission]
   );
 

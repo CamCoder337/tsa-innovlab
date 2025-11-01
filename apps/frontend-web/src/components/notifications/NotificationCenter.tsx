@@ -111,7 +111,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={`relative ${className}`}>
+        <Button variant="ghost" size="sm" className={`relative ${className} px-1 md:px-3`}>
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge

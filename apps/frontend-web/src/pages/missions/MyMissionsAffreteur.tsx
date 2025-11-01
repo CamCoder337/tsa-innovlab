@@ -8,9 +8,10 @@ import { useMissions } from '@/hooks/useMissions';
 import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { useMissionStore } from '@/stores/missionStore';
 
 export default function MyMissionsAffreteur() {
-  const { myMissions, error, publishMission, unpublishMission } = useMissions();
+  const { myMissions, publishMission, unpublishMission } = useMissions();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
   const { t: tMissions } = useMissionsTranslation();
@@ -18,6 +19,8 @@ export default function MyMissionsAffreteur() {
 
   const handlePublish = async (id: string) => {
     await publishMission(id);
+
+    const { error } = useMissionStore.getState();
 
     if (error) {
       console.error(error);
@@ -33,6 +36,8 @@ export default function MyMissionsAffreteur() {
 
   const handleunpublish = async (id: string) => {
     await unpublishMission(id);
+
+    const { error } = useMissionStore.getState();
 
     if (error) {
       console.error(error);

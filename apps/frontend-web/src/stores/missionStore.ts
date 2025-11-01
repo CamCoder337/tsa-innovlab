@@ -15,7 +15,7 @@ import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
-import { toast } from 'sonner';
+import { useVehicleStore } from './vehicleStore';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -524,9 +524,9 @@ export const useMissionStore = create<MissionStoreExtended>()(
       },
 
       applyForMission: async (id: string, vehicleId: string) => {
-        try {
-          set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null });
 
+        try {
           const response = await missionService.applyForMission(id, vehicleId);
 
           if (response.error) {
@@ -538,17 +538,28 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-
-            set({
-              missions: currentMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+            set((state) => ({
+              missions: state.missions.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
               ),
               currentMission:
-                get().currentMission?.id === id ? response.data : get().currentMission,
+                state.currentMission?.id === id ? response.data!.mission : state.currentMission,
               isLoading: false,
               error: null,
-            });
+            }));
+
+            // Update vehicle in vehicle store
+            const vehicleStore = useVehicleStore.getState();
+            const { vehicles } = vehicleStore;
+            if (response.data.vehicle) {
+              const updatedVehicles = vehicles.map((v) =>
+                v.id === response.data!.vehicle.id ? response.data!.vehicle : v
+              );
+
+              useVehicleStore.setState({
+                vehicles: updatedVehicles,
+              });
+            }
           }
         } catch (error) {
           set({
@@ -678,6 +689,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
       partialize: (state) => ({
         missions: state.missions,
         myMissions: state.myMissions,
+        currentMission: state.currentMission,
         stats: state.stats,
         feedbacks: state.feedbacks,
         feedbackStats: state.feedbackStats,
