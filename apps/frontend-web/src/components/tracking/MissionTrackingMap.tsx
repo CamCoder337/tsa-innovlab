@@ -287,8 +287,8 @@ export default function MissionTrackingMap({
 
       const position = await geolocationService.getCurrentPosition({
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0, // Ne pas utiliser de position en cache
+        timeout: 30000, // Augmenté à 30 secondes pour laisser le temps au GPS
+        maximumAge: 5000, // Accepter une position de moins de 5 secondes
       });
 
       setUserPosition(position);
