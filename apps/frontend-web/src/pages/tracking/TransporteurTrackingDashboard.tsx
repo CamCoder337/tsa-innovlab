@@ -224,11 +224,11 @@ export default function TransporteurTrackingDashboard() {
                   </CardHeader>
                   <CardContent>
                     <MissionTrackingMap
-                      className="h-[400px]"
+                      className="h-[700px]"
                       missions={activeAssignments}
                       selectedMission={currentAssignment}
                       onMissionClick={(mission) => setCurrentAssignment(mission)}
-                      showUserLocation={true}
+                      showUserLocation={false}
                       showRoutes={true}
                       showLegend={false}
                     />

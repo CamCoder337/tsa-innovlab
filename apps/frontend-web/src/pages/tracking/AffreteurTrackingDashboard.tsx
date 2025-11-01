@@ -168,7 +168,7 @@ export default function AffréteurTrackingDashboard() {
                 </CardHeader>
                 <CardContent>
                   <MissionTrackingMap
-                    className="h-[400px]"
+                    className="h-[700px]"
                     missions={missions}
                     selectedMission={
                       currentMission || missions.find((m) => m.status === 'in_progress')

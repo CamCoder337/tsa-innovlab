@@ -457,7 +457,7 @@ export default function AdminTrackingDashboard() {
                 </CardHeader>
                 <CardContent>
                   <MissionTrackingMap
-                    className="h-[500px]"
+                    className="h-[700px]"
                     missions={trackableMissions}
                     selectedMission={selectedMission}
                     onMissionClick={(mission) => setSelectedMission(mission)}
