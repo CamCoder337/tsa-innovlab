@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import AIService from '#services/ai_service'
 import Product from '#models/product'
+import fs from 'node:fs'
 
 export default class VisualRecognitionController {
   private aiService: AIService
@@ -32,9 +33,14 @@ export default class VisualRecognitionController {
         })
       }
 
-      // For now, skip visual recognition implementation
-      // TODO: Implement proper file handling with AI service
-      const recognitionResult = null as any
+      // Read the uploaded file as a Buffer from its temporary path
+      const imageBuffer = fs.readFileSync(image.tmpPath!)
+
+      // Call AI service for visual recognition
+      const recognitionResult = await this.aiService.searchProductsByImage(
+        imageBuffer,
+        image.clientName
+      )
 
       if (!recognitionResult || !recognitionResult.success) {
         return response.status(500).json({

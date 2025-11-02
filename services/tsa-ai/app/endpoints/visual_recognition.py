@@ -3,6 +3,7 @@ Endpoints API pour la reconnaissance visuelle de pièces avec Google Cloud Visio
 """
 import logging
 import tempfile
+import time
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
@@ -12,7 +13,9 @@ from app.schemas.visual_recognition import (
     TextSearchRequest,
     SearchResponse,
     PartResult,
-    HealthResponse
+    HealthResponse,
+    VisualRecognitionResponse,
+    ProductRecognitionResult
 )
 from app.services.vision_service import get_vision_service
 
@@ -34,39 +37,44 @@ except Exception as e:
     logger.error(f"Erreur lors du chargement du catalogue: {e}")
 
 
-@router.post("/search/image", response_model=SearchResponse)
+@router.post("/search/image", response_model=VisualRecognitionResponse)
 async def search_by_image(
-    image: UploadFile = File(..., description="Image de la pièce à rechercher"),
-    top_k: int = Query(5, ge=1, le=50, description="Nombre de résultats"),
+    image: UploadFile = File(..., description="Image du produit à rechercher"),
+    top_k: int = Query(10, ge=1, le=50, description="Nombre de résultats"),
     categorie: Optional[str] = Query(None, description="Filtrer par catégorie"),
     marque: Optional[str] = Query(None, description="Filtrer par marque"),
     modele_camion: Optional[str] = Query(None, description="Filtrer par modèle de camion")
 ):
     """
-    Recherche de pièces par image avec Google Cloud Vision
-    
-    Upload une image d'une pièce et trouve les pièces similaires dans le catalogue.
+    Recherche de produits par image avec Google Cloud Vision
+
+    Upload une image d'un produit et trouve les produits similaires dans le catalogue.
+    Retourne un format compatible avec le service TypeScript.
     """
+    start_time = time.time()
+
     if service.catalog_data is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Service non disponible: catalogue non chargé"
+        return VisualRecognitionResponse(
+            success=False,
+            results=[],
+            processing_time_ms=0
         )
-    
+
     # Vérifier le type de fichier
-    if not image.content_type.startswith('image/'):
-        raise HTTPException(
-            status_code=400,
-            detail="Le fichier doit être une image"
+    if not image.content_type or not image.content_type.startswith('image/'):
+        return VisualRecognitionResponse(
+            success=False,
+            results=[],
+            processing_time_ms=(time.time() - start_time) * 1000
         )
-    
+
     try:
         # Sauvegarder temporairement l'image
         with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
             content = await image.read()
             tmp_file.write(content)
             tmp_path = tmp_file.name
-        
+
         # Construire les filtres
         filters = {}
         if categorie:
@@ -75,28 +83,43 @@ async def search_by_image(
             filters['marque'] = marque
         if modele_camion:
             filters['modele_camion'] = modele_camion
-        
+
         # Rechercher
         results = service.search_by_image(
             image_path=tmp_path,
             top_k=top_k,
             filters=filters if filters else None
         )
-        
+
         # Nettoyer le fichier temporaire
         Path(tmp_path).unlink()
-        
-        return SearchResponse(
-            results=[PartResult(**r) for r in results],
-            total=len(results),
-            query_type="image"
+
+        # Convertir au format attendu par TypeScript
+        product_results = [
+            ProductRecognitionResult(
+                product_id=r['id'],
+                product_name=r['nom'],
+                confidence=r['similarity_score'],
+                category=r['categorie']
+            )
+            for r in results
+        ]
+
+        processing_time = (time.time() - start_time) * 1000
+
+        return VisualRecognitionResponse(
+            success=True,
+            results=product_results,
+            processing_time_ms=processing_time
         )
-        
+
     except Exception as e:
         logger.error(f"Erreur lors de la recherche par image: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erreur lors de la recherche: {str(e)}"
+        processing_time = (time.time() - start_time) * 1000
+        return VisualRecognitionResponse(
+            success=False,
+            results=[],
+            processing_time_ms=processing_time
         )
 
 

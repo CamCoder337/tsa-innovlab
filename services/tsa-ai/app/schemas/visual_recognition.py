@@ -40,6 +40,21 @@ class SearchResponse(BaseModel):
     query_type: str = Field(..., description="Type de requête: 'image' ou 'text'")
 
 
+class ProductRecognitionResult(BaseModel):
+    """Résultat de reconnaissance de produit pour l'API TypeScript"""
+    product_id: str
+    product_name: str
+    confidence: float
+    category: str
+
+
+class VisualRecognitionResponse(BaseModel):
+    """Réponse de reconnaissance visuelle pour l'API TypeScript"""
+    success: bool
+    results: List[ProductRecognitionResult]
+    processing_time_ms: float
+
+
 class HealthResponse(BaseModel):
     """Réponse de santé du service"""
     status: str

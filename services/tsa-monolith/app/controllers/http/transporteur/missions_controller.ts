@@ -155,7 +155,11 @@ export default class MissionsController {
 
       // Récupérer les missions assignées à ce transporteur
       const query = Mission.query()
-        .whereIn('status', [MissionStatus.ASSIGNED, MissionStatus.COMPLETED])
+        .whereIn('status', [
+          MissionStatus.ASSIGNED,
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.COMPLETED,
+        ])
         .where('transporteur_id', user.id)
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'phone')

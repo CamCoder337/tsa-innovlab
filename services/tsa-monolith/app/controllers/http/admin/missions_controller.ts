@@ -37,6 +37,9 @@ export default class MissionsController {
         .preload('affreteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
         })
+        .preload('transporteur', (userQuery) => {
+          userQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
+        })
         .preload('adresseDepart')
         .preload('adresseArrivee')
 
@@ -115,6 +118,9 @@ export default class MissionsController {
       const mission = await Mission.query()
         .where('id', params.id)
         .preload('affreteur', (userQuery) => {
+          userQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
+        })
+        .preload('transporteur', (userQuery) => {
           userQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
         })
         .preload('adresseDepart')
