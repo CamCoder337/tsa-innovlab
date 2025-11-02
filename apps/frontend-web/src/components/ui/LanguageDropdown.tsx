@@ -45,7 +45,7 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
     <div className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-tsa-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-tsa-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
         aria-label="Select language"
       >
         <Globe className="h-4 w-4" />
@@ -69,17 +69,17 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
 
           {/* Dropdown menu */}
           <div
-            className={`absolute z-20 w-48 bg-white border border-gray-200 rounded-md shadow-lg ${getPositionClasses()}`}
+            className={`absolute z-20 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg ${getPositionClasses()}`}
           >
             <div className="py-1">
               {languages.map((language) => (
                 <button
                   key={language.code}
                   onClick={() => handleLanguageChange(language.code)}
-                  className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-left hover:bg-gray-100 transition-colors duration-150 ${
+                  className={`w-full flex items-center space-x-3 px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 ${
                     currentLanguage.code === language.code
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                      : 'text-gray-700 dark:text-gray-200'
                   }`}
                 >
                   <span className="text-lg">{language.flag}</span>
