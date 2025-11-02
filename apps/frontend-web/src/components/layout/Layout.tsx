@@ -60,17 +60,17 @@ export default function Layout() {
     <SidebarProvider>
       <>
         {/* FIXED HEADER - MUST HAVE HEIGHT */}
-        <Header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-white" />
+        <Header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-white dark:bg-gray-900 dark:border-gray-800" />
 
         {/* MAIN APP - Full height, starts below header */}
-        <div className="flex-1 pt-16 flex flex-col bg-gray-50">
+        <div className="flex-1 pt-16 flex flex-col bg-gray-50 dark:bg-gray-950">
           {/* MAIN CONTENT - TAKES REMAINING HEIGHT */}
           <main className="flex flex-1 overflow-hidden">
             {/* SIDEBAR */}
             <Sidebar />
 
             {/* OUTLET CONTENT - FULL HEIGHT & WIDTH */}
-            <section className="flex flex-1 overflow-y-auto bg-gray-50">
+            <section className="flex flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
               <Outlet /> {/* Renders Chat, Dashboard, etc. */}
             </section>
           </main>
