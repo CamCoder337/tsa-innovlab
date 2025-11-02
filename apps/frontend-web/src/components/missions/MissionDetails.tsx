@@ -302,7 +302,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                     href={doc}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border rounded-md hover:bg-accent transition-colors"
+                    className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm border dark:border-gray-800 rounded-md hover:bg-accent transition-colors"
                   >
                     {tMissions('details.document')} {index + 1}
                   </a>

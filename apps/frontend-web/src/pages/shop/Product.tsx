@@ -161,7 +161,7 @@ export default function ProductPage() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-square overflow-hidden rounded-2xl border bg-zinc-50">
+          <div className="aspect-square overflow-hidden rounded-2xl border dark:border-gray-800 bg-zinc-50">
             <img
               src={product.imageUrl || product.images?.[activeImageIndex] || product.images?.[0]}
               alt={product.name}
@@ -268,7 +268,7 @@ export default function ProductPage() {
               <span className="text-sm font-medium text-zinc-700">
                 {tShop('product.quantity')}:
               </span>
-              <div className="flex items-center border rounded-lg">
+              <div className="flex items-center border dark:border-gray-800 rounded-lg">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -287,7 +287,7 @@ export default function ProductPage() {
                     const value = Math.max(1, Math.min(product.stock, Number(e.target.value) || 1));
                     setQty(value);
                   }}
-                  className="w-16 text-center border-0 focus-visible:ring-0 h-10"
+                  className="w-16 text-center border dark:border-gray-800-0 focus-visible:ring-0 h-10"
                 />
                 <Button
                   variant="ghost"
@@ -481,7 +481,7 @@ export default function ProductPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 text-xs sm:text-sm text-gray-600">
+                <div className="space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                   <p>
                     <span className="font-medium">{tShop('product.reference')}:</span>{' '}
                     {product.reference}

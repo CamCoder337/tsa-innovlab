@@ -72,7 +72,7 @@ function CartDrawer({ children }: CartDrawerProps) {
           </SheetTitle>
         </SheetHeader>
         {error && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+          <div className="mt-2 p-2 bg-red-50 border dark:border-gray-800 border-red-200 rounded text-red-600 text-sm">
             {error}
           </div>
         )}
@@ -86,7 +86,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                   <img
                     src={item.product?.images?.[0] || '/placeholder-product.png'}
                     alt={`${tCart('imageOf')} ${item.product?.name || tCart('product')}`}
-                    className="h-16 w-16 rounded object-cover border"
+                    className="h-16 w-16 rounded object-cover border dark:border-gray-800"
                     loading="lazy"
                   />
                   <div className="flex-1">

@@ -132,7 +132,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
           <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
         );
       default:
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />;
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -184,7 +184,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       </CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <p className="text-center text-gray-500 py-6 sm:py-8 text-xs sm:text-sm">
+          <p className="text-center text-gray-500 dark:text-gray-400 py-6 sm:py-8 text-xs sm:text-sm">
             {tMissions('timeline.noEvents')}
           </p>
         ) : (
@@ -213,7 +213,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                       </p>
                     )}
                     {event.user && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {tCommon('by')} {event.user.name}
                       </p>
                     )}

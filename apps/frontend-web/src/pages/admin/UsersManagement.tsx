@@ -95,7 +95,7 @@ export default function AdminUsersPage() {
   // Mock data removed - now using real API data
   if (error) {
     return (
-      <div className="flex min-h-screen bg-gray-50 p-6">
+      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
         <div className="flex-1 p-6">
           <div className="text-center py-8">
             <p className="text-red-500">
@@ -145,12 +145,12 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-6">
+    <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-950 p-6">
       <div className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{tAdmin('users.title')}</h1>
-            <p className="text-gray-600 mt-1">{tAdmin('users.subtitle')}</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{tAdmin('users.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-1">{tAdmin('users.subtitle')}</p>
           </div>
           <Link to="/admin/users/add">
             <Button className="gap-2">
@@ -169,7 +169,7 @@ export default function AdminUsersPage() {
                   <Users className="h-5 w-5 text-tsa-blue" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{tAdmin('users.totalUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.totalUsers')}</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function AdminUsersPage() {
                   <UserCheck className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{tAdmin('users.activeUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.activeUsers')}</p>
                   <p className="text-2xl font-bold">{stats.active}</p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function AdminUsersPage() {
                   <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{tAdmin('users.pendingUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.pendingUsers')}</p>
                   <p className="text-2xl font-bold">{stats.pending}</p>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function AdminUsersPage() {
                   <UserX className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">{tAdmin('users.suspendedUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.suspendedUsers')}</p>
                   <p className="text-2xl font-bold">{stats.suspended}</p>
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function AdminUsersPage() {
                     {filteredUsers?.map((user) => (
                       <div
                         key={user.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                        className="flex items-center justify-between p-4 border dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:bg-gray-950"
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function AdminUsersPage() {
 
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-gray-900">{formatUserName(user)}</h4>
+                              <h4 className="font-medium text-gray-900 dark:text-white">{formatUserName(user)}</h4>
                               <Badge className={getStatusColor(user.status)}>
                                 {user.status.toUpperCase()}
                               </Badge>
@@ -323,7 +323,7 @@ export default function AdminUsersPage() {
                               </Badge>
                             </div>
 
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
                               <div className="flex items-center gap-1">
                                 <Mail className="h-3 w-3" />
                                 {user.email}
@@ -336,7 +336,7 @@ export default function AdminUsersPage() {
                               )}
                             </div>
 
-                            <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 {tAdmin('users.registeredOn')} {formatDate(user.createdAt)}
@@ -402,7 +402,7 @@ export default function AdminUsersPage() {
 
                 {!isLoading && filteredUsers?.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">{tAdmin('users.noUsersFound')}</p>
+                    <p className="text-gray-500 dark:text-gray-400">{tAdmin('users.noUsersFound')}</p>
                   </div>
                 )}
               </CardContent>

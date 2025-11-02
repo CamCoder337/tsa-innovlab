@@ -61,10 +61,10 @@ export default function MyMissionsAffreteur() {
     <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 truncate">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 truncate">
             {tMissions('myMissions.affreteur.title')}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
             {tMissions('myMissions.affreteur.subtitle')}
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function MyMissionsAffreteur() {
                 <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('myMissions.affreteur.stats.totalMissions')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">{myMissions.length}</p>
@@ -99,7 +99,7 @@ export default function MyMissionsAffreteur() {
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tCommon('status.in_progress')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">
@@ -120,7 +120,7 @@ export default function MyMissionsAffreteur() {
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tCommon('status.completed')}s
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">
@@ -137,7 +137,7 @@ export default function MyMissionsAffreteur() {
                 <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('myMissions.affreteur.stats.totalOffers')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">{0}</p>
@@ -188,10 +188,10 @@ export default function MyMissionsAffreteur() {
               {filteredMissions.length === 0 && (
                 <div className="text-center py-8 sm:py-12">
                   <Package className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
                     {tMissions('myMissions.affreteur.emptyStates.noMissions')}
                   </h3>
-                  <p className="text-gray-600 text-sm sm:text-base">
+                  <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
                     {activeTab === 'draft'
                       ? tMissions('myMissions.affreteur.emptyStates.noDrafts')
                       : activeTab === 'completed'

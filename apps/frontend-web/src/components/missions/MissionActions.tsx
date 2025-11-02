@@ -296,11 +296,11 @@ export function MissionActions({
 
           <div className="space-y-3 sm:space-y-4">
             {mission && (
-              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+              <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
+                <h3 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">
                   {mission.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                   {mission.description}
                 </p>
                 {mission.requiredVehicleType && (
@@ -313,18 +313,18 @@ export function MissionActions({
             )}
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 {tMissions('myMissions.transporteur.apply.selectVehicle')}
               </label>
               {vehiclesLoading ? (
                 <div className="flex items-center justify-center p-3 sm:p-4">
-                  <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="ml-2 text-gray-600 text-xs sm:text-sm">
+                  <div className="w-4 h-4 sm:w-6 sm:h-6 border dark:border-gray-800-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                     {tMissions('myMissions.transporteur.apply.loadingVehicles')}
                   </span>
                 </div>
               ) : availableVehicles.length === 0 ? (
-                <div className="p-3 sm:p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                <div className="p-3 sm:p-4 text-center text-gray-600 dark:text-gray-300 bg-yellow-50 rounded-lg">
                   <p className="text-xs sm:text-sm">
                     {tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}
                   </p>
@@ -346,7 +346,7 @@ export function MissionActions({
                           <span className="text-xs sm:text-sm font-medium">
                             {vehicle.registration}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             ({VehicleTypeLabels[vehicle.type]})
                           </span>
                         </div>

@@ -281,7 +281,7 @@ export default function CartSummaryPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 flex-1 flex-col p-3 sm:p-4 lg:p-6">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 flex-1 flex-col p-3 sm:p-4 lg:p-6">
       <div className="w-full">
         <div className="container mx-auto px-2 sm:px-4">
           {/* Header */}
@@ -298,14 +298,14 @@ export default function CartSummaryPage() {
                 </Button>
               </Link>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {tShop('cart.title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600">{tShop('cart.reviewItems')}</p>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{tShop('cart.reviewItems')}</p>
           </div>
 
           {error && (
-            <div className="mb-3 sm:mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-xs sm:text-sm">
+            <div className="mb-3 sm:mb-4 p-3 bg-red-50 border dark:border-gray-800 border-red-200 rounded text-red-600 text-xs sm:text-sm">
               {error}
             </div>
           )}
@@ -317,10 +317,10 @@ export default function CartSummaryPage() {
                 <Card>
                   <CardContent className="p-8 sm:p-12 text-center">
                     <ShoppingCart className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
                       {tShop('cart.empty.title')}
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">
                       {tShop('cart.empty.message')}
                     </p>
                     <Link to="/app/shop">
@@ -401,7 +401,7 @@ export default function CartSummaryPage() {
                                 {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
                                 FCFA
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {item.priceAtAdd.toLocaleString()} FCFA {tShop('cart.item.each')}
                               </p>
                             </div>
@@ -488,7 +488,7 @@ export default function CartSummaryPage() {
                           </div>
 
                           {isAddressSelected && (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="p-3 bg-green-50 border dark:border-gray-800 border-green-200 rounded-lg">
                               <div className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
@@ -657,7 +657,7 @@ export default function CartSummaryPage() {
                     <span>{deliveryFee.toLocaleString()} FCFA</span>
                   </div>
 
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
                     <span>{tShop('cart.orderSummary.totalWeight')}</span>
                     <span>{totalWeight.toFixed(1)} kg</span>
                   </div>
@@ -757,7 +757,7 @@ export default function CartSummaryPage() {
 
           <div className="space-y-4">
             {/* Order Summary in Dialog */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-950 rounded-lg p-4">
               <h3 className="font-semibold text-lg mb-3">{tShop('payment.orderSummary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

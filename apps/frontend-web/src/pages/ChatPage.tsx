@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MessageCircle } from 'lucide-react';
+import { Plus, ArrowLeft, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import ChatList from '@/components/chat/ChatList';
@@ -34,16 +34,15 @@ export const ChatPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 flex flex-1 flex-col h-full">
+    <div className="bg-gray-50 dark:bg-gray-950 flex flex-1 flex-col">
       {/* Main Chat Interface */}
-      <div className="flex flex-1 h-full">
+      <div className="flex flex-1">
         {/* Sidebar - Chat List */}
         <aside
           className={`
           ${showMobileChatList ? 'flex' : 'hidden'}
-          md:flex w-full md:w-72 lg:w-80 xl:w-96
+          md:flex w-full md:w-80 lg:w-96
           border-r border-gray-200 bg-white flex-col
-          h-full overflow-hidden
         `}
         >
           <ChatList
@@ -53,47 +52,51 @@ export const ChatPage: React.FC = () => {
         </aside>
 
         {/* Main Chat Area */}
-        <div className="w-full flex flex-1 flex-col bg-white h-full overflow-hidden">
+        <div className="w-full flex flex-1 flex-col bg-white dark:bg-gray-900">
           {currentConversation ? (
             <>
-              {/* Chat Window */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <ChatWindow
-                  conversation={currentConversation}
-                  onBack={handleBackToList}
-                  onClose={handleBackToList}
-                />
+              {/* Mobile Back Button */}
+              <div className="md:hidden flex items-center p-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                <Button variant="ghost" size="sm" onClick={handleBackToList} className="mr-2 p-1">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-medium text-sm">
+                  {t('buttons.backToConversations', 'Retour aux conversations')}
+                </span>
               </div>
+
+              {/* Chat Window */}
+              <ChatWindow conversation={currentConversation} onClose={handleBackToList} />
             </>
           ) : (
             /* Empty State */
-            <div className="flex-1 flex items-center justify-center bg-gray-50 p-3 sm:p-4 lg:p-6">
-              <div className="text-center max-w-xs sm:max-w-sm lg:max-w-md mx-auto p-3 sm:p-4 lg:p-6">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 lg:mb-6">
-                  <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-tsa-blue" />
+            <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+              <div className="text-center max-w-md mx-auto p-4 sm:p-8">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue" />
                 </div>
 
-                <h3 className="text-sm sm:text-base lg:text-lg xl:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   {t('welcome.title', 'Bienvenue dans TSA Chat')}
                 </h3>
 
-                <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-4 sm:mb-5 lg:mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6">
                   {t(
                     'welcome.description',
                     'Communiquez en temps réel avec vos collègues et partenaires. Sélectionnez une conversation existante ou créez-en une nouvelle.'
                   )}
                 </p>
 
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3">
                   <Button
                     onClick={handleCreateConversation}
-                    className="w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10"
+                    className="w-full text-sm sm:text-base"
                   >
-                    <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <Plus className="h-4 w-4 mr-2" />
                     {t('buttons.newConversation', 'Nouvelle conversation')}
                   </Button>
 
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     {t(
                       'welcome.selectHint',
                       'Ou sélectionnez une conversation dans la liste de gauche'

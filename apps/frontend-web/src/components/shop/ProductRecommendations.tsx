@@ -174,7 +174,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               {recommendations.products.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center gap-3 p-2 border rounded-lg hover:shadow-sm transition-shadow"
+                  className="flex items-center gap-3 p-2 border dark:border-gray-800 rounded-lg hover:shadow-sm transition-shadow"
                 >
                   <Link to={`/app/shop/product/${product.id}`} className="flex-shrink-0">
                     {product.imageUrl ? (
@@ -184,7 +184,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                         className="w-10 h-10 object-cover rounded"
                       />
                     ) : (
-                      <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
                         <Eye className="h-4 w-4 text-gray-400" />
                       </div>
                     )}
@@ -195,7 +195,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                         {product.name}
                       </p>
                     </Link>
-                    <p className="text-xs text-gray-500">{product.price.toLocaleString()} FCFA</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{product.price.toLocaleString()} FCFA</p>
                   </div>
                   <Button
                     size="sm"
@@ -216,9 +216,9 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               {recommendations.products.map((product) => (
                 <div
                   key={product.id}
-                  className="group border rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="group border dark:border-gray-800 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                  <div className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg mb-3 overflow-hidden">
                     <Link to={`/app/shop/product/${product.id}`}>
                       {product.imageUrl ? (
                         <img
@@ -247,14 +247,14 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                           {product.price.toLocaleString()} FCFA
                         </div>
                         {product.price && product.price > product.price && (
-                          <div className="text-xs text-gray-500 line-through">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 line-through">
                             {product.price.toLocaleString()} FCFA
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span>
                         {tShop('product.stock')}: {product.stock}
                       </span>
@@ -282,7 +282,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
             </div>
           )
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>{tShop('recommendations.noRecommendations')}</p>
           </div>
