@@ -89,11 +89,7 @@ export default function MissionTrackingPage() {
     };
 
     fetchInfo();
-  }, [
-    mission?.vehicleId,
-    user?.role,
-    getVehicleRegistration,
-  ]);
+  }, [mission?.vehicleId, user?.role, getVehicleRegistration]);
 
   if (!mission) {
     return (
@@ -168,9 +164,7 @@ export default function MissionTrackingPage() {
                 {tTracking('actions.back')}
               </Button>
               <div className="flex items-center gap-2">
-                <Badge
-                  className={`text-xs ${getStatusBadgeColor(mission.status)}`}
-                >
+                <Badge className={`text-xs ${getStatusBadgeColor(mission.status)}`}>
                   {getStatusLabel(mission.status, tCommon)}
                 </Badge>
               </div>
@@ -193,10 +187,12 @@ export default function MissionTrackingPage() {
                     : tTracking('mission.noDate')}
                 </span>
               </div>
-              {vehicleRegistration && <div className="flex items-center gap-2">
-                <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>{vehicleRegistration}</span>
-              </div>}
+              {vehicleRegistration && (
+                <div className="flex items-center gap-2">
+                  <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>{vehicleRegistration}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -254,10 +250,18 @@ export default function MissionTrackingPage() {
 
           <Tabs defaultValue="tracking" className="space-y-4">
             <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
-              <TabsTrigger value="tracking" className="text-xs sm:text-sm">{tTracking('tabs.realTimeTracking')}</TabsTrigger>
-              <TabsTrigger value="details" className="text-xs sm:text-sm">{tTracking('tabs.missionDetails')}</TabsTrigger>
-              <TabsTrigger value="timeline" className="text-xs sm:text-sm">{tTracking('tabs.timeline')}</TabsTrigger>
-              <TabsTrigger value="documents" className="text-xs sm:text-sm">{tTracking('tabs.documents')}</TabsTrigger>
+              <TabsTrigger value="tracking" className="text-xs sm:text-sm">
+                {tTracking('tabs.realTimeTracking')}
+              </TabsTrigger>
+              <TabsTrigger value="details" className="text-xs sm:text-sm">
+                {tTracking('tabs.missionDetails')}
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="text-xs sm:text-sm">
+                {tTracking('tabs.timeline')}
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs sm:text-sm">
+                {tTracking('tabs.documents')}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="tracking" className="space-y-4">
@@ -269,7 +273,9 @@ export default function MissionTrackingPage() {
                       <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-base sm:text-lg">{tTracking('tracking.liveTracking')}</span>
+                          <span className="text-base sm:text-lg">
+                            {tTracking('tracking.liveTracking')}
+                          </span>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                           <Button variant="outline" size="sm" className="text-xs">
@@ -308,25 +314,36 @@ export default function MissionTrackingPage() {
                     <CardContent className="space-y-3 sm:space-y-4">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">{tTracking('tracking.currentSpeed')}</span>
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {tTracking('tracking.currentSpeed')}
+                          </span>
                           <span className="font-medium text-xs sm:text-sm">65 km/h</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">{tTracking('tracking.estimatedArrival')}</span>
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {tTracking('tracking.estimatedArrival')}
+                          </span>
                           <span className="font-medium text-xs sm:text-sm">14:30</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">{tTracking('tracking.remainingDistance')}</span>
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {tTracking('tracking.remainingDistance')}
+                          </span>
                           <span className="font-medium text-xs sm:text-sm">125 km</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">{tTracking('tracking.progress')}</span>
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {tTracking('tracking.progress')}
+                          </span>
                           <span className="font-medium text-green-600 text-xs sm:text-sm">68%</span>
                         </div>
                       </div>
 
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-tsa-blue h-2 rounded-full" style={{ width: '68%' }}></div>
+                        <div
+                          className="bg-tsa-blue h-2 rounded-full"
+                          style={{ width: '68%' }}
+                        ></div>
                       </div>
 
                       <div className="pt-2 border-t">
@@ -446,7 +463,9 @@ export default function MissionTrackingPage() {
                         </div>
                         <div>
                           <p className="font-medium">Transporteur #{mission.transporteurId}</p>
-                          <p className="text-sm text-gray-600">{tTracking('transporter.verified')}</p>
+                          <p className="text-sm text-gray-600">
+                            {tTracking('transporter.verified')}
+                          </p>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -476,8 +495,9 @@ export default function MissionTrackingPage() {
                       <div key={step.status} className="flex items-start gap-4">
                         <div className="flex flex-col items-center">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${step.completed ? 'bg-green-500' : 'bg-gray-300'
-                              }`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              step.completed ? 'bg-green-500' : 'bg-gray-300'
+                            }`}
                           >
                             {step.completed ? (
                               <div className="w-2 h-2 bg-white rounded-full" />
@@ -487,16 +507,18 @@ export default function MissionTrackingPage() {
                           </div>
                           {index < timeline.length - 1 && (
                             <div
-                              className={`w-0.5 h-12 ${step.completed ? 'bg-green-500' : 'bg-gray-300'
-                                }`}
+                              className={`w-0.5 h-12 ${
+                                step.completed ? 'bg-green-500' : 'bg-gray-300'
+                              }`}
                             />
                           )}
                         </div>
                         <div className="flex-1 pb-6">
                           <div className="flex items-center justify-between">
                             <h3
-                              className={`font-medium ${step.completed ? 'text-gray-900' : 'text-gray-500'
-                                }`}
+                              className={`font-medium ${
+                                step.completed ? 'text-gray-900' : 'text-gray-500'
+                              }`}
                             >
                               {step.label}
                             </h3>

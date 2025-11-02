@@ -462,8 +462,12 @@ export default function AdminProductsPage() {
       <div className="flex-1 p-3 sm:p-4 lg:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">{tAdmin('products.title')}</h1>
-            <p className="text-sm sm:text-base text-gray-600 truncate">{tAdmin('products.subtitle')}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
+              {tAdmin('products.title')}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 truncate">
+              {tAdmin('products.subtitle')}
+            </p>
           </div>
         </div>
 
@@ -476,8 +480,12 @@ export default function AdminProductsPage() {
                   <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.totalProducts')}</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{stats?.products?.total || products?.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                    {tAdmin('products.totalProducts')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {stats?.products?.total || products?.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -490,7 +498,9 @@ export default function AdminProductsPage() {
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tCommon('status.active')}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                    {tCommon('status.active')}
+                  </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
                     {stats?.products?.active ||
                       products?.filter((product) => product.isActive).length}
@@ -507,8 +517,12 @@ export default function AdminProductsPage() {
                   <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.lowStock')}</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{stats?.products?.lowStock || 0}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                    {tAdmin('products.lowStock')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {stats?.products?.lowStock || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -521,7 +535,9 @@ export default function AdminProductsPage() {
                   <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.totalRevenue')}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                    {tAdmin('products.totalRevenue')}
+                  </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
                     {((stats?.inventory?.totalValue || 0) / 1000000).toFixed(1)}M || 0
                   </p>
@@ -540,7 +556,9 @@ export default function AdminProductsPage() {
                   count: stats?.products?.total || products?.length,
                 })}
               </span>
-              <span className="sm:hidden">Produits ({stats?.products?.total || products?.length})</span>
+              <span className="sm:hidden">
+                Produits ({stats?.products?.total || products?.length})
+              </span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
               <span className="hidden sm:inline">
@@ -568,7 +586,10 @@ export default function AdminProductsPage() {
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full sm:w-fit justify-start text-xs sm:text-sm">
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-fit justify-start text-xs sm:text-sm"
+                        >
                           <Filter className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span className="truncate">
                             {filters.categoryId?.length ? (
@@ -578,18 +599,24 @@ export default function AdminProductsPage() {
                                 })}
                               </span>
                             ) : (
-                              <span className="hidden sm:inline">{tAdmin('products.filterByCategories')}</span>
+                              <span className="hidden sm:inline">
+                                {tAdmin('products.filterByCategories')}
+                              </span>
                             )}
                             <span className="sm:hidden">Catégories</span>
                           </span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-56">
-                        <DropdownMenuLabel>{tAdmin('products.filterByCategories')}</DropdownMenuLabel>
+                        <DropdownMenuLabel>
+                          {tAdmin('products.filterByCategories')}
+                        </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
                           checked={filters.categoryId?.length === 0}
-                          onCheckedChange={() => setFilters((prev) => ({ ...prev, categoryId: [] }))}
+                          onCheckedChange={() =>
+                            setFilters((prev) => ({ ...prev, categoryId: [] }))
+                          }
                         >
                           {tAdmin('products.allCategories')}
                         </DropdownMenuCheckboxItem>
@@ -656,7 +683,9 @@ export default function AdminProductsPage() {
                         <SelectItem value="active">{tCommon('status.active')}</SelectItem>
                         <SelectItem value="inactive">{tCommon('status.inactive')}</SelectItem>
                         <SelectItem value="low_stock">{tAdmin('products.lowStock')}</SelectItem>
-                        <SelectItem value="out_of_stock">{tAdmin('products.outOfStock')}</SelectItem>
+                        <SelectItem value="out_of_stock">
+                          {tAdmin('products.outOfStock')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -744,7 +773,9 @@ export default function AdminProductsPage() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-medium text-sm sm:text-base truncate">{product.name}</h3>
+                            <h3 className="font-medium text-sm sm:text-base truncate">
+                              {product.name}
+                            </h3>
                             <p className="text-xs sm:text-sm text-gray-500 truncate">
                               {product.description || tAdmin('products.noDescription')}
                             </p>
@@ -834,7 +865,9 @@ export default function AdminProductsPage() {
 
                 {filteredProducts.length === 0 && (
                   <div className="text-center py-6 sm:py-8">
-                    <p className="text-gray-500 text-sm sm:text-base">{tAdmin('products.noProductsFound')}</p>
+                    <p className="text-gray-500 text-sm sm:text-base">
+                      {tAdmin('products.noProductsFound')}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -844,7 +877,9 @@ export default function AdminProductsPage() {
           <TabsContent value="categories" className="mt-4 sm:mt-6">
             <Card>
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">{tAdmin('products.categoryManagement')}</CardTitle>
+                <CardTitle className="text-base sm:text-lg">
+                  {tAdmin('products.categoryManagement')}
+                </CardTitle>
                 <Button
                   className="gap-1 sm:gap-2 bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto"
                   onClick={() => {
@@ -909,7 +944,9 @@ export default function AdminProductsPage() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{category.name}</h4>
+                            <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                              {category.name}
+                            </h4>
                             <Badge variant="outline" className="text-xs w-fit">
                               {category.isActive
                                 ? tCommon('status.active')

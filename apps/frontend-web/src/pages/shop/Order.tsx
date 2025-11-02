@@ -77,8 +77,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       title: tShop('orderDetails.timeline.shipped.title'),
       description: order.trackingNumber
         ? tShop('orderDetails.timeline.shipped.descriptionWithTracking', {
-          trackingNumber: order.trackingNumber,
-        })
+            trackingNumber: order.trackingNumber,
+          })
         : tShop('orderDetails.timeline.shipped.description'),
     });
   }
@@ -194,7 +194,9 @@ export default function OrderDetailsPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-2">
               {tShop('orderDetails.notFound.title')}
             </h1>
-            <p className="text-sm sm:text-base text-zinc-600 mb-4 sm:mb-6">{tShop('orderDetails.notFound.message')}</p>
+            <p className="text-sm sm:text-base text-zinc-600 mb-4 sm:mb-6">
+              {tShop('orderDetails.notFound.message')}
+            </p>
             <Button asChild className="w-full sm:w-auto">
               <Link to="/app/shop/orders">{tShop('orderDetails.notFound.viewOrders')}</Link>
             </Button>
@@ -226,7 +228,9 @@ export default function OrderDetailsPage() {
             <span className="sm:hidden">Commandes</span>
           </Link>
           <span>/</span>
-          <span className="truncate">{tShop('orderDetails.breadcrumb.order', { number: order.orderNumber })}</span>
+          <span className="truncate">
+            {tShop('orderDetails.breadcrumb.order', { number: order.orderNumber })}
+          </span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -241,10 +245,10 @@ export default function OrderDetailsPage() {
                   {tShop('orderDetails.orderedOn')}{' '}
                   {order.createdAt
                     ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })
                     : 'N/A'}
                 </span>
               </span>
@@ -300,23 +304,27 @@ export default function OrderDetailsPage() {
                     <div key={step.status} className="flex gap-3 sm:gap-4">
                       <div className="flex flex-col items-center">
                         <div
-                          className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 ${step.completed
+                          className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 ${
+                            step.completed
                               ? 'bg-green-50 border-green-200 text-green-700'
                               : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                            }`}
+                          }`}
                         >
                           <StepIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                         {!isLast && (
                           <div
-                            className={`w-0.5 h-6 sm:h-8 mt-2 ${step.completed ? 'bg-green-200' : 'bg-zinc-200'
-                              }`}
+                            className={`w-0.5 h-6 sm:h-8 mt-2 ${
+                              step.completed ? 'bg-green-200' : 'bg-zinc-200'
+                            }`}
                           />
                         )}
                       </div>
                       <div className="flex-1 pb-6 sm:pb-8 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
-                          <h3 className="font-medium text-zinc-900 text-sm sm:text-base truncate">{step.title}</h3>
+                          <h3 className="font-medium text-zinc-900 text-sm sm:text-base truncate">
+                            {step.title}
+                          </h3>
                           <span className="text-xs sm:text-sm text-zinc-500 flex-shrink-0">
                             {step.date &&
                               new Date(step.date).toLocaleDateString('fr-FR', {
@@ -359,7 +367,9 @@ export default function OrderDetailsPage() {
                       />
                     )}
                     <div className="flex-1 min-w-0 text-center sm:text-left">
-                      <h3 className="font-semibold text-zinc-900 text-sm sm:text-base truncate">{item.productName}</h3>
+                      <h3 className="font-semibold text-zinc-900 text-sm sm:text-base truncate">
+                        {item.productName}
+                      </h3>
                       <p className="text-xs sm:text-sm text-zinc-600 mb-1 truncate">
                         {tShop('orderDetails.reference')}: {item.productReference}
                       </p>
@@ -416,7 +426,9 @@ export default function OrderDetailsPage() {
                     <p className="font-medium text-blue-900 text-sm sm:text-base">
                       {tShop('orderDetails.trackingNumber')}
                     </p>
-                    <p className="text-xs sm:text-sm text-blue-700 font-mono break-all">{order.trackingNumber}</p>
+                    <p className="text-xs sm:text-sm text-blue-700 font-mono break-all">
+                      {order.trackingNumber}
+                    </p>
                   </div>
                   <Button
                     variant="outline"
@@ -436,7 +448,9 @@ export default function OrderDetailsPage() {
                     <p className="font-medium text-zinc-900 text-sm sm:text-base">
                       {tShop('orderDetails.deliveryInstructions')}
                     </p>
-                    <p className="text-xs sm:text-sm text-zinc-600 mt-1 break-words">{order.notes}</p>
+                    <p className="text-xs sm:text-sm text-zinc-600 mt-1 break-words">
+                      {order.notes}
+                    </p>
                   </div>
                 </div>
               )}

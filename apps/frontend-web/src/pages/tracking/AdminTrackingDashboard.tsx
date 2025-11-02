@@ -242,7 +242,9 @@ export default function AdminTrackingDashboard() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               {tTracking('dashboard.adminTitle')}
             </h1>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">{tTracking('dashboard.adminSubtitle')}</p>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
+              {tTracking('dashboard.adminSubtitle')}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
             <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
@@ -272,7 +274,9 @@ export default function AdminTrackingDashboard() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-red-900 text-sm sm:text-base">Erreur de chargement</h3>
+                  <h3 className="font-semibold text-red-900 text-sm sm:text-base">
+                    Erreur de chargement
+                  </h3>
                   <p className="text-red-700 text-xs sm:text-sm">{error}</p>
                 </div>
                 <Button
@@ -383,7 +387,9 @@ export default function AdminTrackingDashboard() {
                   <p className="text-xs sm:text-sm font-medium text-gray-600">
                     {tTracking('kpis.systemUptime')}
                   </p>
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">{systemMetrics.systemUptime}</p>
+                  <p className="text-lg sm:text-2xl font-bold text-green-600">
+                    {systemMetrics.systemUptime}
+                  </p>
                 </div>
                 <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
               </div>
@@ -427,7 +433,8 @@ export default function AdminTrackingDashboard() {
                           <option value="">-- Sélectionner une mission --</option>
                           {trackableMissions.map((mission) => (
                             <option key={mission.id} value={mission.id}>
-                              {mission.title} - {mission.adresseDepart?.city} → {mission.adresseArrivee?.city}
+                              {mission.title} - {mission.adresseDepart?.city} →{' '}
+                              {mission.adresseArrivee?.city}
                             </option>
                           ))}
                         </select>
@@ -551,8 +558,8 @@ export default function AdminTrackingDashboard() {
                       <span className="font-medium text-green-600">
                         {systemMetrics.totalVehicles > 0
                           ? Math.round(
-                            (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
-                          )
+                              (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
+                            )
                           : 0}
                         %
                       </span>

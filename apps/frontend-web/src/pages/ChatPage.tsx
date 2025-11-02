@@ -88,7 +88,10 @@ export const ChatPage: React.FC = () => {
                 </p>
 
                 <div className="space-y-3">
-                  <Button onClick={handleCreateConversation} className="w-full text-sm sm:text-base">
+                  <Button
+                    onClick={handleCreateConversation}
+                    className="w-full text-sm sm:text-base"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     {t('buttons.newConversation', 'Nouvelle conversation')}
                   </Button>

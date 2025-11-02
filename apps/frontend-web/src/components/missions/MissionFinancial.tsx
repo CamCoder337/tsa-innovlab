@@ -106,7 +106,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           {
             id: '1',
             amount: totalCost,
-            date: mission.dateFinReelle || new Date().toISOString(),
+            date: mission.dateArriveePrevue || new Date().toISOString(),
             method: 'Virement bancaire',
             status: 'completed',
             reference: `PAY-${mission.id}-001`,
@@ -184,7 +184,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       <Card>
         <CardContent className="text-center py-6 sm:py-8">
           <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-400" />
-          <p className="text-gray-600 text-xs sm:text-sm">{tMissions('financial.errors.accessDenied')}</p>
+          <p className="text-gray-600 text-xs sm:text-sm">
+            {tMissions('financial.errors.accessDenied')}
+          </p>
         </CardContent>
       </Card>
     );
@@ -195,7 +197,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       <Card>
         <CardContent className="text-center py-6 sm:py-8">
           <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-3 sm:mt-4 text-gray-600 text-xs sm:text-sm">{tMissions('financial.loading')}</p>
+          <p className="mt-3 sm:mt-4 text-gray-600 text-xs sm:text-sm">
+            {tMissions('financial.loading')}
+          </p>
         </CardContent>
       </Card>
     );
@@ -209,8 +213,12 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tMissions('financial.totalCost')}</p>
-                <p className="text-lg sm:text-2xl font-bold truncate">{financialData.totalCost.toLocaleString()}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tMissions('financial.totalCost')}
+                </p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
+                  {financialData.totalCost.toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-500">FCFA</p>
               </div>
               <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue flex-shrink-0" />
@@ -222,7 +230,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tMissions('financial.transporterPayment')}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tMissions('financial.transporterPayment')}
+                </p>
                 <p className="text-lg sm:text-2xl font-bold truncate">
                   {financialData.transporterPayment.toLocaleString()}
                 </p>
@@ -237,8 +247,12 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tMissions('financial.platformFee')}</p>
-                <p className="text-lg sm:text-2xl font-bold truncate">{financialData.platformFee.toLocaleString()}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tMissions('financial.platformFee')}
+                </p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
+                  {financialData.platformFee.toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-500">FCFA (5%)</p>
               </div>
               <Receipt className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
@@ -250,8 +264,12 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tMissions('financial.taxes')}</p>
-                <p className="text-lg sm:text-2xl font-bold truncate">{financialData.taxes.toLocaleString()}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tMissions('financial.taxes')}
+                </p>
+                <p className="text-lg sm:text-2xl font-bold truncate">
+                  {financialData.taxes.toLocaleString()}
+                </p>
                 <p className="text-xs text-gray-500">FCFA (18%)</p>
               </div>
               <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
@@ -296,7 +314,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                 >
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">{tMissions('financial.generateInvoice')}</span>
-                  <span className="sm:hidden">{tMissions('financial.generateInvoice').slice(0, 8)}...</span>
+                  <span className="sm:hidden">
+                    {tMissions('financial.generateInvoice').slice(0, 8)}...
+                  </span>
                 </Button>
               ) : (
                 <Button
@@ -307,7 +327,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                 >
                   <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">{tMissions('financial.downloadInvoice')}</span>
-                  <span className="sm:hidden">{tMissions('financial.downloadInvoice').slice(0, 8)}...</span>
+                  <span className="sm:hidden">
+                    {tMissions('financial.downloadInvoice').slice(0, 8)}...
+                  </span>
                 </Button>
               )}
             </div>
@@ -316,7 +338,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           {financialData.transactionId && (
             <p className="text-xs sm:text-sm text-gray-600">
               {tMissions('financial.transactionId')}:{' '}
-              <code className="bg-gray-100 px-1 sm:px-2 py-1 rounded text-xs">{financialData.transactionId}</code>
+              <code className="bg-gray-100 px-1 sm:px-2 py-1 rounded text-xs">
+                {financialData.transactionId}
+              </code>
             </p>
           )}
         </CardContent>
@@ -341,7 +365,9 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   <div className="flex items-center gap-2 sm:gap-3">
                     {getPaymentStatusIcon(payment.status)}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs sm:text-sm truncate">{payment.amount.toLocaleString()} FCFA</p>
+                      <p className="font-medium text-xs sm:text-sm truncate">
+                        {payment.amount.toLocaleString()} FCFA
+                      </p>
                       <p className="text-xs text-gray-600 truncate">
                         {new Date(payment.date).toLocaleDateString('fr-FR')} • {payment.method}
                       </p>
@@ -381,22 +407,34 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         <CardContent>
           <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">{tMissions('financial.baseCost')}</span>
+              <span className="text-gray-600 text-xs sm:text-sm">
+                {tMissions('financial.baseCost')}
+              </span>
               <span className="font-medium text-xs sm:text-sm">
                 {(financialData.totalCost - financialData.taxes).toLocaleString()} FCFA
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">{tMissions('financial.platformFee')}</span>
-              <span className="font-medium text-xs sm:text-sm">{financialData.platformFee.toLocaleString()} FCFA</span>
+              <span className="text-gray-600 text-xs sm:text-sm">
+                {tMissions('financial.platformFee')}
+              </span>
+              <span className="font-medium text-xs sm:text-sm">
+                {financialData.platformFee.toLocaleString()} FCFA
+              </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">{tMissions('financial.vatPercent')}</span>
-              <span className="font-medium text-xs sm:text-sm">{financialData.taxes.toLocaleString()} FCFA</span>
+              <span className="text-gray-600 text-xs sm:text-sm">
+                {tMissions('financial.vatPercent')}
+              </span>
+              <span className="font-medium text-xs sm:text-sm">
+                {financialData.taxes.toLocaleString()} FCFA
+              </span>
             </div>
             {financialData.additionalCosts > 0 && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-xs sm:text-sm">{tMissions('financial.additionalCosts')}</span>
+                <span className="text-gray-600 text-xs sm:text-sm">
+                  {tMissions('financial.additionalCosts')}
+                </span>
                 <span className="font-medium text-xs sm:text-sm">
                   {financialData.additionalCosts.toLocaleString()} FCFA
                 </span>

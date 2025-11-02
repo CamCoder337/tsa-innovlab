@@ -234,7 +234,9 @@ export const MyVehicles: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p>
-              <p className="text-lg sm:text-2xl font-bold text-orange-600">{getMaintenanceCount()}</p>
+              <p className="text-lg sm:text-2xl font-bold text-orange-600">
+                {getMaintenanceCount()}
+              </p>
             </div>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-orange-100 rounded-lg flex items-center justify-center text-xs sm:text-base">
               🔧
@@ -276,7 +278,9 @@ export const MyVehicles: React.FC = () => {
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-medium text-gray-700">Type de véhicule</Label>
+                <Label className="text-xs sm:text-sm font-medium text-gray-700">
+                  Type de véhicule
+                </Label>
                 <Select
                   value={typeFilter}
                   onValueChange={(value) => setTypeFilter(value as VehicleType | '')}
@@ -318,7 +322,11 @@ export const MyVehicles: React.FC = () => {
               </div>
 
               <div className="flex items-end sm:col-span-2 lg:col-span-1">
-                <Button variant="outline" onClick={resetFilters} className="w-full text-xs sm:text-sm">
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="w-full text-xs sm:text-sm"
+                >
                   Réinitialiser
                 </Button>
               </div>
@@ -332,7 +340,10 @@ export const MyVehicles: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-3 sm:p-4">
           <div className="flex justify-between items-center">
             <p className="text-red-800 text-sm sm:text-base">{error}</p>
-            <button onClick={clearError} className="text-red-600 hover:text-red-800 text-lg sm:text-xl">
+            <button
+              onClick={clearError}
+              className="text-red-600 hover:text-red-800 text-lg sm:text-xl"
+            >
               ✕
             </button>
           </div>
@@ -383,7 +394,9 @@ export const MyVehicles: React.FC = () => {
                   <tr key={vehicle.id} className="hover:bg-gray-50">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <span className="text-lg sm:text-2xl mr-2 sm:mr-3">{VehicleTypeIcons[vehicle.type]}</span>
+                        <span className="text-lg sm:text-2xl mr-2 sm:mr-3">
+                          {VehicleTypeIcons[vehicle.type]}
+                        </span>
                         <div>
                           <div className="text-xs sm:text-sm font-medium text-gray-900">
                             {vehicle.registration}

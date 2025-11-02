@@ -102,7 +102,7 @@ export function MissionActions({
           </DropdownMenuItem>
         </>
       );
-    }
+    };
 
     if (userRole !== 'transporteur') {
       switch (mission.status) {
@@ -190,21 +190,23 @@ export function MissionActions({
           onClick={() => onRefresh()}
           className="h-8 sm:h-9 text-xs sm:text-sm w-full sm:w-auto"
         >
-          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`}
+          />
           <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
         </Button>
 
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
-                <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 sm:w-auto">
-              {getStatusActions()}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+              <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 sm:w-auto">
+            {getStatusActions()}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -295,8 +297,12 @@ export function MissionActions({
           <div className="space-y-3 sm:space-y-4">
             {mission && (
               <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{mission.title}</h3>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{mission.description}</p>
+                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                  {mission.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+                  {mission.description}
+                </p>
                 {mission.requiredVehicleType && (
                   <p className="text-xs sm:text-sm text-tsa-blue mt-2">
                     {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
@@ -319,7 +325,9 @@ export function MissionActions({
                 </div>
               ) : availableVehicles.length === 0 ? (
                 <div className="p-3 sm:p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                  <p className="text-xs sm:text-sm">{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
+                  <p className="text-xs sm:text-sm">
+                    {tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}
+                  </p>
                   <p className="text-xs mt-1">
                     {tMissions('myMissions.transporteur.apply.noVehiclesMessage')}
                   </p>
@@ -335,7 +343,9 @@ export function MissionActions({
                     {availableVehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                          <span className="text-xs sm:text-sm font-medium">{vehicle.registration}</span>
+                          <span className="text-xs sm:text-sm font-medium">
+                            {vehicle.registration}
+                          </span>
                           <span className="text-xs text-gray-500">
                             ({VehicleTypeLabels[vehicle.type]})
                           </span>

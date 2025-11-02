@@ -201,11 +201,11 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-tsa-blue">
-                {mission.dateFinReelle ? '100%' : '0%'}
+                {mission.dateArriveePrevue ? '100%' : '0%'}
               </div>
               <p className="text-sm text-gray-600 mt-1">{tMissions('tracking.progress')}</p>
               <p className="font-medium">
-                {mission.dateFinReelle
+                {mission.dateArriveePrevue
                   ? tCommon('status.completed')
                   : tCommon('status.in_progress')}
               </p>
@@ -252,8 +252,8 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             <div>
               <p className="text-sm text-gray-600">{tMissions('duration')}</p>
               <p className="font-medium">
-                {mission.dateFinReelle && mission.dateDebutReelle
-                  ? `${Math.ceil((new Date(mission.dateFinReelle).getTime() - new Date(mission.dateDebutReelle).getTime()) / (1000 * 60 * 60 * 24))} jours`
+                {mission.dateArriveePrevue && mission.dateDepartEstime
+                  ? `${Math.ceil((new Date(mission.dateArriveePrevue).getTime() - new Date(mission.dateDepartEstime).getTime()) / (1000 * 60 * 60 * 24))} jours`
                   : tCommon('status.notAvailable')}
               </p>
             </div>

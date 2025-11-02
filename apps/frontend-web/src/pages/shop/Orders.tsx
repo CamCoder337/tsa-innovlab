@@ -141,7 +141,9 @@ export default function OrdersPage() {
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900">{tShop('orders.title')}</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900">
+              {tShop('orders.title')}
+            </h1>
             <p className="text-sm sm:text-base text-zinc-600 mt-1">{tShop('orders.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -287,10 +289,10 @@ export default function OrdersPage() {
                             <span className="truncate">
                               {order.createdAt
                                 ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
-                                  day: 'numeric',
-                                  month: 'long',
-                                  year: 'numeric',
-                                })
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })
                                 : 'N/A'}
                             </span>
                           </span>
@@ -302,8 +304,8 @@ export default function OrdersPage() {
                               {order.items.length === 1
                                 ? tShop('orders.orderItem.items', { count: order.items.length })
                                 : tShop('orders.orderItem.itemsPlural', {
-                                  count: order.items.length,
-                                })}
+                                    count: order.items.length,
+                                  })}
                             </span>
                           )}
                         </CardDescription>
@@ -333,8 +335,12 @@ export default function OrdersPage() {
                                   />
                                 )}
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-zinc-900 truncate">{item.productName}</p>
-                                  <p className="text-zinc-500 text-xs truncate">{item.productReference}</p>
+                                  <p className="font-medium text-zinc-900 truncate">
+                                    {item.productName}
+                                  </p>
+                                  <p className="text-zinc-500 text-xs truncate">
+                                    {item.productReference}
+                                  </p>
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
@@ -352,11 +358,11 @@ export default function OrdersPage() {
                             <p className="text-xs text-zinc-500 text-center py-2">
                               {order.items.length - 2 === 1
                                 ? tShop('orders.orderItem.moreItems', {
-                                  count: order.items.length - 2,
-                                })
+                                    count: order.items.length - 2,
+                                  })
                                 : tShop('orders.orderItem.moreItemsPlural', {
-                                  count: order.items.length - 2,
-                                })}
+                                    count: order.items.length - 2,
+                                  })}
                             </p>
                           )}
                         </div>
@@ -368,19 +374,19 @@ export default function OrdersPage() {
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-600 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
                         <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                         <span className="truncate">
-                          {order.deliveredAt ? (
-                            tShop('orders.orderItem.deliveredOn', {
-                              date: new Date(order.deliveredAt).toLocaleDateString('fr-FR'),
-                            })
-                          ) : order.shippedAt ? (
-                            tShop('orders.orderItem.shippedOn', {
-                              date: new Date(order.shippedAt).toLocaleDateString('fr-FR'),
-                            })
-                          ) : order.trackingNumber ? (
-                            tShop('orders.orderItem.trackingNumber', {
-                              number: order.trackingNumber,
-                            })
-                          ) : null}
+                          {order.deliveredAt
+                            ? tShop('orders.orderItem.deliveredOn', {
+                                date: new Date(order.deliveredAt).toLocaleDateString('fr-FR'),
+                              })
+                            : order.shippedAt
+                              ? tShop('orders.orderItem.shippedOn', {
+                                  date: new Date(order.shippedAt).toLocaleDateString('fr-FR'),
+                                })
+                              : order.trackingNumber
+                                ? tShop('orders.orderItem.trackingNumber', {
+                                    number: order.trackingNumber,
+                                  })
+                                : null}
                         </span>
                       </div>
                     )}

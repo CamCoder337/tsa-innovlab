@@ -26,7 +26,9 @@ interface RouteInfo {
 }
 
 // Helper function to get coordinates from address
-const getCoordinatesFromAddress = (address: Address | undefined): { lat: number; lng: number } | null => {
+const getCoordinatesFromAddress = (
+  address: Address | undefined
+): { lat: number; lng: number } | null => {
   if (!address || address.latitude === undefined || address.longitude === undefined) {
     return null;
   }
@@ -174,7 +176,7 @@ export default function MissionTrackingMap({
               // Ajouter un délai basé sur l'index pour échelonner les requêtes
               const delayMs = routeCalculations.length * 300; // 300ms entre chaque requête
               if (delayMs > 0) {
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
               }
 
               const result = await mapsService.displayRoute(departPosition, arriveePosition, {
@@ -184,7 +186,13 @@ export default function MissionTrackingMap({
                 strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
               });
 
-              if (result && result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
+              if (
+                result &&
+                result.routes &&
+                result.routes[0] &&
+                result.routes[0].legs &&
+                result.routes[0].legs[0]
+              ) {
                 const leg = result.routes[0].legs[0];
                 const distance = Math.round((leg.distance?.value || 0) / 1000); // km
                 const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
@@ -344,7 +352,9 @@ export default function MissionTrackingMap({
       <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
         <div className="text-center p-4 sm:p-8">
           <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto text-red-500 mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('map.errorLoadingMap')}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+            {t('map.errorLoadingMap')}
+          </h3>
           <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}

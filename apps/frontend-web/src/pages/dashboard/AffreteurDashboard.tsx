@@ -107,11 +107,16 @@ function AffreteurDashboard() {
               title={tDash('affreteur.systemOnline')}
             />
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">{tDash('affreteur.subtitle')}</p>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {tDash('affreteur.subtitle')}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <Link to="/app/missions/create" className="w-full sm:w-auto">
-            <Button className="gap-2 w-full sm:w-auto" style={{ backgroundColor: 'var(--tsa-blue)' }}>
+            <Button
+              className="gap-2 w-full sm:w-auto"
+              style={{ backgroundColor: 'var(--tsa-blue)' }}
+            >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">{tDash('affreteur.actions.createMission')}</span>
               <span className="sm:hidden">Créer</span>
@@ -134,7 +139,9 @@ function AffreteurDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1 mr-2">
-                    <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{insight.title}</p>
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                      {insight.title}
+                    </p>
                     <p className="text-lg sm:text-2xl font-bold truncate">{insight.value}</p>
                     <p className="text-xs text-green-600 truncate">{insight.change}</p>
                   </div>
@@ -166,10 +173,14 @@ function AffreteurDashboard() {
                     onClick={() => setCurrentMission(mission)}
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`w-2 h-2 rounded-full ${mission.statusColor} flex-shrink-0`}></div>
+                      <div
+                        className={`w-2 h-2 rounded-full ${mission.statusColor} flex-shrink-0`}
+                      ></div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm sm:text-base truncate">{mission.title}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{mission.route}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                          {mission.route}
+                        </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {mission.transporteur
                             ? `par ${mission.transporteur.fullName}`
@@ -183,7 +194,9 @@ function AffreteurDashboard() {
                         <p className="text-xs text-muted-foreground">{mission.timeAgo}</p>
                       </div>
                       <div className="flex flex-col sm:items-end">
-                        <p className="text-xs font-medium text-tsa-blue">{mission.formattedBudget}</p>
+                        <p className="text-xs font-medium text-tsa-blue">
+                          {mission.formattedBudget}
+                        </p>
                         <Progress value={mission.progress} className="w-16 sm:w-20 h-1" />
                       </div>
                     </div>
@@ -192,8 +205,12 @@ function AffreteurDashboard() {
               ) : (
                 <div className="text-center py-6 sm:py-8 text-muted-foreground">
                   <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-sm sm:text-base">{tDash('affreteur.emptyStates.noRecentMissions')}</p>
-                  <p className="text-xs sm:text-sm">{tDash('affreteur.emptyStates.createFirstMission')}</p>
+                  <p className="text-sm sm:text-base">
+                    {tDash('affreteur.emptyStates.noRecentMissions')}
+                  </p>
+                  <p className="text-xs sm:text-sm">
+                    {tDash('affreteur.emptyStates.createFirstMission')}
+                  </p>
                 </div>
               )}
             </div>
@@ -209,19 +226,28 @@ function AffreteurDashboard() {
           </CardHeader>
           <CardContent className="space-y-2 sm:space-y-3 pt-0">
             <Link to="/app/missions/create">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <Plus className="h-4 w-4" />
                 {tDash('affreteur.quickActions.newMission')}
               </Button>
             </Link>
             <Link to="/app/tracking-dashboard">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <MapPin className="h-4 w-4" />
                 {tDash('affreteur.quickActions.trackShipments')}
               </Button>
             </Link>
             <Link to="/app">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <Euro className="h-4 w-4" />
                 {tDash('affreteur.quickActions.costAnalysis')}
               </Button>
@@ -278,7 +304,9 @@ function AffreteurDashboard() {
               ) : (
                 <div className="text-center py-3 sm:py-4 text-muted-foreground">
                   <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-xs sm:text-sm">{tDash('affreteur.recommendations.noRecommendations')}</p>
+                  <p className="text-xs sm:text-sm">
+                    {tDash('affreteur.recommendations.noRecommendations')}
+                  </p>
                   <p className="text-xs">{tDash('affreteur.recommendations.createMoreMissions')}</p>
                 </div>
               )}
@@ -298,13 +326,17 @@ function AffreteurDashboard() {
               <span className="text-xs sm:text-sm text-muted-foreground">
                 {tDash('affreteur.monthlySummary.createdMissions')}
               </span>
-              <span className="font-semibold text-sm sm:text-base">{monthlySummary?.created || 0}</span>
+              <span className="font-semibold text-sm sm:text-base">
+                {monthlySummary?.created || 0}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs sm:text-sm text-muted-foreground">
                 {tDash('affreteur.monthlySummary.completedMissions')}
               </span>
-              <span className="font-semibold text-green-600 text-sm sm:text-base">{monthlySummary?.completed || 0}</span>
+              <span className="font-semibold text-green-600 text-sm sm:text-base">
+                {monthlySummary?.completed || 0}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs sm:text-sm text-muted-foreground">

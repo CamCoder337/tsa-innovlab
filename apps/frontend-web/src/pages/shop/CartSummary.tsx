@@ -110,9 +110,9 @@ export default function CartSummaryPage() {
         selectedAddress,
         coordinates: selectedAddress
           ? {
-            lat: selectedAddress.latitude,
-            lng: selectedAddress.longitude,
-          }
+              lat: selectedAddress.latitude,
+              lng: selectedAddress.longitude,
+            }
           : null,
       });
       setShowPayment(true);
@@ -288,14 +288,20 @@ export default function CartSummaryPage() {
           <div className="mb-4 sm:mb-6">
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <Link to="/shop">
-                <Button variant="outline" size="sm" className="gap-2 bg-transparent text-xs sm:text-sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-transparent text-xs sm:text-sm"
+                >
                   <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">{tShop('cart.continueShopping')}</span>
                   <span className="sm:hidden">Retour</span>
                 </Button>
               </Link>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{tShop('cart.title')}</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              {tShop('cart.title')}
+            </h1>
             <p className="text-sm sm:text-base text-gray-600">{tShop('cart.reviewItems')}</p>
           </div>
 
@@ -315,9 +321,14 @@ export default function CartSummaryPage() {
                     <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                       {tShop('cart.empty.title')}
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{tShop('cart.empty.message')}</p>
+                    <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                      {tShop('cart.empty.message')}
+                    </p>
                     <Link to="/app/shop">
-                      <Button style={{ backgroundColor: 'var(--tsa-blue)' }} className="w-full sm:w-auto">
+                      <Button
+                        style={{ backgroundColor: 'var(--tsa-blue)' }}
+                        className="w-full sm:w-auto"
+                      >
                         {tShop('cart.empty.browseProducts')}
                       </Button>
                     </Link>
@@ -342,7 +353,9 @@ export default function CartSummaryPage() {
                               <Badge className="bg-green-100 text-green-800 text-xs">
                                 {tShop('cart.item.reference')}: {item.product?.reference || ''}
                               </Badge>
-                              <Badge variant="outline" className="text-xs">{item.product?.unit || ''}</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {item.product?.unit || ''}
+                              </Badge>
                             </div>
                             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                               <div className="flex items-center gap-2">
@@ -415,7 +428,9 @@ export default function CartSummaryPage() {
                       <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
-                          <span className="text-base sm:text-lg">{tShop('cart.delivery.title')}</span>
+                          <span className="text-base sm:text-lg">
+                            {tShop('cart.delivery.title')}
+                          </span>
                         </div>
                         <Button
                           type="button"
@@ -454,7 +469,9 @@ export default function CartSummaryPage() {
                       {!useManualAddress ? (
                         <>
                           <div>
-                            <Label className="text-xs sm:text-sm">{tShop('cart.delivery.searchAddress')} *</Label>
+                            <Label className="text-xs sm:text-sm">
+                              {tShop('cart.delivery.searchAddress')} *
+                            </Label>
                             <AddressPicker
                               onAddressSelect={selectAddress}
                               onClear={clearAddress}
@@ -480,7 +497,9 @@ export default function CartSummaryPage() {
                                   <p className="text-xs sm:text-sm font-medium text-green-800">
                                     {tShop('cart.delivery.addressSelected')}
                                   </p>
-                                  <p className="text-xs sm:text-sm text-green-700 truncate">{selectedAddress?.label}</p>
+                                  <p className="text-xs sm:text-sm text-green-700 truncate">
+                                    {selectedAddress?.label}
+                                  </p>
                                   <p className="text-xs sm:text-sm text-green-700 truncate">
                                     {selectedAddress?.formatted_address}
                                   </p>
@@ -508,10 +527,11 @@ export default function CartSummaryPage() {
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                               rows={3}
-                              className={`text-sm ${formik.touched.deliveryAddress && formik.errors.deliveryAddress
+                              className={`text-sm ${
+                                formik.touched.deliveryAddress && formik.errors.deliveryAddress
                                   ? 'border-red-500'
                                   : ''
-                                }`}
+                              }`}
                             />
                             {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
                               <p className="text-xs sm:text-sm text-red-600 mt-1">
@@ -521,7 +541,9 @@ export default function CartSummaryPage() {
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                              <Label htmlFor="deliveryCity" className="text-xs sm:text-sm">{tShop('cart.delivery.city')} *</Label>
+                              <Label htmlFor="deliveryCity" className="text-xs sm:text-sm">
+                                {tShop('cart.delivery.city')} *
+                              </Label>
                               <Input
                                 id="deliveryCity"
                                 name="deliveryCity"
@@ -529,10 +551,11 @@ export default function CartSummaryPage() {
                                 value={formik.values.deliveryCity}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={`text-sm ${formik.touched.deliveryCity && formik.errors.deliveryCity
+                                className={`text-sm ${
+                                  formik.touched.deliveryCity && formik.errors.deliveryCity
                                     ? 'border-red-500'
                                     : ''
-                                  }`}
+                                }`}
                               />
                               {formik.touched.deliveryCity && formik.errors.deliveryCity && (
                                 <p className="text-xs sm:text-sm text-red-600 mt-1">
@@ -551,11 +574,12 @@ export default function CartSummaryPage() {
                                 value={formik.values.deliveryPostalCode}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={`text-sm ${formik.touched.deliveryPostalCode &&
-                                    formik.errors.deliveryPostalCode
+                                className={`text-sm ${
+                                  formik.touched.deliveryPostalCode &&
+                                  formik.errors.deliveryPostalCode
                                     ? 'border-red-500'
                                     : ''
-                                  }`}
+                                }`}
                               />
                               {formik.touched.deliveryPostalCode &&
                                 formik.errors.deliveryPostalCode && (
@@ -568,7 +592,9 @@ export default function CartSummaryPage() {
                         </>
                       )}
                       <div>
-                        <Label htmlFor="deliveryNotes" className="text-xs sm:text-sm">{tShop('cart.delivery.instructions')}</Label>
+                        <Label htmlFor="deliveryNotes" className="text-xs sm:text-sm">
+                          {tShop('cart.delivery.instructions')}
+                        </Label>
                         <Input
                           id="deliveryNotes"
                           name="deliveryNotes"
@@ -576,13 +602,16 @@ export default function CartSummaryPage() {
                           value={formik.values.deliveryNotes}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          className={`text-sm ${formik.touched.deliveryNotes && formik.errors.deliveryNotes
+                          className={`text-sm ${
+                            formik.touched.deliveryNotes && formik.errors.deliveryNotes
                               ? 'border-red-500'
                               : ''
-                            }`}
+                          }`}
                         />
                         {formik.touched.deliveryNotes && formik.errors.deliveryNotes && (
-                          <p className="text-xs sm:text-sm text-red-600 mt-1">{formik.errors.deliveryNotes}</p>
+                          <p className="text-xs sm:text-sm text-red-600 mt-1">
+                            {formik.errors.deliveryNotes}
+                          </p>
                         )}
                       </div>
                     </CardContent>

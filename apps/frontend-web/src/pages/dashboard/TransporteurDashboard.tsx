@@ -185,13 +185,20 @@ function TransporteurDashboard() {
               title={tDash('transporteur.vehicleOnline')}
             />
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">{tDash('transporteur.subtitle')}</p>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {tDash('transporteur.subtitle')}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <Link to="/app/missions/" className="w-full sm:w-auto">
-            <Button className="gap-2 w-full sm:w-auto" style={{ backgroundColor: 'var(--tsa-blue)' }}>
+            <Button
+              className="gap-2 w-full sm:w-auto"
+              style={{ backgroundColor: 'var(--tsa-blue)' }}
+            >
               <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">{tDash('transporteur.actions.availableMissions')}</span>
+              <span className="hidden sm:inline">
+                {tDash('transporteur.actions.availableMissions')}
+              </span>
               <span className="sm:hidden">Missions</span>
             </Button>
           </Link>
@@ -204,8 +211,12 @@ function TransporteurDashboard() {
             <div className="flex items-center gap-3">
               <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-green-800 text-sm sm:text-base truncate">{latestNotification.title}</p>
-                <p className="text-xs sm:text-sm text-green-600 truncate">{latestNotification.message}</p>
+                <p className="font-medium text-green-800 text-sm sm:text-base truncate">
+                  {latestNotification.title}
+                </p>
+                <p className="text-xs sm:text-sm text-green-600 truncate">
+                  {latestNotification.message}
+                </p>
                 <p className="text-xs text-green-500 mt-1">
                   {new Date(latestNotification.createdAt).toLocaleString()}
                 </p>
@@ -222,7 +233,9 @@ function TransporteurDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div className="min-w-0 flex-1 mr-2">
-                    <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{insight.title}</p>
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                      {insight.title}
+                    </p>
                     <p className="text-lg sm:text-2xl font-bold truncate">{insight.value}</p>
                     <p className="text-xs text-green-600 truncate">{insight.change}</p>
                   </div>
@@ -256,10 +269,14 @@ function TransporteurDashboard() {
                     }}
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={`w-2 h-2 rounded-full ${mission.statusColor} flex-shrink-0`}></div>
+                      <div
+                        className={`w-2 h-2 rounded-full ${mission.statusColor} flex-shrink-0`}
+                      ></div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm sm:text-base truncate">{mission.title}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{mission.route}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                          {mission.route}
+                        </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {mission.affreteur
                             ? `${tCommon('for')} ${mission.affreteur.firstName}  ${mission.affreteur.lastName}`
@@ -284,7 +301,9 @@ function TransporteurDashboard() {
               ) : (
                 <div className="text-center py-6 sm:py-8 text-muted-foreground">
                   <Package className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-sm sm:text-base">{tDash('transporteur.emptyStates.noActiveMissions')}</p>
+                  <p className="text-sm sm:text-base">
+                    {tDash('transporteur.emptyStates.noActiveMissions')}
+                  </p>
                   <p className="text-xs sm:text-sm">
                     {tDash('transporteur.emptyStates.searchAvailableMissions')}
                   </p>
@@ -303,25 +322,37 @@ function TransporteurDashboard() {
           </CardHeader>
           <CardContent className="space-y-2 sm:space-y-3 pt-0">
             <Link to="/app/missions">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <Search className="h-4 w-4" />
                 {tDash('transporteur.quickActions.searchMissions')}
               </Button>
             </Link>
             <Link to="/app/tracking-dashboard">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <MapPin className="h-4 w-4" />
                 {tDash('transporteur.quickActions.gpsTracking')}
               </Button>
             </Link>
             <Link to="/app/vehicles">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <Truck className="h-4 w-4" />
                 {tDash('transporteur.quickActions.vehicleStatus')}
               </Button>
             </Link>
             <Link to="/app">
-              <Button variant="outline" className="w-full justify-start gap-2 bg-transparent text-sm">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 bg-transparent text-sm"
+              >
                 <Euro className="h-4 w-4" />
                 {tDash('transporteur.quickActions.dailyEarnings')}
               </Button>
@@ -352,8 +383,12 @@ function TransporteurDashboard() {
                       className={`p-3 ${notification.bgColor} border ${notification.borderColor} rounded-lg ${!notification.readAt ? 'ring-1 ring-blue-200' : ''}`}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <IconComponent className={`h-4 w-4 ${notification.iconColor} flex-shrink-0`} />
-                        <p className={`text-xs sm:text-sm font-medium ${notification.textColor} truncate flex-1`}>
+                        <IconComponent
+                          className={`h-4 w-4 ${notification.iconColor} flex-shrink-0`}
+                        />
+                        <p
+                          className={`text-xs sm:text-sm font-medium ${notification.textColor} truncate flex-1`}
+                        >
                           {notification.title}
                         </p>
                         {!notification.readAt && (
@@ -402,7 +437,9 @@ function TransporteurDashboard() {
               <span className="text-xs sm:text-sm text-muted-foreground">
                 {tDash('transporteur.monthlyStats.completedMissions')}
               </span>
-              <span className="font-semibold text-green-600 text-sm sm:text-base">{monthlySummary?.completed || 0}</span>
+              <span className="font-semibold text-green-600 text-sm sm:text-base">
+                {monthlySummary?.completed || 0}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs sm:text-sm text-muted-foreground">

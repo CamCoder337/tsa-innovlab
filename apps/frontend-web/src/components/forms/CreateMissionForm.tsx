@@ -277,7 +277,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           cargo_type: formValues.typeMarchandise || 'general',
           urgency: formValues.dateDepartEstime
             ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24) <
+                (1000 * 60 * 60 * 24) <
               7
               ? 'urgent'
               : 'normal'
@@ -305,7 +305,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           cargo_type: formValues.typeMarchandise || 'general',
           urgency: formValues.dateDepartEstime
             ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24) <
+                (1000 * 60 * 60 * 24) <
               7
               ? 'urgent'
               : 'normal'
@@ -433,7 +433,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 <div>
                   <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
                     <div className="flex flex-1 justify-between items-center mb-3 sm:mb-4">
-                      <h1 className="font-medium text-sm sm:text-base">{tForms('labels.departureAddress')}</h1>
+                      <h1 className="font-medium text-sm sm:text-base">
+                        {tForms('labels.departureAddress')}
+                      </h1>
                       <Button
                         type="button"
                         variant="ghost"
@@ -445,7 +447,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     </div>
                     <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <div className="flex flex-col space-y-2 w-full">
-                        <Label htmlFor="label" className="text-xs sm:text-sm">{tForms('labels.addressLabel')}</Label>
+                        <Label htmlFor="label" className="text-xs sm:text-sm">
+                          {tForms('labels.addressLabel')}
+                        </Label>
                         <Input
                           name="label"
                           value={values.adresseDepart!.label}
@@ -454,14 +458,18 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           placeholder={tForms('placeholders.addressLabel')}
                           className={cn(
                             'w-full',
-                            (touched.typeMarchandise || touched.adresseDepart) && errors.adresseDepart && 'border-red-500'
+                            (touched.typeMarchandise || touched.adresseDepart) &&
+                              errors.adresseDepart &&
+                              'border-red-500'
                           )}
                         />
                       </div>
                     </div>
                     <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <Label className="text-xs sm:text-sm">{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <Label className="text-xs sm:text-sm">
+                          {tForms('labels.selectWithGoogleMaps')}
+                        </Label>
                         <div className="mt-2">
                           <ClientSideAddressPicker
                             onAddressSelect={(addressDetails) => {
@@ -489,7 +497,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       <p className="truncate">
                         {values.adresseDepart.postalCode} {values.adresseDepart.city}
                       </p>
-                      {values.adresseDepart.region && <p className="truncate">{values.adresseDepart.region}</p>}
+                      {values.adresseDepart.region && (
+                        <p className="truncate">{values.adresseDepart.region}</p>
+                      )}
                       <p className="truncate">{values.adresseDepart.country}</p>
                       <p className="text-xs text-gray-500 mt-1 truncate">
                         {tForms('labels.coordinates')}:{' '}
@@ -508,7 +518,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 <div>
                   <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
                     <div className="flex justify-between items-center mb-3 sm:mb-4">
-                      <h1 className="font-medium text-sm sm:text-base">{tForms('labels.arrivalAddress')}</h1>
+                      <h1 className="font-medium text-sm sm:text-base">
+                        {tForms('labels.arrivalAddress')}
+                      </h1>
                       <Button
                         type="button"
                         variant="ghost"
@@ -522,7 +534,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     </div>
                     <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                       <div className="flex flex-col space-y-2 w-full">
-                        <Label htmlFor="label" className="text-xs sm:text-sm">{tForms('labels.addressLabel')}</Label>
+                        <Label htmlFor="label" className="text-xs sm:text-sm">
+                          {tForms('labels.addressLabel')}
+                        </Label>
                         <Input
                           name="label"
                           value={values.adresseArrivee!.label}
@@ -531,14 +545,18 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           placeholder={tForms('placeholders.addressLabel')}
                           className={cn(
                             'w-full',
-                            (touched.typeMarchandise || touched.adresseArrivee) && errors.adresseArrivee && 'border-red-500'
+                            (touched.typeMarchandise || touched.adresseArrivee) &&
+                              errors.adresseArrivee &&
+                              'border-red-500'
                           )}
                         />
                       </div>
                     </div>
                     <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <Label className="text-xs sm:text-sm">{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <Label className="text-xs sm:text-sm">
+                          {tForms('labels.selectWithGoogleMaps')}
+                        </Label>
                         <div className="mt-2">
                           <ClientSideAddressPicker
                             onAddressSelect={(addressDetails) => {
@@ -566,7 +584,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       <p className="truncate">
                         {values.adresseArrivee.postalCode} {values.adresseArrivee.city}
                       </p>
-                      {values.adresseArrivee.region && <p className="truncate">{values.adresseArrivee.region}</p>}
+                      {values.adresseArrivee.region && (
+                        <p className="truncate">{values.adresseArrivee.region}</p>
+                      )}
                       <p className="truncate">{values.adresseArrivee.country}</p>
                       <p className="text-xs text-gray-500 mt-1 truncate">
                         {tForms('labels.coordinates')}:{' '}
@@ -595,7 +615,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     value={values.typeMarchandise || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={cn(touched.typeMarchandise && errors.typeMarchandise && 'border-red-500')}
+                    className={cn(
+                      touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
+                    )}
                   />
                   {touched.typeMarchandise && errors.typeMarchandise && (
                     <div className="text-sm text-red-600 mt-1">{errors.typeMarchandise}</div>
@@ -694,7 +716,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined}
+                        selected={
+                          values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined
+                        }
                         onSelect={(date) => {
                           if (date) {
                             setFieldValue('dateDepartEstime', date);
@@ -738,7 +762,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined}
+                        selected={
+                          values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined
+                        }
                         onSelect={(date) => {
                           setFieldValue('dateArriveePrevue', date ? date.toISOString() : '');
                         }}
@@ -872,10 +898,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     placeholder="Ex: 850000"
                     value={values.budgetMin || ''}
                     onChange={(e) =>
-                      setFieldValue(
-                        'budgetMin',
-                        e.target.value ? parseFloat(e.target.value) : null
-                      )
+                      setFieldValue('budgetMin', e.target.value ? parseFloat(e.target.value) : null)
                     }
                     onBlur={handleBlur}
                     className={cn(
@@ -909,11 +932,11 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 >
                   <Package className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">
-                    {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publishMission')}
+                    {isSubmitting
+                      ? tForms('messages.publishing')
+                      : tForms('buttons.publishMission')}
                   </span>
-                  <span className="sm:hidden">
-                    {isSubmitting ? 'Publication...' : 'Publier'}
-                  </span>
+                  <span className="sm:hidden">{isSubmitting ? 'Publication...' : 'Publier'}</span>
                 </Button>
                 <Button
                   type="button"
@@ -928,9 +951,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   <span className="hidden sm:inline">
                     {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
                   </span>
-                  <span className="sm:hidden">
-                    {isSubmitting ? 'Sauvegarde...' : 'Brouillon'}
-                  </span>
+                  <span className="sm:hidden">{isSubmitting ? 'Sauvegarde...' : 'Brouillon'}</span>
                 </Button>
               </>
             )}

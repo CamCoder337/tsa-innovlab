@@ -184,7 +184,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
       </CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <p className="text-center text-gray-500 py-6 sm:py-8 text-xs sm:text-sm">{tMissions('timeline.noEvents')}</p>
+          <p className="text-center text-gray-500 py-6 sm:py-8 text-xs sm:text-sm">
+            {tMissions('timeline.noEvents')}
+          </p>
         ) : (
           <ScrollArea className="h-[300px] sm:h-[400px] pr-2 sm:pr-4">
             <div className="space-y-4 sm:space-y-6">
@@ -198,13 +200,17 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                   </div>
                   <div className="space-y-1 sm:space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                      <h4 className="text-xs sm:text-sm font-medium leading-tight">{event.title}</h4>
+                      <h4 className="text-xs sm:text-sm font-medium leading-tight">
+                        {event.title}
+                      </h4>
                       <time className="text-xs text-muted-foreground flex-shrink-0">
                         {format(new Date(event.date), 'PPPp', { locale: fr })}
                       </time>
                     </div>
                     {event.description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{event.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {event.description}
+                      </p>
                     )}
                     {event.user && (
                       <p className="text-xs text-gray-500 mt-1">

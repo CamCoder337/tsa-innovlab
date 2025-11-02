@@ -209,31 +209,41 @@ export default function MissionsManagement() {
         <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <TabsTrigger value="all" className="flex items-center gap-1 text-xs sm:text-sm">
             <span className="truncate">{tAdmin('missions.tabs.all')}</span>
-            <Badge variant="secondary" className="text-xs">{statusCounts.total}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {statusCounts.total}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="draft" className="flex items-center gap-1 text-xs sm:text-sm">
             <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-500 flex-shrink-0" />
             <span className="truncate hidden sm:inline">{tCommon('status.draft')}</span>
             <span className="truncate sm:hidden">Draft</span>
-            <Badge variant="secondary" className="text-xs">{statusCounts.draft || 0}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {statusCounts.draft || 0}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="published" className="flex items-center gap-1 text-xs sm:text-sm">
             <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-blue-500 flex-shrink-0" />
             <span className="truncate hidden sm:inline">{tCommon('status.published')}</span>
             <span className="truncate sm:hidden">Publié</span>
-            <Badge variant="secondary" className="text-xs">{statusCounts.published || 0}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {statusCounts.published || 0}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="assigned" className="flex items-center gap-1 text-xs sm:text-sm">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-yellow-500 flex-shrink-0" />
             <span className="truncate hidden sm:inline">{tCommon('status.assigned')}</span>
             <span className="truncate sm:hidden">Assigné</span>
-            <Badge variant="secondary" className="text-xs">{statusCounts.assigned || 0}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {statusCounts.assigned || 0}
+            </Badge>
           </TabsTrigger>
           <TabsTrigger value="completed" className="flex items-center gap-1 text-xs sm:text-sm">
             <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-green-500 flex-shrink-0" />
             <span className="truncate hidden sm:inline">{tCommon('status.completed')}</span>
             <span className="truncate sm:hidden">Terminé</span>
-            <Badge variant="secondary" className="text-xs">{statusCounts.completed || 0}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {statusCounts.completed || 0}
+            </Badge>
           </TabsTrigger>
         </TabsList>
 
