@@ -2,7 +2,20 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Eye, Edit, MessageSquare, X, Package, Weight, DollarSign, User, Truck, ArrowDown } from 'lucide-react';
+import {
+  MapPin,
+  Calendar,
+  Eye,
+  Edit,
+  MessageSquare,
+  X,
+  Package,
+  Weight,
+  DollarSign,
+  User,
+  Truck,
+  ArrowDown,
+} from 'lucide-react';
 import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission } from '@/types/mission.types';
@@ -101,7 +114,9 @@ export default function MissionCard({
             <div className="flex flex-col flex-1 gap-1">
               <div className="flex flex-1 items-start sm:justify-between mb-2 sm:mb-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 truncate">{mission.title}</h3>
+                  <h3 className="text-sm sm:text-lg font-semibold text-gray-900 mb-1 truncate">
+                    {mission.title}
+                  </h3>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                     <div className="hidden sm:flex items-center gap-1">
                       <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -126,7 +141,8 @@ export default function MissionCard({
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="truncate">
-                        {tMissions('createdOn')} {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
+                        {tMissions('createdOn')}{' '}
+                        {new Date(mission.createdAt).toLocaleDateString('fr-FR')}
                       </span>
                     </div>
                   </div>
@@ -140,12 +156,14 @@ export default function MissionCard({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
-                {mission.typeMarchandise && <div className="flex items-center gap-1 sm:gap-2">
-                  <Package className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-gray-600 truncate">
-                    {mission.typeMarchandise}
-                  </span>
-                </div>}
+                {mission.typeMarchandise && (
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Package className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">
+                      {mission.typeMarchandise}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Weight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-600">
@@ -155,12 +173,14 @@ export default function MissionCard({
                 <div className="flex items-center gap-1 sm:gap-2">
                   <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-600">
-                    {mission.budgetMin ? `${mission.budgetMin.toLocaleString()} FCFA` : tMissions('noBudget')}
+                    {mission.budgetMin
+                      ? `${mission.budgetMin.toLocaleString()} FCFA`
+                      : tMissions('noBudget')}
                   </span>
                 </div>
               </div>
 
-              {(user?.role === 'affreteur' && mission.transporteurId && transporteurName) && (
+              {user?.role === 'affreteur' && mission.transporteurId && transporteurName && (
                 <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
                   <User className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-600">
@@ -170,7 +190,7 @@ export default function MissionCard({
                 </div>
               )}
 
-              {(user?.role === 'transporteur' && mission.affreteurId && affreteurName) && (
+              {user?.role === 'transporteur' && mission.affreteurId && affreteurName && (
                 <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-3">
                   <div className="flex items-center gap-1 sm:gap-2">
                     <User className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />

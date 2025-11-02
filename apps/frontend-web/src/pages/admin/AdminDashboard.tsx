@@ -71,17 +71,31 @@ export default function AdminDashboard() {
   return (
     <div className="flex-1 p-3 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{tAdmin('dashboard.title')}</h1>
-        <p className="text-gray-600 text-sm sm:text-base">{tAdmin('dashboard.overview.subtitle')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          {tAdmin('dashboard.title')}
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base">
+          {tAdmin('dashboard.overview.subtitle')}
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-6">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">{tAdmin('dashboard.overview.title')}</TabsTrigger>
-          <TabsTrigger value="users" className="text-xs sm:text-sm">{tAdmin('users.users')}</TabsTrigger>
-          <TabsTrigger value="missions" className="text-xs sm:text-sm">{tAdmin('missions.title')}</TabsTrigger>
-          <TabsTrigger value="boutique" className="text-xs sm:text-sm">{tAdmin('dashboard.shop.title')}</TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs sm:text-sm">{tAdmin('analytics.title')}</TabsTrigger>
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">
+            {tAdmin('dashboard.overview.title')}
+          </TabsTrigger>
+          <TabsTrigger value="users" className="text-xs sm:text-sm">
+            {tAdmin('users.users')}
+          </TabsTrigger>
+          <TabsTrigger value="missions" className="text-xs sm:text-sm">
+            {tAdmin('missions.title')}
+          </TabsTrigger>
+          <TabsTrigger value="boutique" className="text-xs sm:text-sm">
+            {tAdmin('dashboard.shop.title')}
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs sm:text-sm">
+            {tAdmin('analytics.title')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 sm:mt-6">
@@ -151,7 +165,9 @@ export default function AdminDashboard() {
                     <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('dashboard.overview.lowStock')}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">
+                      {tAdmin('dashboard.overview.lowStock')}
+                    </p>
                     <p className="text-lg sm:text-2xl font-bold">
                       {allStats.products.stats?.lowStockCount ||
                         productStats?.products?.lowStock ||
@@ -184,13 +200,15 @@ export default function AdminDashboard() {
                           {item.missionCount} {tAdmin('dashboard.labels.missions')}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">{tAdmin('dashboard.labels.topShipper')}</Badge>
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">
+                        {tAdmin('dashboard.labels.topShipper')}
+                      </Badge>
                     </div>
                   )) || (
-                      <p className="text-gray-500 text-center py-4 text-sm">
-                        {tAdmin('dashboard.labels.recent')}
-                      </p>
-                    )}
+                    <p className="text-gray-500 text-center py-4 text-sm">
+                      {tAdmin('dashboard.labels.recent')}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -215,13 +233,15 @@ export default function AdminDashboard() {
                           {item.missionCount} {tAdmin('dashboard.labels.missions')}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">{tAdmin('dashboard.labels.topCarrier')}</Badge>
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">
+                        {tAdmin('dashboard.labels.topCarrier')}
+                      </Badge>
                     </div>
                   )) || (
-                      <p className="text-gray-500 text-center py-4 text-sm">
-                        {tAdmin('dashboard.labels.recent')}
-                      </p>
-                    )}
+                    <p className="text-gray-500 text-center py-4 text-sm">
+                      {tAdmin('dashboard.labels.recent')}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -241,13 +261,17 @@ export default function AdminDashboard() {
                         userStats?.byRole?.transporteur ||
                         0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.affreteur')}s</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {tCommon('roles.affreteur')}s
+                    </p>
                   </div>
                   <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-green-600">
                       {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.transporteur')}s</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {tCommon('roles.transporteur')}s
+                    </p>
                   </div>
                   <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-purple-600">
@@ -274,7 +298,9 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">{tAdmin('dashboard.recentMissions')}</CardTitle>
+              <CardTitle className="text-base sm:text-lg">
+                {tAdmin('dashboard.recentMissions')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-3 sm:space-y-4">
@@ -284,7 +310,9 @@ export default function AdminDashboard() {
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg gap-3 sm:gap-0"
                   >
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{activity.title}</h4>
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                        {activity.title}
+                      </h4>
                       <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500 mt-1">
                         {activity.affreteur && (
                           <>
@@ -376,9 +404,15 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <span className="text-base sm:text-lg">{tAdmin('dashboard.users.userManagement')}</span>
+                <span className="text-base sm:text-lg">
+                  {tAdmin('dashboard.users.userManagement')}
+                </span>
                 <Link to="/app/users">
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
+                  >
                     {tAdmin('dashboard.users.viewAllUsers')}
                   </Button>
                 </Link>
@@ -396,7 +430,9 @@ export default function AdminDashboard() {
                   <p className="text-lg sm:text-2xl font-bold text-green-600">
                     {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.transporteur')}s</p>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {tCommon('roles.transporteur')}s
+                  </p>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
                   <p className="text-lg sm:text-2xl font-bold text-purple-600">
@@ -494,7 +530,9 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">{tAdmin('dashboard.missions.missionSupervision')}</CardTitle>
+              <CardTitle className="text-base sm:text-lg">
+                {tAdmin('dashboard.missions.missionSupervision')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-4 sm:space-y-6">
@@ -505,7 +543,9 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.published ||
                         0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{getStatusLabel('published', tCommon)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {getStatusLabel('published', tCommon)}
+                    </p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
@@ -513,7 +553,9 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.assigned ||
                         0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{getStatusLabel('assigned', tCommon)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {getStatusLabel('assigned', tCommon)}
+                    </p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-green-600">
@@ -521,7 +563,9 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.completed ||
                         0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{getStatusLabel('completed', tCommon)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {getStatusLabel('completed', tCommon)}
+                    </p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-red-600">
@@ -529,7 +573,9 @@ export default function AdminDashboard() {
                         missionStats?.statusStats?.cancelled ||
                         0}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600">{getStatusLabel('cancelled', tCommon)}</p>
+                    <p className="text-xs sm:text-sm text-gray-600">
+                      {getStatusLabel('cancelled', tCommon)}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-6">
@@ -631,7 +677,8 @@ export default function AdminDashboard() {
                     <p className="text-lg sm:text-2xl font-bold">
                       {productStats?.inventory?.totalValue
                         ? `${(productStats.inventory.totalValue / 1000000).toFixed(1)}M`
-                        : '0M'} FCFA
+                        : '0M'}{' '}
+                      FCFA
                     </p>
                   </div>
                 </div>
@@ -653,7 +700,9 @@ export default function AdminDashboard() {
                     <span className="text-xs sm:text-sm text-gray-600">
                       {tAdmin('dashboard.shop.popularProducts')}
                     </span>
-                    <span className="font-medium text-sm sm:text-base">{productStats?.products?.active || 0}</span>
+                    <span className="font-medium text-sm sm:text-base">
+                      {productStats?.products?.active || 0}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs sm:text-sm text-gray-600">
@@ -723,7 +772,9 @@ export default function AdminDashboard() {
                     </h4>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">{tCommon('status.active')}s</span>
+                        <span className="text-xs sm:text-sm text-gray-600">
+                          {tCommon('status.active')}s
+                        </span>
                         <div className="flex items-center gap-2">
                           <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
                             <div
@@ -806,7 +857,9 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-3 text-sm sm:text-base">{tAdmin('dashboard.shop.keyIndicators')}</h4>
+                    <h4 className="font-medium mb-3 text-sm sm:text-base">
+                      {tAdmin('dashboard.shop.keyIndicators')}
+                    </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-xs sm:text-sm text-gray-600">
@@ -907,8 +960,8 @@ export default function AdminDashboard() {
                         <span className="font-medium text-xs sm:text-sm">
                           {DashboardUtils.calculateSuccessRate(
                             allStats.missions.stats?.byStatus.completed ||
-                            missionStats?.statusStats?.completed ||
-                            0,
+                              missionStats?.statusStats?.completed ||
+                              0,
                             allStats.missions.stats?.total || missionStats?.totals.missions || 0
                           )}
                           %
@@ -984,7 +1037,9 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">{tCommon('roles.client')}s</span>
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {tCommon('roles.client')}s
+                          </span>
                           <div className="flex items-center gap-2">
                             <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
                               <div

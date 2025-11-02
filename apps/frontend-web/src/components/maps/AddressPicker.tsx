@@ -439,7 +439,9 @@ export default function AddressPicker({
         <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
-            <span className="text-sm sm:text-base font-medium text-red-800">Erreur de géolocalisation</span>
+            <span className="text-sm sm:text-base font-medium text-red-800">
+              Erreur de géolocalisation
+            </span>
           </div>
           <p className="text-xs sm:text-sm text-red-600 mt-1">{error}</p>
         </div>
@@ -480,9 +482,7 @@ export default function AddressPicker({
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             {tMaps('selectAddress')}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            {tMaps('searchOrSelectOnMap')}
-          </p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">{tMaps('searchOrSelectOnMap')}</p>
         </div>
         <Button
           onClick={getCurrentLocation}

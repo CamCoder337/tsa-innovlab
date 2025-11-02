@@ -90,7 +90,9 @@ export default function TransporteurTrackingDashboard() {
       {/* En-tête */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{tTracking('dashboard.title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {tTracking('dashboard.title')}
+          </h1>
           <p className="text-sm sm:text-base text-gray-600">{tTracking('dashboard.subtitle')}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
@@ -114,7 +116,9 @@ export default function TransporteurTrackingDashboard() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600">
                   {tTracking('kpis.activeMissions')}
                 </p>
-                <p className="text-xl sm:text-2xl font-bold text-tsa-blue">{activeAssignments.length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-tsa-blue">
+                  {activeAssignments.length}
+                </p>
               </div>
               <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
             </div>
@@ -177,9 +181,15 @@ export default function TransporteurTrackingDashboard() {
       {/* Contenu principal */}
       <Tabs defaultValue="current" className="space-y-4">
         <TabsList className="grid grid-cols-2 lg:grid-cols-3 w-full">
-          <TabsTrigger value="current" className="text-xs sm:text-sm">{tTracking('tabs.currentMission')}</TabsTrigger>
-          <TabsTrigger value="assignments" className="text-xs sm:text-sm">{tTracking('tabs.myMissions')}</TabsTrigger>
-          <TabsTrigger value="earnings" className="text-xs sm:text-sm">{tTracking('tabs.earnings')}</TabsTrigger>
+          <TabsTrigger value="current" className="text-xs sm:text-sm">
+            {tTracking('tabs.currentMission')}
+          </TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs sm:text-sm">
+            {tTracking('tabs.myMissions')}
+          </TabsTrigger>
+          <TabsTrigger value="earnings" className="text-xs sm:text-sm">
+            {tTracking('tabs.earnings')}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="current" className="space-y-4">
@@ -205,7 +215,8 @@ export default function TransporteurTrackingDashboard() {
                         >
                           {activeAssignments.map((mission) => (
                             <option key={mission.id} value={mission.id}>
-                              {mission.title} - {mission.adresseDepart?.city} → {mission.adresseArrivee?.city}
+                              {mission.title} - {mission.adresseDepart?.city} →{' '}
+                              {mission.adresseArrivee?.city}
                             </option>
                           ))}
                         </select>
@@ -264,8 +275,12 @@ export default function TransporteurTrackingDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3 sm:space-y-4">
                     <div>
-                      <h4 className="font-medium text-gray-900 text-sm sm:text-base">{currentAssignment.title}</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">{currentAssignment.description}</p>
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                        {currentAssignment.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {currentAssignment.description}
+                      </p>
                     </div>
 
                     <div className="space-y-2">
@@ -357,7 +372,9 @@ export default function TransporteurTrackingDashboard() {
                 <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                   {tTracking('missions.noActiveMission')}
                 </h3>
-                <p className="text-gray-600 text-sm sm:text-base">{tTracking('missions.noActiveMissionMessage')}</p>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  {tTracking('missions.noActiveMissionMessage')}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -366,23 +383,28 @@ export default function TransporteurTrackingDashboard() {
         <TabsContent value="assignments" className="space-y-4">
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">{tTracking('missions.myMissions')}</CardTitle>
+              <CardTitle className="text-base sm:text-lg">
+                {tTracking('missions.myMissions')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 sm:space-y-4">
                 {activeAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
-                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${currentAssignment?.id === assignment.id
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${
+                      currentAssignment?.id === assignment.id
                         ? 'bg-blue-50 border-blue-200'
                         : 'hover:bg-gray-50'
-                      }`}
+                    }`}
                     onClick={() => setCurrentAssignment(assignment)}
                   >
                     <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="font-medium text-sm sm:text-base">{assignment.title}</span>
+                          <span className="font-medium text-sm sm:text-base">
+                            {assignment.title}
+                          </span>
                           {assignment.budgetMin! > 200000 && (
                             <Badge className="bg-red-100 text-red-800 text-xs">Prioritaire</Badge>
                           )}

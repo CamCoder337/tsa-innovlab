@@ -64,7 +64,9 @@ export default function MyMissionsAffreteur() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 truncate">
             {tMissions('myMissions.affreteur.title')}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">{tMissions('myMissions.affreteur.subtitle')}</p>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {tMissions('myMissions.affreteur.subtitle')}
+          </p>
         </div>
         <Link to="/app/missions/create" className="w-full sm:w-auto">
           <Button className="gap-2 w-full sm:w-auto" style={{ backgroundColor: 'var(--tsa-blue)' }}>
@@ -98,7 +100,9 @@ export default function MyMissionsAffreteur() {
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tCommon('status.in_progress')}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tCommon('status.in_progress')}
+                </p>
                 <p className="text-lg sm:text-2xl font-bold">
                   {myMissions.filter((m) => ['published', 'assigned'].includes(m.status)).length}
                 </p>
@@ -113,7 +117,9 @@ export default function MyMissionsAffreteur() {
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">{tCommon('status.completed')}s</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  {tCommon('status.completed')}s
+                </p>
                 <p className="text-lg sm:text-2xl font-bold">
                   {myMissions.filter((m) => m.status === 'completed').length}
                 </p>
@@ -140,16 +146,28 @@ export default function MyMissionsAffreteur() {
 
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-base sm:text-lg">{tMissions('myMissions.affreteur.history')}</CardTitle>
+          <CardTitle className="text-base sm:text-lg">
+            {tMissions('myMissions.affreteur.history')}
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-6">
-              <TabsTrigger value="all" className="text-xs sm:text-sm">{tMissions('myMissions.affreteur.tabs.all')}</TabsTrigger>
-              <TabsTrigger value="pending" className="text-xs sm:text-sm">{tCommon('status.pending')}</TabsTrigger>
-              <TabsTrigger value="actives" className="text-xs sm:text-sm">{tCommon('status.active')}s</TabsTrigger>
-              <TabsTrigger value="completed" className="text-xs sm:text-sm">{tCommon('status.completed')}s</TabsTrigger>
-              <TabsTrigger value="draft" className="text-xs sm:text-sm">{tCommon('status.draft')}s</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                {tMissions('myMissions.affreteur.tabs.all')}
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="text-xs sm:text-sm">
+                {tCommon('status.pending')}
+              </TabsTrigger>
+              <TabsTrigger value="actives" className="text-xs sm:text-sm">
+                {tCommon('status.active')}s
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm">
+                {tCommon('status.completed')}s
+              </TabsTrigger>
+              <TabsTrigger value="draft" className="text-xs sm:text-sm">
+                {tCommon('status.draft')}s
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-4 sm:mt-6">

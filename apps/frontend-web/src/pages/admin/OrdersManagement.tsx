@@ -357,7 +357,11 @@ export default function OrdersManagement() {
               </Select>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-              <Button variant="outline" onClick={() => fetchOrders()} className="text-xs sm:text-sm">
+              <Button
+                variant="outline"
+                onClick={() => fetchOrders()}
+                className="text-xs sm:text-sm"
+              >
                 <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
                 <span className="sm:hidden">Actualiser</span>
@@ -377,7 +381,12 @@ export default function OrdersManagement() {
                 {tCommon('actions.bulkSelected', { count: selectedOrders.length })}
               </p>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleBulkAction('export')} className="text-xs">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAction('export')}
+                  className="text-xs"
+                >
                   {tCommon('actions.export')}
                 </Button>
                 <Button
@@ -416,13 +425,27 @@ export default function OrdersManagement() {
                           className="h-3 w-3 sm:h-4 sm:w-4"
                         />
                       </TableHead>
-                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.number')}</TableHead>
-                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">{tAdmin('orders.table.client')}</TableHead>
-                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">{tAdmin('orders.table.date')}</TableHead>
-                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.amount')}</TableHead>
-                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.status')}</TableHead>
-                      <TableHead className="text-xs sm:text-sm hidden lg:table-cell">{tAdmin('orders.table.payment')}</TableHead>
-                      <TableHead className="text-right text-xs sm:text-sm">{tAdmin('orders.table.actions')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm">
+                        {tAdmin('orders.table.number')}
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">
+                        {tAdmin('orders.table.client')}
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">
+                        {tAdmin('orders.table.date')}
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm">
+                        {tAdmin('orders.table.amount')}
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm">
+                        {tAdmin('orders.table.status')}
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden lg:table-cell">
+                        {tAdmin('orders.table.payment')}
+                      </TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">
+                        {tAdmin('orders.table.actions')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -443,7 +466,9 @@ export default function OrdersManagement() {
                               className="h-3 w-3 sm:h-4 sm:w-4"
                             />
                           </TableCell>
-                          <TableCell className="font-medium text-xs sm:text-sm">{order.orderNumber}</TableCell>
+                          <TableCell className="font-medium text-xs sm:text-sm">
+                            {order.orderNumber}
+                          </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <div>
                               <p className="font-medium text-xs sm:text-sm truncate">
@@ -452,7 +477,9 @@ export default function OrdersManagement() {
                               <p className="text-xs text-gray-500 truncate">{order.user?.email}</p>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden md:table-cell text-xs sm:text-sm">{formatDate(order.createdAt!)}</TableCell>
+                          <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                            {formatDate(order.createdAt!)}
+                          </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm">
                             {formatCurrency(parseFloat(order.total))}
                           </TableCell>
@@ -466,7 +493,9 @@ export default function OrdersManagement() {
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <Badge
-                              variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
+                              variant={
+                                order.paymentStatus === 'completed' ? 'default' : 'secondary'
+                              }
                               className="text-xs"
                             >
                               {order.paymentStatus === 'pending' && tCommon('status.pending')}
@@ -483,14 +512,21 @@ export default function OrdersManagement() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel className="text-xs sm:text-sm">{tCommon('actions.title')}</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => fetchOrder(order.id)} className="text-xs sm:text-sm">
+                                <DropdownMenuLabel className="text-xs sm:text-sm">
+                                  {tCommon('actions.title')}
+                                </DropdownMenuLabel>
+                                <DropdownMenuItem
+                                  onClick={() => fetchOrder(order.id)}
+                                  className="text-xs sm:text-sm"
+                                >
                                   <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                   {tCommon('actions.viewDetails')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.PROCESSING)}
+                                  onClick={() =>
+                                    handleStatusUpdate(order.id, OrderStatus.PROCESSING)
+                                  }
                                   className="text-xs sm:text-sm"
                                 >
                                   <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -504,7 +540,9 @@ export default function OrdersManagement() {
                                   {tCommon('actions.markShipped')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.DELIVERED)}
+                                  onClick={() =>
+                                    handleStatusUpdate(order.id, OrderStatus.DELIVERED)
+                                  }
                                   className="text-xs sm:text-sm"
                                 >
                                   <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -513,7 +551,10 @@ export default function OrdersManagement() {
                                 <DropdownMenuSeparator />
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs sm:text-sm">
+                                    <DropdownMenuItem
+                                      onSelect={(e) => e.preventDefault()}
+                                      className="text-xs sm:text-sm"
+                                    >
                                       <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                                       {tCommon('actions.cancelOrder')}
                                     </DropdownMenuItem>
@@ -531,7 +572,10 @@ export default function OrdersManagement() {
                                       <AlertDialogCancel className="text-xs sm:text-sm">
                                         {tAdmin('orders.dialog.cancel')}
                                       </AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleCancelOrder(order.id)} className="text-xs sm:text-sm">
+                                      <AlertDialogAction
+                                        onClick={() => handleCancelOrder(order.id)}
+                                        className="text-xs sm:text-sm"
+                                      >
                                         {tAdmin('orders.dialog.confirmCancel')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -561,7 +605,9 @@ export default function OrdersManagement() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">{tAdmin('orders.analytics.performanceMetrics')}</CardTitle>
+                <CardTitle className="text-base sm:text-lg">
+                  {tAdmin('orders.analytics.performanceMetrics')}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
@@ -603,7 +649,9 @@ export default function OrdersManagement() {
 
             <Card>
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg">{tAdmin('orders.analytics.topProducts')}</CardTitle>
+                <CardTitle className="text-base sm:text-lg">
+                  {tAdmin('orders.analytics.topProducts')}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 sm:space-y-3">
@@ -614,22 +662,28 @@ export default function OrdersManagement() {
                     >
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs sm:text-sm font-medium text-tsa-blue">{index + 1}</span>
+                          <span className="text-xs sm:text-sm font-medium text-tsa-blue">
+                            {index + 1}
+                          </span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-xs sm:text-sm truncate">{product.productName}</p>
+                          <p className="font-medium text-xs sm:text-sm truncate">
+                            {product.productName}
+                          </p>
                           <p className="text-xs text-gray-500 truncate">
                             {product.quantitySold} {tAdmin('orders.analytics.sold')}
                           </p>
                         </div>
                       </div>
-                      <p className="font-medium text-xs sm:text-sm flex-shrink-0">{formatCurrency(product.revenue)}</p>
+                      <p className="font-medium text-xs sm:text-sm flex-shrink-0">
+                        {formatCurrency(product.revenue)}
+                      </p>
                     </div>
                   )) || (
-                      <p className="text-gray-500 text-center py-3 sm:py-4 text-xs sm:text-sm">
-                        {tAdmin('orders.analytics.noDataAvailable')}
-                      </p>
-                    )}
+                    <p className="text-gray-500 text-center py-3 sm:py-4 text-xs sm:text-sm">
+                      {tAdmin('orders.analytics.noDataAvailable')}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -67,7 +67,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-        conversation.otherParticipant?.role?.slice(1) || ''
+          conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
     return 'Utilisateur inconnu';
@@ -163,7 +163,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
       {error && (
         <div className="text-center py-6 sm:py-8 px-3 sm:px-4">
           <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-400 mx-auto mb-3 sm:mb-4" />
-          <p className="text-red-600 font-medium text-sm sm:text-base">{tChat('messages.loadingError')}</p>
+          <p className="text-red-600 font-medium text-sm sm:text-base">
+            {tChat('messages.loadingError')}
+          </p>
           <p className="text-xs sm:text-sm text-red-500 mt-1">{error}</p>
         </div>
       )}
@@ -184,7 +186,12 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                 : tChat('messages.noConversationsForNow')}
             </p>
             {!searchTerm && (
-              <Button variant="outline" size="sm" onClick={onCreateConversation} className="mt-2 text-xs sm:text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateConversation}
+                className="mt-2 text-xs sm:text-sm"
+              >
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 {tChat('buttons.newConversation')}
               </Button>
@@ -201,8 +208,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
               return (
                 <div
                   key={conversation.id}
-                  className={`p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-                    }`}
+                  className={`p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
+                    isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                  }`}
                   onClick={() => onSelectConversation(conversation)}
                 >
                   <div className="flex items-start gap-2 sm:gap-3">
@@ -231,8 +239,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <h4
-                          className={`text-xs sm:text-sm font-medium truncate ${isActive ? 'text-blue-900' : 'text-gray-900'
-                            }`}
+                          className={`text-xs sm:text-sm font-medium truncate ${
+                            isActive ? 'text-blue-900' : 'text-gray-900'
+                          }`}
                         >
                           {getConversationTitle(conversation)}
                         </h4>
@@ -267,10 +276,11 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                       {/* Last message preview */}
                       {conversation.lastMessage && (
                         <p
-                          className={`text-xs mt-1 truncate ${conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
+                          className={`text-xs mt-1 truncate ${
+                            conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
                               ? 'font-medium text-gray-700'
                               : 'text-gray-500'
-                            }`}
+                          }`}
                         >
                           {conversation.lastMessage.senderId === user?.id
                             ? tForms('messages.you') + ': '

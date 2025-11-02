@@ -149,7 +149,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-        conversation.otherParticipant?.role?.slice(1) || ''
+          conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -197,7 +197,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{getConversationTitle()}</h3>
+            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
+              {getConversationTitle()}
+            </h3>
             <p className="text-xs sm:text-sm text-gray-500 truncate">{getConversationSubtitle()}</p>
           </div>
         </div>
@@ -229,7 +231,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
         {isLoading ? (
           <div className="flex items-center justify-center py-8 h-full">
             <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-500 text-sm sm:text-base">{tChat('messages.loadingMessages')}</span>
+            <span className="ml-2 text-gray-500 text-sm sm:text-base">
+              {tChat('messages.loadingMessages')}
+            </span>
           </div>
         ) : currentMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-gray-500">
@@ -381,14 +385,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       )}
 
-      <div className={`max-w-xs sm:max-w-sm lg:max-w-md min-w-20 sm:min-w-28 ${isCurrentUser ? 'order-1' : ''}`}>
+      <div
+        className={`max-w-xs sm:max-w-sm lg:max-w-md min-w-20 sm:min-w-28 ${isCurrentUser ? 'order-1' : ''}`}
+      >
         <div
-          className={`px-3 sm:px-4 py-2 rounded-2xl ${isCurrentUser
-            ? 'bg-tsa-blue text-white rounded-br-md'
-            : 'bg-tsa-gray/25 text-gray-900 rounded-bl-md'
-            }`}
+          className={`px-3 sm:px-4 py-2 rounded-2xl ${
+            isCurrentUser
+              ? 'bg-tsa-blue text-white rounded-br-md'
+              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-md'
+          }`}
         >
-          <div className="text-xs sm:text-sm whitespace-pre-wrap break-words">{message.content}</div>
+          <div className="text-xs sm:text-sm whitespace-pre-wrap break-words">
+            {message.content}
+          </div>
 
           <div className={`flex items-center gap-1 mt-1 text-xs justify-end`}>
             <span>{formatMessageTime(message.createdAt)}</span>

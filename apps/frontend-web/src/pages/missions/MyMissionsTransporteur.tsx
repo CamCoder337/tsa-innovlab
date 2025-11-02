@@ -141,7 +141,9 @@ export default function MissionsTransporteurPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {tMissions('myMissions.transporteur.title')}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">{tMissions('myMissions.transporteur.subtitle')}</p>
+          <p className="text-gray-600 text-sm sm:text-base">
+            {tMissions('myMissions.transporteur.subtitle')}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -286,9 +288,15 @@ export default function MissionsTransporteurPage() {
           <CardContent className="pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 sm:mb-6">
-                <TabsTrigger value="available" className="text-xs sm:text-sm">{tCommon('status.available')}</TabsTrigger>
-                <TabsTrigger value="active" className="text-xs sm:text-sm">{tCommon('status.active')}</TabsTrigger>
-                <TabsTrigger value="completed" className="text-xs sm:text-sm">{tCommon('status.completed')}</TabsTrigger>
+                <TabsTrigger value="available" className="text-xs sm:text-sm">
+                  {tCommon('status.available')}
+                </TabsTrigger>
+                <TabsTrigger value="active" className="text-xs sm:text-sm">
+                  {tCommon('status.active')}
+                </TabsTrigger>
+                <TabsTrigger value="completed" className="text-xs sm:text-sm">
+                  {tCommon('status.completed')}
+                </TabsTrigger>
                 <TabsTrigger value="all" className="text-xs sm:text-sm">
                   {tMissions('myMissions.transporteur.tabs.all')}
                 </TabsTrigger>
@@ -350,8 +358,12 @@ export default function MissionsTransporteurPage() {
                 <div className="space-y-4">
                   {currentMission && (
                     <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900 text-sm sm:text-base">{currentMission.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">{currentMission.description}</p>
+                      <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+                        {currentMission.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                        {currentMission.description}
+                      </p>
                       {currentMission.requiredVehicleType && (
                         <p className="text-xs sm:text-sm text-tsa-blue mt-2">
                           {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
@@ -374,7 +386,9 @@ export default function MissionsTransporteurPage() {
                       </div>
                     ) : availableVehicles.length === 0 ? (
                       <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                        <p className="text-xs sm:text-sm">{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
+                        <p className="text-xs sm:text-sm">
+                          {tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}
+                        </p>
                         <p className="text-xs mt-1">
                           {tMissions('myMissions.transporteur.apply.noVehiclesMessage')}
                         </p>
@@ -429,7 +443,9 @@ export default function MissionsTransporteurPage() {
             <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-base sm:text-lg">{tMissions('actions.start')}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">
+                    {tMissions('actions.start')}
+                  </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
