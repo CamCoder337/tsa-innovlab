@@ -51,8 +51,6 @@ export interface Mission extends Timestamps {
   isFlexibleRoute?: boolean;
   notesComplementaires?: string;
   documents?: string[];
-  dateDebutReelle?: string;
-  dateFinReelle?: string;
   ratingAffreteur?: number;
   commentaireAffreteur?: string;
   ratingTransporteur?: number;

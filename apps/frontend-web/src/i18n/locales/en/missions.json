@@ -34,7 +34,8 @@
     "estimatedDeparture": "Estimated departure",
     "expectedArrival": "Expected arrival",
     "additionalNotes": "Additional notes",
-    "documents": "Documents"
+    "documents": "Documents",
+    "vehicle": "Vehicle"
   },
   "timeline": {
     "title": "Timeline",

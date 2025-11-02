@@ -311,22 +311,22 @@ export default function OrdersManagement() {
 
         <TabsContent value="orders" className="space-y-6">
           {/* Filters and Actions */}
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-start lg:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 flex-1 w-full lg:w-auto">
+              <div className="relative flex-1 max-w-full sm:max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
                 <Input
                   placeholder={tAdmin('orders.filters.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-xs sm:text-sm"
                 />
               </div>
               <Select
                 value={statusFilter}
                 onValueChange={(value) => setStatusFilter(value as OrderStatus | 'all')}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48 text-xs sm:text-sm">
                   <SelectValue placeholder={tAdmin('orders.filters.filterByStatus')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -344,7 +344,7 @@ export default function OrdersManagement() {
                 value={paymentFilter}
                 onValueChange={(value) => setPaymentFilter(value as PaymentStatus | 'all')}
               >
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48 text-xs sm:text-sm">
                   <SelectValue placeholder={tAdmin('orders.filters.filterByPayment')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -356,32 +356,35 @@ export default function OrdersManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => fetchOrders()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {tCommon('actions.refresh')}
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+              <Button variant="outline" onClick={() => fetchOrders()} className="text-xs sm:text-sm">
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
+                <span className="sm:hidden">Actualiser</span>
               </Button>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                {tCommon('actions.export')}
+              <Button variant="outline" className="text-xs sm:text-sm">
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{tCommon('actions.export')}</span>
+                <span className="sm:hidden">Exporter</span>
               </Button>
             </div>
           </div>
 
           {/* Bulk Actions */}
           {selectedOrders.length > 0 && (
-            <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs sm:text-sm text-blue-700">
                 {tCommon('actions.bulkSelected', { count: selectedOrders.length })}
               </p>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleBulkAction('export')}>
+                <Button size="sm" variant="outline" onClick={() => handleBulkAction('export')} className="text-xs">
                   {tCommon('actions.export')}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleBulkAction('update_status')}
+                  className="text-xs"
                 >
                   {tCommon('actions.updateStatus')}
                 </Button>
@@ -392,197 +395,205 @@ export default function OrdersManagement() {
           {/* Orders Table */}
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <input
-                        type="checkbox"
-                        checked={
-                          selectedOrders.length === filteredOrders.length &&
-                          filteredOrders.length > 0
-                        }
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedOrders(filteredOrders.map((o) => o.id));
-                          } else {
-                            setSelectedOrders([]);
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8 sm:w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedOrders.length === filteredOrders.length &&
+                            filteredOrders.length > 0
                           }
-                        }}
-                      />
-                    </TableHead>
-                    <TableHead>{tAdmin('orders.table.number')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.client')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.date')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.amount')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.status')}</TableHead>
-                    <TableHead>{tAdmin('orders.table.payment')}</TableHead>
-                    <TableHead className="text-right">{tAdmin('orders.table.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((order) => (
-                    <Link to={`/app/shop/orders/${order.id}`}>
-                      <TableRow key={order.id}>
-                        <TableCell>
-                          <input
-                            type="checkbox"
-                            checked={selectedOrders.includes(order.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedOrders([...selectedOrders, order.id]);
-                              } else {
-                                setSelectedOrders(selectedOrders.filter((id) => id !== order.id));
-                              }
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {order.user?.firstName} {order.user?.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500">{order.user?.email}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{formatDate(order.createdAt!)}</TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(parseFloat(order.total))}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={`${getOrderStatusColor(order.status)} text-white`}
-                          >
-                            {getOrderStatusLabel(order.status)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
-                          >
-                            {order.paymentStatus === 'pending' && tCommon('status.pending')}
-                            {order.paymentStatus === 'completed' && tCommon('status.completed')}
-                            {order.paymentStatus === 'failed' && tCommon('status.failed')}
-                            {order.paymentStatus === 'refunded' && tCommon('status.refunded')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>{tCommon('actions.title')}</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => fetchOrder(order.id)}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                {tCommon('actions.viewDetails')}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id, OrderStatus.PROCESSING)}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markProcessing')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id, OrderStatus.SHIPPED)}
-                              >
-                                <Truck className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markShipped')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(order.id, OrderStatus.DELIVERED)}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                {tCommon('actions.markDelivered')}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    {tCommon('actions.cancelOrder')}
-                                  </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      {tAdmin('orders.dialog.cancelTitle')}
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      {tAdmin('orders.dialog.cancelDescription')}
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      {tAdmin('orders.dialog.cancel')}
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleCancelOrder(order.id)}>
-                                      {tAdmin('orders.dialog.confirmCancel')}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    </Link>
-                  ))}
-                </TableBody>
-              </Table>
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedOrders(filteredOrders.map((o) => o.id));
+                            } else {
+                              setSelectedOrders([]);
+                            }
+                          }}
+                          className="h-3 w-3 sm:h-4 sm:w-4"
+                        />
+                      </TableHead>
+                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.number')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden sm:table-cell">{tAdmin('orders.table.client')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">{tAdmin('orders.table.date')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.amount')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm">{tAdmin('orders.table.status')}</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden lg:table-cell">{tAdmin('orders.table.payment')}</TableHead>
+                      <TableHead className="text-right text-xs sm:text-sm">{tAdmin('orders.table.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOrders.map((order) => (
+                      <Link to={`/app/shop/orders/${order.id}`} key={order.id}>
+                        <TableRow>
+                          <TableCell>
+                            <input
+                              type="checkbox"
+                              checked={selectedOrders.includes(order.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOrders([...selectedOrders, order.id]);
+                                } else {
+                                  setSelectedOrders(selectedOrders.filter((id) => id !== order.id));
+                                }
+                              }}
+                              className="h-3 w-3 sm:h-4 sm:w-4"
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-xs sm:text-sm">{order.orderNumber}</TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <div>
+                              <p className="font-medium text-xs sm:text-sm truncate">
+                                {order.user?.firstName} {order.user?.lastName}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">{order.user?.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-xs sm:text-sm">{formatDate(order.createdAt!)}</TableCell>
+                          <TableCell className="font-medium text-xs sm:text-sm">
+                            {formatCurrency(parseFloat(order.total))}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={`${getOrderStatusColor(order.status)} text-white text-xs`}
+                            >
+                              {getOrderStatusLabel(order.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <Badge
+                              variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {order.paymentStatus === 'pending' && tCommon('status.pending')}
+                              {order.paymentStatus === 'completed' && tCommon('status.completed')}
+                              {order.paymentStatus === 'failed' && tCommon('status.failed')}
+                              {order.paymentStatus === 'refunded' && tCommon('status.refunded')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
+                                  <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel className="text-xs sm:text-sm">{tCommon('actions.title')}</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => fetchOrder(order.id)} className="text-xs sm:text-sm">
+                                  <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                  {tCommon('actions.viewDetails')}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.PROCESSING)}
+                                  className="text-xs sm:text-sm"
+                                >
+                                  <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                  {tCommon('actions.markProcessing')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.SHIPPED)}
+                                  className="text-xs sm:text-sm"
+                                >
+                                  <Truck className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                  {tCommon('actions.markShipped')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.DELIVERED)}
+                                  className="text-xs sm:text-sm"
+                                >
+                                  <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                  {tCommon('actions.markDelivered')}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-xs sm:text-sm">
+                                      <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                      {tCommon('actions.cancelOrder')}
+                                    </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle className="text-base sm:text-lg">
+                                        {tAdmin('orders.dialog.cancelTitle')}
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription className="text-xs sm:text-sm">
+                                        {tAdmin('orders.dialog.cancelDescription')}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel className="text-xs sm:text-sm">
+                                        {tAdmin('orders.dialog.cancel')}
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleCancelOrder(order.id)} className="text-xs sm:text-sm">
+                                        {tAdmin('orders.dialog.confirmCancel')}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      </Link>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
 
           {filteredOrders.length === 0 && (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">{tAdmin('orders.empty')}</p>
+            <div className="text-center py-6 sm:py-8">
+              <Package className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-gray-500 text-sm sm:text-base">{tAdmin('orders.empty')}</p>
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle>{tAdmin('orders.analytics.performanceMetrics')}</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">{tAdmin('orders.analytics.performanceMetrics')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">
                       {tAdmin('orders.analytics.conversionRate')}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium text-xs sm:text-sm flex-shrink-0">
                       {allStats.overview.stats?.conversion.total.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">
                       {tAdmin('orders.analytics.averageBasket')}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium text-xs sm:text-sm flex-shrink-0">
                       {formatCurrency(allStats.overview.stats?.averageBasket.total || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">
                       {tAdmin('orders.analytics.ordersToday')}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium text-xs sm:text-sm flex-shrink-0">
                       {allStats.overview.stats?.orders.byPeriod.today || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">
                       {tAdmin('orders.analytics.revenueThisMonth')}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium text-xs sm:text-sm flex-shrink-0">
                       {formatCurrency(allStats.overview.stats?.revenue.last30Days || 0)}
                     </span>
                   </div>
@@ -591,34 +602,34 @@ export default function OrdersManagement() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>{tAdmin('orders.analytics.topProducts')}</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">{tAdmin('orders.analytics.topProducts')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {allStats.overview.stats?.topProducts?.slice(0, 5).map((product, index) => (
                     <div
                       key={product.productId}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-tsa-blue">{index + 1}</span>
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs sm:text-sm font-medium text-tsa-blue">{index + 1}</span>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{product.productName}</p>
-                          <p className="text-xs text-gray-500">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs sm:text-sm truncate">{product.productName}</p>
+                          <p className="text-xs text-gray-500 truncate">
                             {product.quantitySold} {tAdmin('orders.analytics.sold')}
                           </p>
                         </div>
                       </div>
-                      <p className="font-medium">{formatCurrency(product.revenue)}</p>
+                      <p className="font-medium text-xs sm:text-sm flex-shrink-0">{formatCurrency(product.revenue)}</p>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-4">
-                      {tAdmin('orders.analytics.noDataAvailable')}
-                    </p>
-                  )}
+                      <p className="text-gray-500 text-center py-3 sm:py-4 text-xs sm:text-sm">
+                        {tAdmin('orders.analytics.noDataAvailable')}
+                      </p>
+                    )}
                 </div>
               </CardContent>
             </Card>

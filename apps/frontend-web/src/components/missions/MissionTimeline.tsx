@@ -120,35 +120,35 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   const getEventIcon = (event: TimelineEvent) => {
     switch (event.type) {
       case 'status_change':
-        return <Clock className="h-4 w-4 text-blue-500" />;
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
       case 'message':
-        return <MessageSquare className="h-4 w-4 text-green-500" />;
+        return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
       case 'document':
-        return <FileText className="h-4 w-4 text-purple-500" />;
+        return <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
       case 'note':
         return event.title.includes('évaluation') ? (
-          <CheckCircle className="h-4 w-4 text-yellow-500" />
+          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
         ) : (
-          <AlertTriangle className="h-4 w-4 text-orange-500" />
+          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
         );
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />;
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />;
     }
   };
 
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
             {tMissions('timeline.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="ml-2">{tCommon('loading')}</span>
+          <div className="flex items-center justify-center py-6 sm:py-8">
+            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
+            <span className="ml-2 text-xs sm:text-sm">{tCommon('loading')}</span>
           </div>
         </CardContent>
       </Card>
@@ -158,16 +158,16 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
             {tMissions('timeline.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-red-600">
-            <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-            <p>{error}</p>
+          <div className="text-center py-6 sm:py-8 text-red-600">
+            <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2" />
+            <p className="text-xs sm:text-sm">{error}</p>
           </div>
         </CardContent>
       </Card>
@@ -176,35 +176,35 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
           {tMissions('timeline.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">{tMissions('timeline.noEvents')}</p>
+          <p className="text-center text-gray-500 py-6 sm:py-8 text-xs sm:text-sm">{tMissions('timeline.noEvents')}</p>
         ) : (
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-6">
+          <ScrollArea className="h-[300px] sm:h-[400px] pr-2 sm:pr-4">
+            <div className="space-y-4 sm:space-y-6">
               {events.map((event) => (
                 <div
                   key={event.id}
-                  className="relative pb-6 pl-8 border-l-2 border-gray-200 dark:border-gray-700"
+                  className="relative pb-4 sm:pb-6 pl-6 sm:pl-8 border-l-2 border-gray-200 dark:border-gray-700"
                 >
-                  <div className="absolute -left-2.5 mt-1.5 h-4 w-4 rounded-full bg-tsa-blue/90 flex items-center justify-center">
+                  <div className="absolute -left-2 sm:-left-2.5 mt-1 sm:mt-1.5 h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-tsa-blue/90 flex items-center justify-center">
                     {getEventIcon(event)}
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">{event.title}</h4>
-                      <time className="text-xs text-muted-foreground">
+                  <div className="space-y-1 sm:space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                      <h4 className="text-xs sm:text-sm font-medium leading-tight">{event.title}</h4>
+                      <time className="text-xs text-muted-foreground flex-shrink-0">
                         {format(new Date(event.date), 'PPPp', { locale: fr })}
                       </time>
                     </div>
                     {event.description && (
-                      <p className="text-sm text-muted-foreground">{event.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{event.description}</p>
                     )}
                     {event.user && (
                       <p className="text-xs text-gray-500 mt-1">

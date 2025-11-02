@@ -139,8 +139,8 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
         {/* Search */}
         <div className="md:flex flex-col space-y-2 hidden">
           <h3 className="font-medium">{tCommon('actions.search')}</h3>
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-1 items-center justify-between border border-input">
+            <SearchIcon className="h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={tShop('filters.searchPlaceholder')}
               value={filters.search || ''}

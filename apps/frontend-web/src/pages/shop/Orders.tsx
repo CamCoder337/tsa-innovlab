@@ -127,59 +127,60 @@ export default function OrdersPage() {
 
   if (isLoading && !error) {
     return (
-      <main className="flex items-center justify-center mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+      <main className="flex items-center justify-center mx-auto max-w-4xl px-3 sm:px-4 lg:px-8 py-6 sm:py-10">
         <div className="flex items-center justify-center">
-          <Loader className="h-8 w-8 animate-spin" />
+          <Loader className="h-6 w-6 sm:h-8 sm:w-8 animate-spin" />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-col flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="flex flex-col flex-1 max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">{tShop('orders.title')}</h1>
-            <p className="text-zinc-600 mt-1">{tShop('orders.subtitle')}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900">{tShop('orders.title')}</h1>
+            <p className="text-sm sm:text-base text-zinc-600 mt-1">{tShop('orders.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               onClick={handleRefresh}
               disabled={isLoading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm w-full sm:w-auto"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              {tShop('orders.refresh')}
+              <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{tShop('orders.refresh')}</span>
+              <span className="sm:hidden">Actualiser</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+      <Card className="mb-4 sm:mb-6">
+        <CardContent className="pt-4 sm:pt-6">
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-zinc-400" />
                 <Input
                   placeholder={tShop('orders.search.placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm"
                 />
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <Select
                 value={statusFilter}
                 onValueChange={(value) => setStatusFilter(value as OrderStatus | 'all')}
               >
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-full sm:w-40 lg:w-48 text-xs sm:text-sm">
+                  <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <SelectValue placeholder={tShop('orders.search.filterByStatus')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,7 +188,7 @@ export default function OrdersPage() {
                   {Object.entries(statusConfig).map(([status, config]) => (
                     <SelectItem key={status} value={status}>
                       <div className="flex items-center gap-2">
-                        <config.icon className="h-4 w-4" />
+                        <config.icon className="h-3 w-3 sm:h-4 sm:w-4" />
                         {config.label}
                       </div>
                     </SelectItem>
@@ -205,7 +206,7 @@ export default function OrdersPage() {
                   setSortOrder(newSortOrder);
                 }}
               >
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-40 lg:w-48 text-xs sm:text-sm">
                   <SelectValue placeholder={tShop('orders.search.sortBy')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -223,8 +224,8 @@ export default function OrdersPage() {
 
       {/* Results Summary */}
       {filteredAndSortedOrders.length > 0 && (
-        <div className="mb-6">
-          <p className="text-sm text-zinc-600">
+        <div className="mb-4 sm:mb-6">
+          <p className="text-xs sm:text-sm text-zinc-600">
             {filteredAndSortedOrders.length === 1
               ? tShop('orders.results.found', { count: filteredAndSortedOrders.length })
               : tShop('orders.results.foundPlural', { count: filteredAndSortedOrders.length })}
@@ -238,27 +239,27 @@ export default function OrdersPage() {
       {/* Orders List */}
       {filteredAndSortedOrders.length === 0 ? (
         <Card>
-          <CardContent className="text-center py-16">
-            <Package className="h-16 w-16 text-zinc-300 mx-auto mb-6" />
-            <h3 className="text-xl font-semibold text-zinc-900 mb-2">
+          <CardContent className="text-center py-12 sm:py-16">
+            <Package className="h-12 w-12 sm:h-16 sm:w-16 text-zinc-300 mx-auto mb-4 sm:mb-6" />
+            <h3 className="text-lg sm:text-xl font-semibold text-zinc-900 mb-2">
               {orders.length === 0
                 ? tShop('orders.empty.noOrders')
                 : tShop('orders.empty.noResults')}
             </h3>
-            <p className="text-zinc-600 mb-6 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-zinc-600 mb-4 sm:mb-6 max-w-md mx-auto">
               {orders.length === 0
                 ? tShop('orders.empty.noOrdersMessage')
                 : tShop('orders.empty.noResultsMessage')}
             </p>
             {orders.length === 0 && (
-              <Button asChild className="bg-green-600 hover:bg-green-700">
+              <Button asChild className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
                 <Link to="/app/shop">{tShop('orders.empty.discoverProducts')}</Link>
               </Button>
             )}
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {filteredAndSortedOrders.map((order) => {
             const statusInfo = statusConfig[order.status];
             const StatusIcon = statusInfo.icon;
@@ -266,30 +267,32 @@ export default function OrdersPage() {
             return (
               <Card key={order.id} className="hover:shadow-md transition-shadow duration-200">
                 <Link to={`/app/shop/order/${order.id}`} className="block">
-                  <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-lg font-semibold">
+                  <CardHeader className="pb-3 sm:pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                          <CardTitle className="text-base sm:text-lg font-semibold truncate">
                             {tShop('orders.orderItem.number', { number: order.orderNumber })}
                           </CardTitle>
                           <Badge
-                            className={`${statusInfo.color} border flex items-center gap-1.5 px-2.5 py-1`}
+                            className={`${statusInfo.color} border flex items-center gap-1.5 px-2 py-1 text-xs w-fit`}
                           >
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {statusInfo.label}
+                            <StatusIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                            <span className="truncate">{statusInfo.label}</span>
                           </Badge>
                         </div>
-                        <CardDescription className="flex flex-wrap items-center gap-4 text-sm">
+                        <CardDescription className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                           <span className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4" />
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                            <span className="truncate">
+                              {order.createdAt
+                                ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
                                   day: 'numeric',
                                   month: 'long',
                                   year: 'numeric',
                                 })
-                              : 'N/A'}
+                                : 'N/A'}
+                            </span>
                           </span>
                           <span className="font-semibold text-zinc-900">
                             {parseFloat(order.total).toLocaleString('fr-FR')} FCFA
@@ -299,8 +302,8 @@ export default function OrdersPage() {
                               {order.items.length === 1
                                 ? tShop('orders.orderItem.items', { count: order.items.length })
                                 : tShop('orders.orderItem.itemsPlural', {
-                                    count: order.items.length,
-                                  })}
+                                  count: order.items.length,
+                                })}
                             </span>
                           )}
                         </CardDescription>
@@ -312,30 +315,30 @@ export default function OrdersPage() {
                     {/* Order Items Preview */}
                     {order.items && order.items.length > 0 && (
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm text-zinc-600 border-t pt-4">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-zinc-600 border-t pt-3 sm:pt-4">
                           <span>{tShop('orders.orderItem.orderedItems')}</span>
                         </div>
                         <div className="space-y-2">
                           {order.items.slice(0, 2).map((item) => (
                             <div
                               key={item.id}
-                              className="flex items-center justify-between text-sm"
+                              className="flex items-center justify-between text-xs sm:text-sm gap-3"
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                 {item.productImageUrl && (
                                   <img
                                     src={item.productImageUrl}
                                     alt={item.productName || 'Product'}
-                                    className="h-10 w-10 rounded-md object-cover border"
+                                    className="h-8 w-8 sm:h-10 sm:w-10 rounded-md object-cover border flex-shrink-0"
                                   />
                                 )}
-                                <div>
-                                  <p className="font-medium text-zinc-900">{item.productName}</p>
-                                  <p className="text-zinc-500 text-xs">{item.productReference}</p>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-zinc-900 truncate">{item.productName}</p>
+                                  <p className="text-zinc-500 text-xs truncate">{item.productReference}</p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-medium">
+                              <div className="text-right flex-shrink-0">
+                                <p className="font-medium text-xs sm:text-sm">
                                   {item.quantity} ×{' '}
                                   {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
                                 </p>
@@ -349,11 +352,11 @@ export default function OrdersPage() {
                             <p className="text-xs text-zinc-500 text-center py-2">
                               {order.items.length - 2 === 1
                                 ? tShop('orders.orderItem.moreItems', {
-                                    count: order.items.length - 2,
-                                  })
+                                  count: order.items.length - 2,
+                                })
                                 : tShop('orders.orderItem.moreItemsPlural', {
-                                    count: order.items.length - 2,
-                                  })}
+                                  count: order.items.length - 2,
+                                })}
                             </p>
                           )}
                         </div>
@@ -362,27 +365,23 @@ export default function OrdersPage() {
 
                     {/* Delivery Status */}
                     {(order.deliveredAt || order.shippedAt || order.trackingNumber) && (
-                      <div className="flex items-center gap-2 text-sm text-zinc-600 mt-4 pt-4 border-t">
-                        <MapPin className="h-4 w-4" />
-                        {order.deliveredAt ? (
-                          <span>
-                            {tShop('orders.orderItem.deliveredOn', {
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-600 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="truncate">
+                          {order.deliveredAt ? (
+                            tShop('orders.orderItem.deliveredOn', {
                               date: new Date(order.deliveredAt).toLocaleDateString('fr-FR'),
-                            })}
-                          </span>
-                        ) : order.shippedAt ? (
-                          <span>
-                            {tShop('orders.orderItem.shippedOn', {
+                            })
+                          ) : order.shippedAt ? (
+                            tShop('orders.orderItem.shippedOn', {
                               date: new Date(order.shippedAt).toLocaleDateString('fr-FR'),
-                            })}
-                          </span>
-                        ) : order.trackingNumber ? (
-                          <span>
-                            {tShop('orders.orderItem.trackingNumber', {
+                            })
+                          ) : order.trackingNumber ? (
+                            tShop('orders.orderItem.trackingNumber', {
                               number: order.trackingNumber,
-                            })}
-                          </span>
-                        ) : null}
+                            })
+                          ) : null}
+                        </span>
                       </div>
                     )}
                   </CardContent>

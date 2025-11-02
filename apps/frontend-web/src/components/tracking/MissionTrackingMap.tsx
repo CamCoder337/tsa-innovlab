@@ -342,13 +342,13 @@ export default function MissionTrackingMap({
   if (error) {
     return (
       <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
-        <div className="text-center p-8">
-          <AlertTriangle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('map.errorLoadingMap')}</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+        <div className="text-center p-4 sm:p-8">
+          <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto text-red-500 mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{t('map.errorLoadingMap')}</h3>
+          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}
-            className="px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors"
+            className="px-3 sm:px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
           >
             {t('map.retry')}
           </button>
@@ -361,12 +361,12 @@ export default function MissionTrackingMap({
   if (missions.length === 0) {
     return (
       <div className={`flex items-center justify-center bg-gray-50 rounded-lg ${className}`}>
-        <div className="text-center p-8">
-          <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <div className="text-center p-4 sm:p-8">
+          <Package className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto text-gray-400 mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
             {t('map.noMissionsToDisplay')}
           </h3>
-          <p className="text-gray-600">{t('map.noMissionsMessage')}</p>
+          <p className="text-sm sm:text-base text-gray-600">{t('map.noMissionsMessage')}</p>
         </div>
       </div>
     );
@@ -377,8 +377,8 @@ export default function MissionTrackingMap({
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('map.loadingMap')}</p>
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-3 sm:mb-4"></div>
+            <p className="text-gray-600 text-sm sm:text-base">{t('map.loadingMap')}</p>
           </div>
         </div>
       )}
@@ -386,14 +386,14 @@ export default function MissionTrackingMap({
       <div ref={mapRef} className="w-full h-full rounded-lg" style={{ minHeight: '400px' }} />
 
       {/* Informations missions */}
-      <div className="absolute top-4 right-4 space-y-2 max-w-xs">
+      <div className="absolute top-2 sm:top-4 right-2 sm:right-4 space-y-2 max-w-xs">
         <Card className="bg-white/95 backdrop-blur">
-          <CardContent className="p-3">
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
-              <Package className="w-4 h-4" />
+          <CardContent className="p-2 sm:p-3">
+            <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+              <Package className="w-3 h-3 sm:w-4 sm:h-4" />
               {t('map.missions')}
             </h4>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               <p>{t('map.totalMissions', { count: missions.length })}</p>
               <p>
                 {t('map.assignedMissions', {
@@ -407,12 +407,13 @@ export default function MissionTrackingMap({
         {/* ETA Information for selected mission */}
         {selectedMission && routeInfo.has(selectedMission.id) && (
           <Card className="bg-white/95 backdrop-blur">
-            <CardContent className="p-3">
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-500" />
-                Informations de trajet
+            <CardContent className="p-2 sm:p-3">
+              <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                <span className="hidden sm:inline">Informations de trajet</span>
+                <span className="sm:hidden">Trajet</span>
               </h4>
-              <div className="text-sm space-y-1">
+              <div className="text-xs sm:text-sm space-y-1">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Distance:</span>
                   <span className="font-medium">
@@ -443,11 +444,11 @@ export default function MissionTrackingMap({
         {/* Indicateur de position utilisateur */}
         {showUserLocation && userPosition && (
           <Card className="bg-white/95 backdrop-blur">
-            <CardContent className="p-3">
+            <CardContent className="p-2 sm:p-3">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-green-500" />
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                 <div>
-                  <p className="text-sm font-medium">{t('map.detectedPosition')}</p>
+                  <p className="text-xs sm:text-sm font-medium">{t('map.detectedPosition')}</p>
                   <p className="text-xs text-gray-600">±{Math.round(userPosition.accuracy)}m</p>
                 </div>
               </div>
