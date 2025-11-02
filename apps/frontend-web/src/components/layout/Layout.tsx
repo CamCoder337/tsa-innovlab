@@ -67,9 +67,7 @@ export default function Layout() {
           {/* MAIN CONTENT - TAKES REMAINING HEIGHT */}
           <main className="flex flex-1 overflow-hidden">
             {/* SIDEBAR */}
-            <aside className="flex-shrink-0 overflow-y-auto border-r bg-white">
-              <Sidebar />
-            </aside>
+            <Sidebar />
 
             {/* OUTLET CONTENT - FULL HEIGHT & WIDTH */}
             <section className="flex flex-1 overflow-y-auto bg-gray-50">

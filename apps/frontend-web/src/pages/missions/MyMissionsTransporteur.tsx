@@ -32,7 +32,6 @@ import {
 } from '@/hooks/useTranslation';
 import { useSearchParams } from 'react-router-dom';
 import { useMissionStore } from '@/stores/missionStore';
-// import { Calendar } from '@/components/ui/calendar';
 
 export default function MissionsTransporteurPage() {
   const {
@@ -136,27 +135,27 @@ export default function MissionsTransporteurPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-6">
-      <div className="flex-1 p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="flex flex-1 flex-col bg-gray-50 p-3 sm:p-4 lg:p-6">
+      <div className="flex-1 p-3 sm:p-4 lg:p-6">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             {tMissions('myMissions.transporteur.title')}
           </h1>
-          <p className="text-gray-600">{tMissions('myMissions.transporteur.subtitle')}</p>
+          <p className="text-gray-600 text-sm sm:text-base">{tMissions('myMissions.transporteur.subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-tsa-blue" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {tMissions('myMissions.transporteur.stats.availableMissions')}
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg sm:text-2xl font-bold">
                     {missions.filter((m) => m.status === 'published').length}
                   </p>
                 </div>
@@ -164,16 +163,16 @@ export default function MissionsTransporteurPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Truck className="h-5 w-5 text-yellow-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {tMissions('myMissions.transporteur.stats.activeMissions')}
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg sm:text-2xl font-bold">
                     {
                       myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status))
                         .length
@@ -184,16 +183,16 @@ export default function MissionsTransporteurPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {tMissions('myMissions.transporteur.stats.completedMissions')}
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg sm:text-2xl font-bold">
                     {myMissions.filter((m) => m.status === 'completed').length}
                   </p>
                 </div>
@@ -201,25 +200,25 @@ export default function MissionsTransporteurPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-purple-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {tMissions('myMissions.transporteur.stats.potentialRevenue')}
                   </p>
-                  <p className="text-2xl font-bold">0 FCFA</p>
+                  <p className="text-lg sm:text-2xl font-bold">0 FCFA</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
+        <Card className="mb-4 sm:mb-6">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -232,7 +231,7 @@ export default function MissionsTransporteurPage() {
                 </div>
               </div>
               <Select value={filterOrigin} onValueChange={setFilterOrigin}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue
                     placeholder={tMissions('myMissions.transporteur.search.filterOrigin')}
                   />
@@ -253,7 +252,7 @@ export default function MissionsTransporteurPage() {
                 </SelectContent>
               </Select>
               <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger className="w-full lg:w-48">
                   <SelectValue
                     placeholder={tMissions('myMissions.transporteur.search.filterUrgency')}
                   />
@@ -278,25 +277,25 @@ export default function MissionsTransporteurPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+          <CardHeader className="pb-3 sm:pb-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
               {tMissions('myMissions.transporteur.transportMissions')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="available">{tCommon('status.available')}</TabsTrigger>
-                <TabsTrigger value="active">{tCommon('status.active')}</TabsTrigger>
-                <TabsTrigger value="completed">{tCommon('status.completed')}</TabsTrigger>
-                <TabsTrigger value="all">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 sm:mb-6">
+                <TabsTrigger value="available" className="text-xs sm:text-sm">{tCommon('status.available')}</TabsTrigger>
+                <TabsTrigger value="active" className="text-xs sm:text-sm">{tCommon('status.active')}</TabsTrigger>
+                <TabsTrigger value="completed" className="text-xs sm:text-sm">{tCommon('status.completed')}</TabsTrigger>
+                <TabsTrigger value="all" className="text-xs sm:text-sm">
                   {tMissions('myMissions.transporteur.tabs.all')}
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value={activeTab} className="mt-6">
-                <div className="space-y-4">
+              <TabsContent value={activeTab} className="mt-4 sm:mt-6">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredMissions.map((mission: Mission) => (
                     <MissionCard
                       key={mission.id}
@@ -314,12 +313,12 @@ export default function MissionsTransporteurPage() {
                 </div>
 
                 {filteredMissions.length === 0 && (
-                  <div className="text-center py-12">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <div className="text-center py-8 sm:py-12">
+                    <Package className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                       {tMissions('myMissions.transporteur.emptyStates.noMissions')}
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 text-sm sm:text-base">
                       {tMissions('myMissions.transporteur.emptyStates.noMatchingCriteria')}
                     </p>
                   </div>
@@ -338,23 +337,23 @@ export default function MissionsTransporteurPage() {
                 setIsApplyDialogOpen(open);
               }}
             >
-              <DialogContent>
+              <DialogContent className="sm:max-w-md">
                 <DialogDescription className="hidden">
                   {tMissions('myMissions.transporteur.apply.dialogDescription')}
                 </DialogDescription>
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">
                     {tMissions('myMissions.transporteur.apply.dialogTitle')}
                   </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4">
                   {currentMission && (
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900">{currentMission.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{currentMission.description}</p>
+                    <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-medium text-gray-900 text-sm sm:text-base">{currentMission.title}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">{currentMission.description}</p>
                       {currentMission.requiredVehicleType && (
-                        <p className="text-sm text-tsa-blue mt-2">
+                        <p className="text-xs sm:text-sm text-tsa-blue mt-2">
                           {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                           {VehicleTypeLabels[currentMission.requiredVehicleType]}
                         </p>
@@ -363,20 +362,20 @@ export default function MissionsTransporteurPage() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       {tMissions('myMissions.transporteur.apply.selectVehicle')}
                     </label>
                     {vehiclesLoading ? (
                       <div className="flex items-center justify-center p-4">
                         <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="ml-2 text-gray-600">
+                        <span className="ml-2 text-gray-600 text-xs sm:text-sm">
                           {tMissions('myMissions.transporteur.apply.loadingVehicles')}
                         </span>
                       </div>
                     ) : availableVehicles.length === 0 ? (
                       <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                        <p>{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
-                        <p className="text-sm mt-1">
+                        <p className="text-xs sm:text-sm">{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
+                        <p className="text-xs mt-1">
                           {tMissions('myMissions.transporteur.apply.noVehiclesMessage')}
                         </p>
                       </div>
@@ -391,8 +390,8 @@ export default function MissionsTransporteurPage() {
                           {availableVehicles.map((vehicle) => (
                             <SelectItem key={vehicle.id} value={vehicle.id}>
                               <div className="flex items-center gap-2">
-                                <span>{vehicle.registration}</span>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-xs sm:text-sm">{vehicle.registration}</span>
+                                <span className="text-xs text-gray-500">
                                   ({VehicleTypeLabels[vehicle.type]})
                                 </span>
                               </div>
@@ -403,9 +402,10 @@ export default function MissionsTransporteurPage() {
                     )}
                   </div>
 
-                  <div className="flex justify-end space-x-3 pt-4">
+                  <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
                     <Button
                       variant="outline"
+                      className="w-full sm:w-auto"
                       onClick={() => {
                         setIsApplyDialogOpen(false);
                         setSelectedVehicleId('');
@@ -414,6 +414,7 @@ export default function MissionsTransporteurPage() {
                       {tCommon('actions.cancel')}
                     </Button>
                     <Button
+                      className="w-full sm:w-auto"
                       onClick={applyForMission}
                       disabled={!selectedVehicleId || availableVehicles.length === 0}
                     >
@@ -426,27 +427,33 @@ export default function MissionsTransporteurPage() {
 
             {/* Mission Start Dialog */}
             <Dialog open={isStartDialogOpen} onOpenChange={setIsStartDialogOpen}>
-              <DialogContent>
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>{tMissions('actions.start')}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">{tMissions('actions.start')}</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                  <p>
+                  <p className="text-sm sm:text-base">
                     {tCommon('actions.warning.confirmAction')}{' '}
                     {tMissions('actions.start').toLowerCase()} ?
                   </p>
                 </div>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
                   <Button
                     variant="outline"
+                    className="w-full sm:w-auto"
                     onClick={() => setIsStartDialogOpen(false)}
                     disabled={isLoading}
                   >
                     {tCommon('actions.cancel')}
                   </Button>
-                  <Button variant="default" onClick={startMission} disabled={isLoading}>
+                  <Button
+                    variant="default"
+                    className="w-full sm:w-auto"
+                    onClick={startMission}
+                    disabled={isLoading}
+                  >
                     {isLoading ? tCommon('messages.processing') : tCommon('actions.confirm')}
                   </Button>
                 </div>

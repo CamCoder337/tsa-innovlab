@@ -89,12 +89,12 @@ export default function CreateMission() {
   );
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="flex-1 max-w-4xl mx-auto p-3 sm:p-4 lg:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           {currentMission ? tMissions('create.editTitle') : tMissions('create.title')}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 text-sm sm:text-base">
           {currentMission ? tMissions('create.editSubtitle') : tMissions('create.subtitle')}
         </p>
       </div>

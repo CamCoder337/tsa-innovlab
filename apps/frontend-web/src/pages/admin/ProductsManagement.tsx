@@ -458,40 +458,40 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-6">
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAdmin('products.title')}</h1>
-            <p className="text-gray-600">{tAdmin('products.subtitle')}</p>
+    <div className="flex flex-1 flex-col bg-gray-50 p-3 sm:p-4 lg:p-6">
+      <div className="flex-1 p-3 sm:p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">{tAdmin('products.title')}</h1>
+            <p className="text-sm sm:text-base text-gray-600 truncate">{tAdmin('products.subtitle')}</p>
           </div>
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-tsa-blue" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">{tAdmin('products.totalProducts')}</p>
-                  <p className="text-2xl font-bold">{stats?.products?.total || products?.length}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.totalProducts')}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{stats?.products?.total || products?.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">{tCommon('status.active')}</p>
-                  <p className="text-2xl font-bold">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tCommon('status.active')}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
                     {stats?.products?.active ||
                       products?.filter((product) => product.isActive).length}
                   </p>
@@ -501,28 +501,28 @@ export default function AdminProductsPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">{tAdmin('products.lowStock')}</p>
-                  <p className="text-2xl font-bold">{stats?.products?.lowStock || 0}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.lowStock')}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">{stats?.products?.lowStock || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">{tAdmin('products.totalRevenue')}</p>
-                  <p className="text-2xl font-bold">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{tAdmin('products.totalRevenue')}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
                     {((stats?.inventory?.totalValue || 0) / 1000000).toFixed(1)}M || 0
                   </p>
                 </div>
@@ -533,134 +533,146 @@ export default function AdminProductsPage() {
 
         {/* Onglets */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="products">
-              {tAdmin('products.productsTab', {
-                count: stats?.products?.total || products?.length,
-              })}
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+            <TabsTrigger value="products" className="text-xs sm:text-sm truncate">
+              <span className="hidden sm:inline">
+                {tAdmin('products.productsTab', {
+                  count: stats?.products?.total || products?.length,
+                })}
+              </span>
+              <span className="sm:hidden">Produits ({stats?.products?.total || products?.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="categories">
-              {tAdmin('products.categoriesTab', { count: categories.length })}
+            <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
+              <span className="hidden sm:inline">
+                {tAdmin('products.categoriesTab', { count: categories.length })}
+              </span>
+              <span className="sm:hidden">Catégories ({categories.length})</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
             {/* Filtres et recherche */}
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex flex-row gap-4">
+            <Card className="mb-4 sm:mb-6">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                     <Input
                       placeholder={tAdmin('products.searchPlaceholder')}
                       value={filters.search}
                       onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                      className="pl-10"
+                      className="pl-8 sm:pl-10 text-xs sm:text-sm"
                     />
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-fit justify-start">
-                        <Filter className="mr-2 h-4 w-4" />
-                        {filters.categoryId?.length ? (
-                          <span>
-                            {tAdmin('products.categoriesSelected', {
-                              count: filters.categoryId.length,
-                            })}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full sm:w-fit justify-start text-xs sm:text-sm">
+                          <Filter className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {filters.categoryId?.length ? (
+                              <span>
+                                {tAdmin('products.categoriesSelected', {
+                                  count: filters.categoryId.length,
+                                })}
+                              </span>
+                            ) : (
+                              <span className="hidden sm:inline">{tAdmin('products.filterByCategories')}</span>
+                            )}
+                            <span className="sm:hidden">Catégories</span>
                           </span>
-                        ) : (
-                          <span>{tAdmin('products.filterByCategories')}</span>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>{tAdmin('products.filterByCategories')}</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem
-                        checked={filters.categoryId?.length === 0}
-                        onCheckedChange={() => setFilters((prev) => ({ ...prev, categoryId: [] }))}
-                      >
-                        {tAdmin('products.allCategories')}
-                      </DropdownMenuCheckboxItem>
-                      {categories?.map((category) => (
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>{tAdmin('products.filterByCategories')}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
                         <DropdownMenuCheckboxItem
-                          key={category.id}
-                          checked={filters.categoryId?.includes(category.id)}
-                          onCheckedChange={(checked) => {
-                            setFilters((prev) => {
-                              const currentCategoryIds = Array.isArray(prev.categoryId)
-                                ? prev.categoryId
-                                : prev.categoryId
-                                  ? [prev.categoryId]
-                                  : [];
-
-                              return {
-                                ...prev,
-                                categoryId: checked
-                                  ? [...currentCategoryIds, category.id]
-                                  : currentCategoryIds.filter((id) => id !== category.id),
-                              };
-                            });
-                          }}
+                          checked={filters.categoryId?.length === 0}
+                          onCheckedChange={() => setFilters((prev) => ({ ...prev, categoryId: [] }))}
                         >
-                          {category.name}
+                          {tAdmin('products.allCategories')}
                         </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        {categories?.map((category) => (
+                          <DropdownMenuCheckboxItem
+                            key={category.id}
+                            checked={filters.categoryId?.includes(category.id)}
+                            onCheckedChange={(checked) => {
+                              setFilters((prev) => {
+                                const currentCategoryIds = Array.isArray(prev.categoryId)
+                                  ? prev.categoryId
+                                  : prev.categoryId
+                                    ? [prev.categoryId]
+                                    : [];
 
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) => {
-                      setStatusFilter(value);
-                      switch (value) {
-                        case 'all':
-                          setFilters((prev) => ({
-                            ...prev,
-                            isActive: undefined,
-                            inStock: true,
-                            lowStock: false,
-                          }));
-                          break;
-                        case 'active':
-                          setFilters((prev) => ({ ...prev, isActive: true }));
-                          break;
-                        case 'inactive':
-                          setFilters((prev) => ({ ...prev, isActive: false }));
-                          break;
-                        case 'low_stock':
-                          setFilters((prev) => ({ ...prev, lowStock: true }));
-                          break;
-                        case 'out_of_stock':
-                          setFilters((prev) => ({ ...prev, inStock: false }));
-                          break;
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder={tAdmin('products.filterByStatus')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{tAdmin('products.allStatuses')}</SelectItem>
-                      <SelectItem value="active">{tCommon('status.active')}</SelectItem>
-                      <SelectItem value="inactive">{tCommon('status.inactive')}</SelectItem>
-                      <SelectItem value="low_stock">{tAdmin('products.lowStock')}</SelectItem>
-                      <SelectItem value="out_of_stock">{tAdmin('products.outOfStock')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                                return {
+                                  ...prev,
+                                  categoryId: checked
+                                    ? [...currentCategoryIds, category.id]
+                                    : currentCategoryIds.filter((id) => id !== category.id),
+                                };
+                              });
+                            }}
+                          >
+                            {category.name}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                  <Button
-                    className="gap-2 bg-tsa-blue"
-                    onClick={() => {
-                      setEditingProduct(null);
-                      productFormik.resetForm();
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    {tAdmin('products.addProduct')}
-                  </Button>
+                    <Select
+                      value={statusFilter}
+                      onValueChange={(value) => {
+                        setStatusFilter(value);
+                        switch (value) {
+                          case 'all':
+                            setFilters((prev) => ({
+                              ...prev,
+                              isActive: undefined,
+                              inStock: true,
+                              lowStock: false,
+                            }));
+                            break;
+                          case 'active':
+                            setFilters((prev) => ({ ...prev, isActive: true }));
+                            break;
+                          case 'inactive':
+                            setFilters((prev) => ({ ...prev, isActive: false }));
+                            break;
+                          case 'low_stock':
+                            setFilters((prev) => ({ ...prev, lowStock: true }));
+                            break;
+                          case 'out_of_stock':
+                            setFilters((prev) => ({ ...prev, inStock: false }));
+                            break;
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-48 text-xs sm:text-sm">
+                        <SelectValue placeholder={tAdmin('products.filterByStatus')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{tAdmin('products.allStatuses')}</SelectItem>
+                        <SelectItem value="active">{tCommon('status.active')}</SelectItem>
+                        <SelectItem value="inactive">{tCommon('status.inactive')}</SelectItem>
+                        <SelectItem value="low_stock">{tAdmin('products.lowStock')}</SelectItem>
+                        <SelectItem value="out_of_stock">{tAdmin('products.outOfStock')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button
+                      className="gap-1 sm:gap-2 bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto"
+                      onClick={() => {
+                        setEditingProduct(null);
+                        productFormik.resetForm();
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span className="hidden sm:inline">{tAdmin('products.addProduct')}</span>
+                      <span className="sm:hidden">Ajouter</span>
+                    </Button>
+                  </div>
 
                   <Sheet
                     open={isDialogOpen}
@@ -672,14 +684,14 @@ export default function AdminProductsPage() {
                       setIsDialogOpen(open);
                     }}
                   >
-                    <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
+                    <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
                       <SheetHeader>
-                        <SheetTitle>
+                        <SheetTitle className="text-base sm:text-lg">
                           {editingProduct
                             ? tAdmin('products.editProduct')
                             : tAdmin('products.addProduct')}
                         </SheetTitle>
-                        <SheetDescription>
+                        <SheetDescription className="text-xs sm:text-sm">
                           {editingProduct
                             ? tAdmin('products.editProductDescription')
                             : tAdmin('products.addProductDescription')}
@@ -705,22 +717,22 @@ export default function AdminProductsPage() {
 
             {/* Liste des produits */}
             <Card>
-              <CardHeader>
-                <CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
                   {tAdmin('products.catalogTitle', { count: filteredProducts.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredProducts.map((product) => {
                     const isLowStock = product.stock > 0 && product.stock <= product.stockAlert;
                     return (
                       <div
                         key={product.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
                             {product.imageUrl ? (
                               <img
                                 src={product.imageUrl || product.images[0]}
@@ -728,18 +740,18 @@ export default function AdminProductsPage() {
                                 className="w-full h-full object-cover rounded-md"
                               />
                             ) : (
-                              <Package className="h-6 w-6 text-gray-400" />
+                              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="font-medium truncate">{product.name}</h3>
-                            <p className="text-sm text-gray-500 truncate">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-sm sm:text-base truncate">{product.name}</h3>
+                            <p className="text-xs sm:text-sm text-gray-500 truncate">
                               {product.description || tAdmin('products.noDescription')}
                             </p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 flex-wrap">
                               <Badge
                                 variant={product.isActive ? 'default' : 'secondary'}
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap text-xs"
                               >
                                 {product.isActive
                                   ? tCommon('status.active')
@@ -747,29 +759,30 @@ export default function AdminProductsPage() {
                               </Badge>
                               <Badge
                                 variant={isLowStock ? 'destructive' : 'outline'}
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap text-xs"
                               >
                                 {tAdmin('products.inStockCount', { count: product.stock })}
                               </Badge>
                               {product.category && (
-                                <Badge variant="secondary" className="whitespace-nowrap">
+                                <Badge variant="secondary" className="whitespace-nowrap text-xs">
                                   {product.category.name}
                                 </Badge>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-bold text-lg">
+
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                          <div className="text-center sm:text-right">
+                            <p className="font-bold text-base sm:text-lg">
                               {parseFloat(product.price).toLocaleString()} FCFA
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className={`gap-1 ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
+                              className={`gap-1 text-xs ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                               onClick={async () => {
                                 try {
                                   await updateProduct(product.id, {
@@ -790,24 +803,27 @@ export default function AdminProductsPage() {
                               ) : (
                                 <Eye className="h-3 w-3" />
                               )}
+                              <span className="hidden sm:inline">
+                                {product.isActive ? 'Masquer' : 'Afficher'}
+                              </span>
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="gap-1 bg-transparent"
+                              className="gap-1 bg-transparent text-xs"
                               onClick={() => handleEditProduct(product)}
                             >
                               <Edit className="h-3 w-3" />
-                              {tCommon('actions.edit')}
+                              <span className="hidden sm:inline">{tCommon('actions.edit')}</span>
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-red-600 hover:text-red-700 gap-1 bg-transparent"
+                              className="gap-1 text-red-600 hover:text-red-700 bg-transparent text-xs"
                               onClick={() => handleDeleteProduct(product.id)}
                             >
                               <Trash2 className="h-3 w-3" />
-                              {tCommon('actions.delete')}
+                              <span className="hidden sm:inline">{tCommon('actions.delete')}</span>
                             </Button>
                           </div>
                         </div>
@@ -817,28 +833,29 @@ export default function AdminProductsPage() {
                 </div>
 
                 {filteredProducts.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">{tAdmin('products.noProductsFound')}</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-500 text-sm sm:text-base">{tAdmin('products.noProductsFound')}</p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="categories" className="mt-6">
+          <TabsContent value="categories" className="mt-4 sm:mt-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{tAdmin('products.categoryManagement')}</CardTitle>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">{tAdmin('products.categoryManagement')}</CardTitle>
                 <Button
-                  className="gap-2 bg-tsa-blue"
+                  className="gap-1 sm:gap-2 bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto"
                   onClick={() => {
                     setEditingCategory(null);
                     categoryFormik.resetForm();
                     setIsDialogOpen(true);
                   }}
                 >
-                  <Plus className="h-4 w-4" />
-                  {tAdmin('products.addCategory')}
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{tAdmin('products.addCategory')}</span>
+                  <span className="sm:hidden">Ajouter</span>
                 </Button>
                 <Sheet
                   open={isDialogOpen}
@@ -850,14 +867,14 @@ export default function AdminProductsPage() {
                     setIsDialogOpen(open);
                   }}
                 >
-                  <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
+                  <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
                     <SheetHeader>
-                      <SheetTitle>
+                      <SheetTitle className="text-base sm:text-lg">
                         {editingCategory
                           ? tAdmin('products.editCategory')
                           : tAdmin('products.addCategory')}
                       </SheetTitle>
-                      <SheetDescription>
+                      <SheetDescription className="text-xs sm:text-sm">
                         {editingCategory
                           ? tAdmin('products.editCategoryDescription')
                           : tAdmin('products.addCategoryDescription')}
@@ -879,40 +896,38 @@ export default function AdminProductsPage() {
                 </Sheet>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {categories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Tag className="h-5 w-5 text-tsa-blue" />
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900">{category.name}</h4>
-                            <Badge variant="outline">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{category.name}</h4>
+                            <Badge variant="outline" className="text-xs w-fit">
                               {category.isActive
                                 ? tCommon('status.active')
                                 : tCommon('status.inactive')}
                             </Badge>
                           </div>
 
-                          <div className="text-sm text-gray-600">
+                          <div className="text-xs sm:text-sm text-gray-600">
                             {category.products?.length || 0} {tAdmin('dashboard.labels.products')}
                           </div>
-
-                          {/*  */}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`gap-1 ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
+                          className={`gap-1 text-xs ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                           onClick={async () => {
                             try {
                               const response = await adminService.updateCategory(category.id, {
@@ -932,24 +947,27 @@ export default function AdminProductsPage() {
                           ) : (
                             <Eye className="h-3 w-3" />
                           )}
+                          <span className="hidden sm:inline">
+                            {category.isActive ? 'Masquer' : 'Afficher'}
+                          </span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1 bg-transparent"
+                          className="gap-1 bg-transparent text-xs"
                           onClick={() => handleEditCategory(category)}
                         >
                           <Edit className="h-3 w-3" />
-                          {tCommon('actions.edit')}
+                          <span className="hidden sm:inline">{tCommon('actions.edit')}</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1 text-red-600 hover:text-red-700 bg-transparent"
+                          className="gap-1 text-red-600 hover:text-red-700 bg-transparent text-xs"
                           onClick={() => handleDeleteCategory(category.id)}
                         >
                           <Trash2 className="h-3 w-3" />
-                          {tCommon('actions.delete')}
+                          <span className="hidden sm:inline">{tCommon('actions.delete')}</span>
                         </Button>
                       </div>
                     </div>

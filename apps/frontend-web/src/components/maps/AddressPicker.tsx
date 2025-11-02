@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Navigation, X, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
 import {
   useErrorsTranslation,
@@ -41,7 +41,6 @@ export default function AddressPicker({
   onClear,
   placeholder,
   value = '',
-  className = '',
   showMap = false,
   disabled = false,
 }: AddressPickerProps) {
@@ -434,47 +433,124 @@ export default function AddressPicker({
     [inputValue, error, onAddressSelect]
   );
 
-  return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="relative">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder={error ? tMaps('placeholders.manualAddressEntry') : defaultPlaceholder}
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleManualSubmit}
-              disabled={disabled || (!isLoaded && !error)}
-              className={`pl-10 pr-10 ${error ? 'border-orange-300 bg-orange-50' : ''}`}
-            />
-            {inputValue && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClear}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
+  if (error) {
+    return (
+      <div className="space-y-3 sm:space-y-4">
+        <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base font-medium text-red-800">Erreur de géolocalisation</span>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={getCurrentLocation}
-            disabled={disabled || !isLoaded || isLoadingLocation || !!error}
-            className="flex items-center gap-1 px-3"
-          >
-            <Navigation className={`h-4 w-4 ${isLoadingLocation ? 'animate-spin' : ''}`} />
-            {isLoadingLocation ? tMaps('buttons.locating') : tMaps('buttons.myLocation')}
-          </Button>
+          <p className="text-xs sm:text-sm text-red-600 mt-1">{error}</p>
         </div>
+        <Button
+          onClick={() => {
+            setError(null);
+            setIsLoaded(false);
+            // Retry loading Google Maps
+            const loadGoogleMaps = async () => {
+              try {
+                // console.log('🔄 Nouvelle tentative de chargement de Google Maps...');
+                await googleMapsLoader.load({ libraries: ['places', 'marker'] });
+                if (window.google?.maps) {
+                  setIsLoaded(true);
+                  setError(null);
+                }
+              } catch (retryError) {
+                console.error('❌ Échec de la nouvelle tentative:', retryError);
+                setError(tErrors('maps.retryGoogleMaps'));
+              }
+            };
+            loadGoogleMaps();
+          }}
+          className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base"
+        >
+          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span>Réessayer</span>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 sm:space-y-4">
+      {/* En-tête avec titre et bouton position */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center">
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+            {tMaps('selectAddress')}
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            {tMaps('searchOrSelectOnMap')}
+          </p>
+        </div>
+        <Button
+          onClick={getCurrentLocation}
+          disabled={isLoadingLocation}
+          variant="outline"
+          className="flex items-center gap-2 w-full sm:w-auto text-sm sm:text-base"
+        >
+          {isLoadingLocation ? (
+            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-500" />
+          ) : (
+            <Navigation className="w-3 h-3 sm:w-4 sm:h-4" />
+          )}
+          <span className="hidden sm:inline">{tMaps('myPosition')}</span>
+          <span className="sm:hidden">Position</span>
+        </Button>
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="relative">
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder={error ? tMaps('placeholders.manualAddressEntry') : defaultPlaceholder}
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleManualSubmit}
+            disabled={disabled || (!isLoaded && !error)}
+            className={`pl-9 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base ${error ? 'border-orange-300 bg-orange-50' : ''}`}
+          />
+          {inputValue && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Suggestions d'adresses */}
+        {/* {suggestions.length > 0 && (
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={suggestion.place_id}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 text-sm sm:text-base"
+              >
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate">
+                      {suggestion.structured_formatting?.main_text || suggestion.description}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">
+                      {suggestion.structured_formatting?.secondary_text || ''}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )} */}
 
         {!isLoaded && !error && (
           <p className="text-xs text-gray-500 mt-1">{tMaps('messages.loadingGoogleMaps')}</p>
@@ -517,12 +593,78 @@ export default function AddressPicker({
         )}
       </div>
 
+      {/* Carte interactive */}
       {showMap && !error && (
         <Card>
           <CardContent className="p-0">
-            <div ref={mapRef} className="w-full h-64 rounded-lg" style={{ minHeight: '256px' }} />
+            <div
+              ref={mapRef}
+              className="w-full h-64 sm:h-80 lg:h-96 rounded-lg border border-gray-200"
+              style={{ minHeight: '200px' }}
+            />
+
+            {!isLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="text-center p-4 sm:p-6">
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500 mx-auto mb-2 sm:mb-3"></div>
+                  <p className="text-xs sm:text-sm text-gray-600">{tMaps('loadingMap')}</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Informations sur l'adresse sélectionnée */}
+      {/* {selectedAddress && (
+        <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm sm:text-base font-medium text-blue-900 mb-1">
+                {t('selectedAddress')}
+              </h4>
+              <p className="text-xs sm:text-sm text-blue-700 break-words">
+                {selectedAddress.formatted_address}
+              </p>
+              {selectedAddress.geometry?.location && (
+                <p className="text-xs text-blue-600 mt-1">
+                  {t('coordinates')}: {selectedAddress.geometry.location.lat().toFixed(6)}, {selectedAddress.geometry.location.lng().toFixed(6)}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )} */}
+
+      {/* Actions */}
+      {/* <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <Button
+          onClick={handleConfirm}
+          disabled={!selectedAddress}
+          className="flex-1 sm:flex-none text-sm sm:text-base"
+        >
+          <span className="hidden sm:inline">{t('confirmAddress')}</span>
+          <span className="sm:hidden">Confirmer</span>
+        </Button>
+        <Button
+          onClick={handleClear}
+          variant="outline"
+          className="flex-1 sm:flex-none text-sm sm:text-base"
+        >
+          <span className="hidden sm:inline">{t('clearSelection')}</span>
+          <span className="sm:hidden">Effacer</span>
+        </Button>
+      </div> */}
+
+      {/* État de chargement pour les opérations */}
+      {isLoadingLocation && (
+        <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-yellow-500"></div>
+            <span className="text-xs sm:text-sm text-yellow-800">{tMaps('gettingLocation')}</span>
+          </div>
+        </div>
       )}
     </div>
   );

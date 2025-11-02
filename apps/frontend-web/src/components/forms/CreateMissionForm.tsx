@@ -277,7 +277,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           cargo_type: formValues.typeMarchandise || 'general',
           urgency: formValues.dateDepartEstime
             ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
-                (1000 * 60 * 60 * 24) <
+              (1000 * 60 * 60 * 24) <
               7
               ? 'urgent'
               : 'normal'
@@ -305,7 +305,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           cargo_type: formValues.typeMarchandise || 'general',
           urgency: formValues.dateDepartEstime
             ? (new Date(formValues.dateDepartEstime).getTime() - Date.now()) /
-                (1000 * 60 * 60 * 24) <
+              (1000 * 60 * 60 * 24) <
               7
               ? 'urgent'
               : 'normal'
@@ -367,36 +367,33 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
       validateOnMount={true}
     >
       {({ values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched }) => (
-        <Form className="space-y-6">
+        <Form className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tForms('sections.missionDetails')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div
-                className={cn('grid gap-4', {
-                  'grid-cols-1 md:grid-cols-2': user?.role === 'admin',
-                })}
-              >
+            <CardContent className="pt-0 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <Label htmlFor="title">{tForms('labels.missionTitle')}</Label>
+                  <Label htmlFor="title">{tForms('labels.title')}</Label>
                   <Input
                     id="title"
                     name="title"
-                    placeholder={tForms('placeholders.missionTitle')}
-                    value={values.title}
+                    type="text"
+                    placeholder={tForms('placeholders.title')}
+                    value={values.title || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={cn('w-full', touched.title && errors.title && 'border-red-500')}
-                    required
+                    className={cn(touched.title && errors.title && 'border-red-500')}
                   />
                   {touched.title && errors.title && (
                     <div className="text-sm text-red-600 mt-1">{errors.title}</div>
                   )}
                 </div>
+
                 {user?.role === 'admin' && (
                   <div>
                     <Label htmlFor="affreteurId">{tForms('labels.affreteur')}</Label>
@@ -404,7 +401,6 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       value={values.affreteurId || ''}
                       onValueChange={(value) => {
                         setFieldValue('affreteurId', value);
-                        setFieldTouched('affreteurId', true);
                       }}
                     >
                       <SelectTrigger
@@ -412,14 +408,16 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           'w-full',
                           touched.affreteurId && errors.affreteurId && 'border-red-500'
                         )}
-                        onBlur={() => setFieldTouched('affreteurId', true)}
+                        onBlur={handleBlur}
                       >
                         <SelectValue placeholder={tForms('placeholders.selectAffreteur')} />
                       </SelectTrigger>
                       <SelectContent>
                         {getUsersByRole('affreteur').map((affreteur) => (
                           <SelectItem key={affreteur.id} value={affreteur.id}>
-                            {affreteur.firstName} {affreteur.lastName} ({affreteur.email})
+                            <span className="truncate">
+                              {affreteur.firstName} {affreteur.lastName} ({affreteur.email})
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -431,11 +429,11 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <div className="flex flex-1 justify-between items-center">
-                      <h1 className="font-medium">{tForms('labels.departureAddress')}</h1>
+                  <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                    <div className="flex flex-1 justify-between items-center mb-3 sm:mb-4">
+                      <h1 className="font-medium text-sm sm:text-base">{tForms('labels.departureAddress')}</h1>
                       <Button
                         type="button"
                         variant="ghost"
@@ -445,24 +443,25 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <div className="flex space-y-2 items-center gap-2 w-full">
-                        <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
+                    <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                      <div className="flex flex-col space-y-2 w-full">
+                        <Label htmlFor="label" className="text-xs sm:text-sm">{tForms('labels.addressLabel')}</Label>
                         <Input
                           name="label"
                           value={values.adresseDepart!.label}
                           onChange={(e) => handleNewAddressChange(e, 'departure', setFieldValue)}
+                          onBlur={handleBlur}
                           placeholder={tForms('placeholders.addressLabel')}
                           className={cn(
                             'w-full',
-                            touched.typeMarchandise && errors.adresseDepart && 'border-red-500'
+                            (touched.typeMarchandise || touched.adresseDepart) && errors.adresseDepart && 'border-red-500'
                           )}
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <Label className="text-xs sm:text-sm">{tForms('labels.selectWithGoogleMaps')}</Label>
                         <div className="mt-2">
                           <ClientSideAddressPicker
                             onAddressSelect={(addressDetails) => {
@@ -484,15 +483,15 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   </div>
 
                   {values.adresseDepart && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
-                      <p className="font-medium">{values.adresseDepart.label}</p>
-                      <p>{values.adresseDepart.street}</p>
-                      <p>
+                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs sm:text-sm">
+                      <p className="font-medium truncate">{values.adresseDepart.label}</p>
+                      <p className="truncate">{values.adresseDepart.street}</p>
+                      <p className="truncate">
                         {values.adresseDepart.postalCode} {values.adresseDepart.city}
                       </p>
-                      {values.adresseDepart.region && <p>{values.adresseDepart.region}</p>}
-                      <p>{values.adresseDepart.country}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      {values.adresseDepart.region && <p className="truncate">{values.adresseDepart.region}</p>}
+                      <p className="truncate">{values.adresseDepart.country}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">
                         {tForms('labels.coordinates')}:{' '}
                         {Number(values.adresseDepart.latitude)?.toFixed(6)},{' '}
                         {Number(values.adresseDepart.longitude)?.toFixed(6)}
@@ -507,9 +506,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 </div>
 
                 <div>
-                  <div className="p-4 border rounded-lg bg-gray-50">
-                    <div className="flex justify-between items-center">
-                      <h1 className="font-medium">{tForms('labels.arrivalAddress')}</h1>
+                  <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                    <div className="flex justify-between items-center mb-3 sm:mb-4">
+                      <h1 className="font-medium text-sm sm:text-base">{tForms('labels.arrivalAddress')}</h1>
                       <Button
                         type="button"
                         variant="ghost"
@@ -521,28 +520,25 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <div className="flex space-y-2 items-center gap-2 w-full">
-                        <Label htmlFor="label">{tForms('labels.addressLabel')}</Label>
+                    <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                      <div className="flex flex-col space-y-2 w-full">
+                        <Label htmlFor="label" className="text-xs sm:text-sm">{tForms('labels.addressLabel')}</Label>
                         <Input
                           name="label"
                           value={values.adresseArrivee!.label}
-                          onBlur={(e) => {
-                            handleBlur(e);
-                            setFieldTouched('adresseArrivee.label', true);
-                          }}
                           onChange={(e) => handleNewAddressChange(e, 'arrival', setFieldValue)}
+                          onBlur={handleBlur}
                           placeholder={tForms('placeholders.addressLabel')}
                           className={cn(
                             'w-full',
-                            touched.typeMarchandise && errors.adresseArrivee && 'border-red-500'
+                            (touched.typeMarchandise || touched.adresseArrivee) && errors.adresseArrivee && 'border-red-500'
                           )}
                         />
                       </div>
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <Label>{tForms('labels.selectWithGoogleMaps')}</Label>
+                        <Label className="text-xs sm:text-sm">{tForms('labels.selectWithGoogleMaps')}</Label>
                         <div className="mt-2">
                           <ClientSideAddressPicker
                             onAddressSelect={(addressDetails) => {
@@ -564,15 +560,15 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   </div>
 
                   {values.adresseArrivee && (
-                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-sm">
-                      <p className="font-medium">{values.adresseArrivee.label}</p>
-                      <p>{values.adresseArrivee.street}</p>
-                      <p>
+                    <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs sm:text-sm">
+                      <p className="font-medium truncate">{values.adresseArrivee.label}</p>
+                      <p className="truncate">{values.adresseArrivee.street}</p>
+                      <p className="truncate">
                         {values.adresseArrivee.postalCode} {values.adresseArrivee.city}
                       </p>
-                      {values.adresseArrivee.region && <p>{values.adresseArrivee.region}</p>}
-                      <p>{values.adresseArrivee.country}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      {values.adresseArrivee.region && <p className="truncate">{values.adresseArrivee.region}</p>}
+                      <p className="truncate">{values.adresseArrivee.country}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">
                         {tForms('labels.coordinates')}:{' '}
                         {Number(values.adresseArrivee.latitude)?.toFixed(6)},{' '}
                         {Number(values.adresseArrivee.longitude)?.toFixed(6)}
@@ -588,7 +584,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <Label htmlFor="typeMarchandise">{tForms('labels.cargoType')}</Label>
                   <Input
@@ -599,14 +595,13 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     value={values.typeMarchandise || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={cn(
-                      touched.typeMarchandise && errors.typeMarchandise && 'border-red-500'
-                    )}
+                    className={cn(touched.typeMarchandise && errors.typeMarchandise && 'border-red-500')}
                   />
                   {touched.typeMarchandise && errors.typeMarchandise && (
                     <div className="text-sm text-red-600 mt-1">{errors.typeMarchandise}</div>
                   )}
                 </div>
+
                 <div>
                   <Label htmlFor="poids">{tForms('labels.weight')}</Label>
                   <Input
@@ -614,8 +609,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     name="poids"
                     type="number"
                     min="0"
-                    step="0.01"
-                    placeholder="0.00"
+                    step="0.1"
+                    placeholder={tForms('placeholders.weight')}
                     value={values.poids || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -625,6 +620,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     <div className="text-sm text-red-600 mt-1">{errors.poids}</div>
                   )}
                 </div>
+
                 <div>
                   <Label htmlFor="volume">{tForms('labels.volume')}</Label>
                   <Input
@@ -632,16 +628,11 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     name="volume"
                     type="number"
                     min="0"
-                    step="0.01"
-                    placeholder="0.00"
+                    step="0.1"
+                    placeholder={tForms('placeholders.volume')}
                     value={values.volume || ''}
-                    onChange={(e) =>
-                      setFieldValue('volume', e.target.value ? parseFloat(e.target.value) : null)
-                    }
-                    onBlur={(e) => {
-                      handleBlur(e);
-                      setFieldTouched('volume', true);
-                    }}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                     className={cn(touched.volume && errors.volume && 'border-red-500')}
                   />
                   {touched.volume && errors.volume && (
@@ -651,16 +642,18 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
               </div>
 
               <div>
-                <Label htmlFor="description">{tForms('labels.missionDescription')}</Label>
+                <Label htmlFor="description">{tForms('labels.description')}</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder={tForms('placeholders.missionDescription')}
-                  value={values.description}
+                  placeholder={tForms('placeholders.description')}
+                  value={values.description || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={cn(touched.description && errors.description && 'border-red-500')}
-                  rows={4}
+                  className={cn(
+                    'min-h-[100px] resize-none',
+                    touched.description && errors.description && 'border-red-500'
+                  )}
                 />
                 {touched.description && errors.description && (
                   <div className="text-sm text-red-600 mt-1">{errors.description}</div>
@@ -670,14 +663,14 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                {tForms('sections.missionDates')}
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                {tForms('sections.schedule')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="pt-0 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <Label>{tForms('labels.estimatedDepartureDate')}</Label>
                   <Popover>
@@ -689,20 +682,19 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           !values.dateDepartEstime && 'text-muted-foreground',
                           touched.dateDepartEstime && errors.dateDepartEstime && 'border-red-500'
                         )}
-                        onBlur={() => setFieldTouched('dateDepartEstime', true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {values.dateDepartEstime
-                          ? format(new Date(values.dateDepartEstime), 'dd MMM yyyy')
-                          : tForms('placeholders.selectDate')}
+                        {values.dateDepartEstime ? (
+                          format(new Date(values.dateDepartEstime), 'dd MMM yyy')
+                        ) : (
+                          <span>{tForms('placeholders.selectDate')}</span>
+                        )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={
-                          values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined
-                        }
+                        selected={values.dateDepartEstime ? new Date(values.dateDepartEstime) : undefined}
                         onSelect={(date) => {
                           if (date) {
                             setFieldValue('dateDepartEstime', date);
@@ -714,7 +706,6 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                             }
                           }
                         }}
-                        initialFocus
                         disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
@@ -723,6 +714,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     <div className="text-sm text-red-600 mt-1">{errors.dateDepartEstime}</div>
                   )}
                 </div>
+
                 <div>
                   <Label>{tForms('labels.expectedArrivalDate')}</Label>
                   <Popover>
@@ -734,27 +726,22 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           !values.dateArriveePrevue && 'text-muted-foreground',
                           touched.dateArriveePrevue && errors.dateArriveePrevue && 'border-red-500'
                         )}
-                        onBlur={() => setFieldTouched('dateArriveePrevue', true)}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {values.dateArriveePrevue
-                          ? format(new Date(values.dateArriveePrevue), 'dd MMM yyyy')
-                          : tForms('placeholders.selectDate')}
+                        {values.dateArriveePrevue ? (
+                          format(new Date(values.dateArriveePrevue), 'dd MMM yyy')
+                        ) : (
+                          <span>{tForms('placeholders.selectDate')}</span>
+                        )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={
-                          values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined
-                        }
+                        selected={values.dateArriveePrevue ? new Date(values.dateArriveePrevue) : undefined}
                         onSelect={(date) => {
-                          if (date) {
-                            setFieldValue('dateArriveePrevue', date);
-                            setFieldTouched('dateArriveePrevue', true);
-                          }
+                          setFieldValue('dateArriveePrevue', date ? date.toISOString() : '');
                         }}
-                        initialFocus
                         disabled={(date) =>
                           values.dateDepartEstime
                             ? date < new Date(values.dateDepartEstime)
@@ -772,20 +759,22 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                {tForms('sections.dynamicPricing')}
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+                {tForms('sections.pricing')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-0 space-y-4 sm:space-y-6">
               {/* Dynamic Pricing Section */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Calculator className="h-5 w-5 text-tsa-blue" />
-                    <p className="text-sm text-blue-700 mb-3">
-                      {tForms('messages.dynamicPricingDescription')}
+              <div className="bg-blue-50 p-3 sm:p-4 rounded-lg space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h3 className="font-medium text-sm sm:text-base text-blue-900">
+                      {tForms('sections.dynamicPricing')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-blue-700 mt-1">
+                      {tForms('descriptions.dynamicPricing')}
                     </p>
                   </div>
                   <Button
@@ -800,48 +789,50 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       !values.poids ||
                       !values.volume
                     }
-                    className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-100 w-full sm:w-auto"
                   >
                     {isCalculatingPrice ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {tForms('messages.calculating')}
+                        <span className="hidden sm:inline">{tForms('messages.calculating')}</span>
+                        <span className="sm:hidden">Calcul...</span>
                       </>
                     ) : (
                       <>
                         <Calculator className="h-4 w-4 mr-2" />
-                        {tForms('buttons.calculatePrice')}
+                        <span className="hidden sm:inline">{tForms('buttons.calculatePrice')}</span>
+                        <span className="sm:hidden">Calculer</span>
                       </>
                     )}
                   </Button>
                 </div>
 
                 {dynamicPricing && showDynamicPricing && (
-                  <div className="bg-white p-4 rounded-lg border border-blue-200 space-y-3">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-white p-3 sm:p-4 rounded-lg border border-blue-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
-                        <p className="text-sm text-gray-600">Distance calculée</p>
-                        <p className="text-lg font-semibold text-gray-900">
+                        <p className="text-xs sm:text-sm text-gray-600">Distance calculée</p>
+                        <p className="text-base sm:text-lg font-semibold text-gray-900">
                           {dynamicPricing.distance_km.toFixed(1)} km
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Prix estimé</p>
-                        <p className="text-2xl font-bold text-green-600">
+                      <div className="text-left sm:text-right">
+                        <p className="text-xs sm:text-sm text-gray-600">Prix estimé</p>
+                        <p className="text-xl sm:text-2xl font-bold text-green-600">
                           {dynamicPricing.calculated_price.toLocaleString()} FCFA
                         </p>
                       </div>
                     </div>
 
                     <div className="bg-blue-50 p-3 rounded-md space-y-2">
-                      <div className="flex items-center justify-between text-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs sm:text-sm">
                         <span className="text-gray-700">Fourchette de négociation</span>
                         <span className="font-medium text-blue-900">
                           {dynamicPricing.negotiation_range.min_price.toLocaleString()} -{' '}
                           {dynamicPricing.negotiation_range.max_price.toLocaleString()} FCFA
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs">
                         <span className="text-gray-600">Marge</span>
                         <span className="font-medium text-gray-700">
                           ±{dynamicPricing.negotiation_range.margin_percentage}%
@@ -903,12 +894,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
             </CardContent>
           </Card>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {!currentMission && (
               <>
                 <Button
                   type="submit"
-                  className="flex-1"
+                  className="flex-1 w-full sm:w-auto"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting || Object.keys(errors).length > 0}
                   onClick={() => {
@@ -917,25 +908,36 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   }}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publishMission')}
+                  <span className="hidden sm:inline">
+                    {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publishMission')}
+                  </span>
+                  <span className="sm:hidden">
+                    {isSubmitting ? 'Publication...' : 'Publier'}
+                  </span>
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     // Set status to 'draft' and submit
                     onSubmit({ ...values }, 'create', false);
                   }}
                   disabled={isSubmitting || Object.keys(errors).length > 0}
                 >
-                  {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
+                  <span className="hidden sm:inline">
+                    {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
+                  </span>
+                  <span className="sm:hidden">
+                    {isSubmitting ? 'Sauvegarde...' : 'Brouillon'}
+                  </span>
                 </Button>
               </>
             )}
             {currentMission && (
               <>
                 <Button
-                  className="flex-1"
+                  className="flex-1 w-full sm:w-auto"
                   style={{ backgroundColor: 'var(--tsa-blue)' }}
                   disabled={isSubmitting || Object.keys(errors).length > 0}
                   onClick={() => {
@@ -944,25 +946,42 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   }}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  {isSubmitting
-                    ? currentMission?.status === 'draft'
-                      ? tForms('messages.updatingAndPublishing')
-                      : tForms('messages.updating')
-                    : currentMission?.status === 'draft'
-                      ? tForms('buttons.updateAndPublishMission')
-                      : tForms('buttons.updateMission')}
+                  <span className="hidden sm:inline">
+                    {isSubmitting
+                      ? currentMission?.status === 'draft'
+                        ? tForms('messages.updatingAndPublishing')
+                        : tForms('messages.updating')
+                      : currentMission?.status === 'draft'
+                        ? tForms('buttons.updateAndPublishMission')
+                        : tForms('buttons.updateMission')}
+                  </span>
+                  <span className="sm:hidden">
+                    {isSubmitting
+                      ? currentMission?.status === 'draft'
+                        ? 'Mise à jour...'
+                        : 'Mise à jour...'
+                      : currentMission?.status === 'draft'
+                        ? 'Mettre à jour'
+                        : 'Mettre à jour'}
+                  </span>
                 </Button>
                 {currentMission?.status === 'draft' && (
                   <Button
                     type="button"
                     variant="outline"
+                    className="w-full sm:w-auto"
                     onClick={() => {
                       // Set status to 'draft' and submit
                       onSubmit({ ...values }, 'update', false);
                     }}
                     disabled={isSubmitting || Object.keys(errors).length > 0}
                   >
-                    {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
+                    <span className="hidden sm:inline">
+                      {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
+                    </span>
+                    <span className="sm:hidden">
+                      {isSubmitting ? 'Mise à jour...' : 'Brouillon'}
+                    </span>
                   </Button>
                 )}
               </>

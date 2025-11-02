@@ -175,7 +175,7 @@ export default function MissionDetailsPage() {
         onValueChange={setActiveTab}
         className={currentMission.status !== 'draft' ? 'space-y-4' : ''}
       >
-        <TabsList className={currentMission.status !== 'draft' ? 'w-full grid grid-cols-4' : ''}>
+        <TabsList className={currentMission.status !== 'draft' ? `w-full grid ${user?.role === 'transporteur' ? 'grid-cols-3' : 'grid-cols-4'}` : ''}>
           {currentMission.status !== 'draft' && (
             <>
               <TabsTrigger value="details">{tMissions('details.tabs.details')}</TabsTrigger>

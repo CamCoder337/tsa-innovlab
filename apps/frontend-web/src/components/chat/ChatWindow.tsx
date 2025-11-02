@@ -149,7 +149,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-          conversation.otherParticipant?.role?.slice(1) || ''
+        conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -175,15 +175,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
   return (
     <div className="flex flex-1 flex-col bg-white justify-between">
       {/* Header - Fixed Height */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <div className="relative">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
               <AvatarImage
                 src={conversation.otherParticipant?.avatarUrl}
                 alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
               />
-              <AvatarFallback>
+              <AvatarFallback className="text-xs sm:text-sm">
                 {conversation.otherParticipant?.firstName?.charAt(0) || ''}
                 {conversation.otherParticipant?.lastName?.charAt(0) || ''}
                 {!conversation.otherParticipant?.firstName &&
@@ -197,27 +197,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{getConversationTitle()}</h3>
-            <p className="text-sm text-gray-500 truncate">{getConversationSubtitle()}</p>
+            <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{getConversationTitle()}</h3>
+            <p className="text-xs sm:text-sm text-gray-500 truncate">{getConversationSubtitle()}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           {conversation.type === 'direct' && (
             <>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden sm:flex">
                 <Phone className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden sm:flex">
                 <Video className="h-4 w-4" />
               </Button>
             </>
           )}
-          <Button variant="ghost" size="sm">
-            <MoreVertical className="h-4 w-4" />
+          <Button variant="ghost" size="sm" className="p-1 sm:p-2">
+            <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="p-1 sm:p-2 md:hidden">
               ×
             </Button>
           )}
@@ -225,17 +225,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
       </div>
 
       {/* Messages - Scrollable Area */}
-      <div className="flex-1 flex flex-col justify-end py-2 gap-2">
+      <div className="flex-1 flex flex-col justify-end py-2 gap-2 px-2 sm:px-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-8 h-full">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-500">{tChat('messages.loadingMessages')}</span>
+            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-gray-500 text-sm sm:text-base">{tChat('messages.loadingMessages')}</span>
           </div>
         ) : currentMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-            <MessageCircle className="h-12 w-12 mb-4 text-gray-300" />
-            <p className="text-sm">{tChat('messages.noMessagesInConversation')}</p>
-            <p className="text-xs mt-1">{tChat('messages.sendFirstMessage')}</p>
+          <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-gray-500">
+            <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 text-gray-300" />
+            <p className="text-sm sm:text-base">{tChat('messages.noMessagesInConversation')}</p>
+            <p className="text-xs sm:text-sm mt-1">{tChat('messages.sendFirstMessage')}</p>
           </div>
         ) : (
           <>
@@ -258,15 +258,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
 
             {/* Typing indicators */}
             {typingUsers.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 px-2">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"
                     style={{ animationDelay: '0.1s' }}
                   ></div>
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"
                     style={{ animationDelay: '0.2s' }}
                   ></div>
                 </div>
@@ -283,7 +283,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
       </div>
 
       {/* Message Input - Fixed Height */}
-      <div className="border-t border-gray-200 px-8 py-2 bg-white shrink-0">
+      <div className="border-t border-gray-200 px-3 sm:px-8 py-2 bg-white shrink-0">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             value={newMessage}
@@ -291,11 +291,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onClose })
             placeholder={tChat('placeholders.sendMessageTo', {
               name: conversation.otherParticipant?.firstName || tChat('user'),
             })}
-            className="flex-1"
+            className="flex-1 text-sm sm:text-base"
             disabled={isLoading}
           />
-          <Button type="submit" disabled={!newMessage.trim() || isLoading} className="px-4">
-            <Send className="h-4 w-4" />
+          <Button type="submit" disabled={!newMessage.trim() || isLoading} className="px-3 sm:px-4">
+            <Send className="h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </form>
       </div>
@@ -364,14 +364,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <div className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
       {!isCurrentUser && (
-        <div className="w-8">
+        <div className="w-6 sm:w-8">
           {showAvatar && (
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
               <AvatarImage
                 src={otherParticipant?.avatar}
                 alt={`${otherParticipant?.firstName} ${otherParticipant?.lastName}`}
               />
-              <AvatarFallback>
+              <AvatarFallback className="text-xs">
                 {otherParticipant?.firstName?.charAt(0) || ''}
                 {otherParticipant?.lastName?.charAt(0) || ''}
                 {!otherParticipant?.firstName && !otherParticipant?.lastName && '?'}
@@ -381,17 +381,16 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
       )}
 
-      <div className={`max-w-xs lg:max-w-md min-w-28 ${isCurrentUser ? 'order-1' : ''}`}>
+      <div className={`max-w-xs sm:max-w-sm lg:max-w-md min-w-20 sm:min-w-28 ${isCurrentUser ? 'order-1' : ''}`}>
         <div
-          className={`px-4 py-2 rounded-2xl ${
-            isCurrentUser
-              ? 'bg-tsa-blue text-white rounded-br-md'
-              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-md'
-          }`}
+          className={`px-3 sm:px-4 py-2 rounded-2xl ${isCurrentUser
+            ? 'bg-tsa-blue text-white rounded-br-md'
+            : 'bg-tsa-gray/25 text-gray-900 rounded-bl-md'
+            }`}
         >
-          <div className="text-sm whitespace-pre-wrap break-words">{message.content}</div>
+          <div className="text-xs sm:text-sm whitespace-pre-wrap break-words">{message.content}</div>
 
-          <div className={`flex items-center gap-1 mt-1 text-xs text-gray-500 justify-end`}>
+          <div className={`flex items-center gap-1 mt-1 text-xs justify-end`}>
             <span>{formatMessageTime(message.createdAt)}</span>
             {getMessageStatusIcon()}
           </div>

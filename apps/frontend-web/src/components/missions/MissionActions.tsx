@@ -86,7 +86,7 @@ export function MissionActions({
   };
 
   const getStatusActions = () => {
-    if (userRole === 'admin') {
+    const getCommonActions = () => {
       return (
         <>
           <DropdownMenuItem onClick={() => navigate(`/missions/${mission.id}/edit`)}>
@@ -104,21 +104,25 @@ export function MissionActions({
       );
     }
 
-    if (userRole === 'affreteur') {
+    if (userRole !== 'transporteur') {
       switch (mission.status) {
         case 'draft':
           return (
-            <DropdownMenuItem
-              onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
-            >
-              <Send className="mr-2 h-4 w-4" />
-              <span>{tCommon('actions.publish')}</span>
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem
+                onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                <span>{tCommon('actions.publish')}</span>
+              </DropdownMenuItem>
+              {getCommonActions()}
+            </>
           );
         case 'published':
         case 'assigned':
           return (
             <>
+              {getCommonActions()}
               <DropdownMenuItem
                 className="text-red-600"
                 onClick={() => handleAction('cancel', tMissions('actions.cancelMission'))}
@@ -179,54 +183,47 @@ export function MissionActions({
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={() => onRefresh()} className="h-8">
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          {tCommon('actions.refresh')}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onRefresh()}
+          className="h-8 sm:h-9 text-xs sm:text-sm w-full sm:w-auto"
+        >
+          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
         </Button>
 
-        {mission.status === 'draft' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
-            className="h-8 bg-tsa-blue text-white"
-          >
-            <Send className="mr-2 h-4 w-4" />
-            <span>{tCommon('actions.publish')}</span>
-          </Button>
-        )}
-
-        {mission.status !== 'draft' && (
-          <DropdownMenu>
+        <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="sr-only">Actions</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">{getStatusActions()}</DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-48 sm:w-auto">
+              {getStatusActions()}
+            </DropdownMenuContent>
           </DropdownMenu>
-        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogDescription className="hidden">
             {mission.status === 'draft' ? tCommon('actions.publish') : action?.title}
           </DialogDescription>
           <DialogHeader>
-            <DialogTitle>{action?.title}</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">{action?.title}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <p>
+          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+            <p className="text-xs sm:text-sm">
               {tCommon('actions.warning.confirmAction')} {action?.title.toLowerCase()} ?
             </p>
 
             {(action?.type === 'cancel' || action?.type === 'complete') && (
               <div className="space-y-2">
-                <Label htmlFor="comment">
+                <Label htmlFor="comment" className="text-xs sm:text-sm">
                   {action.type === 'cancel'
                     ? tMissions('actions.cancellationReason')
                     : tMissions('actions.optionalComment')}
@@ -241,26 +238,33 @@ export function MissionActions({
                       : tMissions('actions.addMissionDetails')
                   }
                   rows={3}
+                  className="text-xs sm:text-sm"
                 />
               </div>
             )}
 
             {action?.type === 'delete' && (
-              <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
+              <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-md text-xs sm:text-sm">
                 <p className="font-medium">{tMissions('actions.warningIrreversible')}</p>
                 <p>{tMissions('actions.missionDataWillBeDeleted')}</p>
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isLoading}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isLoading}
+              className="w-full sm:w-auto text-xs sm:text-sm"
+            >
               {tCommon('actions.cancel')}
             </Button>
             <Button
               variant={action?.type === 'delete' ? 'destructive' : 'default'}
               onClick={confirmAction}
               disabled={isLoading}
+              className="w-full sm:w-auto text-xs sm:text-sm"
             >
               {isLoading ? tCommon('messages.processing') : tCommon('actions.confirm')}
             </Button>
@@ -278,21 +282,23 @@ export function MissionActions({
           setIsApplyDialogOpen(open);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogDescription className="hidden">
             {tMissions('myMissions.transporteur.apply.dialogDescription')}
           </DialogDescription>
           <DialogHeader>
-            <DialogTitle>{tMissions('myMissions.transporteur.apply.dialogTitle')}</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
+              {tMissions('myMissions.transporteur.apply.dialogTitle')}
+            </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {mission && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900">{mission.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{mission.description}</p>
+              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{mission.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{mission.description}</p>
                 {mission.requiredVehicleType && (
-                  <p className="text-sm text-tsa-blue mt-2">
+                  <p className="text-xs sm:text-sm text-tsa-blue mt-2">
                     {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                     {VehicleTypeLabels[mission.requiredVehicleType]}
                   </p>
@@ -301,26 +307,26 @@ export function MissionActions({
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 {tMissions('myMissions.transporteur.apply.selectVehicle')}
               </label>
               {vehiclesLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="ml-2 text-gray-600">
+                <div className="flex items-center justify-center p-3 sm:p-4">
+                  <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-2 text-gray-600 text-xs sm:text-sm">
                     {tMissions('myMissions.transporteur.apply.loadingVehicles')}
                   </span>
                 </div>
               ) : availableVehicles.length === 0 ? (
-                <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
-                  <p>{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
-                  <p className="text-sm mt-1">
+                <div className="p-3 sm:p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                  <p className="text-xs sm:text-sm">{tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}</p>
+                  <p className="text-xs mt-1">
                     {tMissions('myMissions.transporteur.apply.noVehiclesMessage')}
                   </p>
                 </div>
               ) : (
                 <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-xs sm:text-sm">
                     <SelectValue
                       placeholder={tMissions('myMissions.transporteur.apply.chooseVehicle')}
                     />
@@ -328,9 +334,9 @@ export function MissionActions({
                   <SelectContent>
                     {availableVehicles.map((vehicle) => (
                       <SelectItem key={vehicle.id} value={vehicle.id}>
-                        <div className="flex items-center gap-2">
-                          <span>{vehicle.registration}</span>
-                          <span className="text-sm text-gray-500">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span className="text-xs sm:text-sm font-medium">{vehicle.registration}</span>
+                          <span className="text-xs text-gray-500">
                             ({VehicleTypeLabels[vehicle.type]})
                           </span>
                         </div>
@@ -341,13 +347,14 @@ export function MissionActions({
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4">
               <Button
                 variant="outline"
                 onClick={() => {
                   setIsApplyDialogOpen(false);
                   setSelectedVehicleId('');
                 }}
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
                 {tCommon('actions.cancel')}
               </Button>
@@ -360,6 +367,7 @@ export function MissionActions({
                   confirmAction();
                 }}
                 disabled={!selectedVehicleId || availableVehicles.length === 0}
+                className="w-full sm:w-auto text-xs sm:text-sm"
               >
                 {tCommon('actions.apply')}
               </Button>

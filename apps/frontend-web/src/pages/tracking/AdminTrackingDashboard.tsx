@@ -234,32 +234,32 @@ export default function AdminTrackingDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* En-tête */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               {tTracking('dashboard.adminTitle')}
             </h1>
-            <p className="text-gray-600 mt-2">{tTracking('dashboard.adminSubtitle')}</p>
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">{tTracking('dashboard.adminSubtitle')}</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Download className="w-4 h-4" />
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
+            <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
+              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
               {tTracking('actions.exportReport')}
             </Button>
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
               onClick={handleRefresh}
               disabled={isLoading}
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isLoading ? 'animate-spin' : ''}`} />
               {tTracking('actions.refresh')}
             </Button>
-            <Button className="bg-red-600 hover:bg-red-700">
-              <Shield className="w-4 h-4 mr-2" />
+            <Button className="bg-red-600 hover:bg-red-700 text-xs sm:text-sm">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               {tTracking('actions.emergencyMode')}
             </Button>
           </div>
@@ -268,17 +268,17 @@ export default function AdminTrackingDashboard() {
         {/* Error Alert */}
         {error && (
           <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-                <div>
-                  <h3 className="font-semibold text-red-900">Erreur de chargement</h3>
-                  <p className="text-red-700">{error}</p>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 text-sm sm:text-base">Erreur de chargement</h3>
+                  <p className="text-red-700 text-xs sm:text-sm">{error}</p>
                 </div>
                 <Button
                   size="sm"
                   onClick={handleRefresh}
-                  className="ml-auto bg-red-600 hover:bg-red-700"
+                  className="ml-auto bg-red-600 hover:bg-red-700 text-xs"
                 >
                   Réessayer
                 </Button>
@@ -290,16 +290,16 @@ export default function AdminTrackingDashboard() {
         {/* Alertes critiques */}
         {criticalAlerts > 0 && (
           <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-                <div>
-                  <h3 className="font-semibold text-red-900">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 text-sm sm:text-base">
                     {tTracking('alerts.critical', { count: criticalAlerts })}
                   </h3>
-                  <p className="text-red-700">{tTracking('alerts.checkTab')}</p>
+                  <p className="text-red-700 text-xs sm:text-sm">{tTracking('alerts.checkTab')}</p>
                 </div>
-                <Button size="sm" className="ml-auto bg-red-600 hover:bg-red-700">
+                <Button size="sm" className="ml-auto bg-red-600 hover:bg-red-700 text-xs">
                   {tTracking('actions.viewAlerts')}
                 </Button>
               </div>
@@ -308,19 +308,19 @@ export default function AdminTrackingDashboard() {
         )}
 
         {/* KPIs Système */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     {tTracking('kpis.activeVehicles')}
                   </p>
-                  <p className="text-2xl font-bold text-tsa-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
                     {systemMetrics.activeVehicles}/{systemMetrics.totalVehicles}
                   </p>
                 </div>
-                <Truck className="w-8 h-8 text-blue-500" />
+                <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div
@@ -334,17 +334,17 @@ export default function AdminTrackingDashboard() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     {tTracking('kpis.activeDrivers')}
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-lg sm:text-2xl font-bold text-green-600">
                     {systemMetrics.activeDrivers}/{systemMetrics.totalDrivers}
                   </p>
                 </div>
-                <Users className="w-8 h-8 text-green-500" />
+                <Users className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
               </div>
               <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
                 <div
@@ -358,36 +358,36 @@ export default function AdminTrackingDashboard() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     {tTracking('kpis.activeMissions')}
                   </p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-lg sm:text-2xl font-bold text-purple-600">
                     {systemMetrics.activeMissions}
                   </p>
                 </div>
-                <Package className="w-8 h-8 text-purple-500" />
+                <Package className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 {tTracking('kpis.completedToday', { count: systemMetrics.completedToday })}
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">
                     {tTracking('kpis.systemUptime')}
                   </p>
-                  <p className="text-2xl font-bold text-green-600">{systemMetrics.systemUptime}</p>
+                  <p className="text-lg sm:text-2xl font-bold text-green-600">{systemMetrics.systemUptime}</p>
                 </div>
-                <Activity className="w-8 h-8 text-green-500" />
+                <Activity className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
               </div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 {tTracking('kpis.responseTime')}: {systemMetrics.avgResponseTime}ms
               </p>
             </CardContent>
@@ -408,63 +408,63 @@ export default function AdminTrackingDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Carte globale */}
               <div className="lg:col-span-2 space-y-4">
-              {/* Sélecteur de mission */}
-              {trackableMissions.length > 1 && (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <label className="text-sm font-medium text-gray-700">
-                        Mission à suivre:
-                      </label>
-                      <select
-                        value={selectedMission?.id || ''}
-                        onChange={(e) => {
-                          const selected = trackableMissions.find((m) => m.id === e.target.value);
-                          if (selected) setSelectedMission(selected);
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">-- Sélectionner une mission --</option>
-                        {trackableMissions.map((mission) => (
-                          <option key={mission.id} value={mission.id}>
-                            {mission.title} - {mission.adresseDepart?.city} → {mission.adresseArrivee?.city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                {/* Sélecteur de mission */}
+                {trackableMissions.length > 1 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700">
+                          Mission à suivre:
+                        </label>
+                        <select
+                          value={selectedMission?.id || ''}
+                          onChange={(e) => {
+                            const selected = trackableMissions.find((m) => m.id === e.target.value);
+                            if (selected) setSelectedMission(selected);
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">-- Sélectionner une mission --</option>
+                          {trackableMissions.map((mission) => (
+                            <option key={mission.id} value={mission.id}>
+                              {mission.title} - {mission.adresseDepart?.city} → {mission.adresseArrivee?.city}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5" />
-                      {tTracking('map.globalView')}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        {tTracking('map.filters')}
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 mr-2" />
-                        {tTracking('map.satelliteView')}
-                      </Button>
-                    </div>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MissionTrackingMap
-                    className="h-[700px]"
-                    missions={trackableMissions}
-                    selectedMission={selectedMission}
-                    onMissionClick={(mission) => setSelectedMission(mission)}
-                    showUserLocation={false}
-                    showRoutes={true}
-                    showLegend={true}
-                  />
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        {tTracking('map.globalView')}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Filter className="w-4 h-4 mr-2" />
+                          {tTracking('map.filters')}
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          {tTracking('map.satelliteView')}
+                        </Button>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <MissionTrackingMap
+                      className="h-[700px]"
+                      missions={trackableMissions}
+                      selectedMission={selectedMission}
+                      onMissionClick={(mission) => setSelectedMission(mission)}
+                      showUserLocation={false}
+                      showRoutes={true}
+                      showLegend={true}
+                    />
                     <div className="mt-4 flex justify-between items-center text-sm">
                       <div className="flex gap-4">
                         <div className="flex items-center gap-2">
@@ -498,7 +498,7 @@ export default function AdminTrackingDashboard() {
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center justify-between">
                       <AlertTriangle className="w-5 h-5 text-red-500" />
                       {tTracking('alerts.title')}
                       {unreadAlerts > 0 && (
@@ -551,8 +551,8 @@ export default function AdminTrackingDashboard() {
                       <span className="font-medium text-green-600">
                         {systemMetrics.totalVehicles > 0
                           ? Math.round(
-                              (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
-                            )
+                            (systemMetrics.activeVehicles / systemMetrics.totalVehicles) * 100
+                          )
                           : 0}
                         %
                       </span>

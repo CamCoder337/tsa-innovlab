@@ -179,7 +179,7 @@ export default function Header({ className }: { className?: string }) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 sm:h-9 px-2 sm:px-3 lg:px-4 gap-1 sm:gap-2 min-w-0"
+                className="h-8 sm:h-9 px-2 sm:px-0 lg:px-4 gap-1 sm:gap-2 min-w-0"
                 aria-label="User menu"
                 data-testid="user-menu-button"
               >
@@ -192,9 +192,11 @@ export default function Header({ className }: { className?: string }) {
                   <p className="text-xs xl:text-sm font-medium truncate leading-tight">
                     {displayName}
                   </p>
-                  <p className="text-[10px] xl:text-xs text-muted-foreground truncate leading-tight">
-                    {tCommon(`roles.${displayRole}`)}
-                  </p>
+                  {!isInvite && (
+                    <p className="text-[10px] xl:text-xs text-muted-foreground truncate leading-tight">
+                      {tCommon(`roles.${displayRole}`)}
+                    </p>
+                  )}
                 </div>
 
                 {/* User name only on medium screens */}

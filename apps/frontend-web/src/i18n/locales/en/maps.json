@@ -15,5 +15,10 @@
   },
   "messages": {
     "loadingGoogleMaps": "Loading Google Maps..."
-  }
+  },
+  "selectAddress": "Select an address",
+  "searchOrSelectOnMap": "Search for an address or select on the map",
+  "myPosition": "My position",
+  "loadingMap": "Loading map...",
+  "gettingLocation": "Getting your location..."
 }

@@ -90,7 +90,7 @@ export function ProductCard({
                     style={{ backgroundColor: product.stock ? 'var(--tsa-blue)' : undefined }}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    {product.stock ? tShop('addToCart') : tShop('product.outOfStock')}
+                    {product.stock ? tShop('product.addToCart') : tShop('product.outOfStock')}
                   </Button>
                 </div>
               </div>

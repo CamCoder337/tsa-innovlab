@@ -344,8 +344,8 @@ export default function Sidebar() {
   if (!isAuthenticated) return null;
 
   return (
-    <UISidebar collapsible="icon" className="top-16 h-full">
-      <SidebarHeader className="flex flex-row items-center justify-between p-2">
+    <UISidebar collapsible="icon" className="top-16 h-[calc(100vh-4rem)] flex flex-col fixed">
+      <SidebarHeader className="flex flex-row items-center justify-between p-2 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
             {tNav('breadcrumb.workspace', { role })}
@@ -353,15 +353,15 @@ export default function Sidebar() {
         </div>
         <SidebarTrigger className="ml-auto" />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex-1 overflow-hidden">
         <SidebarGroup className="h-full flex flex-col">
-          <SidebarGroupContent className="max-h-screen h-full p-4">
+          <SidebarGroupContent className="flex-1 overflow-y-auto p-4">
             <MenuTree items={menu} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarSeparator />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="flex-shrink-0">
         <div className="md:hidden">
           {/* Mobile-only user info display */}
           <div className="pb-2 border-b">
