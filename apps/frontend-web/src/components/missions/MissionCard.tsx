@@ -39,33 +39,50 @@ export default function MissionCard({
   const [affreteurName, setAffreteurName] = useState<string>('');
   const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
 
-  // Fetch user names and vehicle info
+  // Fetch user names and vehicle info (only if not preloaded)
   useEffect(() => {
     const fetchInfo = async () => {
-      // Fetch transporteur name for affreteurs
+      // Use preloaded transporteur data first, fallback to fetch
       if (user?.role === 'affreteur' && mission.transporteurId) {
-        const name = await getUserName(mission.transporteurId);
-        setTransporteurName(name);
+        if (mission.transporteur) {
+          const name = `${mission.transporteur.firstName} ${mission.transporteur.lastName}`;
+          setTransporteurName(name);
+        } else {
+          const name = await getUserName(mission.transporteurId);
+          setTransporteurName(name);
+        }
       }
 
-      // Fetch affreteur name for transporteurs
+      // Use preloaded affreteur data first, fallback to fetch
       if (user?.role === 'transporteur' && mission.affreteurId) {
-        const name = await getUserName(mission.affreteurId);
-        setAffreteurName(name);
+        if (mission.affreteur) {
+          const name = `${mission.affreteur.firstName} ${mission.affreteur.lastName}`;
+          setAffreteurName(name);
+        } else {
+          const name = await getUserName(mission.affreteurId);
+          setAffreteurName(name);
+        }
       }
 
-      // Fetch vehicle registration for transporteurs
+      // Use preloaded vehicle data first, fallback to fetch
       if (mission.vehicleId) {
-        const registration = await getVehicleRegistration(mission.vehicleId);
-        setVehicleRegistration(registration);
+        if (mission.vehicle) {
+          setVehicleRegistration(mission.vehicle.registration);
+        } else {
+          const registration = await getVehicleRegistration(mission.vehicleId);
+          setVehicleRegistration(registration);
+        }
       }
     };
 
     fetchInfo();
   }, [
     mission.transporteurId,
+    mission.transporteur,
     mission.affreteurId,
+    mission.affreteur,
     mission.vehicleId,
+    mission.vehicle,
     user?.role,
     getUserName,
     getVehicleRegistration,
