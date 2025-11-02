@@ -225,7 +225,7 @@ export default function AdminTrackingDashboard() {
       <div className="flex flex-col flex-1 bg-gray-50 dark:bg-gray-950 p-6">
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-tsa-blue" />
+            <Loader2 className="w-6 h-6 animate-spin text-tsa-blue dark:text-tsa-white" />
             <span className="text-lg text-gray-600 dark:text-gray-300">Chargement du tableau de bord...</span>
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function AdminTrackingDashboard() {
                   <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                     {tTracking('kpis.activeVehicles')}
                   </p>
-                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                     {systemMetrics.activeVehicles}/{systemMetrics.totalVehicles}
                   </p>
                 </div>
@@ -568,7 +568,7 @@ export default function AdminTrackingDashboard() {
                       <span className="text-sm text-gray-600 dark:text-gray-300">
                         {tTracking('metrics.dailyRevenue')}
                       </span>
-                      <span className="font-medium text-tsa-blue">{850000} FCFA</span>
+                      <span className="font-medium text-tsa-blue dark:text-tsa-white">{850000} FCFA</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -754,7 +754,7 @@ export default function AdminTrackingDashboard() {
                     <h4 className="font-medium text-blue-900">
                       {tTracking('analytics.expectedDemand')}
                     </h4>
-                    <p className="text-2xl font-bold text-tsa-blue">+23%</p>
+                    <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">+23%</p>
                     <p className="text-sm text-blue-700">{tTracking('analytics.nextWeek')}</p>
                   </div>
                   <div className="p-4 bg-green-50 rounded-lg">

@@ -186,7 +186,7 @@ export default function OrdersManagement() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Package className="h-5 w-5 text-tsa-blue" />
+                    <Package className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalOrders')}</p>
@@ -257,7 +257,7 @@ export default function OrdersManagement() {
                       <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.pending')}s</p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-tsa-blue">{orderStats.processing}</p>
+                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">{orderStats.processing}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.processing')}s</p>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -660,7 +660,7 @@ export default function OrdersManagement() {
                     >
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs sm:text-sm font-medium text-tsa-blue">
+                          <span className="text-xs sm:text-sm font-medium text-tsa-blue dark:text-tsa-white">
                             {index + 1}
                           </span>
                         </div>

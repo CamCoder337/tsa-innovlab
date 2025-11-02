@@ -170,7 +170,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">En Cours</p>
-                <p className="text-lg sm:text-2xl font-bold text-tsa-blue">{stats.inProgress}</p>
+                <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">{stats.inProgress}</p>
               </div>
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
             </div>

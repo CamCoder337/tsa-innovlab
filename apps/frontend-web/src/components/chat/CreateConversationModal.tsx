@@ -280,7 +280,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <p className="font-medium text-sm truncate">{`${user.firstName} ${user.lastName}`}</p>
                       <p className="text-xs text-gray-600 truncate">{user.email}</p>
                       {conversationType === ConversationType.MISSION && user.relatedMissions && (
-                        <p className="text-xs text-tsa-blue mt-1">
+                        <p className="text-xs text-tsa-blue dark:text-tsa-white mt-1">
                           {tForms('messages.sharedMissions', {
                             count: user.relatedMissions.length,
                           })}

@@ -427,7 +427,7 @@ export default function ShopPage() {
 
           {isLoading && (
             <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
-              <Loader className="h-12 w-12 animate-spin text-tsa-blue" />
+              <Loader className="h-12 w-12 animate-spin text-tsa-blue dark:text-tsa-white" />
             </div>
           )}
 

@@ -116,7 +116,7 @@ export default function TransporteurTrackingDashboard() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tTracking('kpis.activeMissions')}
                 </p>
-                <p className="text-xl sm:text-2xl font-bold text-tsa-blue">
+                <p className="text-xl sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                   {activeAssignments.length}
                 </p>
               </div>
@@ -463,9 +463,9 @@ export default function TransporteurTrackingDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue">0</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">0</p>
                   <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">FCFA</p>
-                  <p className="text-xs sm:text-sm text-tsa-blue mt-2">0</p>
+                  <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">0</p>
                 </div>
               </CardContent>
             </Card>

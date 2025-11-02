@@ -231,7 +231,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">FCFA</p>
               </div>
-              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue flex-shrink-0" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
             </div>
           </CardContent>
         </Card>

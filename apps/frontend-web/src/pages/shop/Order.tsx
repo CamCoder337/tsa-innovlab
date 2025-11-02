@@ -419,7 +419,7 @@ export default function OrderDetailsPage() {
 
               {order.trackingNumber && (
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue flex-shrink-0" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-blue-900 text-sm sm:text-base">
                       {tShop('orderDetails.trackingNumber')}

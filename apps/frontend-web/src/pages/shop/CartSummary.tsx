@@ -725,7 +725,7 @@ export default function CartSummaryPage() {
                     <span>{tShop('cart.deliveryInfo.qualityTested')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Truck className="h-4 w-4 text-tsa-blue" />
+                    <Truck className="h-4 w-4 text-tsa-blue dark:text-tsa-white" />
                     <span>{tShop('cart.deliveryInfo.freeReturns')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">

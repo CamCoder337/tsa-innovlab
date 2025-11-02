@@ -104,7 +104,7 @@ export default function AdminDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
               <CardContent className="pt-0">
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
+                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                       {allStats.users.stats?.byRole.transporteur ||
                         userStats?.byRole?.transporteur ||
                         0}
@@ -343,7 +343,7 @@ export default function AdminDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
             <CardContent className="pt-0">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
+                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                     {allStats.users.stats?.byRole.admin || userStats?.byRole?.admin || 0}
                   </p>
                   <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.admin')}s</p>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
+                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                       {allStats.missions.stats?.byStatus.assigned ||
                         missionStats?.statusStats?.assigned ||
                         0}
@@ -612,7 +612,7 @@ export default function AdminDashboard() {
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-gray-600 truncate">
@@ -736,7 +736,7 @@ export default function AdminDashboard() {
               <CardContent className="pt-0">
                 <div className="space-y-3 sm:space-y-4">
                   <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue">
+                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                       {productStats?.inventory?.totalQuantity || 0}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600">
@@ -836,7 +836,7 @@ export default function AdminDashboard() {
                     </h4>
                     <div className="space-y-3">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-lg sm:text-xl font-bold text-tsa-blue">
+                        <p className="text-lg sm:text-xl font-bold text-tsa-blue dark:text-tsa-white">
                           {allStats.overview.stats?.orders.total || 0}
                         </p>
                         <p className="text-xs sm:text-sm text-gray-600">
@@ -910,7 +910,7 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                      <p className="text-xl sm:text-2xl font-bold text-tsa-blue">
+                      <p className="text-xl sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                         {allStats.missions.stats?.byStatus.completed ||
                           missionStats?.statusStats?.completed ||
                           0}

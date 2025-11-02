@@ -459,7 +459,7 @@ export default function MissionTrackingPage() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-tsa-blue" />
+                          <User className="w-6 h-6 text-tsa-blue dark:text-tsa-white" />
                         </div>
                         <div>
                           <p className="font-medium">Transporteur #{mission.transporteurId}</p>

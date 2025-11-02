@@ -191,7 +191,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                   </Link>
                   <div className="flex-1 min-w-0">
                     <Link to={`/app/shop/product/${product.id}`}>
-                      <p className="text-sm font-medium truncate hover:text-tsa-blue transition-colors">
+                      <p className="text-sm font-medium truncate hover:text-tsa-blue dark:text-tsa-white transition-colors">
                         {product.name}
                       </p>
                     </Link>
@@ -236,14 +236,14 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
 
                   <div className="space-y-2">
                     <Link to={`/app/shop/product/${product.id}`}>
-                      <h4 className="font-medium text-sm line-clamp-2 group-hover:text-tsa-blue transition-colors">
+                      <h4 className="font-medium text-sm line-clamp-2 group-hover:text-tsa-blue dark:text-tsa-white transition-colors">
                         {product.name}
                       </h4>
                     </Link>
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
-                        <div className="font-bold text-lg text-tsa-blue">
+                        <div className="font-bold text-lg text-tsa-blue dark:text-tsa-white">
                           {product.price.toLocaleString()} FCFA
                         </div>
                         {product.price && product.price > product.price && (
@@ -294,10 +294,10 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               <Sparkles className="h-4 w-4" />
               <span className="font-medium">Pourquoi ces recommandations ?</span>
             </div>
-            <p className="text-sm text-tsa-blue mt-1">{recommendations.reason}</p>
+            <p className="text-sm text-tsa-blue dark:text-tsa-white mt-1">{recommendations.reason}</p>
             {recommendations.confidence && (
               <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-tsa-blue">
+                <div className="flex items-center justify-between text-xs text-tsa-blue dark:text-tsa-white">
                   <span>Pertinence</span>
                   <span>{Math.round(recommendations.confidence * 100)}%</span>
                 </div>

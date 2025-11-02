@@ -87,7 +87,7 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
                   {currentLanguage.code === language.code && (
                     <span className="ml-auto">
                       <svg
-                        className="w-4 h-4 text-tsa-blue"
+                        className="w-4 h-4 text-tsa-blue dark:text-tsa-white"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >

@@ -652,7 +652,7 @@ export default function UserProfile() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {userStats.map((stat, index) => (
                   <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
-                    <stat.icon className="h-8 w-8 mx-auto mb-2 text-tsa-blue" />
+                    <stat.icon className="h-8 w-8 mx-auto mb-2 text-tsa-blue dark:text-tsa-white" />
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</p>
                   </div>
@@ -760,7 +760,7 @@ export default function UserProfile() {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-tsa-blue" />
+                            <FileText className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                             <div>
                               <h4 className="font-medium text-gray-900 dark:text-white">{document.label}</h4>
                               <div className="flex items-center gap-2 mt-1">
@@ -954,7 +954,7 @@ export default function UserProfile() {
 
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
+                    <Shield className="h-5 w-5 text-tsa-blue dark:text-tsa-white mt-0.5" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium text-blue-900">
                         {tAdmin('userProfile.kyc.management.title')}
@@ -962,7 +962,7 @@ export default function UserProfile() {
                       <p className="text-sm text-blue-700">
                         {tAdmin('userProfile.kyc.management.description')}
                       </p>
-                      <ul className="text-xs text-tsa-blue mt-2 space-y-1">
+                      <ul className="text-xs text-tsa-blue dark:text-tsa-white mt-2 space-y-1">
                         <li>• {tAdmin('userProfile.kyc.management.instructions.view')}</li>
                         <li>• {tAdmin('userProfile.kyc.management.instructions.download')}</li>
                         <li>• {tAdmin('userProfile.kyc.management.instructions.validate')}</li>

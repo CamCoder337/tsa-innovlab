@@ -166,7 +166,7 @@ export default function AdminUsersPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-tsa-blue" />
+                  <Users className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.totalUsers')}</p>

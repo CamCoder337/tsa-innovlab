@@ -200,7 +200,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               <p className="font-medium capitalize">{tCommon(`status.${mission.status}`)}</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-tsa-blue">
+              <div className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                 {mission.dateArriveePrevue ? '100%' : '0%'}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tMissions('tracking.progress')}</p>
@@ -319,7 +319,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                   </div>
                 </div>
                 {appreciation.ponctualite > 0 && (
-                  <p className="text-xs text-tsa-blue text-right">
+                  <p className="text-xs text-tsa-blue dark:text-tsa-white text-right">
                     {appreciation.ponctualite === 1 &&
                       tMissions('appreciation.criteria.punctuality.ratings.1')}
                     {appreciation.ponctualite === 2 &&

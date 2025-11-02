@@ -42,7 +42,7 @@ export const ChatPage: React.FC = () => {
           className={`
           ${showMobileChatList ? 'flex' : 'hidden'}
           md:flex w-full md:w-80 lg:w-96
-          border-r border-gray-200 bg-white flex-col
+          border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-col
         `}
         >
           <ChatList
@@ -73,7 +73,7 @@ export const ChatPage: React.FC = () => {
             <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
               <div className="text-center max-w-md mx-auto p-4 sm:p-8">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue" />
+                  <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue dark:text-tsa-white" />
                 </div>
 
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">

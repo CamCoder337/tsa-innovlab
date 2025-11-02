@@ -72,7 +72,7 @@ export default function AffréteurTrackingDashboard() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tCommon('status.in_progress')}
                 </p>
-                <p className="text-xl sm:text-2xl font-bold text-tsa-blue">
+                <p className="text-xl sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                   {ongoingMissions.length}
                 </p>
               </div>
@@ -290,7 +290,7 @@ export default function AffréteurTrackingDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue">2,450,000</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">2,450,000</p>
                   <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                     {tTracking('performance.fcfaThisMonth')}
                   </p>

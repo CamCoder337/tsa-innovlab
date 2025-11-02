@@ -41,13 +41,13 @@ const MissionTrackingPage = lazy(() => import('./pages/tracking/MissionTrackingP
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen bg-white dark:bg-gray-950">
-    <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-blue-dark" />
+    <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
   </div>
 );
 
 const LoadingFallback2 = () => (
   <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
-    <Loader className="h-12 w-12 animate-spin text-tsa-blue dark:text-tsa-blue-dark" />
+    <Loader className="h-12 w-12 animate-spin text-tsa-blue dark:text-tsa-white" />
   </div>
 );
 

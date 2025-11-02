@@ -93,10 +93,7 @@ export default function Header({ className }: { className?: string }) {
 
         {/* App Name - Hidden on mobile, visible on medium+ screens */}
         <div className="hidden md:flex flex-col justify-center ml-1 lg:ml-2">
-          <h1
-            className="font-semibold text-lg lg:text-xl leading-tight"
-            style={{ color: 'var(--tsa-blue)' }}
-          >
+          <h1 className="font-semibold text-lg lg:text-xl leading-tight text-tsa-blue dark:text-tsa-white">
             {tCommon('app.name')}
           </h1>
           <p className="text-xs lg:text-sm text-muted-foreground leading-tight">

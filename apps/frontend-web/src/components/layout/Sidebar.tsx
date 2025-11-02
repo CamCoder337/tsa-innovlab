@@ -363,7 +363,7 @@ export default function Sidebar() {
     <UISidebar collapsible="icon" className="top-16 h-[calc(100vh-4rem)] flex flex-col fixed">
       <SidebarHeader className="flex flex-row items-center justify-between p-2 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
+          <div className="text-base font-bold text-tsa-blue dark:text-tsa-white group-data-[collapsible=icon]:hidden">
             {tNav('breadcrumb.workspace', { role })}
           </div>
         </div>

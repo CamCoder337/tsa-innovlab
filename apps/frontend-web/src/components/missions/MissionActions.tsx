@@ -304,7 +304,7 @@ export function MissionActions({
                   {mission.description}
                 </p>
                 {mission.requiredVehicleType && (
-                  <p className="text-xs sm:text-sm text-tsa-blue mt-2">
+                  <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">
                     {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                     {VehicleTypeLabels[mission.requiredVehicleType]}
                   </p>

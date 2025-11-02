@@ -477,7 +477,7 @@ export default function AdminProductsPage() {
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
@@ -928,7 +928,7 @@ export default function AdminProductsPage() {
                     >
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                         </div>
 
                         <div className="min-w-0 flex-1">

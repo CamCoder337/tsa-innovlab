@@ -420,7 +420,7 @@ function TransporteurProfile() {
                   <span className="text-sm text-muted-foreground">
                     {tProfile('transporteur.inMission')}
                   </span>
-                  <span className="font-semibold text-tsa-blue">
+                  <span className="font-semibold text-tsa-blue dark:text-tsa-white">
                     {vehicles.filter((v) => v.status === 'in_mission').length}
                   </span>
                 </div>

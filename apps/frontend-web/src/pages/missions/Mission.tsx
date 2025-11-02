@@ -115,7 +115,7 @@ export default function MissionDetailsPage() {
     return (
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="flex items-center gap-2">
-          <Loader2 className="animate-spin h-12 w-12 text-tsa-blue" />
+          <Loader2 className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
           <span>{tMissions('details.loadingMessage')}</span>
         </div>
       </div>
