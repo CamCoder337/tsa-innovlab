@@ -36,12 +36,19 @@ export function getStatusIcon(status: string) {
 }
 
 // Utility function that accepts a translation function
-export function getStatusLabel(status: MissionStatus, t?: (key: string) => string) {
+export function getStatusLabel(
+  status: MissionStatus,
+  t?: (key: string, options?: Record<string, unknown>) => string
+) {
   if (t) {
-    return t(`status.${status}`).toUpperCase() || status.toUpperCase();
+    const translated = t(`status.${status}`);
+    // Only return translated if it's not the same as the key (meaning translation was found)
+    if (translated && translated !== `status.${status}`) {
+      return translated.toUpperCase();
+    }
   }
 
-  // Fallback to French labels if no translation function provided
+  // Fallback to French labels if no translation function provided or translation not found
   const labels = {
     draft: 'BROUILLON',
     published: 'OUVERTE',

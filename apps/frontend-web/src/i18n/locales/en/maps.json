@@ -2,23 +2,47 @@
   "title": "Maps and Geolocation",
   "labels": {
     "myLocation": "My location",
+    "position": "Position: {{ address }}",
     "deliveryAddress": "Delivery address"
   },
   "placeholders": {
     "searchAddress": "Search address...",
+    "selectAddress": "Select an address",
+    "searchOrSelectOnMap": "Search for an address or select on the map",
     "manualAddressEntry": "Manual address entry (Enter to validate)..."
   },
-  "buttons": {
-    "myLocation": "My location",
-    "retry": "Retry",
-    "locating": "Locating..."
-  },
   "messages": {
-    "loadingGoogleMaps": "Loading Google Maps..."
+    "loadingGoogleMaps": "Loading Google Maps...",
+    "loadingMap": "Loading map...",
+    "gettingLocation": "Getting your location...",
+    "locating": "Locating...",
+    "locationAccuracy": "Location accuracy: {{accuracy}}m",
+    "geolocationExcellentAccuracy": "Excellent GPS accuracy: {{accuracy}}m",
+    "geolocationGoodAccuracy": "Good GPS accuracy: {{accuracy}}m",
+    "geolocationLowAccuracy": "Low GPS accuracy: {{accuracy}}m. \n Please check your internet network",
+    "geolocationTooLowAccuracy": "Accuracy too low ({{accuracy}} m). Try moving or enabling GPS.",
+    "improvingAccuracy": "Improving accuracy... {{accuracy}}m"
   },
-  "selectAddress": "Select an address",
-  "searchOrSelectOnMap": "Search for an address or select on the map",
-  "myPosition": "My position",
-  "loadingMap": "Loading map...",
-  "gettingLocation": "Getting your location..."
+  "errors": {
+    "geolocationError": "Geolocation error",
+    "geolocationNotSupported": "Geolocation is not supported by this browser",
+    "geolocationTimeout": "Geolocation timeout exceeded",
+    "permissionDenied": "Geolocation permission denied",
+    "positionUnavailable": "Position unavailable",
+    "cannotAccessLocation": "Cannot access your location",
+    "cannotGetAddress": "Cannot retrieve address from your location",
+    "googleMapsApiKeyMissing": "Google Maps API key missing",
+    "googleMapsNotAvailable": "Google Maps API not available",
+    "googleMapsLoadError": "Error loading Google Maps",
+    "invalidAddressSelected": "Invalid address selected",
+    "addressProcessingError": "Error processing address",
+    "addressSearchInitError": "Error initializing address search",
+    "mapInitError": "Error initializing map",
+    "mapConstructorNotAvailable": "Google Maps constructor not available",
+    "markerCreationError": "Error creating marker",
+    "markerCreationFallbackError": "Error creating basic marker",
+    "autocompleteInitError": "Error initializing autocomplete",
+    "retryFailed": "Retry failed",
+    "retryGoogleMaps": "Reload failed. Check your internet connection."
+  }
 }

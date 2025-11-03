@@ -4,6 +4,7 @@ import {
   useProfileTranslation,
   useCommonTranslation,
   useErrorsTranslation,
+  useFormsTranslation,
 } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,25 +35,23 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
-
-interface MFAStatus {
-  enabled: boolean;
-  setupRequired: boolean;
-  backupCodes: string[];
-  qrCode?: string;
-  secret?: string;
-}
+import { authService } from '@/services/auth.service';
+import type { MFAUserStatus } from '@/types/auth.types';
 
 function AffreteurSettings() {
   const { user } = useAuth();
   const { t: tProfile } = useProfileTranslation();
+  const { t: tForms } = useFormsTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
+  const [mfaStatus, setMfaStatus] = useState<MFAUserStatus>({
     enabled: user?.mfaEnabled || false,
-    setupRequired: false,
+    setupRequired: user?.mustEnableMFA || false,
+    secret: '',
+    key: '',
     backupCodes: [],
+    instructions: '',
   });
   const [notifications, setNotifications] = useState({
     email: true,
@@ -88,43 +87,54 @@ function AffreteurSettings() {
     }
   };
 
-  const handleMFAToggle = async (enabled: boolean) => {
+  const handleMFAToggle = async (enabled: boolean, code?: string) => {
     try {
       setIsLoading(true);
 
       if (enabled) {
         // Initialize MFA setup
-        const response = await fetch('/api/auth/mfa/initialize', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+        const response = await authService.setupMFA();
 
-        if (response.ok) {
-          const data = await response.json();
-          setMfaStatus({
-            enabled: false,
-            setupRequired: true,
-            backupCodes: [],
-            qrCode: data.qrCode,
-            secret: data.secret,
-          });
+        if (response.error) {
+          console.error(response.error);
+          toast.error(response.error?.message);
+        }
+
+        if (response.data) {
+          const status = await authService.statusMFA();
+
+          if (status.error) {
+            console.error(status.error);
+            toast.error(status.error?.message);
+          }
+
+          if (status.data) {
+            setMfaStatus({
+              enabled: status.data.mfaEnabled,
+              setupRequired: true,
+              backupCodes: response.data.recoveryCodes,
+              key: response.data.manualEntryKey,
+              secret: response.data.secret,
+            });
+          }
         }
       } else {
         // Disable MFA
-        const response = await fetch('/api/auth/mfa/disable', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+        const response = await authService.disableMFA(code!);
 
-        if (response.ok) {
+        if (response.error) {
+          toast.error(response.error.message);
+          return;
+        }
+
+        if (response.data) {
           setMfaStatus({
             enabled: false,
             setupRequired: false,
+            secret: '',
+            key: '',
             backupCodes: [],
+            instructions: '',
           });
           toast.success(tProfile('settings.mfa.disableSuccess'));
         }
@@ -141,21 +151,21 @@ function AffreteurSettings() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/auth/mfa/enable', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ code }),
-      });
+      const response = await authService.enableMFA(code);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.error) {
+        toast.error(response.error.message);
+        return;
+      }
+
+      if (response.data) {
         setMfaStatus({
           enabled: true,
           setupRequired: false,
-          backupCodes: data.backupCodes || [],
+          secret: '',
+          key: '',
+          backupCodes: [],
+          instructions: '',
         });
         toast.success(tProfile('settings.mfa.enableSuccess'));
       } else {
@@ -399,7 +409,7 @@ function AffreteurSettings() {
                   </p>
                 </div>
                 <Switch
-                  checked={mfaStatus.enabled}
+                  checked={user.mfaEnabled}
                   onCheckedChange={handleMFAToggle}
                   disabled={isLoading}
                 />
@@ -412,26 +422,21 @@ function AffreteurSettings() {
                 </Alert>
               )}
 
-              {mfaStatus.setupRequired && (
+              {mfaStatus.key && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
                   <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
 
-                  {mfaStatus.qrCode && (
+                  {mfaStatus.instructions && (
                     <div className="space-y-3">
-                      <p className="text-sm">{tProfile('settings.security.mfa.scanQR')}</p>
-                      <div className="flex justify-center">
-                        <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
-                      </div>
-
                       <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                          {mfaStatus.secret}
+                          {mfaStatus.key}
                         </code>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(mfaStatus.secret || '')}
+                          onClick={() => copyToClipboard(mfaStatus.key || '')}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -459,6 +464,8 @@ function AffreteurSettings() {
                                 .previousElementSibling as HTMLInputElement;
                               if (input.value.length === 6) {
                                 handleMFAEnable(input.value);
+                              } else {
+                                toast.info(tForms('validation.mfa'));
                               }
                             }}
                             disabled={isLoading}
@@ -472,7 +479,7 @@ function AffreteurSettings() {
                 </div>
               )}
 
-              {mfaStatus.backupCodes.length > 0 && (
+              {mfaStatus.backupCodes!.length > 0 && (
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
@@ -482,7 +489,7 @@ function AffreteurSettings() {
                     {tProfile('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {mfaStatus.backupCodes.map((code, index) => (
+                    {mfaStatus.backupCodes!.map((code, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-white rounded text-sm font-mono border">
                           {code}

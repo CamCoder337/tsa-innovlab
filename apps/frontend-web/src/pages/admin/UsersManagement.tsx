@@ -341,11 +341,11 @@ export default function AdminUsersPage() {
                                 <Calendar className="h-3 w-3" />
                                 {tAdmin('users.registeredOn')} {formatDate(user.createdAt)}
                               </div>
-                              {user.lastLoginAt && (
+                              {/* {user.lastLoginAt && (
                                 <span>
                                   {tAdmin('users.lastLogin')}: {formatDate(user.lastLoginAt)}
                                 </span>
-                              )}
+                              )} */}
                             </div>
                           </div>
                         </div>

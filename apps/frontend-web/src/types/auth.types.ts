@@ -13,11 +13,9 @@ export interface User extends Timestamps {
   status: UserStatus;
   emailVerifiedAt: string | null;
   mfaEnabled: boolean;
-  lastLoginAt: string | null;
-  failedLoginAttempts: number;
-  lockedUntil: string | null;
-  avatarUrl?: string;
+  mustEnableMFA: boolean;
   fullName?: string;
+  avatarUrl?: string;
 }
 
 export interface CreateUserRequest {
@@ -67,6 +65,15 @@ export interface MFAStatus {
   mfaEnabled: boolean;
   mfaRequired?: boolean;
   mustEnableMFA?: boolean;
+}
+
+export interface MFAUserStatus {
+  enabled: boolean;
+  setupRequired: boolean;
+  secret?: string;
+  key?: string;
+  backupCodes?: string[];
+  instructions?: string;
 }
 
 export interface MFASetupResponse {

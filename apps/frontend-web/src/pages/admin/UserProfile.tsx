@@ -452,11 +452,11 @@ export default function UserProfile() {
       value: selectedUser.stats?.totalOrders || 0,
       icon: Users,
     },
-    {
-      label: tAdmin('userProfile.lastLogin'),
-      value: selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : tCommon('never'),
-      icon: Calendar,
-    },
+    // {
+    //   label: tAdmin('userProfile.lastLogin'),
+    //   value: selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : tCommon('never'),
+    //   icon: Calendar,
+    // },
   ];
 
   return (
@@ -686,12 +686,12 @@ export default function UserProfile() {
                   {selectedUser.mfaEnabled ? tCommon('yes') : tCommon('no')}
                 </Badge>
               </div>
-              {selectedUser.lastLoginAt && (
+              {/* {selectedUser.lastLoginAt && (
                 <div className="pt-2 border-t">
                   <span className="text-sm text-gray-600">{tAdmin('userProfile.lastLogin')}</span>
                   <p className="text-sm font-medium">{formatDate(selectedUser.lastLoginAt)}</p>
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
 

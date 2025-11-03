@@ -369,7 +369,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
       {({ values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched }) => (
         <Form className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+            <CardHeader className="">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tForms('sections.missionDetails')}
@@ -378,12 +378,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
             <CardContent className="pt-0 space-y-4 sm:space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <Label htmlFor="title">{tForms('labels.title')}</Label>
+                  <Label htmlFor="title">{tForms('labels.missionTitle')}</Label>
                   <Input
                     id="title"
                     name="title"
                     type="text"
-                    placeholder={tForms('placeholders.title')}
+                    placeholder={tForms('placeholders.missionTitle')}
                     value={values.title || ''}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -668,7 +668,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder={tForms('placeholders.description')}
+                  placeholder={tForms('placeholders.missionDescription')}
                   value={values.description || ''}
                   onChange={handleChange}
                   onBlur={handleBlur}
@@ -800,7 +800,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       {tForms('sections.dynamicPricing')}
                     </h3>
                     <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                      {tForms('descriptions.dynamicPricing')}
+                      {tForms('messages.dynamicPricingDescription')}
                     </p>
                   </div>
                   <Button
@@ -821,13 +821,13 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         <span className="hidden sm:inline">{tForms('messages.calculating')}</span>
-                        <span className="sm:hidden">Calcul...</span>
+                        <span className="sm:hidden">{tForms('buttons.calculating')}</span>
                       </>
                     ) : (
                       <>
                         <Calculator className="h-4 w-4 mr-2" />
                         <span className="hidden sm:inline">{tForms('buttons.calculatePrice')}</span>
-                        <span className="sm:hidden">Calculer</span>
+                        <span className="sm:hidden">{tForms('buttons.calculate')}</span>
                       </>
                     )}
                   </Button>
@@ -837,13 +837,17 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   <div className="bg-white p-3 sm:p-4 rounded-lg border border-blue-200 space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
-                        <p className="text-xs sm:text-sm text-gray-600">Distance calculée</p>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          {tForms('labels.calculatedDistance')}
+                        </p>
                         <p className="text-base sm:text-lg font-semibold text-gray-900">
                           {dynamicPricing.distance_km.toFixed(1)} km
                         </p>
                       </div>
                       <div className="text-left sm:text-right">
-                        <p className="text-xs sm:text-sm text-gray-600">Prix estimé</p>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          {tForms('labels.estimatedPrice')}
+                        </p>
                         <p className="text-xl sm:text-2xl font-bold text-green-600">
                           {dynamicPricing.calculated_price.toLocaleString()} FCFA
                         </p>
@@ -852,14 +856,14 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
 
                     <div className="bg-blue-50 p-3 rounded-md space-y-2">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs sm:text-sm">
-                        <span className="text-gray-700">Fourchette de négociation</span>
+                        <span className="text-gray-700">{tForms('labels.negotiationRange')}</span>
                         <span className="font-medium text-blue-900">
                           {dynamicPricing.negotiation_range.min_price.toLocaleString()} -{' '}
                           {dynamicPricing.negotiation_range.max_price.toLocaleString()} FCFA
                         </span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs">
-                        <span className="text-gray-600">Marge</span>
+                        <span className="text-gray-600">{tForms('labels.margin')}</span>
                         <span className="font-medium text-gray-700">
                           ±{dynamicPricing.negotiation_range.margin_percentage}%
                         </span>
@@ -878,7 +882,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
                       <Calculator className="h-4 w-4 mr-2" />
-                      Appliquer ce prix
+                      {tForms('buttons.applyPrice')}
                     </Button>
                   </div>
                 )}
@@ -886,7 +890,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
 
               {/* Manual Budget Section */}
               <div>
-                <Label htmlFor="budgetMin">Prix que vous êtes prêt à payer (FCFA)</Label>
+                <Label htmlFor="budgetMin">{tForms('placeholders.budgetWillingToPay')}</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -895,12 +899,15 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     type="number"
                     min="0"
                     step="1000"
-                    placeholder="Ex: 850000"
+                    placeholder={tForms('placeholders.budgetExample')}
                     value={values.budgetMin || ''}
                     onChange={(e) =>
                       setFieldValue('budgetMin', e.target.value ? parseFloat(e.target.value) : null)
                     }
-                    onBlur={handleBlur}
+                    onBlur={(e) => {
+                      handleBlur(e);
+                      setFieldTouched('budgetMin', true);
+                    }}
                     className={cn(
                       'pl-10',
                       touched.budgetMin && errors.budgetMin && 'border-red-500'
@@ -910,9 +917,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 {touched.budgetMin && errors.budgetMin && (
                   <div className="text-sm text-red-600 mt-1">{errors.budgetMin}</div>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Saisissez le montant que vous souhaitez payer pour cette mission
-                </p>
+                <p className="text-xs text-gray-500 mt-1">{tForms('placeholders.budgetHelper')}</p>
               </div>
             </CardContent>
           </Card>
@@ -936,7 +941,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       ? tForms('messages.publishing')
                       : tForms('buttons.publishMission')}
                   </span>
-                  <span className="sm:hidden">{isSubmitting ? 'Publication...' : 'Publier'}</span>
+                  <span className="sm:hidden">
+                    {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publish')}
+                  </span>
                 </Button>
                 <Button
                   type="button"
@@ -951,7 +958,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   <span className="hidden sm:inline">
                     {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
                   </span>
-                  <span className="sm:hidden">{isSubmitting ? 'Sauvegarde...' : 'Brouillon'}</span>
+                  <span className="sm:hidden">
+                    {isSubmitting ? tForms('messages.saving') : tForms('buttons.draft')}
+                  </span>
                 </Button>
               </>
             )}
@@ -977,13 +986,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                         : tForms('buttons.updateMission')}
                   </span>
                   <span className="sm:hidden">
-                    {isSubmitting
-                      ? currentMission?.status === 'draft'
-                        ? 'Mise à jour...'
-                        : 'Mise à jour...'
-                      : currentMission?.status === 'draft'
-                        ? 'Mettre à jour'
-                        : 'Mettre à jour'}
+                    {isSubmitting ? tForms('messages.updating') : tForms('buttons.update')}
                   </span>
                 </Button>
                 {currentMission?.status === 'draft' && (
@@ -1001,7 +1004,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
                     </span>
                     <span className="sm:hidden">
-                      {isSubmitting ? 'Mise à jour...' : 'Brouillon'}
+                      {isSubmitting ? tForms('messages.updating') : tForms('buttons.draft')}
                     </span>
                   </Button>
                 )}

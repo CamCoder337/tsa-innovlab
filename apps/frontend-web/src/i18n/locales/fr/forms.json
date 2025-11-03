@@ -95,7 +95,10 @@
     "cvvPlaceholder": "123",
     "cardholderNamePlaceholder": "Nom comme indiqué sur la carte",
     "receiverNamePlaceholder": "Nom complet du bénéficiaire",
-    "cameroonPhone": "237 6 55 55 55 55"
+    "cameroonPhone": "237 6 55 55 55 55",
+    "budgetExample": "Ex: 850000",
+    "budgetWillingToPay": "Prix que vous êtes prêt à payer (FCFA)",
+    "budgetHelper": "Saisissez le montant que vous souhaitez payer pour cette mission"
   },
   "labels": {
     "optional": "Optionnel",
@@ -110,7 +113,7 @@
     "departureAddress": "Adresse de Départ",
     "arrivalAddress": "Adresse d'Arrivée",
     "cargoType": "Type de Marchandise",
-    "weight": "Poids (kg)",
+    "weight": "Poids (t)",
     "volume": "Volume (m³)",
     "missionDescription": "Description de la Mission",
     "estimatedDepartureDate": "Date de Départ Estimée",
@@ -124,7 +127,7 @@
     "selectWithGoogleMaps": "Sélectionner l'adresse avec Google Maps",
     "coordinates": "Coordonnées",
     "distance": "Distance",
-    "estimatedPrice": "Prix Estimé",
+    "estimatedPrice": "Prix estimé",
     "priceRange": "Fourchette de Prix",
     "productName": "Nom du Produit",
     "productReference": "Référence",
@@ -177,7 +180,10 @@
     "mobileProvider": "Service de paiement",
     "mobilePhone": "Numéro de téléphone",
     "receiverName": "Nom du bénéficiaire",
-    "deliveryAddress": "Adresse de livraison"
+    "deliveryAddress": "Adresse de livraison",
+    "calculatedDistance": "Distance calculée",
+    "negotiationRange": "Fourchette de négociation",
+    "margin": "Marge"
   },
   "buttons": {
     "save": "Enregistrer",
@@ -224,11 +230,16 @@
     "sendByEmail": "Envoyer par email",
     "close": "Fermer",
     "continueShopping": "Continuer mes achats",
-    "createConversation": "Créer une conversation"
+    "createConversation": "Créer une conversation",
+    "calculating": "Calcul...",
+    "applyPrice": "Appliquer ce prix",
+    "updatingAndPublishing": "Mise à jour et publication..."
   },
   "sections": {
     "missionDetails": "Détails de la Mission",
     "missionDates": "Dates de la Mission",
+    "schedule": "Planification",
+    "pricing": "Tarification",
     "dynamicPricing": "Prix Dynamique Intelligent",
     "manualBudget": "Budget Manuel",
     "productInfo": "Informations Produit",
@@ -306,7 +317,8 @@
     "noConversationsForNow": "Aucune conversation pour le moment",
     "noConversationFound": "Aucune conversation trouvée",
     "deliveryAddressTitle": "Adresse de livraison",
-    "noPaymentsDescription": "Aucun paiement n'a été effectué pour le moment."
+    "noPaymentsDescription": "Aucun paiement n'a été effectué pour le moment.",
+    "updatingAndPublishing": "Mise à jour et publication..."
   },
   "vehicleTypes": {
     "truck": "Camion",
