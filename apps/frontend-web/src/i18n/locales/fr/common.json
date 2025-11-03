@@ -91,7 +91,10 @@
     "thisMonth": "Ce mois",
     "lastMonth": "Le mois dernier",
     "thisYear": "Cette année",
-    "lastYear": "L'année dernière"
+    "lastYear": "L'année dernière",
+    "lessThanHour": "Il y a moins d'une heure",
+    "hoursAgo": "Il y a {{hours}}h",
+    "daysAgo": "Il y a {{days}} jour{{days, plural, one {} other {s}}}"
   },
   "messages": {
     "loading": "Chargement...",
@@ -100,7 +103,8 @@
     "activating": "Activation...",
     "saving": "Sauvegarde...",
     "deleting": "Suppression...",
-    "noChanges": "Aucune modification détectée"
+    "noChanges": "Aucune modification détectée",
+    "copiedToClipboard": "Copié dans le presse-papiers"
   },
   "search": {
     "title": "Recherche",

@@ -90,7 +90,10 @@
     "thisMonth": "This month",
     "lastMonth": "Last month",
     "thisYear": "This year",
-    "lastYear": "Last year"
+    "lastYear": "Last year",
+    "lessThanHour": "Less than an hour ago",
+    "hoursAgo": "{{hours}}h ago",
+    "daysAgo": "{{days}} day{{days, plural, one {} other {s}}} ago"
   },
   "messages": {
     "loading": "Loading...",
@@ -100,7 +103,8 @@
     "processing": "Processing...",
     "saving": "Saving...",
     "deleting": "Deleting...",
-    "noChanges": "No changes detected"
+    "noChanges": "No changes detected",
+    "copiedToClipboard": "Copied to clipboard"
   },
   "search": {
     "title": "Search",

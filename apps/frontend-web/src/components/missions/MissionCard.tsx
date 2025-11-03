@@ -101,7 +101,7 @@ export default function MissionCard({
 
   return (
     <Card>
-      <CardContent className="p-3 sm:p-4 lg:p-6">
+      <CardContent className="p-3 sm:p-4 lg:p-6 max-w-xs sm:max-w-none">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 sm:gap-4">
           <Link
             to={`/app/missions/${mission.id}`}

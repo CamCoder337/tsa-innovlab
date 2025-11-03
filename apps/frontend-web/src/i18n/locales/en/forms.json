@@ -95,7 +95,10 @@
     "cvvPlaceholder": "123",
     "cardholderNamePlaceholder": "Name as shown on card",
     "receiverNamePlaceholder": "Full name of receiver",
-    "cameroonPhone": "237 6 55 55 55 55"
+    "cameroonPhone": "237 6 55 55 55 55",
+    "budgetExample": "Ex: 850000",
+    "budgetWillingToPay": "Price you are willing to pay (FCFA)",
+    "budgetHelper": "Enter the amount you want to pay for this mission"
   },
   "labels": {
     "optional": "Optional",
@@ -177,7 +180,12 @@
     "mobileProvider": "Payment service",
     "mobilePhone": "Phone number",
     "receiverName": "Receiver name",
-    "deliveryAddress": "Delivery address"
+    "deliveryAddress": "Delivery address",
+    "calculatedDistance": "Calculated distance",
+    "negotiationRange": "Negotiation range",
+    "margin": "Margin",
+    "budgetWillingToPay": "Price you are willing to pay (FCFA)",
+    "budgetHelper": "Enter the amount you want to pay for this mission"
   },
   "buttons": {
     "save": "Save",
@@ -224,11 +232,14 @@
     "sendByEmail": "Send by Email",
     "close": "Close",
     "continueShopping": "Continue Shopping",
-    "createConversation": "Create Conversation"
+    "createConversation": "Create Conversation",
+    "applyPrice": "Apply this price"
   },
   "sections": {
     "missionDetails": "Mission Details",
     "missionDates": "Mission Dates",
+    "schedule": "Schedule",
+    "pricing": "Pricing",
     "dynamicPricing": "Smart Dynamic Pricing",
     "manualBudget": "Manual Budget",
     "productInfo": "Product Information",
@@ -306,7 +317,8 @@
     "noConversationsForNow": "No conversations for now",
     "noConversationFound": "No conversations found",
     "deliveryAddressTitle": "Delivery address",
-    "noPaymentsDescription": "No payments have been made yet."
+    "noPaymentsDescription": "No payments have been made yet.",
+    "updatingAndPublishing": "Updating and publishing..."
   },
   "vehicleTypes": {
     "truck": "Truck",

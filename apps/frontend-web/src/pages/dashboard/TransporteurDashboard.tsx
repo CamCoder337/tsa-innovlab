@@ -247,9 +247,9 @@ function TransporteurDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3 sm:pb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2 gap-0">
+          <CardHeader className="">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Package className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('transporteur.sections.myActiveMissions')}
@@ -286,7 +286,9 @@ function TransporteurDashboard() {
                     </div>
                     <div className="flex sm:flex-col sm:text-right items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-1 flex-shrink-0">
                       <div className="flex flex-col sm:items-end">
-                        <p className="text-xs sm:text-sm font-medium">{mission.statusLabel}</p>
+                        <p className="text-xs sm:text-sm font-medium">
+                          {tCommon('status.' + mission.statusLabel)}
+                        </p>
                         <p className="text-xs text-muted-foreground">{mission.timeAgo}</p>
                       </div>
                       <div className="flex flex-col sm:items-end">

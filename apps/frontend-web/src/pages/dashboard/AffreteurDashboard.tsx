@@ -33,8 +33,7 @@ function AffreteurDashboard() {
 
   const recentMissions = useMemo(() => {
     return DashboardUtils.getRecentMissions(myMissions, 3, tCommon);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myMissions]);
+  }, [myMissions, tCommon]);
 
   const recommendations = useMemo(() => {
     return DashboardUtils.generateInsightRecommendations(myMissions);
@@ -183,14 +182,16 @@ function AffreteurDashboard() {
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {mission.transporteur
-                            ? `par ${mission.transporteur.fullName}`
+                            ? `par ${mission.transporteur.firstName} ${mission.transporteur.lastName}`
                             : tCommon('status.notAssigned')}
                         </p>
                       </div>
                     </div>
                     <div className="flex sm:flex-col sm:text-right items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-1 flex-shrink-0">
                       <div className="flex flex-col sm:items-end">
-                        <p className="text-xs sm:text-sm font-medium">{mission.statusLabel}</p>
+                        <p className="text-xs sm:text-sm font-medium">
+                          {tCommon('status.' + mission.statusLabel).toUpperCase()}
+                        </p>
                         <p className="text-xs text-muted-foreground">{mission.timeAgo}</p>
                       </div>
                       <div className="flex flex-col sm:items-end">
@@ -256,7 +257,7 @@ function AffreteurDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
