@@ -69,6 +69,12 @@ export interface ChatbotQueryRequest {
   context?: Record<string, any>
 }
 
+export interface NavigationInfo {
+  path: string
+  description: string
+  filters?: Record<string, any>
+}
+
 export interface ChatbotResponse {
   message: string
   intent: {
@@ -78,6 +84,7 @@ export interface ChatbotResponse {
   }
   suggestions: string[]
   data?: Record<string, any>
+  navigation?: NavigationInfo // V3: Frontend navigation info
   requires_human: boolean
   timestamp: string
 }
@@ -299,28 +306,81 @@ export default class AIService {
 
   /**
    * Query the chatbot with a user message
+   *
+   * Uses V3 (Intent-First with Frontend Guidance) by default
+   * Falls back to V2 (LLM-First) then V1 (Regex-based) if needed
    */
   async queryChatbot(request: ChatbotQueryRequest): Promise<ChatbotResponse | null> {
     try {
-      logger.info('Querying chatbot', {
+      logger.info('Querying chatbot V3 (Intent-First)', {
         userId: request.user_id,
         messageLength: request.message.length,
       })
 
-      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
+      // Try V3 first (Intent-First with Frontend Guidance)
+      const responseV3 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/v3/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(15000), // 15 seconds for LLM responses
+        signal: AbortSignal.timeout(15000), // 15 seconds for intent detection + action
       })
 
-      if (!response.ok) {
-        throw new Error(`AI Service responded with status ${response.status}`)
+      if (responseV3.ok) {
+        const data = (await responseV3.json()) as ChatbotResponse
+        logger.info('Chatbot V3 response received', {
+          userId: request.user_id,
+          intent: data.intent?.name,
+          hasNavigation: !!data.navigation,
+        })
+        return data
       }
 
-      const data = (await response.json()) as ChatbotResponse
+      // Fallback to V2 if V3 fails
+      logger.warn('Chatbot V3 failed, falling back to V2', {
+        status: responseV3.status,
+        userId: request.user_id,
+      })
+
+      const responseV2 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(20000), // 20 seconds for LLM + function calls
+      })
+
+      if (responseV2.ok) {
+        const data = (await responseV2.json()) as ChatbotResponse
+        logger.info('Chatbot V2 response received (fallback)', {
+          userId: request.user_id,
+          requiresHuman: data.requires_human,
+        })
+        return data
+      }
+
+      // Fallback to V1 if V2 also fails
+      logger.warn('Chatbot V2 also failed, falling back to V1', {
+        status: responseV2.status,
+        userId: request.user_id,
+      })
+
+      const responseV1 = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(15000),
+      })
+
+      if (!responseV1.ok) {
+        throw new Error(`All chatbot versions (V3, V2, V1) failed`)
+      }
+
+      const data = (await responseV1.json()) as ChatbotResponse
       return data
     } catch (error) {
       logger.error('Failed to query chatbot from AI service', { error })

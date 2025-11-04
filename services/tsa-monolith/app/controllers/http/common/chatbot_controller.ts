@@ -29,22 +29,34 @@ export default class ChatbotController {
         })
       }
 
+      // 🔍 DEBUG: Log user info
+      logger.info(`🔍 USER: id=${user.id} role=${user.role} email=${user.email}`)
+
       logger.info('Chatbot query received', {
         userId: user.id,
+        userRole: user.role,
+        userEmail: user.email,
         messageLength: message.length,
       })
 
       // Get authorization token to pass to chatbot
-      const authToken = request.header('Authorization')
+      const authToken = request.header('Authorization') || ''
 
-      const chatbotResponse = await this.aiService.queryChatbot({
+      const chatbotPayload = {
         message: message.trim(),
         user_id: user.id.toString(),
         user_role: user.role,
-        user_token: authToken, // Pass token for API calls
+        user_token: authToken || undefined, // Pass token for API calls (undefined if empty)
         conversation_id: conversationId || user.id.toString(),
         context: context || {},
-      })
+      }
+
+      // 🔍 DEBUG: Log payload sent to AI service
+      logger.info(
+        `🔍 PAYLOAD: user_id=${chatbotPayload.user_id} user_role=${chatbotPayload.user_role}`
+      )
+
+      const chatbotResponse = await this.aiService.queryChatbot(chatbotPayload)
 
       if (!chatbotResponse) {
         return response.status(503).json({

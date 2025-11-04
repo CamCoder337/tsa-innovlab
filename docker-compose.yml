@@ -273,8 +273,13 @@ services:
       FASTAPI_HOST: 0.0.0.0
       FASTAPI_PORT: 8000
       
-      # Monolith API URL for chatbot
+      # Monolith API URL for chatbot (fallback only, prefer direct DB access)
       MONOLITH_API_URL: http://tsa-monolith:3333/api
+      
+      # LLM Configuration (Groq) - REQUIRED for Chatbot V2
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
+      LLM_ENABLED: ${LLM_ENABLED:-true}
       
       # Google Cloud Vision API
       # Option 1: Variable d'environnement (RECOMMANDÉ pour production)
