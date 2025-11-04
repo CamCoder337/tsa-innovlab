@@ -91,7 +91,7 @@ function AffreteurDashboard() {
   if (isLoading && myMissions.length === 0)
     return (
       <div className="flex flex-1 flex-col items-center justify-center h-screen">
-        <Loader className="animate-spin h-12 w-12 text-tsa-blue" />
+        <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
       </div>
     );
 
@@ -142,7 +142,7 @@ function AffreteurDashboard() {
                     <p className="text-lg sm:text-2xl font-bold truncate">{insight.value}</p>
                     <p className="text-xs text-green-600 truncate">{insight.change}</p>
                   </div>
-                  <insight.icon className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue flex-shrink-0" />
+                  <insight.icon className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                 </div>
               </CardContent>
             </Card>
@@ -193,7 +193,7 @@ function AffreteurDashboard() {
                         <p className="text-xs text-muted-foreground">{mission.timeAgo}</p>
                       </div>
                       <div className="flex flex-col sm:items-end">
-                        <p className="text-xs font-medium text-tsa-blue">
+                        <p className="text-xs font-medium text-tsa-blue dark:text-tsa-white">
                           {mission.formattedBudget}
                         </p>
                         <Progress value={mission.progress} className="w-16 sm:w-20 h-1" />
@@ -259,7 +259,7 @@ function AffreteurDashboard() {
         <Card>
           <CardHeader className="pb-3 sm:pb-6">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
               {tDash('affreteur.sections.recommendations')}
               <div className="w-2 h-2 bg-tsa-blue rounded-full animate-pulse" />
             </CardTitle>

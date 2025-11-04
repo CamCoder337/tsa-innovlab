@@ -95,8 +95,8 @@ export default function MissionTrackingPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{tTracking('mission.notFound')}</h1>
-          <p className="text-gray-600 mb-8">{tTracking('mission.notFoundMessage', { id })}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{tTracking('mission.notFound')}</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">{tTracking('mission.notFoundMessage', { id })}</p>
           <Button onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {tTracking('navigation.backToDashboard')}
@@ -148,7 +148,7 @@ export default function MissionTrackingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* En-tête avec informations mission */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 sm:mb-8">
@@ -169,10 +169,10 @@ export default function MissionTrackingPage() {
                 </Badge>
               </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {mission?.title || tTracking('mission.loading')}
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>
@@ -314,32 +314,32 @@ export default function MissionTrackingPage() {
                     <CardContent className="space-y-3 sm:space-y-4">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('tracking.currentSpeed')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">65 km/h</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('tracking.estimatedArrival')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">14:30</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('tracking.remainingDistance')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">125 km</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('tracking.progress')}
                           </span>
                           <span className="font-medium text-green-600 text-xs sm:text-sm">68%</span>
                         </div>
                       </div>
 
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className="bg-tsa-blue h-2 rounded-full"
                           style={{ width: '68%' }}
@@ -353,7 +353,7 @@ export default function MissionTrackingPage() {
                             {tTracking('tracking.vehicleOnline')}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {tTracking('tracking.lastUpdate')}: {new Date().toLocaleTimeString()}
                         </p>
                       </div>
@@ -369,7 +369,7 @@ export default function MissionTrackingPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        <div className="p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="p-2 sm:p-3 bg-green-50 border dark:border-gray-800 border-green-200 rounded-lg">
                           <div className="flex items-center gap-2">
                             <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                             <span className="text-xs sm:text-sm text-green-800">
@@ -377,7 +377,7 @@ export default function MissionTrackingPage() {
                             </span>
                           </div>
                         </div>
-                        <div className="p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="p-2 sm:p-3 bg-blue-50 border dark:border-gray-800 border-blue-200 rounded-lg">
                           <div className="flex items-center gap-2">
                             <Info className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
                             <span className="text-xs sm:text-sm text-blue-800">
@@ -400,49 +400,49 @@ export default function MissionTrackingPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-600">
+                      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                         {tTracking('mission.description')}
                       </label>
-                      <p className="text-gray-900">{mission.description}</p>
+                      <p className="text-gray-900 dark:text-white">{mission.description}</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-600">
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('mission.merchandiseType')}
                         </label>
-                        <p className="text-gray-900">{mission.typeMarchandise}</p>
+                        <p className="text-gray-900 dark:text-white">{mission.typeMarchandise}</p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-600">
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('mission.weight', { weight: '' })}
                         </label>
-                        <p className="text-gray-900">
+                        <p className="text-gray-900 dark:text-white">
                           {tTracking('mission.weight', { weight: mission.poids })}
                         </p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-600">
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('mission.estimatedDeparture')}
                         </label>
-                        <p className="text-gray-900">
+                        <p className="text-gray-900 dark:text-white">
                           {new Date(mission.dateDepartEstime || '').toLocaleDateString()}
                         </p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-600">
+                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('mission.expectedArrival')}
                         </label>
-                        <p className="text-gray-900">
+                        <p className="text-gray-900 dark:text-white">
                           {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     {/* <div>
-                      <label className="text-sm font-medium text-gray-600">Priorité</label>
-                      <Badge className={getPriorityColor(mission.budgetMin)}>
-                        {mission.budgetMin > 200000 ? 'Urgent' : 'Normal'}
+                      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Priorité</label>
+                      <Badge className={getPriorityColor(mission.budgetMax)}>
+                        {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
                       </Badge>
                     </div> */}
                   </CardContent>
@@ -459,11 +459,11 @@ export default function MissionTrackingPage() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-tsa-blue" />
+                          <User className="w-6 h-6 text-tsa-blue dark:text-tsa-white" />
                         </div>
                         <div>
                           <p className="font-medium">Transporteur #{mission.transporteurId}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('transporter.verified')}
                           </p>
                         </div>
@@ -500,9 +500,9 @@ export default function MissionTrackingPage() {
                             }`}
                           >
                             {step.completed ? (
-                              <div className="w-2 h-2 bg-white rounded-full" />
+                              <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full" />
                             ) : (
-                              <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                              <div className="w-2 h-2 bg-gray-50 dark:bg-gray-9500 rounded-full" />
                             )}
                           </div>
                           {index < timeline.length - 1 && (
@@ -523,12 +523,12 @@ export default function MissionTrackingPage() {
                               {step.label}
                             </h3>
                             {step.date && (
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(step.date).toLocaleString()}
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{step.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{step.description}</p>
                         </div>
                       </div>
                     ))}
@@ -543,7 +543,7 @@ export default function MissionTrackingPage() {
                   <CardTitle>{tTracking('documents.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                     <p>{tTracking('documents.noDocuments')}</p>
                     <p className="text-sm">{tTracking('documents.documentsWillShow')}</p>

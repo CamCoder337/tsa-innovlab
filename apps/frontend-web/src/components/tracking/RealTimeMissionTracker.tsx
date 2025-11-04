@@ -6,7 +6,6 @@ import MissionTrackingMap from './MissionTrackingMap';
 import type { Mission } from '@/types/mission.types';
 import { RefreshCw, MapPin, Truck, Clock, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { useTrackingTranslation } from '@/hooks/useTranslation';
 
 interface RealTimeMissionTrackerProps {
   className?: string;
@@ -52,7 +51,6 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isConnected, setIsConnected] = useState(false);
-  const { t: tTracking } = useTrackingTranslation();
 
   // Charger les missions initiales
   useEffect(() => {
@@ -91,7 +89,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     inProgress: missions.filter((m) => m.status === 'in_progress').length,
     completed: missions.filter((m) => m.status === 'completed').length,
     published: missions.filter((m) => m.status === 'published').length,
-    highPriority: missions.filter((m) => m.budgetMin! > 200000).length,
+    highPriority: missions.filter((m) => m.budgetMax! > 200000).length,
   };
 
   const handleRefresh = async () => {
@@ -112,8 +110,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
       <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
         <div className="text-center p-4 sm:p-8">
           <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-3 sm:mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base">
-            {tTracking('realTime.loadingMissions')}
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+            Chargement des missions en temps réel...
           </p>
         </div>
       </div>
@@ -125,7 +123,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
       {/* En-tête avec statut de connexion */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-start sm:items-center">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
             Suivi Temps Réel des Missions
           </h2>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
@@ -133,12 +131,12 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
               <div
                 className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
               ></div>
-              <span className="text-xs sm:text-sm text-gray-600">
-                {isConnected ? tTracking('realTime.connected') : tTracking('realTime.disconnected')}
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                {isConnected ? 'Connecté' : 'Déconnecté'}
               </span>
             </div>
-            <span className="text-xs sm:text-sm text-gray-500">
-              {tTracking('realTime.lastUpdate', { time: lastUpdate.toLocaleTimeString() })}
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              Dernière mise à jour: {lastUpdate.toLocaleTimeString()}
             </span>
           </div>
         </div>
@@ -148,7 +146,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           className="flex items-center gap-2 w-full sm:w-auto text-sm sm:text-base"
         >
           <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{tTracking('realTime.refresh')}</span>
+          <span className="hidden sm:inline">Actualiser</span>
+          <span className="sm:hidden">Actualiser</span>
         </Button>
       </div>
 
@@ -158,12 +157,10 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  {tTracking('realTime.totalMissions')}
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Total Missions</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
-              <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
+              <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 dark:text-gray-400" />
             </div>
           </CardContent>
         </Card>
@@ -172,10 +169,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  {tTracking('realTime.inProgress')}
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-tsa-blue">{stats.inProgress}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">En Cours</p>
+                <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">{stats.inProgress}</p>
               </div>
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
             </div>
@@ -186,9 +181,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  {tTracking('realTime.published')}
-                </p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Publiées</p>
                 <p className="text-lg sm:text-2xl font-bold text-orange-600">{stats.published}</p>
               </div>
               <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
@@ -200,9 +193,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  {tTracking('realTime.completed')}
-                </p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Terminées</p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">{stats.completed}</p>
               </div>
               <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
@@ -214,9 +205,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600">
-                  {tTracking('realTime.highPriority')}
-                </p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Prioritaires</p>
                 <p className="text-lg sm:text-2xl font-bold text-red-600">{stats.highPriority}</p>
               </div>
               <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
@@ -232,8 +221,8 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">{tTracking('realTime.realTimeMap')}</span>
-                <span className="sm:hidden">{tTracking('realTime.realTimeMapShort')}</span>
+                <span className="hidden sm:inline">Carte des Missions en Temps Réel</span>
+                <span className="sm:hidden">Missions Temps Réel</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -256,7 +245,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
             <Card>
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                  <span className="truncate">{tTracking('realTime.selectedMission')}</span>
+                  <span className="truncate">Mission Sélectionnée</span>
                   <Badge
                     className={`
                       ${selectedMission.status === 'completed' ? 'bg-green-500' : ''}
@@ -276,34 +265,34 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                   <h4 className="font-semibold text-sm sm:text-base truncate">
                     {selectedMission.title}
                   </h4>
-                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                     {selectedMission.description}
                   </p>
                 </div>
 
                 <div className="space-y-2 text-xs sm:text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{tTracking('realTime.type')}:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Type:</span>
                     <span className="font-medium truncate ml-2">
                       {selectedMission.typeMarchandise}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{tTracking('realTime.weight')}:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Poids:</span>
                     <span className="font-medium">{selectedMission.poids} kg</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{tTracking('realTime.volume')}:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Volume:</span>
                     <span className="font-medium">{selectedMission.volume} m³</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{tTracking('realTime.budget')}:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Budget:</span>
                     <span className="font-medium text-green-600">
                       {selectedMission.budgetMin?.toLocaleString()} FCFA
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{tTracking('realTime.delivery')}:</span>
+                    <span className="text-gray-600 dark:text-gray-300">Livraison:</span>
                     <span className="font-medium text-xs sm:text-sm">
                       {new Date(selectedMission.dateArriveePrevue!).toLocaleDateString()}
                     </span>
@@ -311,15 +300,15 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                 </div>
 
                 {selectedMission.budgetMin! > 200000 && (
-                  <div className="p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-medium text-red-800">
-                        {tTracking('realTime.priorityMission')}
+                        Mission Prioritaire
                       </span>
                     </div>
                     <p className="text-xs text-red-600 mt-1">
-                      {tTracking('realTime.highBudgetTracking')}
+                      Budget élevé - Suivi renforcé requis
                     </p>
                   </div>
                 )}
@@ -329,11 +318,11 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
             <Card>
               <CardContent className="p-4 sm:p-8 text-center">
                 <MapPin className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
-                  {tTracking('realTime.noMissionSelected')}
+                <h3 className="font-medium text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
+                  Aucune mission sélectionnée
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  {tTracking('realTime.clickMarkerForDetails')}
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                  Cliquez sur un marqueur de la carte pour voir les détails
                 </p>
               </CardContent>
             </Card>
@@ -342,9 +331,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           {/* Missions récentes */}
           <Card>
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-sm sm:text-base">
-                {tTracking('realTime.recentActivity')}
-              </CardTitle>
+              <CardTitle className="text-sm sm:text-base">Activité Récente</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 sm:space-y-3">
@@ -354,7 +341,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                   .map((mission) => (
                     <div
                       key={mission.id}
-                      className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg hover:bg-gray-50 dark:bg-gray-950 cursor-pointer"
                       onClick={() => setSelectedMission(mission)}
                     >
                       <div
@@ -370,7 +357,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs sm:text-sm font-medium truncate">{mission.title}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(mission.updatedAt).toLocaleTimeString()}
                         </p>
                       </div>

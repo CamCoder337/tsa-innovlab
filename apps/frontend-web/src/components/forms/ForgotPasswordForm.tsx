@@ -61,7 +61,7 @@ export default function ForgotPasswordForm({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 aria-invalid={touched.email && !!errors.email}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue placeholder:text-tsa-blue dark:text-tsa-white/90 placeholder:text-sm placeholder:font-medium"
                 required
               />
               {touched.email && errors.email ? (
@@ -79,7 +79,7 @@ export default function ForgotPasswordForm({
             </Button>
 
             <div className="text-center">
-              <Link to="/" className="text-tsa-blue font-medium">
+              <Link to="/" className="text-tsa-blue dark:text-tsa-white font-medium">
                 ← {tForms('actions.backToLogin')}
               </Link>
             </div>

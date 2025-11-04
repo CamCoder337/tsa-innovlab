@@ -34,7 +34,7 @@ export default function AddUser() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ export default function AddUser() {
               {tCommon('actions.back')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{tAdmin('addUser.title')}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tAdmin('addUser.title')}</h1>
               <p className="text-muted-foreground">{tAdmin('addUser.subtitle')}</p>
             </div>
           </div>

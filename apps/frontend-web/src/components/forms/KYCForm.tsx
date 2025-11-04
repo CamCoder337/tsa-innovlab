@@ -120,7 +120,7 @@ const KYCForm = ({ kycDocuments, kycUploading, onDocumentUpload }: KYCFormProps)
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-44">
                     {doc.fileName ? (
                       <div className="space-y-2">
-                        <FileText className="h-8 w-8 mx-auto text-tsa-blue" />
+                        <FileText className="h-8 w-8 mx-auto text-tsa-blue dark:text-tsa-white" />
                         <p className="text-sm font-medium">{doc.fileName}</p>
                         <p className="text-xs text-muted-foreground">
                           {tForms('kyc.messages.uploadedOn')}{' '}

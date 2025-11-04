@@ -404,7 +404,7 @@ export default function UserProfile() {
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-200">
+          <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700">
             <AlertTriangle className="h-3 w-3 mr-1" />
             {tCommon('status.missing')}
           </Badge>
@@ -424,10 +424,10 @@ export default function UserProfile() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
         <AlertTriangle className="h-16 w-16 text-red-500" />
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           {tAdmin('userProfile.userNotFound')}
         </h2>
-        <p className="text-gray-600">{tAdmin('userProfile.userNotFoundDescription')}</p>
+        <p className="text-gray-600 dark:text-gray-300">{tAdmin('userProfile.userNotFoundDescription')}</p>
         <Button onClick={() => navigate('/app/users')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {tAdmin('userProfile.backToList')}
@@ -469,7 +469,7 @@ export default function UserProfile() {
             {tCommon('actions.back')}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{tAdmin('userProfile.title')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tAdmin('userProfile.title')}</h1>
             <p className="text-muted-foreground">{tAdmin('userProfile.subtitle')}</p>
           </div>
         </div>
@@ -569,7 +569,7 @@ export default function UserProfile() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tAdmin('userProfile.fullName')}
                   </label>
                   <p className="text-lg font-semibold">
@@ -578,13 +578,13 @@ export default function UserProfile() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tCommon('status.title')}
                   </label>
                   <div className="mt-1">{getStatusBadge(selectedUser.status)}</div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tAdmin('userProfile.email')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
@@ -593,7 +593,7 @@ export default function UserProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tAdmin('userProfile.phone')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
@@ -604,7 +604,7 @@ export default function UserProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tCommon('roles.title')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
@@ -615,7 +615,7 @@ export default function UserProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {tAdmin('userProfile.registrationDate')}
                   </label>
                   <div className="flex items-center gap-2 mt-1">
@@ -629,7 +629,7 @@ export default function UserProfile() {
                 <>
                   <Separator />
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Entreprise</label>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Entreprise</label>
                     <div className="flex items-center gap-2 mt-1">
                       <Building className="h-4 w-4 text-gray-400" />
                       <p className="text-sm">{selectedUser.companyName}</p>
@@ -651,10 +651,10 @@ export default function UserProfile() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {userStats.map((stat, index) => (
-                  <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-                    <stat.icon className="h-8 w-8 mx-auto mb-2 text-tsa-blue" />
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <p className="text-sm text-gray-600">{stat.label}</p>
+                  <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
+                    <stat.icon className="h-8 w-8 mx-auto mb-2 text-tsa-blue dark:text-tsa-white" />
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -673,13 +673,13 @@ export default function UserProfile() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{tAdmin('userProfile.emailVerified')}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('userProfile.emailVerified')}</span>
                 <Badge variant={selectedUser.emailVerifiedAt ? 'default' : 'secondary'}>
                   {selectedUser.emailVerifiedAt ? tCommon('yes') : tCommon('no')}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {tAdmin('userProfile.twoFactorEnabled')}
                 </span>
                 <Badge variant={selectedUser.mfaEnabled ? 'default' : 'secondary'}>
@@ -688,7 +688,7 @@ export default function UserProfile() {
               </div>
               {/* {selectedUser.lastLoginAt && (
                 <div className="pt-2 border-t">
-                  <span className="text-sm text-gray-600">{tAdmin('userProfile.lastLogin')}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('userProfile.lastLogin')}</span>
                   <p className="text-sm font-medium">{formatDate(selectedUser.lastLoginAt)}</p>
                 </div>
               )} */}
@@ -747,7 +747,7 @@ export default function UserProfile() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {kycDocuments.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>{tAdmin('userProfile.kyc.noDocuments')}</p>
                   </div>
@@ -756,17 +756,17 @@ export default function UserProfile() {
                     {kycDocuments.map((document) => (
                       <div
                         key={document.id}
-                        className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        className="border dark:border-gray-800 rounded-lg p-4 hover:bg-gray-50 dark:bg-gray-950 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <FileText className="h-5 w-5 text-tsa-blue" />
+                            <FileText className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                             <div>
-                              <h4 className="font-medium text-gray-900">{document.label}</h4>
+                              <h4 className="font-medium text-gray-900 dark:text-white">{document.label}</h4>
                               <div className="flex items-center gap-2 mt-1">
                                 {getStatusBadgeForKYC(document.status)}
                                 {document.fileName && (
-                                  <span className="text-sm text-gray-500">{document.fileName}</span>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">{document.fileName}</span>
                                 )}
                               </div>
                             </div>
@@ -799,14 +799,14 @@ export default function UserProfile() {
                                       </DialogDescription>
                                     </DialogHeader>
                                     <div className="mt-4">
-                                      <div className="bg-gray-100 rounded-lg p-8 text-center">
+                                      <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center">
                                         <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                                        <p className="text-gray-600 mb-4">
+                                        <p className="text-gray-600 dark:text-gray-300 mb-4">
                                           {tAdmin('userProfile.kyc.previewPlaceholder', {
                                             fileName: document.fileName,
                                           })}
                                         </p>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
                                           {tAdmin('userProfile.kyc.previewNote')}
                                         </p>
                                       </div>
@@ -896,14 +896,14 @@ export default function UserProfile() {
                         <div className="mt-3 pt-3 border-t border-gray-100">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                              <span className="text-gray-500">
+                              <span className="text-gray-500 dark:text-gray-400">
                                 {tAdmin('userProfile.kyc.details.status')}
                               </span>
                               <p className="font-medium">{document.status}</p>
                             </div>
                             {document.uploadDate && (
                               <div>
-                                <span className="text-gray-500">
+                                <span className="text-gray-500 dark:text-gray-400">
                                   {tAdmin('userProfile.kyc.details.uploaded')}
                                 </span>
                                 <p className="font-medium">{formatDate(document.uploadDate)}</p>
@@ -911,7 +911,7 @@ export default function UserProfile() {
                             )}
                             {document.validatedAt && (
                               <div>
-                                <span className="text-gray-500">
+                                <span className="text-gray-500 dark:text-gray-400">
                                   {document.status === 'verified'
                                     ? tAdmin('userProfile.kyc.details.validated')
                                     : tAdmin('userProfile.kyc.details.rejected')}
@@ -921,7 +921,7 @@ export default function UserProfile() {
                             )}
                             {document.validatedBy && (
                               <div>
-                                <span className="text-gray-500">
+                                <span className="text-gray-500 dark:text-gray-400">
                                   {document.status === 'verified'
                                     ? tAdmin('userProfile.kyc.details.validatedBy')
                                     : tAdmin('userProfile.kyc.details.rejectedBy')}
@@ -932,7 +932,7 @@ export default function UserProfile() {
                           </div>
 
                           {document.rejectionReason && (
-                            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="mt-3 p-3 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg">
                               <div className="flex items-start gap-2">
                                 <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
                                 <div>
@@ -954,7 +954,7 @@ export default function UserProfile() {
 
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-start gap-3">
-                    <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
+                    <Shield className="h-5 w-5 text-tsa-blue dark:text-tsa-white mt-0.5" />
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium text-blue-900">
                         {tAdmin('userProfile.kyc.management.title')}
@@ -962,7 +962,7 @@ export default function UserProfile() {
                       <p className="text-sm text-blue-700">
                         {tAdmin('userProfile.kyc.management.description')}
                       </p>
-                      <ul className="text-xs text-tsa-blue mt-2 space-y-1">
+                      <ul className="text-xs text-tsa-blue dark:text-tsa-white mt-2 space-y-1">
                         <li>• {tAdmin('userProfile.kyc.management.instructions.view')}</li>
                         <li>• {tAdmin('userProfile.kyc.management.instructions.download')}</li>
                         <li>• {tAdmin('userProfile.kyc.management.instructions.validate')}</li>

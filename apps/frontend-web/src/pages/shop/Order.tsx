@@ -355,13 +355,13 @@ export default function OrderDetailsPage() {
                 {order.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-zinc-50 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-zinc-50 transition-colors"
                   >
                     {item.productImageUrl && (
                       <img
                         src={item.productImageUrl}
                         alt={item.productName || 'Product'}
-                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover border flex-shrink-0 mx-auto sm:mx-0"
+                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover border dark:border-gray-800 flex-shrink-0 mx-auto sm:mx-0"
                       />
                     )}
                     <div className="flex-1 min-w-0 text-center sm:text-left">
@@ -419,7 +419,7 @@ export default function OrderDetailsPage() {
 
               {order.trackingNumber && (
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue flex-shrink-0" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-blue-900 text-sm sm:text-base">
                       {tShop('orderDetails.trackingNumber')}

@@ -223,7 +223,7 @@ export const Facture: React.FC<FactureProps> = ({
                   {deliveryAddress.city}, {deliveryAddress.postalCode}
                 </p>
                 <p>{deliveryAddress.country || 'Cameroun'}</p>
-                <p className="font-medium text-tsa-blue">
+                <p className="font-medium text-tsa-blue dark:text-tsa-white">
                   {getDeliveryOptionLabel(deliveryOption)}
                 </p>
               </div>
@@ -345,7 +345,7 @@ export const Facture: React.FC<FactureProps> = ({
             <p>Merci pour votre confiance en TSA Logistics !</p>
             <p className="mt-2">
               Pour toute question concernant votre commande, contactez-nous à{' '}
-              <a href="mailto:support@tsa-logistics.com" className="text-tsa-blue hover:underline">
+              <a href="mailto:support@tsa-logistics.com" className="text-tsa-blue dark:text-tsa-white hover:underline">
                 support@tsa-logistics.com
               </a>
             </p>

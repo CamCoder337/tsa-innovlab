@@ -36,6 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import GlobalSearch from '@/components/search/GlobalSearch';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export default function Header({ className }: { className?: string }) {
   const { user, logout } = useAuth();
@@ -70,7 +71,7 @@ export default function Header({ className }: { className?: string }) {
 
   return (
     <header
-      className={`h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 lg:px-6 bg-white border-b ${className}`}
+      className={`h-14 sm:h-16 flex items-center justify-between px-3 sm:px-4 lg:px-6 bg-white dark:bg-gray-900 border-b dark:border-gray-800 ${className}`}
     >
       {/* Left Section: Logo and Mobile Sidebar */}
       <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-shrink-0">
@@ -92,10 +93,7 @@ export default function Header({ className }: { className?: string }) {
 
         {/* App Name - Hidden on mobile, visible on medium+ screens */}
         <div className="hidden md:flex flex-col justify-center ml-1 lg:ml-2">
-          <h1
-            className="font-semibold text-lg lg:text-xl leading-tight"
-            style={{ color: 'var(--tsa-blue)' }}
-          >
+          <h1 className="font-semibold text-lg lg:text-xl leading-tight text-tsa-blue dark:text-tsa-white">
             {tCommon('app.name')}
           </h1>
           <p className="text-xs lg:text-sm text-muted-foreground leading-tight">
@@ -150,6 +148,11 @@ export default function Header({ className }: { className?: string }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        {/* Theme Toggle - Always visible */}
+        <div className="hidden lg:block">
+          <ThemeToggle />
         </div>
 
         {/* Desktop Notifications - Hidden on mobile/tablet */}

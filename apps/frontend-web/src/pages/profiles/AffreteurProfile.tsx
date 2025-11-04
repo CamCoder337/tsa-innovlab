@@ -338,13 +338,13 @@ function AffreteurProfile() {
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
+                <Shield className="h-5 w-5 text-tsa-blue dark:text-tsa-white mt-0.5" />
                 <div className="space-y-1">
                   <h4 className="text-sm font-medium text-blue-900">
                     {tProfile('kyc.whyDocuments')}
                   </h4>
                   <p className="text-sm text-blue-700">{tProfile('kyc.description')}</p>
-                  <ul className="text-xs text-tsa-blue mt-2 space-y-1">
+                  <ul className="text-xs text-tsa-blue dark:text-tsa-white mt-2 space-y-1">
                     <li>• {tProfile('kyc.acceptedFormats')}</li>
                     <li>• {tProfile('kyc.verificationTime')}</li>
                     <li>• {tProfile('kyc.secureStorage')}</li>

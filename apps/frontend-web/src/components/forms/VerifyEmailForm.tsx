@@ -42,7 +42,7 @@ export default function VerifyEmailForm({
         if (isSubmitting || isAutoVerifying) {
           return (
             <div className="space-y-6 text-center">
-              <div className="text-tsa-blue font-medium">{tForms('messages.autoVerifying')}</div>
+              <div className="text-tsa-blue dark:text-tsa-white font-medium">{tForms('messages.autoVerifying')}</div>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tsa-blue mx-auto"></div>
             </div>
           );
@@ -59,7 +59,7 @@ export default function VerifyEmailForm({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 aria-invalid={touched.email && !!errors.email}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue placeholder:text-tsa-blue dark:text-tsa-white/90 placeholder:text-sm placeholder:font-medium"
                 required
               />
               {touched.email && errors.email ? (
@@ -76,7 +76,7 @@ export default function VerifyEmailForm({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 aria-invalid={touched.token && !!errors.token}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue placeholder:text-tsa-blue dark:text-tsa-white/90 placeholder:text-sm placeholder:font-medium"
                 required
               />
               {touched.token && errors.token ? (
@@ -93,7 +93,7 @@ export default function VerifyEmailForm({
             </Button>
 
             <div className="text-center">
-              <Link to="/" className="text-tsa-blue font-medium">
+              <Link to="/" className="text-tsa-blue dark:text-tsa-white font-medium">
                 {tForms('buttons.backToLogin')}
               </Link>
             </div>

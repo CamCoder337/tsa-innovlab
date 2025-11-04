@@ -245,10 +245,10 @@ export default function ShopPage() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
           {tShop('title')} TSA
         </h1>
-        <p className="text-gray-600 text-base sm:text-lg">{tShop('subtitle')}</p>
+        <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">{tShop('subtitle')}</p>
       </div>
 
       {/* AI Recommendations */}
@@ -277,7 +277,7 @@ export default function ShopPage() {
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+        <div className="mb-6 p-4 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg flex items-center gap-3">
           <AlertTriangle className="h-5 w-5 text-red-600" />
           <span className="text-red-800">{error}</span>
         </div>
@@ -337,7 +337,7 @@ export default function ShopPage() {
             </SelectContent>
           </Select>
 
-          <div className="flex items-center gap-1 border rounded-md p-1 flex-shrink-0">
+          <div className="flex items-center gap-1 border dark:border-gray-800 rounded-md p-1 flex-shrink-0">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="icon"
@@ -370,7 +370,7 @@ export default function ShopPage() {
         <div className="flex-1 min-w-0">
           {/* Toolbar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <p className="text-sm text-gray-500 order-2 sm:order-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
               {isLoading
                 ? tCommon('loading')
                 : totalProducts === 0
@@ -404,7 +404,7 @@ export default function ShopPage() {
                   <SelectItem value="stock">{tShop('sorting.stockAvailable')}</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 border rounded-md p-1">
+              <div className="flex items-center gap-1 border dark:border-gray-800 rounded-md p-1">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="icon"
@@ -426,8 +426,8 @@ export default function ShopPage() {
           </div>
 
           {isLoading && (
-            <div className="flex h-full w-full items-center justify-center bg-gray-50">
-              <Loader className="h-12 w-12 animate-spin text-tsa-blue" />
+            <div className="flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-950">
+              <Loader className="h-12 w-12 animate-spin text-tsa-blue dark:text-tsa-white" />
             </div>
           )}
 
@@ -493,7 +493,7 @@ export default function ShopPage() {
               </Pagination>
 
               {/* Pagination Info */}
-              <div className="text-center mt-4 text-sm text-gray-500">
+              <div className="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
                 {tCommon('search.pagination.showingResults', {
                   start: indexOfFirstProduct + 1,
                   end: Math.min(indexOfLastProduct, totalProducts),
@@ -507,7 +507,7 @@ export default function ShopPage() {
           {!isLoading &&
             filteredProducts.length === 0 &&
             (results ? (
-              <div className="text-center py-8 sm:py-12 text-gray-500">
+              <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400">
                 <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p className="text-base sm:text-lg">{tShop('search.noVisualResults')}</p>
                 <p className="text-sm">{tShop('search.tryAnotherImage')}</p>

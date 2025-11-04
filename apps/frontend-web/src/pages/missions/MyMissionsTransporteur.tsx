@@ -135,13 +135,13 @@ export default function MissionsTransporteurPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-3 sm:p-4 lg:p-6">
+    <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
       <div className="flex-1 p-3 sm:p-4 lg:p-6">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {tMissions('myMissions.transporteur.title')}
           </h1>
-          <p className="text-gray-600 text-sm sm:text-base">
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
             {tMissions('myMissions.transporteur.subtitle')}
           </p>
         </div>
@@ -151,10 +151,10 @@ export default function MissionsTransporteurPage() {
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tMissions('myMissions.transporteur.stats.availableMissions')}
                   </p>
                   <p className="text-lg sm:text-2xl font-bold">
@@ -171,7 +171,7 @@ export default function MissionsTransporteurPage() {
                   <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tMissions('myMissions.transporteur.stats.activeMissions')}
                   </p>
                   <p className="text-lg sm:text-2xl font-bold">
@@ -191,7 +191,7 @@ export default function MissionsTransporteurPage() {
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tMissions('myMissions.transporteur.stats.completedMissions')}
                   </p>
                   <p className="text-lg sm:text-2xl font-bold">
@@ -208,7 +208,7 @@ export default function MissionsTransporteurPage() {
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tMissions('myMissions.transporteur.stats.potentialRevenue')}
                   </p>
                   <p className="text-lg sm:text-2xl font-bold">0 FCFA</p>
@@ -323,10 +323,10 @@ export default function MissionsTransporteurPage() {
                 {filteredMissions.length === 0 && (
                   <div className="text-center py-8 sm:py-12">
                     <Package className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
                       {tMissions('myMissions.transporteur.emptyStates.noMissions')}
                     </h3>
-                    <p className="text-gray-600 text-sm sm:text-base">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
                       {tMissions('myMissions.transporteur.emptyStates.noMatchingCriteria')}
                     </p>
                   </div>
@@ -357,15 +357,15 @@ export default function MissionsTransporteurPage() {
 
                 <div className="space-y-4">
                   {currentMission && (
-                    <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                      <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+                    <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
+                      <h3 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                         {currentMission.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
                         {currentMission.description}
                       </p>
                       {currentMission.requiredVehicleType && (
-                        <p className="text-xs sm:text-sm text-tsa-blue mt-2">
+                        <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">
                           {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                           {VehicleTypeLabels[currentMission.requiredVehicleType]}
                         </p>
@@ -374,18 +374,18 @@ export default function MissionsTransporteurPage() {
                   )}
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       {tMissions('myMissions.transporteur.apply.selectVehicle')}
                     </label>
                     {vehiclesLoading ? (
                       <div className="flex items-center justify-center p-4">
-                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="ml-2 text-gray-600 text-xs sm:text-sm">
+                        <div className="w-6 h-6 border dark:border-gray-800-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                           {tMissions('myMissions.transporteur.apply.loadingVehicles')}
                         </span>
                       </div>
                     ) : availableVehicles.length === 0 ? (
-                      <div className="p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                      <div className="p-4 text-center text-gray-600 dark:text-gray-300 bg-yellow-50 rounded-lg">
                         <p className="text-xs sm:text-sm">
                           {tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}
                         </p>
@@ -405,7 +405,7 @@ export default function MissionsTransporteurPage() {
                             <SelectItem key={vehicle.id} value={vehicle.id}>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs sm:text-sm">{vehicle.registration}</span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   ({VehicleTypeLabels[vehicle.type]})
                                 </span>
                               </div>

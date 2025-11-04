@@ -21,7 +21,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
   const { t: tChat } = useChatTranslation();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<ConversationType | 'all'>(ConversationType.DIRECT);
+  const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
 
   const { conversations, isLoading, error, currentConversation, clearError } = useChat();
 
@@ -40,9 +40,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
 
   const getConversationIcon = (conversation: ConversationListItem) => {
     if (conversation.type === 'mission') {
-      return <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
+      return <Hash className="h-4 w-4 text-blue-500" />;
     }
-    return <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
+    return <MessageCircle className="h-4 w-4 text-green-500" />;
   };
 
   const getConversationTitle = (conversation: ConversationListItem) => {
@@ -82,9 +82,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
 
   if (error) {
     return (
-      <div className="p-3 sm:p-4 text-center">
-        <div className="text-red-500 text-xs sm:text-sm mb-2">{error}</div>
-        <Button variant="outline" size="sm" onClick={clearError} className="text-xs sm:text-sm">
+      <div className="p-4 text-center">
+        <div className="text-red-500 text-sm mb-2">{error}</div>
+        <Button variant="outline" size="sm" onClick={clearError}>
           {tChat('buttons.retry')}
         </Button>
       </div>
@@ -94,89 +94,93 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="p-2 sm:p-3 lg:p-4 border-b border-gray-200 space-y-2 sm:space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 flex items-center gap-1 sm:gap-2">
-            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
-            <span>{tForms('sections.messages')}</span>
+      <div className="p-3 sm:p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">{tForms('sections.messages')}</span>
+            <span className="sm:hidden">Messages</span>
           </h2>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
-            <Input
-              placeholder={tChat('placeholders.searchConversations')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-7 sm:pl-9 lg:pl-10 text-xs sm:text-sm h-8 sm:h-9 lg:h-10"
-            />
-          </div>
-
           <Button
             variant="ghost"
             size="sm"
             onClick={onCreateConversation}
-            className="text-tsa-blue hover:text-blue-700 h-6 w-6 sm:h-8 sm:w-8 lg:h-9 lg:w-9 p-0 sm:p-1"
+            className="text-tsa-blue dark:text-tsa-white hover:text-blue-700 p-1 sm:p-2"
           >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="sr-only">{tChat('buttons.newConversation')}</span>
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{tChat('buttons.newConversation')}</span>
+            <span className="sm:hidden text-xs">Nouveau</span>
           </Button>
         </div>
 
+        {/* Search */}
+        <div className="relative mb-3 sm:mb-4">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
+          <Input
+            placeholder={tChat('placeholders.searchConversations')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 sm:pl-10 text-sm sm:text-base"
+          />
+        </div>
+
         {/* Filter Tabs */}
-        <div className="hidden gap-1 sm:gap-2">
+        <div className="flex gap-1">
           <Button
             variant={filterType === 'all' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setFilterType('all')}
-            className="text-xs flex-1 sm:flex-none h-7 sm:h-8 px-2 sm:px-3"
+            className="text-xs flex-1 sm:flex-none"
           >
-            <MessageCircle className="h-3 w-3 mr-1" />
-            <span>{tChat('buttons.all')}</span>
+            <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{tChat('buttons.all')}</span>
+            <span className="sm:hidden">Tous</span>
           </Button>
           <Button
             variant={filterType === ConversationType.DIRECT ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setFilterType(ConversationType.DIRECT)}
-            className="text-xs flex-1 sm:flex-none h-7 sm:h-8 px-2 sm:px-3"
+            className="text-xs flex-1 sm:flex-none"
           >
             <Users className="h-3 w-3 mr-1" />
-            <span>{tChat('buttons.direct')}</span>
+            <span className="hidden sm:inline">{tChat('buttons.direct')}</span>
+            <span className="sm:hidden">Direct</span>
           </Button>
           <Button
             variant={filterType === ConversationType.MISSION ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setFilterType(ConversationType.MISSION)}
-            className="text-xs flex-1 sm:flex-none h-7 sm:h-8 px-2 sm:px-3"
+            className="text-xs flex-1 sm:flex-none"
           >
             <Hash className="h-3 w-3 mr-1" />
-            <span>{tChat('buttons.mission')}</span>
+            <span className="hidden sm:inline">{tChat('buttons.mission')}</span>
+            <span className="sm:hidden">Mission</span>
           </Button>
         </div>
       </div>
 
       {/* Error Display */}
       {error && (
-        <div className="text-center py-4 sm:py-6 lg:py-8 px-2 sm:px-3 lg:px-4">
-          <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-red-400 mx-auto mb-2 sm:mb-3 lg:mb-4" />
-          <p className="text-red-600 font-medium text-xs sm:text-sm lg:text-base">
+        <div className="text-center py-6 sm:py-8 px-3 sm:px-4">
+          <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-400 mx-auto mb-3 sm:mb-4" />
+          <p className="text-red-600 font-medium text-sm sm:text-base">
             {tChat('messages.loadingError')}
           </p>
-          <p className="text-xs text-red-500 mt-1">{error}</p>
+          <p className="text-xs sm:text-sm text-red-500 mt-1">{error}</p>
         </div>
       )}
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="p-2 sm:p-3 lg:p-4 flex items-center justify-center text-gray-500 h-full">
-            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-600 mr-2"></div>
-            <span className="text-xs sm:text-sm lg:text-base">{tChat('messages.loading')}</span>
+          <div className="p-3 sm:p-4 flex items-center justify-center text-gray-500 h-full">
+            <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600 mr-2"></div>
+            <span className="text-sm sm:text-base">{tChat('messages.loading')}</span>
           </div>
         ) : filteredConversations.length === 0 ? (
-          <div className="p-2 sm:p-3 lg:p-4 text-center text-gray-500">
-            <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mx-auto mb-2 sm:mb-3 text-gray-300" />
-            <p className="text-xs sm:text-sm lg:text-base">
+          <div className="p-3 sm:p-4 text-center text-gray-500">
+            <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-2 text-gray-300" />
+            <p className="text-sm sm:text-base">
               {searchTerm
                 ? tChat('messages.noConversationFound')
                 : tChat('messages.noConversationsForNow')}
@@ -186,7 +190,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                 variant="outline"
                 size="sm"
                 onClick={onCreateConversation}
-                className="mt-2 text-xs sm:text-sm h-7 sm:h-8"
+                className="mt-2 text-xs sm:text-sm"
               >
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 {tChat('buttons.newConversation')}
@@ -204,20 +208,20 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
               return (
                 <div
                   key={conversation.id}
-                  className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                  className={`p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
                     isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
                   }`}
                   onClick={() => onSelectConversation(conversation)}
                 >
                   <div className="flex items-start gap-2 sm:gap-3">
                     {/* Avatar */}
-                    <div className="relative flex-shrink-0">
-                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10">
+                    <div className="relative">
+                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                         <AvatarImage
                           src={conversation.otherParticipant?.avatarUrl}
                           alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
                         />
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="text-xs sm:text-sm">
                           {conversation.otherParticipant?.firstName?.charAt(0) || ''}
                           {conversation.otherParticipant?.lastName?.charAt(0) || ''}
                           {!conversation.otherParticipant?.firstName &&
@@ -226,7 +230,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                         </AvatarFallback>
                       </Avatar>
                       {/* Conversation type indicator */}
-                      <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
+                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                         {getConversationIcon(conversation)}
                       </div>
                     </div>
@@ -235,24 +239,25 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <h4
-                          className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
+                          className={`text-xs sm:text-sm font-medium truncate ${
                             isActive ? 'text-blue-900' : 'text-gray-900'
                           }`}
                         >
                           {getConversationTitle(conversation)}
                         </h4>
-                        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           {lastMessageTime && (
                             <p className="text-xs text-gray-500 flex items-center">
-                              <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
-                              <span>{lastMessageTime}</span>
+                              <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                              <span className="hidden sm:inline">{lastMessageTime}</span>
+                              <span className="sm:hidden">{lastMessageTime.split(' ')[0]}</span>
                             </p>
                           )}
                           {conversation.unreadMessagesCount &&
                             conversation.unreadMessagesCount > 0 && (
                               <Badge
                                 variant="destructive"
-                                className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 p-0 text-xs rounded-full flex items-center justify-center min-w-3 sm:min-w-4 lg:min-w-5"
+                                className="h-4 w-4 sm:h-5 sm:w-5 p-0 text-xs rounded-full flex items-center justify-center"
                               >
                                 {conversation.unreadMessagesCount > 99
                                   ? '99+'

@@ -179,7 +179,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                       href={payment.receiptUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-tsa-blue hover:text-blue-900"
+                      className="text-tsa-blue dark:text-tsa-white hover:text-blue-900"
                     >
                       {tPayment('labels.receipt')}
                     </a>

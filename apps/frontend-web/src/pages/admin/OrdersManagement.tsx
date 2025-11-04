@@ -148,7 +148,7 @@ export default function OrdersManagement() {
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{tAdmin('orders.loading')}</p>
+          <p className="text-gray-600 dark:text-gray-300">{tAdmin('orders.loading')}</p>
         </div>
       </div>
     );
@@ -157,12 +157,12 @@ export default function OrdersManagement() {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAdmin('orders.title')}</h1>
-        <p className="text-gray-600">{tAdmin('orders.subtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{tAdmin('orders.title')}</h1>
+        <p className="text-gray-600 dark:text-gray-300">{tAdmin('orders.subtitle')}</p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-4 p-4 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg">
           <div className="flex items-center justify-between">
             <p className="text-red-600">{error}</p>
             <Button variant="ghost" size="sm" onClick={clearError}>
@@ -186,10 +186,10 @@ export default function OrdersManagement() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Package className="h-5 w-5 text-tsa-blue" />
+                    <Package className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.totalOrders')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalOrders')}</p>
                     <p className="text-2xl font-bold">{orderStats.total.toLocaleString()}</p>
                   </div>
                 </div>
@@ -203,7 +203,7 @@ export default function OrdersManagement() {
                     <DollarSign className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.totalRevenue')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalRevenue')}</p>
                     <p className="text-2xl font-bold">{formatCurrency(orderStats.totalRevenue)}</p>
                   </div>
                 </div>
@@ -217,7 +217,7 @@ export default function OrdersManagement() {
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">{tAdmin('orders.stats.averageBasket')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.averageBasket')}</p>
                     <p className="text-2xl font-bold">
                       {formatCurrency(orderStats.averageOrderValue)}
                     </p>
@@ -233,7 +233,7 @@ export default function OrdersManagement() {
                     <Clock className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       {getOrderStatusLabel(OrderStatus.PENDING)}
                     </p>
                     <p className="text-2xl font-bold">{orderStats.pending}</p>
@@ -254,19 +254,19 @@ export default function OrdersManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <p className="text-2xl font-bold text-yellow-600">{orderStats.pending}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.pending')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.pending')}s</p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-tsa-blue">{orderStats.processing}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.processing')}s</p>
+                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">{orderStats.processing}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.processing')}s</p>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
                       <p className="text-2xl font-bold text-purple-600">{orderStats.shipped}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.shipped')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.shipped')}s</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">{orderStats.delivered}</p>
-                      <p className="text-sm text-gray-600">{tCommon('status.delivered')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.delivered')}s</p>
                     </div>
                   </div>
                 </div>
@@ -282,11 +282,11 @@ export default function OrdersManagement() {
                   {orders.slice(0, 5).map((order) => (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-950 rounded-lg"
                     >
                       <div>
                         <p className="font-medium text-sm">{order.orderNumber}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {order.user?.firstName} {order.user?.lastName}
                         </p>
                       </div>
@@ -374,7 +374,7 @@ export default function OrdersManagement() {
 
           {/* Bulk Actions */}
           {selectedOrders.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 border dark:border-gray-800 border-blue-200 rounded-lg">
               <p className="text-xs sm:text-sm text-blue-700">
                 {tCommon('actions.bulkSelected', { count: selectedOrders.length })}
               </p>
@@ -472,7 +472,7 @@ export default function OrdersManagement() {
                               <p className="font-medium text-xs sm:text-sm truncate">
                                 {order.user?.firstName} {order.user?.lastName}
                               </p>
-                              <p className="text-xs text-gray-500 truncate">{order.user?.email}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{order.user?.email}</p>
                             </div>
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-xs sm:text-sm">
@@ -594,7 +594,7 @@ export default function OrdersManagement() {
           {filteredOrders.length === 0 && (
             <div className="text-center py-6 sm:py-8">
               <Package className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <p className="text-gray-500 text-sm sm:text-base">{tAdmin('orders.empty')}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">{tAdmin('orders.empty')}</p>
             </div>
           )}
         </TabsContent>
@@ -610,7 +610,7 @@ export default function OrdersManagement() {
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                       {tAdmin('orders.analytics.conversionRate')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
@@ -618,7 +618,7 @@ export default function OrdersManagement() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                       {tAdmin('orders.analytics.averageBasket')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
@@ -626,7 +626,7 @@ export default function OrdersManagement() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                       {tAdmin('orders.analytics.ordersToday')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
@@ -634,7 +634,7 @@ export default function OrdersManagement() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600 truncate">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                       {tAdmin('orders.analytics.revenueThisMonth')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
@@ -656,11 +656,11 @@ export default function OrdersManagement() {
                   {allStats.overview.stats?.topProducts?.slice(0, 5).map((product, index) => (
                     <div
                       key={product.productId}
-                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2"
+                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg gap-2"
                     >
                       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs sm:text-sm font-medium text-tsa-blue">
+                          <span className="text-xs sm:text-sm font-medium text-tsa-blue dark:text-tsa-white">
                             {index + 1}
                           </span>
                         </div>
@@ -668,7 +668,7 @@ export default function OrdersManagement() {
                           <p className="font-medium text-xs sm:text-sm truncate">
                             {product.productName}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                             {product.quantitySold} {tAdmin('orders.analytics.sold')}
                           </p>
                         </div>
@@ -678,7 +678,7 @@ export default function OrdersManagement() {
                       </p>
                     </div>
                   )) || (
-                    <p className="text-gray-500 text-center py-3 sm:py-4 text-xs sm:text-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-center py-3 sm:py-4 text-xs sm:text-sm">
                       {tAdmin('orders.analytics.noDataAvailable')}
                     </p>
                   )}

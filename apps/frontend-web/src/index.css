@@ -136,4 +136,27 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Google Maps Autocomplete Dark Mode Support */
+  .dark .pac-container {
+    background-color: oklch(0.205 0 0);
+    border-color: oklch(1 0 0 / 10%);
+  }
+
+  .dark .pac-item {
+    color: oklch(0.985 0 0);
+    border-color: oklch(1 0 0 / 10%);
+  }
+
+  .dark .pac-item:hover {
+    background-color: oklch(0.269 0 0);
+  }
+
+  .dark .pac-item-query {
+    color: oklch(0.985 0 0);
+  }
+
+  .dark .pac-matched {
+    color: oklch(0.708 0 0);
+  }
 }
