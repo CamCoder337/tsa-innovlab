@@ -1,4 +1,69 @@
 import type { ShipmentDetails, RouteSegment } from '@/types/tracking.types';
+import type { Address } from '@/types/address.types';
+import { toast } from 'sonner';
+import GoogleMapsService from '@/services/google-maps.service';
+
+export const calculateDistance = async (
+  origin: Address,
+  destination: Address,
+  tErrors: (key: string) => string
+) => {
+  if (!origin || !destination) {
+    toast.error(tErrors('missions.fillAddressesForPricing'));
+    return;
+  }
+
+  // Validate that addresses have coordinates
+  if (!origin.latitude || !origin.longitude || !destination.latitude || !destination.longitude) {
+    toast.error(tErrors('missions.addressesNeedCoordinates'));
+    return;
+  }
+
+  try {
+    // Calculate distance using Google Maps API
+    const googleMapsService = new GoogleMapsService();
+    const distanceResult = await googleMapsService.calculateDistanceWithDirections(
+      {
+        lat: origin.latitude,
+        lng: origin.longitude,
+      },
+      {
+        lat: destination.latitude,
+        lng: destination.longitude,
+      }
+    );
+
+    if (!distanceResult) {
+      // Fallback to straight-line distance if directions fail
+      const straightLineDistance = await googleMapsService.calculateDistance(
+        {
+          lat: origin.latitude,
+          lng: origin.longitude,
+        },
+        {
+          lat: destination.latitude,
+          lng: destination.longitude,
+        }
+      );
+
+      if (!straightLineDistance) {
+        toast.error(tErrors('missions.cannotCalculateDistance'));
+        return;
+      }
+
+      // Use straight-line distance with a 1.3 multiplier for road distance estimation
+      const estimatedDistance = Math.round(straightLineDistance * 1.3);
+      console.log(estimatedDistance);
+
+      return estimatedDistance;
+    } else {
+      console.log(distanceResult);
+      return distanceResult.distance;
+    }
+  } catch (error) {
+    console.error('Error calculating dynamic pricing:', error);
+  }
+};
 
 export const formatDistance = (meters: number): string => {
   if (meters < 1000) {

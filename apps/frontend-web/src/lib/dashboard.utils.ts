@@ -62,15 +62,15 @@ export class DashboardUtils {
 
     const todayEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= todayStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const weeklyEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= weekStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const monthlyEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= monthStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     return {
       today: todayEarnings,
@@ -136,7 +136,8 @@ export class DashboardUtils {
     if (t) {
       if (diffHours < 1) return t('time.lessThanHour');
       if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
-      if (diffDays < 7) return t('time.daysAgo', { days: diffDays });
+      if (diffDays < 7)
+        return t('time.daysAgo', { days: diffDays, plural: diffDays > 1 ? 's' : '' });
       return past.toLocaleDateString();
     }
 

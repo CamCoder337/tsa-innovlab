@@ -105,7 +105,19 @@
     "missions": "Missions",
     "totalMissions": "Total: {{count}} missions",
     "assignedMissions": "Assigned: {{count}}",
-    "detectedPosition": "Position detected"
+    "detectedPosition": "Position detected",
+    "departure": "Departure: {{title}}",
+    "arrival": "Arrival: {{title}}",
+    "transporter": "Transporter: {{title}}",
+    "yourPosition": "Your position",
+    "routeInformation": "Route information",
+    "distance": "Distance:",
+    "duration": "Duration:",
+    "eta": "ETA:",
+    "apiKeyNotConfigured": "Google Maps API key not configured. Add VITE_GOOGLE_MAPS_API_KEY to your .env file",
+    "mapInitializationError": "Map initialization error:",
+    "unknownError": "Unknown error",
+    "positionUnavailable": "Unable to get user position:"
   },
   "actions": {
     "share": "Share",
@@ -239,5 +251,32 @@
     "noActiveMissionMessage": "You have no mission in progress. Check your assigned missions.",
     "departure": "Departure",
     "arrival": "Arrival"
+  },
+  "realTime": {
+    "title": "Real-Time Mission Tracking",
+    "loadingMissions": "Loading real-time missions...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "lastUpdate": "Last update: {{time}}",
+    "totalMissions": "Total Missions",
+    "inProgress": "In Progress",
+    "published": "Published",
+    "completed": "Completed",
+    "highPriority": "High Priority",
+    "realTimeMap": "Real-Time Mission Map",
+    "realTimeMapShort": "Real-Time Missions",
+    "selectedMission": "Selected Mission",
+    "noMissionSelected": "No mission selected",
+    "clickMarkerForDetails": "Click on a map marker to see details",
+    "recentActivity": "Recent Activity",
+    "priorityMission": "Priority Mission",
+    "highBudgetTracking": "High budget - Enhanced tracking required",
+    "type": "Type:",
+    "weight": "Weight:",
+    "volume": "Volume:",
+    "budget": "Budget:",
+    "delivery": "Delivery:",
+    "loadingError": "Error loading missions:",
+    "refreshError": "Error during refresh:"
   }
 }

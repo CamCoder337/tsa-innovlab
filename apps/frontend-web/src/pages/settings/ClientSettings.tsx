@@ -159,13 +159,21 @@ export default function ClientSettings() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
-          <p className="text-muted-foreground">{tProfile('client.subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tProfile('settings.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {tProfile('client.subtitle')}
+          </p>
         </div>
-        <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
-          <Save className="h-4 w-4" />
+        <Button
+          onClick={handleSaveSettings}
+          disabled={isLoading}
+          className="gap-2 w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+        >
+          <Save className="h-3 w-3 sm:h-4 sm:w-4" />
           {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
         </Button>
       </div>

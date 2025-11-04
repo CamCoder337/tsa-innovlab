@@ -117,7 +117,7 @@ const validationSchema = (tForms: (key: string, options?: Record<string, unknown
       .required(tForms('validation.required'))
       .typeError(tForms('validation.date')),
     adresseDepart: Yup.object({
-      street: Yup.string().required(tForms('validation.required')),
+      street: Yup.string(),
       city: Yup.string().required(tForms('validation.required')),
       postalCode: Yup.string(),
       country: Yup.string().required(tForms('validation.required')),
@@ -820,14 +820,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     {isCalculatingPrice ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        <span className="hidden sm:inline">{tForms('messages.calculating')}</span>
-                        <span className="sm:hidden">{tForms('buttons.calculating')}</span>
+                        <span>{tForms('messages.calculating')}</span>
                       </>
                     ) : (
                       <>
                         <Calculator className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">{tForms('buttons.calculatePrice')}</span>
-                        <span className="sm:hidden">{tForms('buttons.calculate')}</span>
+                        <span>{tForms('buttons.calculatePrice')}</span>
                       </>
                     )}
                   </Button>
@@ -936,13 +934,10 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   }}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">
+                  <span>
                     {isSubmitting
                       ? tForms('messages.publishing')
                       : tForms('buttons.publishMission')}
-                  </span>
-                  <span className="sm:hidden">
-                    {isSubmitting ? tForms('messages.publishing') : tForms('buttons.publish')}
                   </span>
                 </Button>
                 <Button
@@ -955,11 +950,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   }}
                   disabled={isSubmitting || Object.keys(errors).length > 0}
                 >
-                  <span className="hidden sm:inline">
+                  <span>
                     {isSubmitting ? tForms('messages.saving') : tForms('buttons.saveAsDraft')}
-                  </span>
-                  <span className="sm:hidden">
-                    {isSubmitting ? tForms('messages.saving') : tForms('buttons.draft')}
                   </span>
                 </Button>
               </>
@@ -976,7 +968,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   }}
                 >
                   <Package className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">
+                  <span>
                     {isSubmitting
                       ? currentMission?.status === 'draft'
                         ? tForms('messages.updatingAndPublishing')
@@ -984,9 +976,6 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       : currentMission?.status === 'draft'
                         ? tForms('buttons.updateAndPublishMission')
                         : tForms('buttons.updateMission')}
-                  </span>
-                  <span className="sm:hidden">
-                    {isSubmitting ? tForms('messages.updating') : tForms('buttons.update')}
                   </span>
                 </Button>
                 {currentMission?.status === 'draft' && (
@@ -1000,11 +989,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                     }}
                     disabled={isSubmitting || Object.keys(errors).length > 0}
                   >
-                    <span className="hidden sm:inline">
+                    <span>
                       {isSubmitting ? tForms('messages.updating') : tForms('buttons.updateDraft')}
-                    </span>
-                    <span className="sm:hidden">
-                      {isSubmitting ? tForms('messages.updating') : tForms('buttons.draft')}
                     </span>
                   </Button>
                 )}

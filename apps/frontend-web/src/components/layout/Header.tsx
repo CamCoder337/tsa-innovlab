@@ -281,7 +281,7 @@ export default function Header({ className }: { className?: string }) {
                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-40 w-fit flex flex-col flex-1 gap-2">
+            <DropdownMenuContent align="end" className="min-w-40 w-fit flex flex-col flex-1 gap-3">
               <CartDrawer>
                 <div className="flex flex-1 items-center px-2">
                   <div className="w-1/4">
@@ -300,7 +300,7 @@ export default function Header({ className }: { className?: string }) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex flex-1items-center px-2">
+                  <div className="flex flex-1 items-center px-2">
                     <div className="w-1/4">
                       <Globe className="h-4 w-4 flex-shrink-0" />
                     </div>

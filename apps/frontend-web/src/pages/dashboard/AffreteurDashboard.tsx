@@ -117,15 +117,13 @@ function AffreteurDashboard() {
               style={{ backgroundColor: 'var(--tsa-blue)' }}
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">{tDash('affreteur.actions.createMission')}</span>
-              <span className="sm:hidden">Créer</span>
+              <span>{tDash('affreteur.actions.createMission')}</span>
             </Button>
           </Link>
           <Link to="/app/missions/reports" className="w-full sm:w-auto">
             <Button variant="outline" className="gap-2 bg-transparent w-full sm:w-auto">
               <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">{tDash('affreteur.actions.myReports')}</span>
-              <span className="sm:hidden">Rapports</span>
+              <span>{tDash('affreteur.actions.myReports')}</span>
             </Button>
           </Link>
         </div>

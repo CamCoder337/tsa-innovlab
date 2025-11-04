@@ -196,10 +196,7 @@ function TransporteurDashboard() {
               style={{ backgroundColor: 'var(--tsa-blue)' }}
             >
               <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {tDash('transporteur.actions.availableMissions')}
-              </span>
-              <span className="sm:hidden">Missions</span>
+              <span>{tDash('transporteur.actions.availableMissions')}</span>
             </Button>
           </Link>
         </div>

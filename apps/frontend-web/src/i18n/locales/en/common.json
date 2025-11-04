@@ -93,7 +93,7 @@
     "lastYear": "Last year",
     "lessThanHour": "Less than an hour ago",
     "hoursAgo": "{{hours}}h ago",
-    "daysAgo": "{{days}} day{{days, plural, one {} other {s}}} ago"
+    "daysAgo": "{{days}} day{{plural}} ago"
   },
   "messages": {
     "loading": "Loading...",

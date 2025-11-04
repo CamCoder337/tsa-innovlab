@@ -59,7 +59,7 @@ export default function MissionTrackingMap({
   const [routeInfo, setRouteInfo] = useState<Map<string, RouteInfo>>(new Map());
 
   // Translation hook
-  const { t } = useTrackingTranslation();
+  const { t: tTracking } = useTrackingTranslation();
 
   // Afficher uniquement la mission sélectionnée, sinon toutes les missions
   // Utiliser useMemo pour éviter de recréer le tableau à chaque rendu
@@ -76,9 +76,7 @@ export default function MissionTrackingMap({
 
       // Vérifier si la clé API est configurée
       if (!getGoogleMapsApiKey()) {
-        throw new Error(
-          'Clé API Google Maps non configurée. Ajoutez VITE_GOOGLE_MAPS_API_KEY dans votre fichier .env'
-        );
+        throw new Error(tTracking('map.apiKeyNotConfigured'));
       }
 
       // N'initialiser la carte qu'une seule fois
@@ -124,7 +122,7 @@ export default function MissionTrackingMap({
         const departMarkerData: MarkerData = {
           id: `${mission.id}-depart`,
           position: departPosition,
-          title: `Départ: ${mission.title}`,
+          title: tTracking('map.departure', { title: mission.title }),
           type: 'origin',
           data: {
             mission,
@@ -148,7 +146,7 @@ export default function MissionTrackingMap({
         const arriveeMarkerData: MarkerData = {
           id: `${mission.id}-arrivee`,
           position: arriveePosition,
-          title: `Arrivée: ${mission.title}`,
+          title: tTracking('map.arrival', { title: mission.title }),
           type: 'destination',
           data: {
             mission,
@@ -156,7 +154,7 @@ export default function MissionTrackingMap({
             status: mission.status,
             typeMarchandise: mission.typeMarchandise,
             poids: mission.poids,
-            budgetMax: mission.budgetMax,
+            budgetMin: mission.budgetMin,
           },
         };
 
@@ -225,7 +223,7 @@ export default function MissionTrackingMap({
           const transporteurMarkerData: MarkerData = {
             id: `${mission.id}-transporteur`,
             position: mission.currentPosition,
-            title: `Transporteur: ${mission.title}`,
+            title: tTracking('map.transporter', { title: mission.title }),
             type: 'vehicle',
             data: {
               mission,
@@ -263,7 +261,7 @@ export default function MissionTrackingMap({
         const userMarkerData: MarkerData = {
           id: 'user-location',
           position: { lat: userPosition.lat, lng: userPosition.lng },
-          title: 'Votre position',
+          title: tTracking('map.yourPosition'),
           type: 'user',
           data: {
             accuracy: userPosition.accuracy,
@@ -276,11 +274,11 @@ export default function MissionTrackingMap({
 
       setIsLoading(false);
     } catch (err) {
-      console.error("Erreur lors de l'initialisation de la carte:", err);
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      console.error(tTracking('map.mapInitializationError'), err);
+      setError(err instanceof Error ? err.message : tTracking('map.unknownError'));
       setIsLoading(false);
     }
-  }, [filteredMissions, selectedMission, showRoutes, onMissionClick, userPosition]);
+  }, [filteredMissions, userPosition, tTracking, onMissionClick, showRoutes, selectedMission?.id]);
 
   const initializeUserLocation = useCallback(async () => {
     if (!showUserLocation) return;
@@ -305,7 +303,7 @@ export default function MissionTrackingMap({
         const userMarkerData: MarkerData = {
           id: 'user-location',
           position: { lat: position.lat, lng: position.lng },
-          title: 'Votre position',
+          title: tTracking('map.yourPosition'),
           type: 'user',
           data: {
             accuracy: position.accuracy,
@@ -317,10 +315,10 @@ export default function MissionTrackingMap({
         hasAddedUserMarkerRef.current = true;
       }
     } catch (err) {
-      console.warn("Impossible d'obtenir la position de l'utilisateur:", err);
+      console.warn(tTracking('map.positionUnavailable'), err);
       hasInitializedGeolocationRef.current = true; // Marquer comme tenté même en cas d'échec
     }
-  }, [showUserLocation]);
+  }, [showUserLocation, tTracking]);
 
   // Fonctions supprimées - plus de filtrage par statut
 
@@ -353,14 +351,14 @@ export default function MissionTrackingMap({
         <div className="text-center p-4 sm:p-8">
           <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto text-red-500 mb-3 sm:mb-4" />
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-            {t('map.errorLoadingMap')}
+            {tTracking('map.errorLoadingMap')}
           </h3>
           <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}
             className="px-3 sm:px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
           >
-            {t('map.retry')}
+            {tTracking('map.retry')}
           </button>
         </div>
       </div>
@@ -374,9 +372,9 @@ export default function MissionTrackingMap({
         <div className="text-center p-4 sm:p-8">
           <Package className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto text-gray-400 mb-3 sm:mb-4" />
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-            {t('map.noMissionsToDisplay')}
+            {tTracking('map.noMissionsToDisplay')}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600">{t('map.noMissionsMessage')}</p>
+          <p className="text-sm sm:text-base text-gray-600">{tTracking('map.noMissionsMessage')}</p>
         </div>
       </div>
     );
@@ -388,7 +386,7 @@ export default function MissionTrackingMap({
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-3 sm:mb-4"></div>
-            <p className="text-gray-600 text-sm sm:text-base">{t('map.loadingMap')}</p>
+            <p className="text-gray-600 text-sm sm:text-base">{tTracking('map.loadingMap')}</p>
           </div>
         </div>
       )}
@@ -401,12 +399,12 @@ export default function MissionTrackingMap({
           <CardContent className="p-2 sm:p-3">
             <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
               <Package className="w-3 h-3 sm:w-4 sm:h-4" />
-              {t('map.missions')}
+              {tTracking('map.missions')}
             </h4>
             <div className="text-xs sm:text-sm text-gray-600">
-              <p>{t('map.totalMissions', { count: missions.length })}</p>
+              <p>{tTracking('map.totalMissions', { count: missions.length })}</p>
               <p>
-                {t('map.assignedMissions', {
+                {tTracking('map.assignedMissions', {
                   count: missions.filter((m) => m.status === 'assigned').length,
                 })}
               </p>
@@ -420,25 +418,24 @@ export default function MissionTrackingMap({
             <CardContent className="p-2 sm:p-3">
               <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
-                <span className="hidden sm:inline">Informations de trajet</span>
-                <span className="sm:hidden">Trajet</span>
+                <span>{tTracking('map.routeInformation')}</span>
               </h4>
               <div className="text-xs sm:text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Distance:</span>
+                  <span className="text-gray-600">{tTracking('map.distance')}</span>
                   <span className="font-medium">
                     {routeInfo.get(selectedMission.id)?.distance} km
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Durée:</span>
+                  <span className="text-gray-600">{tTracking('map.duration')}</span>
                   <span className="font-medium">
                     {Math.floor((routeInfo.get(selectedMission.id)?.duration || 0) / 60)}h{' '}
                     {(routeInfo.get(selectedMission.id)?.duration || 0) % 60}min
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">ETA:</span>
+                  <span className="text-gray-600">{tTracking('map.eta')}</span>
                   <span className="font-medium text-green-600">
                     {routeInfo.get(selectedMission.id)?.eta.toLocaleTimeString('fr-FR', {
                       hour: '2-digit',
@@ -458,7 +455,9 @@ export default function MissionTrackingMap({
               <div className="flex items-center gap-2">
                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                 <div>
-                  <p className="text-xs sm:text-sm font-medium">{t('map.detectedPosition')}</p>
+                  <p className="text-xs sm:text-sm font-medium">
+                    {tTracking('map.detectedPosition')}
+                  </p>
                   <p className="text-xs text-gray-600">±{Math.round(userPosition.accuracy)}m</p>
                 </div>
               </div>

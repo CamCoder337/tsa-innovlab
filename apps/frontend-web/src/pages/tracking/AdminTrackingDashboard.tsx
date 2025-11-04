@@ -117,12 +117,12 @@ export default function AdminTrackingDashboard() {
 
     // Create alerts for high-value missions
     allMissions.forEach((mission) => {
-      if (mission.budgetMax && mission.budgetMax > 500000) {
+      if (mission.budgetMin && mission.budgetMin > 500000) {
         mockAlerts.push({
           id: `alert-${mission.id}`,
           type: 'warning',
           title: `Mission haute valeur: ${mission.title}`,
-          description: `Budget de ${mission.budgetMax?.toLocaleString()} FCFA nécessite un suivi renforcé`,
+          description: `Budget de ${mission.budgetMin?.toLocaleString()} FCFA nécessite un suivi renforcé`,
           timestamp: new Date().toISOString(),
           resolved: false,
         });

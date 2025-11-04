@@ -12,6 +12,7 @@ import {
   Clock,
   FileText,
   Download,
+  Eye,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +22,14 @@ import {
   useCommonTranslation,
   usePaymentTranslation,
 } from '@/hooks/useTranslation';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { MissionInvoice } from './MissionInvoice';
 
 interface MissionFinancialProps {
   mission: Mission;
@@ -54,7 +63,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
   const { t: tCommon } = useCommonTranslation();
   const { t: tPayment } = usePaymentTranslation();
   const [financialData, setFinancialData] = useState<FinancialData>({
-    totalCost: mission.budgetMax || 0,
+    totalCost: mission.budgetMin || 0,
     transporterPayment: 0,
     platformFee: 0,
     taxes: 0,
@@ -66,6 +75,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
 
   const [paymentHistory, setPaymentHistory] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
     loadFinancialData();
@@ -81,7 +91,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       // ]);
 
       // Mock data calculation
-      const totalCost = mission.budgetMax || 0;
+      const totalCost = mission.budgetMin || 0;
       const platformFeeRate = 0.05; // 5% platform fee
       const taxRate = 0.18; // 18% VAT
 
@@ -313,24 +323,46 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   className="w-full sm:w-auto text-xs sm:text-sm"
                 >
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tMissions('financial.generateInvoice')}</span>
-                  <span className="sm:hidden">
-                    {tMissions('financial.generateInvoice').slice(0, 8)}...
-                  </span>
+                  <span>{tMissions('financial.generateInvoice')}</span>
                 </Button>
               ) : (
-                <Button
-                  onClick={handleDownloadInvoice}
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto text-xs sm:text-sm"
-                >
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tMissions('financial.downloadInvoice')}</span>
-                  <span className="sm:hidden">
-                    {tMissions('financial.downloadInvoice').slice(0, 8)}...
-                  </span>
-                </Button>
+                <>
+                  <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto text-xs sm:text-sm"
+                      >
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span>{tMissions('invoice.actions.view')}</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{tMissions('invoice.title')}</DialogTitle>
+                      </DialogHeader>
+                      <MissionInvoice
+                        mission={mission}
+                        financialData={financialData}
+                        paymentRecord={paymentHistory}
+                        onDownload={handleDownloadInvoice}
+                        onPrint={() => window.print()}
+                        onEmailSend={() => toast.info(tMissions('invoice.actions.emailSent'))}
+                        onClose={() => setShowInvoice(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    onClick={handleDownloadInvoice}
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
+                  >
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span>{tMissions('financial.downloadInvoice')}</span>
+                  </Button>
+                </>
               )}
             </div>
           </div>

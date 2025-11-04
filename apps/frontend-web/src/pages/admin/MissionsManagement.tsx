@@ -86,8 +86,7 @@ export default function MissionsManagement() {
         <Link to="/app/missions/create" className="w-full sm:w-auto">
           <Button className="bg-tsa-blue hover:bg-tsa-blue/90 w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">{tAdmin('missions.newMission')}</span>
-            <span className="sm:hidden">Nouvelle Mission</span>
+            <span>{tAdmin('missions.newMission')}</span>
           </Button>
         </Link>
       </div>
@@ -193,8 +192,7 @@ export default function MissionsManagement() {
               </Select>
               <Button variant="outline" onClick={exportToCSV} className="w-full sm:w-auto">
                 <Download className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{tCommon('actions.export')}</span>
-                <span className="sm:hidden">Export</span>
+                <span>{tCommon('actions.export')}</span>
               </Button>
             </div>
           </div>

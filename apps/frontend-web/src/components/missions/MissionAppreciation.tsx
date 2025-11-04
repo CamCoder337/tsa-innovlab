@@ -14,6 +14,8 @@ import {
   useFormsTranslation,
 } from '@/hooks/useTranslation';
 import { useUserSearch } from '@/hooks/useUserSearch';
+import { DashboardUtils } from '@/lib/dashboard.utils';
+import { calculateDistance, formatDistance } from '@/lib/map-utils';
 
 interface MissionAppreciationProps {
   mission: Mission;
@@ -95,17 +97,35 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
   useEffect(() => {
     const fetchUserNames = async () => {
       if (mission.transporteurId) {
-        const name = await getUserName(mission.transporteurId);
-        setTransporteurName(name);
+        if (mission.transporteur) {
+          const name = `${mission.transporteur.firstName} ${mission.transporteur.lastName}`;
+          setTransporteurName(name);
+        } else {
+          const name = await getUserName(mission.transporteurId);
+          setTransporteurName(name);
+        }
       }
+
+      // Use preloaded affreteur data first, fallback to fetch
       if (mission.affreteurId) {
-        const name = await getUserName(mission.affreteurId);
-        setAffreteurName(name);
+        if (mission.affreteur) {
+          const name = `${mission.affreteur.firstName} ${mission.affreteur.lastName}`;
+          setAffreteurName(name);
+        } else {
+          const name = await getUserName(mission.affreteurId);
+          setAffreteurName(name);
+        }
       }
     };
 
     fetchUserNames();
-  }, [mission.transporteurId, mission.affreteurId, getUserName]);
+  }, [
+    mission.transporteurId,
+    mission.affreteurId,
+    getUserName,
+    mission.transporteur,
+    mission.affreteur,
+  ]);
 
   // Calcul automatique de la note générale
   const calculateOverallRating = (
@@ -201,14 +221,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-tsa-blue">
-                {mission.dateArriveePrevue ? '100%' : '0%'}
+                {DashboardUtils.calculateProgress(mission.status)} %
               </div>
               <p className="text-sm text-gray-600 mt-1">{tMissions('tracking.progress')}</p>
-              <p className="font-medium">
-                {mission.dateArriveePrevue
-                  ? tCommon('status.completed')
-                  : tCommon('status.in_progress')}
-              </p>
+              <p className="font-medium">{tCommon('status.completed')}</p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">N/A</div>
@@ -232,20 +248,20 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}</p>
-              <p className="font-medium">
-                {transporteurName ||
-                  mission.transporteur?.fullName ||
-                  `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
-                  tCommon('status.notAssigned')}
-              </p>
-            </div>
-            <div>
               <p className="text-sm text-gray-600">{tCommon('roles.affreteur')}</p>
               <p className="font-medium">
                 {affreteurName ||
                   mission.affreteur?.fullName ||
                   `${mission.affreteur?.firstName} ${mission.affreteur?.lastName}` ||
+                  tCommon('status.notAssigned')}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}</p>
+              <p className="font-medium">
+                {transporteurName ||
+                  mission.transporteur?.fullName ||
+                  `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
                   tCommon('status.notAssigned')}
               </p>
             </div>
@@ -259,11 +275,17 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div>
               <p className="text-sm text-gray-600">{tMissions('budget')}</p>
-              <p className="font-medium">{mission.budgetMax?.toLocaleString()} FCFA</p>
+              <p className="font-medium">{mission.budgetMin?.toLocaleString()} FCFA</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">{tMissions('distance')}</p>
-              <p className="font-medium">{tCommon('status.notAvailable')}</p>
+              <p className="font-medium">
+                {formatDistance(
+                  Number(
+                    calculateDistance(mission.adresseDepart!, mission.adresseArrivee!, tErrors)
+                  )
+                ) || tCommon('status.notAvailable')}
+              </p>
             </div>
           </div>
         </CardContent>

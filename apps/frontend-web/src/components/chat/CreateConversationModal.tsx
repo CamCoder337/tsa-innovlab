@@ -376,10 +376,9 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                           >
                             {tCommon(`status.${mission.status}`)}
                           </Badge>
-                          {mission.budgetMin && mission.budgetMax && (
+                          {mission.budgetMin && (
                             <span className="text-xs text-gray-500">
-                              {mission.budgetMin.toLocaleString()} -{' '}
-                              {mission.budgetMax.toLocaleString()} FCFA
+                              {mission.budgetMin.toLocaleString()} FCFA
                             </span>
                           )}
                         </div>

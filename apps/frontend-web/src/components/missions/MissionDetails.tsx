@@ -68,7 +68,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       }
 
       // Use preloaded vehicle data first, fallback to fetch
-      if (mission.vehicleId) {
+      if (user?.role === 'transporteur' && mission.vehicleId) {
         if (mission.vehicle) {
           setVehicleRegistration(mission.vehicle.registration);
         } else {
@@ -221,16 +221,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                 <div>
                   <span className="font-medium block sm:inline">{tMissions('budget')}:</span>{' '}
                   <span className="text-muted-foreground">
-                    {mission.budgetMin?.toLocaleString() || 'N/A'} -{' '}
-                    {mission.budgetMax?.toLocaleString() || 'N/A'} FCFA
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium block sm:inline">
-                    {tMissions('details.cargoType')}:
-                  </span>{' '}
-                  <span className="text-muted-foreground">
-                    {mission.typeMarchandise || tCommon('notSpecified')}
+                    {mission.budgetMin?.toLocaleString() || 'N/A'} FCFA
                   </span>
                 </div>
                 <div>

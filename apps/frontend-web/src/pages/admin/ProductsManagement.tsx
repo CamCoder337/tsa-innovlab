@@ -551,20 +551,14 @@ export default function AdminProductsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
             <TabsTrigger value="products" className="text-xs sm:text-sm truncate">
-              <span className="hidden sm:inline">
+              <span>
                 {tAdmin('products.productsTab', {
                   count: stats?.products?.total || products?.length,
                 })}
               </span>
-              <span className="sm:hidden">
-                Produits ({stats?.products?.total || products?.length})
-              </span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
-              <span className="hidden sm:inline">
-                {tAdmin('products.categoriesTab', { count: categories.length })}
-              </span>
-              <span className="sm:hidden">Catégories ({categories.length})</span>
+              <span>{tAdmin('products.categoriesTab', { count: categories.length })}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -599,11 +593,8 @@ export default function AdminProductsPage() {
                                 })}
                               </span>
                             ) : (
-                              <span className="hidden sm:inline">
-                                {tAdmin('products.filterByCategories')}
-                              </span>
+                              <span>{tAdmin('products.filterByCategories')}</span>
                             )}
-                            <span className="sm:hidden">Catégories</span>
                           </span>
                         </Button>
                       </DropdownMenuTrigger>
@@ -698,8 +689,7 @@ export default function AdminProductsPage() {
                       }}
                     >
                       <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">{tAdmin('products.addProduct')}</span>
-                      <span className="sm:hidden">Ajouter</span>
+                      <span>{tAdmin('products.addProduct')}</span>
                     </Button>
                   </div>
 
@@ -889,8 +879,7 @@ export default function AdminProductsPage() {
                   }}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className="hidden sm:inline">{tAdmin('products.addCategory')}</span>
-                  <span className="sm:hidden">Ajouter</span>
+                  <span>{tAdmin('products.addCategory')}</span>
                 </Button>
                 <Sheet
                   open={isDialogOpen}
