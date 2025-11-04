@@ -171,11 +171,26 @@ export class GoogleMapsService {
       strokeColor?: string;
       strokeWeight?: number;
       strokeOpacity?: number;
+      departureTime?: Date;
+      trafficModel?: 'best_guess' | 'pessimistic' | 'optimistic';
     }
   ): Promise<google.maps.DirectionsResult | null> {
     if (!this.directionsService || !this.map) return null;
 
     try {
+      // Map string traffic model to Google Maps enum
+      const getTrafficModel = (model?: string): google.maps.TrafficModel => {
+        switch (model) {
+          case 'optimistic':
+            return google.maps.TrafficModel.OPTIMISTIC;
+          case 'pessimistic':
+            return google.maps.TrafficModel.PESSIMISTIC;
+          case 'best_guess':
+          default:
+            return google.maps.TrafficModel.BEST_GUESS;
+        }
+      };
+
       const request: google.maps.DirectionsRequest = {
         origin,
         destination,
@@ -183,6 +198,11 @@ export class GoogleMapsService {
         travelMode: google.maps.TravelMode.DRIVING,
         avoidHighways: false,
         avoidTolls: false,
+        // Add driving options for real-time traffic data
+        drivingOptions: {
+          departureTime: options?.departureTime || new Date(), // Use current time or provided time
+          trafficModel: getTrafficModel(options?.trafficModel),
+        },
       };
 
       const result = await this.directionsService.route(request);
@@ -379,8 +399,16 @@ export class GoogleMapsService {
 
   async calculateDistanceWithDirections(
     origin: { lat: number; lng: number },
-    destination: { lat: number; lng: number }
-  ): Promise<{ distance: number; duration: number } | null> {
+    destination: { lat: number; lng: number },
+    options?: {
+      departureTime?: Date;
+      trafficModel?: 'best_guess' | 'pessimistic' | 'optimistic';
+    }
+  ): Promise<{
+    distance: number;
+    duration: number;
+    durationInTraffic?: number;
+  } | null> {
     try {
       // Ensure Google Maps is loaded
       await googleMapsLoader.load({ libraries: ['routes'] });
@@ -389,27 +417,147 @@ export class GoogleMapsService {
         this.directionsService = new google.maps.DirectionsService();
       }
 
+      // Map string traffic model to Google Maps enum
+      const getTrafficModel = (model?: string): google.maps.TrafficModel => {
+        switch (model) {
+          case 'optimistic':
+            return google.maps.TrafficModel.OPTIMISTIC;
+          case 'pessimistic':
+            return google.maps.TrafficModel.PESSIMISTIC;
+          case 'best_guess':
+          default:
+            return google.maps.TrafficModel.BEST_GUESS;
+        }
+      };
+
       const request: google.maps.DirectionsRequest = {
         origin,
         destination,
         travelMode: google.maps.TravelMode.DRIVING,
         avoidHighways: false,
         avoidTolls: false,
+        // Add driving options for real-time traffic data
+        drivingOptions: {
+          departureTime: options?.departureTime || new Date(),
+          trafficModel: getTrafficModel(options?.trafficModel),
+        },
       };
 
       const result = await this.directionsService.route(request);
 
       if (result.routes && result.routes[0] && result.routes[0].legs && result.routes[0].legs[0]) {
         const leg = result.routes[0].legs[0];
-        return {
+        const response: {
+          distance: number;
+          duration: number;
+          durationInTraffic?: number;
+        } = {
           distance: Math.round((leg.distance?.value || 0) / 1000), // Convert to km
           duration: Math.round((leg.duration?.value || 0) / 60), // Convert to minutes
         };
+
+        // Add traffic duration if available
+        if (leg.duration_in_traffic?.value) {
+          response.durationInTraffic = Math.round(leg.duration_in_traffic.value / 60); // Convert to minutes
+        }
+
+        return response;
       }
 
       return null;
     } catch (error) {
       console.error('Error calculating distance with directions:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Calculate detailed ETA with traffic information
+   * Returns optimistic, realistic, and pessimistic estimates
+   */
+  async getETAWithTraffic(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    departureTime?: Date
+  ): Promise<{
+    distance: number; // in km
+    baseTime: number; // in minutes (without traffic)
+    bestCase: {
+      duration: number; // in minutes
+      eta: Date;
+    };
+    realistic: {
+      duration: number; // in minutes
+      eta: Date;
+      trafficDelay?: number; // in minutes
+    };
+    worstCase: {
+      duration: number; // in minutes
+      eta: Date;
+    };
+  } | null> {
+    try {
+      await googleMapsLoader.load({ libraries: ['routes'] });
+
+      if (!this.directionsService) {
+        this.directionsService = new google.maps.DirectionsService();
+      }
+
+      const departure = departureTime || new Date();
+
+      // Get all three traffic models in parallel
+      const [optimistic, bestGuess, pessimistic] = await Promise.all([
+        this.calculateDistanceWithDirections(origin, destination, {
+          departureTime: departure,
+          trafficModel: 'optimistic',
+        }),
+        this.calculateDistanceWithDirections(origin, destination, {
+          departureTime: departure,
+          trafficModel: 'best_guess',
+        }),
+        this.calculateDistanceWithDirections(origin, destination, {
+          departureTime: departure,
+          trafficModel: 'pessimistic',
+        }),
+      ]);
+
+      if (!bestGuess) return null;
+
+      const distance = bestGuess.distance;
+      const baseTime = bestGuess.duration;
+      const realisticDuration = bestGuess.durationInTraffic || bestGuess.duration;
+      const trafficDelay = bestGuess.durationInTraffic
+        ? bestGuess.durationInTraffic - bestGuess.duration
+        : 0;
+
+      // Calculate ETAs
+      const calculateETA = (minutes: number): Date => {
+        const eta = new Date(departure);
+        eta.setMinutes(eta.getMinutes() + minutes);
+        return eta;
+      };
+
+      return {
+        distance,
+        baseTime,
+        bestCase: {
+          duration: optimistic?.durationInTraffic || optimistic?.duration || realisticDuration,
+          eta: calculateETA(optimistic?.durationInTraffic || optimistic?.duration || realisticDuration),
+        },
+        realistic: {
+          duration: realisticDuration,
+          eta: calculateETA(realisticDuration),
+          trafficDelay: trafficDelay > 0 ? trafficDelay : undefined,
+        },
+        worstCase: {
+          duration: pessimistic?.durationInTraffic || pessimistic?.duration || realisticDuration,
+          eta: calculateETA(
+            pessimistic?.durationInTraffic || pessimistic?.duration || realisticDuration
+          ),
+        },
+      };
+    } catch (error) {
+      console.error('Error calculating ETA with traffic:', error);
       return null;
     }
   }

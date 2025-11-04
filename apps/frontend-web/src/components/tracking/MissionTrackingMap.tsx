@@ -21,8 +21,11 @@ interface MissionTrackingMapProps {
 
 interface RouteInfo {
   distance: number; // in km
-  duration: number; // in minutes
+  duration: number; // in minutes (base time without traffic)
+  durationInTraffic?: number; // in minutes (with real-time traffic)
+  trafficDelay?: number; // in minutes
   eta: Date;
+  etaWithTraffic?: Date;
 }
 
 // Helper function to get coordinates from address
@@ -184,6 +187,8 @@ export default function MissionTrackingMap({
                 strokeColor: '#2563eb',
                 strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
                 strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+                departureTime: new Date(), // Use current time for real-time traffic
+                trafficModel: 'best_guess', // Best realistic estimate
               });
 
               if (
@@ -195,11 +200,27 @@ export default function MissionTrackingMap({
               ) {
                 const leg = result.routes[0].legs[0];
                 const distance = Math.round((leg.distance?.value || 0) / 1000); // km
-                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
+                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes (base time)
+                const durationInTraffic = leg.duration_in_traffic?.value
+                  ? Math.round(leg.duration_in_traffic.value / 60)
+                  : undefined; // minutes (with traffic)
+
+                // Calculate traffic delay
+                const trafficDelay =
+                  durationInTraffic && durationInTraffic > duration
+                    ? durationInTraffic - duration
+                    : undefined;
 
                 // Calculate ETA based on current time
-                const eta = new Date();
+                const now = new Date();
+                const eta = new Date(now);
                 eta.setMinutes(eta.getMinutes() + duration);
+
+                // Calculate ETA with traffic if available
+                const etaWithTraffic = durationInTraffic ? new Date(now) : undefined;
+                if (etaWithTraffic) {
+                  etaWithTraffic.setMinutes(etaWithTraffic.getMinutes() + durationInTraffic);
+                }
 
                 // Update route info using functional form to avoid race conditions
                 setRouteInfo((prev) => {
@@ -207,7 +228,10 @@ export default function MissionTrackingMap({
                   updated.set(mission.id, {
                     distance,
                     duration,
+                    durationInTraffic,
+                    trafficDelay,
                     eta,
+                    etaWithTraffic,
                   });
                   return updated;
                 });
@@ -430,22 +454,60 @@ export default function MissionTrackingMap({
                     {routeInfo.get(selectedMission.id)?.distance} km
                   </span>
                 </div>
+
+                {/* Base duration (without traffic) */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Durée:</span>
-                  <span className="font-medium">
+                  <span className="text-gray-600 dark:text-gray-300">Durée base:</span>
+                  <span className="font-medium text-gray-500">
                     {Math.floor((routeInfo.get(selectedMission.id)?.duration || 0) / 60)}h{' '}
                     {(routeInfo.get(selectedMission.id)?.duration || 0) % 60}min
                   </span>
                 </div>
-                <div className="flex justify-between">
+
+                {/* Duration with traffic if available */}
+                {routeInfo.get(selectedMission.id)?.durationInTraffic && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Avec trafic:</span>
+                      <span className="font-medium text-blue-600">
+                        {Math.floor((routeInfo.get(selectedMission.id)?.durationInTraffic || 0) / 60)}h{' '}
+                        {(routeInfo.get(selectedMission.id)?.durationInTraffic || 0) % 60}min
+                      </span>
+                    </div>
+
+                    {/* Traffic delay indicator */}
+                    {routeInfo.get(selectedMission.id)?.trafficDelay && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-300">Retard trafic:</span>
+                        <span className="font-medium text-orange-600">
+                          +{routeInfo.get(selectedMission.id)?.trafficDelay}min
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ETA with traffic */}
+                <div className="flex justify-between pt-1 border-t">
                   <span className="text-gray-600 dark:text-gray-300">ETA:</span>
                   <span className="font-medium text-green-600">
-                    {routeInfo.get(selectedMission.id)?.eta.toLocaleTimeString('fr-FR', {
+                    {(routeInfo.get(selectedMission.id)?.etaWithTraffic ||
+                      routeInfo.get(selectedMission.id)?.eta)?.toLocaleTimeString('fr-FR', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
                 </div>
+
+                {/* Real-time traffic indicator */}
+                {routeInfo.get(selectedMission.id)?.durationInTraffic && (
+                  <div className="pt-1 mt-1 border-t">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Trafic en temps réel
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
