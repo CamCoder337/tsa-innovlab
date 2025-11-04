@@ -58,7 +58,7 @@ export async function calculateETAWithTraffic(
     eta.setMinutes(eta.getMinutes() + duration);
 
     const etaWithTraffic = durationInTraffic ? new Date(now) : undefined;
-    if (etaWithTraffic) {
+    if (etaWithTraffic && durationInTraffic) {
       etaWithTraffic.setMinutes(etaWithTraffic.getMinutes() + durationInTraffic);
     }
 
