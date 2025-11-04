@@ -51,7 +51,7 @@ export default class AuthService {
     private cacheService: CacheService,
     private mfaService: MFAService,
     private emailService: EmailService
-  ) { }
+  ) {}
 
   async login(
     credentials: LoginCredentials,

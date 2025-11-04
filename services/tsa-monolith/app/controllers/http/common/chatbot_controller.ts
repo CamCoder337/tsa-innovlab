@@ -52,7 +52,9 @@ export default class ChatbotController {
       }
 
       // 🔍 DEBUG: Log payload sent to AI service
-      logger.info(`🔍 PAYLOAD: user_id=${chatbotPayload.user_id} user_role=${chatbotPayload.user_role}`)
+      logger.info(
+        `🔍 PAYLOAD: user_id=${chatbotPayload.user_id} user_role=${chatbotPayload.user_role}`
+      )
 
       const chatbotResponse = await this.aiService.queryChatbot(chatbotPayload)
 
