@@ -43,12 +43,14 @@ import type { Payment, PaymentMethodType } from '@/types/payment.types';
 import { useOrders } from '@/hooks/useOrders';
 import { type Order, PaymentMethod } from '@/types/order.types';
 import { useAddresses } from '@/hooks/useAddresses';
+import { useShopTranslation } from '@/hooks/useTranslation';
+import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
 const OrderSchema = Yup.object().shape({
-  deliveryAddress: Yup.string().required("L'adresse de livraison est requise"),
-  deliveryCity: Yup.string().required('La ville est requise'),
+  deliveryAddress: Yup.string().required('validation.addressRequired'),
+  deliveryCity: Yup.string().required('validation.cityRequired'),
   deliveryPostalCode: Yup.string(),
-  deliveryNotes: Yup.string().max(200, 'Les notes ne peuvent pas dépasser 200 caractères'),
+  deliveryNotes: Yup.string().max(200, 'validation.notesMaxLength'),
   // Google Maps coordinates
   latitude: Yup.number(),
   longitude: Yup.number(),
@@ -56,6 +58,7 @@ const OrderSchema = Yup.object().shape({
 });
 
 export default function CartSummaryPage() {
+  const { t: tShop } = useShopTranslation();
   const [promoCode, setPromoCode] = useState('');
   const [deliveryOption, setDeliveryOption] = useState('standard');
   const [showPayment, setShowPayment] = useState(false);
@@ -234,7 +237,7 @@ export default function CartSummaryPage() {
 
   if (paymentSuccess && completedPayment && createdOrder) {
     return (
-      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-10">
         <Facture
           payment={completedPayment}
           order={createdOrder}
@@ -278,41 +281,55 @@ export default function CartSummaryPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 flex-1 flex-col p-6">
+    <div className="flex min-h-screen bg-gray-50 flex-1 flex-col p-3 sm:p-4 lg:p-6">
       <div className="w-full">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2 sm:px-4">
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 mb-4">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <Link to="/shop">
-                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                  <ArrowLeft className="h-4 w-4" />
-                  Continue Shopping
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-transparent text-xs sm:text-sm"
+                >
+                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">{tShop('cart.continueShopping')}</span>
+                  <span className="sm:hidden">Retour</span>
                 </Button>
               </Link>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
-            <p className="text-gray-600">Review your selected parts before checkout</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              {tShop('cart.title')}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600">{tShop('cart.reviewItems')}</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600">
+            <div className="mb-3 sm:mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-xs sm:text-sm">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-3 sm:space-y-4">
               {isEmpty() ? (
                 <Card>
-                  <CardContent className="p-12 text-center">
-                    <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
-                    <p className="text-gray-600 mb-4">Add some quality parts to get started</p>
+                  <CardContent className="p-8 sm:p-12 text-center">
+                    <ShoppingCart className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                      {tShop('cart.empty.title')}
+                    </h3>
+                    <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                      {tShop('cart.empty.message')}
+                    </p>
                     <Link to="/app/shop">
-                      <Button style={{ backgroundColor: 'var(--tsa-blue)' }}>
-                        Browse Products
+                      <Button
+                        style={{ backgroundColor: 'var(--tsa-blue)' }}
+                        className="w-full sm:w-auto"
+                      >
+                        {tShop('cart.empty.browseProducts')}
                       </Button>
                     </Link>
                   </CardContent>
@@ -321,30 +338,33 @@ export default function CartSummaryPage() {
                 <>
                   {cart.items.map((item) => (
                     <Card key={item.productId}>
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                           <img
                             src={item.product?.images[0] || item.product?.imageUrl || ''}
                             alt={item.product?.name || ''}
-                            className="w-20 h-20 object-cover rounded-lg"
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0 mx-auto sm:mx-0"
                           />
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1">
+                          <div className="flex-1 min-w-0 text-center sm:text-left">
+                            <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">
                               {item.product?.name || ''}
                             </h3>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge className="bg-green-100 text-green-800">
-                                Ref: {item.product?.reference || ''}
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2 sm:mb-3">
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                {tShop('cart.item.reference')}: {item.product?.reference || ''}
                               </Badge>
-                              <Badge variant="outline">{item.product?.unit || ''}</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {item.product?.unit || ''}
+                              </Badge>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                                   disabled={item.quantity <= 1 || isLoading}
+                                  className="h-8 w-8 p-0"
                                 >
                                   <Minus className="h-3 w-3" />
                                 </Button>
@@ -357,7 +377,7 @@ export default function CartSummaryPage() {
                                       Number.parseInt(e.target.value) || 1
                                     )
                                   }
-                                  className="w-16 text-center"
+                                  className="w-12 sm:w-16 text-center text-sm"
                                   min="1"
                                   max={item.product?.stock || 0}
                                   disabled={isLoading}
@@ -369,31 +389,32 @@ export default function CartSummaryPage() {
                                   disabled={
                                     item.quantity >= (item.product?.stock || 0) || isLoading
                                   }
+                                  className="h-8 w-8 p-0"
                                 >
                                   <Plus className="h-3 w-3" />
                                 </Button>
                               </div>
-                              {/* <p className="text-sm text-gray-500">{item.product.stock} available</p> */}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="flex flex-col items-end gap-1">
-                              <p className="text-lg font-bold">
+                          <div className="text-center sm:text-right w-full sm:w-auto">
+                            <div className="flex flex-col items-center sm:items-end gap-1 mb-2">
+                              <p className="text-base sm:text-lg font-bold">
                                 {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
                                 FCFA
                               </p>
                               <p className="text-xs text-gray-500">
-                                {item.priceAtAdd.toLocaleString()} FCFA each
+                                {item.priceAtAdd.toLocaleString()} FCFA {tShop('cart.item.each')}
                               </p>
                             </div>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveItem(item.id)}
-                              className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
                               disabled={isLoading}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
+                              <span className="sm:hidden">Supprimer</span>
                             </Button>
                           </div>
                         </div>
@@ -403,11 +424,13 @@ export default function CartSummaryPage() {
 
                   {/* Adresse de livraison */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <Truck className="h-5 w-5" />
-                          Livraison
+                          <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <span className="text-base sm:text-lg">
+                            {tShop('cart.delivery.title')}
+                          </span>
                         </div>
                         <Button
                           type="button"
@@ -428,22 +451,31 @@ export default function CartSummaryPage() {
                               });
                             }
                           }}
-                          className="text-xs"
+                          className="text-xs w-full sm:w-auto"
                         >
                           <MapPin className="h-3 w-3 mr-1" />
-                          {useManualAddress ? 'Utiliser Google Maps' : 'Saisie manuelle'}
+                          <span className="hidden sm:inline">
+                            {useManualAddress
+                              ? tShop('cart.delivery.useGoogleMaps')
+                              : tShop('cart.delivery.manualEntry')}
+                          </span>
+                          <span className="sm:hidden">
+                            {useManualAddress ? 'Google Maps' : 'Manuel'}
+                          </span>
                         </Button>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 sm:space-y-4">
                       {!useManualAddress ? (
                         <>
                           <div>
-                            <Label>Rechercher votre adresse de livraison *</Label>
+                            <Label className="text-xs sm:text-sm">
+                              {tShop('cart.delivery.searchAddress')} *
+                            </Label>
                             <AddressPicker
                               onAddressSelect={selectAddress}
                               onClear={clearAddress}
-                              placeholder="Tapez votre adresse ou utilisez votre position..."
+                              placeholder={tShop('cart.delivery.addressPlaceholder')}
                               value={getFormattedAddress()}
                               showMap={true}
                               className="mt-2"
@@ -451,7 +483,7 @@ export default function CartSummaryPage() {
                             {formik.touched.deliveryAddress &&
                               formik.errors.deliveryAddress &&
                               !isAddressSelected && (
-                                <p className="text-sm text-red-600 mt-1">
+                                <p className="text-xs sm:text-sm text-red-600 mt-1">
                                   {formik.errors.deliveryAddress}
                                 </p>
                               )}
@@ -460,14 +492,20 @@ export default function CartSummaryPage() {
                           {isAddressSelected && (
                             <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                               <div className="flex items-start gap-2">
-                                <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-green-800">
-                                    Adresse sélectionnée
+                                <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs sm:text-sm font-medium text-green-800">
+                                    {tShop('cart.delivery.addressSelected')}
                                   </p>
-                                  <p className="text-sm text-green-700">{getFormattedAddress()}</p>
+                                  <p className="text-xs sm:text-sm text-green-700 truncate">
+                                    {selectedAddress?.label}
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-green-700 truncate">
+                                    {selectedAddress?.formatted_address}
+                                  </p>
                                   <div className="mt-1 text-xs text-green-600">
-                                    Coordonnées: {selectedAddress?.latitude.toFixed(6)},{' '}
+                                    {tShop('cart.delivery.coordinates')}:{' '}
+                                    {selectedAddress?.latitude.toFixed(6)},{' '}
                                     {selectedAddress?.longitude.toFixed(6)}
                                   </div>
                                 </div>
@@ -478,68 +516,74 @@ export default function CartSummaryPage() {
                       ) : (
                         <>
                           <div>
-                            <Label htmlFor="deliveryAddress">Adresse de livraison *</Label>
+                            <Label htmlFor="deliveryAddress" className="text-xs sm:text-sm">
+                              {tShop('cart.delivery.address')} *
+                            </Label>
                             <Textarea
                               id="deliveryAddress"
                               name="deliveryAddress"
-                              placeholder="Votre adresse complète..."
+                              placeholder={tShop('cart.delivery.fullAddress')}
                               value={formik.values.deliveryAddress}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                               rows={3}
-                              className={
+                              className={`text-sm ${
                                 formik.touched.deliveryAddress && formik.errors.deliveryAddress
                                   ? 'border-red-500'
                                   : ''
-                              }
+                              }`}
                             />
                             {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
-                              <p className="text-sm text-red-600 mt-1">
+                              <p className="text-xs sm:text-sm text-red-600 mt-1">
                                 {formik.errors.deliveryAddress}
                               </p>
                             )}
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                              <Label htmlFor="deliveryCity">Ville *</Label>
+                              <Label htmlFor="deliveryCity" className="text-xs sm:text-sm">
+                                {tShop('cart.delivery.city')} *
+                              </Label>
                               <Input
                                 id="deliveryCity"
                                 name="deliveryCity"
-                                placeholder="Votre ville"
+                                placeholder={tShop('cart.delivery.cityPlaceholder')}
                                 value={formik.values.deliveryCity}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={
+                                className={`text-sm ${
                                   formik.touched.deliveryCity && formik.errors.deliveryCity
                                     ? 'border-red-500'
                                     : ''
-                                }
+                                }`}
                               />
                               {formik.touched.deliveryCity && formik.errors.deliveryCity && (
-                                <p className="text-sm text-red-600 mt-1">
+                                <p className="text-xs sm:text-sm text-red-600 mt-1">
                                   {formik.errors.deliveryCity}
                                 </p>
                               )}
                             </div>
                             <div>
-                              <Label htmlFor="deliveryPostalCode">Code postal *</Label>
+                              <Label htmlFor="deliveryPostalCode" className="text-xs sm:text-sm">
+                                {tShop('cart.delivery.postalCode')} *
+                              </Label>
                               <Input
                                 id="deliveryPostalCode"
                                 name="deliveryPostalCode"
-                                placeholder="Code postal"
+                                placeholder={tShop('cart.delivery.postalCodePlaceholder')}
                                 value={formik.values.deliveryPostalCode}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={
+                                className={`text-sm ${
                                   formik.touched.deliveryPostalCode &&
                                   formik.errors.deliveryPostalCode
                                     ? 'border-red-500'
                                     : ''
-                                }
+                                }`}
                               />
                               {formik.touched.deliveryPostalCode &&
                                 formik.errors.deliveryPostalCode && (
-                                  <p className="text-sm text-red-600 mt-1">
+                                  <p className="text-xs sm:text-sm text-red-600 mt-1">
                                     {formik.errors.deliveryPostalCode}
                                   </p>
                                 )}
@@ -548,22 +592,26 @@ export default function CartSummaryPage() {
                         </>
                       )}
                       <div>
-                        <Label htmlFor="deliveryNotes">Instructions de livraison</Label>
+                        <Label htmlFor="deliveryNotes" className="text-xs sm:text-sm">
+                          {tShop('cart.delivery.instructions')}
+                        </Label>
                         <Input
                           id="deliveryNotes"
                           name="deliveryNotes"
-                          placeholder="Code d'accès, étage, etc."
+                          placeholder={tShop('cart.delivery.instructionsPlaceholder')}
                           value={formik.values.deliveryNotes}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          className={
+                          className={`text-sm ${
                             formik.touched.deliveryNotes && formik.errors.deliveryNotes
                               ? 'border-red-500'
                               : ''
-                          }
+                          }`}
                         />
                         {formik.touched.deliveryNotes && formik.errors.deliveryNotes && (
-                          <p className="text-sm text-red-600 mt-1">{formik.errors.deliveryNotes}</p>
+                          <p className="text-xs sm:text-sm text-red-600 mt-1">
+                            {formik.errors.deliveryNotes}
+                          </p>
                         )}
                       </div>
                     </CardContent>
@@ -576,53 +624,61 @@ export default function CartSummaryPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Order Summary</CardTitle>
+                  <CardTitle>{tShop('cart.orderSummary.title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span>Subtotal ({getTotalItems()} items)</span>
+                    <span>{tShop('cart.orderSummary.subtotal', { count: getTotalItems() })}</span>
                     <span>{subtotal.toLocaleString()} FCFA</span>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Delivery Option</label>
+                    <label className="text-sm font-medium mb-2 block">
+                      {tShop('cart.orderSummary.deliveryOptions.label')}
+                    </label>
                     <Select value={deliveryOption} onValueChange={setDeliveryOption}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="standard">Standard (3-5 days) - 2,000 FCFA</SelectItem>
-                        <SelectItem value="express">Express (1-2 days) - 5,000 FCFA</SelectItem>
-                        <SelectItem value="same-day">Same Day - 10,000 FCFA</SelectItem>
+                        <SelectItem value="standard">
+                          {tShop('cart.orderSummary.deliveryOptions.standard')}
+                        </SelectItem>
+                        <SelectItem value="express">
+                          {tShop('cart.orderSummary.deliveryOptions.express')}
+                        </SelectItem>
+                        <SelectItem value="same-day">
+                          {tShop('cart.orderSummary.deliveryOptions.sameDay')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="flex justify-between">
-                    <span>Delivery</span>
+                    <span>{tShop('cart.orderSummary.delivery')}</span>
                     <span>{deliveryFee.toLocaleString()} FCFA</span>
                   </div>
 
                   <div className="flex justify-between text-sm text-gray-600">
-                    <span>Total Weight</span>
+                    <span>{tShop('cart.orderSummary.totalWeight')}</span>
                     <span>{totalWeight.toFixed(1)} kg</span>
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
+                    <span>{tShop('cart.orderSummary.total')}</span>
                     <span>{total.toLocaleString()} FCFA</span>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Promo code"
+                        placeholder={tShop('cart.orderSummary.promoCode')}
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                       />
-                      <Button variant="outline">Apply</Button>
+                      <Button variant="outline">{tShop('cart.orderSummary.apply')}</Button>
                     </div>
 
                     <Button
@@ -646,11 +702,11 @@ export default function CartSummaryPage() {
                       }}
                     >
                       <CreditCard className="h-4 w-4" />
-                      Proceed to Checkout
+                      {tShop('cart.orderSummary.proceedToCheckout')}
                     </Button>
                     {!useManualAddress && !isAddressSelected && (
                       <p className="text-xs text-amber-600 text-center mt-1">
-                        Veuillez sélectionner une adresse de livraison
+                        {tShop('cart.delivery.selectAddressRequired')}
                       </p>
                     )}
                   </div>
@@ -662,49 +718,27 @@ export default function CartSummaryPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Truck className="h-5 w-5" />
-                    Delivery Information
+                    {tShop('cart.deliveryInfo.title')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Shield className="h-4 w-4 text-green-600" />
-                    <span>All parts quality-tested and guaranteed</span>
+                    <span>{tShop('cart.deliveryInfo.qualityTested')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Truck className="h-4 w-4 text-blue-600" />
-                    <span>Free returns within 30 days</span>
+                    <Truck className="h-4 w-4 text-tsa-blue" />
+                    <span>{tShop('cart.deliveryInfo.freeReturns')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <CreditCard className="h-4 w-4 text-purple-600" />
-                    <span>Secure payment processing</span>
+                    <span>{tShop('cart.deliveryInfo.securePayment')}</span>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Recommended Parts */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>You might also need</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 border rounded-lg">
-                      <img
-                        src="/air-filter.png"
-                        alt="Air Filter"
-                        className="w-10 h-10 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Air Filter</p>
-                        <p className="text-xs text-gray-500">8,500 FCFA</p>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductRecommendations type="cart" limit={3} view="compact" />
             </div>
           </div>
         </div>
@@ -718,7 +752,7 @@ export default function CartSummaryPage() {
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Finaliser le paiement
+                {tShop('payment.title')}
               </div>
             </DialogTitle>
           </DialogHeader>
@@ -726,14 +760,14 @@ export default function CartSummaryPage() {
           <div className="space-y-4">
             {/* Order Summary in Dialog */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-semibold text-lg mb-3">Résumé de la commande</h3>
+              <h3 className="font-semibold text-lg mb-3">{tShop('payment.orderSummary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Sous-total ({getTotalItems()} articles)</span>
+                  <span>{tShop('payment.subtotal', { count: getTotalItems() })}</span>
                   <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Livraison ({deliveryOption})</span>
+                  <span>{tShop('payment.delivery', { option: deliveryOption })}</span>
                   <span>{deliveryFee.toLocaleString()} FCFA</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold text-base">

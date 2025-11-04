@@ -3,7 +3,13 @@ import type { Address } from './address.types';
 import type { User } from './auth.types';
 import type { Vehicle, VehicleType } from './vehicle.types';
 
-export type MissionStatus = 'draft' | 'published' | 'assigned' | 'completed' | 'cancelled';
+export type MissionStatus =
+  | 'draft'
+  | 'published'
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
 
 export type MissionUpdateType =
   | 'status_change'
@@ -45,8 +51,6 @@ export interface Mission extends Timestamps {
   isFlexibleRoute?: boolean;
   notesComplementaires?: string;
   documents?: string[];
-  dateDebutReelle?: string;
-  dateFinReelle?: string;
   ratingAffreteur?: number;
   commentaireAffreteur?: string;
   ratingTransporteur?: number;
@@ -65,8 +69,8 @@ export interface CreateMissionDto {
   volume?: number;
   dateDepartEstime?: string;
   dateArriveePrevue?: string;
-  adresseDepart?: Address;
-  adresseArrivee?: Address;
+  adresseDepart?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
+  adresseArrivee?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
   budgetMin?: number;
   budgetMax?: number;
   requiredVehicleType?: VehicleType;
@@ -131,9 +135,12 @@ export interface MissionState {
   missions: Mission[];
   myMissions: Mission[];
   currentMission: Mission | null;
+  stats: MissionStats;
+  feedbacks: MissionFeedback[];
+  currentFeedback: MissionFeedback | null;
+  feedbackStats: FeedbackStats | null;
   isLoading: boolean;
   error: string | null;
-  stats: MissionStats;
 }
 
 export interface MissionActions {
@@ -146,12 +153,21 @@ export interface MissionActions {
   fetchMyMissions: () => Promise<void>;
   fetchMission: (id: string) => Promise<void>;
   fetchMissionsStats: () => Promise<void>;
-  createMission: (data: CreateMissionDto) => Promise<Mission | null>;
+  createMission: (data: CreateMissionDto) => Promise<Mission | void>;
   updateMission: (id: string, data: UpdateMissionDto) => Promise<void>;
+  updateMissionStatus: (id: string, data: UpdateMissionStatus) => Promise<void>;
   deleteMission: (id: string) => void;
   publishMission: (id: string) => Promise<void>;
   unpublishMission: (id: string) => Promise<void>;
   applyForMission: (id: string, vehicleId: string) => Promise<void>;
+
+  // Feedback management actions
+  fetchFeedbacks: (params?: FeedbackFilterParams) => Promise<void>;
+  fetchFeedback: (id: string) => Promise<void>;
+  fetchFeedbackStats: () => Promise<void>;
+  setCurrentFeedback: (feedback: MissionFeedback | null) => void;
+  setFeedbacks: (feedbacks: MissionFeedback[]) => void;
+  setFeedbackStats: (feedbackStats: FeedbackStats) => void;
 
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -162,6 +178,7 @@ export interface MissionActions {
 // Extended store interface with API and utility methods
 export type MissionStoreExtended = MissionState & MissionActions;
 
+// Feedback interfaces based on backend Feedback model
 export interface MissionFeedback extends Timestamps {
   id: string;
   missionId: string;
@@ -177,6 +194,43 @@ export interface MissionFeedback extends Timestamps {
 export interface CreateMissionFeedback {
   rating: number;
   description?: string;
+}
+
+// Feedback filter parameters for admin
+export interface FeedbackFilterParams {
+  page?: number;
+  limit?: number;
+  rating?: number; // Filter by rating (1-5)
+  transporteurId?: string; // Filter by transporteur
+  affreteurId?: string; // Filter by affreteur
+  missionId?: string; // Filter by mission
+  sortBy?: 'rating' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Feedback statistics for admin dashboard
+export interface FeedbackStats {
+  total: number;
+  averageRating: number;
+  distribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+  topTransporteurs: Array<{
+    transporteurId: string;
+    transporteurName: string;
+    averageRating: number;
+    feedbackCount: number;
+  }>;
+  worstTransporteurs: Array<{
+    transporteurId: string;
+    transporteurName: string;
+    averageRating: number;
+    feedbackCount: number;
+  }>;
 }
 
 export interface MissionUpdate extends Timestamps {
@@ -234,15 +288,31 @@ export interface DynamicPricingRequest {
 }
 
 export interface DynamicPricingResponse {
-  success: boolean;
+  calculation_id: string;
+  timestamp: string;
+  base_rate_per_ton_km: number;
+  distance_km: number;
+  weight_tons: number;
+  base_subtotal: number;
+  distance_discount: number;
+  weight_discount: number;
+  total_adjustments: number;
   calculated_price: number;
+  currency: string;
+  formatted_price: string;
   negotiation_range: {
     min_price: number;
     max_price: number;
     margin_percentage: number;
+    margin_calculation?: string;
     reason: string;
   };
-  breakdown: {
+  origin: string;
+  destination: string;
+  cargo_type: string;
+  urgency: string;
+  // Legacy fields for backward compatibility
+  breakdown?: {
     base_cost: number;
     distance_factor: number;
     weight_factor: number;

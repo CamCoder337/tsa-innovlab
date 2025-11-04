@@ -19,6 +19,7 @@ import type {
   UpdateMissionStatus,
   proofType,
 } from '@/types/mission.types';
+import type { Vehicle } from '@/types/vehicle.types';
 import type { AxiosError } from 'axios';
 
 // Types pour les événements WebSocket
@@ -453,7 +454,10 @@ export class MissionService extends BaseApi {
     }
   }
 
-  async applyForMission(missionId: string, vehicleId: string): Promise<ApiResponse<Mission>> {
+  async applyForMission(
+    missionId: string,
+    vehicleId: string
+  ): Promise<ApiResponse<{ mission: Mission; vehicle: Vehicle }>> {
     try {
       const response = await this.insertToken().post(
         `/api/transporteur/missions/${missionId}/claim`,

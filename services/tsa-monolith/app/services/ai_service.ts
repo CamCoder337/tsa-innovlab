@@ -271,12 +271,18 @@ export default class AIService {
   /**
    * Search products by image using visual recognition
    */
-  async searchProductsByImage(imageFile: File | Buffer): Promise<VisualRecognitionResponse | null> {
+  async searchProductsByImage(
+    imageBuffer: Buffer,
+    filename: string = 'image.jpg'
+  ): Promise<VisualRecognitionResponse | null> {
     try {
       logger.info('Requesting visual recognition search')
 
+      // Create a proper Blob from Buffer for Node.js
+      const blob = new Blob([imageBuffer], { type: 'image/jpeg' })
+
       const formData = new FormData()
-      formData.append('image', imageFile)
+      formData.append('image', blob, filename)
 
       const response = await fetch(`${this.baseUrl}/api/ai/visual/search/image`, {
         method: 'POST',
@@ -285,6 +291,8 @@ export default class AIService {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        logger.error('AI Service error response', { status: response.status, body: errorText })
         throw new Error(`AI Service responded with status ${response.status}`)
       }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import {
   VehicleType,
@@ -12,33 +12,39 @@ import type {
   UpdateVehicleRequest,
   Vehicle,
 } from '../../types/vehicle.types';
+import { useFormsTranslation } from '@/hooks/useTranslation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Textarea } from '../ui/textarea';
+import { Label } from '../ui/label';
 
 interface CreateVehicleFormProps {
   vehicle?: Vehicle | null;
-  onSubmit: (data: CreateVehicleRequest | UpdateVehicleRequest) => Promise<void>;
+  onSubmit: (data: CreateVehicleRequest | UpdateVehicleRequest) => void;
   onCancel?: () => void;
   isLoading?: boolean;
 }
 
-const vehicleValidationSchema = Yup.object({
-  type: Yup.string()
-    .oneOf(Object.values(VehicleType), 'Type de véhicule invalide')
-    .required('Le type de véhicule est requis'),
-  registration: Yup.string()
-    .min(3, "L'immatriculation doit contenir au moins 3 caractères")
-    .max(50, "L'immatriculation ne peut pas dépasser 50 caractères")
-    .matches(
-      /^[A-Z0-9-]+$/i,
-      "L'immatriculation ne peut contenir que des lettres, chiffres et tirets"
-    )
-    .required("L'immatriculation est requise"),
-  description: Yup.string()
-    .max(500, 'La description ne peut pas dépasser 500 caractères')
-    .nullable(),
-  status: Yup.string()
-    .oneOf(Object.values(VehicleStatus), 'Statut invalide')
-    .required('Le statut est requis'),
-});
+const createVehicleValidationSchema = (
+  tForms: (key: string, options?: Record<string, unknown>) => string
+) =>
+  Yup.object({
+    type: Yup.string()
+      .oneOf(Object.values(VehicleType), tForms('validation.role'))
+      .required(tForms('validation.required')),
+    registration: Yup.string()
+      .min(3, tForms('validation.minLength', { min: 3 }))
+      .max(50, tForms('validation.maxLength', { max: 50 }))
+      .matches(/^[A-Z0-9-]+$/i, tForms('validation.licensePlateFormat'))
+      .required(tForms('validation.required')),
+    description: Yup.string()
+      .max(500, tForms('validation.maxLength', { max: 500 }))
+      .nullable(),
+    status: Yup.string()
+      .oneOf(Object.values(VehicleStatus), tForms('validation.role'))
+      .required(tForms('validation.required')),
+  });
 
 export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   vehicle,
@@ -46,6 +52,7 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t: tForms } = useFormsTranslation();
   const isEditing = !!vehicle;
 
   const initialValues: CreateVehicleRequest = {
@@ -64,149 +71,122 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          {isEditing ? 'Modifier le véhicule' : 'Ajouter un nouveau véhicule'}
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          {isEditing
-            ? 'Modifiez les informations de votre véhicule'
-            : 'Ajoutez un nouveau véhicule à votre flotte'}
-        </p>
-      </div>
-
-      <Formik
-        initialValues={initialValues}
-        validationSchema={vehicleValidationSchema}
-        onSubmit={handleSubmit}
-        enableReinitialize
-      >
-        {({ errors, touched }) => (
-          <Form className="space-y-6">
-            {/* Vehicle Type */}
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                Type de véhicule *
-              </label>
-              <Field
-                as="select"
-                id="type"
-                name="type"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.type && touched.type ? 'border-red-300' : 'border-gray-300'
-                }`}
+    <Formik
+      initialValues={initialValues}
+      validationSchema={createVehicleValidationSchema(tForms)}
+      onSubmit={handleSubmit}
+      enableReinitialize
+    >
+      {({ errors, touched, values, setFieldValue, handleChange, handleBlur }) => (
+        <Form className="space-y-6">
+          {/* Vehicle Type */}
+          <div>
+            <Label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+              {tForms('labels.vehicleType')} *
+            </Label>
+            <Select value={values.type} onValueChange={(value) => setFieldValue('type', value)}>
+              <SelectTrigger
+                className={`w-full ${errors.type && touched.type ? 'border-red-300' : ''}`}
               >
-                <option value="">Sélectionnez un type</option>
+                <SelectValue placeholder={tForms('messages.selectVehicleType')} />
+              </SelectTrigger>
+              <SelectContent>
                 {Object.values(VehicleType).map((type) => (
-                  <option key={type} value={type}>
+                  <SelectItem key={type} value={type}>
                     {VehicleTypeLabels[type]}
-                  </option>
+                  </SelectItem>
                 ))}
-              </Field>
-              <ErrorMessage name="type" component="div" className="mt-1 text-sm text-red-600" />
-            </div>
+              </SelectContent>
+            </Select>
+            {touched.type && errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
+          </div>
 
-            {/* Registration */}
-            <div>
-              <label
-                htmlFor="registration"
-                className="block text-sm font-medium text-gray-700 mb-2"
+          {/* Registration */}
+          <div>
+            <Label htmlFor="registration" className="block text-sm font-medium text-gray-700 mb-2">
+              {tForms('labels.licensePlate')} *
+            </Label>
+            <Input
+              id="registration"
+              name="registration"
+              value={values.registration}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder={tForms('placeholders.licensePlate')}
+              className={errors.registration && touched.registration ? 'border-red-300' : ''}
+            />
+            {touched.registration && errors.registration && (
+              <p className="text-sm text-red-500">{errors.registration}</p>
+            )}
+          </div>
+
+          {/* Description */}
+          <div>
+            <Label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              {tForms('labels.description')}
+            </Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={values.description || ''}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              rows={3}
+              placeholder={tForms('placeholders.enterDescription')}
+              className={errors.description && touched.description ? 'border-red-300' : ''}
+            />
+            {touched.description && errors.description && (
+              <p className="text-sm text-red-500">{errors.description}</p>
+            )}
+          </div>
+
+          {/* Status */}
+          <div>
+            <Label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              {tForms('labels.status')} *
+            </Label>
+            <Select value={values.status} onValueChange={(value) => setFieldValue('status', value)}>
+              <SelectTrigger
+                className={`w-full ${errors.status && touched.status ? 'border-red-300' : ''}`}
               >
-                Immatriculation *
-              </label>
-              <Field
-                type="text"
-                id="registration"
-                name="registration"
-                placeholder="Ex: AB-123-CD"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.registration && touched.registration ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
-              <ErrorMessage
-                name="registration"
-                component="div"
-                className="mt-1 text-sm text-red-600"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <Field
-                as="textarea"
-                id="description"
-                name="description"
-                rows={3}
-                placeholder="Description optionnelle du véhicule..."
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.description && touched.description ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
-              <ErrorMessage
-                name="description"
-                component="div"
-                className="mt-1 text-sm text-red-600"
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                Statut *
-              </label>
-              <Field
-                as="select"
-                id="status"
-                name="status"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.status && touched.status ? 'border-red-300' : 'border-gray-300'
-                }`}
-              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 {Object.values(VehicleStatus).map((status) => (
-                  <option key={status} value={status}>
+                  <SelectItem key={status} value={status}>
                     {VehicleStatusLabels[status]}
-                  </option>
+                  </SelectItem>
                 ))}
-              </Field>
-              <ErrorMessage name="status" component="div" className="mt-1 text-sm text-red-600" />
-            </div>
+              </SelectContent>
+            </Select>
 
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-              {onCancel && (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Annuler
-                </button>
+            {touched.status && errors.status && (
+              <p className="text-sm text-red-500">{errors.status}</p>
+            )}
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                {tForms('buttons.cancel')}
+              </Button>
+            )}
+            <Button type="submit" disabled={isLoading} className="bg-tsa-blue hover:bg-tsa-blue">
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  {isEditing ? tForms('messages.updating') : tForms('messages.creating')}
+                </div>
+              ) : isEditing ? (
+                tForms('buttons.update')
+              ) : (
+                tForms('buttons.create')
               )}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {isEditing ? 'Modification...' : 'Création...'}
-                  </div>
-                ) : isEditing ? (
-                  'Modifier'
-                ) : (
-                  'Créer'
-                )}
-              </button>
-            </div>
-          </Form>
-        )}
-      </Formik>
-    </div>
+            </Button>
+          </div>
+        </Form>
+      )}
+    </Formik>
   );
 };

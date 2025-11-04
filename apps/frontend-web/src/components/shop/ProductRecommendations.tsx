@@ -8,12 +8,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import type { Product } from '@/types/product.types';
 import { shopService } from '@/services/shop.service';
+import { toast } from 'sonner';
+import { useShopTranslation } from '@/hooks/useTranslation';
+import { Link } from 'react-router-dom';
 
 interface ProductRecommendationsProps {
-  type: 'popular' | 'personalized' | 'similar';
+  type: 'popular' | 'personalized' | 'similar' | 'cart';
   productId?: string;
   limit?: number;
   className?: string;
+  view?: 'grid' | 'compact';
 }
 
 interface RecommendationResponse {
@@ -27,9 +31,11 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   productId,
   limit = 4,
   className = '',
+  view = 'grid',
 }) => {
   const { isAuthenticated } = useAuth();
   const { addToCart, isLoading: cartLoading } = useCart();
+  const { t: tShop } = useShopTranslation();
   const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,17 +48,14 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       let response;
 
       switch (type) {
-        case 'popular':
-          response = await shopService.getProductRecommendations(limit);
-          break;
-        case 'personalized':
-          response = await shopService.getProductRecommendations(limit);
-          break;
         case 'similar':
           if (!productId) {
             throw new Error('Product ID required for similar recommendations');
           }
           response = await shopService.getSimilarProducts(productId, limit);
+          break;
+        default:
+          response = await shopService.getProductRecommendations(limit);
           break;
       }
 
@@ -77,6 +80,11 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const handleAddToCart = async (product: Product) => {
     try {
       await addToCart(product, 1);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      toast.success(tShop('recommendations.addedToCart', { productName: product.name }));
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
@@ -85,13 +93,17 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getTitle = () => {
     switch (type) {
       case 'popular':
-        return 'Produits Populaires';
+        return tShop('recommendations.popularProducts');
       case 'personalized':
-        return isAuthenticated ? 'Recommandé pour vous' : 'Produits Populaires';
+        return isAuthenticated
+          ? tShop('recommendations.recommendedForYou')
+          : tShop('recommendations.popularProducts');
       case 'similar':
-        return 'Produits Similaires';
+        return tShop('recommendations.similarProducts');
+      case 'cart':
+        return tShop('cart.recommendations.title');
       default:
-        return 'Recommandations';
+        return tShop('recommendations.title');
     }
   };
 
@@ -111,15 +123,15 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
   const getDescription = () => {
     switch (type) {
       case 'popular':
-        return 'Les produits les plus demandés par nos clients';
+        return tShop('recommendations.popularDescription');
       case 'personalized':
         return isAuthenticated
-          ? 'Sélection personnalisée basée sur vos préférences'
-          : 'Les produits les plus populaires';
+          ? tShop('recommendations.personalizedDescription')
+          : tShop('recommendations.popularDescription');
       case 'similar':
-        return "D'autres produits qui pourraient vous intéresser";
+        return tShop('recommendations.similarDescription');
       default:
-        return 'Découvrez nos recommandations';
+        return tShop('recommendations.defaultDescription');
     }
   };
 
@@ -136,11 +148,13 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
           {type === 'personalized' && isAuthenticated && (
             <Badge variant="secondary" className="ml-auto">
               <Sparkles className="h-3 w-3 mr-1" />
-              IA
+              {tShop('recommendations.ai')}
             </Badge>
           )}
         </CardTitle>
-        <CardDescription>{getDescription()}</CardDescription>
+        <CardDescription className={`${type === 'cart' ? 'hidden' : ''}`}>
+          {getDescription()}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -155,77 +169,122 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
             ))}
           </div>
         ) : recommendations?.products?.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {recommendations.products.map((product) => (
-              <div
-                key={product.id}
-                className="group border rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
-                  {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Eye className="h-8 w-8" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {product.name}
-                  </h4>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="font-bold text-lg text-tsa-blue">
-                        {product.price.toLocaleString()} FCFA
+          view === 'compact' ? (
+            <div className="space-y-3">
+              {recommendations.products.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center gap-3 p-2 border rounded-lg hover:shadow-sm transition-shadow"
+                >
+                  <Link to={`/app/shop/product/${product.id}`} className="flex-shrink-0">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                        <Eye className="h-4 w-4 text-gray-400" />
                       </div>
-                      {product.price && product.price > product.price && (
-                        <div className="text-xs text-gray-500 line-through">
+                    )}
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/app/shop/product/${product.id}`}>
+                      <p className="text-sm font-medium truncate hover:text-tsa-blue transition-colors">
+                        {product.name}
+                      </p>
+                    </Link>
+                    <p className="text-xs text-gray-500">{product.price.toLocaleString()} FCFA</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAddToCart(product)}
+                    disabled={cartLoading || product.stock === 0}
+                    className="flex-shrink-0"
+                  >
+                    {product.stock === 0
+                      ? tShop('product.outOfStock')
+                      : tShop('cart.recommendations.add')}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recommendations.products.map((product) => (
+                <div
+                  key={product.id}
+                  className="group border rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                    <Link to={`/app/shop/product/${product.id}`}>
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Eye className="h-8 w-8" />
+                        </div>
+                      )}
+                    </Link>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Link to={`/app/shop/product/${product.id}`}>
+                      <h4 className="font-medium text-sm line-clamp-2 group-hover:text-tsa-blue transition-colors">
+                        {product.name}
+                      </h4>
+                    </Link>
+
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="font-bold text-lg text-tsa-blue">
                           {product.price.toLocaleString()} FCFA
                         </div>
+                        {product.price && product.price > product.price && (
+                          <div className="text-xs text-gray-500 line-through">
+                            {product.price.toLocaleString()} FCFA
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>
+                        {tShop('product.stock')}: {product.stock}
+                      </span>
+                      {product.category && (
+                        <Badge variant="outline" className="text-xs">
+                          {product.category.name}
+                        </Badge>
                       )}
                     </div>
 
-                    {/* {product.rating && (
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs text-gray-600">{product.rating}</span>
-                      </div>
-                    )} */}
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleAddToCart(product)}
+                      disabled={cartLoading || product.stock === 0}
+                    >
+                      <ShoppingCart className="h-3 w-3 mr-2" />
+                      {product.stock === 0
+                        ? tShop('product.outOfStock')
+                        : tShop('product.addToCart')}
+                    </Button>
                   </div>
-
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Stock: {product.stock}</span>
-                    {product.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {product.category.name}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => handleAddToCart(product)}
-                    disabled={cartLoading || product.stock === 0}
-                  >
-                    <ShoppingCart className="h-3 w-3 mr-2" />
-                    {product.stock === 0 ? 'Rupture' : 'Ajouter'}
-                  </Button>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )
         ) : (
           <div className="text-center py-8 text-gray-500">
             <Eye className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Aucune recommandation disponible</p>
+            <p>{tShop('recommendations.noRecommendations')}</p>
           </div>
         )}
 
@@ -235,16 +294,16 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               <Sparkles className="h-4 w-4" />
               <span className="font-medium">Pourquoi ces recommandations ?</span>
             </div>
-            <p className="text-sm text-blue-600 mt-1">{recommendations.reason}</p>
+            <p className="text-sm text-tsa-blue mt-1">{recommendations.reason}</p>
             {recommendations.confidence && (
               <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-blue-600">
+                <div className="flex items-center justify-between text-xs text-tsa-blue">
                   <span>Pertinence</span>
                   <span>{Math.round(recommendations.confidence * 100)}%</span>
                 </div>
                 <div className="w-full bg-blue-200 rounded-full h-1.5 mt-1">
                   <div
-                    className="bg-blue-600 h-1.5 rounded-full transition-all"
+                    className="bg-tsa-blue h-1.5 rounded-full transition-all"
                     style={{ width: `${recommendations.confidence * 100}%` }}
                   />
                 </div>

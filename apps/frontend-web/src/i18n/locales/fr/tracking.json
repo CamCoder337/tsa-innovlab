@@ -1,0 +1,243 @@
+{
+  "title": "Suivi",
+  "dashboard": {
+    "title": "Tableau de Suivi",
+    "subtitle": "Gérez vos expéditions et suivez vos performances",
+    "adminTitle": "Centre de Contrôle Admin",
+    "adminSubtitle": "Supervision globale du système TSA Logistics"
+  },
+  "navigation": {
+    "back": "Retour",
+    "backToDashboard": "Retour au tableau de bord",
+    "newMission": "Nouvelle Mission",
+    "detailedTracking": "Suivi détaillé de la mission"
+  },
+  "kpis": {
+    "totalMissions": "Total Missions",
+    "activeMissions": "En Cours",
+    "completedMissions": "Terminées",
+    "revenue": "Chiffre d'Affaires",
+    "activeVehicles": "Véhicules Actifs",
+    "activeDrivers": "Chauffeurs Actifs",
+    "systemUptime": "Disponibilité Système",
+    "responseTime": "Temps de réponse",
+    "completedToday": "Terminées Aujourd'hui"
+  },
+  "mission": {
+    "notFound": "Mission non trouvée",
+    "notFoundMessage": "La mission avec l'ID \"{{id}}\" n'existe pas.",
+    "status": "Statut",
+    "price": "Prix",
+    "merchandise": "Marchandise",
+    "deliveryScheduled": "Livraison prévue",
+    "weight": "{{weight}} kg",
+    "information": "Informations de la mission",
+    "description": "Description",
+    "merchandiseType": "Type de marchandise",
+    "estimatedDeparture": "Date de départ estimée",
+    "expectedArrival": "Date d'arrivée prévue"
+  },
+  "timeline": {
+    "title": "Chronologie de la mission",
+    "published": {
+      "label": "Mission publiée",
+      "description": "Mission créée et publiée sur la plateforme"
+    },
+    "assigned": {
+      "label": "Transporteur assigné",
+      "description": "Un transporteur a été assigné à cette mission",
+      "pending": "En attente d'assignation"
+    },
+    "inProgress": {
+      "label": "Transport en cours",
+      "description": "Le transport est en cours de réalisation"
+    },
+    "completed": {
+      "label": "Mission terminée",
+      "description": "Mission terminée avec succès"
+    }
+  },
+  "transporter": {
+    "title": "Informations transporteur",
+    "verified": "Professionnel vérifié",
+    "call": "Appeler",
+    "message": "Message",
+    "lastPosition": "Dernière position",
+    "positionUpdate": "Mise à jour: {{date}}",
+    "realTimePosition": "Position en temps réel"
+  },
+  "tabs": {
+    "realTimeTracking": "Suivi en temps réel",
+    "missionDetails": "Détails Mission",
+    "currentMission": "Mission Actuelle",
+    "myMissions": "Mes Missions",
+    "vehicleStatus": "État Véhicule",
+    "earnings": "Gains & Performance",
+    "costs": "Coûts & Budget",
+    "timeline": "Chronologie",
+    "documents": "Documents",
+    "overview": "Vue d'ensemble",
+    "fleetManagement": "Gestion Flotte",
+    "performance": "Performance",
+    "alertsIncidents": "Alertes & Incidents",
+    "analytics": "Analytiques"
+  },
+  "map": {
+    "title": "Suivi en Temps Réel",
+    "globalView": "Vue Globale du Réseau",
+    "noLocation": "Position non disponible",
+    "estimatedArrival": "Arrivée estimée",
+    "currentLocation": "Position actuelle",
+    "route": "Itinéraire",
+    "traffic": "Trafic",
+    "weather": "Météo",
+    "filters": "Filtres",
+    "satelliteView": "Vue Satellite",
+    "activeVehicles": "Véhicules actifs ({{count}})",
+    "incidents": "Incidents ({{count}})",
+    "delays": "Retards ({{count}})",
+    "lastUpdate": "Dernière mise à jour: {{time}}",
+    "noMissionsToDisplay": "Aucune mission à afficher",
+    "noMissionsMessage": "Il n'y a actuellement aucune mission à suivre sur la carte.",
+    "errorLoadingMap": "Erreur de chargement de la carte",
+    "retry": "Réessayer",
+    "loadingMap": "Chargement de la carte des missions...",
+    "missions": "Missions",
+    "totalMissions": "Total: {{count}} missions",
+    "assignedMissions": "Assignées: {{count}}",
+    "detectedPosition": "Position détectée"
+  },
+  "actions": {
+    "share": "Partager",
+    "exportPdf": "Exporter PDF",
+    "fullscreen": "Plein écran",
+    "exportReport": "Exporter Rapport",
+    "refresh": "Actualiser",
+    "emergencyMode": "Mode Urgence",
+    "viewAlerts": "Voir Alertes",
+    "markAllRead": "Marquer tout lu",
+    "resolve": "Résoudre",
+    "details": "Détails",
+    "viewAll": "Voir toutes les alertes",
+    "openGPS": "Ouvrir GPS",
+    "markDelivered": "Marquer Livré",
+    "markAsDelivered": "Marquer comme Livré",
+    "reportProblem": "Signaler un Problème",
+    "viewDetails": "Voir détails",
+    "assignMission": "Assigner mission",
+    "contact": "Contacter",
+    "viewHistory": "Voir historique",
+    "editMission": "Modifier mission",
+    "cancelMission": "Annuler mission",
+    "completeMission": "Terminer mission"
+  },
+  "alerts": {
+    "title": "Alertes Récentes",
+    "management": "Gestion des Alertes",
+    "critical": "Alerte(s) Critique(s) nécessitent votre attention",
+    "checkTab": "Vérifiez l'onglet \"Alertes & Incidents\" pour plus de détails",
+    "vehicleBreakdown": "Panne de véhicule",
+    "breakdownMessage": "Le véhicule {{vehicle}} est en panne à {{location}}",
+    "maintenanceReminder": "Rappel de maintenance",
+    "maintenanceMessage": "Le véhicule {{vehicle}} nécessite une maintenance dans {{days}} jours",
+    "fuelLow": "Carburant faible",
+    "fuelMessage": "Le véhicule {{vehicle}} a un niveau de carburant faible ({{level}}%)",
+    "deliveryDelay": "Retard de livraison",
+    "delayMessage": "La mission {{mission}} sera {{delay}} en retard",
+    "newDriver": "Nouveau chauffeur",
+    "newDriverMessage": "{{name}} a rejoint le transport"
+  },
+  "performance": {
+    "title": "Performance",
+    "onTimeDelivery": "Livraisons à temps",
+    "customerSatisfaction": "Satisfaction client",
+    "fleetUtilization": "Utilisation de la flotte",
+    "fuelEfficiency": "Efficacité carburant",
+    "evolution": "Évolution des Performances",
+    "target": "Objectif: {{target}}{{unit}}",
+    "chart30Days": "Graphique de performance sur 30 jours",
+    "basedOnReviews": "Basé sur {{count}} avis",
+    "successRate": "Taux de réussite",
+    "averageDelay": "Délai moyen",
+    "savings": "Économies réalisées",
+    "responseTime": "Temps de réponse",
+    "monthlyBudget": "Budget Mensuel",
+    "fcfaThisMonth": "FCFA ce mois",
+    "costPerKm": "Coût par km"
+  },
+  "metrics": {
+    "realTime": "Métriques Temps Réel",
+    "networkEfficiency": "Efficacité réseau",
+    "activeMissions": "Missions en cours",
+    "occupancyRate": "Taux d'occupation",
+    "dailyRevenue": "Revenus du jour"
+  },
+  "quickActions": {
+    "title": "Actions Rapides",
+    "manageDrivers": "Gérer Chauffeurs",
+    "fleetStatus": "État Flotte",
+    "urgentMissions": "Missions Urgentes",
+    "reports": "Rapports"
+  },
+  "analytics": {
+    "avgDeliveryTime": "2.3 jours",
+    "budgetUsed": "73% du budget utilisé",
+    "costPerTransport": "Coût par Transport",
+    "savingsRealized": "Économies Réalisées",
+    "fcfaSaved": "FCFA économisés",
+    "vsLastMonth": "↗ +12% vs mois dernier",
+    "revenueAnalysis": "Analyse des Revenus",
+    "fleetUtilization": "Utilisation de la Flotte",
+    "revenueByRegion": "Graphique des revenus par région",
+    "vehicleUtilization": "Graphique d'utilisation des véhicules",
+    "aiPredictions": "Prédictions IA",
+    "expectedDemand": "Demande Prévue",
+    "nextWeek": "Semaine prochaine",
+    "routeOptimization": "Optimisation Route",
+    "fuelSavings": "Économie carburant",
+    "maintenance": "Maintenance",
+    "vehicles": "véhicules",
+    "scheduledMaintenance": "Maintenance prévue",
+    "shipmentEvolution": "Évolution des Expéditions",
+    "monthlyShipmentChart": "Graphique des expéditions par mois",
+    "destinationBreakdown": "Répartition par Destination",
+    "destinationPieChart": "Graphique en secteurs des destinations"
+  },
+  "documents": {
+    "title": "Documents de la mission",
+    "noDocuments": "Aucun document disponible pour cette mission",
+    "documentsWillShow": "Les documents seront affichés ici une fois uploadés"
+  },
+  "empty": {
+    "noMissions": "Aucune mission trouvée",
+    "noMissionsMessage": "Créez votre première mission pour commencer le suivi"
+  },
+  "vehicle": {
+    "speed": "Vitesse",
+    "status": "État du Véhicule",
+    "battery": "Batterie",
+    "fuel": "Carburant",
+    "currentSpeed": "Vitesse actuelle",
+    "maintenanceStatus": "État maintenance",
+    "maintenanceGood": "Bon",
+    "maintenanceWarning": "Attention",
+    "maintenanceCritical": "Critique",
+    "currentPosition": "Position actuelle",
+    "lastUpdate": "Dernière mise à jour",
+    "averageSpeed": "Vitesse moyenne",
+    "drivingHistory": "Historique de Conduite",
+    "kmToday": "Km parcourus aujourd'hui",
+    "drivingTime": "Temps de conduite",
+    "consumption": "Consommation",
+    "ecoScore": "Score éco-conduite"
+  },
+  "missions": {
+    "priorityMissions": "Missions Prioritaires",
+    "list": "Liste des Missions",
+    "myMissions": "Mes Missions",
+    "noActiveMission": "Aucune mission active",
+    "noActiveMissionMessage": "Vous n'avez pas de mission en cours. Consultez vos missions assignées.",
+    "departure": "Départ",
+    "arrival": "Arrivée"
+  }
+}

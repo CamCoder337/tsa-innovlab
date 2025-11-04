@@ -9,6 +9,7 @@ import { X, Search as SearchIcon } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
 import type { ProductFilterParams } from '@/types/product.types';
 import { VisualSearch } from './VisualSearch';
+import { useShopTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
 type ProductFilter = Omit<ProductFilterParams, 'page' | 'limit' | 'sortBy' | 'sortOrder'>;
 
@@ -22,6 +23,8 @@ const PRICE_RANGE = { min: 0, max: 100000, step: 1000 } as const;
 
 export function ProductFilters({ filters, onFiltersChange, className = '' }: ProductFiltersProps) {
   const { categories = [], isLoading: isLoadingCategories } = useCategories();
+  const { t: tShop } = useShopTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [priceRange, setPriceRange] = useState<[number, number]>([
     filters.minPrice ?? PRICE_RANGE.min,
     filters.maxPrice ?? PRICE_RANGE.max,
@@ -117,7 +120,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
     <Card className={`w-full max-w-md ${className}`}>
       <CardHeader className="">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Filtres</CardTitle>
+          <CardTitle className="text-lg font-semibold">{tShop('filters.title')}</CardTitle>
           {activeFiltersCount > 0 && (
             <Button
               variant="ghost"
@@ -127,7 +130,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
               disabled={activeFiltersCount === 0}
             >
               <X className="h-3.5 w-3.5" />
-              {`Réinitialiser (${activeFiltersCount})`}
+              {tShop('filters.reset')} ({activeFiltersCount})
             </Button>
           )}
         </div>
@@ -135,11 +138,11 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
       <CardContent className="space-y-6">
         {/* Search */}
         <div className="md:flex flex-col space-y-2 hidden">
-          <h3 className="font-medium">Recherche</h3>
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <h3 className="font-medium">{tCommon('actions.search')}</h3>
+          <div className="flex flex-1 items-center justify-between border border-input">
+            <SearchIcon className="h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher des produits..."
+              placeholder={tShop('filters.searchPlaceholder')}
               value={filters.search || ''}
               onChange={handleSearchChange}
               className="w-full pl-9"
@@ -152,7 +155,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
 
         {/* Categories */}
         <div>
-          <h3 className="font-medium mb-3">Catégories</h3>
+          <h3 className="font-medium mb-3">{tShop('filters.categories')}</h3>
           {isLoadingCategories ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
@@ -186,7 +189,9 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Aucune catégorie disponible</p>
+            <p className="text-sm text-muted-foreground">
+              {tShop('filters.noCategoriesAvailable')}
+            </p>
           )}
         </div>
 
@@ -194,7 +199,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
 
         {/* Price Range */}
         <div className="space-y-4">
-          <h3 className="font-medium">Fourchette de prix</h3>
+          <h3 className="font-medium">{tShop('filters.priceRange')}</h3>
           <div className="px-1">
             <Slider
               value={priceRange}
@@ -215,7 +220,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
 
         {/* Stock Status */}
         <div className="space-y-3">
-          <h3 className="font-medium">Disponibilité</h3>
+          <h3 className="font-medium">{tShop('filters.availability')}</h3>
           <div className="space-y-2">
             {/* <div className="flex items-center gap-2">
               <Checkbox
@@ -237,7 +242,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
                 className="h-4 w-4 rounded"
               />
               <label htmlFor="low-stock" className="text-sm cursor-pointer select-none">
-                Stock faible
+                {tShop('filters.lowStock')}
               </label>
             </div>
 

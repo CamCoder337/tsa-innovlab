@@ -32,13 +32,15 @@ import {
   Edit,
 } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
+import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import type { UserRole } from '@/types/auth.types';
 import type { UserStatus } from '@/types/user.types';
 
 export default function AdminUsersPage() {
   const { users, userStats, isLoading, error, fetchUsers, suspendUser, activateUser, deleteUser } =
     useUsers();
-
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -75,7 +77,7 @@ export default function AdminUsersPage() {
   };
 
   const handleSuspendUser = async (userId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir suspendre cet utilisateur ?')) {
+    if (window.confirm(tAdmin('users.confirmSuspend'))) {
       await suspendUser(userId, { status: 'suspended', reason: 'Suspended by admin' });
     }
   };
@@ -85,11 +87,7 @@ export default function AdminUsersPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (
-      window.confirm(
-        'Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.'
-      )
-    ) {
+    if (window.confirm(tAdmin('users.confirmDelete'))) {
       await deleteUser(userId);
     }
   };
@@ -100,9 +98,11 @@ export default function AdminUsersPage() {
       <div className="flex min-h-screen bg-gray-50 p-6">
         <div className="flex-1 p-6">
           <div className="text-center py-8">
-            <p className="text-red-500">Erreur: {error}</p>
+            <p className="text-red-500">
+              {tCommon('Error')}: {error}
+            </p>
             <Button onClick={() => fetchUsers()} className="mt-4">
-              Réessayer
+              {tCommon('actions.retry')}
             </Button>
           </div>
         </div>
@@ -145,17 +145,17 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="flex flex-1 flex-col bg-gray-50 p-6">
       <div className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestion des Utilisateurs</h1>
-            <p className="text-gray-600 mt-1">Gérez les comptes utilisateurs de la plateforme</p>
+            <h1 className="text-3xl font-bold text-gray-900">{tAdmin('users.title')}</h1>
+            <p className="text-gray-600 mt-1">{tAdmin('users.subtitle')}</p>
           </div>
           <Link to="/admin/users/add">
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Ajouter un utilisateur
+              {tAdmin('users.addUser')}
             </Button>
           </Link>
         </div>
@@ -166,10 +166,10 @@ export default function AdminUsersPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-600" />
+                  <Users className="h-5 w-5 text-tsa-blue" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Utilisateurs</p>
+                  <p className="text-sm text-gray-600">{tAdmin('users.totalUsers')}</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
               </div>
@@ -183,7 +183,7 @@ export default function AdminUsersPage() {
                   <UserCheck className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Utilisateurs Actifs</p>
+                  <p className="text-sm text-gray-600">{tAdmin('users.activeUsers')}</p>
                   <p className="text-2xl font-bold">{stats.active}</p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function AdminUsersPage() {
                   <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">En Attente</p>
+                  <p className="text-sm text-gray-600">{tAdmin('users.pendingUsers')}</p>
                   <p className="text-2xl font-bold">{stats.pending}</p>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function AdminUsersPage() {
                   <UserX className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Suspendus</p>
+                  <p className="text-sm text-gray-600">{tAdmin('users.suspendedUsers')}</p>
                   <p className="text-2xl font-bold">{stats.suspended}</p>
                 </div>
               </div>
@@ -226,7 +226,7 @@ export default function AdminUsersPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Rechercher par nom, email ou entreprise..."
+                  placeholder={tAdmin('users.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -238,13 +238,13 @@ export default function AdminUsersPage() {
                 onValueChange={(value) => setStatusFilter(value as UserStatus | 'all')}
               >
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filtrer par statut" />
+                  <SelectValue placeholder={tAdmin('users.filterByStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="suspended">Suspendu</SelectItem>
+                  <SelectItem value="all">{tAdmin('users.allStatuses')}</SelectItem>
+                  <SelectItem value="active">{tCommon('status.active')}</SelectItem>
+                  <SelectItem value="pending">{tCommon('status.pending')}</SelectItem>
+                  <SelectItem value="suspended">{tCommon('status.suspended')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -253,20 +253,20 @@ export default function AdminUsersPage() {
                 onValueChange={(value) => setRoleFilter(value as UserRole | 'all')}
               >
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filtrer par rôle" />
+                  <SelectValue placeholder={tAdmin('users.filterByRole')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les rôles</SelectItem>
-                  <SelectItem value="admin">Administrateur</SelectItem>
-                  <SelectItem value="affreteur">Affréteur</SelectItem>
-                  <SelectItem value="transporteur">Transporteur</SelectItem>
-                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="all">{tAdmin('users.allRoles')}</SelectItem>
+                  <SelectItem value="admin">{tCommon('roles.admin')}</SelectItem>
+                  <SelectItem value="affreteur">{tCommon('roles.affreteur')}</SelectItem>
+                  <SelectItem value="transporteur">{tCommon('roles.transporteur')}</SelectItem>
+                  <SelectItem value="client">{tCommon('roles.client')}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Nouvel Utilisateur
+                {tAdmin('users.newUser')}
               </Button>
             </div>
           </CardContent>
@@ -275,22 +275,30 @@ export default function AdminUsersPage() {
         {/* Onglets */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">Tous ({stats.total})</TabsTrigger>
-            <TabsTrigger value="affreteurs">Affréteurs ({stats.affreteurs})</TabsTrigger>
-            <TabsTrigger value="transporteurs">Transporteurs ({stats.transporteurs})</TabsTrigger>
-            <TabsTrigger value="admins">Admins ({userStats?.byRole?.admin || 0})</TabsTrigger>
+            <TabsTrigger value="all">
+              {tAdmin('users.all')} ({stats.total})
+            </TabsTrigger>
+            <TabsTrigger value="affreteurs">
+              {tCommon('roles.affreteur')}s ({stats.affreteurs})
+            </TabsTrigger>
+            <TabsTrigger value="transporteurs">
+              {tCommon('roles.transporteur')}s ({stats.transporteurs})
+            </TabsTrigger>
+            <TabsTrigger value="admins">
+              {tCommon('roles.admin')}s ({userStats?.byRole?.admin || 0})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>Liste des Utilisateurs</CardTitle>
+                <CardTitle>{tAdmin('users.usersList')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin" />
-                    <span className="ml-2">Chargement des utilisateurs...</span>
+                    <span className="ml-2">{tAdmin('users.loadingUsers')}</span>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -331,11 +339,13 @@ export default function AdminUsersPage() {
                             <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Inscrit le {formatDate(user.createdAt)}
+                                {tAdmin('users.registeredOn')} {formatDate(user.createdAt)}
                               </div>
-                              {user.lastLoginAt && (
-                                <span>Dernière connexion: {formatDate(user.lastLoginAt)}</span>
-                              )}
+                              {/* {user.lastLoginAt && (
+                                <span>
+                                  {tAdmin('users.lastLogin')}: {formatDate(user.lastLoginAt)}
+                                </span>
+                              )} */}
                             </div>
                           </div>
                         </div>
@@ -344,12 +354,12 @@ export default function AdminUsersPage() {
                           <Link to={`/app/users/${user.id}`}>
                             <Button variant="outline" size="sm" className="gap-1">
                               <Eye className="h-3 w-3" />
-                              Voir
+                              {tCommon('actions.view')}
                             </Button>
                           </Link>
                           <Button variant="outline" size="sm" className="gap-1">
                             <Edit className="h-3 w-3" />
-                            Modifier
+                            {tCommon('actions.edit')}
                           </Button>
                           {user.status === 'active' ? (
                             <Button
@@ -360,7 +370,7 @@ export default function AdminUsersPage() {
                               disabled={isLoading}
                             >
                               <UserX className="h-3 w-3" />
-                              Suspendre
+                              {tCommon('actions.suspend')}
                             </Button>
                           ) : (
                             <Button
@@ -371,7 +381,7 @@ export default function AdminUsersPage() {
                               disabled={isLoading}
                             >
                               <UserCheck className="h-3 w-3" />
-                              Activer
+                              {tCommon('actions.activate')}
                             </Button>
                           )}
                           <Button
@@ -382,7 +392,7 @@ export default function AdminUsersPage() {
                             disabled={isLoading}
                           >
                             <Trash2 className="h-3 w-3" />
-                            Supprimer
+                            {tCommon('actions.delete')}
                           </Button>
                         </div>
                       </div>
@@ -392,7 +402,7 @@ export default function AdminUsersPage() {
 
                 {!isLoading && filteredUsers?.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">Aucun utilisateur trouvé avec ces critères.</p>
+                    <p className="text-gray-500">{tAdmin('users.noUsersFound')}</p>
                   </div>
                 )}
               </CardContent>

@@ -1,0 +1,39 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "missions": "Missions",
+    "products": "Products",
+    "orders": "Orders",
+    "shop": "Shop",
+    "cart": "Cart",
+    "profile": "Profile",
+    "settings": "Settings",
+    "admin": "Administration",
+    "users": "Users",
+    "categories": "Categories",
+    "vehicles": "Vehicles",
+    "chat": "Chat",
+    "reports": "Reports",
+    "analytics": "Analytics",
+    "tracking": "Real-time Tracking"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "workspace": "{{role}} Workspace",
+    "admin": "Administration",
+    "shop": "Shop",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "privacy": "Privacy",
+    "terms": "Terms of Service",
+    "help": "Help",
+    "support": "Support"
+  }
+}

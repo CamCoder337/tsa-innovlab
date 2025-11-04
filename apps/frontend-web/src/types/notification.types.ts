@@ -1,5 +1,4 @@
 import React from 'react';
-import type { Renderable } from 'react-hot-toast';
 import type { PaginationMeta } from './common.types';
 
 export enum NotificationType {
@@ -59,6 +58,7 @@ export type NotificationData =
 export interface Notification {
   id: string;
   userId: string;
+  description?: string;
   type: NotificationType;
   priority: NotificationPriority;
   title: string;
@@ -104,7 +104,7 @@ export interface ToastNotificationOptions {
     | 'bottom-right';
   style?: React.CSSProperties;
   className?: string;
-  icon?: Renderable;
+  icon?: React.ReactNode;
   dismissible?: boolean;
   onClick?: () => void;
 }

@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useProfileTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,24 +33,25 @@ import {
   RefreshCw,
   Currency,
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
-
-interface MFAStatus {
-  enabled: boolean;
-  setupRequired: boolean;
-  backupCodes: string[];
-  qrCode?: string;
-  secret?: string;
-}
+import { authService } from '@/services/auth.service';
+import type { MFAUserStatus } from '@/types/auth.types';
 
 function AffreteurSettings() {
   const { user } = useAuth();
+  const { t: tProfile } = useProfileTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
+  const [mfaStatus, setMfaStatus] = useState<MFAUserStatus>({
     enabled: user?.mfaEnabled || false,
-    setupRequired: false,
+    setupRequired: user?.mustEnableMFA || false,
+    secret: '',
+    key: '',
     backupCodes: [],
+    instructions: '',
   });
   const [notifications, setNotifications] = useState({
     email: true,
@@ -70,60 +77,71 @@ function AffreteurSettings() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Paramètres sauvegardés avec succès');
+      toast.success(tProfile('settings.saveSuccess'));
       setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(tErrors('general.saveError'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMFAToggle = async (enabled: boolean) => {
+  const handleMFAToggle = async (enabled: boolean, code?: string) => {
     try {
       setIsLoading(true);
 
       if (enabled) {
         // Initialize MFA setup
-        const response = await fetch('/api/auth/mfa/initialize', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+        const response = await authService.setupMFA();
 
-        if (response.ok) {
-          const data = await response.json();
-          setMfaStatus({
-            enabled: false,
-            setupRequired: true,
-            backupCodes: [],
-            qrCode: data.qrCode,
-            secret: data.secret,
-          });
+        if (response.error) {
+          console.error(response.error);
+          toast.error(response.error?.message);
+        }
+
+        if (response.data) {
+          const status = await authService.statusMFA();
+
+          if (status.error) {
+            console.error(status.error);
+            toast.error(status.error?.message);
+          }
+
+          if (status.data) {
+            setMfaStatus({
+              enabled: status.data.mfaEnabled,
+              setupRequired: true,
+              backupCodes: response.data.recoveryCodes,
+              key: response.data.manualEntryKey,
+              secret: response.data.secret,
+            });
+          }
         }
       } else {
         // Disable MFA
-        const response = await fetch('/api/auth/mfa/disable', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+        const response = await authService.disableMFA(code!);
 
-        if (response.ok) {
+        if (response.error) {
+          toast.error(response.error.message);
+          return;
+        }
+
+        if (response.data) {
           setMfaStatus({
             enabled: false,
             setupRequired: false,
+            secret: '',
+            key: '',
             backupCodes: [],
+            instructions: '',
           });
-          toast.success('MFA désactivé avec succès');
+          toast.success(tProfile('settings.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la configuration MFA');
+      toast.error(tProfile('settings.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -133,29 +151,29 @@ function AffreteurSettings() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/auth/mfa/enable', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ code }),
-      });
+      const response = await authService.enableMFA(code);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.error) {
+        toast.error(response.error.message);
+        return;
+      }
+
+      if (response.data) {
         setMfaStatus({
           enabled: true,
           setupRequired: false,
-          backupCodes: data.backupCodes || [],
+          secret: '',
+          key: '',
+          backupCodes: [],
+          instructions: '',
         });
-        toast.success('MFA activé avec succès');
+        toast.success(tProfile('settings.mfa.enableSuccess'));
       } else {
-        toast.error('Code invalide');
+        toast.error(tProfile('settings.mfa.invalidCode'));
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erreur lors de l'activation MFA");
+      toast.error(tProfile('settings.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -163,21 +181,19 @@ function AffreteurSettings() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié dans le presse-papiers');
+    toast.success(tCommon('messages.copiedToClipboard'));
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-          <p className="text-muted-foreground">
-            Configurez vos préférences et paramètres de compte
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
+          <p className="text-muted-foreground">{tProfile('settings.subtitle')}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+          {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
         </Button>
       </div>
 
@@ -186,14 +202,14 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications
+              {tProfile('settings.notifications.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Email</span>
+                <span className="text-sm">{tProfile('settings.notifications.email')}</span>
               </div>
               <Switch
                 checked={notifications.email}
@@ -206,7 +222,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications SMS</span>
+                <span className="text-sm">{tProfile('settings.notifications.sms')}</span>
               </div>
               <Switch
                 checked={notifications.sms}
@@ -217,7 +233,7 @@ function AffreteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Push</span>
+                <span className="text-sm">{tProfile('settings.notifications.push')}</span>
               </div>
               <Switch
                 checked={notifications.push}
@@ -228,7 +244,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Mises à jour de missions</span>
+              <span className="text-sm">{tProfile('settings.notifications.missionUpdates')}</span>
               <Switch
                 checked={notifications.missionUpdates}
                 onCheckedChange={(checked) =>
@@ -238,7 +254,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Alertes de prix</span>
+              <span className="text-sm">{tProfile('settings.notifications.priceAlerts')}</span>
               <Switch
                 checked={notifications.priceAlerts}
                 onCheckedChange={(checked) =>
@@ -248,7 +264,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Rapports hebdomadaires</span>
+              <span className="text-sm">{tProfile('settings.notifications.weeklyReports')}</span>
               <Switch
                 checked={notifications.weeklyReports}
                 onCheckedChange={(checked) =>
@@ -263,13 +279,13 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Préférences
+              {tProfile('settings.preferences.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <div className="space-y-2">
-                <Label>Langue</Label>
+                <Label>{tProfile('settings.preferences.language')}</Label>
                 <Select
                   value={preferences.language}
                   onValueChange={(value) => setPreferences({ ...preferences, language: value })}
@@ -278,14 +294,14 @@ function AffreteurSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">{tProfile('settings.preferences.french')}</SelectItem>
+                    <SelectItem value="en">{tProfile('settings.preferences.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Devise</Label>
+                <Label>{tProfile('settings.preferences.currency')}</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
@@ -302,7 +318,7 @@ function AffreteurSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fuseau Horaire</Label>
+                <Label>{tProfile('settings.preferences.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
@@ -321,7 +337,7 @@ function AffreteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Attribution automatique</span>
+              <span className="text-sm">{tProfile('settings.preferences.autoAssign')}</span>
               <Switch
                 checked={preferences.autoAssign}
                 onCheckedChange={(checked) =>
@@ -331,7 +347,7 @@ function AffreteurSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Fourchette de prix préférée</Label>
+              <Label>{tProfile('settings.preferences.priceRange')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
                   <Currency className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -372,7 +388,7 @@ function AffreteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Sécurité
+              {tProfile('settings.security.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -386,14 +402,14 @@ function AffreteurSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    Authentification à deux facteurs (MFA)
+                    {tProfile('settings.security.mfa.title')}
                   </h4>
                   <p className="text-sm text-gray-600">
-                    Ajoutez une couche de sécurité supplémentaire à votre compte
+                    {tProfile('settings.security.mfa.description')}
                   </p>
                 </div>
                 <Switch
-                  checked={mfaStatus.enabled}
+                  checked={user.mfaEnabled}
                   onCheckedChange={handleMFAToggle}
                   disabled={isLoading}
                 />
@@ -402,35 +418,25 @@ function AffreteurSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    MFA est activé sur votre compte. Votre compte est protégé.
-                  </AlertDescription>
+                  <AlertDescription>{tProfile('settings.security.mfa.enabled')}</AlertDescription>
                 </Alert>
               )}
 
-              {mfaStatus.setupRequired && (
+              {mfaStatus.key && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">Configuration MFA</h5>
+                  <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
 
-                  {mfaStatus.qrCode && (
+                  {mfaStatus.instructions && (
                     <div className="space-y-3">
-                      <p className="text-sm">
-                        1. Scannez ce QR code avec votre application d'authentification (Google
-                        Authenticator, Authy, etc.)
-                      </p>
-                      <div className="flex justify-center">
-                        <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
-                      </div>
-
-                      <p className="text-sm">2. Ou entrez manuellement cette clé secrète :</p>
+                      <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                          {mfaStatus.secret}
+                          {mfaStatus.key}
                         </code>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(mfaStatus.secret || '')}
+                          onClick={() => copyToClipboard(mfaStatus.key || '')}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
@@ -438,7 +444,7 @@ function AffreteurSettings() {
 
                       <div className="space-y-2">
                         <Label htmlFor="mfaCode">
-                          3. Entrez le code à 6 chiffres de votre application
+                          {tProfile('settings.security.mfa.enterCode')}
                         </Label>
                         <div className="flex gap-2">
                           <Input
@@ -458,11 +464,13 @@ function AffreteurSettings() {
                                 .previousElementSibling as HTMLInputElement;
                               if (input.value.length === 6) {
                                 handleMFAEnable(input.value);
+                              } else {
+                                toast.info(tForms('validation.mfa'));
                               }
                             }}
                             disabled={isLoading}
                           >
-                            Activer MFA
+                            {tProfile('settings.security.mfa.enable')}
                           </Button>
                         </div>
                       </div>
@@ -471,18 +479,17 @@ function AffreteurSettings() {
                 </div>
               )}
 
-              {mfaStatus.backupCodes.length > 0 && (
+              {mfaStatus.backupCodes!.length > 0 && (
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <h5 className="font-medium">Codes de récupération</h5>
+                    <h5 className="font-medium">{tProfile('settings.security.mfa.backupCodes')}</h5>
                   </div>
                   <p className="text-sm text-yellow-800">
-                    Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte
-                    si vous perdez votre téléphone.
+                    {tProfile('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {mfaStatus.backupCodes.map((code, index) => (
+                    {mfaStatus.backupCodes!.map((code, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-white rounded text-sm font-mono border">
                           {code}
@@ -495,7 +502,7 @@ function AffreteurSettings() {
                   </div>
                   <Button variant="outline" size="sm">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Régénérer les codes
+                    {tProfile('settings.security.mfa.regenerateCodes')}
                   </Button>
                 </div>
               )}

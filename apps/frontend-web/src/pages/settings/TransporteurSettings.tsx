@@ -1,5 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useProfileTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,25 +34,25 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
 import { authService } from '@/services/auth.service';
-
-interface MFAStatus {
-  enabled: boolean;
-  setupRequired: boolean;
-  backupCodes: string[];
-  key?: string;
-  secret?: string;
-}
+import type { MFAUserStatus } from '@/types/auth.types';
 
 function TransporteurSettings() {
   const { user } = useAuth();
+  const { t: tProfile } = useProfileTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
+  const [mfaStatus, setMfaStatus] = useState<MFAUserStatus>({
     enabled: user?.mfaEnabled || false,
-    setupRequired: user?.mfaEnabled || false,
+    setupRequired: user?.mustEnableMFA || false,
+    secret: '',
+    key: '',
     backupCodes: [],
+    instructions: '',
   });
 
   const [notifications, setNotifications] = useState({
@@ -78,17 +84,17 @@ function TransporteurSettings() {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Paramètres sauvegardés avec succès');
+      toast.success(tProfile('settings.saveSuccess'));
       setTimeout(() => {}, 3000);
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(tErrors('general.saveError'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMFAToggle = async (enabled: boolean) => {
+  const handleMFAToggle = async (enabled: boolean, code?: string) => {
     try {
       setIsLoading(true);
 
@@ -121,25 +127,28 @@ function TransporteurSettings() {
         }
       } else {
         // Disable MFA
-        const response = await fetch('/api/auth/mfa/disable', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+        const response = await authService.disableMFA(code!);
 
-        if (response.ok) {
+        if (response.error) {
+          toast.error(response.error.message);
+          return;
+        }
+
+        if (response.data) {
           setMfaStatus({
             enabled: false,
             setupRequired: false,
+            secret: '',
+            key: '',
             backupCodes: [],
+            instructions: '',
           });
-          toast.success('MFA désactivé avec succès');
+          toast.success(tProfile('settings.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la configuration MFA');
+      toast.error(tProfile('settings.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -152,30 +161,26 @@ function TransporteurSettings() {
       const response = await authService.enableMFA(code);
 
       if (response.error) {
-        console.error(response.error);
-        toast.error(response.error?.message || 'Code invalide');
+        toast.error(response.error.message);
+        return;
       }
 
       if (response.data) {
-        const status = await authService.statusMFA();
-
-        if (status.error) {
-          console.error(status.error);
-          toast.error(status.error?.message);
-        }
-
-        if (status.data) {
-          setMfaStatus({
-            ...mfaStatus,
-            enabled: status.data.mfaEnabled,
-            setupRequired: true,
-          });
-        }
-        toast.success('MFA activé avec succès');
+        setMfaStatus({
+          enabled: true,
+          setupRequired: false,
+          secret: '',
+          key: '',
+          backupCodes: [],
+          instructions: '',
+        });
+        toast.success(tProfile('settings.mfa.enableSuccess'));
+      } else {
+        toast.error(tProfile('settings.mfa.invalidCode'));
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erreur lors de l'activation MFA");
+      toast.error(tProfile('settings.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -183,21 +188,19 @@ function TransporteurSettings() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié dans le presse-papiers');
+    toast.success(tCommon('messages.copiedToClipboard'));
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-          <p className="text-muted-foreground">
-            Configurez vos préférences de travail et paramètres de compte
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
+          <p className="text-muted-foreground">{tProfile('settings.subtitle')}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
           <Save className="h-4 w-4" />
-          {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+          {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
         </Button>
       </div>
 
@@ -206,14 +209,14 @@ function TransporteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications
+              {tProfile('settings.notifications.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Email</span>
+                <span className="text-sm">{tProfile('settings.notifications.email')}</span>
               </div>
               <Switch
                 checked={notifications.email}
@@ -226,7 +229,7 @@ function TransporteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications SMS</span>
+                <span className="text-sm">{tProfile('settings.notifications.sms')}</span>
               </div>
               <Switch
                 checked={notifications.sms}
@@ -237,7 +240,7 @@ function TransporteurSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Push</span>
+                <span className="text-sm">{tProfile('settings.notifications.push')}</span>
               </div>
               <Switch
                 checked={notifications.push}
@@ -248,7 +251,7 @@ function TransporteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Nouvelles missions</span>
+              <span className="text-sm">{tProfile('settings.notifications.missionUpdates')}</span>
               <Switch
                 checked={notifications.newMissions}
                 onCheckedChange={(checked) =>
@@ -258,7 +261,7 @@ function TransporteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Mises à jour d'itinéraire</span>
+              <span className="text-sm">{tProfile('client.routeUpdates')}</span>
               <Switch
                 checked={notifications.routeUpdates}
                 onCheckedChange={(checked) =>
@@ -268,7 +271,7 @@ function TransporteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Alertes de paiement</span>
+              <span className="text-sm">{tProfile('client.paymentAlerts')}</span>
               <Switch
                 checked={notifications.paymentAlerts}
                 onCheckedChange={(checked) =>
@@ -278,7 +281,7 @@ function TransporteurSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Rapports hebdomadaires</span>
+              <span className="text-sm">{tProfile('settings.notifications.weeklyReports')}</span>
               <Switch
                 checked={notifications.weeklyReports}
                 onCheckedChange={(checked) =>
@@ -293,13 +296,13 @@ function TransporteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              Préférences
+              {tProfile('settings.preferences.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between">
               <div className="space-y-2">
-                <Label>Langue</Label>
+                <Label>{tProfile('settings.preferences.language')}</Label>
                 <Select
                   value={preferences.language}
                   onValueChange={(value) => setPreferences({ ...preferences, language: value })}
@@ -308,14 +311,14 @@ function TransporteurSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">{tProfile('settings.preferences.french')}</SelectItem>
+                    <SelectItem value="en">{tProfile('settings.preferences.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Devise</Label>
+                <Label>{tProfile('settings.preferences.currency')}</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setPreferences({ ...preferences, currency: value })}
@@ -332,7 +335,7 @@ function TransporteurSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fuseau Horaire</Label>
+                <Label>{tProfile('settings.preferences.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
@@ -367,7 +370,7 @@ function TransporteurSettings() {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label>Distance maximale (km)</Label>
+                <Label>{tProfile('client.maxDistance')}</Label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -382,7 +385,7 @@ function TransporteurSettings() {
               </div>
 
               <div className="space-y-2">
-                <Label>Poids maximum (kg)</Label>
+                <Label>{tProfile('client.maxWeight')}</Label>
                 <div className="relative">
                   <Truck className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -398,7 +401,7 @@ function TransporteurSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Heures de travail</Label>
+              <Label>{tProfile('client.workingHours')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
                   <Clock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -434,7 +437,7 @@ function TransporteurSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Acceptation automatique</span>
+              <span className="text-sm">{tProfile('client.autoAccept')}</span>
               <Switch
                 checked={preferences.autoAccept}
                 onCheckedChange={(checked) =>
@@ -449,7 +452,7 @@ function TransporteurSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Sécurité
+              {tProfile('settings.security.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -463,14 +466,14 @@ function TransporteurSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    Authentification à deux facteurs (MFA)
+                    {tProfile('settings.security.mfa.title')}
                   </h4>
                   <p className="text-sm text-gray-600">
-                    Ajoutez une couche de sécurité supplémentaire à votre compte
+                    {tProfile('settings.security.mfa.description')}
                   </p>
                 </div>
                 <Switch
-                  checked={mfaStatus.enabled}
+                  checked={user.mfaEnabled}
                   onCheckedChange={handleMFAToggle}
                   disabled={isLoading}
                 />
@@ -479,22 +482,17 @@ function TransporteurSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    MFA est activé sur votre compte. Votre compte est protégé.
-                  </AlertDescription>
+                  <AlertDescription>{tProfile('settings.security.mfa.enabled')}</AlertDescription>
                 </Alert>
               )}
 
-              {mfaStatus.setupRequired && (
+              {mfaStatus.key && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">Configuration MFA</h5>
+                  <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
 
-                  {mfaStatus.key && (
+                  {mfaStatus.instructions && (
                     <div className="space-y-3">
-                      <p className="text-sm">
-                        1. Copiez code avec votre application d'authentification (Google
-                        Authenticator, Authy, etc.)
-                      </p>
+                      <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
                           {mfaStatus.key}
@@ -508,23 +506,9 @@ function TransporteurSettings() {
                         </Button>
                       </div>
 
-                      <p className="text-sm">2. Ou entrez manuellement cette clé secrète :</p>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                          {mfaStatus.secret}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(mfaStatus.secret || '')}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-
                       <div className="space-y-2">
                         <Label htmlFor="mfaCode">
-                          3. Entrez le code à 6 chiffres de votre application
+                          {tProfile('settings.security.mfa.enterCode')}
                         </Label>
                         <div className="flex gap-2">
                           <Input
@@ -544,11 +528,13 @@ function TransporteurSettings() {
                                 .previousElementSibling as HTMLInputElement;
                               if (input.value.length === 6) {
                                 handleMFAEnable(input.value);
+                              } else {
+                                toast.info(tForms('validation.mfa'));
                               }
                             }}
                             disabled={isLoading}
                           >
-                            Activer MFA
+                            {tProfile('settings.security.mfa.enable')}
                           </Button>
                         </div>
                       </div>
@@ -557,18 +543,17 @@ function TransporteurSettings() {
                 </div>
               )}
 
-              {mfaStatus.backupCodes.length > 0 && (
+              {mfaStatus.backupCodes!.length > 0 && (
                 <div className="space-y-3 p-4 border rounded-lg bg-yellow-50">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <h5 className="font-medium">Codes de récupération</h5>
+                    <h5 className="font-medium">{tProfile('settings.security.mfa.backupCodes')}</h5>
                   </div>
                   <p className="text-sm text-yellow-800">
-                    Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte
-                    si vous perdez votre téléphone.
+                    {tProfile('settings.security.mfa.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {mfaStatus.backupCodes.map((code, index) => (
+                    {mfaStatus.backupCodes!.map((code, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-white rounded text-sm font-mono border">
                           {code}
@@ -581,7 +566,7 @@ function TransporteurSettings() {
                   </div>
                   <Button variant="outline" size="sm">
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Régénérer les codes
+                    {tProfile('settings.security.mfa.regenerateCodes')}
                   </Button>
                 </div>
               )}

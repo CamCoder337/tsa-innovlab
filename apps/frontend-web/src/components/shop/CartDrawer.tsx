@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/sheet';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useCartTranslation } from '@/hooks/useTranslation';
 
 interface CartDrawerProps {
   children: React.ReactNode;
@@ -31,6 +32,8 @@ function CartDrawer({ children }: CartDrawerProps) {
     isLoading,
     error,
   } = useCart();
+  const { t: tCart } = useCartTranslation();
+  const navigate = useNavigate();
 
   const handleUpdateQuantity = useCallback(
     async (itemId: string, newQuantity: number) => {
@@ -61,11 +64,11 @@ function CartDrawer({ children }: CartDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetDescription className="hidden"> Votre panier </SheetDescription>
+      <SheetDescription className="hidden"> {tCart('title')} </SheetDescription>
       <SheetContent className="w-full sm:max-w-md p-4">
         <SheetHeader>
           <SheetTitle>
-            <h2 className="text-xl font-semibold">Mon panier</h2>
+            <p className="text-xl font-semibold">{tCart('title')}</p>
           </SheetTitle>
         </SheetHeader>
         {error && (
@@ -73,16 +76,16 @@ function CartDrawer({ children }: CartDrawerProps) {
             {error}
           </div>
         )}
-        <div className="mt-4 grid gap-4">
+        <div className="mt-4 grid gap-4 overflow-y-auto max-h-[calc(100vh-280px)]">
           {isEmpty() ? (
-            <p className=" text-tsa-gray text-center">Votre panier est vide.</p>
+            <p className=" text-tsa-gray text-center">{tCart('empty')}</p>
           ) : (
-            <ul className="grid gap-4">
+            <ul className="grid gap-4 pr-2">
               {cart.items.map((item) => (
                 <li key={item.productId} className="flex items-center gap-3">
                   <img
                     src={item.product?.images?.[0] || '/placeholder-product.png'}
-                    alt={`Image de ${item.product?.name || 'produit'}`}
+                    alt={`${tCart('imageOf')} ${item.product?.name || tCart('product')}`}
                     className="h-16 w-16 rounded object-cover border"
                     loading="lazy"
                   />
@@ -91,7 +94,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       className="text-sm font-medium"
                       style={{ fontFamily: 'Rounded, sans-serif' }}
                     >
-                      {item.product?.name || 'Produit'}
+                      {item.product?.name || tCart('product')}
                     </p>
                     <p className="text-xs text-zinc-600">{item.priceAtAdd.toLocaleString()} FCFA</p>
                   </div>
@@ -99,7 +102,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                     <Button
                       size="icon"
                       variant="outline"
-                      aria-label="Diminuer la quantité"
+                      aria-label={tCart('decreaseQuantity')}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleUpdateQuantity(item.id, item.quantity - 1);
@@ -109,7 +112,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                       <Minus className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Input
-                      aria-label="Quantité"
+                      aria-label={tCart('quantity')}
                       className="w-12 text-center px-0.5"
                       type="number"
                       min={1}
@@ -127,7 +130,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                     <Button
                       size="icon"
                       variant="outline"
-                      aria-label="Augmenter la quantité"
+                      aria-label={tCart('increaseQuantity')}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleUpdateQuantity(item.id, item.quantity + 1);
@@ -139,7 +142,7 @@ function CartDrawer({ children }: CartDrawerProps) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Supprimer l'article"
+                      aria-label={tCart('removeItem')}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveItem(item.id);
@@ -157,11 +160,11 @@ function CartDrawer({ children }: CartDrawerProps) {
         <SheetFooter className="mt-6">
           <div className="w-full grid gap-3">
             <div className="flex items-center justify-between text-sm">
-              <span>Total Articles</span>
+              <span>{tCart('totalItems')}</span>
               <span className="font-medium">{getTotalItems()}</span>
             </div>
             <div className="flex items-center justify-between text-base">
-              <span>Total Prix</span>
+              <span>{tCart('totalPrice')}</span>
               <span className="font-semibold">{getFormattedTotalPrice()}</span>
             </div>
             <div className="flex gap-2">
@@ -174,17 +177,19 @@ function CartDrawer({ children }: CartDrawerProps) {
                 }}
                 disabled={isEmpty() || isLoading}
               >
-                Vider
+                {tCart('clear')}
               </Button>
-              <Link to={'/app/shop/cart'}>
-                <Button
-                  className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
-                  onClick={(e) => e.stopPropagation()}
-                  disabled={isEmpty() || isLoading}
-                >
-                  Passer au paiement
-                </Button>
-              </Link>
+              <Button
+                className="flex-1 bg-tsa-blue hover:bg-tsa-blue/80"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/app/shop/cart');
+                  setOpen(false);
+                }}
+                disabled={isEmpty() || isLoading}
+              >
+                {tCart('checkout')}
+              </Button>
             </div>
           </div>
         </SheetFooter>

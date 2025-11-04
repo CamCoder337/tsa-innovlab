@@ -19,33 +19,14 @@ import {
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useMissions } from '@/hooks/useMissions';
-
-interface VehicleStatus {
-  id: string;
-  batteryLevel: number;
-  fuelLevel: number;
-  speed: number;
-  location: string;
-  lastUpdate: string;
-  maintenanceStatus: 'good' | 'warning' | 'critical';
-}
-
-const VEHICLE_STATUS: VehicleStatus = {
-  id: 'vehicle-001',
-  batteryLevel: 78,
-  fuelLevel: 65,
-  speed: 72,
-  location: 'Edéa, Route Nationale N°3',
-  lastUpdate: new Date().toISOString(),
-  maintenanceStatus: 'good',
-};
+import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
 
 const getStatusColor = (status: Mission['status']) => {
   switch (status) {
     case 'completed':
       return 'bg-green-500';
     case 'assigned':
-      return 'bg-blue-500';
+      return 'bg-tsa-blue/90';
     case 'published':
       return 'bg-yellow-500';
     case 'draft':
@@ -57,513 +38,473 @@ const getStatusColor = (status: Mission['status']) => {
   }
 };
 
-const getStatusText = (status: Mission['status']) => {
+const getStatusText = (status: Mission['status'], tCommon: (key: string) => string) => {
   switch (status) {
     case 'completed':
-      return 'Terminé';
+      return tCommon('status.completed');
     case 'assigned':
-      return 'Assigné';
+      return tCommon('status.assigned');
     case 'published':
-      return 'Publié';
+      return tCommon('status.published');
     case 'draft':
-      return 'Brouillon';
+      return tCommon('status.draft');
     case 'cancelled':
-      return 'Annulé';
+      return tCommon('status.cancelled');
     default:
       return status;
   }
 };
 
-const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
-  switch (status) {
-    case 'good':
-      return 'text-green-600';
-    case 'warning':
-      return 'text-yellow-600';
-    case 'critical':
-      return 'text-red-600';
-    default:
-      return 'text-gray-600';
-  }
-};
+// const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
+//   switch (status) {
+//     case 'good':
+//       return 'text-green-600';
+//     case 'warning':
+//       return 'text-yellow-600';
+//     case 'critical':
+//       return 'text-red-600';
+//     default:
+//       return 'text-gray-600';
+//   }
+// };
 
 export default function TransporteurTrackingDashboard() {
   const { myMissions: missions } = useMissions();
-  const [assignments] = useState<Mission[]>(
-    missions.filter((m) => m.transporteurId === 'transporteur-1')
-  );
-  const [vehicleStatus] = useState<VehicleStatus>(VEHICLE_STATUS);
-  const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
-    assignments.find((a) => a.status === 'assigned') || assignments[0]
-  );
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tTracking } = useTrackingTranslation();
 
   // Calculs des KPIs
-  const activeAssignments = missions.filter((m) => m.transporteurId === 'transporteur-1').length;
-  const completedToday = 3; // Calculé dynamiquement
-  const totalDistance = 525; // Calculé à partir des adresses
-  const totalEarnings = assignments.reduce((sum, a) => sum + a.budgetMin!, 0);
-  const driverRating = 4.8;
+  const activeAssignments = missions.filter((m) => m.status === 'in_progress');
+  const completedToday = missions.filter((m) => m.status === 'completed').length; // Calculé dynamiquement
+  const totalDistance = 0; // Calculé à partir des adresses
+  const totalEarnings = 0;
+  const driverRating = 0;
+
+  // Initialiser avec la première mission active si elle existe
+  const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
+    activeAssignments.length > 0 ? activeAssignments[0] : null
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* En-tête */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord Transporteur</h1>
-            <p className="text-gray-600">Gérez vos livraisons et optimisez vos trajets</p>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              Support
-            </Button>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Marquer Livré
-            </Button>
-          </div>
+    <div className="flex flex-col flex-1 bg-gray-50 p-3 sm:p-6">
+      {/* En-tête */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {tTracking('dashboard.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">{tTracking('dashboard.subtitle')}</p>
         </div>
-
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Missions Actives</p>
-                  <p className="text-2xl font-bold text-blue-600">{activeAssignments}</p>
-                </div>
-                <Truck className="w-8 h-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Livrées Aujourd'hui</p>
-                  <p className="text-2xl font-bold text-green-600">{completedToday}</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Distance Totale</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalDistance} km</p>
-                </div>
-                <Route className="w-8 h-8 text-gray-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Gains du Jour</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {totalEarnings.toLocaleString()} FCFA
-                  </p>
-                </div>
-                <Battery className="w-8 h-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Note Chauffeur</p>
-                  <p className="text-2xl font-bold text-yellow-600">{driverRating}/5</p>
-                </div>
-                <Star className="w-8 h-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+            Support
+          </Button>
+          <Button className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
+            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+            {tTracking('actions.markDelivered')}
+          </Button>
         </div>
+      </div>
 
-        {/* Contenu principal */}
-        <Tabs defaultValue="current" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="current">Mission Actuelle</TabsTrigger>
-            <TabsTrigger value="assignments">Mes Missions</TabsTrigger>
-            <TabsTrigger value="vehicle">État Véhicule</TabsTrigger>
-            <TabsTrigger value="earnings">Gains & Performance</TabsTrigger>
-          </TabsList>
+      {/* KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  {tTracking('kpis.activeMissions')}
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-tsa-blue">
+                  {activeAssignments.length}
+                </p>
+              </div>
+              <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="current" className="space-y-4">
-            {currentAssignment ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Carte de navigation */}
-                <div className="lg:col-span-2">
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  {tTracking('kpis.completedToday')}
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{completedToday}</p>
+              </div>
+              <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Distance Totale</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalDistance} km</p>
+              </div>
+              <Route className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Gains du Jour</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">
+                  {totalEarnings.toLocaleString()} FCFA
+                </p>
+              </div>
+              <Battery className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Note Chauffeur</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-600">{driverRating}/5</p>
+              </div>
+              <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contenu principal */}
+      <Tabs defaultValue="current" className="space-y-4">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-3 w-full">
+          <TabsTrigger value="current" className="text-xs sm:text-sm">
+            {tTracking('tabs.currentMission')}
+          </TabsTrigger>
+          <TabsTrigger value="assignments" className="text-xs sm:text-sm">
+            {tTracking('tabs.myMissions')}
+          </TabsTrigger>
+          <TabsTrigger value="earnings" className="text-xs sm:text-sm">
+            {tTracking('tabs.earnings')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="current" className="space-y-4">
+          {currentAssignment ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+              {/* Carte de navigation */}
+              <div className="lg:col-span-2 space-y-4">
+                {/* Sélecteur de mission */}
+                {activeAssignments.length > 1 && (
                   <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Navigation className="w-5 h-5" />
-                        Navigation - {currentAssignment.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <MissionTrackingMap
-                        className="h-[400px]"
-                        missions={assignments}
-                        selectedMission={currentAssignment}
-                        onMissionClick={(mission) => setCurrentAssignment(mission)}
-                        showUserLocation={true}
-                        showRoutes={true}
-                        showLegend={false}
-                      />
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`w-3 h-3 rounded-full ${getStatusColor(currentAssignment.status)}`}
-                            />
-                            <span className="font-medium">
-                              {getStatusText(currentAssignment.status)}
-                            </span>
-                          </div>
-                          <span className="text-gray-600">Vitesse: {vehicleStatus.speed} km/h</span>
-                        </div>
-                        <Button className="bg-blue-600 hover:bg-blue-700">
-                          <Navigation className="w-4 h-4 mr-2" />
-                          Ouvrir GPS
-                        </Button>
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <label className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
+                          Mission à suivre:
+                        </label>
+                        <select
+                          value={currentAssignment.id}
+                          onChange={(e) => {
+                            const selected = activeAssignments.find((m) => m.id === e.target.value);
+                            if (selected) setCurrentAssignment(selected);
+                          }}
+                          className="flex-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {activeAssignments.map((mission) => (
+                            <option key={mission.id} value={mission.id}>
+                              {mission.title} - {mission.adresseDepart?.city} →{' '}
+                              {mission.adresseArrivee?.city}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </CardContent>
                   </Card>
-                </div>
+                )}
 
-                {/* Détails de la mission */}
-                <div className="space-y-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>Mission en Cours</span>
-                        {currentAssignment.budgetMin! > 200000 && (
-                          <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{currentAssignment.title}</h4>
-                        <p className="text-sm text-gray-600">{currentAssignment.description}</p>
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Navigation - {currentAssignment.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <MissionTrackingMap
+                      className="h-[400px] sm:h-[500px] lg:h-[700px]"
+                      missions={activeAssignments}
+                      selectedMission={currentAssignment}
+                      onMissionClick={(mission) => setCurrentAssignment(mission)}
+                      showUserLocation={false}
+                      showRoutes={true}
+                      showLegend={false}
+                    />
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-3 h-3 rounded-full ${getStatusColor(currentAssignment.status)}`}
+                          />
+                          <span className="font-medium text-xs sm:text-sm">
+                            {getStatusText(currentAssignment.status, tCommon)}
+                          </span>
+                        </div>
                       </div>
+                      <Button className="bg-tsa-blue hover:bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto">
+                        <Navigation className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        {tTracking('actions.openGPS')}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
+              {/* Détails de la mission */}
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <span className="text-base sm:text-lg">Mission en Cours</span>
+                      {currentAssignment.budgetMin! > 200000 && (
+                        <Badge className="bg-red-100 text-red-800 text-xs">Prioritaire</Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 sm:space-y-4">
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                        {currentAssignment.title}
+                      </h4>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {currentAssignment.description}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm">
+                          {tTracking('mission.departure')}: {currentAssignment.adresseDepartId}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 flex-shrink-0" />
+                        <span className="text-xs sm:text-sm">
+                          {tTracking('mission.arrival')}: {currentAssignment.adresseArriveeId}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-3">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-green-500" />
-                          <span className="text-sm">
-                            Départ: {currentAssignment.adresseDepartId}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-red-500" />
-                          <span className="text-sm">
-                            Arrivée: {currentAssignment.adresseArriveeId}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border-t pt-3">
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="text-gray-600">Cargaison:</span>
                           <span className="font-medium">{currentAssignment.typeMarchandise}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="text-gray-600">Poids:</span>
                           <span className="font-medium">{currentAssignment.poids} kg</span>
                         </div>
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="text-gray-600">Volume:</span>
                           <span className="font-medium">{currentAssignment.volume} m³</span>
                         </div>
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="text-gray-600">Paiement:</span>
                           <span className="font-medium text-green-600">
                             {currentAssignment.budgetMin!.toLocaleString()} FCFA
                           </span>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="border-t pt-3">
-                        <p className="text-sm text-gray-600 mb-2">Livraison prévue:</p>
-                        <p className="font-medium">
-                          {new Date(currentAssignment.dateArriveePrevue!).toLocaleString()}
+                    <div className="border-t pt-3">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                        {tTracking('mission.deliveryScheduled')}:
+                      </p>
+                      <p className="font-medium text-xs sm:text-sm">
+                        {new Date(currentAssignment.dateArriveePrevue!).toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 text-xs">
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        Appeler Client
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1 text-xs">
+                        <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        Message
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Actions rapides */}
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="text-base sm:text-lg">Actions Rapides</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      {tTracking('actions.markAsDelivered')}
+                    </Button>
+                    <Button variant="outline" className="w-full text-xs sm:text-sm">
+                      <AlertTriangle className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      {tTracking('actions.reportProblem')}
+                    </Button>
+                    <Button variant="outline" className="w-full text-xs sm:text-sm">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      Demander Extension
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-6 sm:p-8 text-center">
+                <Truck className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                  {tTracking('missions.noActiveMission')}
+                </h3>
+                <p className="text-gray-600 text-sm sm:text-base">
+                  {tTracking('missions.noActiveMissionMessage')}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="assignments" className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">
+                {tTracking('missions.myMissions')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 sm:space-y-4">
+                {activeAssignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${
+                      currentAssignment?.id === assignment.id
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'hover:bg-gray-50'
+                    }`}
+                    onClick={() => setCurrentAssignment(assignment)}
+                  >
+                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="font-medium text-sm sm:text-base">
+                            {assignment.title}
+                          </span>
+                          {assignment.budgetMin! > 200000 && (
+                            <Badge className="bg-red-100 text-red-800 text-xs">Prioritaire</Badge>
+                          )}
+                          <div
+                            className={`w-2 h-2 rounded-full ${getStatusColor(assignment.status)}`}
+                          />
+                          <span className="text-xs sm:text-sm text-gray-600">
+                            {getStatusText(assignment.status, tCommon)}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 text-xs sm:text-sm">{assignment.description}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {assignment.typeMarchandise} - {assignment.poids}kg
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                          <span>Volume: {assignment.volume}m³</span>
+                          <span>Budget: {assignment.budgetMin!.toLocaleString()} FCFA</span>
+                        </div>
+                      </div>
+                      <div className="text-left lg:text-right">
+                        <p className="font-medium text-green-600 text-sm sm:text-base">
+                          {assignment.budgetMin!.toLocaleString()} FCFA
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {new Date(assignment.dateArriveePrevue!).toLocaleDateString()}
                         </p>
                       </div>
-
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Phone className="w-4 h-4 mr-2" />
-                          Appeler Client
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Message
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Actions rapides */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Actions Rapides</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button className="w-full bg-green-600 hover:bg-green-700">
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Marquer comme Livré
-                      </Button>
-                      <Button variant="outline" className="w-full">
-                        <AlertTriangle className="w-4 h-4 mr-2" />
-                        Signaler un Problème
-                      </Button>
-                      <Button variant="outline" className="w-full">
-                        <Clock className="w-4 h-4 mr-2" />
-                        Demander Extension
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Truck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune mission active</h3>
-                  <p className="text-gray-600">
-                    Vous n'avez pas de mission en cours. Consultez vos missions assignées.
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="earnings" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <Card>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Gains Aujourd'hui</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                    {totalEarnings.toLocaleString()}
                   </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="assignments" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Mes Missions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {assignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        currentAssignment?.id === assignment.id
-                          ? 'bg-blue-50 border-blue-200'
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => setCurrentAssignment(assignment)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <span className="font-medium">{assignment.title}</span>
-                            {assignment.budgetMin! > 200000 && (
-                              <Badge className="bg-red-100 text-red-800">Prioritaire</Badge>
-                            )}
-                            <div
-                              className={`w-2 h-2 rounded-full ${getStatusColor(assignment.status)}`}
-                            />
-                            <span className="text-sm text-gray-600">
-                              {getStatusText(assignment.status)}
-                            </span>
-                          </div>
-                          <p className="text-gray-600">{assignment.description}</p>
-                          <p className="text-sm text-gray-500">
-                            {assignment.typeMarchandise} - {assignment.poids}kg
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>Volume: {assignment.volume}m³</span>
-                            <span>Budget: {assignment.budgetMin!.toLocaleString()} FCFA</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-green-600">
-                            {assignment.budgetMin!.toLocaleString()} FCFA
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(assignment.dateArriveePrevue!).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  <p className="text-gray-600 text-xs sm:text-sm">FCFA</p>
+                  <p className="text-xs sm:text-sm text-green-600 mt-2">↗ </p>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="vehicle" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>État du Véhicule</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Batterie</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full"
-                          style={{ width: `${vehicleStatus.batteryLevel}%` }}
-                        ></div>
-                      </div>
-                      <span className="font-medium">{vehicleStatus.batteryLevel}%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Carburant</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{ width: `${vehicleStatus.fuelLevel}%` }}
-                        ></div>
-                      </div>
-                      <span className="font-medium">{vehicleStatus.fuelLevel}%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Vitesse actuelle</span>
-                    <span className="font-medium">{vehicleStatus.speed} km/h</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">État maintenance</span>
-                    <span
-                      className={`font-medium ${getMaintenanceColor(vehicleStatus.maintenanceStatus)}`}
-                    >
-                      {vehicleStatus.maintenanceStatus === 'good'
-                        ? 'Bon'
-                        : vehicleStatus.maintenanceStatus === 'warning'
-                          ? 'Attention'
-                          : 'Critique'}
-                    </span>
-                  </div>
-
-                  <div className="border-t pt-3">
-                    <p className="text-sm text-gray-600">Position actuelle:</p>
-                    <p className="font-medium">{vehicleStatus.location}</p>
-                    <p className="text-xs text-gray-500">
-                      Dernière mise à jour:{' '}
-                      {new Date(vehicleStatus.lastUpdate).toLocaleTimeString()}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Historique de Conduite</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Km parcourus aujourd'hui</span>
-                      <span className="font-medium">245 km</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Temps de conduite</span>
-                      <span className="font-medium">6h 30min</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Vitesse moyenne</span>
-                      <span className="font-medium">68 km/h</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Consommation</span>
-                      <span className="font-medium">28L/100km</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Score éco-conduite</span>
-                      <span className="font-medium text-green-600">85/100</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="earnings" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gains Aujourd'hui</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-green-600">
-                      {totalEarnings.toLocaleString()}
-                    </p>
-                    <p className="text-gray-600">FCFA</p>
-                    <p className="text-sm text-green-600 mt-2">↗ +15% vs hier</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gains ce Mois</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-blue-600">1,850,000</p>
-                    <p className="text-gray-600">FCFA</p>
-                    <p className="text-sm text-blue-600 mt-2">73% de l'objectif</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Note Moyenne</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-yellow-600">{driverRating}</p>
-                    <div className="flex justify-center mt-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-5 h-5 ${star <= Math.floor(driverRating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">Basé sur 47 avis</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Historique des Performances</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Gains ce Mois</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-gray-500">
-                  Graphique des gains et performances par semaine
+                <div className="text-center">
+                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue">0</p>
+                  <p className="text-gray-600 text-xs sm:text-sm">FCFA</p>
+                  <p className="text-xs sm:text-sm text-tsa-blue mt-2">0</p>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+
+            <Card>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">Note Moyenne</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center">
+                  <p className="text-2xl sm:text-3xl font-bold text-yellow-600">{driverRating}</p>
+                  <div className="flex justify-center mt-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= Math.floor(driverRating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                    {tTracking('performance.basedOnReviews', { count: 0 })}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-base sm:text-lg">Historique des Performances</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-48 sm:h-64 flex items-center justify-center text-gray-500 text-xs sm:text-sm">
+                Graphique des gains et performances par semaine
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

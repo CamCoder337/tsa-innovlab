@@ -8,8 +8,8 @@ import type {
 } from '@/types/auth.types';
 import { tokenManager } from '@/services/token-manager.service';
 import { authService } from '@/services/auth.service';
-import toast from 'react-hot-toast';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 interface CookieOptions {
   days?: number;
@@ -133,18 +133,24 @@ export const useAuthStore = create<AuthStore>()(
           if (response.error) {
             if (response.error.errors?.[0] === 'Invalid credentials') {
               set({
-                error: 'Email ou Mot de passe incorrect',
+                error: 'invalidCredentials',
                 isLoading: false,
               });
             } else if (response.error.errors?.[0] === 'Account is not active') {
               localStorage.setItem('verificationEmail', data.email);
               set({
-                error: `Compte inactif. Veuillez consulter vos mails et récuperer votre code de validation à cet adresse : ${data.email}`,
+                error: `accountInactive`,
+                isLoading: false,
+              });
+            } else if (response.error.errors?.[0] === 'Invalid MFA code') {
+              set({
+                error: `invalidMFA`,
                 isLoading: false,
               });
             } else {
+              console.error(response.error);
               set({
-                error: response.error.message || 'Échec de connexion',
+                error: 'loginFailed',
                 isLoading: false,
               });
             }
@@ -154,7 +160,6 @@ export const useAuthStore = create<AuthStore>()(
           if (response.data) {
             set({
               error: null,
-              isLoading: false,
             });
 
             if ('requiresMFA' in response.data && response.data.requiresMFA) {
@@ -167,12 +172,13 @@ export const useAuthStore = create<AuthStore>()(
                 response.data.expiresIn,
                 response.data.refreshToken
               );
+              get().getUser();
               return true;
             }
           }
         } catch (error) {
           console.error(error);
-          set({ isLoading: false, error: error as string });
+          set({ isLoading: false, error: 'loginFailed' });
           return false;
         }
       },
@@ -183,8 +189,9 @@ export const useAuthStore = create<AuthStore>()(
           const failed = response.error ?? null;
 
           if (failed) {
+            console.error(failed);
             set({
-              error: failed.message || 'Échec de connexion',
+              error: 'loginFailed',
             });
             return;
           }
@@ -200,7 +207,7 @@ export const useAuthStore = create<AuthStore>()(
           }
         } catch (error) {
           console.error(error);
-          set({ isLoading: false, error: error as string });
+          set({ isLoading: false, error: 'loginFailed' });
           return;
         }
       },
@@ -209,11 +216,8 @@ export const useAuthStore = create<AuthStore>()(
         // Arrêter la gestion automatique des tokens
         tokenManager.stopTokenManagement();
         try {
-          await toast.promise(authService.logout(), {
-            loading: 'Déconnexion...',
-          });
+          await authService.logout();
 
-          toast.success('Déconnexion réussie');
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
           set({
@@ -222,10 +226,10 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: null,
             isAuthenticated: false,
           });
-          localStorage.clear();
+          // Clear only TSA-specific localStorage items instead of all localStorage
+          clearTSALocalStorage();
         } catch (error) {
           console.error(error);
-          toast.error('Erreur lors de la déconnexion');
         }
       },
 

@@ -22,7 +22,6 @@ import {
   Truck,
   Shield,
   RotateCcw,
-  Info,
   User,
   Calendar,
   Package,
@@ -34,10 +33,13 @@ import { useProducts } from '@/hooks/useProducts';
 import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import { useShopTranslation } from '@/hooks/useTranslation';
+import { toast } from 'sonner';
 
-function ProductPage() {
+export default function ProductPage() {
+  const { t: tShop } = useShopTranslation();
   const { id } = useParams<{ id: string }>();
-  const { addToCart } = useCart();
+  const { addToCart, error } = useCart();
   const { products } = useProducts();
 
   const [qty, setQty] = useState(1);
@@ -56,6 +58,14 @@ function ProductPage() {
     setIsAddingToCart(true);
     try {
       await addToCart(product, qty);
+
+      if (error) {
+        toast.error(error);
+      } else {
+        toast.success(tShop('cart.addedToCart'));
+      }
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsAddingToCart(false);
     }
@@ -108,14 +118,14 @@ function ProductPage() {
 
   if (!product) {
     return (
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+      <main className=" flex flex-col flex-1 mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
         <Card>
           <CardContent className="text-center py-16">
             <Package className="h-16 w-16 text-zinc-300 mx-auto mb-6" />
-            <h1 className="text-2xl font-bold text-zinc-900 mb-2">Produit introuvable</h1>
-            <p className="text-zinc-600 mb-6">Ce produit n'existe pas ou n'est plus disponible</p>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-2">{tShop('product.notFound')}</h1>
+            <p className="text-zinc-600 mb-6">{tShop('product.notFoundDescription')}</p>
             <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link to="/app/shop">Retour au catalogue</Link>
+              <Link to="/shop">{tShop('cart.continueShopping')}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -134,8 +144,8 @@ function ProductPage() {
             to="/app/shop"
             className="flex items-center gap-1 hover:text-zinc-900 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Catalogue
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            {tShop('cart.continueShopping')}
           </Link>
           <span>/</span>
           {product.category?.name && (
@@ -208,7 +218,8 @@ function ProductPage() {
                   <div className="flex items-center gap-2 text-sm text-zinc-600">
                     <User className="h-4 w-4" />
                     <span>
-                      Vendu par {product.creator.firstName} {product.creator.lastName}
+                      {tShop('product.soldBy')} {product.creator.firstName}{' '}
+                      {product.creator.lastName}
                     </span>
                   </div>
                 )}
@@ -254,7 +265,9 @@ function ProductPage() {
           {/* Quantity & Add to Cart */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-zinc-700">Quantité:</span>
+              <span className="text-sm font-medium text-zinc-700">
+                {tShop('product.quantity')}:
+              </span>
               <div className="flex items-center border rounded-lg">
                 <Button
                   variant="ghost"
@@ -287,7 +300,8 @@ function ProductPage() {
                 </Button>
               </div>
               <span className="text-sm text-zinc-500">
-                {product.stock} disponible{product.stock > 1 ? 's' : ''}
+                {product.stock}{' '}
+                {product.stock > 1 ? tShop('product.availablePlural') : tShop('product.available')}
               </span>
             </div>
 
@@ -298,7 +312,7 @@ function ProductPage() {
                 className="flex-1 bg-green-600 hover:bg-green-700 h-12"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                {isAddingToCart ? 'Ajout...' : 'Ajouter au panier'}
+                {isAddingToCart ? tShop('product.adding') : tShop('product.addToCart')}
               </Button>
             </div>
           </div>
@@ -310,17 +324,17 @@ function ProductPage() {
                 <Truck className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Livraison rapide</p>
-                <p className="text-zinc-600">2-3 jours ouvrés</p>
+                <p className="font-medium text-zinc-900">{tShop('product.fastDelivery')}</p>
+                <p className="text-zinc-600">{tShop('product.deliveryTime')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
-                <Shield className="h-5 w-5 text-blue-600" />
+                <Shield className="h-5 w-5 text-tsa-blue" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Garantie</p>
-                <p className="text-zinc-600">12 mois</p>
+                <p className="font-medium text-zinc-900">{tShop('product.warranty')}</p>
+                <p className="text-zinc-600">{tShop('product.warrantyDuration')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -328,8 +342,8 @@ function ProductPage() {
                 <RotateCcw className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="font-medium text-zinc-900">Retour</p>
-                <p className="text-zinc-600">30 jours</p>
+                <p className="font-medium text-zinc-900">{tShop('product.returnPolicy')}</p>
+                <p className="text-zinc-600">{tShop('product.returnTime')}</p>
               </div>
             </div>
           </div>
@@ -337,76 +351,92 @@ function ProductPage() {
       </div>
 
       {/* Product Details Tabs */}
-      <div className="mt-12">
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details" className="flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              Détails
+      <div className="mt-8 sm:mt-12">
+        <Tabs defaultValue="description" className="mt-6 sm:mt-8 w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+            <TabsTrigger value="description" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              {tShop('product.description')}
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              Avis (0)
+            <TabsTrigger value="specifications" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              {tShop('product.specifications')}
             </TabsTrigger>
-            <TabsTrigger value="seller" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Vendeur
+            <TabsTrigger value="reviews" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              {tShop('product.reviews')}
+            </TabsTrigger>
+            <TabsTrigger value="seller" className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              {tShop('product.seller')}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="mt-6">
+          <TabsContent value="description" className="mt-4 sm:mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Informations détaillées</CardTitle>
-                <CardDescription>Toutes les informations techniques sur ce produit</CardDescription>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  {tShop('product.description')}
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  {tShop('product.descriptionInfo')}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                      <Package className="h-5 w-5 text-zinc-600" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Référence</p>
-                        <p className="text-sm text-zinc-600">{product.id}</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                          {tShop('product.reference')}:
+                        </p>
+                        <p className="text-xs sm:text-sm text-zinc-600 truncate">{product.id}</p>
                       </div>
                     </div>
 
                     {product.category && (
-                      <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                        <Package className="h-5 w-5 text-zinc-600" />
-                        <div>
-                          <p className="font-medium text-zinc-900">Catégorie</p>
-                          <p className="text-sm text-zinc-600">{product.category.name}</p>
+                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Package className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                            {tShop('product.category')}:
+                          </p>
+                          <p className="text-xs sm:text-sm text-zinc-600 truncate">
+                            {product.category.name}
+                          </p>
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                      <Package className="h-5 w-5 text-zinc-600" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Unité de vente</p>
-                        <p className="text-sm text-zinc-600">{product.unit}</p>
+                    <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                          {tShop('product.unit')}:
+                        </p>
+                        <p className="text-xs sm:text-sm text-zinc-600 truncate">{product.unit}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                      <Package className="h-5 w-5 text-zinc-600" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Stock disponible</p>
-                        <p className="text-sm text-zinc-600">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                          {tShop('product.stock')}:
+                        </p>
+                        <p className="text-xs sm:text-sm text-zinc-600">
                           {product.stock} unité{product.stock > 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
 
                     {product.createdAt && (
-                      <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                        <Calendar className="h-5 w-5 text-zinc-600" />
-                        <div>
-                          <p className="font-medium text-zinc-900">Ajouté le</p>
-                          <p className="text-sm text-zinc-600">
+                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                            {tShop('product.createdAt')}:
+                          </p>
+                          <p className="text-xs sm:text-sm text-zinc-600">
                             {new Date(product.createdAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'long',
@@ -418,11 +448,13 @@ function ProductPage() {
                     )}
 
                     {product.updatedAt && (
-                      <div className="flex items-center gap-3 p-4 bg-zinc-50 rounded-lg">
-                        <Calendar className="h-5 w-5 text-zinc-600" />
-                        <div>
-                          <p className="font-medium text-zinc-900">Dernière mise à jour</p>
-                          <p className="text-sm text-zinc-600">
+                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-zinc-900 text-sm sm:text-base">
+                            {tShop('product.updatedAt')}:
+                          </p>
+                          <p className="text-xs sm:text-sm text-zinc-600">
                             {new Date(product.updatedAt).toLocaleDateString('fr-FR', {
                               day: 'numeric',
                               month: 'long',
@@ -438,35 +470,96 @@ function ProductPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="reviews" className="mt-6">
+          <TabsContent value="specifications" className="mt-4 sm:mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Avis clients</CardTitle>
-                <CardDescription>Partagez votre expérience avec ce produit</CardDescription>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  {tShop('product.specifications')}
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  {tShop('product.specificationsInfo')}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
+                <div className="space-y-2 text-xs sm:text-sm text-gray-600">
+                  <p>
+                    <span className="font-medium">{tShop('product.reference')}:</span>{' '}
+                    {product.reference}
+                  </p>
+                  <p>
+                    <span className="font-medium">{tShop('product.category')}:</span>{' '}
+                    {product.category?.name}
+                  </p>
+                  {product.specifications?.brand && (
+                    <p>
+                      <span className="font-medium">{tShop('product.brand')}:</span>{' '}
+                      {product.specifications?.brand}
+                    </p>
+                  )}
+                  {product.specifications?.weight && (
+                    <p>
+                      <span className="font-medium">{tShop('product.weight')}:</span>{' '}
+                      {product.specifications.weight} kg
+                    </p>
+                  )}
+                  {product.specifications?.dimensions && (
+                    <p>
+                      <span className="font-medium">{tShop('product.dimensions')}:</span>{' '}
+                      {product.specifications.dimensions}
+                    </p>
+                  )}
+                  {product.specifications?.warranty && (
+                    <p>
+                      <span className="font-medium">{tShop('product.warranty')}:</span>{' '}
+                      {product.specifications?.warranty} mois
+                    </p>
+                  )}
+                  <p>
+                    <span className="font-medium">{tShop('product.condition')}:</span>{' '}
+                    <Badge variant="outline" className="ml-1 text-xs">
+                      {product.specifications?.condition === 'new'
+                        ? tShop('product.new')
+                        : product.specifications?.condition === 'used'
+                          ? tShop('product.used')
+                          : tShop('product.refurbished')}
+                    </Badge>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="mt-4 sm:mt-6">
+            <Card>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">{tShop('product.reviews')}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  {tShop('product.reviewsInfo')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 sm:space-y-6">
                   {!isWritingComment ? (
-                    <div className="text-center py-8">
-                      <Star className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-zinc-900 mb-2">
-                        Aucun avis pour le moment
+                    <div className="text-center py-6 sm:py-8">
+                      <Star className="h-8 w-8 sm:h-12 sm:w-12 text-zinc-300 mx-auto mb-3 sm:mb-4" />
+                      <h3 className="text-base sm:text-lg font-medium text-zinc-900 mb-2">
+                        {tShop('product.noReviews')}
                       </h3>
-                      <p className="text-zinc-600 mb-4">
-                        Soyez le premier à donner votre avis sur ce produit
+                      <p className="text-xs sm:text-sm text-zinc-600 mb-3 sm:mb-4">
+                        {tShop('product.noReviewsDescription')}
                       </p>
                       <Button
                         onClick={() => setIsWritingComment(true)}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                       >
-                        Écrire un avis
+                        {tShop('product.writeReview')}
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
-                        <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          Votre note
+                        <label className="text-xs sm:text-sm font-medium text-zinc-700 mb-2 block">
+                          {tShop('product.rating')}:
                         </label>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: 5 }).map((_, i) => (
@@ -476,7 +569,7 @@ function ProductPage() {
                               className="p-1 hover:scale-110 transition-transform"
                             >
                               <Star
-                                className={`h-6 w-6 ${
+                                className={`h-5 w-5 sm:h-6 sm:w-6 ${
                                   (selectedRating ?? 0) > i
                                     ? 'fill-amber-400 text-amber-400'
                                     : 'fill-zinc-200 text-zinc-300'
@@ -484,25 +577,25 @@ function ProductPage() {
                               />
                             </button>
                           ))}
-                          <span className="ml-2 text-sm text-zinc-600">
-                            {selectedRating ? `${selectedRating}/5` : 'Cliquez pour noter'}
+                          <span className="ml-2 text-xs sm:text-sm text-zinc-600">
+                            {selectedRating ? `${selectedRating}/5` : tShop('product.clickToRate')}
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-zinc-700 mb-2 block">
-                          Votre avis
+                        <label className="text-xs sm:text-sm font-medium text-zinc-700 mb-2 block">
+                          {tShop('product.review')}:
                         </label>
                         <Textarea
-                          placeholder="Partagez votre expérience avec ce produit..."
+                          placeholder={tShop('product.reviewPlaceholder')}
                           value={commentText}
                           onChange={(e) => setCommentText(e.target.value)}
-                          className="min-h-[120px]"
+                          className="min-h-[100px] sm:min-h-[120px] text-sm"
                         />
                       </div>
 
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <Button
                           onClick={() => {
                             console.log({ rating: selectedRating, comment: commentText });
@@ -511,9 +604,9 @@ function ProductPage() {
                             setSelectedRating(0);
                           }}
                           disabled={!selectedRating || commentText.length < 10}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
                         >
-                          Publier l'avis
+                          {tShop('product.publishReview')}
                         </Button>
                         <Button
                           variant="outline"
@@ -522,8 +615,9 @@ function ProductPage() {
                             setCommentText('');
                             setSelectedRating(0);
                           }}
+                          className="w-full sm:w-auto"
                         >
-                          Annuler
+                          {tShop('product.cancel')}
                         </Button>
                       </div>
                     </div>
@@ -533,51 +627,63 @@ function ProductPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="seller" className="mt-6">
+          <TabsContent value="seller" className="mt-4 sm:mt-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Informations vendeur</CardTitle>
-                <CardDescription>À propos du vendeur de ce produit</CardDescription>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">{tShop('product.seller')}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  {tShop('product.sellerInfo')}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {product.creator ? (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-green-600" />
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="h-12 w-12 sm:h-16 sm:w-16 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
                       </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-zinc-900">
+                      <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-zinc-900 truncate">
                           {product.creator.firstName} {product.creator.lastName}
                         </h3>
-                        <p className="text-zinc-600">Vendeur vérifié</p>
+                        <p className="text-xs sm:text-sm text-zinc-600">
+                          {tShop('product.verifiedSeller')}
+                        </p>
                       </div>
                     </div>
 
                     <Separator />
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-zinc-50 rounded-lg">
-                        <Package className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Produits vendus</p>
-                        <p className="text-lg font-semibold text-zinc-900">-</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <div className="text-center p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Package className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-600 mx-auto mb-2" />
+                        <p className="text-xs sm:text-sm text-zinc-600">
+                          {tShop('product.soldProducts')}:
+                        </p>
+                        <p className="text-base sm:text-lg font-semibold text-zinc-900">-</p>
                       </div>
-                      <div className="text-center p-4 bg-zinc-50 rounded-lg">
-                        <Star className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Note moyenne</p>
-                        <p className="text-lg font-semibold text-zinc-900">-</p>
+                      <div className="text-center p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Star className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-600 mx-auto mb-2" />
+                        <p className="text-xs sm:text-sm text-zinc-600">
+                          {tShop('product.averageRating')}:
+                        </p>
+                        <p className="text-base sm:text-lg font-semibold text-zinc-900">-</p>
                       </div>
-                      <div className="text-center p-4 bg-zinc-50 rounded-lg">
-                        <Calendar className="h-6 w-6 text-zinc-600 mx-auto mb-2" />
-                        <p className="text-sm text-zinc-600">Membre depuis</p>
-                        <p className="text-lg font-semibold text-zinc-900">-</p>
+                      <div className="text-center p-3 sm:p-4 bg-zinc-50 rounded-lg">
+                        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-600 mx-auto mb-2" />
+                        <p className="text-xs sm:text-sm text-zinc-600">
+                          {tShop('product.memberSince')}:
+                        </p>
+                        <p className="text-base sm:text-lg font-semibold text-zinc-900">-</p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <User className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-                    <p className="text-zinc-600">Informations vendeur non disponibles</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <User className="h-8 w-8 sm:h-12 sm:w-12 text-zinc-300 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-xs sm:text-sm text-zinc-600">
+                      {tShop('product.noSellerInfo')}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -587,7 +693,7 @@ function ProductPage() {
 
         {/* Similar Products Recommendations */}
         {product && (
-          <div className="mt-8">
+          <div className="mt-6 sm:mt-8">
             <ProductRecommendations type="similar" productId={product.id} limit={4} />
           </div>
         )}
@@ -595,5 +701,3 @@ function ProductPage() {
     </main>
   );
 }
-
-export default ProductPage;

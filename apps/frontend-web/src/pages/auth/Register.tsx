@@ -5,16 +5,23 @@ import type { CreateUserRequest } from '@/types/auth.types';
 import bg from '@/assets/register-background.png';
 import logo from '@/assets/logo_white_bg.png';
 import RedirectIfAuthenticated from '@/components/auth/RedirectIfAuthenticated';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import RegisterForm from '@/components/forms/RegisterForm';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import LanguageDropdown from '@/components/ui/LanguageDropdown';
+import { useAuthStore } from '@/stores/authStore';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { signup, error } = useAuth();
+  const { signup } = useAuth();
+  const { t: tAuth } = useAuthTranslation();
+  const { t: tCommon } = useCommonTranslation();
 
   const handleRegister = async (data: CreateUserRequest) => {
     const response = await signup(data);
+
+    const { error } = useAuthStore.getState();
 
     if (!response) {
       if (error) {
@@ -24,7 +31,7 @@ const Register: React.FC = () => {
     }
 
     if (response) {
-      toast.success('Inscription réussie');
+      toast.success(tCommon('success'));
       navigate('/verify-email');
     }
   };
@@ -33,11 +40,16 @@ const Register: React.FC = () => {
     <RedirectIfAuthenticated>
       <div className="min-h-screen flex">
         {/* Left side - Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-8 relative">
+          {/* Language Dropdown - Bottom Right */}
+          <div className="absolute top-10 right-4">
+            <LanguageDropdown position="bottom-right" />
+          </div>
+
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Heureux de vous voir</h1>
-              <p className="text-gray-600">Vivez votre logistique en toute confiance</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAuth('register.title')}</h1>
+              <p className="text-gray-600">{tCommon('app.tagline')}</p>
             </div>
 
             <Card className="shadow-xl bg-[#D9D9D980]">
