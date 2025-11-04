@@ -306,7 +306,7 @@ export default class AIService {
 
   /**
    * Query the chatbot with a user message
-   * 
+   *
    * Uses V3 (Intent-First with Frontend Guidance) by default
    * Falls back to V2 (LLM-First) then V1 (Regex-based) if needed
    */
