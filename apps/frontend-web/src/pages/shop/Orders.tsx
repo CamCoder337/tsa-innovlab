@@ -155,7 +155,6 @@ export default function OrdersPage() {
             >
               <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">{tShop('orders.refresh')}</span>
-              <span className="sm:hidden">Actualiser</span>
             </Button>
           </div>
         </div>

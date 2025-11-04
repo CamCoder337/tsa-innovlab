@@ -295,7 +295,6 @@ export default function CartSummaryPage() {
                 >
                   <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">{tShop('cart.continueShopping')}</span>
-                  <span className="sm:hidden">Retour</span>
                 </Button>
               </Link>
             </div>
@@ -338,18 +337,18 @@ export default function CartSummaryPage() {
                 <>
                   {cart.items.map((item) => (
                     <Card key={item.productId}>
-                      <CardContent className="p-3 sm:p-4 lg:p-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                      <CardContent className="p-4 lg:p-6">
+                        <div className="flex items-center gap-4">
                           <img
                             src={item.product?.images[0] || item.product?.imageUrl || ''}
                             alt={item.product?.name || ''}
-                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0 mx-auto sm:mx-0"
+                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                           />
-                          <div className="flex-1 min-w-0 text-center sm:text-left">
+                          <div className="flex-1 min-w-0 text-left">
                             <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">
                               {item.product?.name || ''}
                             </h3>
-                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2 sm:mb-3">
+                            <div className="flex flex-wrap items-center justify-start gap-2 mb-3">
                               <Badge className="bg-green-100 text-green-800 text-xs">
                                 {tShop('cart.item.reference')}: {item.product?.reference || ''}
                               </Badge>
@@ -357,7 +356,7 @@ export default function CartSummaryPage() {
                                 {item.product?.unit || ''}
                               </Badge>
                             </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                            <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
@@ -396,8 +395,8 @@ export default function CartSummaryPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-center sm:text-right w-full sm:w-auto">
-                            <div className="flex flex-col items-center sm:items-end gap-1 mb-2">
+                          <div className="text-right w-auto">
+                            <div className="flex flex-col items-end gap-1 mb-2">
                               <p className="text-base sm:text-lg font-bold">
                                 {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
                                 FCFA
@@ -410,11 +409,10 @@ export default function CartSummaryPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveItem(item.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-auto"
                               disabled={isLoading}
                             >
-                              <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
-                              <span className="sm:hidden">Supprimer</span>
+                              <Trash2 className="h-4 w-4 mr-0" />
                             </Button>
                           </div>
                         </div>
@@ -424,8 +422,8 @@ export default function CartSummaryPage() {
 
                   {/* Adresse de livraison */}
                   <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
                           <span className="text-base sm:text-lg">
@@ -451,7 +449,7 @@ export default function CartSummaryPage() {
                               });
                             }
                           }}
-                          className="text-xs w-full sm:w-auto"
+                          className="text-xs w-auto"
                         >
                           <MapPin className="h-3 w-3 mr-1" />
                           <span className="hidden sm:inline">

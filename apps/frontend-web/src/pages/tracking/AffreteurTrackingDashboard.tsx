@@ -9,10 +9,10 @@ import { getStatusColor } from '@/lib/mission-utils';
 import { Link, useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 
-// const getPriorityColor = (budgetMax: number) => {
-//   if (budgetMax > 200000) return 'bg-red-100 text-red-800'; // Urgent/High value
-//   if (budgetMax > 100000) return 'bg-orange-100 text-orange-800'; // High
-//   if (budgetMax > 50000) return 'bg-yellow-100 text-yellow-800'; // Medium
+// const getPriorityColor = (budgetMin: number) => {
+//   if (budgetMin > 200000) return 'bg-red-100 text-red-800'; // Urgent/High value
+//   if (budgetMin > 100000) return 'bg-orange-100 text-orange-800'; // High
+//   if (budgetMin > 50000) return 'bg-yellow-100 text-yellow-800'; // Medium
 //   return 'bg-green-100 text-green-800'; // Low
 // };
 

@@ -119,6 +119,13 @@ function AffreteurSettings() {
           }
         }
       } else {
+        if (!code) {
+          setMfaStatus({
+            ...mfaStatus,
+            setupRequired: true,
+          });
+          return;
+        }
         // Disable MFA
         const response = await authService.disableMFA(code!);
 
@@ -136,12 +143,12 @@ function AffreteurSettings() {
             backupCodes: [],
             instructions: '',
           });
-          toast.success(tProfile('settings.mfa.disableSuccess'));
+          toast.success(tProfile('settings.security.mfa.disableSuccess'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error(tProfile('settings.mfa.configError'));
+      toast.error(tProfile('settings.security.mfa.configError'));
     } finally {
       setIsLoading(false);
     }
@@ -154,26 +161,32 @@ function AffreteurSettings() {
       const response = await authService.enableMFA(code);
 
       if (response.error) {
-        toast.error(response.error.message);
+        toast.error(tProfile('settings.security.mfa.invalidCode'));
         return;
       }
 
       if (response.data) {
-        setMfaStatus({
-          enabled: true,
-          setupRequired: false,
-          secret: '',
-          key: '',
-          backupCodes: [],
-          instructions: '',
-        });
-        toast.success(tProfile('settings.mfa.enableSuccess'));
-      } else {
-        toast.error(tProfile('settings.mfa.invalidCode'));
+        const status = await authService.statusMFA();
+
+        if (status.error) {
+          console.error(status.error);
+          toast.error(tProfile('settings.security.mfa.enableError'));
+        }
+
+        if (status.data) {
+          setMfaStatus({
+            enabled: status.data.mfaEnabled,
+            setupRequired: false,
+            secret: '',
+            key: '',
+            backupCodes: [],
+            instructions: '',
+          });
+          toast.success(tProfile('settings.security.mfa.enableSuccess'));
+        }
       }
     } catch (error) {
       console.error(error);
-      toast.error(tProfile('settings.mfa.enableError'));
     } finally {
       setIsLoading(false);
     }
@@ -186,13 +199,21 @@ function AffreteurSettings() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('settings.title')}</h1>
-          <p className="text-muted-foreground">{tProfile('settings.subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tProfile('settings.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {tProfile('settings.subtitle')}
+          </p>
         </div>
-        <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
-          <Save className="h-4 w-4" />
+        <Button
+          onClick={handleSaveSettings}
+          disabled={isLoading}
+          className="gap-2 w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+        >
+          <Save className="h-3 w-3 sm:h-4 sm:w-4" />
           {isLoading ? tProfile('settings.saving') : tProfile('settings.save')}
         </Button>
       </div>
@@ -409,73 +430,90 @@ function AffreteurSettings() {
                   </p>
                 </div>
                 <Switch
-                  checked={user.mfaEnabled}
+                  checked={mfaStatus.enabled}
                   onCheckedChange={handleMFAToggle}
                   disabled={isLoading}
+                  className={mfaStatus.enabled ? 'data-[state=checked]:bg-green-600' : ''}
                 />
               </div>
 
               {mfaStatus.enabled && (
-                <Alert>
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>{tProfile('settings.security.mfa.enabled')}</AlertDescription>
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    {tProfile('settings.security.mfa.enabled')}
+                  </AlertDescription>
                 </Alert>
               )}
 
-              {mfaStatus.key && (
+              {mfaStatus.setupRequired && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
                   <h5 className="font-medium">{tProfile('settings.security.mfa.setup')}</h5>
 
-                  {mfaStatus.instructions && (
-                    <div className="space-y-3">
-                      <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
-                          {mfaStatus.key}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(mfaStatus.key || '')}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="mfaCode">
-                          {tProfile('settings.security.mfa.enterCode')}
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="mfaCode"
-                            placeholder="000000"
-                            maxLength={6}
-                            className="w-32"
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && e.currentTarget.value.length === 6) {
-                                handleMFAEnable(e.currentTarget.value);
-                              }
-                            }}
-                          />
+                  <div className="space-y-3 flex flex-col items-center">
+                    {mfaStatus.key && (
+                      <>
+                        <p className="text-sm">{tProfile('settings.security.mfa.manualKey')}</p>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 p-2 bg-gray-100 rounded text-sm font-mono">
+                            {mfaStatus.key}
+                          </code>
                           <Button
-                            onClick={(e) => {
-                              const input = e.currentTarget
-                                .previousElementSibling as HTMLInputElement;
-                              if (input.value.length === 6) {
-                                handleMFAEnable(input.value);
-                              } else {
-                                toast.info(tForms('validation.mfa'));
-                              }
-                            }}
-                            disabled={isLoading}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(mfaStatus.key || '')}
                           >
-                            {tProfile('settings.security.mfa.enable')}
+                            <Copy className="h-4 w-4" />
                           </Button>
                         </div>
+                      </>
+                    )}
+
+                    <div className="space-y-2 flex flex-col items-center">
+                      <Label htmlFor="mfaCode">
+                        {!mfaStatus.enabled
+                          ? tProfile('settings.security.mfa.enterCode')
+                          : tProfile('settings.security.mfa.enterDisableCode')}
+                      </Label>
+                      <div className="flex flex-col justify-center items-center gap-2">
+                        <Input
+                          id="mfaCode"
+                          placeholder="000000"
+                          maxLength={6}
+                          className="w-full justify-self-center text-center"
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.length === 6) {
+                              if (!mfaStatus.enabled) {
+                                handleMFAEnable(e.currentTarget.value);
+                              } else {
+                                handleMFAToggle(false, e.currentTarget.value);
+                              }
+                            }
+                          }}
+                        />
+                        <Button
+                          onClick={(e) => {
+                            const input = e.currentTarget
+                              .previousElementSibling as HTMLInputElement;
+                            if (input.value.length === 6) {
+                              if (!mfaStatus.enabled) {
+                                handleMFAEnable(input.value);
+                              } else {
+                                handleMFAToggle(false, input.value);
+                              }
+                            } else {
+                              toast.info(tForms('validation.mfa'));
+                            }
+                          }}
+                          disabled={isLoading}
+                        >
+                          {!mfaStatus.enabled
+                            ? tProfile('settings.security.mfa.enable')
+                            : tProfile('settings.security.mfa.disable')}
+                        </Button>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 

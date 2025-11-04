@@ -94,7 +94,7 @@
     "lastYear": "L'année dernière",
     "lessThanHour": "Il y a moins d'une heure",
     "hoursAgo": "Il y a {{hours}}h",
-    "daysAgo": "Il y a {{days}} jour{{days, plural, one {} other {s}}}"
+    "daysAgo": "Il y a {{days}} jour{{plural}}"
   },
   "messages": {
     "loading": "Chargement...",

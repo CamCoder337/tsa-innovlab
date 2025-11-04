@@ -90,38 +90,51 @@ function AdminProfile() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tAdmin('profile.title')}</h1>
-          <p className="text-muted-foreground">{tAdmin('profile.subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tAdmin('profile.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">{tAdmin('profile.subtitle')}</p>
         </div>
         {!isEditing ? (
-          <div className="flex gap-2">
-            <Button onClick={() => setIsEditing(true)} className="gap-2">
-              <Edit className="h-4 w-4" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="gap-2 h-9 sm:h-10 text-sm sm:text-base"
+            >
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
-              <Button variant="outline" className="gap-2">
-                <Settings className="h-4 w-4" />
+              <Button
+                variant="outline"
+                className="gap-2 w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+              >
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
                 {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               disabled={isLoading}
               onClick={handleSaveClick}
-              className="gap-2"
+              className="gap-2 h-9 sm:h-10 text-sm sm:text-base"
               type="submit"
               form="profile-form"
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-3 w-3 sm:h-4 sm:w-4" />
               {isLoading ? tCommon('messages.saving') : tCommon('actions.save')}
             </Button>
-            <Button variant="outline" disabled={isLoading} className="gap-2" onClick={handleCancel}>
-              <X className="h-4 w-4" />
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              className="gap-2 h-9 sm:h-10 text-sm sm:text-base"
+              onClick={handleCancel}
+            >
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.cancel')}
             </Button>
           </div>

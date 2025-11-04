@@ -236,6 +236,21 @@ const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
   },
 ];
 
+const getFooterMenu = (tNav: (key: string) => string): SidebarItem[] => [
+  {
+    id: 'settings',
+    label: tNav('menu.settings'),
+    icon: Settings,
+    href: '/app/settings',
+  },
+  {
+    id: 'support',
+    label: tNav('footer.support'),
+    icon: Headset,
+    href: '/app/support',
+  },
+];
+
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
   const { t: tNav } = useNavigationTranslation();
@@ -323,6 +338,7 @@ export default function Sidebar() {
   const { t: tAuth } = useAuthTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tNav } = useNavigationTranslation();
+  const { pathname } = useLocation();
 
   const displayName = user?.fullName;
   const role = tCommon(`roles.${user?.role}`);
@@ -362,41 +378,44 @@ export default function Sidebar() {
         <SidebarSeparator />
       </SidebarContent>
       <SidebarFooter className="flex-shrink-0">
-        <div className="md:hidden">
+        <div className="md:hidden flex flex-col gap-4">
           {/* Mobile-only user info display */}
-          <div className="pb-2 border-b">
-            <p className="px-2 text-sm font-medium truncate">{displayName}</p>
-            <p className="px-2 text-xs text-muted-foreground truncate">{role}</p>
-          </div>
 
-          <Link to="/app/profile" className="h-fit pt-8">
-            <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
-              <User className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{tAuth('profile')}</span>
-            </div>
-          </Link>
+          <SidebarMenuItem key={'profile'}>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/app/profile'}
+              tooltip={tNav('menu.profile')}
+            >
+              <Link
+                to={'/app/profile'}
+                className="flex items-center gap-3 font-medium overflow-visible"
+              >
+                <User className="h-5 w-5" />
+                <div className="flex flex-col">
+                  <p className="text-base">{displayName}</p>
+                  <p className="text-xs">{role}</p>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
 
-          <Link to="/app/settings" className="h-fit">
-            <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
-              <Settings className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{tCommon('actions.settings', 'Paramètres')}</span>
-            </div>
-          </Link>
+          <MenuTree items={getFooterMenu(tNav)} />
 
-          <div className="cursor-pointer flex items-center px-2 py-1 gap-2">
-            <Headset className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{tCommon('actions.support', 'Support')}</span>
-          </div>
-
-          <div
-            onClick={handleLogout}
-            data-testid="logout-button"
-            role="menuitem"
-            className="cursor-pointer flex items-center px-2 py-1 gap-2 text-red-600 focus:text-red-600"
-          >
-            <LogOut className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{tAuth('logout')}</span>
-          </div>
+          <SidebarMenuItem key={'logout'}>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              data-testid="logout-button"
+              role="menuitem"
+              className="cursor-pointer flex items-center px-2 py-1 gap-2 text-red-600 focus:text-red-600"
+              tooltip={tAuth('logout')}
+            >
+              <div className="flex items-center gap-3 font-medium">
+                <LogOut className="h-5 w-5" />
+                <span className="text-base">{tAuth('logout')}</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </div>
       </SidebarFooter>
     </UISidebar>

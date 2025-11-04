@@ -364,12 +364,10 @@ export default function OrdersManagement() {
               >
                 <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
-                <span className="sm:hidden">Actualiser</span>
               </Button>
               <Button variant="outline" className="text-xs sm:text-sm">
                 <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">{tCommon('actions.export')}</span>
-                <span className="sm:hidden">Exporter</span>
               </Button>
             </div>
           </div>

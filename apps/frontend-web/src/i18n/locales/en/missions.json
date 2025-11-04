@@ -256,5 +256,83 @@
     "estimatedArrival": "Estimated arrival",
     "progress": "Progress",
     "updates": "Updates"
+  },
+  "invoice": {
+    "title": "Mission Invoice",
+    "invoiceNumber": "Invoice No.",
+    "date": "Date",
+    "companyInfo": {
+      "title": "Company Information",
+      "name": "TSA Logistics",
+      "address": "123 Commerce Street",
+      "city": "Abidjan, Côte d'Ivoire",
+      "phone": "Tel: +225 XX XX XX XX",
+      "email": "Email: contact@tsa-logistics.com"
+    },
+    "missionDetails": {
+      "title": "Mission Details",
+      "missionId": "Mission ID",
+      "affreteur": "Shipper",
+      "missionTitle": "Mission Title",
+      "merchandiseType": "Merchandise Type",
+      "volume": "Volume"
+    },
+    "routeInfo": {
+      "title": "Route Information",
+      "from": "From",
+      "to": "To",
+      "distance": "Distance",
+      "estimatedDuration": "Estimated Duration"
+    },
+    "servicesProvided": {
+      "title": "Services Provided",
+      "transportService": "Transport Service",
+      "logistics": "Logistics and Coordination",
+      "tracking": "Real-time Tracking",
+      "insurance": "Transport Insurance"
+    },
+    "totals": {
+      "title": "Totals",
+      "totalCost": "Total Cost",
+      "transporterPayment": "Transporter Payment",
+      "platformFee": "Platform Fee",
+      "taxes": "Taxes",
+      "additionalCosts": "Additional Costs",
+      "finalTotal": "Final Total"
+    },
+    "paymentInfo": {
+      "title": "Payment Information",
+      "paymentStatus": "Payment Status",
+      "paymentMethod": "Payment Method",
+      "transactionId": "Transaction ID",
+      "paymentReference": "Payment Reference"
+    },
+    "footer": {
+      "thankYou": "Thank you for trusting TSA Logistics for your transport needs.",
+      "support": "For any questions, contact our customer support.",
+      "terms": "Terms and conditions available on our website."
+    },
+    "actions": {
+      "download": "Download",
+      "print": "Print",
+      "email": "Send by Email",
+      "close": "Close",
+      "view": "View Invoice",
+      "emailSent": "Email sent successfully"
+    },
+    "paymentMethods": {
+      "orange_money": "Orange Money",
+      "mtn_momo": "MTN Mobile Money",
+      "wave": "Wave",
+      "bank_transfer": "Bank Transfer",
+      "cash_on_delivery": "Cash on Delivery",
+      "credit_card": "Credit Card"
+    },
+    "paymentStatuses": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    }
   }
 }

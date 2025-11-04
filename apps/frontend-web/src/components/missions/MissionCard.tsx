@@ -165,17 +165,17 @@ export default function MissionCard({
                   </div>
                 )}
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <Weight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    {mission.poids ? `${mission.poids} t` : tMissions('noWeight')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2">
                   <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-600">
                     {mission.budgetMin
                       ? `${mission.budgetMin.toLocaleString()} FCFA`
                       : tMissions('noBudget')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Weight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm text-gray-600">
+                    {mission.poids ? `${mission.poids} t` : tMissions('noWeight')}
                   </span>
                 </div>
               </div>
@@ -191,7 +191,7 @@ export default function MissionCard({
               )}
 
               {user?.role === 'transporteur' && mission.affreteurId && affreteurName && (
-                <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-3">
+                <div className="grid grid-cols-3">
                   <div className="flex items-center gap-1 sm:gap-2">
                     <User className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
                     <span className="text-xs sm:text-sm text-gray-600">

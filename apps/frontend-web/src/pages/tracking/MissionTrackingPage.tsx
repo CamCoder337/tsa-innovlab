@@ -441,8 +441,8 @@ export default function MissionTrackingPage() {
                     </div>
                     {/* <div>
                       <label className="text-sm font-medium text-gray-600">Priorité</label>
-                      <Badge className={getPriorityColor(mission.budgetMax)}>
-                        {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
+                      <Badge className={getPriorityColor(mission.budgetMin)}>
+                        {mission.budgetMin > 200000 ? 'Urgent' : 'Normal'}
                       </Badge>
                     </div> */}
                   </CardContent>

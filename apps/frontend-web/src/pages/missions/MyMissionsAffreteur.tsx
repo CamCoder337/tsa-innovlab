@@ -51,7 +51,7 @@ export default function MyMissionsAffreteur() {
   const filteredMissions = myMissions.filter((mission) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'pending') return mission.status === 'published';
-    if (activeTab === 'actives') return mission.status === 'assigned';
+    if (activeTab === 'actives') return ['assigned', 'in_progress'].includes(mission.status);
     if (activeTab === 'completed') return mission.status === 'completed';
     if (activeTab === 'draft') return mission.status === 'draft';
     return true;
@@ -71,8 +71,7 @@ export default function MyMissionsAffreteur() {
         <Link to="/app/missions/create" className="w-full sm:w-auto">
           <Button className="gap-2 w-full sm:w-auto" style={{ backgroundColor: 'var(--tsa-blue)' }}>
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{tMissions('myMissions.affreteur.newMission')}</span>
-            <span className="sm:hidden">Nouvelle Mission</span>
+            <span>{tMissions('myMissions.affreteur.newMission')}</span>
           </Button>
         </Link>
       </div>
@@ -104,7 +103,11 @@ export default function MyMissionsAffreteur() {
                   {tCommon('status.in_progress')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">
-                  {myMissions.filter((m) => ['published', 'assigned'].includes(m.status)).length}
+                  {
+                    myMissions.filter((m) =>
+                      ['published', 'assigned', 'in_progress'].includes(m.status)
+                    ).length
+                  }
                 </p>
               </div>
             </div>

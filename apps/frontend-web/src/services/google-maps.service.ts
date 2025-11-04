@@ -303,7 +303,7 @@ export class GoogleMapsService {
         description?: string;
         typeMarchandise?: string;
         poids?: number;
-        budgetMax?: number;
+        budgetMin?: number;
         status: string;
         dateDepartEstime?: string;
         dateArriveePrevue?: string;
@@ -325,7 +325,7 @@ export class GoogleMapsService {
       } else if (type === 'destination') {
         content += `
           <p><strong>Type:</strong> Point d'arrivée</p>
-          <p><strong>Budget:</strong> ${mission.budgetMax ? mission.budgetMax.toLocaleString() + ' FCFA' : 'N/A'}</p>
+          <p><strong>Budget:</strong> ${mission.budgetMin ? mission.budgetMin.toLocaleString() + ' FCFA' : 'N/A'}</p>
           <p><strong>Arrivée prévue:</strong> ${mission.dateArriveePrevue ? new Date(mission.dateArriveePrevue).toLocaleDateString() : 'N/A'}</p>`;
       } else if (type === 'vehicle') {
         content += `

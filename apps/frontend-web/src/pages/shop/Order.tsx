@@ -225,7 +225,6 @@ export default function OrderDetailsPage() {
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">{tShop('orderDetails.breadcrumb.myOrders')}</span>
-            <span className="sm:hidden">Commandes</span>
           </Link>
           <span>/</span>
           <span className="truncate">
@@ -277,7 +276,6 @@ export default function OrderDetailsPage() {
               >
                 <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">{tShop('orderDetails.copyTracking')}</span>
-                <span className="sm:hidden">Copier</span>
               </Button>
             )}
           </div>
@@ -542,30 +540,26 @@ export default function OrderDetailsPage() {
             {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tShop('orderDetails.downloadInvoice')}</span>
-                <span className="sm:hidden">Facture</span>
+                <span>{tShop('orderDetails.downloadInvoice')}</span>
               </Button>
             )}
 
             {order.trackingNumber && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <ExternalLink className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tShop('orderDetails.trackPackage')}</span>
-                <span className="sm:hidden">Suivre</span>
+                <span>{tShop('orderDetails.trackPackage')}</span>
               </Button>
             )}
 
             <Button asChild className="w-full bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
               <Link to="/app/shop">
-                <span className="hidden sm:inline">{tShop('orderDetails.continueShopping')}</span>
-                <span className="sm:hidden">Continuer</span>
+                <span>{tShop('orderDetails.continueShopping')}</span>
               </Link>
             </Button>
 
             <Button asChild variant="outline" className="w-full text-xs sm:text-sm">
               <Link to="/app/shop/orders">
-                <span className="hidden sm:inline">{tShop('orderDetails.backToOrders')}</span>
-                <span className="sm:hidden">Mes commandes</span>
+                <span>{tShop('orderDetails.backToOrders')}</span>
               </Link>
             </Button>
           </div>
