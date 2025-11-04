@@ -218,7 +218,7 @@ export default function MissionTrackingMap({
 
                 // Calculate ETA with traffic if available
                 const etaWithTraffic = durationInTraffic ? new Date(now) : undefined;
-                if (etaWithTraffic) {
+                if (etaWithTraffic && durationInTraffic) {
                   etaWithTraffic.setMinutes(etaWithTraffic.getMinutes() + durationInTraffic);
                 }
 
