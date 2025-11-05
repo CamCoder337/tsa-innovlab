@@ -7,8 +7,8 @@ export interface Address extends Partial<Timestamps> {
   region: string;
   country: string;
   postalCode: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   label: string;
 }
 

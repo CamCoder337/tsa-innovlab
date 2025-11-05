@@ -1,19 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
-import { Button } from '../ui/button';
 import { getStatusColor } from '@/lib/mission-utils';
 import { getStatusLabel } from '@/lib/mission-utils';
-import { toast } from 'sonner';
-import { useMissions } from '@/hooks/useMissions';
 import { useState, useEffect } from 'react';
 import {
   useMissionsTranslation,
@@ -29,12 +19,9 @@ interface MissionDetailsProps {
 }
 
 export function MissionDetails({ mission }: MissionDetailsProps) {
-  const { deleteMission, error } = useMissions();
   const { user } = useAuth();
   const { getUserName } = useUserSearch();
   const { getVehicleRegistration } = useVehicleInfo();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [transporteurName, setTransporteurName] = useState<string>('');
   const [affreteurName, setAffreteurName] = useState<string>('');
   const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
@@ -90,27 +77,6 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
     getUserName,
     getVehicleRegistration,
   ]);
-
-  const handleDelete = async (id: string) => {
-    setIsLoading(true);
-
-    toast.loading(tMissions('actions.deletingMission'), {
-      duration: 30000,
-    });
-
-    await deleteMission(id);
-
-    toast.dismiss();
-
-    setIsLoading(false);
-
-    if (error) {
-      toast.error(error || tCommon('error.generic'));
-      return;
-    }
-
-    toast.success(tMissions('actions.success.delete'));
-  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -312,48 +278,6 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogDescription className="hidden">{tCommon('actions.delete')}</DialogDescription>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg">
-              {tMissions('actions.delete')}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-            <p className="text-xs sm:text-sm">
-              {tCommon('actions.warning.confirmAction')}{' '}
-              {tMissions('actions.confirmDelete', { mission: mission.title })}
-            </p>
-
-            <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-md text-xs sm:text-sm">
-              <p className="font-medium">{tCommon('actions.warning.irreversible')}</p>
-              <p>{tMissions('actions.warning')}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isLoading}
-              className="w-full sm:w-auto text-xs sm:text-sm"
-            >
-              {tCommon('actions.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleDelete(mission.id)}
-              className="text-white w-full sm:w-auto text-xs sm:text-sm"
-              disabled={isLoading}
-            >
-              {isLoading ? tMissions('actions.deleting') : tCommon('actions.confirm')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

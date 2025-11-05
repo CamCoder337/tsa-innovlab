@@ -8,7 +8,8 @@
   "placeholders": {
     "searchConversations": "Search conversations...",
     "searchUsers": "Search users...",
-    "sendMessageTo": "Send message to {{name}}..."
+    "sendMessageTo": "Send message to {{name}}...",
+    "sendMessageToBot": "Ask your question to bot..."
   },
   "buttons": {
     "newConversation": "New Conversation",
@@ -41,5 +42,46 @@
     "noUsersFound": "No users found",
     "tryDifferentSearch": "Try a different search",
     "sharedMissions": "{{count}} shared mission(s)"
+  },
+  "chatbot": {
+    "name": "TSA Bot",
+    "description": "TSA Logistics virtual assistant",
+    "welcomeMessage": "Hello! I'm your TSA Logistics assistant. I can help you with your missions, shipment tracking, our shop and much more. How can I assist you?",
+    "helpMessage": "Here's what I can do for you:\n• Transport mission management\n• Real-time tracking\n• Refurbished parts shop\n• Support and assistance\n\nFeel free to ask me your questions!",
+    "responses": {
+      "missions": "I can help you with transport mission management. You can create a new mission, track your ongoing missions, or check your mission history in the 'Missions' section.",
+      "tracking": "For mission tracking, go to the 'Tracking' section where you can see real-time position of your transporters and delivery progress status.",
+      "boutique": "In our shop, you'll find quality refurbished parts. You can browse categories, add items to your cart and place orders easily.",
+      "vehicles": "For fleet management, you can add your vehicles, update their information and track their availability in the 'Vehicles' section.",
+      "support": "I'm here to help! You can ask me questions about using the TSA Logistics platform. For advanced technical support, contact our team via the 'Contact' section.",
+      "greeting": "Hello! I'm the TSA Logistics assistant. I can help you with transport missions, shipment tracking, our refurbished parts shop, and much more. How can I assist you today?",
+      "default": "I'm the TSA Logistics assistant and I can help you with various platform features: mission management, shipment tracking, refurbished parts shop, and general support. What would you like to know?"
+    },
+    "categories": {
+      "missions": "Missions",
+      "tracking": "Tracking",
+      "boutique": "Shop",
+      "vehicles": "Vehicles",
+      "support": "Support",
+      "greeting": "Greetings",
+      "general": "General"
+    },
+    "relatedTopics": {
+      "createMission": "create mission",
+      "trackMission": "track mission",
+      "history": "history",
+      "realTimePosition": "real-time position",
+      "deliveryStatus": "delivery status",
+      "notifications": "notifications",
+      "productCatalog": "product catalog",
+      "cart": "cart",
+      "orders": "orders",
+      "addVehicle": "add vehicle",
+      "availability": "availability",
+      "maintenance": "maintenance",
+      "platformUsage": "platform usage",
+      "contactSupport": "contact support",
+      "faq": "FAQ"
+    }
   }
 }

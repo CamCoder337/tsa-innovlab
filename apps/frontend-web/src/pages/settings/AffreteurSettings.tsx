@@ -192,6 +192,31 @@ function AffreteurSettings() {
     }
   };
 
+  const handleCodesRegeneration = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await authService.regenMFACodes();
+
+      if (response.error) {
+        toast.error(tErrors('general.somethingWentWrong'));
+        return;
+      }
+
+      if (response.data) {
+        setMfaStatus({
+          ...mfaStatus,
+          backupCodes: response.data.recoveryCodes,
+        });
+        toast.success(tProfile('settings.security.mfa.regenerateSuccess'));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success(tCommon('messages.copiedToClipboard'));
@@ -418,7 +443,7 @@ function AffreteurSettings() {
             <Separator />
 
             {/* MFA Settings */}
-            <div className="space-y-4">
+            <div className="space-y-4 flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
@@ -438,12 +463,18 @@ function AffreteurSettings() {
               </div>
 
               {mfaStatus.enabled && (
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    {tProfile('settings.security.mfa.enabled')}
-                  </AlertDescription>
-                </Alert>
+                <>
+                  <Alert className="border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      {tProfile('settings.security.mfa.enabled')}
+                    </AlertDescription>
+                  </Alert>
+                  <Button variant="outline" size="sm" onClick={handleCodesRegeneration}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {tProfile('settings.security.mfa.regenerateCodes')}
+                  </Button>
+                </>
               )}
 
               {mfaStatus.setupRequired && (
@@ -526,7 +557,7 @@ function AffreteurSettings() {
                   <p className="text-sm text-yellow-800">
                     {tProfile('settings.security.mfa.backupCodesDescription')}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid sm:grid-cols-2 gap-2">
                     {mfaStatus.backupCodes!.map((code, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <code className="flex-1 p-2 bg-white rounded text-sm font-mono border">
@@ -538,10 +569,6 @@ function AffreteurSettings() {
                       </div>
                     ))}
                   </div>
-                  <Button variant="outline" size="sm">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    {tProfile('settings.security.mfa.regenerateCodes')}
-                  </Button>
                 </div>
               )}
             </div>

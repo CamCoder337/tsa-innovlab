@@ -217,18 +217,23 @@
     }
   },
   "messages": {
+    "updatingMission": "Updating mission...",
+    "creatingMission": "Creating mission...",
+    "publishingMission": "Publishing mission...",
+    "deletingMission": "Deleting mission...",
     "publishedSuccess": "Mission published successfully",
     "cancelledSuccess": "Mission cancelled successfully",
     "createdSuccess": "Mission created successfully",
     "modifiedSuccess": "Mission modified successfully",
     "statusUpdatedSuccess": "Mission {{status}} successfully",
-    "applicationSentSuccess": "Application sent successfully"
+    "applicationSentSuccess": "Application sent successfully",
+    "missionDataWillBeDeleted": "Mission data will be permanently deleted"
   },
   "actions": {
+    "publish": "Publish mission",
     "start": "Start mission",
     "complete": "Complete mission",
     "delete": "Delete Mission",
-    "deleting": "Deleting...",
     "confirmDelete": "delete mission {{ mission }}",
     "warning": "The mission and all associated data will be permanently deleted",
     "success": {

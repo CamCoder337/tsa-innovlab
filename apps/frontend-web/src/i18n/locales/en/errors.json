@@ -66,6 +66,7 @@
   },
   "missions": {
     "errorLoading": "Error loading mission: {{error}}",
+    "updateFailed": "Failed to update mission",
     "statusUpdateFailed": "Failed to update mission status",
     "timelineLoadingError": "Error loading timeline",
     "evaluationLoadingError": "Error loading evaluation",

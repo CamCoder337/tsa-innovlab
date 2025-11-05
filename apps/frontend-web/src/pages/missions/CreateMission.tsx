@@ -32,12 +32,16 @@ export default function CreateMission() {
         let missionId: string | undefined;
 
         if (currentMission && action === 'update') {
+          toast.loading(tMissions('messages.updatingMission'));
           await updateMission(currentMission.id, formattedData);
           missionId = currentMission.id;
         } else {
+          toast.loading(tMissions('messages.creatingMission'));
           const newMission = await createMission(formattedData);
           missionId = newMission?.id;
         }
+
+        toast.dismiss();
 
         const { error } = useMissionStore.getState();
 
@@ -49,7 +53,7 @@ export default function CreateMission() {
 
         console.log('no Error');
 
-        if (currentMission && action === 'update') {
+        if ((currentMission || missionId) && action === 'update') {
           toast.success(tMissions('messages.modifiedSuccess'));
         } else {
           toast.success(tMissions('messages.createdSuccess'));
@@ -59,13 +63,15 @@ export default function CreateMission() {
           setTimeout(() => {
             setError(null);
             navigate('/app/missions');
-          }, 2500);
+          }, 1500);
           return;
         }
 
         // If publish is true and we have a mission ID, publish it
         if (publish && missionId) {
+          toast.loading(tMissions('messages.publishingMission'));
           await publishMission(missionId);
+          toast.dismiss();
 
           const { error } = useMissionStore.getState();
 

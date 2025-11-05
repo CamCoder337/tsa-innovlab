@@ -1,50 +1,25 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  useProfileTranslation,
-  useCommonTranslation,
-  useErrorsTranslation,
-} from '@/hooks/useTranslation';
+import { useProfileTranslation, useErrorsTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Shield,
-  Bell,
-  Smartphone,
-  AlertTriangle,
-  CheckCircle,
-  Copy,
-  RefreshCw,
-  Save,
-  ShoppingBag,
-} from 'lucide-react';
+import { Shield, Bell, Save, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
-
-interface MFAStatus {
-  enabled: boolean;
-  setupRequired: boolean;
-  backupCodes: string[];
-  qrCode?: string;
-  secret?: string;
-}
 
 export default function ClientSettings() {
   const { user } = useAuth();
   const { t: tProfile } = useProfileTranslation();
-  const { t: tCommon } = useCommonTranslation();
+  // const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
-    enabled: user?.mfaEnabled || false,
-    setupRequired: false,
-    backupCodes: [],
-  });
+  // const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
+  //   enabled: user?.mfaEnabled || false,
+  //   setupRequired: false,
+  //   backupCodes: [],
+  // });
   const [notifications, setNotifications] = useState({
     orderUpdates: true,
     promotions: true,
@@ -68,92 +43,140 @@ export default function ClientSettings() {
     }
   };
 
-  // MFA Management
-  const handleMFAToggle = async (enabled: boolean) => {
-    try {
-      setIsLoading(true);
+  // const handleMFAToggle = async (enabled: boolean, code?: string) => {
+  //   try {
+  //     setIsLoading(true);
 
-      if (enabled) {
-        // Initialize MFA setup
-        const response = await fetch('/api/auth/mfa/initialize', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+  //     if (enabled) {
+  //       // Initialize MFA setup
+  //       const response = await authService.setupMFA();
 
-        if (response.ok) {
-          const data = await response.json();
-          setMfaStatus({
-            enabled: false,
-            setupRequired: true,
-            backupCodes: [],
-            qrCode: data.qrCode,
-            secret: data.secret,
-          });
-        }
-      } else {
-        // Disable MFA
-        const response = await fetch('/api/auth/mfa/disable', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
+  //       if (response.error) {
+  //         console.error(response.error);
+  //         toast.error(response.error?.message);
+  //       }
 
-        if (response.ok) {
-          setMfaStatus({
-            enabled: false,
-            setupRequired: false,
-            backupCodes: [],
-          });
-          toast.success(tProfile('settings.security.mfa.disableSuccess'));
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error(tErrors('profile.configError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //       if (response.data) {
+  //         const status = await authService.statusMFA();
 
-  const handleMFAEnable = async (code: string) => {
-    try {
-      setIsLoading(true);
+  //         if (status.error) {
+  //           console.error(status.error);
+  //           toast.error(status.error?.message);
+  //         }
 
-      const response = await fetch('/api/auth/mfa/enable', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ code }),
-      });
+  //         if (status.data) {
+  //           setMfaStatus({
+  //             enabled: status.data.mfaEnabled,
+  //             setupRequired: true,
+  //             backupCodes: response.data.recoveryCodes,
+  //             key: response.data.manualEntryKey,
+  //             secret: response.data.secret,
+  //           });
+  //         }
+  //       }
+  //     } else {
+  //       if (!code) {
+  //         setMfaStatus({
+  //           ...mfaStatus,
+  //           setupRequired: true,
+  //         });
+  //         return;
+  //       }
+  //       // Disable MFA
+  //       const response = await authService.disableMFA(code!);
 
-      if (response.ok) {
-        const data = await response.json();
-        setMfaStatus({
-          enabled: true,
-          setupRequired: false,
-          backupCodes: data.backupCodes || [],
-        });
-        toast.success(tProfile('settings.security.mfa.enableSuccess'));
-      } else {
-        toast.error(tErrors('profile.invalidCode'));
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error(tErrors('profile.enableError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //       if (response.error) {
+  //         toast.error(response.error.message);
+  //         return;
+  //       }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(tCommon('copied'));
-  };
+  //       if (response.data) {
+  //         setMfaStatus({
+  //           enabled: false,
+  //           setupRequired: false,
+  //           secret: '',
+  //           key: '',
+  //           backupCodes: [],
+  //           instructions: '',
+  //         });
+  //         toast.success(tProfile('settings.security.mfa.disableSuccess'));
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error(tProfile('settings.security.mfa.configError'));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleMFAEnable = async (code: string) => {
+  //   try {
+  //     setIsLoading(true);
+
+  //     const response = await authService.enableMFA(code);
+
+  //     if (response.error) {
+  //       toast.error(tProfile('settings.security.mfa.invalidCode'));
+  //       return;
+  //     }
+
+  //     if (response.data) {
+  //       const status = await authService.statusMFA();
+
+  //       if (status.error) {
+  //         console.error(status.error);
+  //         toast.error(tProfile('settings.security.mfa.enableError'));
+  //       }
+
+  //       if (status.data) {
+  //         setMfaStatus({
+  //           enabled: status.data.mfaEnabled,
+  //           setupRequired: false,
+  //           secret: '',
+  //           key: '',
+  //           backupCodes: [],
+  //           instructions: '',
+  //         });
+  //         toast.success(tProfile('settings.security.mfa.enableSuccess'));
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleCodesRegeneration = async () => {
+  //   try {
+  //     setIsLoading(true);
+
+  //     const response = await authService.regenMFACodes();
+
+  //     if (response.error) {
+  //       toast.error(tErrors('general.somethingWentWrong'));
+  //       return;
+  //     }
+
+  //     if (response.data) {
+  //       setMfaStatus({
+  //         ...mfaStatus,
+  //         backupCodes: response.data.recoveryCodes,
+  //       });
+  //       toast.success(tProfile('settings.security.mfa.regenerateSuccess'));
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
+
+  // const copyToClipboard = (text: string) => {
+  //   navigator.clipboard.writeText(text);
+  //   toast.success(tCommon('messages.copiedToClipboard'));
+  // };
 
   if (!user) return null;
 
@@ -295,7 +318,7 @@ export default function ClientSettings() {
 
             <Separator />
 
-            {/* MFA Settings */}
+            {/* MFA Settings
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -408,7 +431,7 @@ export default function ClientSettings() {
                   </Button>
                 </div>
               )}
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
