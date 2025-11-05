@@ -169,7 +169,7 @@ services:
       ALLOWED_ORIGINS: ${AI_ALLOWED_ORIGINS:-["http://localhost:3000", "http://localhost:5173", "http://localhost:3333", "http://51.91.77.0", "http://51.91.77.0:30000", "http://51.91.77.0:30001", "http://51.91.77.0:30002"]}
 
       # Trusted Hosts (for TrustedHostMiddleware)
-      ALLOWED_HOSTS: ${AI_ALLOWED_HOSTS:-["*.tsa-contest.com", "localhost", "tsa-ai", "tsa-ai-backend", "51.91.77.0", "51.91.77.0:30002"]}
+      ALLOWED_HOSTS: ${AI_ALLOWED_HOSTS:-["*.tsa-contest.com", "localhost", "tsa-ai", "tsa-ai-backend", "tsa-ai-backend:8000", "51.91.77.0", "51.91.77.0:30002"]}
 
       # ML Models
       MODELS_PATH: ${AI_MODELS_PATH:-ml_models}
