@@ -10,6 +10,7 @@ from datetime import datetime
 
 from app.core.database import get_db, test_connection
 from app.core.config import settings
+from app.core.metrics import update_system_metrics, health_check_status
 from app.schemas.health import HealthResponse, DatabaseStatus, SystemStatus, ServiceStatus
 
 logger = logging.getLogger(__name__)
@@ -127,7 +128,15 @@ async def health_check():
             overall_status = "degraded"
         elif any(service.status == "degraded" for service in ml_services.values()):
             overall_status = "degraded"
-        
+
+        # Update Prometheus metrics
+        update_system_metrics()
+        health_check_status.labels(component='database').set(1 if database_status.connected else 0)
+        health_check_status.labels(component='overall').set(1 if overall_status == 'healthy' else 0.5 if overall_status == 'degraded' else 0)
+        for service_name, service in ml_services.items():
+            status_value = 1 if service.status == "healthy" else 0.5 if service.status == "degraded" else 0
+            health_check_status.labels(component=service_name).set(status_value)
+
         return HealthResponse(
             status=overall_status,
             version=settings.app_version,

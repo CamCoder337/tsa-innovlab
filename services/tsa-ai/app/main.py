@@ -15,7 +15,9 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
+from app.core.metrics import setup_metrics
 from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot, intelligent_chatbot
+from prometheus_client import make_asgi_app
 
 # Configure logging
 logging.basicConfig(
@@ -125,6 +127,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Setup Prometheus metrics
+instrumentator = setup_metrics(app)
 
 # Error handlers
 @app.exception_handler(RequestValidationError)
@@ -152,6 +156,10 @@ async def internal_server_error_handler(request: Request, exc: Exception):
         }
     )
 
+
+# Mount Prometheus metrics endpoint
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
 
 # Include routers
 app.include_router(
