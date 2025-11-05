@@ -1,6 +1,7 @@
 import { googleMapsLoader } from '@/lib/google-maps-loader';
 import { mapsCacheService } from './maps-cache.service';
 import { distanceMatrixService } from './distance-matrix.service';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 
 export interface MapConfig {
   center: { lat: number; lng: number };
@@ -54,8 +55,8 @@ export class GoogleMapsService {
   private transitLayer: google.maps.TransitLayer | null = null;
   private heatmapLayer: google.maps.visualization.HeatmapLayer | null = null;
 
-  // Marker clustering (type will be added when @googlemaps/markerclusterer is installed)
-  private markerClusterer: unknown = null;
+  // Marker clustering
+  private markerClusterer: MarkerClusterer | null = null;
 
   // Polygons and shapes
   private polygons: Map<string, google.maps.Polygon> = new Map();
