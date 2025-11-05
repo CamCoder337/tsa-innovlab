@@ -114,7 +114,7 @@ app = FastAPI(
 if is_production():
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["*.tsa-contest.com", "localhost"]
+        allowed_hosts=settings.allowed_hosts
     )
 
 app.add_middleware(
