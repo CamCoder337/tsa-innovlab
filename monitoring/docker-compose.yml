@@ -7,8 +7,10 @@ services:
     ports:
       - "30003:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -159,3 +161,59 @@ volumes:
 networks:
   InnovlabG1:
     external: true
+
+configs:
+  prometheus-config:
+    content: |
+      global:
+        scrape_interval: 15s
+        evaluation_interval: 15s
+
+      scrape_configs:
+        # Prometheus self-monitoring
+        - job_name: 'prometheus'
+          static_configs:
+            - targets: ['localhost:9090']
+
+        # Docker container metrics
+        - job_name: 'cadvisor'
+          static_configs:
+            - targets: ['tsa-cadvisor:8080']
+
+        # VPS host metrics (CPU, memory, disk, network)
+        - job_name: 'node'
+          static_configs:
+            - targets: ['tsa-node-exporter:9100']
+
+        # PostgreSQL database metrics
+        - job_name: 'postgres'
+          static_configs:
+            - targets: ['tsa-postgres-exporter:9187']
+
+        # Redis cache metrics
+        - job_name: 'redis'
+          static_configs:
+            - targets: ['tsa-redis-exporter:9121']
+
+        # Nginx web server metrics
+        - job_name: 'nginx'
+          static_configs:
+            - targets: ['tsa-nginx-exporter:9113']
+
+        # Adonis backend application (after instrumentation)
+        - job_name: 'tsa-backend'
+          static_configs:
+            - targets: ['tsa-backend:3333']
+          metrics_path: '/metrics'
+
+        # FastAPI AI backend (after instrumentation)
+        - job_name: 'tsa-ai-backend'
+          static_configs:
+            - targets: ['tsa-ai-backend:8000']
+          metrics_path: '/metrics'
+
+        # React frontend (optional - if you add metrics)
+        - job_name: 'frontend'
+          static_configs:
+            - targets: ['frontend:80']
+          metrics_path: '/metrics'
