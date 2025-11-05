@@ -19,13 +19,11 @@ const initialState = {
   error: null as string | null,
   stats: {
     products: {
-      totalProducts: 0,
-      activeProducts: 0,
-      inactiveProducts: 0,
-      outOfStockProducts: 0,
-      lowStockProducts: 0,
-      totalValue: 0,
-      categoriesWithProducts: 0,
+      total: 0,
+      active: 0,
+      inactive: 0,
+      outOfStock: 0,
+      lowStock: 0,
     },
     inventory: {},
     topCategories: [],

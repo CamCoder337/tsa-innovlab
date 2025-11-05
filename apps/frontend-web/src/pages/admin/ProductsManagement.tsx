@@ -51,10 +51,15 @@ import {
 import { ProductForm } from '@/components/forms/ProductForm';
 import { categoryValidationSchema, productValidationSchema } from '@/lib/validation';
 import { useFormik } from 'formik';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
 import { adminService } from '@/services/admin.service';
+import {
+  useAdminTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+} from '@/hooks/useTranslation';
 
 const defaultFilters: ProductFilterParams = {
   search: '',
@@ -84,6 +89,9 @@ export default function AdminProductsPage() {
     updateCategory,
     deleteCategory,
   } = useCategories();
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
 
   const [filters, setFilters] = useState<ProductFilterParams>(defaultFilters);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -177,15 +185,15 @@ export default function AdminProductsPage() {
       };
 
       await toast.promise(createProduct(payload), {
-        loading: 'Création du produit...',
+        loading: tAdmin('products.creating'),
       });
 
       if (productError) {
-        toast.error('Erreur lors de la création du produit');
+        toast.error(tAdmin('products.createError'));
         return;
       }
 
-      toast.success('Produit créé avec succès');
+      toast.success(tAdmin('products.createSuccess'));
       setIsDialogOpen(false);
       productFormik.resetForm();
     } catch (error) {
@@ -201,7 +209,7 @@ export default function AdminProductsPage() {
       const originalProduct = products.find((p) => p.id === editingProduct.id);
 
       if (!originalProduct) {
-        throw new Error('Produit introuvable');
+        throw new Error(tAdmin('products.notFound'));
       }
 
       // Create a map of changed fields
@@ -237,7 +245,7 @@ export default function AdminProductsPage() {
       };
 
       await toast.promise(updateProduct(editingProduct.id, payload), {
-        loading: 'Mise à jour du produit...',
+        loading: tAdmin('products.updating'),
       });
 
       if (productError) {
@@ -245,7 +253,7 @@ export default function AdminProductsPage() {
         return;
       }
 
-      toast.success('Produit mis à jour avec succès');
+      toast.success(tAdmin('products.updateSuccess'));
       setIsDialogOpen(false);
       setEditingProduct(null);
       productFormik.resetForm();
@@ -255,19 +263,19 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
+    if (!confirm(tAdmin('products.deleteConfirm'))) return;
 
     try {
       await toast.promise(deleteProduct(id), {
-        loading: 'Suppression du produit...',
+        loading: tAdmin('products.deleting'),
       });
 
       if (productError) {
-        toast.error('Erreur lors de la suppression du produit');
+        toast.error(tAdmin('products.deleteError'));
         return;
       }
 
-      toast.success('Produit supprimé avec succès');
+      toast.success(tAdmin('products.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting product:', error);
     }
@@ -276,15 +284,15 @@ export default function AdminProductsPage() {
   const handleAddCategory = async (values: CreateCategory) => {
     try {
       await toast.promise(createCategory(values), {
-        loading: 'Création de la catégorie...',
+        loading: tAdmin('products.creatingCategory'),
       });
 
       if (categoryError) {
-        toast.error('Erreur lors de la création de la catégorie');
+        toast.error(tAdmin('products.createCategoryError'));
         return;
       }
 
-      toast.success('Catégorie créée avec succès');
+      toast.success(tAdmin('products.createCategorySuccess'));
       setIsDialogOpen(false);
       categoryFormik.resetForm();
     } catch (error) {
@@ -354,19 +362,19 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+    if (!confirm(tAdmin('products.deleteConfirm'))) return;
 
     try {
       await toast.promise(deleteCategory(id), {
-        loading: 'Suppression de la catégorie...',
+        loading: tAdmin('products.deleting'),
       });
 
       if (categoryError) {
-        toast.error('Erreur lors de la suppression de la catégorie');
+        toast.error(tAdmin('products.deleteError'));
         return;
       }
 
-      toast.success('Catégorie supprimée avec succès');
+      toast.success(tAdmin('products.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting category:', error);
     }
@@ -398,8 +406,8 @@ export default function AdminProductsPage() {
           await handleAddProduct(values as CreateProduct);
         }
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde du produit:', error);
-        toast.error('Une erreur est survenue lors de la sauvegarde du produit');
+        console.error('Error saving product:', error);
+        toast.error(tErrors('general.saveError'));
       } finally {
         setSubmitting(false);
       }
@@ -428,8 +436,8 @@ export default function AdminProductsPage() {
           await handleAddCategory(values as CreateCategory);
         }
       } catch (error) {
-        console.error('Erreur lors de la sauvegarde de la catégorie:', error);
-        toast.error('Une erreur est survenue lors de la sauvegarde de la catégorie');
+        console.error('Error saving category:', error);
+        toast.error(tAdmin('products.saveCategoryError'));
       } finally {
         setSubmitting(false);
       }
@@ -450,29 +458,33 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 p-6">
-      <div className="flex-1 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Produits</h1>
-            <p className="text-gray-600">
-              Gérez le catalogue de pièces détachées et les catégories
+    <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
+      <div className="flex-1 p-3 sm:p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2 truncate">
+              {tAdmin('products.title')}
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 truncate">
+              {tAdmin('products.subtitle')}
             </p>
           </div>
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Produits</p>
-                  <p className="text-2xl font-bold">
-                    {stats?.products?.totalProducts || products?.length}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('products.totalProducts')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {stats?.products?.total || products?.length}
                   </p>
                 </div>
               </div>
@@ -480,15 +492,17 @@ export default function AdminProductsPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Produits Actifs</p>
-                  <p className="text-2xl font-bold">
-                    {stats?.products?.activeProducts ||
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tCommon('status.active')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {stats?.products?.active ||
                       products?.filter((product) => product.isActive).length}
                   </p>
                 </div>
@@ -497,29 +511,35 @@ export default function AdminProductsPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Stock Faible</p>
-                  <p className="text-2xl font-bold">{stats?.products?.lowStockProducts}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('products.lowStock')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {stats?.products?.lowStock || 0}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Revenus Total</p>
-                  <p className="text-2xl font-bold">
-                    {(stats?.products?.totalValue / 1000000).toFixed(1)}M
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('products.totalRevenue')}
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                    {((stats?.inventory?.totalValue || 0) / 1000000).toFixed(1)}M || 0
                   </p>
                 </div>
               </div>
@@ -529,126 +549,150 @@ export default function AdminProductsPage() {
 
         {/* Onglets */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="products">
-              Produits ({stats?.products?.totalProducts || products?.length})
+          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+            <TabsTrigger value="products" className="text-xs sm:text-sm truncate">
+              <span>
+                {tAdmin('products.productsTab', {
+                  count: stats?.products?.total || products?.length,
+                })}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="categories">Catégories ({categories.length})</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
+              <span>{tAdmin('products.categoriesTab', { count: categories.length })}</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="products">
             {/* Filtres et recherche */}
-            <Card className="mb-6">
-              <CardContent className="p-4">
-                <div className="flex flex-row gap-4">
+            <Card className="mb-4 sm:mb-6">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                     <Input
-                      placeholder="Rechercher par nom, desc ou catégorie..."
+                      placeholder={tAdmin('products.searchPlaceholder')}
                       value={filters.search}
                       onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                      className="pl-10"
+                      className="pl-8 sm:pl-10 text-xs sm:text-sm"
                     />
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-fit justify-start">
-                        <Filter className="mr-2 h-4 w-4" />
-                        {filters.categoryId?.length ? (
-                          <span>{filters.categoryId.length} catégorie(s) sélectionnée(s)</span>
-                        ) : (
-                          <span>Filtrer par catégories</span>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>Filtrer par catégories</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuCheckboxItem
-                        checked={filters.categoryId?.length === 0}
-                        onCheckedChange={() => setFilters((prev) => ({ ...prev, categoryId: [] }))}
-                      >
-                        Toutes les catégories
-                      </DropdownMenuCheckboxItem>
-                      {categories?.map((category) => (
-                        <DropdownMenuCheckboxItem
-                          key={category.id}
-                          checked={filters.categoryId?.includes(category.id)}
-                          onCheckedChange={(checked) => {
-                            setFilters((prev) => {
-                              const currentCategoryIds = Array.isArray(prev.categoryId)
-                                ? prev.categoryId
-                                : prev.categoryId
-                                  ? [prev.categoryId]
-                                  : [];
-
-                              return {
-                                ...prev,
-                                categoryId: checked
-                                  ? [...currentCategoryIds, category.id]
-                                  : currentCategoryIds.filter((id) => id !== category.id),
-                              };
-                            });
-                          }}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-fit justify-start text-xs sm:text-sm"
                         >
-                          {category.name}
+                          <Filter className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">
+                            {filters.categoryId?.length ? (
+                              <span>
+                                {tAdmin('products.categoriesSelected', {
+                                  count: filters.categoryId.length,
+                                })}
+                              </span>
+                            ) : (
+                              <span>{tAdmin('products.filterByCategories')}</span>
+                            )}
+                          </span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>
+                          {tAdmin('products.filterByCategories')}
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuCheckboxItem
+                          checked={filters.categoryId?.length === 0}
+                          onCheckedChange={() =>
+                            setFilters((prev) => ({ ...prev, categoryId: [] }))
+                          }
+                        >
+                          {tAdmin('products.allCategories')}
                         </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        {categories?.map((category) => (
+                          <DropdownMenuCheckboxItem
+                            key={category.id}
+                            checked={filters.categoryId?.includes(category.id)}
+                            onCheckedChange={(checked) => {
+                              setFilters((prev) => {
+                                const currentCategoryIds = Array.isArray(prev.categoryId)
+                                  ? prev.categoryId
+                                  : prev.categoryId
+                                    ? [prev.categoryId]
+                                    : [];
 
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) => {
-                      setStatusFilter(value);
-                      switch (value) {
-                        case 'all':
-                          setFilters((prev) => ({
-                            ...prev,
-                            isActive: undefined,
-                            inStock: true,
-                            lowStock: false,
-                          }));
-                          break;
-                        case 'active':
-                          setFilters((prev) => ({ ...prev, isActive: true }));
-                          break;
-                        case 'inactive':
-                          setFilters((prev) => ({ ...prev, isActive: false }));
-                          break;
-                        case 'low_stock':
-                          setFilters((prev) => ({ ...prev, lowStock: true }));
-                          break;
-                        case 'out_of_stock':
-                          setFilters((prev) => ({ ...prev, inStock: false }));
-                          break;
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder="Filtrer par statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="active">Actif</SelectItem>
-                      <SelectItem value="inactive">Inactif</SelectItem>
-                      <SelectItem value="low_stock">Stock Faible</SelectItem>
-                      <SelectItem value="out_of_stock">Rupture de stock</SelectItem>
-                    </SelectContent>
-                  </Select>
+                                return {
+                                  ...prev,
+                                  categoryId: checked
+                                    ? [...currentCategoryIds, category.id]
+                                    : currentCategoryIds.filter((id) => id !== category.id),
+                                };
+                              });
+                            }}
+                          >
+                            {category.name}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                  <Button
-                    className="gap-2 bg-tsa-blue"
-                    onClick={() => {
-                      setEditingProduct(null);
-                      productFormik.resetForm();
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Nouveau Produit
-                  </Button>
+                    <Select
+                      value={statusFilter}
+                      onValueChange={(value) => {
+                        setStatusFilter(value);
+                        switch (value) {
+                          case 'all':
+                            setFilters((prev) => ({
+                              ...prev,
+                              isActive: undefined,
+                              inStock: true,
+                              lowStock: false,
+                            }));
+                            break;
+                          case 'active':
+                            setFilters((prev) => ({ ...prev, isActive: true }));
+                            break;
+                          case 'inactive':
+                            setFilters((prev) => ({ ...prev, isActive: false }));
+                            break;
+                          case 'low_stock':
+                            setFilters((prev) => ({ ...prev, lowStock: true }));
+                            break;
+                          case 'out_of_stock':
+                            setFilters((prev) => ({ ...prev, inStock: false }));
+                            break;
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full sm:w-48 text-xs sm:text-sm">
+                        <SelectValue placeholder={tAdmin('products.filterByStatus')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{tAdmin('products.allStatuses')}</SelectItem>
+                        <SelectItem value="active">{tCommon('status.active')}</SelectItem>
+                        <SelectItem value="inactive">{tCommon('status.inactive')}</SelectItem>
+                        <SelectItem value="low_stock">{tAdmin('products.lowStock')}</SelectItem>
+                        <SelectItem value="out_of_stock">
+                          {tAdmin('products.outOfStock')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button
+                      className="gap-1 sm:gap-2 bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto"
+                      onClick={() => {
+                        setEditingProduct(null);
+                        productFormik.resetForm();
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span>{tAdmin('products.addProduct')}</span>
+                    </Button>
+                  </div>
+
                   <Sheet
                     open={isDialogOpen}
                     onOpenChange={(open) => {
@@ -659,18 +703,20 @@ export default function AdminProductsPage() {
                       setIsDialogOpen(open);
                     }}
                   >
-                    <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
+                    <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
                       <SheetHeader>
-                        <SheetTitle>
-                          {editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}
-                        </SheetTitle>
-                        <SheetDescription>
+                        <SheetTitle className="text-base sm:text-lg">
                           {editingProduct
-                            ? 'Modifiez les détails du produit'
-                            : 'Remplissez les informations pour créer un nouveau produit'}
+                            ? tAdmin('products.editProduct')
+                            : tAdmin('products.addProduct')}
+                        </SheetTitle>
+                        <SheetDescription className="text-xs sm:text-sm">
+                          {editingProduct
+                            ? tAdmin('products.editProductDescription')
+                            : tAdmin('products.addProductDescription')}
                         </SheetDescription>
                       </SheetHeader>
-                      <div className="p">
+                      <div>
                         <ProductForm
                           formik={productFormik}
                           categories={categories}
@@ -690,20 +736,22 @@ export default function AdminProductsPage() {
 
             {/* Liste des produits */}
             <Card>
-              <CardHeader>
-                <CardTitle>{`Catalogue des Produits (${filteredProducts.length})`}</CardTitle>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  {tAdmin('products.catalogTitle', { count: filteredProducts.length })}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredProducts.map((product) => {
                     const isLowStock = product.stock > 0 && product.stock <= product.stockAlert;
                     return (
                       <div
                         key={product.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:bg-gray-950"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center flex-shrink-0">
                             {product.imageUrl ? (
                               <img
                                 src={product.imageUrl || product.images[0]}
@@ -711,46 +759,51 @@ export default function AdminProductsPage() {
                                 className="w-full h-full object-cover rounded-md"
                               />
                             ) : (
-                              <Package className="h-6 w-6 text-gray-400" />
+                              <Package className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <h3 className="font-medium truncate">{product.name}</h3>
-                            <p className="text-sm text-gray-500 truncate">
-                              {product.description || 'Aucune description'}
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-sm sm:text-base truncate">
+                              {product.name}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                              {product.description || tAdmin('products.noDescription')}
                             </p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 flex-wrap">
                               <Badge
                                 variant={product.isActive ? 'default' : 'secondary'}
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap text-xs"
                               >
-                                {product.isActive ? 'Actif' : 'Inactif'}
+                                {product.isActive
+                                  ? tCommon('status.active')
+                                  : tCommon('status.inactive')}
                               </Badge>
                               <Badge
                                 variant={isLowStock ? 'destructive' : 'outline'}
-                                className="whitespace-nowrap"
+                                className="whitespace-nowrap text-xs"
                               >
-                                {product.stock} en stock
+                                {tAdmin('products.inStockCount', { count: product.stock })}
                               </Badge>
                               {product.category && (
-                                <Badge variant="secondary" className="whitespace-nowrap">
+                                <Badge variant="secondary" className="whitespace-nowrap text-xs">
                                   {product.category.name}
                                 </Badge>
                               )}
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="font-bold text-lg">
+
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                          <div className="text-center sm:text-right">
+                            <p className="font-bold text-base sm:text-lg">
                               {parseFloat(product.price).toLocaleString()} FCFA
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className={`gap-1 ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
+                              className={`gap-1 text-xs ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                               onClick={async () => {
                                 try {
                                   await updateProduct(product.id, {
@@ -758,7 +811,7 @@ export default function AdminProductsPage() {
                                     isActive: !product.isActive,
                                   });
                                   if (productError) {
-                                    toast.error('Erreur lors de la mise à jour du produit');
+                                    toast.error(tAdmin('products.updateError'));
                                     return;
                                   }
                                 } catch (error) {
@@ -771,24 +824,27 @@ export default function AdminProductsPage() {
                               ) : (
                                 <Eye className="h-3 w-3" />
                               )}
+                              <span className="hidden sm:inline">
+                                {product.isActive ? 'Masquer' : 'Afficher'}
+                              </span>
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="gap-1 bg-transparent"
+                              className="gap-1 bg-transparent text-xs"
                               onClick={() => handleEditProduct(product)}
                             >
                               <Edit className="h-3 w-3" />
-                              Modifier
+                              <span className="hidden sm:inline">{tCommon('actions.edit')}</span>
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-red-600 hover:text-red-700 gap-1 bg-transparent"
+                              className="gap-1 text-red-600 hover:text-red-700 bg-transparent text-xs"
                               onClick={() => handleDeleteProduct(product.id)}
                             >
                               <Trash2 className="h-3 w-3" />
-                              Supprimer
+                              <span className="hidden sm:inline">{tCommon('actions.delete')}</span>
                             </Button>
                           </div>
                         </div>
@@ -798,28 +854,32 @@ export default function AdminProductsPage() {
                 </div>
 
                 {filteredProducts.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">Aucun produit trouvé avec ces critères.</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                      {tAdmin('products.noProductsFound')}
+                    </p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="categories" className="mt-6">
+          <TabsContent value="categories" className="mt-4 sm:mt-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Gestion des Catégories</CardTitle>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg">
+                  {tAdmin('products.categoryManagement')}
+                </CardTitle>
                 <Button
-                  className="gap-2 bg-tsa-blue"
+                  className="gap-1 sm:gap-2 bg-tsa-blue text-xs sm:text-sm w-full sm:w-auto"
                   onClick={() => {
                     setEditingCategory(null);
                     categoryFormik.resetForm();
                     setIsDialogOpen(true);
                   }}
                 >
-                  <Plus className="h-4 w-4" />
-                  Nouvelle Catégorie
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>{tAdmin('products.addCategory')}</span>
                 </Button>
                 <Sheet
                   open={isDialogOpen}
@@ -831,17 +891,17 @@ export default function AdminProductsPage() {
                     setIsDialogOpen(open);
                   }}
                 >
-                  <SheetContent className="w-4/5 sm:min-w-fit p-4 max-h-screen overflow-y-auto">
+                  <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
                     <SheetHeader>
-                      <SheetTitle>
+                      <SheetTitle className="text-base sm:text-lg">
                         {editingCategory
-                          ? 'Modifier la catégorie'
-                          : 'Ajouter une nouvelle catégorie'}
+                          ? tAdmin('products.editCategory')
+                          : tAdmin('products.addCategory')}
                       </SheetTitle>
-                      <SheetDescription>
+                      <SheetDescription className="text-xs sm:text-sm">
                         {editingCategory
-                          ? 'Modifiez les détails de la catégorie'
-                          : 'Remplissez les informations pour créer une nouvelle catégorie'}
+                          ? tAdmin('products.editCategoryDescription')
+                          : tAdmin('products.addCategoryDescription')}
                       </SheetDescription>
                     </SheetHeader>
                     <div className="p">
@@ -860,38 +920,40 @@ export default function AdminProductsPage() {
                 </Sheet>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {categories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:bg-gray-950"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Tag className="h-5 w-5 text-blue-600" />
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                         </div>
 
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900">{category.name}</h4>
-                            <Badge variant="outline">
-                              {category.isActive ? 'ACTIF' : 'INACTIF'}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">
+                              {category.name}
+                            </h4>
+                            <Badge variant="outline" className="text-xs w-fit">
+                              {category.isActive
+                                ? tCommon('status.active')
+                                : tCommon('status.inactive')}
                             </Badge>
                           </div>
 
-                          <div className="text-sm text-gray-600">
-                            {category.products?.length || 0} produits
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                            {category.products?.length || 0} {tAdmin('dashboard.labels.products')}
                           </div>
-
-                          {/*  */}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className={`gap-1 ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
+                          className={`gap-1 text-xs ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                           onClick={async () => {
                             try {
                               const response = await adminService.updateCategory(category.id, {
@@ -911,24 +973,27 @@ export default function AdminProductsPage() {
                           ) : (
                             <Eye className="h-3 w-3" />
                           )}
+                          <span className="hidden sm:inline">
+                            {category.isActive ? 'Masquer' : 'Afficher'}
+                          </span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1 bg-transparent"
+                          className="gap-1 bg-transparent text-xs"
                           onClick={() => handleEditCategory(category)}
                         >
                           <Edit className="h-3 w-3" />
-                          Modifier
+                          <span className="hidden sm:inline">{tCommon('actions.edit')}</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="gap-1 text-red-600 hover:text-red-700 bg-transparent"
+                          className="gap-1 text-red-600 hover:text-red-700 bg-transparent text-xs"
                           onClick={() => handleDeleteCategory(category.id)}
                         >
                           <Trash2 className="h-3 w-3" />
-                          Supprimer
+                          <span className="hidden sm:inline">{tCommon('actions.delete')}</span>
                         </Button>
                       </div>
                     </div>

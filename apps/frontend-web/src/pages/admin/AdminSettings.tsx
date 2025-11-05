@@ -25,8 +25,13 @@ import {
   RefreshCw,
   Database,
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import PasswordChangeForm from '@/components/forms/PasswordChangeForm';
+import {
+  useAdminTranslation,
+  useCommonTranslation,
+  useErrorsTranslation,
+} from '@/hooks/useTranslation';
 
 interface MFAStatus {
   enabled: boolean;
@@ -38,6 +43,9 @@ interface MFAStatus {
 
 function AdminSettings() {
   const { user } = useAuth();
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [mfaStatus, setMfaStatus] = useState<MFAStatus>({
     enabled: user?.mfaEnabled || false,
@@ -81,10 +89,10 @@ function AdminSettings() {
     try {
       // Simulate API call for admin settings
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success('Paramètres administrateur sauvegardés avec succès');
+      toast.success(tAdmin('settings.saveSuccess'));
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(tErrors('general.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -128,12 +136,12 @@ function AdminSettings() {
             setupRequired: false,
             backupCodes: [],
           });
-          toast.success('MFA désactivé avec succès');
+          toast.success(tAdmin('settings.mfaDisabled'));
         }
       }
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors de la configuration MFA');
+      toast.error(tAdmin('settings.mfaError'));
     } finally {
       setIsLoading(false);
     }
@@ -173,21 +181,27 @@ function AdminSettings() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié dans le presse-papiers');
+    toast.success(tAdmin('settings.copiedToClipboard'));
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Paramètres Administrateur</h1>
-          <p className="text-muted-foreground">
-            Configurez les paramètres système et vos préférences d'administration
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tAdmin('settings.title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {tAdmin('settings.subtitle')}
           </p>
         </div>
-        <Button onClick={handleSaveSettings} disabled={isLoading} className="gap-2">
-          <Save className="h-4 w-4" />
-          {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+        <Button
+          onClick={handleSaveSettings}
+          disabled={isLoading}
+          className="gap-2 w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+        >
+          <Save className="h-3 w-3 sm:h-4 sm:w-4" />
+          {isLoading ? tCommon('messages.saving') : tCommon('actions.save')}
         </Button>
       </div>
 
@@ -197,14 +211,14 @@ function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications Administrateur
+              {tAdmin('settings.adminNotifications')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Email</span>
+                <span className="text-sm">{tAdmin('settings.emailNotifications')}</span>
               </div>
               <Switch
                 checked={notifications.email}
@@ -217,7 +231,7 @@ function AdminSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications SMS</span>
+                <span className="text-sm">{tAdmin('settings.smsNotifications')}</span>
               </div>
               <Switch
                 checked={notifications.sms}
@@ -228,7 +242,7 @@ function AdminSettings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">Notifications Push</span>
+                <span className="text-sm">{tAdmin('settings.pushNotifications')}</span>
               </div>
               <Switch
                 checked={notifications.push}
@@ -239,7 +253,7 @@ function AdminSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Alertes système</span>
+              <span className="text-sm">{tAdmin('settings.systemAlerts')}</span>
               <Switch
                 checked={notifications.systemAlerts}
                 onCheckedChange={(checked) =>
@@ -249,7 +263,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Nouvelles inscriptions</span>
+              <span className="text-sm">{tAdmin('settings.userRegistrations')}</span>
               <Switch
                 checked={notifications.userRegistrations}
                 onCheckedChange={(checked) =>
@@ -259,7 +273,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Événements de sécurité</span>
+              <span className="text-sm">{tAdmin('settings.securityEvents')}</span>
               <Switch
                 checked={notifications.securityEvents}
                 onCheckedChange={(checked) =>
@@ -269,7 +283,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Alertes de performance</span>
+              <span className="text-sm">{tAdmin('settings.performanceAlerts')}</span>
               <Switch
                 checked={notifications.performanceAlerts}
                 onCheckedChange={(checked) =>
@@ -279,7 +293,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Rapports quotidiens</span>
+              <span className="text-sm">{tAdmin('settings.dailyReports')}</span>
               <Switch
                 checked={notifications.dailyReports}
                 onCheckedChange={(checked) =>
@@ -289,7 +303,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Rapports hebdomadaires</span>
+              <span className="text-sm">{tAdmin('settings.weeklyReports')}</span>
               <Switch
                 checked={notifications.weeklyReports}
                 onCheckedChange={(checked) =>
@@ -305,13 +319,13 @@ function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Paramètres Système
+              {tAdmin('settings.systemSettings')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label>Langue par défaut</Label>
+                <Label>{tAdmin('settings.defaultLanguage')}</Label>
                 <Select
                   value={preferences.language}
                   onValueChange={(value) => setPreferences({ ...preferences, language: value })}
@@ -320,14 +334,14 @@ function AdminSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">{tCommon('languages.french')}</SelectItem>
+                    <SelectItem value="en">{tCommon('languages.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Fuseau Horaire</Label>
+                <Label>{tAdmin('settings.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => setPreferences({ ...preferences, timezone: value })}
@@ -336,8 +350,8 @@ function AdminSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Africa/Douala">Afrique/Douala</SelectItem>
-                    <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
+                    <SelectItem value="Africa/Douala">{tAdmin('settings.africaDouala')}</SelectItem>
+                    <SelectItem value="Europe/Paris">{tAdmin('settings.europeParis')}</SelectItem>
                     <SelectItem value="UTC">UTC</SelectItem>
                   </SelectContent>
                 </Select>
@@ -346,7 +360,7 @@ function AdminSettings() {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label>Timeout de session (minutes)</Label>
+                <Label>{tAdmin('settings.sessionTimeout')}</Label>
                 <Select
                   value={preferences.sessionTimeout.toString()}
                   onValueChange={(value) =>
@@ -357,16 +371,16 @@ function AdminSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="60">1 heure</SelectItem>
-                    <SelectItem value="120">2 heures</SelectItem>
+                    <SelectItem value="15">{tAdmin('settings.minutes15')}</SelectItem>
+                    <SelectItem value="30">{tAdmin('settings.minutes30')}</SelectItem>
+                    <SelectItem value="60">{tAdmin('settings.hour1')}</SelectItem>
+                    <SelectItem value="120">{tAdmin('settings.hours2')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Fréquence des sauvegardes</Label>
+                <Label>{tAdmin('settings.backupFrequency')}</Label>
                 <Select
                   value={preferences.backupFrequency}
                   onValueChange={(value) =>
@@ -377,9 +391,9 @@ function AdminSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hourly">Toutes les heures</SelectItem>
-                    <SelectItem value="daily">Quotidienne</SelectItem>
-                    <SelectItem value="weekly">Hebdomadaire</SelectItem>
+                    <SelectItem value="hourly">{tAdmin('settings.hourly')}</SelectItem>
+                    <SelectItem value="daily">{tAdmin('settings.daily')}</SelectItem>
+                    <SelectItem value="weekly">{tAdmin('settings.weekly')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -388,7 +402,7 @@ function AdminSettings() {
             <Separator />
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Mode maintenance</span>
+              <span className="text-sm">{tAdmin('settings.maintenanceMode')}</span>
               <Switch
                 checked={preferences.maintenanceMode}
                 onCheckedChange={(checked) =>
@@ -398,7 +412,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Autoriser les inscriptions</span>
+              <span className="text-sm">{tAdmin('settings.enableRegistration')}</span>
               <Switch
                 checked={systemSettings.enableRegistration}
                 onCheckedChange={(checked) =>
@@ -408,7 +422,7 @@ function AdminSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm">Vérification email obligatoire</span>
+              <span className="text-sm">{tAdmin('settings.requireEmailVerification')}</span>
               <Switch
                 checked={systemSettings.requireEmailVerification}
                 onCheckedChange={(checked) =>
@@ -424,7 +438,7 @@ function AdminSettings() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Sécurité
+              {tAdmin('settings.security')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -439,11 +453,9 @@ function AdminSettings() {
                 <div>
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="h-4 w-4" />
-                    Authentification à deux facteurs (MFA)
+                    {tAdmin('settings.mfaTitle')}
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    Ajoutez une couche de sécurité supplémentaire à votre compte administrateur
-                  </p>
+                  <p className="text-sm text-gray-600">{tAdmin('settings.mfaDescription')}</p>
                 </div>
                 <Switch
                   checked={mfaStatus.enabled}
@@ -455,22 +467,17 @@ function AdminSettings() {
               {mfaStatus.enabled && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    MFA est activé sur votre compte administrateur. Votre compte est protégé.
-                  </AlertDescription>
+                  <AlertDescription>{tAdmin('settings.mfaEnabled')}</AlertDescription>
                 </Alert>
               )}
 
               {mfaStatus.setupRequired && (
                 <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h5 className="font-medium">Configuration MFA Administrateur</h5>
+                  <h5 className="font-medium">{tAdmin('settings.mfaSetup')}</h5>
 
                   {mfaStatus.qrCode && (
                     <div className="space-y-3">
-                      <p className="text-sm">
-                        1. Scannez ce QR code avec votre application d'authentification (Google
-                        Authenticator, Authy, etc.)
-                      </p>
+                      <p className="text-sm">{tAdmin('settings.scanQrCode')}</p>
                       <div className="flex justify-center">
                         <img src={mfaStatus.qrCode} alt="QR Code MFA" className="border rounded" />
                       </div>

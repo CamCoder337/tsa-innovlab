@@ -1,0 +1,406 @@
+{
+  "title": "Shop",
+  "subtitle": "Browse our collection of quality refurbished parts from all your suppliers",
+  "categories": "Categories",
+  "allCategories": "All Categories",
+  "featuredProducts": "Featured Products",
+  "newArrivals": "New Arrivals",
+  "bestSellers": "Best Sellers",
+  "onSale": "On Sale",
+  "searchPlaceholder": "Search products...",
+  "noResults": "No products found",
+  "showingResults": "Showing {{count}} results",
+  "loadMore": "Load More",
+  "viewAll": "View All",
+  "quickView": "Quick View",
+  "compare": "Compare",
+  "wishlist": "Wishlist",
+  "addToWishlist": "Add to Wishlist",
+  "removeFromWishlist": "Remove from Wishlist",
+  "share": "Share",
+  "productDetails": {
+    "overview": "Overview",
+    "specifications": "Specifications",
+    "reviews": "Customer Reviews",
+    "shipping": "Shipping",
+    "returns": "Returns"
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset",
+    "searchPlaceholder": "Search products...",
+    "categories": "Categories",
+    "noCategoriesAvailable": "No categories available",
+    "priceRange": "Price Range",
+    "category": "Category",
+    "brand": "Brand",
+    "condition": "Condition",
+    "availability": "Availability",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock",
+    "applyFilters": "Apply Filters",
+    "clearFilters": "Clear Filters",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "rating": "Minimum rating"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "noResults": "No products found",
+    "noVisualResults": "No similar products found",
+    "tryAnotherImage": "Try with another image"
+  },
+  "sorting": {
+    "sortBy": "Sort by",
+    "newest": "Newest",
+    "priceAsc": "Price ascending",
+    "nameAZ": "Name (A-Z)",
+    "stockAvailable": "Stock available",
+    "priceDesc": "Price descending",
+    "rating": "Rating",
+    "popularity": "Popularity"
+  },
+  "alerts": {
+    "lowStockTitle": "Low Stock Alert",
+    "lowStockMessage": "Only {{count}} left in stock!"
+  },
+  "product": {
+    "title": "Products",
+    "product": "Product",
+    "name": "Product name",
+    "images": "Images",
+    "availability": "Availability",
+    "viewDetails": "View details",
+    "rating": "Rating",
+    "addToCart": "Add to Cart",
+    "buyNow": "Buy Now",
+    "quantity": "Quantity",
+    "decreaseQuantity": "Decrease Quantity",
+    "increaseQuantity": "Increase Quantity",
+    "price": "Price",
+    "originalPrice": "Original Price",
+    "discount": "Discount",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock ({{count}} remaining)",
+    "stockCount": "{{count}} in stock",
+    "reference": "Reference",
+    "brand": "Brand",
+    "category": "Category",
+    "weight": "Weight",
+    "dimensions": "Dimensions",
+    "warranty": "Warranty",
+    "condition": "Condition",
+    "new": "New",
+    "used": "Used",
+    "refurbished": "Refurbished",
+    "description": "Description",
+    "specifications": "Specifications",
+    "reviews": "Reviews",
+    "seller": "Seller",
+    "sellerInfo": "Seller Information",
+    "contactSeller": "Contact Seller",
+    "viewSellerProfile": "View Seller Profile",
+    "relatedProducts": "Related Products",
+    "recentlyViewed": "Recently Viewed",
+    "addedToCart": "Added to Cart",
+    "errorAddingToCart": "Error adding to cart",
+    "shareProduct": "Share this product",
+    "fastDelivery": "Fast delivery",
+    "deliveryTime": "Delivery time",
+    "warrantyDuration": "Warranty duration",
+    "returnPolicy": "Return policy",
+    "returnTime": "Return time",
+    "descriptionInfo": "Detailed information about this product",
+    "unit": "Unit",
+    "stock": "Stock",
+    "createdAt": "Created on",
+    "updatedAt": "Updated on",
+    "specificationsInfo": "Detailed technical specifications",
+    "reviewsInfo": "Customer reviews and ratings",
+    "noReviews": "No reviews",
+    "noReviewsDescription": "This product hasn't received any reviews yet. Be the first to rate it!",
+    "writeReview": "Write a review",
+    "noSellerInfo": "Seller information not available",
+    "soldBy": "Sold by",
+    "available": "available",
+    "availablePlural": "available",
+    "adding": "Adding..."
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "summary": "Cart Summary",
+    "continueShopping": "Continue Shopping",
+    "reviewItems": "Review your selected parts before checkout",
+    "empty": {
+      "title": "Your cart is empty",
+      "message": "Add some quality parts to get started",
+      "browseProducts": "Browse Products"
+    },
+    "item": {
+      "reference": "Ref",
+      "quantity": "Quantity",
+      "price": "Price",
+      "each": "each",
+      "remove": "Remove",
+      "updateQuantity": "Update quantity"
+    },
+    "delivery": {
+      "title": "Delivery",
+      "address": "Delivery Address",
+      "useGoogleMaps": "Use Google Maps",
+      "manualEntry": "Manual Entry",
+      "searchAddress": "Search your delivery address",
+      "addressPlaceholder": "Type your address or use your location...",
+      "addressSelected": "Address Selected",
+      "coordinates": "Coordinates",
+      "fullAddress": "Your complete address...",
+      "city": "City",
+      "cityPlaceholder": "Your city",
+      "postalCode": "Postal Code",
+      "postalCodePlaceholder": "Postal code",
+      "instructions": "Delivery Instructions",
+      "instructionsPlaceholder": "Access code, floor, etc.",
+      "selectAddressRequired": "Please select a delivery address"
+    },
+    "orderSummary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal ({{count}} items)",
+      "delivery": "Delivery",
+      "deliveryOptions": {
+        "label": "Delivery Option",
+        "standard": "Standard (3-5 days) - 2,000 FCFA",
+        "express": "Express (1-2 days) - 5,000 FCFA",
+        "sameDay": "Same Day - 10,000 FCFA"
+      },
+      "totalWeight": "Total Weight",
+      "total": "Total",
+      "promoCode": "Promo code",
+      "apply": "Apply",
+      "proceedToCheckout": "Proceed to Checkout"
+    },
+    "deliveryInfo": {
+      "title": "Delivery Information",
+      "qualityTested": "All parts quality-tested and guaranteed",
+      "freeReturns": "Free returns within 30 days",
+      "securePayment": "Secure payment processing"
+    },
+    "recommendations": {
+      "title": "You might also need",
+      "add": "Add"
+    }
+  },
+  "recommendations": {
+    "title": "Recommendations",
+    "popularProducts": "Popular Products",
+    "recommendedForYou": "Recommended for You",
+    "similarProducts": "Similar Products",
+    "popularDescription": "The most requested products by our customers",
+    "personalizedDescription": "Personalized selection based on your preferences",
+    "similarDescription": "Other products that might interest you",
+    "defaultDescription": "Discover our recommendations",
+    "ai": "AI",
+    "addedToCart": "{{productName}} has been added to your cart",
+    "noRecommendations": "No recommendations available"
+  },
+  "visualSearch": {
+    "title": "Visual Search",
+    "searchByImage": "Search by Image",
+    "selectImage": "Select Image",
+    "takePhoto": "Take Photo",
+    "instruction": "Select or take a photo of the product you're looking for",
+    "selectImageFirst": "Please select an image first",
+    "searchCompleted": "Search completed!",
+    "searchError": "Error during visual search",
+    "imageTooLarge": "Image is too large (max 5MB)",
+    "invalidImage": "Invalid image format",
+    "selectedImage": "Selected Image"
+  },
+  "stock": "Stock",
+  "outOfStock": "Out of Stock",
+  "payment": {
+    "title": "Complete Payment",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal ({{count}} items)",
+    "delivery": "Delivery ({{option}})",
+    "total": "Total"
+  },
+  "orders": {
+    "title": "My Orders",
+    "subtitle": "Track your order status and download invoices",
+    "refresh": "Refresh",
+    "order": "Order",
+    "orders": "Orders",
+    "orderNumber": "Order number",
+    "orderDate": "Order date",
+    "items": "Items",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "tax": "Tax",
+    "viewDetails": "View details",
+    "trackOrder": "Track order",
+    "cancelOrder": "Cancel order",
+    "reorder": "Reorder",
+    "payment": {
+      "method": "Payment method",
+      "status": "Payment status",
+      "methods": {
+        "orange_money": "Orange Money",
+        "mtn_momo": "MTN Mobile Money",
+        "wave": "Wave",
+        "bank_transfer": "Bank transfer",
+        "cash_on_delivery": "Cash on delivery"
+      }
+    },
+    "shipping": {
+      "address": "Delivery address",
+      "method": "Delivery method",
+      "cost": "Delivery cost",
+      "tracking": "Tracking",
+      "estimatedDelivery": "Estimated delivery"
+    },
+    "search": {
+      "placeholder": "Search by order number, name or product...",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "sortBy": "Sort by",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "amountDesc": "Amount descending",
+      "amountAsc": "Amount ascending",
+      "statusAZ": "Status A-Z"
+    },
+    "results": {
+      "found": "{{count}} order found",
+      "foundPlural": "{{count}} orders found",
+      "forSearch": "for \"{{term}}\"",
+      "withStatus": "with status \"{{status}}\""
+    },
+    "empty": {
+      "noOrders": "No orders",
+      "noResults": "No results",
+      "noOrdersMessage": "You haven't placed any orders yet. Discover our catalog to start shopping.",
+      "noResultsMessage": "No orders match your search criteria. Try modifying your filters.",
+      "discoverProducts": "Discover Products"
+    },
+    "orderItem": {
+      "number": "Order {{number}}",
+      "items": "{{count}} item",
+      "itemsPlural": "{{count}} items",
+      "orderedItems": "Ordered items:",
+      "moreItems": "+{{count}} other item",
+      "moreItemsPlural": "+{{count}} other items",
+      "deliveredOn": "Delivered on {{date}}",
+      "shippedOn": "Shipped on {{date}}",
+      "trackingNumber": "Tracking number: {{number}}"
+    },
+    "status": {
+      "pending": {
+        "label": "Pending",
+        "description": "Order awaiting payment"
+      },
+      "paid": {
+        "label": "Paid",
+        "description": "Payment confirmed"
+      },
+      "processing": {
+        "label": "Processing",
+        "description": "Order being prepared"
+      },
+      "shipped": {
+        "label": "Shipped",
+        "description": "Order shipped"
+      },
+      "delivered": {
+        "label": "Delivered",
+        "description": "Order delivered successfully"
+      },
+      "cancelled": {
+        "label": "Cancelled",
+        "description": "Order cancelled"
+      },
+      "refunded": {
+        "label": "Refunded",
+        "description": "Order refunded"
+      }
+    }
+  },
+  "orderDetails": {
+    "backToOrders": "My Orders",
+    "orderNumber": "Order {{number}}",
+    "orderedOn": "Ordered on {{date}}",
+    "tracking": {
+      "title": "Order Tracking",
+      "created": "Order Created",
+      "createdDesc": "Your order has been registered",
+      "paid": "Payment Confirmed",
+      "paidDesc": "Your payment has been processed successfully",
+      "processing": "Processing",
+      "processingDesc": "Your order is being prepared",
+      "shipped": "Order Shipped",
+      "shippedDesc": "Your order has been shipped",
+      "shippedWithTracking": "Tracking number: {{number}}",
+      "delivered": "Order Delivered",
+      "deliveredDesc": "Your order has been delivered successfully",
+      "cancelled": "Order Cancelled",
+      "cancelledDesc": "Your order has been cancelled"
+    },
+    "items": {
+      "title": "Ordered Items",
+      "reference": "Ref",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price"
+    },
+    "delivery": {
+      "title": "Delivery Information",
+      "address": "Delivery Address",
+      "trackingNumber": "Tracking Number",
+      "instructions": "Delivery Instructions"
+    },
+    "summary": {
+      "title": "Order Summary",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping Cost",
+      "tax": "Tax",
+      "total": "Total",
+      "paymentMethod": "Payment Method: ",
+      "paymentReference": "Reference"
+    },
+    "customer": {
+      "title": "Customer Information",
+      "name": "Name:"
+    },
+    "actions": {
+      "downloadInvoice": "Download Invoice",
+      "trackPackage": "Track Package",
+      "continueShopping": "Continue Shopping",
+      "backToOrders": "Back to Orders",
+      "copyTracking": "Copy Tracking"
+    },
+    "notFound": {
+      "title": "Order Not Found",
+      "message": "This order does not exist or you do not have access to it",
+      "viewOrders": "View My Orders"
+    }
+  },
+  "validation": {
+    "addressRequired": "Delivery address is required",
+    "cityRequired": "City is required",
+    "notesMaxLength": "Notes cannot exceed 200 characters"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "step1": "Shipping Information",
+    "step2": "Payment Method",
+    "step3": "Confirmation",
+    "billingAddress": "Billing Address",
+    "shippingAddress": "Shipping Address",
+    "sameAsBilling": "Same as billing address",
+    "paymentMethod": "Payment Method",
+    "orderSummary": "Order Summary",
+    "placeOrder": "Place Order"
+  }
+}

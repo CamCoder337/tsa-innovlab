@@ -1,6 +1,6 @@
 import type { Mission } from '@/types/mission.types';
 import type { User } from '@/types/auth.types';
-import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
+import { getStatusColor } from '@/lib/mission-utils';
 
 export interface DashboardMetrics {
   activeMissions: number;
@@ -62,15 +62,15 @@ export class DashboardUtils {
 
     const todayEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= todayStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const weeklyEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= weekStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const monthlyEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= monthStart)
-      .reduce((sum, m) => sum + (m.budgetMax || 0), 0);
+      .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     return {
       today: todayEarnings,
@@ -79,7 +79,11 @@ export class DashboardUtils {
     };
   }
 
-  static getRecentMissions(missions: Mission[], limit: number = 5) {
+  static getRecentMissions(
+    missions: Mission[],
+    limit: number = 5,
+    t: (key: string, options?: Record<string, unknown>) => string
+  ) {
     return missions
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, limit)
@@ -87,10 +91,10 @@ export class DashboardUtils {
         ...mission,
         route: `${mission.adresseDepart?.city || 'N/A'} → ${mission.adresseArrivee?.city || 'N/A'}`,
         statusColor: getStatusColor(mission.status),
-        statusLabel: getStatusLabel(mission.status),
+        statusLabel: mission.status,
         progress: this.calculateProgress(mission.status),
-        timeAgo: this.getTimeAgo(mission.updatedAt),
-        formattedBudget: this.formatCurrency(mission.budgetMax || 0),
+        timeAgo: this.getTimeAgo(mission.updatedAt, t),
+        formattedBudget: this.formatCurrency(mission.budgetMin || 0),
       }));
   }
 
@@ -119,13 +123,25 @@ export class DashboardUtils {
     return `${value.toFixed(1)}%`;
   }
 
-  static getTimeAgo(date: string): string {
+  static getTimeAgo(
+    date: string,
+    t?: (key: string, options?: Record<string, unknown>) => string
+  ): string {
     const now = new Date();
     const past = new Date(date);
     const diffMs = now.getTime() - past.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
 
+    if (t) {
+      if (diffHours < 1) return t('time.lessThanHour');
+      if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
+      if (diffDays < 7)
+        return t('time.daysAgo', { days: diffDays, plural: diffDays > 1 ? 's' : '' });
+      return past.toLocaleDateString();
+    }
+
+    // Fallback to French if no translation function
     if (diffHours < 1) return "Il y a moins d'une heure";
     if (diffHours < 24) return `Il y a ${diffHours}h`;
     if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
@@ -224,16 +240,16 @@ export class DashboardUtils {
     };
   }
 
-  static calculateActiveUsersToday(users: User[]): number {
-    const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  // static calculateActiveUsersToday(users: User[]): number {
+  //   const today = new Date();
+  //   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    return users?.filter((user) => {
-      if (!user.lastLoginAt) return false;
-      const lastLogin = new Date(user.lastLoginAt);
-      return lastLogin >= todayStart;
-    }).length;
-  }
+  //   return users?.filter((user) => {
+  //     if (!user.lastLoginAt) return false;
+  //     const lastLogin = new Date(user.lastLoginAt);
+  //     return lastLogin >= todayStart;
+  //   }).length;
+  // }
 
   static calculateNewUsersThisMonth(users: User[]): number {
     const now = new Date();

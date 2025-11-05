@@ -1,82 +1,107 @@
 import CreateMissionForm from '@/components/forms/CreateMissionForm';
 import type { CreateMissionDto } from '@/types/mission.types';
 import { useAddresses } from '@/hooks/useAddresses';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useMissions } from '@/hooks/useMissions';
+import { useErrorsTranslation, useMissionsTranslation } from '@/hooks/useTranslation';
+import { useCallback } from 'react';
+import { useMissionStore } from '@/stores/missionStore';
 
 export default function CreateMission() {
   const { addresses } = useAddresses();
-  const { currentMission, error, createMission, updateMission, publishMission } = useMissions();
+  const { currentMission, createMission, updateMission, publishMission, setError } = useMissions();
   const navigate = useNavigate();
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tErrors } = useErrorsTranslation();
 
-  const handleCreateMission = async (data: CreateMissionDto, action: string, publish: boolean) => {
-    // Format dates to ISO 8601 without milliseconds
-    const formattedData = {
-      ...data,
-      dateDepartEstime: data.dateDepartEstime
-        ? new Date(data.dateDepartEstime).toISOString().replace(/\.\d+Z$/, '')
-        : '',
-      dateArriveePrevue: data.dateArriveePrevue
-        ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
-        : '',
-    };
+  const handleCreateMission = useCallback(
+    async (data: CreateMissionDto, action: string, publish: boolean) => {
+      try {
+        // Format dates to ISO 8601 without milliseconds
+        const formattedData = {
+          ...data,
+          dateDepartEstime: data.dateDepartEstime
+            ? new Date(data.dateDepartEstime).toISOString().replace(/\.\d+Z$/, '')
+            : '',
+          dateArriveePrevue: data.dateArriveePrevue
+            ? new Date(data.dateArriveePrevue).toISOString().replace(/\.\d+Z$/, '')
+            : '',
+        };
 
-    let missionId: string | undefined;
+        let missionId: string | undefined;
 
-    if (currentMission && action === 'update') {
-      await updateMission(currentMission.id, formattedData);
-      missionId = currentMission.id;
-    } else {
-      const newMission = await createMission(formattedData);
-      missionId = newMission?.id;
-    }
+        if (currentMission && action === 'update') {
+          toast.loading(tMissions('messages.updatingMission'));
+          await updateMission(currentMission.id, formattedData);
+          missionId = currentMission.id;
+        } else {
+          toast.loading(tMissions('messages.creatingMission'));
+          const newMission = await createMission(formattedData);
+          missionId = newMission?.id;
+        }
 
-    if (error) {
-      toast.error(error || 'Une erreur est survenue');
-      return;
-    }
+        toast.dismiss();
 
-    if (currentMission && action === 'update') {
-      toast.success('Mission modifiée avec succès');
-    } else {
-      toast.success('Mission créée avec succès');
-    }
+        const { error } = useMissionStore.getState();
 
-    if (!publish) {
-      setTimeout(() => {
-        navigate('/app/missions');
-      }, 2500);
-      return;
-    }
+        // Check if the operation failed
+        if (error || !missionId) {
+          toast.error(tErrors('general.somethingWentWrong'));
+          return;
+        }
 
-    // If publish is true and we have a mission ID, publish it
-    if (publish && missionId) {
-      await publishMission(missionId);
+        console.log('no Error');
 
-      if (error) {
-        console.error(error);
-        toast.error(error);
-        return;
+        if ((currentMission || missionId) && action === 'update') {
+          toast.success(tMissions('messages.modifiedSuccess'));
+        } else {
+          toast.success(tMissions('messages.createdSuccess'));
+        }
+
+        if (!publish) {
+          setTimeout(() => {
+            setError(null);
+            navigate('/app/missions');
+          }, 1500);
+          return;
+        }
+
+        // If publish is true and we have a mission ID, publish it
+        if (publish && missionId) {
+          toast.loading(tMissions('messages.publishingMission'));
+          await publishMission(missionId);
+          toast.dismiss();
+
+          const { error } = useMissionStore.getState();
+
+          if (error) {
+            toast.error(error || tErrors('general.somethingWentWrong'));
+            return;
+          }
+
+          toast.success(tMissions('messages.publishedSuccess'));
+          setTimeout(() => {
+            navigate(`/app/missions/${missionId}`);
+          }, 2500);
+        }
+      } catch (err) {
+        console.error('Error in handleCreateMission:', err);
+        toast.error(tErrors('general.somethingWentWrong'));
       }
-
-      toast.success('Mission publiée avec succès');
-      setTimeout(() => {
-        navigate(`/app/missions/${missionId}`);
-      }, 2500);
-    }
-  };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentMission, createMission]
+  );
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          {currentMission ? 'Modifier une Mission' : 'Créer une Nouvelle Mission'}
+    <div className="flex-1 max-w-4xl mx-auto p-3 sm:p-4 lg:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {currentMission ? tMissions('create.editTitle') : tMissions('create.title')}
         </h1>
-        <p className="text-gray-600">
-          {currentMission
-            ? 'Modifiez les informations de votre mission'
-            : 'Publiez vos besoins de transport et connectez-vous avec des transporteurs fiables'}
+        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+          {currentMission ? tMissions('create.editSubtitle') : tMissions('create.subtitle')}
         </p>
       </div>
 

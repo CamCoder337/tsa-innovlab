@@ -221,7 +221,7 @@ export const useAddressStore = create<AddressStore>()(
       },
     }),
     {
-      name: 'tsa-address-store',
+      name: 'tsa_addresses',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         addresses: state.addresses,

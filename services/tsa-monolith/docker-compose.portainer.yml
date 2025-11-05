@@ -166,7 +166,10 @@ services:
       CACHE_TTL_SECONDS: ${AI_CACHE_TTL:-300}
 
       # CORS Origins
-      ALLOWED_ORIGINS: ${AI_ALLOWED_ORIGINS:-["http://localhost:3000", "http://localhost:5173", "http://localhost:3333"]}
+      ALLOWED_ORIGINS: ${AI_ALLOWED_ORIGINS:-["http://localhost:3000", "http://localhost:5173", "http://localhost:3333", "http://51.91.77.0", "http://51.91.77.0:30000", "http://51.91.77.0:30001", "http://51.91.77.0:30002"]}
+
+      # Trusted Hosts (for TrustedHostMiddleware)
+      ALLOWED_HOSTS: ${AI_ALLOWED_HOSTS:-["*.tsa-contest.com", "localhost", "localhost:8000", "tsa-ai", "tsa-ai-backend", "tsa-ai-backend:8000", "51.91.77.0", "51.91.77.0:30002"]}
 
       # ML Models
       MODELS_PATH: ${AI_MODELS_PATH:-ml_models}
@@ -175,6 +178,11 @@ services:
 
       # Internal service communication
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-key-change-in-production}
+
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
+      LLM_ENABLED: ${LLM_ENABLED:-true}
+      GOOGLE_CREDENTIALS_JSON: ${GOOGLE_CREDENTIALS_JSON}
 
     ports:
       - '${AI_PORT:-30002}:8000'
@@ -189,7 +197,7 @@ services:
       - InnovlabG1
 
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/ai/health']
+      test: ['CMD', 'curl', '-f', 'http://tsa-ai:8000/api/ai/health/live']
       interval: 30s
       timeout: 15s
       retries: 5

@@ -12,9 +12,11 @@ import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useAllAdminStats } from '@/hooks/useAdminStats';
 
 export default function Layout() {
   const { user } = useAuth();
+  const { fetchAllStats } = useAllAdminStats();
   const { fetchCart } = useCart();
   const { fetchAdminCategories, fetchCategories } = useCategories();
   const { fetchConversations } = useChat();
@@ -25,7 +27,6 @@ export default function Layout() {
   const { fetchUsers, fetchUserStats } = useUsers();
 
   useEffect(() => {
-    console.log('Layout');
     if (user && user.role !== 'client') {
       if (user && user.role !== 'affreteur') fetchAllMissions();
       if (user && user.role !== 'admin') {
@@ -38,6 +39,7 @@ export default function Layout() {
         fetchProductStats();
         fetchUsers();
         fetchUserStats();
+        fetchAllStats();
       }
       fetchConversations();
       fetchNotifications();
@@ -54,22 +56,26 @@ export default function Layout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // WebSocket initialization is now handled by NotificationProvider
-  // to avoid conflicts and page reloads on notification receive
-
   return (
     <SidebarProvider>
-      <div className="flex h-screen bg-gray-50 flex-1 flex-col">
-        <Header />
-        <main className="flex h-full">
-          <div>
+      <>
+        {/* FIXED HEADER - MUST HAVE HEIGHT */}
+        <Header className="fixed top-0 left-0 right-0 z-50 h-16 border-b bg-white dark:bg-gray-900 dark:border-gray-800" />
+
+        {/* MAIN APP - Full height, starts below header */}
+        <div className="flex-1 pt-16 flex flex-col bg-gray-50 dark:bg-gray-950">
+          {/* MAIN CONTENT - TAKES REMAINING HEIGHT */}
+          <main className="flex flex-1 overflow-hidden">
+            {/* SIDEBAR */}
             <Sidebar />
-          </div>
-          <div className="w-full top-16 relative">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+
+            {/* OUTLET CONTENT - FULL HEIGHT & WIDTH */}
+            <section className="flex flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
+              <Outlet /> {/* Renders Chat, Dashboard, etc. */}
+            </section>
+          </main>
+        </div>
+      </>
     </SidebarProvider>
   );
 }

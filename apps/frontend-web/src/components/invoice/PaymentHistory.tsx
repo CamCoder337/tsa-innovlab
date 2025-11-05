@@ -1,12 +1,20 @@
-import React, { useEffect, useState } from 'react';
 import type { Payment } from '@/types/payment.types';
 import { paymentService } from '@/services/payment.service';
+import { useEffect, useState } from 'react';
+import {
+  useCommonTranslation,
+  useErrorsTranslation,
+  usePaymentTranslation,
+} from '@/hooks/useTranslation';
 
 interface PaymentHistoryProps {
   missionId?: string;
 }
 
 export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => {
+  const { t: tErrors } = useErrorsTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tPayment } = usePaymentTranslation();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +26,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
         const data = await paymentService.getPaymentHistory({ missionId });
         setPayments(data.payments);
       } catch (err) {
-        setError("Erreur lors du chargement de l'historique des paiements");
+        setError(tErrors('payment.paymentHistoryLoadError'));
         console.error(err);
       } finally {
         setLoading(false);
@@ -26,6 +34,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
     };
 
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [missionId]);
 
   const getStatusColor = (status: string) => {
@@ -103,10 +112,10 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
             d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
           />
         </svg>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun paiement</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Aucun paiement n'a été effectué pour le moment.
-        </p>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">
+          {tPayment('messages.noPayments')}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">{tPayment('messages.noPaymentsDescription')}</p>
       </div>
     );
   }
@@ -121,22 +130,22 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                 scope="col"
                 className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
               >
-                ID
+                {tPayment('labels.id')}
               </th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                Date
+                {tPayment('labels.date')}
               </th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                Montant
+                {tPayment('labels.amount')}
               </th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                Statut
+                {tCommon('status.title')}
               </th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                Méthode
+                {tPayment('labels.method')}
               </th>
               <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{tCommon('actions.title')}</span>
               </th>
             </tr>
           </thead>
@@ -158,11 +167,11 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                       payment.status
                     )}`}
                   >
-                    {payment.status}
+                    {tCommon(`status.${payment.status}`)}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  {payment.method}
+                  {tPayment(`labels.${payment.method}`)}
                 </td>
                 {/* <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                   {payment.receiptUrl && (
@@ -170,9 +179,9 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ missionId }) => 
                       href={payment.receiptUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-tsa-blue dark:text-tsa-white hover:text-blue-900"
                     >
-                      Reçu
+                      {tPayment('labels.receipt')}
                     </a>
                   )}
                 </td> */}

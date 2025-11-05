@@ -1,14 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type {
-  ConversationListItem,
-  CreateDirectConversationRequest,
-  CreateMissionConversationRequest,
-  SendMessageRequest,
-  ChatMessageEvent,
-  ChatMessageReadEvent,
-  ChatTypingEvent,
-  ChatState,
+import {
+  type ConversationListItem,
+  type CreateDirectConversationRequest,
+  type CreateMissionConversationRequest,
+  type SendMessageRequest,
+  type ChatMessageEvent,
+  type ChatMessageReadEvent,
+  type ChatTypingEvent,
+  type ChatState,
+  type ChatbotConversation,
+  type ChatbotProfile,
+  type ChatbotMessage,
+  type ChatbotResponse,
+  ConversationType,
+  MessageType,
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
@@ -21,12 +27,223 @@ const initialState = {
   isLoading: false,
   error: null,
   unreadCount: 0,
+  chatbot: null,
+  chatbotCapabilities: {
+    canHandleMissions: true,
+    canHandleTracking: true,
+    canHandleBoutique: true,
+    canHandleVehicles: true,
+    canHandleSupport: true,
+    supportedLanguages: ['fr', 'en'],
+  },
+};
+
+// Chatbot response generation logic
+const generateChatbotResponse = (userInput: string): ChatbotResponse => {
+  const input = userInput.toLowerCase().trim();
+
+  // Mission-related keywords
+  if (
+    input.includes('mission') ||
+    input.includes('transport') ||
+    input.includes('livraison') ||
+    input.includes('colis')
+  ) {
+    return {
+      content:
+        "Je peux vous aider avec la gestion des missions de transport. Vous pouvez créer une nouvelle mission, suivre vos missions en cours, ou consulter l'historique de vos missions dans la section 'Missions'.",
+      category: 'missions',
+      relatedTopics: ['créer mission', 'suivi mission', 'historique'],
+    };
+  }
+
+  // Tracking-related keywords
+  if (
+    input.includes('suivi') ||
+    input.includes('tracking') ||
+    input.includes('localisation') ||
+    input.includes('position')
+  ) {
+    return {
+      content:
+        "Pour le suivi de vos missions, rendez-vous dans la section 'Suivi' où vous pourrez voir la position en temps réel de vos transporteurs et l'état d'avancement de vos livraisons.",
+      category: 'tracking',
+      relatedTopics: ['position temps réel', 'état livraison', 'notifications'],
+    };
+  }
+
+  // Boutique-related keywords
+  if (
+    input.includes('boutique') ||
+    input.includes('produit') ||
+    input.includes('achat') ||
+    input.includes('commande')
+  ) {
+    return {
+      content:
+        'Dans notre boutique, vous trouverez des pièces reconditionnées de qualité. Vous pouvez parcourir les catégories, ajouter des articles à votre panier et passer commande facilement.',
+      category: 'boutique',
+      relatedTopics: ['catalogue produits', 'panier', 'commandes'],
+    };
+  }
+
+  // Vehicle-related keywords
+  if (
+    input.includes('véhicule') ||
+    input.includes('camion') ||
+    input.includes('flotte') ||
+    input.includes('vehicle')
+  ) {
+    return {
+      content:
+        "Pour la gestion de votre flotte, vous pouvez ajouter vos véhicules, mettre à jour leurs informations et suivre leur disponibilité dans la section 'Véhicules'.",
+      category: 'vehicles',
+      relatedTopics: ['ajouter véhicule', 'disponibilité', 'maintenance'],
+    };
+  }
+
+  // Support-related keywords
+  if (
+    input.includes('aide') ||
+    input.includes('support') ||
+    input.includes('problème') ||
+    input.includes('help')
+  ) {
+    return {
+      content:
+        "Je suis là pour vous aider ! Vous pouvez me poser des questions sur l'utilisation de la plateforme TSA Logistics. Pour un support technique avancé, contactez notre équipe via la section 'Contact'.",
+      category: 'support',
+      relatedTopics: ['utilisation plateforme', 'contact support', 'FAQ'],
+    };
+  }
+
+  // Greeting keywords
+  if (
+    input.includes('bonjour') ||
+    input.includes('salut') ||
+    input.includes('hello') ||
+    input.includes('hi')
+  ) {
+    return {
+      content:
+        "Bonjour ! Je suis l'assistant TSA Logistics. Je peux vous aider avec vos missions de transport, le suivi de vos livraisons, la boutique de pièces reconditionnées, et bien plus encore. Comment puis-je vous assister aujourd'hui ?",
+      category: 'greeting',
+      relatedTopics: ['missions', 'suivi', 'boutique', 'support'],
+    };
+  }
+
+  // Default response
+  return {
+    content:
+      "Je suis l'assistant TSA Logistics et je peux vous aider avec diverses fonctionnalités de la plateforme : gestion des missions, suivi des livraisons, boutique de pièces reconditionnées, et support général. Que souhaitez-vous savoir ?",
+    category: 'general',
+    relatedTopics: ['missions', 'suivi', 'boutique', 'véhicules', 'support'],
+  };
 };
 
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
       ...initialState,
+
+      // Initialize chatbot
+      initializeChatbot: () => {
+        const chatbotProfile: ChatbotProfile = {
+          id: -1,
+          type: ConversationType.CHATBOT,
+          name: 'TSA Bot',
+          description: 'Assistant virtuel TSA Logistics',
+          isActive: true,
+        };
+
+        const welcomeMessage: ChatbotMessage = {
+          id: 1,
+          content:
+            'Bonjour ! Je suis votre assistant TSA Logistics. Je peux vous aider avec vos missions, le suivi de vos livraisons, la boutique et bien plus encore. Comment puis-je vous assister ?',
+          createdAt: new Date().toISOString(),
+          isFromBot: true,
+          senderId: '-1',
+          conversationId: -1,
+          type: MessageType.TEXT,
+          isRead: true,
+          updatedAt: new Date().toISOString(),
+        };
+
+        const helpMessage: ChatbotMessage = {
+          id: 2,
+          content:
+            "Voici ce que je peux faire pour vous :\n• Gestion des missions de transport\n• Suivi en temps réel\n• Boutique de pièces reconditionnées\n• Support et assistance\n\nN'hésitez pas à me poser vos questions !",
+          createdAt: new Date().toISOString(),
+          isFromBot: true,
+          senderId: '-1',
+          conversationId: -1,
+          type: MessageType.TEXT,
+          isRead: true,
+          updatedAt: new Date().toISOString(),
+        };
+
+        const chatbot: ChatbotConversation = {
+          id: -1,
+          type: ConversationType.CHATBOT,
+          profile: chatbotProfile,
+          messages: [welcomeMessage, helpMessage],
+          lastMessage: helpMessage,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        set({ chatbot });
+      },
+
+      // Send message to chatbot
+      sendChatbotMessage: async (message: string): Promise<ChatbotResponse> => {
+        const { chatbot } = get();
+        if (!chatbot) return generateChatbotResponse(message);
+
+        // Add user message
+        const userMessage: ChatbotMessage = {
+          id: 3,
+          content: message,
+          createdAt: new Date().toISOString(),
+          isFromBot: false,
+          senderId: '-1',
+          conversationId: -1,
+          type: MessageType.TEXT,
+          isRead: true,
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Generate bot response
+        const response = generateChatbotResponse(message);
+        const botMessage: ChatbotMessage = {
+          id: 4,
+          content: response.content,
+          createdAt: new Date().toISOString(),
+          isFromBot: true,
+          senderId: '-1',
+          conversationId: -1,
+          type: MessageType.TEXT,
+          isRead: true,
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Update chatbot conversation
+        const updatedChatbot: ChatbotConversation = {
+          ...chatbot,
+          messages: [...chatbot.messages, userMessage, botMessage],
+          lastMessage: botMessage,
+          updatedAt: new Date().toISOString(),
+        };
+
+        set({ chatbot: updatedChatbot });
+        return response;
+      },
+
+      // Get chatbot response (synchronous version)
+      getChatbotResponse: (userInput: string): ChatbotResponse => {
+        return generateChatbotResponse(userInput);
+      },
 
       fetchConversations: async (filters) => {
         try {
@@ -203,7 +420,7 @@ export const useChatStore = create<ChatState>()(
             throw new Error('Mission ID is required for mission conversations');
           }
           const request: CreateMissionConversationRequest = {
-            missionId: parseInt(missionId),
+            missionId: missionId,
             userId,
           };
           const response = await chatService.createMissionConversation(request);
@@ -371,8 +588,8 @@ export const useChatStore = create<ChatState>()(
       setCurrentConversation: (conversation) => {
         set({ currentConversation: conversation });
 
-        // Mark messages as read when opening conversation
-        if (conversation) {
+        // Mark messages as read when opening conversation (only for regular conversations)
+        if (conversation && conversation.id !== -1) {
           get().markAllMessagesAsRead(conversation.id);
         }
       },
@@ -383,12 +600,13 @@ export const useChatStore = create<ChatState>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'chat-store',
+      name: 'tsa_chat',
       partialize: (state) => ({
         // Only persist conversations and current conversation
         conversations: state.conversations,
         currentConversation: state.currentConversation,
         messages: state.messages,
+        chatbot: state.chatbot,
       }),
     }
   )

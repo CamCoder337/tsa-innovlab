@@ -117,6 +117,8 @@ export const useCartStore = create<CartStore>()(
         const { cart } = get();
 
         try {
+          set({ error: null });
+
           if (currentUser) {
             // Authenticated user - use API
             const addRequest: AddToCartRequest = { productId, quantity };
@@ -303,7 +305,6 @@ export const useCartStore = create<CartStore>()(
         try {
           set({ isLoading: true, error: null });
 
-          console.log('fetchCart');
           if (currentUser) {
             if (!localCart.id && localCart.items.length > 0) {
               await syncWithServer();

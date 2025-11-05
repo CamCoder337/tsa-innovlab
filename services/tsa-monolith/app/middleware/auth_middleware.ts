@@ -35,6 +35,8 @@ export default class AuthMiddleware {
       authHeader = `Bearer ${tokenFromQuery}`
       ctx.request.headers().authorization = authHeader
       console.log('🔧 Token extrait depuis query param pour WebSocket')
+      console.log('🔍 Token préfixe:', tokenFromQuery.substring(0, 20) + '...')
+      console.log('🔍 Token longueur:', tokenFromQuery.length)
     }
 
     // Utiliser l'authentification AdonisJS standard

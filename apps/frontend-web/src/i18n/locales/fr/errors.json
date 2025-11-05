@@ -1,0 +1,120 @@
+{
+  "general": {
+    "error": "Erreur",
+    "somethingWentWrong": "Une erreur s'est produite",
+    "saveError": "Erreur lors de la sauvegarde",
+    "invalidDate": "Date invalide",
+    "tryAgain": "Veuillez réessayer",
+    "contactSupport": "Contactez le support si le problème persiste"
+  },
+  "network": {
+    "connectionError": "Erreur de connexion",
+    "timeout": "Délai d'attente dépassé",
+    "serverError": "Erreur serveur",
+    "notFound": "Ressource non trouvée",
+    "unauthorized": "Non autorisé",
+    "forbidden": "Accès interdit"
+  },
+  "validation": {
+    "invalidInput": "Données invalides",
+    "missingFields": "Champs obligatoires manquants",
+    "invalidFormat": "Format invalide",
+    "duplicateEntry": "Cette entrée existe déjà"
+  },
+  "auth": {
+    "invalidCredentials": "Identifiants invalides",
+    "accountInactive": "Compte inactif. Veuillez consulter vos mails et récuperer votre code de validation",
+    "accountLocked": "Compte verrouillé",
+    "sessionExpired": "Session expirée",
+    "accessDenied": "Accès refusé",
+    "invalidMFA": "Code MFA invalide",
+    "loginFailed": "Échec de connexion. Vérifiez votre connexion et réessayez s'il vous plaît"
+  },
+  "file": {
+    "uploadFailed": "Échec du téléversement",
+    "uploadError": "Erreur lors du téléchargement",
+    "fileTooLarge": "Fichier trop volumineux",
+    "invalidFileType": "Type de fichier non supporté",
+    "corruptedFile": "Fichier corrompu",
+    "noImageSelected": "Aucune image sélectionnée"
+  },
+  "payment": {
+    "paymentFailed": "Paiement échoué",
+    "insufficientFunds": "Fonds insuffisants",
+    "cardDeclined": "Carte refusée",
+    "paymentTimeout": "Délai de paiement dépassé",
+    "paymentMethodInvalid": "Méthode de paiement invalide",
+    "expiryDateInvalid": "Format invalide (MM/AA)",
+    "cvvInvalid": "CVV invalide",
+    "paymentError": "Une erreur est survenue lors du traitement du paiement",
+    "paymentHistoryLoadError": "Erreur lors du chargement de l'historique des paiements"
+  },
+  "shop": {
+    "searchError": "Erreur lors de la recherche visuelle"
+  },
+  "profile": {
+    "documentUploadError": "Erreur lors du téléchargement du document",
+    "updateError": "Erreur lors de la mise à jour du profil",
+    "configError": "Erreur lors de la configuration MFA",
+    "enableError": "Erreur lors de l'activation MFA",
+    "invalidCode": "Code invalide"
+  },
+  "notifications": {
+    "markError": "Erreur lors du marquage de la notification",
+    "markAllError": "Erreur lors du marquage des notifications",
+    "deleteError": "Erreur lors de la suppression"
+  },
+  "missions": {
+    "errorLoading": "Error loading mission: {{error}}",
+    "updateFailed": "Erreur lors de la mise à jour de la mission",
+    "statusUpdateFailed": "Erreur lors de la mise à jour du statut de la mission",
+    "timelineLoadingError": "Erreur lors du chargement de l'historique",
+    "evaluationLoadingError": "Erreur lors du chargement de l'évaluation",
+    "evaluationSubmitError": "Erreur lors de la soumission de l'évaluation",
+    "financialLoadingError": "Erreur lors du chargement des informations financières",
+    "invoiceGenerationError": "Erreur lors de la génération de la facture",
+    "financialAccessDenied": "Accès refusé aux informations financières",
+    "downloadError": "Erreur lors du téléchargement de la facture",
+    "selectVehicleError": "Veuillez sélectionner un véhicule",
+    "applicationError": "Erreur lors de la candidature",
+    "fillAddressesForPricing": "Veuillez remplir les adresses, le poids et le volume pour calculer le prix dynamique",
+    "addressesNeedCoordinates": "Les adresses doivent avoir des coordonnées valides pour calculer la distance",
+    "cannotCalculateDistance": "Impossible de calculer la distance entre les adresses",
+    "dynamicPricingError": "Erreur lors du calcul du prix dynamique"
+  },
+  "maps": {
+    "cannotAccessLocation": "Impossible d'accéder à votre position.",
+    "googleMapsApiKeyMissing": "Clé API Google Maps manquante",
+    "googleMapsNotAvailable": "API Google Maps non disponible après chargement",
+    "googleMapsLoadError": "Impossible de charger Google Maps",
+    "invalidAddressSelected": "Adresse invalide sélectionnée",
+    "addressProcessingError": "Erreur lors du traitement de l'adresse",
+    "addressSearchInitError": "Erreur d'initialisation de la recherche d'adresse. Utilisez la saisie manuelle.",
+    "mapInitError": "Erreur d'initialisation de la carte",
+    "geolocationError": "Erreur de géolocalisation",
+    "geolocationNotSupported": "La géolocalisation n'est pas supportée par ce navigateur",
+    "geolocationPermissionDenied": "Permission de géolocalisation refusée",
+    "geolocationUnavailable": "Position non disponible",
+    "geolocationTimeout": "Délai de géolocalisation dépassé",
+    "permissionDenied": "Permission de géolocalisation refusée",
+    "positionUnavailable": "Position non disponible",
+    "mapConstructorNotAvailable": "Constructeur de carte Google Maps non disponible",
+    "markerCreationError": "Erreur lors de la création du marqueur",
+    "markerCreationFallbackError": "Erreur lors de la création du marqueur de base",
+    "autocompleteInitError": "Erreur d'initialisation de l'autocomplétion",
+    "retryFailed": "Échec de la nouvelle tentative",
+    "noAddressFound": "Aucune adresse trouvée pour votre position",
+    "cannotGetAddress": "Impossible de récupérer l'adresse de votre position",
+    "retryGoogleMaps": "Échec du rechargement. Vérifiez votre connexion internet.",
+    "unknown": "Erreur inconnue"
+  },
+  "admin": {
+    "userSuspendError": "Erreur lors de la suspension de l'utilisateur",
+    "userActivateError": "Erreur lors de l'activation de l'utilisateur",
+    "userDeleteError": "Erreur lors de la suppression de l'utilisateur",
+    "createError": "Erreur lors de la création de l'utilisateur",
+    "downloadError": "Erreur lors du téléchargement",
+    "documentValidateError": "Erreur lors de la validation du document",
+    "documentRejectError": "Erreur lors du rejet du document"
+  }
+}

@@ -2,8 +2,17 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Navigation, X, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
+import {
+  useCommonTranslation,
+  useErrorsTranslation,
+  useFormsTranslation,
+  useMapsTranslation,
+} from '@/hooks/useTranslation';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { toast } from 'sonner';
+import type { Address } from '@/types/address.types';
 
 export interface AddressDetails {
   formatted_address: string;
@@ -13,12 +22,14 @@ export interface AddressDetails {
   administrative_area_level_1?: string;
   country?: string;
   postal_code?: string;
+  label?: string;
   latitude: number;
   longitude: number;
   place_id: string;
 }
 
 interface AddressPickerProps {
+  selectedAddress?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
   onAddressSelect: (address: AddressDetails) => void;
   onClear?: () => void;
   placeholder?: string;
@@ -29,14 +40,19 @@ interface AddressPickerProps {
 }
 
 export default function AddressPicker({
+  selectedAddress,
   onAddressSelect,
   onClear,
-  placeholder = 'Rechercher une adresse...',
+  placeholder,
   value = '',
-  className = '',
   showMap = false,
   disabled = false,
 }: AddressPickerProps) {
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
+  const { t: tForms } = useFormsTranslation();
+  const { t: tMaps } = useMapsTranslation();
+  const defaultPlaceholder = placeholder || tMaps('placeholders.searchAddress');
   const inputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -45,42 +61,101 @@ export default function AddressPicker({
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ key: string; options?: Record<string, unknown> } | null>(
+    null
+  );
+
+  // Extract address details function for useGeolocation
+  // const extractAddressDetailsFromGeocoderResult = useCallback(
+  //   (place: google.maps.GeocoderResult): AddressDetails => {
+  //     const components = place.address_components || [];
+  //     const details: Partial<AddressDetails> = {
+  //       formatted_address: place.formatted_address || '',
+  //       latitude: place.geometry!.location!.lat(),
+  //       longitude: place.geometry!.location!.lng(),
+  //       place_id: place.place_id || '',
+  //       label: place.formatted_address || '',
+  //     };
+
+  //     components.forEach((component) => {
+  //       const types = component.types;
+
+  //       if (types.includes('street_number')) {
+  //         details.street_number = component.long_name;
+  //       } else if (types.includes('plus_code')) {
+  //         details.street_number = component.long_name;
+  //       } else details.street_number = place.plus_code?.global_code;
+  //       if (types.includes('route')) {
+  //         details.route = component.long_name;
+  //       }
+  //       if (types.includes('locality')) {
+  //         details.locality = component.long_name;
+  //       }
+  //       if (types.includes('administrative_area_level_1')) {
+  //         details.administrative_area_level_1 = component.long_name;
+  //       }
+  //       if (types.includes('country')) {
+  //         details.country = component.long_name;
+  //       }
+  //       if (types.includes('postal_code')) {
+  //         details.postal_code = component.long_name;
+  //       }
+  //     });
+
+  //     return details as AddressDetails;
+  //   },
+  //   []
+  // );
+
+  // Initialize useGeolocation hook with proper configuration
+  const {
+    getLocation,
+    reset,
+    isLoading,
+    error: geolocationError,
+  } = useGeolocation({
+    tErrors,
+    tMaps,
+    onAddressSelect: (addressDetails) => {
+      if (addressDetails) {
+        setInputValue(addressDetails.formatted_address);
+        onAddressSelect(addressDetails);
+        if (showMap && mapInstanceRef.current) {
+          updateMapLocation(addressDetails.latitude, addressDetails.longitude);
+        }
+      }
+    },
+    minAccuracy: 80,
+    maxAttempts: 3,
+  });
 
   // Load Google Maps script
   useEffect(() => {
     const loadGoogleMaps = async () => {
       try {
-        console.log('🗺️ Chargement de Google Maps...');
-
-        // Check if API key is available
         const apiKey =
           window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
         if (!apiKey) {
-          throw new Error('Clé API Google Maps manquante');
+          throw new Error(tErrors('maps.googleMapsApiKeyMissing'));
         }
-
-        console.log('🔑 Clé API Google Maps trouvée');
 
         await googleMapsLoader.load({ libraries: ['places', 'marker'] });
 
-        // Verify Google Maps is actually loaded
         if (!window.google?.maps) {
-          throw new Error('Google Maps API non disponible après le chargement');
+          throw new Error(tErrors('maps.googleMapsNotAvailable'));
         }
 
-        console.log('✅ Google Maps chargé avec succès');
         setIsLoaded(true);
         setError(null);
       } catch (error) {
-        console.error('❌ Erreur lors du chargement de Google Maps:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-        setError(`Impossible de charger Google Maps: ${errorMessage}`);
+        console.error(tErrors('maps.googleMapsLoadError'), error);
+        const errorMessage = error instanceof Error ? error.message : tErrors('errors.unknown');
+        setError({ key: 'maps.googleMapsLoadError', options: { error: errorMessage } });
       }
     };
 
     loadGoogleMaps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update input value when prop changes
@@ -96,6 +171,7 @@ export default function AddressPicker({
         latitude: place.geometry!.location!.lat(),
         longitude: place.geometry!.location!.lng(),
         place_id: place.place_id || '',
+        label: place.name || '',
       };
 
       components.forEach((component) => {
@@ -103,15 +179,22 @@ export default function AddressPicker({
 
         if (types.includes('street_number')) {
           details.street_number = component.long_name;
-        } else if (types.includes('route')) {
+        } else if (types.includes('plus_code')) {
+          details.street_number = component.long_name;
+        } else details.street_number = place.plus_code?.global_code || place.vicinity;
+        if (types.includes('route')) {
           details.route = component.long_name;
-        } else if (types.includes('locality')) {
+        }
+        if (types.includes('locality')) {
           details.locality = component.long_name;
-        } else if (types.includes('administrative_area_level_1')) {
+        }
+        if (types.includes('administrative_area_level_1')) {
           details.administrative_area_level_1 = component.long_name;
-        } else if (types.includes('country')) {
+        }
+        if (types.includes('country')) {
           details.country = component.long_name;
-        } else if (types.includes('postal_code')) {
+        }
+        if (types.includes('postal_code')) {
           details.postal_code = component.long_name;
         }
       });
@@ -151,33 +234,49 @@ export default function AddressPicker({
       markerRef.current = new google.maps.marker.AdvancedMarkerElement({
         position,
         map: mapInstanceRef.current,
-        title: 'Adresse de livraison',
+        title: tForms('labels.deliveryAddress'),
         content: markerElement,
       });
     } catch (error) {
-      console.error('Error creating AdvancedMarkerElement:', error);
+      console.error(tErrors('maps.markerCreationError'), error);
       // If AdvancedMarkerElement fails, create a simple marker without custom content
       try {
         markerRef.current = new google.maps.marker.AdvancedMarkerElement({
           position,
           map: mapInstanceRef.current,
-          title: 'Adresse de livraison',
+          title: tForms('labels.deliveryAddress'),
         });
       } catch (fallbackError) {
-        console.error('Error creating basic AdvancedMarkerElement:', fallbackError);
+        console.error(tErrors('maps.markerCreationFallbackError'), fallbackError);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Initialize modern autocomplete with fallback
   useEffect(() => {
     if (!isLoaded || !inputRef.current || disabled || error) return;
+    if (!window.google?.maps?.places?.Autocomplete) {
+      setError({ key: 'maps.googleMapsNotAvailable' });
+      return;
+    }
 
     try {
       const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {
-        types: ['address'],
-        fields: ['formatted_address', 'address_components', 'geometry', 'place_id'],
+        types: ['establishment'],
+        fields: [
+          'name',
+          'formatted_address',
+          'vicinity',
+          'address_components',
+          'geometry',
+          'place_id',
+        ],
         componentRestrictions: { country: ['cm'] },
+        bounds: new google.maps.LatLngBounds(
+          { lat: 1.5, lng: 8.2 }, // SW corner
+          { lat: 13.5, lng: 16.2 } // NE corner
+        ),
       });
 
       autocompleteRef.current = autocomplete;
@@ -186,14 +285,13 @@ export default function AddressPicker({
         const place = autocomplete.getPlace();
 
         if (!place.geometry?.location) {
-          console.error('No geometry data for selected place');
-          setError('Adresse invalide sélectionnée');
+          setError({ key: 'maps.invalidAddressSelected' });
           return;
         }
 
         try {
           const addressDetails = extractAddressDetails(place);
-          setInputValue(addressDetails.formatted_address);
+          setInputValue(addressDetails.label || addressDetails.formatted_address);
           onAddressSelect(addressDetails);
           setError(null);
 
@@ -201,8 +299,8 @@ export default function AddressPicker({
             updateMapLocation(addressDetails.latitude, addressDetails.longitude);
           }
         } catch (err) {
-          console.error('Error processing selected address:', err);
-          setError("Erreur lors du traitement de l'adresse");
+          console.error(tErrors('maps.addressProcessingError'), err);
+          setError({ key: 'maps.addressProcessingError' });
         }
       };
 
@@ -214,8 +312,8 @@ export default function AddressPicker({
         }
       };
     } catch (err) {
-      console.error('Error initializing autocomplete:', err);
-      setError("Erreur d'initialisation de la recherche d'adresse. Utilisez la saisie manuelle.");
+      console.error(tErrors('maps.autocompleteInitError'), err);
+      setError({ key: 'maps.addressSearchInitError' });
     }
   }, [
     isLoaded,
@@ -225,11 +323,19 @@ export default function AddressPicker({
     updateMapLocation,
     onAddressSelect,
     showMap,
+    tErrors,
   ]);
 
   // Initialize map
   useEffect(() => {
     if (!isLoaded || !showMap || !mapRef.current || error) return;
+
+    // Double-check that Google Maps API is available before initializing
+    if (!window.google?.maps?.Map) {
+      console.error(tErrors('maps.mapConstructorNotAvailable'));
+      setError({ key: 'maps.googleMapsNotAvailable' });
+      return;
+    }
 
     try {
       // Ensure the map container has proper dimensions
@@ -238,9 +344,15 @@ export default function AddressPicker({
       mapContainer.style.height = '256px';
       mapContainer.style.minHeight = '256px';
 
+      // Default center (Cameroon center)
+      const defaultCenter = { lat: 4.0511, lng: 9.7679 };
+      const initialCenter = selectedAddress?.latitude && selectedAddress?.longitude
+        ? { lat: Number(selectedAddress.latitude), lng: Number(selectedAddress.longitude) }
+        : defaultCenter;
+
       const map = new google.maps.Map(mapContainer, {
-        center: { lat: 4.0511, lng: 9.7679 }, // Douala, Cameroun
-        zoom: 12,
+        center: initialCenter,
+        zoom: selectedAddress?.latitude && selectedAddress?.longitude ? 15 : 12,
         mapId: 'TSA_LOGISTICS_MAP', // Add mapId to enable advanced markers
         mapTypeControl: false,
         streetViewControl: false,
@@ -250,6 +362,11 @@ export default function AddressPicker({
       });
 
       mapInstanceRef.current = map;
+
+      // Create marker for initial selected address if it exists
+      if (selectedAddress?.latitude && selectedAddress?.longitude) {
+        updateMapLocation(Number(selectedAddress.latitude), Number(selectedAddress.longitude));
+      }
 
       // Force map resize after initialization
       setTimeout(() => {
@@ -266,130 +383,20 @@ export default function AddressPicker({
         }
       };
     } catch (err) {
-      console.error('Error initializing map:', err);
-      setError("Erreur d'initialisation de la carte");
+      console.error(tErrors('maps.mapInitError'), err);
+      setError({ key: 'maps.mapInitError' });
     }
-  }, [isLoaded, showMap, error]);
+  }, [isLoaded, showMap, error, tErrors, selectedAddress, updateMapLocation]);
 
-  const getCurrentLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setError("La géolocalisation n'est pas supportée par ce navigateur");
-      return;
-    }
-
-    setIsLoadingLocation(true);
-    setError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-
-        console.log(
-          `Position détectée: ${latitude}, ${longitude} (précision: ±${Math.round(accuracy)}m)`
-        );
-
-        try {
-          // Wait for Google Maps to be loaded
-          if (!window.google?.maps?.Geocoder) {
-            await googleMapsLoader.load({ libraries: ['places', 'marker'] });
-          }
-
-          // Reverse geocoding to get address
-          const geocoder = new google.maps.Geocoder();
-          const result = await geocoder.geocode({
-            location: { lat: latitude, lng: longitude },
-            region: 'CM', // Prioritize Côte d'Ivoire results
-          });
-
-          if (result.results && result.results.length > 0) {
-            // Try to find the most specific address first
-            let bestResult = result.results[0];
-
-            // Look for a more specific address (with street number or route)
-            for (const res of result.results) {
-              const hasStreetInfo = res.address_components?.some(
-                (comp) => comp.types.includes('street_number') || comp.types.includes('route')
-              );
-              if (hasStreetInfo) {
-                bestResult = res;
-                break;
-              }
-            }
-
-            const place = bestResult;
-            const addressDetails: AddressDetails = {
-              formatted_address: place.formatted_address,
-              latitude,
-              longitude,
-              place_id: place.place_id || '',
-            };
-
-            // Extract components
-            place.address_components?.forEach((component) => {
-              const types = component.types;
-
-              if (types.includes('street_number')) {
-                addressDetails.street_number = component.long_name;
-              } else if (types.includes('route')) {
-                addressDetails.route = component.long_name;
-              } else if (types.includes('locality')) {
-                addressDetails.locality = component.long_name;
-              } else if (types.includes('administrative_area_level_1')) {
-                addressDetails.administrative_area_level_1 = component.long_name;
-              } else if (types.includes('country')) {
-                addressDetails.country = component.long_name;
-              } else if (types.includes('postal_code')) {
-                addressDetails.postal_code = component.long_name;
-              }
-            });
-
-            console.log('Adresse trouvée:', addressDetails);
-            setInputValue(addressDetails.formatted_address);
-            onAddressSelect(addressDetails);
-
-            if (showMap && mapInstanceRef.current) {
-              updateMapLocation(latitude, longitude);
-            }
-          } else {
-            setError('Aucune adresse trouvée pour votre position');
-          }
-        } catch (error) {
-          console.error('Erreur lors de la géolocalisation inverse:', error);
-          setError("Impossible de récupérer l'adresse de votre position");
-        } finally {
-          setIsLoadingLocation(false);
-        }
-      },
-      (error) => {
-        console.error('Erreur de géolocalisation:', error);
-        let errorMessage = "Impossible d'accéder à votre position";
-
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Permission de géolocalisation refusée';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Position non disponible';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Délai de géolocalisation dépassé';
-            break;
-        }
-
-        setError(errorMessage);
-        setIsLoadingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000, // Increased timeout
-        maximumAge: 60000, // Reduced cache time for more accurate results
-      }
-    );
-  }, [onAddressSelect, showMap, updateMapLocation]);
+  // Handle geolocation button click
+  const handleGetCurrentLocation = useCallback(() => {
+    getLocation();
+  }, [getLocation]);
 
   const handleClear = useCallback(() => {
     setInputValue('');
     setError(null);
+    reset();
 
     if (onClear) {
       onClear();
@@ -406,7 +413,7 @@ export default function AddressPicker({
       mapInstanceRef.current.setCenter({ lat: 4.0511, lng: 9.7679 });
       mapInstanceRef.current.setZoom(12);
     }
-  }, [onClear]);
+  }, [onClear, reset]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -416,113 +423,130 @@ export default function AddressPicker({
     [error]
   );
 
-  const handleManualSubmit = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && inputValue.trim() && error) {
-        // Manual address submission when Google Maps is not available
-        const manualAddress: AddressDetails = {
-          formatted_address: inputValue.trim(),
-          latitude: 4.0511, // Default to Douala coordinates
-          longitude: 9.7679,
-          place_id: `manual_${Date.now()}`,
-        };
+  // Show geolocation error if present
+  useEffect(() => {
+    if (geolocationError) {
+      toast.error(geolocationError);
+    }
+  }, [geolocationError]);
 
-        console.log('📝 Adresse manuelle soumise:', manualAddress);
-        onAddressSelect(manualAddress);
-      }
-    },
-    [inputValue, error, onAddressSelect]
-  );
+  if (error) {
+    return (
+      <div className="space-y-3 sm:space-y-4">
+        <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+            <span className="text-sm sm:text-base font-medium text-red-800">
+              {tErrors('maps.geolocationError')}
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-red-600 mt-1">
+            {tErrors(error.key, error.options!)}
+          </p>
+        </div>
+        <Button
+          onClick={() => {
+            setError(null);
+            setIsLoaded(false);
+            // Retry loading Google Maps
+            const loadGoogleMaps = async () => {
+              try {
+                await googleMapsLoader.load({ libraries: ['places', 'marker'] });
+                if (window.google?.maps) {
+                  setIsLoaded(true);
+                  setError(null);
+                }
+              } catch (retryError) {
+                console.error(tErrors('maps.retryFailed'), retryError);
+                setError({ key: 'maps.retryGoogleMaps' });
+              }
+            };
+            loadGoogleMaps();
+          }}
+          className="w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base"
+        >
+          <RefreshCw className="w-3 h-3 sm:w-4" />
+          <span>{tCommon('actions.retry')}</span>
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className="space-y-3 sm:space-y-4">
+      {/* Search bar */}
       <div className="relative">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder={
-                error ? "Saisie manuelle de l'adresse (Entrée pour valider)..." : placeholder
-              }
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleManualSubmit}
-              disabled={disabled || (!isLoaded && !error)}
-              className={`pl-10 pr-10 ${error ? 'border-orange-300 bg-orange-50' : ''}`}
-            />
-            {inputValue && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleClear}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={getCurrentLocation}
-            disabled={disabled || !isLoaded || isLoadingLocation || !!error}
-            className="flex items-center gap-1 px-3"
-          >
-            <Navigation className={`h-4 w-4 ${isLoadingLocation ? 'animate-spin' : ''}`} />
-            {isLoadingLocation ? 'Localisation...' : 'Ma position'}
-          </Button>
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder={error ? tMaps('placeholders.manualAddressEntry') : defaultPlaceholder}
+            value={inputValue}
+            onChange={handleInputChange}
+            disabled={disabled || (!isLoaded && !error)}
+            className={`pl-9 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base ${error ? 'border-orange-300 bg-orange-50' : ''}`}
+          />
+          {inputValue && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
 
         {!isLoaded && !error && (
-          <p className="text-xs text-gray-500 mt-1">Chargement de Google Maps...</p>
-        )}
-
-        {error && (
-          <div className="flex items-center justify-between gap-2 mt-2 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setError(null);
-                setIsLoaded(false);
-                // Retry loading Google Maps
-                const loadGoogleMaps = async () => {
-                  try {
-                    console.log('🔄 Nouvelle tentative de chargement de Google Maps...');
-                    await googleMapsLoader.load({ libraries: ['places', 'marker'] });
-                    if (window.google?.maps) {
-                      setIsLoaded(true);
-                      setError(null);
-                    }
-                  } catch (retryError) {
-                    console.error('❌ Échec de la nouvelle tentative:', retryError);
-                    setError('Échec du rechargement. Vérifiez votre connexion internet.');
-                  }
-                };
-                loadGoogleMaps();
-              }}
-              className="text-xs px-2 py-1 h-auto"
-            >
-              Réessayer
-            </Button>
-          </div>
+          <p className="text-xs text-gray-500 mt-1">{tMaps('messages.loadingGoogleMaps')}</p>
         )}
       </div>
 
+      {/* Header with title and position button */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center">
+        <Button
+          onClick={handleGetCurrentLocation}
+          disabled={isLoading}
+          variant="outline"
+          className="flex items-center gap-2 w-full text-sm sm:text-base"
+        >
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-500" />
+              <span>{tMaps('messages.locating')}</span>
+            </>
+          ) : (
+            <>
+              <Navigation className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{tMaps('labels.myLocation')}</span>
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Interactive map */}
       {showMap && !error && (
         <Card>
           <CardContent className="p-0">
-            <div ref={mapRef} className="w-full h-64 rounded-lg" style={{ minHeight: '256px' }} />
+            <div
+              ref={mapRef}
+              className="w-full h-64 sm:h-80 lg:h-96 rounded-lg border border-gray-200"
+              style={{ minHeight: '200px' }}
+            />
+
+            {!isLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
+                <div className="text-center p-4 sm:p-6">
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500 mx-auto mb-2 sm:mb-3"></div>
+                  <p className="text-xs sm:text-sm text-gray-600">
+                    {tMaps('messages.loadingGoogleMaps')}
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

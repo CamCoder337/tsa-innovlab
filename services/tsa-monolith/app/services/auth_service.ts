@@ -343,10 +343,6 @@ export default class AuthService {
    * Initialise le MFA pour un utilisateur
    */
   async initializeMFA(user: User): Promise<MfaSecretData> {
-    if (!user.requiresMFA()) {
-      throw new Exception('MFA not required for this account', { status: 403 })
-    }
-
     const mfaData = await this.mfaService.generateSecret(user)
 
     // Log MFA initialization

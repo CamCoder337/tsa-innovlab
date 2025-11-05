@@ -60,6 +60,35 @@ export interface VisualRecognitionResponse {
   processing_time_ms: number
 }
 
+export interface ChatbotQueryRequest {
+  message: string
+  user_id: string
+  user_role?: string
+  user_token?: string
+  conversation_id?: string
+  context?: Record<string, any>
+}
+
+export interface NavigationInfo {
+  path: string
+  description: string
+  filters?: Record<string, any>
+}
+
+export interface ChatbotResponse {
+  message: string
+  intent: {
+    name: string
+    confidence: number
+    entities: Record<string, any>
+  }
+  suggestions: string[]
+  data?: Record<string, any>
+  navigation?: NavigationInfo // V3: Frontend navigation info
+  requires_human: boolean
+  timestamp: string
+}
+
 export default class AIService {
   private readonly baseUrl: string
   private readonly timeout: number = 10000 // 10 seconds
@@ -242,12 +271,18 @@ export default class AIService {
   /**
    * Search products by image using visual recognition
    */
-  async searchProductsByImage(imageFile: File | Buffer): Promise<VisualRecognitionResponse | null> {
+  async searchProductsByImage(
+    imageBuffer: Buffer,
+    filename: string = 'image.jpg'
+  ): Promise<VisualRecognitionResponse | null> {
     try {
       logger.info('Requesting visual recognition search')
 
+      // Create a proper Blob from Buffer for Node.js
+      const blob = new Blob([imageBuffer], { type: 'image/jpeg' })
+
       const formData = new FormData()
-      formData.append('image', imageFile)
+      formData.append('image', blob, filename)
 
       const response = await fetch(`${this.baseUrl}/api/ai/visual/search/image`, {
         method: 'POST',
@@ -256,6 +291,8 @@ export default class AIService {
       })
 
       if (!response.ok) {
+        const errorText = await response.text()
+        logger.error('AI Service error response', { status: response.status, body: errorText })
         throw new Error(`AI Service responded with status ${response.status}`)
       }
 
@@ -264,6 +301,131 @@ export default class AIService {
     } catch (error) {
       logger.error('Failed to perform visual recognition from AI service', { error })
       return null
+    }
+  }
+
+  /**
+   * Query the chatbot with a user message
+   *
+   * Uses V3 (Intent-First with Frontend Guidance) by default
+   * Falls back to V2 (LLM-First) then V1 (Regex-based) if needed
+   */
+  async queryChatbot(request: ChatbotQueryRequest): Promise<ChatbotResponse | null> {
+    try {
+      logger.info('Querying chatbot V3 (Intent-First)', {
+        userId: request.user_id,
+        messageLength: request.message.length,
+      })
+
+      // Try V3 first (Intent-First with Frontend Guidance)
+      const responseV3 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/v3/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(15000), // 15 seconds for intent detection + action
+      })
+
+      if (responseV3.ok) {
+        const data = (await responseV3.json()) as ChatbotResponse
+        logger.info('Chatbot V3 response received', {
+          userId: request.user_id,
+          intent: data.intent?.name,
+          hasNavigation: !!data.navigation,
+        })
+        return data
+      }
+
+      // Fallback to V2 if V3 fails
+      logger.warn('Chatbot V3 failed, falling back to V2', {
+        status: responseV3.status,
+        userId: request.user_id,
+      })
+
+      const responseV2 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(20000), // 20 seconds for LLM + function calls
+      })
+
+      if (responseV2.ok) {
+        const data = (await responseV2.json()) as ChatbotResponse
+        logger.info('Chatbot V2 response received (fallback)', {
+          userId: request.user_id,
+          requiresHuman: data.requires_human,
+        })
+        return data
+      }
+
+      // Fallback to V1 if V2 also fails
+      logger.warn('Chatbot V2 also failed, falling back to V1', {
+        status: responseV2.status,
+        userId: request.user_id,
+      })
+
+      const responseV1 = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+        signal: AbortSignal.timeout(15000),
+      })
+
+      if (!responseV1.ok) {
+        throw new Error(`All chatbot versions (V3, V2, V1) failed`)
+      }
+
+      const data = (await responseV1.json()) as ChatbotResponse
+      return data
+    } catch (error) {
+      logger.error('Failed to query chatbot from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Get chatbot conversation history
+   */
+  async getChatbotHistory(conversationId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/history/${conversationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      logger.error('Failed to get chatbot history from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Check chatbot health
+   */
+  async checkChatbotHealth(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000),
+      })
+
+      return response.ok
+    } catch (error) {
+      logger.warn('Chatbot health check failed', { error })
+      return false
     }
   }
 

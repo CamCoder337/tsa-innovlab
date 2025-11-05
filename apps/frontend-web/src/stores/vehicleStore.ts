@@ -190,7 +190,7 @@ export const useVehicleStore = create<VehicleStoreState>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'vehicle-store',
+      name: 'tsa_vehicles',
       partialize: (state) => ({
         vehicles: state.vehicles,
         availableVehicles: state.availableVehicles,

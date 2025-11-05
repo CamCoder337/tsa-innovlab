@@ -5,12 +5,17 @@ import type {
   MissionStats,
   CreateMissionDto,
   UpdateMissionDto,
+  MissionFeedback,
+  FeedbackFilterParams,
+  FeedbackStats,
+  UpdateMissionStatus,
 } from '@/types/mission.types';
 import type { MissionStoreExtended } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import type { PaginatedMetaResponse } from '@/types/common.types';
 import { adminService } from '@/services/admin.service';
 import { getPersistedUser } from './authStore';
+import { useVehicleStore } from './vehicleStore';
 
 function getPersistedData(): Partial<MissionStoreExtended> | null {
   try {
@@ -31,6 +36,9 @@ const initialState = {
   missions: getPersistedData()?.missions || [],
   myMissions: getPersistedData()?.myMissions || [],
   currentMission: null,
+  feedbacks: getPersistedData()?.feedbacks || [],
+  currentFeedback: null,
+  feedbackStats: getPersistedData()?.feedbackStats || null,
   isLoading: false,
   error: null,
   stats: getPersistedData()?.stats || {
@@ -296,14 +304,17 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.createMission(data);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminCreateMission(data)
+              : await missionService.createMission(data);
 
           if (response.error) {
             set({
               error: response.error.message,
               isLoading: false,
             });
-            return null;
+            return;
           }
 
           if (response.data) {
@@ -317,13 +328,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
             return response.data;
           }
 
-          return null;
+          return;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to create mission',
             isLoading: false,
           });
-          return null;
+          return;
         }
       },
 
@@ -342,18 +353,55 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
+            set((state) => ({
+              missions: state.missions.map((mission) =>
+                mission.id === id ? { ...mission, ...response.data! } : mission
+              ),
+              myMissions: state.myMissions.map((mission) =>
+                mission.id === id ? { ...mission, ...response.data! } : mission
+              ),
+              currentMission:
+                state.currentMission?.id === id
+                  ? { ...state.currentMission, ...response.data! }
+                  : state.currentMission,
+              isLoading: false,
+              error: null,
+            }));
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to update mission',
+            isLoading: false,
+          });
+        }
+      },
+
+      updateMissionStatus: async (id: string, data: UpdateMissionStatus) => {
+        try {
+          set({ error: null });
+
+          const response = await missionService.updateMissionStatus(id, data);
+
+          if (response.error) {
+            set({
+              error: response.error.message || 'Erreur de connexion internet',
+            });
+            return;
+          }
+
+          if (response.data) {
             const currentMissions = get().missions;
             const currentMyMissions = get().myMissions;
 
             set({
-              missions: currentMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+              missions: currentMissions?.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
               ),
-              myMissions: currentMyMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+              myMissions: currentMyMissions?.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
               ),
               currentMission:
-                get().currentMission?.id === id ? response.data : get().currentMission,
+                get().currentMission?.id === id ? response.data.mission : get().currentMission,
               isLoading: false,
               error: null,
             });
@@ -368,29 +416,25 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
       deleteMission: async (id: string) => {
         try {
-          set({ isLoading: true, error: null });
+          set({ error: null });
 
           const response = await missionService.deleteMission(id);
 
           if (response.error) {
             set({
-              error: response.error.message,
-              isLoading: false,
+              error: response.error.message || 'Erreur de connexion internet',
             });
             return;
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-            const currentMyMissions = get().myMissions;
-
-            set({
-              missions: currentMissions.filter((mission) => mission.id !== id),
-              myMissions: currentMyMissions.filter((mission) => mission.id !== id),
-              currentMission: get().currentMission?.id === id ? null : get().currentMission,
+            set((state) => ({
+              missions: state.missions.filter((mission) => mission.id !== id),
+              myMissions: state.myMissions.filter((mission) => mission.id !== id),
+              currentMission: state.currentMission?.id === id ? null : state.currentMission,
               isLoading: false,
               error: null,
-            });
+            }));
           }
         } catch (error) {
           set({
@@ -479,9 +523,9 @@ export const useMissionStore = create<MissionStoreExtended>()(
       },
 
       applyForMission: async (id: string, vehicleId: string) => {
-        try {
-          set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null });
 
+        try {
           const response = await missionService.applyForMission(id, vehicleId);
 
           if (response.error) {
@@ -493,17 +537,28 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-
-            set({
-              missions: currentMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+            set((state) => ({
+              missions: state.missions.map((mission) =>
+                mission.id === id ? response.data!.mission : mission
               ),
               currentMission:
-                get().currentMission?.id === id ? response.data : get().currentMission,
+                state.currentMission?.id === id ? response.data!.mission : state.currentMission,
               isLoading: false,
               error: null,
-            });
+            }));
+
+            // Update vehicle in vehicle store
+            const vehicleStore = useVehicleStore.getState();
+            const { vehicles } = vehicleStore;
+            if (response.data.vehicle) {
+              const updatedVehicles = vehicles.map((v) =>
+                v.id === response.data!.vehicle.id ? response.data!.vehicle : v
+              );
+
+              useVehicleStore.setState({
+                vehicles: updatedVehicles,
+              });
+            }
           }
         } catch (error) {
           set({
@@ -526,6 +581,106 @@ export const useMissionStore = create<MissionStoreExtended>()(
       clearError: () => set({ error: null }),
 
       reset: () => set(initialState),
+
+      // Feedback Management Actions
+      fetchFeedbacks: async (params?: FeedbackFilterParams) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedbacks(params);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              feedbacks: response.data.feedbacks.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedbacks',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchFeedback: async (id: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedback(id);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              currentFeedback: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedback',
+            isLoading: false,
+          });
+        }
+      },
+
+      fetchFeedbackStats: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await adminService.getFeedbackStats();
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              feedbackStats: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch feedback stats',
+            isLoading: false,
+          });
+        }
+      },
+
+      setCurrentFeedback: (feedback: MissionFeedback | null) => {
+        set({ currentFeedback: feedback });
+      },
+
+      setFeedbacks: (feedbacks: MissionFeedback[]) => {
+        set({ feedbacks });
+      },
+
+      setFeedbackStats: (feedbackStats: FeedbackStats) => {
+        set({ feedbackStats });
+      },
     }),
     {
       name: 'tsa_missions',
@@ -535,6 +690,8 @@ export const useMissionStore = create<MissionStoreExtended>()(
         myMissions: state.myMissions,
         currentMission: state.currentMission,
         stats: state.stats,
+        feedbacks: state.feedbacks,
+        feedbackStats: state.feedbackStats,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

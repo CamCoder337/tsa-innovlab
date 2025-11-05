@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -11,6 +11,10 @@ import {
   MapPin,
   MessagesSquare,
   Truck,
+  User,
+  Headset,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -23,8 +27,15 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
   SidebarTrigger,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useNavigationTranslation,
+  useCommonTranslation,
+  useAuthTranslation,
+} from '@/hooks/useTranslation';
+import { toast } from 'sonner';
 
 type SidebarItem = {
   id: string;
@@ -34,22 +45,22 @@ type SidebarItem = {
   children?: SidebarItem[];
 };
 
-const affreteurMenu: SidebarItem[] = [
+const getAffreteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -57,27 +68,21 @@ const affreteurMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
     ],
   },
   {
-    id: 'tracking',
-    label: 'Suivi Temps Réel',
-    icon: MapPin,
-    href: '/app/tracking-dashboard',
-  },
-  {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -102,22 +107,22 @@ const affreteurMenu: SidebarItem[] = [
   // }
 ];
 
-const transporteurMenu: SidebarItem[] = [
+const getTransporteurMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Tableau de bord',
+    label: tNav('menu.dashboard'),
     icon: Layout,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -125,19 +130,19 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'vehicles',
-    label: 'Mes Véhicules',
+    label: tNav('menu.vehicles'),
     icon: Truck,
     href: '/app/vehicles',
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
     children: [
       {
         id: 'orders',
-        label: 'Commandes',
+        label: tNav('menu.orders'),
         icon: ShoppingBag,
         href: '/app/shop/orders',
       },
@@ -145,7 +150,7 @@ const transporteurMenu: SidebarItem[] = [
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -166,22 +171,22 @@ const transporteurMenu: SidebarItem[] = [
   // },
 ];
 
-const adminMenu: SidebarItem[] = [
+const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: tNav('menu.dashboard'),
     icon: LayoutDashboard,
     href: '/app',
   },
   {
     id: 'missions',
-    label: 'Missions',
+    label: tNav('menu.missions'),
     icon: Package,
     href: '/app/missions',
     children: [
       {
         id: 'tracking',
-        label: 'Suivi Temps Réel',
+        label: tNav('menu.tracking'),
         icon: MapPin,
         href: '/app/tracking-dashboard',
       },
@@ -189,19 +194,25 @@ const adminMenu: SidebarItem[] = [
   },
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingBag,
     href: '/app/products',
   },
   {
+    id: 'orders',
+    label: tNav('menu.orders'),
+    icon: ShoppingCart,
+    href: '/app/orders',
+  },
+  {
     id: 'users',
-    label: 'Utilisateurs',
+    label: tNav('menu.users'),
     icon: Users,
     href: '/app/users',
   },
   {
     id: 'chat',
-    label: 'Chat',
+    label: tNav('menu.chat'),
     icon: MessagesSquare,
     href: '/app/chat',
   },
@@ -216,21 +227,38 @@ const adminMenu: SidebarItem[] = [
   // { id: "settings", label: "Paramètres", icon: Settings, href: "/settings" },
 ];
 
-const clientMenu: SidebarItem[] = [
+const getClientMenu = (tNav: (key: string) => string): SidebarItem[] => [
   {
     id: 'products',
-    label: 'Boutique',
+    label: tNav('menu.shop'),
     icon: ShoppingCart,
     href: '/app/shop',
   },
 ];
 
+const getFooterMenu = (tNav: (key: string) => string): SidebarItem[] => [
+  {
+    id: 'settings',
+    label: tNav('menu.settings'),
+    icon: Settings,
+    href: '/app/settings',
+  },
+  {
+    id: 'support',
+    label: tNav('footer.support'),
+    icon: Headset,
+    href: '/app/support',
+  },
+];
+
 function GetMenuByRole(): SidebarItem[] {
   const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return clientMenu;
-  if (user?.role === 'transporteur') return transporteurMenu;
-  if (user?.role === 'admin') return adminMenu;
-  return affreteurMenu;
+  const { t: tNav } = useNavigationTranslation();
+
+  if (!isAuthenticated || user?.role === 'client') return getClientMenu(tNav);
+  if (user?.role === 'transporteur') return getTransporteurMenu(tNav);
+  if (user?.role === 'admin') return getAdminMenu(tNav);
+  return getAffreteurMenu(tNav);
 }
 
 function MenuTree({ items }: { items: SidebarItem[] }) {
@@ -306,30 +334,90 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
 }
 
 export default function Sidebar() {
-  const { user, isAuthenticated } = useAuth();
-  const role = user ? user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) : 'Invité';
+  const { user, isAuthenticated, logout } = useAuth();
+  const { t: tAuth } = useAuthTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tNav } = useNavigationTranslation();
+  const { pathname } = useLocation();
+
+  const displayName = user?.fullName;
+  const role = tCommon(`roles.${user?.role}`);
   const menu = GetMenuByRole();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    toast.loading(tAuth('loggingOut'), {
+      duration: 30000,
+    });
+
+    await logout();
+
+    toast.dismiss();
+    toast.success('Déconnexion réussie');
+    navigate('/');
+  };
 
   if (!isAuthenticated) return null;
 
   return (
-    <UISidebar collapsible="icon" className="top-16 h-full">
-      <SidebarHeader className="flex flex-row items-center justify-between p-2">
+    <UISidebar collapsible="icon" className="top-16 h-[calc(100vh-4rem)] flex flex-col fixed">
+      <SidebarHeader className="flex flex-row items-center justify-between p-2 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="text-base font-bold text-tsa-blue group-data-[collapsible=icon]:hidden">
-            Espace {role}
+          <div className="text-base font-bold text-tsa-blue dark:text-tsa-white group-data-[collapsible=icon]:hidden">
+            {tNav('breadcrumb.workspace', { role })}
           </div>
         </div>
         <SidebarTrigger className="ml-auto" />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex-1 overflow-hidden">
         <SidebarGroup className="h-full flex flex-col">
-          <SidebarGroupContent className="max-h-screen h-full p-4">
+          <SidebarGroupContent className="flex-1 overflow-y-auto p-4">
             <MenuTree items={menu} />
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarSeparator />
       </SidebarContent>
+      <SidebarFooter className="flex-shrink-0">
+        <div className="md:hidden flex flex-col gap-4">
+          {/* Mobile-only user info display */}
+
+          <SidebarMenuItem key={'profile'}>
+            <SidebarMenuButton
+              asChild
+              isActive={pathname === '/app/profile'}
+              tooltip={tNav('menu.profile')}
+            >
+              <Link
+                to={'/app/profile'}
+                className="flex items-center gap-3 font-medium overflow-visible"
+              >
+                <User className="h-5 w-5" />
+                <div className="flex flex-col">
+                  <p className="text-base">{displayName}</p>
+                  <p className="text-xs">{role}</p>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <MenuTree items={getFooterMenu(tNav)} />
+
+          <SidebarMenuItem key={'logout'}>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              data-testid="logout-button"
+              role="menuitem"
+              className="cursor-pointer flex items-center px-2 py-1 gap-2 text-red-600 focus:text-red-600"
+              tooltip={tAuth('logout')}
+            >
+              <div className="flex items-center gap-3 font-medium">
+                <LogOut className="h-5 w-5" />
+                <span className="text-base">{tAuth('logout')}</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </div>
+      </SidebarFooter>
     </UISidebar>
   );
 }

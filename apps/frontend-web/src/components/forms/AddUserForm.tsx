@@ -14,11 +14,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { CreateUserRequest, UserRole } from '@/types/auth.types';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Shield, Building } from 'lucide-react';
+import {
+  useAdminTranslation,
+  useCommonTranslation,
+  useFormsTranslation,
+} from '@/hooks/useTranslation';
 
 interface AddUserFormData {
   firstName: string;
@@ -47,45 +51,46 @@ const INITIAL_VALUES: AddUserFormData = {
 // Admin can create users with all roles including admin
 const ALL_USER_ROLES: UserRole[] = ['admin', 'affreteur', 'transporteur', 'client'];
 
-const validationSchema = Yup.object({
-  firstName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_NAME),
-  lastName: Yup.string().trim().required(VALIDATION_MESSAGES.REQUIRED_FIRSTNAME),
-  email: Yup.string()
-    .trim()
-    .required(VALIDATION_MESSAGES.REQUIRED_EMAIL)
-    .email(VALIDATION_MESSAGES.INVALID_EMAIL),
-  password: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
-    .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
-    ),
-  confirmPassword: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PASSWORD)
-    .oneOf([Yup.ref('password')], VALIDATION_MESSAGES.PASSWORDS_NOT_MATCH),
-  phone: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_PHONE)
-    .test('isValidPhone', VALIDATION_MESSAGES.INVALID_PHONE, (value, context) => {
-      try {
-        const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
-        const countryCode = context.parent.country || 'CM';
-        const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
-        return phoneUtil.isValidNumber(number);
-      } catch (error) {
-        console.error(error);
-        return false;
-      }
+const createValidationSchema = (tAdmin: (key: string) => string, tForms: (key: string) => string) =>
+  Yup.object({
+    firstName: Yup.string().trim().required(tForms('validation.required')),
+    lastName: Yup.string().trim().required(tForms('validation.required')),
+    email: Yup.string()
+      .trim()
+      .required(tForms('validation.required'))
+      .email(tForms('validation.email')),
+    password: Yup.string()
+      .required(tForms('validation.required'))
+      .min(8, tAdmin('addUser.form.validation.passwordMinLength'))
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/,
+        tAdmin('addUser.form.validation.passwordComplexity')
+      ),
+    confirmPassword: Yup.string()
+      .required(tForms('validation.required'))
+      .oneOf([Yup.ref('password')], tForms('validation.passwordsNotMatch')),
+    phone: Yup.string()
+      .required(tForms('validation.required'))
+      .test('isValidPhone', tForms('validation.phone'), (value, context) => {
+        try {
+          const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
+          const countryCode = context.parent.country || 'CM';
+          const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
+          return phoneUtil.isValidNumber(number);
+        } catch (error) {
+          console.error(error);
+          return false;
+        }
+      }),
+    role: Yup.string()
+      .required(tForms('validation.required'))
+      .oneOf(ALL_USER_ROLES, tForms('validation.role')),
+    companyName: Yup.string().when('role', {
+      is: (role: UserRole) => role === 'affreteur' || role === 'transporteur',
+      then: (schema) => schema.required(tAdmin('addUser.form.validation.companyRequired')),
+      otherwise: (schema) => schema.optional(),
     }),
-  role: Yup.string()
-    .required(VALIDATION_MESSAGES.REQUIRED_ROLE)
-    .oneOf(ALL_USER_ROLES, VALIDATION_MESSAGES.INVALID_ROLE),
-  companyName: Yup.string().when('role', {
-    is: (role: UserRole) => role === 'affreteur' || role === 'transporteur',
-    then: (schema) => schema.required("Le nom de l'entreprise est requis pour ce rôle"),
-    otherwise: (schema) => schema.optional(),
-  }),
-});
+  });
 
 interface AddUserFormProps {
   onSubmit: (data: CreateUserRequest) => Promise<void>;
@@ -100,6 +105,11 @@ export default function AddUserForm({
 }: AddUserFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { t: tAdmin } = useAdminTranslation();
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tForms } = useFormsTranslation();
+
+  const validationSchema = createValidationSchema(tAdmin, tForms);
 
   const getRoleIcon = (role: UserRole) => {
     switch (role) {
@@ -117,13 +127,13 @@ export default function AddUserForm({
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case 'admin':
-        return 'Administrateur';
+        return tCommon('roles.admin');
       case 'affreteur':
-        return 'Affréteur';
+        return tCommon('roles.affreteur');
       case 'transporteur':
-        return 'Transporteur';
+        return tCommon('roles.transporteur');
       case 'client':
-        return 'Client';
+        return tCommon('roles.client');
       default:
         return role;
     }
@@ -134,7 +144,7 @@ export default function AddUserForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
-          Ajouter un Utilisateur
+          {tAdmin('addUser.form.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -167,18 +177,18 @@ export default function AddUserForm({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                     <User className="h-4 w-4" />
-                    Informations Personnelles
+                    {tAdmin('addUser.form.personalInfo')}
                   </div>
                   <Separator />
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">Nom *</Label>
+                      <Label htmlFor="firstName">{tForms('labels.firstName')}*</Label>
                       <Input
                         name="firstName"
                         id="firstName"
                         type="text"
-                        placeholder="Nom de famille"
+                        placeholder={tForms('placeholders.firstName')}
                         value={values.firstName}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -190,12 +200,12 @@ export default function AddUserForm({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Prénom *</Label>
+                      <Label htmlFor="lastName">{tForms('labels.lastName')}*</Label>
                       <Input
                         name="lastName"
                         id="lastName"
                         type="text"
-                        placeholder="Prénom"
+                        placeholder={tForms('placeholders.lastName')}
                         value={values.lastName}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -212,17 +222,17 @@ export default function AddUserForm({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                     <Mail className="h-4 w-4" />
-                    Informations de Contact
+                    {tAdmin('addUser.form.contactInfo')}
                   </div>
                   <Separator />
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">{tForms('labels.email')}*</Label>
                     <Input
                       name="email"
                       id="email"
                       type="email"
-                      placeholder="adresse@email.com"
+                      placeholder={tForms('placeholders.enterEmail')}
                       value={values.email}
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -234,10 +244,10 @@ export default function AddUserForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone *</Label>
+                    <Label htmlFor="phone">{tForms('labels.phone')}*</Label>
                     <PhoneInput
                       specialLabel=""
-                      placeholder="237 6 55 55 55 55"
+                      placeholder={tForms('placeholders.enterPhone')}
                       country={'cm'}
                       enableSearch={true}
                       disableDropdown={false}
@@ -283,12 +293,12 @@ export default function AddUserForm({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                     <Shield className="h-4 w-4" />
-                    Rôle et Entreprise
+                    {tAdmin('addUser.form.roleAndCompany')}
                   </div>
                   <Separator />
 
                   <div className="space-y-2">
-                    <Label htmlFor="role">Rôle *</Label>
+                    <Label htmlFor="role">{tForms('labels.role')}*</Label>
                     <Select
                       value={values.role}
                       onValueChange={(value) => setFieldValue('role', value)}
@@ -296,7 +306,7 @@ export default function AddUserForm({
                       <SelectTrigger
                         className={touched.role && errors.role ? 'border-red-500' : ''}
                       >
-                        <SelectValue placeholder="Sélectionner un rôle" />
+                        <SelectValue placeholder={tForms('placeholders.rolePlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {ALL_USER_ROLES.map((role) => (
@@ -316,12 +326,12 @@ export default function AddUserForm({
 
                   {needsCompanyName && (
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">Nom de l'entreprise *</Label>
+                      <Label htmlFor="companyName">{tForms('labels.companyName')}*</Label>
                       <Input
                         name="companyName"
                         id="companyName"
                         type="text"
-                        placeholder="Nom de l'entreprise"
+                        placeholder={tForms('labels.companyName')}
                         value={values.companyName}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -340,18 +350,18 @@ export default function AddUserForm({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                     <Shield className="h-4 w-4" />
-                    Mot de Passe
+                    {tForms('labels.password')}
                   </div>
                   <Separator />
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Mot de passe *</Label>
+                    <Label htmlFor="password">{tForms('labels.password')}*</Label>
                     <div className="relative">
                       <Input
                         name="password"
                         id="password"
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Mot de passe"
+                        placeholder={tForms('placeholderss.enterPassword')}
                         value={values.password}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -377,13 +387,13 @@ export default function AddUserForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
+                    <Label htmlFor="confirmPassword">{tForms('labels.confirmPassword')}*</Label>
                     <div className="relative">
                       <Input
                         name="confirmPassword"
                         id="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="Confirmer le mot de passe"
+                        placeholder={tForms('labels.confirmPasswordPlaceholder')}
                         value={values.confirmPassword}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -418,7 +428,9 @@ export default function AddUserForm({
                     className="flex-1"
                     disabled={isSubmitting || Object.keys(errors).length > 0}
                   >
-                    {isSubmitting ? 'Création...' : "Créer l'utilisateur"}
+                    {isSubmitting
+                      ? tForms('messages.creating')
+                      : tAdmin('addUser.form.createButton')}
                   </Button>
                   {onCancel && (
                     <Button
@@ -428,7 +440,7 @@ export default function AddUserForm({
                       disabled={isSubmitting}
                       className="flex-1"
                     >
-                      Annuler
+                      {tCommon('actions.cancel')}
                     </Button>
                   )}
                 </div>

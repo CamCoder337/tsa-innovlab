@@ -1,0 +1,48 @@
+{
+  "title": "Cartes et Géolocalisation",
+  "labels": {
+    "myLocation": "Ma position",
+    "position": "Position: {{ address }}",
+    "deliveryAddress": "Adresse de livraison"
+  },
+  "placeholders": {
+    "searchAddress": "Rechercher une adresse...",
+    "selectAddress": "Sélectionner une adresse",
+    "searchOrSelectOnMap": "Recherchez une adresse ou sélectionnez sur la carte",
+    "manualAddressEntry": "Saisie manuelle de l'adresse (Entrée pour valider)..."
+  },
+  "messages": {
+    "loadingGoogleMaps": "Chargement de Google Maps...",
+    "loadingMap": "Chargement de la carte...",
+    "gettingLocation": "Obtention de votre position...",
+    "locating": "Localisation...",
+    "locationAccuracy": "Précision de la position: {{accuracy}}m",
+    "geolocationExcellentAccuracy": "Excellente précision GPS: {{accuracy}}m",
+    "geolocationGoodAccuracy": "Bonne précision GPS: {{accuracy}}m",
+    "geolocationLowAccuracy": "Précision GPS Faible: {{accuracy}}m. Vérifiez votre connexion internet",
+    "geolocationTooLowAccuracy": "Précision trop faible ({{accuracy}} m). Essayez de vous déplacer ou d'activer le GPS.",
+    "improvingAccuracy": "Amélioration de la précision... {{accuracy}}m"
+  },
+  "errors": {
+    "geolocationError": "Erreur de géolocalisation",
+    "geolocationNotSupported": "La géolocalisation n'est pas supportée par ce navigateur",
+    "geolocationTimeout": "Délai de géolocalisation dépassé",
+    "permissionDenied": "Permission de géolocalisation refusée",
+    "positionUnavailable": "Position non disponible",
+    "cannotAccessLocation": "Impossible d'accéder à votre position",
+    "cannotGetAddress": "Impossible de récupérer l'adresse de votre position",
+    "googleMapsApiKeyMissing": "Clé API Google Maps manquante",
+    "googleMapsNotAvailable": "Google Maps API non disponible",
+    "googleMapsLoadError": "Erreur lors du chargement de Google Maps",
+    "invalidAddressSelected": "Adresse invalide sélectionnée",
+    "addressProcessingError": "Erreur lors du traitement de l'adresse",
+    "addressSearchInitError": "Erreur d'initialisation de la recherche d'adresse",
+    "mapInitError": "Erreur d'initialisation de la carte",
+    "mapConstructorNotAvailable": "Constructeur de carte Google Maps non disponible",
+    "markerCreationError": "Erreur lors de la création du marqueur",
+    "markerCreationFallbackError": "Erreur lors de la création du marqueur de base",
+    "autocompleteInitError": "Erreur d'initialisation de l'autocomplétion",
+    "retryFailed": "Échec de la nouvelle tentative",
+    "retryGoogleMaps": "Échec du rechargement. Vérifiez votre connexion internet."
+  }
+}

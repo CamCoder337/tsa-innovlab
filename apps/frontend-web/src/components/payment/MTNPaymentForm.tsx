@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Smartphone, CreditCard, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import type { PaymentMethod, OrderPaymentRequest, PaymentSimulation } from '@/types/payment.types';
 import { paymentService } from '@/services/payment.service';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface MTNPaymentFormProps {
   orderId: string;
@@ -60,7 +60,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
       id: 'wave' as PaymentMethod,
       name: 'Wave',
       icon: Smartphone,
-      color: 'bg-blue-500',
+      color: 'bg-tsa-blue/90',
       description: 'Paiement via Wave',
     },
     {
@@ -178,7 +178,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
+          <Loader2 className="h-12 w-12 animate-spin text-tsa-blue dark:text-tsa-white mb-4" />
           <h3 className="text-lg font-semibold mb-2">Traitement du paiement</h3>
           <p className="text-gray-600 text-center">
             Veuillez patienter pendant que nous traitons votre paiement...
@@ -285,7 +285,7 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
                       <div className="font-medium">{method.name}</div>
                       <div className="text-xs text-gray-500">{method.description}</div>
                     </div>
-                    {isSelected && <CheckCircle className="h-5 w-5 text-blue-600" />}
+                    {isSelected && <CheckCircle className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />}
                   </div>
                 </button>
               );
