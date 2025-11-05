@@ -66,20 +66,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
   const currentMessages = useMemo(() => {
     if (isChatbotConversation && chatbotConversation) {
-      // For chatbot conversations, use chatbot messages
-      return chatbotConversation.messages.map((msg) => ({
-        id: msg.id,
-        conversationId: msg.conversationId,
-        senderId: msg.isFromBot ? 'bot' : user?.id || '',
-        content: msg.content,
-        type: 'text' as const,
-        isRead: true,
-        createdAt: msg.createdAt,
-        updatedAt: msg.updatedAt,
-      }));
+      // For chatbot conversations, use chatbot messages directly
+      return chatbotConversation.messages;
     }
     return messages[conversation.id] || [];
-  }, [messages, conversation.id, isChatbotConversation, chatbotConversation, user?.id]);
+  }, [messages, conversation.id, isChatbotConversation, chatbotConversation]);
 
   const typingUsers = useMemo(() => {
     // Skip typing indicators for chatbot conversations
@@ -131,7 +122,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
     try {
       if (isChatbotConversation) {
-        await sendChatbotMessage(newMessage);
+        await sendChatbotMessage(newMessage, user.id);
       } else {
         await sendMessage(conversation.id, newMessage);
       }
@@ -338,13 +329,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
               const isBotMessage = message.senderId === 'bot';
               const showAvatar =
                 !isCurrentUser &&
-                !isBotMessage &&
                 (index === 0 || currentMessages[index - 1]?.senderId !== message.senderId);
-              const msg = isBotMessage ? (message as Message) : (message as ChatbotMessage);
+
               return (
                 <MessageBubble
                   key={message.id}
-                  message={msg}
+                  message={message}
                   isCurrentUser={isCurrentUser}
                   isBotMessage={isBotMessage}
                   showAvatar={showAvatar}

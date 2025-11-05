@@ -196,9 +196,11 @@ export class ShopService extends BaseApi {
 
   async createOrder(data: CreateOrderRequest): Promise<ApiResponse<Record<string, Order>>> {
     try {
+      console.log('Creating order with data:', data);
       const response = await this.insertToken().post('/api/client/orders', data);
       return { data: response.data.data };
     } catch (error) {
+      console.error('Order creation error:', error);
       return { error: this.getErrorResponse(error) };
     }
   }
