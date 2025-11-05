@@ -3,12 +3,14 @@ Intelligent Chatbot API Endpoints
 LLM-First architecture with function calling
 """
 import logging
+import time
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.schemas.chatbot import ChatbotQueryRequest, ChatbotResponse
 from app.services.intelligent_chatbot_service import get_intelligent_chatbot, IntelligentChatbotService
 from app.core.dependencies import get_user_from_header
+from app.core.metrics import chatbot_queries_total, chatbot_query_duration
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +49,15 @@ async def intelligent_chatbot_query(
     }
     ```
     """
+    start_time = time.time()
     try:
         # ✅ FIX: Utiliser les données du request body (envoyées par le monolithe)
         # au lieu de get_user_from_header qui retourne un mock user en dev
         user_id = request.user_id
         user_role = request.user_role
-        
+
         logger.info(f"Intelligent chatbot query from {user_id} ({user_role}): {request.message[:50]}...")
-        
+
         response = await chatbot.process_message(
             message=request.message,
             user_id=user_id,
@@ -63,11 +66,16 @@ async def intelligent_chatbot_query(
             conversation_id=request.conversation_id,
             context=request.context
         )
-        
+
+        # Track metrics
+        chatbot_queries_total.labels(version='v2', status='success').inc()
+        chatbot_query_duration.observe(time.time() - start_time)
+
         return ChatbotResponse(**response)
-        
+
     except Exception as e:
         logger.error(f"Error in intelligent chatbot: {e}", exc_info=True)
+        chatbot_queries_total.labels(version='v2', status='error').inc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process chatbot query: {str(e)}"

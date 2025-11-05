@@ -9,6 +9,7 @@ import logging
 
 from app.core.database import get_db
 from app.core.dependencies import get_user_from_header
+from app.core.metrics import eta_predictions_total, eta_prediction_duration
 from app.schemas.eta import (
     ETARequest, ETAResponse, ETABatchRequest, ETABatchResponse,
     ETAHistoryRequest, ETAHistoryResponse, ETAAccuracyFeedback,
@@ -38,6 +39,7 @@ async def predict_eta(
     - **departure_time**: Heure de départ prévue
     - **priority**: Priorité (normal, urgent, express)
     """
+    start_time = time.time()
     try:
         logger.info(f"ETA prediction request for user {user.get('id') if user else 'anonymous'}")
 
@@ -45,16 +47,23 @@ async def predict_eta(
         prediction = await eta_service.predict_eta(request)
 
         logger.info(f"ETA predicted: {prediction.estimated_duration_minutes} minutes")
+
+        # Track metrics
+        eta_predictions_total.labels(status='success').inc()
+        eta_prediction_duration.observe(time.time() - start_time)
+
         return prediction
 
     except ValueError as e:
         logger.error(f"Validation error in ETA prediction: {e}")
+        eta_predictions_total.labels(status='error').inc()
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Erreur de validation: {str(e)}"
         )
     except Exception as e:
         logger.error(f"ETA prediction failed: {e}")
+        eta_predictions_total.labels(status='error').inc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur lors de la prédiction ETA"
