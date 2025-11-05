@@ -214,7 +214,7 @@ export interface ChatState {
 
   // Chatbot actions
   initializeChatbot: () => void;
-  sendChatbotMessage: (message: string) => Promise<ChatbotResponse>;
+  sendChatbotMessage: (message: string, userId?: string) => Promise<ChatbotResponse>;
   getChatbotResponse: (userInput: string) => ChatbotResponse;
 
   // Real-time actions

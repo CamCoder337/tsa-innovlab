@@ -41,7 +41,7 @@ import PaymentForm from '@/components/forms/PaymentForm';
 import Facture from '@/components/invoice/Facture';
 import type { Payment, PaymentMethodType } from '@/types/payment.types';
 import { useOrders } from '@/hooks/useOrders';
-import { type Order, PaymentMethod } from '@/types/order.types';
+import { type Order } from '@/types/order.types';
 import { useAddresses } from '@/hooks/useAddresses';
 import { useShopTranslation } from '@/hooks/useTranslation';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
@@ -147,16 +147,29 @@ export default function CartSummaryPage() {
   const handleCreateOrder = async (payment: Payment): Promise<Order | null> => {
     try {
       // Map payment method from Payment to OrderPaymentMethod
-      const getPaymentMethod = (method: string): PaymentMethod => {
+      const getPaymentMethod = (method: string): string => {
+        // If method is already a valid payment method string, return it directly
+        if (
+          method === 'orange_money' ||
+          method === 'mtn_mobile_money' ||
+          method === 'moov_money' ||
+          method === 'wave' ||
+          method === 'bank_transfer' ||
+          method === 'cash_on_delivery'
+        ) {
+          return method;
+        }
+
+        // Legacy mapping for backward compatibility
         switch (method) {
           case 'mobile':
-            return PaymentMethod.MTN_MOMO; // Default to MTN for mobile
+            return 'mtn_mobile_money';
           case 'card':
-            return PaymentMethod.BANK_TRANSFER;
+            return 'bank_transfer';
           case 'cash':
-            return PaymentMethod.CASH_ON_DELIVERY;
+            return 'cash_on_delivery';
           default:
-            return PaymentMethod.MTN_MOMO;
+            return 'mtn_mobile_money';
         }
       };
 
@@ -217,6 +230,7 @@ export default function CartSummaryPage() {
         notes: formik.values.deliveryNotes || undefined,
       };
 
+      console.log('Order data to send:', orderData);
       const order = await createOrder(orderData);
       return order;
     } catch (error) {

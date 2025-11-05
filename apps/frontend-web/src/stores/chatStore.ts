@@ -162,7 +162,7 @@ export const useChatStore = create<ChatState>()(
             'Bonjour ! Je suis votre assistant TSA Logistics. Je peux vous aider avec vos missions, le suivi de vos livraisons, la boutique et bien plus encore. Comment puis-je vous assister ?',
           createdAt: new Date().toISOString(),
           isFromBot: true,
-          senderId: '-1',
+          senderId: 'bot',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,
@@ -175,7 +175,7 @@ export const useChatStore = create<ChatState>()(
             "Voici ce que je peux faire pour vous :\n• Gestion des missions de transport\n• Suivi en temps réel\n• Boutique de pièces reconditionnées\n• Support et assistance\n\nN'hésitez pas à me poser vos questions !",
           createdAt: new Date().toISOString(),
           isFromBot: true,
-          senderId: '-1',
+          senderId: 'bot',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,
@@ -197,17 +197,22 @@ export const useChatStore = create<ChatState>()(
       },
 
       // Send message to chatbot
-      sendChatbotMessage: async (message: string): Promise<ChatbotResponse> => {
+      sendChatbotMessage: async (message: string, userId?: string): Promise<ChatbotResponse> => {
         const { chatbot } = get();
         if (!chatbot) return generateChatbotResponse(message);
 
+        // Generate unique IDs based on current message count
+        const currentMessageCount = chatbot.messages.length;
+        const userMessageId = currentMessageCount + 1;
+        const botMessageId = currentMessageCount + 2;
+
         // Add user message
         const userMessage: ChatbotMessage = {
-          id: 3,
+          id: userMessageId,
           content: message,
           createdAt: new Date().toISOString(),
           isFromBot: false,
-          senderId: '-1',
+          senderId: userId || 'user',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,
@@ -217,11 +222,11 @@ export const useChatStore = create<ChatState>()(
         // Generate bot response
         const response = generateChatbotResponse(message);
         const botMessage: ChatbotMessage = {
-          id: 4,
+          id: botMessageId,
           content: response.content,
           createdAt: new Date().toISOString(),
           isFromBot: true,
-          senderId: '-1',
+          senderId: 'bot',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,

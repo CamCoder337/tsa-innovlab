@@ -72,7 +72,7 @@ export interface Order extends Timestamps {
 export interface CreateOrderRequest {
   shippingAddressId: string;
   billingAddressId: string;
-  paymentMethod: PaymentMethod;
+  paymentMethod: PaymentMethod | string; // Accept both enum and string values
   notes?: string;
 }
 
