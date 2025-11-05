@@ -178,7 +178,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
         </div>
         {isUploading && (
-          <div className="flex items-center gap-2 text-sm text-tsa-blue">
+          <div className="flex items-center gap-2 text-sm text-tsa-blue dark:text-tsa-white">
             <Loader2 className="h-4 w-4 animate-spin" />
             {tForms('messages.uploading')}...
           </div>

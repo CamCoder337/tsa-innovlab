@@ -225,7 +225,6 @@ export default function OrderDetailsPage() {
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">{tShop('orderDetails.breadcrumb.myOrders')}</span>
-            <span className="sm:hidden">Commandes</span>
           </Link>
           <span>/</span>
           <span className="truncate">
@@ -277,7 +276,6 @@ export default function OrderDetailsPage() {
               >
                 <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">{tShop('orderDetails.copyTracking')}</span>
-                <span className="sm:hidden">Copier</span>
               </Button>
             )}
           </div>
@@ -357,13 +355,13 @@ export default function OrderDetailsPage() {
                 {order.items?.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-zinc-50 transition-colors"
+                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-zinc-50 transition-colors"
                   >
                     {item.productImageUrl && (
                       <img
                         src={item.productImageUrl}
                         alt={item.productName || 'Product'}
-                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover border flex-shrink-0 mx-auto sm:mx-0"
+                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover border dark:border-gray-800 flex-shrink-0 mx-auto sm:mx-0"
                       />
                     )}
                     <div className="flex-1 min-w-0 text-center sm:text-left">
@@ -421,7 +419,7 @@ export default function OrderDetailsPage() {
 
               {order.trackingNumber && (
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue flex-shrink-0" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-blue-900 text-sm sm:text-base">
                       {tShop('orderDetails.trackingNumber')}
@@ -542,30 +540,26 @@ export default function OrderDetailsPage() {
             {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tShop('orderDetails.downloadInvoice')}</span>
-                <span className="sm:hidden">Facture</span>
+                <span>{tShop('orderDetails.downloadInvoice')}</span>
               </Button>
             )}
 
             {order.trackingNumber && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <ExternalLink className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tShop('orderDetails.trackPackage')}</span>
-                <span className="sm:hidden">Suivre</span>
+                <span>{tShop('orderDetails.trackPackage')}</span>
               </Button>
             )}
 
             <Button asChild className="w-full bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
               <Link to="/app/shop">
-                <span className="hidden sm:inline">{tShop('orderDetails.continueShopping')}</span>
-                <span className="sm:hidden">Continuer</span>
+                <span>{tShop('orderDetails.continueShopping')}</span>
               </Link>
             </Button>
 
             <Button asChild variant="outline" className="w-full text-xs sm:text-sm">
               <Link to="/app/shop/orders">
-                <span className="hidden sm:inline">{tShop('orderDetails.backToOrders')}</span>
-                <span className="sm:hidden">Mes commandes</span>
+                <span>{tShop('orderDetails.backToOrders')}</span>
               </Link>
             </Button>
           </div>

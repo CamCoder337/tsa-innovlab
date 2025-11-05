@@ -177,7 +177,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
 
         <div className="space-y-4">
           {/* Conversation Type Selection */}
-          <div className="flex gap-2">
+          <div className="hidden gap-2">
             <Button
               variant={conversationType === ConversationType.DIRECT ? 'default' : 'outline'}
               size="sm"
@@ -280,7 +280,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                       <p className="font-medium text-sm truncate">{`${user.firstName} ${user.lastName}`}</p>
                       <p className="text-xs text-gray-600 truncate">{user.email}</p>
                       {conversationType === ConversationType.MISSION && user.relatedMissions && (
-                        <p className="text-xs text-tsa-blue mt-1">
+                        <p className="text-xs text-tsa-blue dark:text-tsa-white mt-1">
                           {tForms('messages.sharedMissions', {
                             count: user.relatedMissions.length,
                           })}
@@ -376,10 +376,9 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
                           >
                             {tCommon(`status.${mission.status}`)}
                           </Badge>
-                          {mission.budgetMin && mission.budgetMax && (
+                          {mission.budgetMin && (
                             <span className="text-xs text-gray-500">
-                              {mission.budgetMin.toLocaleString()} -{' '}
-                              {mission.budgetMax.toLocaleString()} FCFA
+                              {mission.budgetMin.toLocaleString()} FCFA
                             </span>
                           )}
                         </div>

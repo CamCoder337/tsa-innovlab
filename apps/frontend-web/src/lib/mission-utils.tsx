@@ -9,6 +9,8 @@ export function getStatusColor(status: MissionStatus) {
       return 'bg-blue-100 text-blue-800';
     case 'assigned':
       return 'bg-purple-100 text-purple-800';
+    case 'in_progress':
+      return 'bg-yellow-100 text-yellow-800';
     case 'completed':
       return 'bg-green-100 text-green-800';
     case 'cancelled':
@@ -26,7 +28,6 @@ export function getStatusIcon(status: string) {
     case 'cancelled':
     case 'rejected':
       return <XCircle className="h-4 w-4" />;
-    case 'assigned':
     case 'published':
     case 'pending':
       return <Clock className="h-4 w-4" />;

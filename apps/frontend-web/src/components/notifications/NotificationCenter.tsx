@@ -266,7 +266,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-center text-tsa-blue hover:text-blue-700"
+                className="w-full text-center text-tsa-blue dark:text-tsa-white hover:text-blue-700"
                 onClick={() => {
                   setIsOpen(false);
                   // Navigate to full notifications page

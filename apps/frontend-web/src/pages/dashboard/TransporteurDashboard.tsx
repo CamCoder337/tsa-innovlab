@@ -196,10 +196,7 @@ function TransporteurDashboard() {
               style={{ backgroundColor: 'var(--tsa-blue)' }}
             >
               <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {tDash('transporteur.actions.availableMissions')}
-              </span>
-              <span className="sm:hidden">Missions</span>
+              <span>{tDash('transporteur.actions.availableMissions')}</span>
             </Button>
           </Link>
         </div>
@@ -239,7 +236,7 @@ function TransporteurDashboard() {
                     <p className="text-lg sm:text-2xl font-bold truncate">{insight.value}</p>
                     <p className="text-xs text-green-600 truncate">{insight.change}</p>
                   </div>
-                  <insight.icon className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue flex-shrink-0" />
+                  <insight.icon className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                 </div>
               </CardContent>
             </Card>

@@ -458,14 +458,14 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50 p-3 sm:p-4 lg:p-6">
+    <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-950 p-3 sm:p-4 lg:p-6">
       <div className="flex-1 p-3 sm:p-4 lg:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2 truncate">
               {tAdmin('products.title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 truncate">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 truncate">
               {tAdmin('products.subtitle')}
             </p>
           </div>
@@ -477,10 +477,10 @@ export default function AdminProductsPage() {
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tAdmin('products.totalProducts')}
                   </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
@@ -498,7 +498,7 @@ export default function AdminProductsPage() {
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tCommon('status.active')}
                   </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
@@ -517,7 +517,7 @@ export default function AdminProductsPage() {
                   <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tAdmin('products.lowStock')}
                   </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
@@ -535,7 +535,7 @@ export default function AdminProductsPage() {
                   <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                     {tAdmin('products.totalRevenue')}
                   </p>
                   <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
@@ -551,20 +551,14 @@ export default function AdminProductsPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
             <TabsTrigger value="products" className="text-xs sm:text-sm truncate">
-              <span className="hidden sm:inline">
+              <span>
                 {tAdmin('products.productsTab', {
                   count: stats?.products?.total || products?.length,
                 })}
               </span>
-              <span className="sm:hidden">
-                Produits ({stats?.products?.total || products?.length})
-              </span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
-              <span className="hidden sm:inline">
-                {tAdmin('products.categoriesTab', { count: categories.length })}
-              </span>
-              <span className="sm:hidden">Catégories ({categories.length})</span>
+              <span>{tAdmin('products.categoriesTab', { count: categories.length })}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -599,11 +593,8 @@ export default function AdminProductsPage() {
                                 })}
                               </span>
                             ) : (
-                              <span className="hidden sm:inline">
-                                {tAdmin('products.filterByCategories')}
-                              </span>
+                              <span>{tAdmin('products.filterByCategories')}</span>
                             )}
-                            <span className="sm:hidden">Catégories</span>
                           </span>
                         </Button>
                       </DropdownMenuTrigger>
@@ -698,8 +689,7 @@ export default function AdminProductsPage() {
                       }}
                     >
                       <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="hidden sm:inline">{tAdmin('products.addProduct')}</span>
-                      <span className="sm:hidden">Ajouter</span>
+                      <span>{tAdmin('products.addProduct')}</span>
                     </Button>
                   </div>
 
@@ -758,10 +748,10 @@ export default function AdminProductsPage() {
                     return (
                       <div
                         key={product.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:bg-gray-950"
                       >
                         <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center flex-shrink-0">
                             {product.imageUrl ? (
                               <img
                                 src={product.imageUrl || product.images[0]}
@@ -776,7 +766,7 @@ export default function AdminProductsPage() {
                             <h3 className="font-medium text-sm sm:text-base truncate">
                               {product.name}
                             </h3>
-                            <p className="text-xs sm:text-sm text-gray-500 truncate">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                               {product.description || tAdmin('products.noDescription')}
                             </p>
                             <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 flex-wrap">
@@ -865,7 +855,7 @@ export default function AdminProductsPage() {
 
                 {filteredProducts.length === 0 && (
                   <div className="text-center py-6 sm:py-8">
-                    <p className="text-gray-500 text-sm sm:text-base">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                       {tAdmin('products.noProductsFound')}
                     </p>
                   </div>
@@ -889,8 +879,7 @@ export default function AdminProductsPage() {
                   }}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className="hidden sm:inline">{tAdmin('products.addCategory')}</span>
-                  <span className="sm:hidden">Ajouter</span>
+                  <span>{tAdmin('products.addCategory')}</span>
                 </Button>
                 <Sheet
                   open={isDialogOpen}
@@ -935,16 +924,16 @@ export default function AdminProductsPage() {
                   {categories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 border dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:bg-gray-950"
                     >
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue" />
+                          <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                            <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                            <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">
                               {category.name}
                             </h4>
                             <Badge variant="outline" className="text-xs w-fit">
@@ -954,7 +943,7 @@ export default function AdminProductsPage() {
                             </Badge>
                           </div>
 
-                          <div className="text-xs sm:text-sm text-gray-600">
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             {category.products?.length || 0} {tAdmin('dashboard.labels.products')}
                           </div>
                         </div>

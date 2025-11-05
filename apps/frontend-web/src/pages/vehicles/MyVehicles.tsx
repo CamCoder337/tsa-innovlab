@@ -148,8 +148,7 @@ export const MyVehicles: React.FC = () => {
           className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 bg-tsa-blue text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
         >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-          <span className="hidden sm:inline">Ajouter un véhicule</span>
-          <span className="sm:hidden">Ajouter</span>
+          <span>Ajouter un véhicule</span>
         </Button>
 
         <Sheet
@@ -222,7 +221,7 @@ export const MyVehicles: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm font-medium text-gray-600">En mission</p>
-              <p className="text-lg sm:text-2xl font-bold text-tsa-blue">{getInUseCount()}</p>
+              <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">{getInUseCount()}</p>
             </div>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center text-xs sm:text-base">
               🚚
@@ -269,7 +268,6 @@ export const MyVehicles: React.FC = () => {
           >
             <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
             <span className="hidden sm:inline">Filtres</span>
-            <span className="sm:hidden">Filtrer</span>
           </button>
         </div>
 
@@ -362,7 +360,7 @@ export const MyVehicles: React.FC = () => {
             <p className="text-gray-600 text-sm sm:text-base">Aucun véhicule trouvé</p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="mt-4 text-tsa-blue hover:text-blue-800 text-sm sm:text-base"
+              className="mt-4 text-tsa-blue dark:text-tsa-white hover:text-blue-800 text-sm sm:text-base"
             >
               Ajouter votre premier véhicule
             </button>
@@ -448,7 +446,7 @@ export const MyVehicles: React.FC = () => {
                       <div className="flex justify-end space-x-1 sm:space-x-2">
                         <button
                           onClick={() => setEditingVehicle(vehicle)}
-                          className="text-tsa-blue hover:text-blue-900 p-1"
+                          className="text-tsa-blue dark:text-tsa-white hover:text-blue-900 p-1"
                           title="Modifier"
                         >
                           <Edit className="w-3 h-3 sm:w-4 sm:h-4" />

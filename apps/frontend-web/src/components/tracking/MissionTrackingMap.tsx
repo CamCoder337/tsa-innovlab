@@ -21,8 +21,11 @@ interface MissionTrackingMapProps {
 
 interface RouteInfo {
   distance: number; // in km
-  duration: number; // in minutes
+  duration: number; // in minutes (base time without traffic)
+  durationInTraffic?: number; // in minutes (with real-time traffic)
+  trafficDelay?: number; // in minutes
   eta: Date;
+  etaWithTraffic?: Date;
 }
 
 // Helper function to get coordinates from address
@@ -184,6 +187,8 @@ export default function MissionTrackingMap({
                 strokeColor: '#2563eb',
                 strokeWeight: mission.id === selectedMission?.id ? 4 : 2,
                 strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
+                departureTime: new Date(), // Use current time for real-time traffic
+                trafficModel: 'best_guess', // Best realistic estimate
               });
 
               if (
@@ -195,11 +200,27 @@ export default function MissionTrackingMap({
               ) {
                 const leg = result.routes[0].legs[0];
                 const distance = Math.round((leg.distance?.value || 0) / 1000); // km
-                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes
+                const duration = Math.round((leg.duration?.value || 0) / 60); // minutes (base time)
+                const durationInTraffic = leg.duration_in_traffic?.value
+                  ? Math.round(leg.duration_in_traffic.value / 60)
+                  : undefined; // minutes (with traffic)
+
+                // Calculate traffic delay
+                const trafficDelay =
+                  durationInTraffic && durationInTraffic > duration
+                    ? durationInTraffic - duration
+                    : undefined;
 
                 // Calculate ETA based on current time
-                const eta = new Date();
+                const now = new Date();
+                const eta = new Date(now);
                 eta.setMinutes(eta.getMinutes() + duration);
+
+                // Calculate ETA with traffic if available
+                const etaWithTraffic = durationInTraffic ? new Date(now) : undefined;
+                if (etaWithTraffic && durationInTraffic) {
+                  etaWithTraffic.setMinutes(etaWithTraffic.getMinutes() + durationInTraffic);
+                }
 
                 // Update route info using functional form to avoid race conditions
                 setRouteInfo((prev) => {
@@ -207,7 +228,10 @@ export default function MissionTrackingMap({
                   updated.set(mission.id, {
                     distance,
                     duration,
+                    durationInTraffic,
+                    trafficDelay,
                     eta,
+                    etaWithTraffic,
                   });
                   return updated;
                 });
@@ -352,10 +376,10 @@ export default function MissionTrackingMap({
       <div className={`flex items-center justify-center bg-gray-100 rounded-lg ${className}`}>
         <div className="text-center p-4 sm:p-8">
           <AlertTriangle className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto text-red-500 mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t('map.errorLoadingMap')}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{error}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">{error}</p>
           <button
             onClick={() => void initializeMap()}
             className="px-3 sm:px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
@@ -373,10 +397,10 @@ export default function MissionTrackingMap({
       <div className={`flex items-center justify-center bg-gray-50 rounded-lg ${className}`}>
         <div className="text-center p-4 sm:p-8">
           <Package className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto text-gray-400 mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t('map.noMissionsToDisplay')}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600">{t('map.noMissionsMessage')}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{t('map.noMissionsMessage')}</p>
         </div>
       </div>
     );
@@ -385,10 +409,10 @@ export default function MissionTrackingMap({
   return (
     <div className={`relative ${className}`}>
       {isLoading && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-3 sm:mb-4"></div>
-            <p className="text-gray-600 text-sm sm:text-base">{t('map.loadingMap')}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">{t('map.loadingMap')}</p>
           </div>
         </div>
       )}
@@ -397,13 +421,13 @@ export default function MissionTrackingMap({
 
       {/* Informations missions */}
       <div className="absolute top-2 sm:top-4 right-2 sm:right-4 space-y-2 max-w-xs">
-        <Card className="bg-white/95 backdrop-blur">
+        <Card className="bg-white dark:bg-gray-900/95 backdrop-blur">
           <CardContent className="p-2 sm:p-3">
             <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
               <Package className="w-3 h-3 sm:w-4 sm:h-4" />
               {t('map.missions')}
             </h4>
-            <div className="text-xs sm:text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
               <p>{t('map.totalMissions', { count: missions.length })}</p>
               <p>
                 {t('map.assignedMissions', {
@@ -416,7 +440,7 @@ export default function MissionTrackingMap({
 
         {/* ETA Information for selected mission */}
         {selectedMission && routeInfo.has(selectedMission.id) && (
-          <Card className="bg-white/95 backdrop-blur">
+          <Card className="bg-white dark:bg-gray-900/95 backdrop-blur">
             <CardContent className="p-2 sm:p-3">
               <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm sm:text-base">
                 <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
@@ -425,27 +449,65 @@ export default function MissionTrackingMap({
               </h4>
               <div className="text-xs sm:text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Distance:</span>
+                  <span className="text-gray-600 dark:text-gray-300">Distance:</span>
                   <span className="font-medium">
                     {routeInfo.get(selectedMission.id)?.distance} km
                   </span>
                 </div>
+
+                {/* Base duration (without traffic) */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Durée:</span>
-                  <span className="font-medium">
+                  <span className="text-gray-600 dark:text-gray-300">Durée base:</span>
+                  <span className="font-medium text-gray-500">
                     {Math.floor((routeInfo.get(selectedMission.id)?.duration || 0) / 60)}h{' '}
                     {(routeInfo.get(selectedMission.id)?.duration || 0) % 60}min
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ETA:</span>
+
+                {/* Duration with traffic if available */}
+                {routeInfo.get(selectedMission.id)?.durationInTraffic && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Avec trafic:</span>
+                      <span className="font-medium text-blue-600">
+                        {Math.floor((routeInfo.get(selectedMission.id)?.durationInTraffic || 0) / 60)}h{' '}
+                        {(routeInfo.get(selectedMission.id)?.durationInTraffic || 0) % 60}min
+                      </span>
+                    </div>
+
+                    {/* Traffic delay indicator */}
+                    {routeInfo.get(selectedMission.id)?.trafficDelay && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-300">Retard trafic:</span>
+                        <span className="font-medium text-orange-600">
+                          +{routeInfo.get(selectedMission.id)?.trafficDelay}min
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ETA with traffic */}
+                <div className="flex justify-between pt-1 border-t">
+                  <span className="text-gray-600 dark:text-gray-300">ETA:</span>
                   <span className="font-medium text-green-600">
-                    {routeInfo.get(selectedMission.id)?.eta.toLocaleTimeString('fr-FR', {
+                    {(routeInfo.get(selectedMission.id)?.etaWithTraffic ||
+                      routeInfo.get(selectedMission.id)?.eta)?.toLocaleTimeString('fr-FR', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
                   </span>
                 </div>
+
+                {/* Real-time traffic indicator */}
+                {routeInfo.get(selectedMission.id)?.durationInTraffic && (
+                  <div className="pt-1 mt-1 border-t">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      Trafic en temps réel
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -453,13 +515,13 @@ export default function MissionTrackingMap({
 
         {/* Indicateur de position utilisateur */}
         {showUserLocation && userPosition && (
-          <Card className="bg-white/95 backdrop-blur">
+          <Card className="bg-white dark:bg-gray-900/95 backdrop-blur">
             <CardContent className="p-2 sm:p-3">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                 <div>
                   <p className="text-xs sm:text-sm font-medium">{t('map.detectedPosition')}</p>
-                  <p className="text-xs text-gray-600">±{Math.round(userPosition.accuracy)}m</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">±{Math.round(userPosition.accuracy)}m</p>
                 </div>
               </div>
             </CardContent>

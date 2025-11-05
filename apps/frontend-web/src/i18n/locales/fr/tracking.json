@@ -105,7 +105,19 @@
     "missions": "Missions",
     "totalMissions": "Total: {{count}} missions",
     "assignedMissions": "Assignées: {{count}}",
-    "detectedPosition": "Position détectée"
+    "detectedPosition": "Position détectée",
+    "departure": "Départ: {{title}}",
+    "arrival": "Arrivée: {{title}}",
+    "transporter": "Transporteur: {{title}}",
+    "yourPosition": "Votre position",
+    "routeInformation": "Informations de trajet",
+    "distance": "Distance:",
+    "duration": "Durée:",
+    "eta": "ETA:",
+    "apiKeyNotConfigured": "Clé API Google Maps non configurée. Ajoutez VITE_GOOGLE_MAPS_API_KEY dans votre fichier .env",
+    "mapInitializationError": "Erreur lors de l'initialisation de la carte:",
+    "unknownError": "Erreur inconnue",
+    "positionUnavailable": "Impossible d'obtenir la position de l'utilisateur:"
   },
   "actions": {
     "share": "Partager",
@@ -239,5 +251,32 @@
     "noActiveMissionMessage": "Vous n'avez pas de mission en cours. Consultez vos missions assignées.",
     "departure": "Départ",
     "arrival": "Arrivée"
+  },
+  "realTime": {
+    "title": "Suivi Temps Réel des Missions",
+    "loadingMissions": "Chargement des missions en temps réel...",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "lastUpdate": "Dernière mise à jour: {{time}}",
+    "totalMissions": "Total Missions",
+    "inProgress": "En Cours",
+    "published": "Publiées",
+    "completed": "Terminées",
+    "highPriority": "Prioritaires",
+    "realTimeMap": "Carte des Missions en Temps Réel",
+    "realTimeMapShort": "Missions Temps Réel",
+    "selectedMission": "Mission Sélectionnée",
+    "noMissionSelected": "Aucune mission sélectionnée",
+    "clickMarkerForDetails": "Cliquez sur un marqueur de la carte pour voir les détails",
+    "recentActivity": "Activité Récente",
+    "priorityMission": "Mission Prioritaire",
+    "highBudgetTracking": "Budget élevé - Suivi renforcé requis",
+    "type": "Type:",
+    "weight": "Poids:",
+    "volume": "Volume:",
+    "budget": "Budget:",
+    "delivery": "Livraison:",
+    "loadingError": "Erreur lors du chargement des missions:",
+    "refreshError": "Erreur lors de l'actualisation:"
   }
 }

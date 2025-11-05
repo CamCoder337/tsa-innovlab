@@ -196,14 +196,14 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               <div className="text-2xl font-bold text-green-600">
                 {mission.status === 'completed' ? '✓' : '⏳'}
               </div>
-              <p className="text-sm text-gray-600 mt-1">{tCommon('status.title')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tCommon('status.title')}</p>
               <p className="font-medium capitalize">{tCommon(`status.${mission.status}`)}</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-tsa-blue">
+              <div className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                 {mission.dateArriveePrevue ? '100%' : '0%'}
               </div>
-              <p className="text-sm text-gray-600 mt-1">{tMissions('tracking.progress')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tMissions('tracking.progress')}</p>
               <p className="font-medium">
                 {mission.dateArriveePrevue
                   ? tCommon('status.completed')
@@ -212,7 +212,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">N/A</div>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                 {tMissions('appreciation.averageRating')}
               </p>
               <p className="font-medium">{tMissions('appreciation.notYetRated')}</p>
@@ -232,7 +232,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600">{tCommon('roles.transporteur')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('roles.transporteur')}</p>
               <p className="font-medium">
                 {transporteurName ||
                   mission.transporteur?.fullName ||
@@ -241,7 +241,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{tCommon('roles.affreteur')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('roles.affreteur')}</p>
               <p className="font-medium">
                 {affreteurName ||
                   mission.affreteur?.fullName ||
@@ -250,7 +250,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{tMissions('duration')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{tMissions('duration')}</p>
               <p className="font-medium">
                 {mission.dateArriveePrevue && mission.dateDepartEstime
                   ? `${Math.ceil((new Date(mission.dateArriveePrevue).getTime() - new Date(mission.dateDepartEstime).getTime()) / (1000 * 60 * 60 * 24))} jours`
@@ -258,11 +258,11 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{tMissions('budget')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{tMissions('budget')}</p>
               <p className="font-medium">{mission.budgetMax?.toLocaleString()} FCFA</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">{tMissions('distance')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{tMissions('distance')}</p>
               <p className="font-medium">{tCommon('status.notAvailable')}</p>
             </div>
           </div>
@@ -282,10 +282,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             {/* Critères de notation détaillés */}
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {tMissions('appreciation.detailedEvaluation')}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   {tMissions('appreciation.rateEachCriteria')}
                 </p>
               </div>
@@ -319,7 +319,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                   </div>
                 </div>
                 {appreciation.ponctualite > 0 && (
-                  <p className="text-xs text-tsa-blue text-right">
+                  <p className="text-xs text-tsa-blue dark:text-tsa-white text-right">
                     {appreciation.ponctualite === 1 &&
                       tMissions('appreciation.criteria.punctuality.ratings.1')}
                     {appreciation.ponctualite === 2 &&
@@ -468,13 +468,13 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
 
               {/* Note générale calculée */}
               {appreciation.rating > 0 && (
-                <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                <div className="bg-gray-50 dark:bg-gray-950 p-4 rounded-lg border dark:border-gray-800-2 border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-gray-900 dark:text-white">
                         {tMissions('appreciation.overallRating')}
                       </h4>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {tMissions('appreciation.calculatedAutomatically')}
                       </p>
                     </div>
@@ -491,7 +491,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                           />
                         ))}
                       </div>
-                      <span className="text-lg font-bold text-gray-900">
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
                         {appreciation.rating}/5
                       </span>
                     </div>
@@ -567,7 +567,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
           ) : existingFeedback ? (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="bg-gray-50 dark:bg-gray-950 p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium">{tMissions('appreciation.success.submitted')}</h4>
                   <div className="flex items-center gap-1">
@@ -585,9 +585,9 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                   </div>
                 </div>
                 {existingFeedback.description && (
-                  <p className="text-sm text-gray-600 mb-2">{existingFeedback.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{existingFeedback.description}</p>
                 )}
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {tMissions('appreciation.submittedOn')}{' '}
                   {new Date(existingFeedback.createdAt).toLocaleDateString('fr-FR', {
                     year: 'numeric',
@@ -600,7 +600,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>{tMissions('appreciation.noAppreciations')}</p>
               <p className="text-sm">{tMissions('appreciation.appreciationsWillAppear')}</p>

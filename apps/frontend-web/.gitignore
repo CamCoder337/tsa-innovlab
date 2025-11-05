@@ -28,3 +28,9 @@ dist-ssr
 .env.local
 .env
 .env.docker
+
+# MAPS
+GOOGLE_MAPS_CHANGES.md
+GOOGLE_MAPS_GUIDE.md
+GOOGLE_MAPS_SUMMARY.md
+

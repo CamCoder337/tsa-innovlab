@@ -281,7 +281,7 @@ export default function CartSummaryPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 flex-1 flex-col p-3 sm:p-4 lg:p-6">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 flex-1 flex-col p-3 sm:p-4 lg:p-6">
       <div className="w-full">
         <div className="container mx-auto px-2 sm:px-4">
           {/* Header */}
@@ -295,18 +295,17 @@ export default function CartSummaryPage() {
                 >
                   <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="hidden sm:inline">{tShop('cart.continueShopping')}</span>
-                  <span className="sm:hidden">Retour</span>
                 </Button>
               </Link>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {tShop('cart.title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600">{tShop('cart.reviewItems')}</p>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{tShop('cart.reviewItems')}</p>
           </div>
 
           {error && (
-            <div className="mb-3 sm:mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-xs sm:text-sm">
+            <div className="mb-3 sm:mb-4 p-3 bg-red-50 border dark:border-gray-800 border-red-200 rounded text-red-600 text-xs sm:text-sm">
               {error}
             </div>
           )}
@@ -318,10 +317,10 @@ export default function CartSummaryPage() {
                 <Card>
                   <CardContent className="p-8 sm:p-12 text-center">
                     <ShoppingCart className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
                       {tShop('cart.empty.title')}
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">
                       {tShop('cart.empty.message')}
                     </p>
                     <Link to="/app/shop">
@@ -338,18 +337,18 @@ export default function CartSummaryPage() {
                 <>
                   {cart.items.map((item) => (
                     <Card key={item.productId}>
-                      <CardContent className="p-3 sm:p-4 lg:p-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                      <CardContent className="p-4 lg:p-6">
+                        <div className="flex items-center gap-4">
                           <img
                             src={item.product?.images[0] || item.product?.imageUrl || ''}
                             alt={item.product?.name || ''}
-                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0 mx-auto sm:mx-0"
+                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                           />
-                          <div className="flex-1 min-w-0 text-center sm:text-left">
+                          <div className="flex-1 min-w-0 text-left">
                             <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">
                               {item.product?.name || ''}
                             </h3>
-                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2 sm:mb-3">
+                            <div className="flex flex-wrap items-center justify-start gap-2 mb-3">
                               <Badge className="bg-green-100 text-green-800 text-xs">
                                 {tShop('cart.item.reference')}: {item.product?.reference || ''}
                               </Badge>
@@ -357,7 +356,7 @@ export default function CartSummaryPage() {
                                 {item.product?.unit || ''}
                               </Badge>
                             </div>
-                            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                            <div className="flex items-center gap-4">
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
@@ -396,13 +395,13 @@ export default function CartSummaryPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-center sm:text-right w-full sm:w-auto">
-                            <div className="flex flex-col items-center sm:items-end gap-1 mb-2">
+                          <div className="text-right w-auto">
+                            <div className="flex flex-col items-end gap-1 mb-2">
                               <p className="text-base sm:text-lg font-bold">
                                 {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
                                 FCFA
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
                                 {item.priceAtAdd.toLocaleString()} FCFA {tShop('cart.item.each')}
                               </p>
                             </div>
@@ -410,11 +409,10 @@ export default function CartSummaryPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveItem(item.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 w-auto"
                               disabled={isLoading}
                             >
-                              <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
-                              <span className="sm:hidden">Supprimer</span>
+                              <Trash2 className="h-4 w-4 mr-0" />
                             </Button>
                           </div>
                         </div>
@@ -424,8 +422,8 @@ export default function CartSummaryPage() {
 
                   {/* Adresse de livraison */}
                   <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <CardHeader>
+                      <CardTitle className="flex justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
                           <span className="text-base sm:text-lg">
@@ -451,7 +449,7 @@ export default function CartSummaryPage() {
                               });
                             }
                           }}
-                          className="text-xs w-full sm:w-auto"
+                          className="text-xs w-auto"
                         >
                           <MapPin className="h-3 w-3 mr-1" />
                           <span className="hidden sm:inline">
@@ -490,7 +488,7 @@ export default function CartSummaryPage() {
                           </div>
 
                           {isAddressSelected && (
-                            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="p-3 bg-green-50 border dark:border-gray-800 border-green-200 rounded-lg">
                               <div className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
@@ -659,7 +657,7 @@ export default function CartSummaryPage() {
                     <span>{deliveryFee.toLocaleString()} FCFA</span>
                   </div>
 
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
                     <span>{tShop('cart.orderSummary.totalWeight')}</span>
                     <span>{totalWeight.toFixed(1)} kg</span>
                   </div>
@@ -727,7 +725,7 @@ export default function CartSummaryPage() {
                     <span>{tShop('cart.deliveryInfo.qualityTested')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Truck className="h-4 w-4 text-tsa-blue" />
+                    <Truck className="h-4 w-4 text-tsa-blue dark:text-tsa-white" />
                     <span>{tShop('cart.deliveryInfo.freeReturns')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
@@ -759,7 +757,7 @@ export default function CartSummaryPage() {
 
           <div className="space-y-4">
             {/* Order Summary in Dialog */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-950 rounded-lg p-4">
               <h3 className="font-semibold text-lg mb-3">{tShop('payment.orderSummary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

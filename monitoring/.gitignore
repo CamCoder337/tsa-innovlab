@@ -1,0 +1,17 @@
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# Prometheus data
+prometheus-data/
+
+# Grafana data
+grafana-data/
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store

@@ -181,43 +181,51 @@ function AffreteurProfile() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('title')}</h1>
-          <p className="text-muted-foreground">{tProfile('subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tProfile('title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">{tProfile('subtitle')}</p>
         </div>
         {!isEditing ? (
-          <div className="flex gap-2">
-            <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
-              <Edit className="h-4 w-4" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
+            >
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
-              <Button variant="outline" className="gap-2 cursor-pointer">
-                <Settings className="h-4 w-4" />
+              <Button
+                variant="outline"
+                className="gap-2 cursor-pointer w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+              >
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
                 {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               disabled={isLoading}
               onClick={handleSaveClick}
-              className="gap-2 cursor-pointer"
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
               type="submit"
               form="profile-form"
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-3 w-3 sm:h-4 sm:w-4" />
               {isLoading ? tProfile('profile.actions.saving') : tProfile('profile.actions.save')}
             </Button>
             <Button
               variant="outline"
               disabled={isLoading}
-              className="gap-2 cursor-pointer"
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
               onClick={handleCancel}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.cancel')}
             </Button>
           </div>
@@ -330,13 +338,13 @@ function AffreteurProfile() {
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-tsa-blue mt-0.5" />
+                <Shield className="h-5 w-5 text-tsa-blue dark:text-tsa-white mt-0.5" />
                 <div className="space-y-1">
                   <h4 className="text-sm font-medium text-blue-900">
                     {tProfile('kyc.whyDocuments')}
                   </h4>
                   <p className="text-sm text-blue-700">{tProfile('kyc.description')}</p>
-                  <ul className="text-xs text-tsa-blue mt-2 space-y-1">
+                  <ul className="text-xs text-tsa-blue dark:text-tsa-white mt-2 space-y-1">
                     <li>• {tProfile('kyc.acceptedFormats')}</li>
                     <li>• {tProfile('kyc.verificationTime')}</li>
                     <li>• {tProfile('kyc.secureStorage')}</li>

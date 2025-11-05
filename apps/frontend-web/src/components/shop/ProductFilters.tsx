@@ -139,7 +139,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
         {/* Search */}
         <div className="md:flex flex-col space-y-2 hidden">
           <h3 className="font-medium">{tCommon('actions.search')}</h3>
-          <div className="flex flex-1 items-center justify-between border border-input">
+          <div className="flex flex-1 items-center justify-between border dark:border-gray-800 border-input">
             <SearchIcon className="h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={tShop('filters.searchPlaceholder')}
@@ -160,8 +160,8 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="flex items-center gap-2 h-8">
-                  <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse" />
                 </div>
               ))}
             </div>
@@ -210,7 +210,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
               className="w-full"
             />
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <span>{filters.minPrice?.toLocaleString()} FCFA</span>
             <span>{filters.maxPrice?.toLocaleString()} FCFA</span>
           </div>

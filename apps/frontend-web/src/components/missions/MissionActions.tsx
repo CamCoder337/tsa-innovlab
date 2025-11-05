@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Edit, Trash2, Send, X, Check, Clock, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTransla
 import { useVehicles } from '@/hooks/useVehicles';
 import { VehicleTypeLabels } from '@/types/vehicle.types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useMissions } from '@/hooks/useMissions';
 
 interface MissionActionsProps {
   mission: Mission;
@@ -30,6 +31,7 @@ interface MissionActionsProps {
   onApply?: (selectedVehicleId: string) => void;
   onUpdate?: (status: MissionStatus, comment?: string) => Promise<void>;
   onStatusUpdate?: (status: MissionStatus) => Promise<void>;
+  onDelete?: (missionId: string) => void;
   onRefresh: () => void;
 }
 
@@ -39,9 +41,10 @@ export function MissionActions({
   onApply,
   onUpdate,
   onStatusUpdate,
+  onDelete,
   onRefresh,
 }: MissionActionsProps) {
-  const navigate = useNavigate();
+  const { setCurrentMission } = useMissions();
   const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
@@ -70,10 +73,12 @@ export function MissionActions({
         case 'start':
           await onStatusUpdate?.('in_progress');
           break;
+        case 'delete':
+          await onDelete?.(mission.id);
+          break;
         default:
           await onUpdate?.(action.type as MissionStatus, comment || undefined);
       }
-      toast.success(tMissions(`actions.success.${action.type}`));
       setIsDialogOpen(false);
       setIsApplyDialogOpen(false);
       onRefresh();
@@ -89,13 +94,15 @@ export function MissionActions({
     const getCommonActions = () => {
       return (
         <>
-          <DropdownMenuItem onClick={() => navigate(`/missions/${mission.id}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            <span>{tCommon('actions.edit')}</span>
-          </DropdownMenuItem>
+          <Link to={`/app/missions/create`}>
+            <DropdownMenuItem onClick={() => setCurrentMission(mission)}>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>{tCommon('actions.edit')}</span>
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem
             className="text-red-600"
-            onClick={() => handleAction('delete', tMissions('actions.deleteMission'))}
+            onClick={() => handleAction('delete', tMissions('actions.delete'))}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             <span>{tCommon('actions.delete')}</span>
@@ -110,7 +117,7 @@ export function MissionActions({
           return (
             <>
               <DropdownMenuItem
-                onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
+                onClick={() => handleAction('publish', tMissions('actions.publish'))}
               >
                 <Send className="mr-2 h-4 w-4" />
                 <span>{tCommon('actions.publish')}</span>
@@ -247,8 +254,8 @@ export function MissionActions({
 
             {action?.type === 'delete' && (
               <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-md text-xs sm:text-sm">
-                <p className="font-medium">{tMissions('actions.warningIrreversible')}</p>
-                <p>{tMissions('actions.missionDataWillBeDeleted')}</p>
+                <p className="font-medium">{tCommon('actions.warning.irreversible')}</p>
+                <p>{tMissions('messages.missionDataWillBeDeleted')}</p>
               </div>
             )}
           </div>
@@ -266,7 +273,7 @@ export function MissionActions({
               variant={action?.type === 'delete' ? 'destructive' : 'default'}
               onClick={confirmAction}
               disabled={isLoading}
-              className="w-full sm:w-auto text-xs sm:text-sm"
+              className="w-full sm:w-auto text-xs sm:text-sm text-white"
             >
               {isLoading ? tCommon('messages.processing') : tCommon('actions.confirm')}
             </Button>
@@ -296,15 +303,15 @@ export function MissionActions({
 
           <div className="space-y-3 sm:space-y-4">
             {mission && (
-              <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">
+              <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
+                <h3 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">
                   {mission.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                   {mission.description}
                 </p>
                 {mission.requiredVehicleType && (
-                  <p className="text-xs sm:text-sm text-tsa-blue mt-2">
+                  <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">
                     {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
                     {VehicleTypeLabels[mission.requiredVehicleType]}
                   </p>
@@ -313,18 +320,18 @@ export function MissionActions({
             )}
 
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 {tMissions('myMissions.transporteur.apply.selectVehicle')}
               </label>
               {vehiclesLoading ? (
                 <div className="flex items-center justify-center p-3 sm:p-4">
-                  <div className="w-4 h-4 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="ml-2 text-gray-600 text-xs sm:text-sm">
+                  <div className="w-4 h-4 sm:w-6 sm:h-6 border dark:border-gray-800-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="ml-2 text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                     {tMissions('myMissions.transporteur.apply.loadingVehicles')}
                   </span>
                 </div>
               ) : availableVehicles.length === 0 ? (
-                <div className="p-3 sm:p-4 text-center text-gray-600 bg-yellow-50 rounded-lg">
+                <div className="p-3 sm:p-4 text-center text-gray-600 dark:text-gray-300 bg-yellow-50 rounded-lg">
                   <p className="text-xs sm:text-sm">
                     {tMissions('myMissions.transporteur.apply.noVehiclesAvailable')}
                   </p>
@@ -346,7 +353,7 @@ export function MissionActions({
                           <span className="text-xs sm:text-sm font-medium">
                             {vehicle.registration}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             ({VehicleTypeLabels[vehicle.type]})
                           </span>
                         </div>

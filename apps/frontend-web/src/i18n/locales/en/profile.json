@@ -149,11 +149,14 @@
         "setup": "MFA Setup",
         "manualKey": "1. Enter this secret key in your authenticator app (Google Authenticator, Authy, etc.)",
         "enterCode": "2. Enter the 6-digit code from your app",
+        "enterDisableCode": "Confirm the deactivation by entering the 6-digit code from your app",
         "enable": "Enable MFA",
+        "disable": "Disable MFA",
         "backupCodes": "Backup Codes",
         "backupCodesDescription": "Keep these codes safe. They will allow you to access your account if you lose your phone.",
         "regenerateCodes": "Regenerate Codes",
         "enableSuccess": "MFA enabled successfully",
+        "regenerateSuccess": "Backup codes regenerated successfully",
         "disableSuccess": "MFA disabled successfully"
       }
     }

@@ -205,43 +205,53 @@ function TransporteurProfile() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{tProfile('title')}</h1>
-          <p className="text-muted-foreground">{tProfile('transporteur.subtitle')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            {tProfile('title')}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {tProfile('transporteur.subtitle')}
+          </p>
         </div>
         {!isEditing ? (
-          <div className="flex gap-2">
-            <Button onClick={() => setIsEditing(true)} className="gap-2 cursor-pointer">
-              <Edit className="h-4 w-4" />
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
+            >
+              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.edit')}
             </Button>
             <Link to="/app/settings">
-              <Button variant="outline" className="gap-2 cursor-pointer">
-                <Settings className="h-4 w-4" />
+              <Button
+                variant="outline"
+                className="gap-2 cursor-pointer w-full sm:w-auto h-9 sm:h-10 text-sm sm:text-base"
+              >
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
                 {tCommon('actions.settings')}
               </Button>
             </Link>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               disabled={isLoading}
               onClick={handleSaveClick}
-              className="gap-2 cursor-pointer"
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
               type="submit"
               form="profile-form"
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-3 w-3 sm:h-4 sm:w-4" />
               {isLoading ? tCommon('messages.saving') : tCommon('actions.save')}
             </Button>
             <Button
               variant="outline"
               disabled={isLoading}
-              className="gap-2 cursor-pointer"
+              className="gap-2 cursor-pointer h-9 sm:h-10 text-sm sm:text-base"
               onClick={handleCancel}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
               {tCommon('actions.cancel')}
             </Button>
           </div>
@@ -410,7 +420,7 @@ function TransporteurProfile() {
                   <span className="text-sm text-muted-foreground">
                     {tProfile('transporteur.inMission')}
                   </span>
-                  <span className="font-semibold text-tsa-blue">
+                  <span className="font-semibold text-tsa-blue dark:text-tsa-white">
                     {vehicles.filter((v) => v.status === 'in_mission').length}
                   </span>
                 </div>

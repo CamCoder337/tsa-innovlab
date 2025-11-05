@@ -149,11 +149,14 @@
         "setup": "Configuration MFA",
         "manualKey": "1. Entrez cette clé secrète dans votre application d'authentification (Google Authenticator, Authy, etc.)",
         "enterCode": "2. Entrez le code à 6 chiffres de votre application",
+        "enterDisableCode": "Confirmez la désactivation en entrant le code à 6 chiffres de votre application",
         "enable": "Activer MFA",
+        "disable": "Désactiver MFA",
         "backupCodes": "Codes de récupération",
         "backupCodesDescription": "Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte si vous perdez votre téléphone.",
         "regenerateCodes": "Régénérer les codes",
         "enableSuccess": "MFA activé avec succès",
+        "regenerateSuccess": "Codes de récuperation régénerées avec succès",
         "disableSuccess": "MFA désactivé avec succès"
       }
     }

@@ -1,18 +1,23 @@
-import { useState } from 'react';
-import { Search, Plus, MessageCircle, Clock, Hash, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, Plus, MessageCircle, Clock, Hash, Users, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/hooks/useAuth';
-import { ConversationType, type ConversationListItem } from '@/types/chat.types';
+import {
+  ConversationType,
+  type ConversationListItem,
+  type ChatbotConversation,
+  type AnyConversation,
+} from '@/types/chat.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useChatTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 interface ChatListProps {
-  onSelectConversation: (conversation: ConversationListItem) => void;
+  onSelectConversation: (conversation: ConversationListItem | ChatbotConversation) => void;
   onCreateConversation: () => void;
 }
 
@@ -23,17 +28,32 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
 
-  const { conversations, isLoading, error, currentConversation, clearError } = useChat();
+  const {
+    conversations,
+    isLoading,
+    error,
+    currentConversation,
+    chatbot,
+    initializeChatbot,
+    clearError,
+  } = useChat();
+
+  // Combine regular conversations with chatbot
+  const allConversations: AnyConversation[] = [...(chatbot ? [chatbot] : []), ...conversations];
 
   // Filter conversations based on search and type
-  const filteredConversations = conversations.filter((conv) => {
+  const filteredConversations = allConversations.filter((conv) => {
+    const chatbotConv = conv as ChatbotConversation;
+    const regularConv = conv as ConversationListItem;
     const matchesSearch =
       searchTerm === '' ||
-      conv.otherParticipant?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.otherParticipant?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.mission?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+      chatbotConv.profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      chatbotConv.profile.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      regularConv.otherParticipant?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      regularConv.otherParticipant?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      regularConv.mission?.title?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesType = filterType === 'all' || conv.type === filterType;
+    const matchesType = conv.type !== ConversationType.MISSION;
 
     return matchesSearch && matchesType;
   });
@@ -42,7 +62,11 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     if (conversation.type === 'mission') {
       return <Hash className="h-4 w-4 text-blue-500" />;
     }
-    return <MessageCircle className="h-4 w-4 text-green-500" />;
+    return <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
+  };
+
+  const getChatbotIcon = () => {
+    return <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
   };
 
   const getConversationTitle = (conversation: ConversationListItem) => {
@@ -80,6 +104,171 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     });
   };
 
+  const renderChatbotConversation = (chatbotConv: ChatbotConversation) => {
+    const isActive = currentConversation?.id === chatbotConv.id;
+    const lastMessageTime = chatbotConv.lastMessage?.createdAt
+      ? formatMessageTime(chatbotConv.lastMessage.createdAt)
+      : '';
+
+    return (
+      <div
+        key={chatbotConv.id}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+        }`}
+        onClick={() => onSelectConversation(chatbotConv)}
+      >
+        <div className="flex items-start gap-2 sm:gap-3">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10">
+              <AvatarImage src={chatbotConv.profile.avatar || ''} alt={chatbotConv.profile.name} />
+              <AvatarFallback className="text-xs">
+                {chatbotConv.profile.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Chatbot indicator */}
+            <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
+              {getChatbotIcon()}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h4
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
+                  isActive ? 'text-blue-900' : 'text-gray-900'
+                }`}
+              >
+                {chatbotConv.profile.name}
+              </h4>
+              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                {lastMessageTime && (
+                  <p className="text-xs text-gray-500 flex items-center">
+                    <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                    <span>{lastMessageTime}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500 truncate">{chatbotConv.profile.description}</p>
+            </div>
+
+            {/* Last message preview */}
+            {chatbotConv.lastMessage && (
+              <p className="text-xs mt-1 truncate text-gray-500">
+                {chatbotConv.lastMessage.isFromBot ? '' : tForms('messages.you') + ': '}
+                {chatbotConv.lastMessage.content}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRegularConversation = (conversation: ConversationListItem) => {
+    const isActive = currentConversation?.id === conversation.id;
+    const lastMessageTime = conversation.lastMessage?.createdAt
+      ? formatMessageTime(conversation.lastMessage.createdAt)
+      : '';
+
+    return (
+      <div
+        key={conversation.id}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+        }`}
+        onClick={() => onSelectConversation(conversation)}
+      >
+        <div className="flex items-start gap-2 sm:gap-3">
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10">
+              <AvatarImage
+                src={conversation.otherParticipant?.avatarUrl}
+                alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
+              />
+              <AvatarFallback className="text-xs">
+                {conversation.otherParticipant?.firstName?.charAt(0) || ''}
+                {conversation.otherParticipant?.lastName?.charAt(0) || ''}
+                {!conversation.otherParticipant?.firstName &&
+                  !conversation.otherParticipant?.lastName &&
+                  '?'}
+              </AvatarFallback>
+            </Avatar>
+            {/* Conversation type indicator */}
+            <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
+              {getConversationIcon(conversation)}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h4
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
+                  isActive ? 'text-blue-900' : 'text-gray-900'
+                }`}
+              >
+                {getConversationTitle(conversation)}
+              </h4>
+              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                {lastMessageTime && (
+                  <p className="text-xs text-gray-500 flex items-center">
+                    <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                    <span>{lastMessageTime}</span>
+                  </p>
+                )}
+                {conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 p-0 text-xs rounded-full flex items-center justify-center min-w-3 sm:min-w-4 lg:min-w-5"
+                  >
+                    {conversation.unreadMessagesCount > 99
+                      ? '99+'
+                      : conversation.unreadMessagesCount}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500 truncate">
+                {getConversationSubtitle(conversation)}
+              </p>
+            </div>
+
+            {/* Last message preview */}
+            {conversation.lastMessage && (
+              <p
+                className={`text-xs mt-1 truncate ${
+                  conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
+                    ? 'font-medium text-gray-700'
+                    : 'text-gray-500'
+                }`}
+              >
+                {conversation.lastMessage.senderId === user?.id
+                  ? tForms('messages.you') + ': '
+                  : ''}
+                {conversation.lastMessage.content}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    if (!chatbot) {
+      initializeChatbot();
+    }
+  }, [chatbot, initializeChatbot]);
+
   if (error) {
     return (
       <div className="p-4 text-center">
@@ -101,11 +290,23 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             <span className="hidden sm:inline">{tForms('sections.messages')}</span>
             <span className="sm:hidden">Messages</span>
           </h2>
+
+          {/* Search */}
+          <div className="relative sm:hidden w-1/2">
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
+            <Input
+              placeholder={tChat('placeholders.searchConversations')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-7 sm:pl-9 lg:pl-10 text-xs sm:text-sm h-8 sm:h-9 lg:h-10"
+            />
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
             onClick={onCreateConversation}
-            className="text-tsa-blue hover:text-blue-700 p-1 sm:p-2"
+            className="text-tsa-blue dark:text-tsa-white hover:text-blue-700 p-1 sm:p-2"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">{tChat('buttons.newConversation')}</span>
@@ -114,13 +315,13 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
         </div>
 
         {/* Search */}
-        <div className="relative mb-3 sm:mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
+        <div className="hidden sm:block relative">
+          <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
           <Input
             placeholder={tChat('placeholders.searchConversations')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 sm:pl-10 text-sm sm:text-base"
+            className="pl-7 sm:pl-9 lg:pl-10 text-xs sm:text-sm h-8 sm:h-9 lg:h-10"
           />
         </div>
 
@@ -199,100 +400,11 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {filteredConversations.map((conversation) => {
-              const isActive = currentConversation?.id === conversation.id;
-              const lastMessageTime = conversation.lastMessage?.createdAt
-                ? formatMessageTime(conversation.lastMessage.createdAt)
-                : '';
-
-              return (
-                <div
-                  key={conversation.id}
-                  className={`p-2 sm:p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                    isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-                  }`}
-                  onClick={() => onSelectConversation(conversation)}
-                >
-                  <div className="flex items-start gap-2 sm:gap-3">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                        <AvatarImage
-                          src={conversation.otherParticipant?.avatarUrl}
-                          alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
-                        />
-                        <AvatarFallback className="text-xs sm:text-sm">
-                          {conversation.otherParticipant?.firstName?.charAt(0) || ''}
-                          {conversation.otherParticipant?.lastName?.charAt(0) || ''}
-                          {!conversation.otherParticipant?.firstName &&
-                            !conversation.otherParticipant?.lastName &&
-                            '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Conversation type indicator */}
-                      <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                        {getConversationIcon(conversation)}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4
-                          className={`text-xs sm:text-sm font-medium truncate ${
-                            isActive ? 'text-blue-900' : 'text-gray-900'
-                          }`}
-                        >
-                          {getConversationTitle(conversation)}
-                        </h4>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {lastMessageTime && (
-                            <p className="text-xs text-gray-500 flex items-center">
-                              <Clock className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                              <span className="hidden sm:inline">{lastMessageTime}</span>
-                              <span className="sm:hidden">{lastMessageTime.split(' ')[0]}</span>
-                            </p>
-                          )}
-                          {conversation.unreadMessagesCount &&
-                            conversation.unreadMessagesCount > 0 && (
-                              <Badge
-                                variant="destructive"
-                                className="h-4 w-4 sm:h-5 sm:w-5 p-0 text-xs rounded-full flex items-center justify-center"
-                              >
-                                {conversation.unreadMessagesCount > 99
-                                  ? '99+'
-                                  : conversation.unreadMessagesCount}
-                              </Badge>
-                            )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-gray-500 truncate">
-                          {getConversationSubtitle(conversation)}
-                        </p>
-                      </div>
-
-                      {/* Last message preview */}
-                      {conversation.lastMessage && (
-                        <p
-                          className={`text-xs mt-1 truncate ${
-                            conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
-                              ? 'font-medium text-gray-700'
-                              : 'text-gray-500'
-                          }`}
-                        >
-                          {conversation.lastMessage.senderId === user?.id
-                            ? tForms('messages.you') + ': '
-                            : ''}
-                          {conversation.lastMessage.content}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredConversations.map((conv) =>
+              conv.type === ConversationType.CHATBOT
+                ? renderChatbotConversation(conv as ChatbotConversation)
+                : renderRegularConversation(conv as ConversationListItem)
+            )}
           </div>
         )}
       </div>

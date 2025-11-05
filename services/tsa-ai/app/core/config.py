@@ -31,6 +31,19 @@ class Settings(BaseSettings):
         alias="ALLOWED_ORIGINS"
     )
 
+    # Trusted Hosts (for TrustedHostMiddleware)
+    allowed_hosts: list = Field(
+        default=[
+            "*.tsa-contest.com",
+            "localhost",
+            "tsa-ai",
+            "tsa-ai-backend",
+            "51.91.77.0",
+            "51.91.77.0:30002"
+        ],
+        alias="ALLOWED_HOSTS"
+    )
+
     # ML Models
     models_path: str = Field(default="ml_models", alias="MODELS_PATH")
 

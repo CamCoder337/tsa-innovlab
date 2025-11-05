@@ -8,7 +8,8 @@
   "placeholders": {
     "searchConversations": "Rechercher des conversations...",
     "searchUsers": "Rechercher des utilisateurs...",
-    "sendMessageTo": "Envoyer un message à {{name}}..."
+    "sendMessageTo": "Envoyer un message à {{name}}...",
+    "sendMessageToBot": "Posez votre question au bot..."
   },
   "buttons": {
     "newConversation": "Nouvelle Conversation",
@@ -41,5 +42,46 @@
     "noUsersFound": "Aucun utilisateur trouvé",
     "tryDifferentSearch": "Essayez une recherche différente",
     "sharedMissions": "{{count}} mission(s) partagée(s)"
+  },
+  "chatbot": {
+    "name": "TSA Bot",
+    "description": "Assistant virtuel TSA Logistics",
+    "welcomeMessage": "Bonjour ! Je suis votre assistant TSA Logistics. Je peux vous aider avec vos missions, le suivi de vos livraisons, la boutique et bien plus encore. Comment puis-je vous assister ?",
+    "helpMessage": "Voici ce que je peux faire pour vous :\n• Gestion des missions de transport\n• Suivi en temps réel\n• Boutique de pièces reconditionnées\n• Support et assistance\n\nN'hésitez pas à me poser vos questions !",
+    "responses": {
+      "missions": "Je peux vous aider avec la gestion des missions de transport. Vous pouvez créer une nouvelle mission, suivre vos missions en cours, ou consulter l'historique de vos missions dans la section 'Missions'.",
+      "tracking": "Pour le suivi de vos missions, rendez-vous dans la section 'Suivi' où vous pourrez voir la position en temps réel de vos transporteurs et l'état d'avancement de vos livraisons.",
+      "boutique": "Dans notre boutique, vous trouverez des pièces reconditionnées de qualité. Vous pouvez parcourir les catégories, ajouter des articles à votre panier et passer commande facilement.",
+      "vehicles": "Pour la gestion de votre flotte, vous pouvez ajouter vos véhicules, mettre à jour leurs informations et suivre leur disponibilité dans la section 'Véhicules'.",
+      "support": "Je suis là pour vous aider ! Vous pouvez me poser des questions sur l'utilisation de la plateforme TSA Logistics. Pour un support technique avancé, contactez notre équipe via la section 'Contact'.",
+      "greeting": "Bonjour ! Je suis l'assistant TSA Logistics. Je peux vous aider avec vos missions de transport, le suivi de vos livraisons, la boutique de pièces reconditionnées, et bien plus encore. Comment puis-je vous assister aujourd'hui ?",
+      "default": "Je suis l'assistant TSA Logistics et je peux vous aider avec diverses fonctionnalités de la plateforme : gestion des missions, suivi des livraisons, boutique de pièces reconditionnées, et support général. Que souhaitez-vous savoir ?"
+    },
+    "categories": {
+      "missions": "Missions",
+      "tracking": "Suivi",
+      "boutique": "Boutique",
+      "vehicles": "Véhicules",
+      "support": "Support",
+      "greeting": "Salutations",
+      "general": "Général"
+    },
+    "relatedTopics": {
+      "createMission": "créer mission",
+      "trackMission": "suivi mission",
+      "history": "historique",
+      "realTimePosition": "position temps réel",
+      "deliveryStatus": "état livraison",
+      "notifications": "notifications",
+      "productCatalog": "catalogue produits",
+      "cart": "panier",
+      "orders": "commandes",
+      "addVehicle": "ajouter véhicule",
+      "availability": "disponibilité",
+      "maintenance": "maintenance",
+      "platformUsage": "utilisation plateforme",
+      "contactSupport": "contact support",
+      "faq": "FAQ"
+    }
   }
 }

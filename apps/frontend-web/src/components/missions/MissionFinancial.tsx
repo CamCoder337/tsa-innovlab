@@ -12,6 +12,7 @@ import {
   Clock,
   FileText,
   Download,
+  Eye,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +22,14 @@ import {
   useCommonTranslation,
   usePaymentTranslation,
 } from '@/hooks/useTranslation';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { MissionInvoice } from './MissionInvoice';
 
 interface MissionFinancialProps {
   mission: Mission;
@@ -54,7 +63,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
   const { t: tCommon } = useCommonTranslation();
   const { t: tPayment } = usePaymentTranslation();
   const [financialData, setFinancialData] = useState<FinancialData>({
-    totalCost: mission.budgetMax || 0,
+    totalCost: mission.budgetMin || 0,
     transporterPayment: 0,
     platformFee: 0,
     taxes: 0,
@@ -66,6 +75,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
 
   const [paymentHistory, setPaymentHistory] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showInvoice, setShowInvoice] = useState(false);
 
   useEffect(() => {
     loadFinancialData();
@@ -81,7 +91,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       // ]);
 
       // Mock data calculation
-      const totalCost = mission.budgetMax || 0;
+      const totalCost = mission.budgetMin || 0;
       const platformFeeRate = 0.05; // 5% platform fee
       const taxRate = 0.18; // 18% VAT
 
@@ -184,7 +194,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       <Card>
         <CardContent className="text-center py-6 sm:py-8">
           <AlertCircle className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-400" />
-          <p className="text-gray-600 text-xs sm:text-sm">
+          <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
             {tMissions('financial.errors.accessDenied')}
           </p>
         </CardContent>
@@ -197,7 +207,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       <Card>
         <CardContent className="text-center py-6 sm:py-8">
           <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-3 sm:mt-4 text-gray-600 text-xs sm:text-sm">
+          <p className="mt-3 sm:mt-4 text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
             {tMissions('financial.loading')}
           </p>
         </CardContent>
@@ -213,15 +223,15 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('financial.totalCost')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold truncate">
                   {financialData.totalCost.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500">FCFA</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">FCFA</p>
               </div>
-              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue flex-shrink-0" />
+              <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -230,13 +240,13 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('financial.transporterPayment')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold truncate">
                   {financialData.transporterPayment.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500">FCFA</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">FCFA</p>
               </div>
               <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
             </div>
@@ -247,13 +257,13 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('financial.platformFee')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold truncate">
                   {financialData.platformFee.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500">FCFA (5%)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">FCFA (5%)</p>
               </div>
               <Receipt className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
             </div>
@@ -264,13 +274,13 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
                   {tMissions('financial.taxes')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold truncate">
                   {financialData.taxes.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-500">FCFA (18%)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">FCFA (18%)</p>
               </div>
               <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
             </div>
@@ -297,7 +307,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   {financialData.paymentStatus === 'partial' && tCommon('status.partial')}
                   {financialData.paymentStatus === 'overdue' && tCommon('status.overdue')}
                 </Badge>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1 truncate">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">
                   {tMissions('financial.paymentMethod')}:{' '}
                   {tPayment(`labels.${financialData.paymentMethod}`)}
                 </p>
@@ -313,32 +323,54 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   className="w-full sm:w-auto text-xs sm:text-sm"
                 >
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tMissions('financial.generateInvoice')}</span>
-                  <span className="sm:hidden">
-                    {tMissions('financial.generateInvoice').slice(0, 8)}...
-                  </span>
+                  <span>{tMissions('financial.generateInvoice')}</span>
                 </Button>
               ) : (
-                <Button
-                  onClick={handleDownloadInvoice}
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto text-xs sm:text-sm"
-                >
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">{tMissions('financial.downloadInvoice')}</span>
-                  <span className="sm:hidden">
-                    {tMissions('financial.downloadInvoice').slice(0, 8)}...
-                  </span>
-                </Button>
+                <>
+                  <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto text-xs sm:text-sm"
+                      >
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span>{tMissions('invoice.actions.view')}</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{tMissions('invoice.title')}</DialogTitle>
+                      </DialogHeader>
+                      <MissionInvoice
+                        mission={mission}
+                        financialData={financialData}
+                        paymentRecord={paymentHistory}
+                        onDownload={handleDownloadInvoice}
+                        onPrint={() => window.print()}
+                        onEmailSend={() => toast.info(tMissions('invoice.actions.emailSent'))}
+                        onClose={() => setShowInvoice(false)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  <Button
+                    onClick={handleDownloadInvoice}
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto text-xs sm:text-sm"
+                  >
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span>{tMissions('financial.downloadInvoice')}</span>
+                  </Button>
+                </>
               )}
             </div>
           </div>
 
           {financialData.transactionId && (
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
               {tMissions('financial.transactionId')}:{' '}
-              <code className="bg-gray-100 px-1 sm:px-2 py-1 rounded text-xs">
+              <code className="bg-gray-100 dark:bg-gray-800 px-1 sm:px-2 py-1 rounded text-xs">
                 {financialData.transactionId}
               </code>
             </p>
@@ -360,7 +392,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
               {paymentHistory.map((payment) => (
                 <div
                   key={payment.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2 sm:p-3 border dark:border-gray-800 rounded-lg"
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
                     {getPaymentStatusIcon(payment.status)}
@@ -368,7 +400,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                       <p className="font-medium text-xs sm:text-sm truncate">
                         {payment.amount.toLocaleString()} FCFA
                       </p>
-                      <p className="text-xs text-gray-600 truncate">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
                         {new Date(payment.date).toLocaleDateString('fr-FR')} • {payment.method}
                       </p>
                     </div>
@@ -379,7 +411,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                       {payment.status === 'pending' && tCommon('status.pending')}
                       {payment.status === 'failed' && tCommon('status.failed')}
                     </Badge>
-                    <p className="text-xs text-gray-500 mt-1 truncate">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
                       {tMissions('financial.reference')}: {payment.reference}
                     </p>
                   </div>
@@ -387,7 +419,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 sm:py-8 text-gray-500">
+            <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
               <Receipt className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
               <p className="text-xs sm:text-sm">{tMissions('financial.noPayments')}</p>
               <p className="text-xs">{tMissions('financial.paymentsWillAppear')}</p>
@@ -407,7 +439,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         <CardContent>
           <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">
+              <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                 {tMissions('financial.baseCost')}
               </span>
               <span className="font-medium text-xs sm:text-sm">
@@ -415,7 +447,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">
+              <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                 {tMissions('financial.platformFee')}
               </span>
               <span className="font-medium text-xs sm:text-sm">
@@ -423,7 +455,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-xs sm:text-sm">
+              <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                 {tMissions('financial.vatPercent')}
               </span>
               <span className="font-medium text-xs sm:text-sm">
@@ -432,7 +464,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
             </div>
             {financialData.additionalCosts > 0 && (
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-xs sm:text-sm">
+                <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                   {tMissions('financial.additionalCosts')}
                 </span>
                 <span className="font-medium text-xs sm:text-sm">

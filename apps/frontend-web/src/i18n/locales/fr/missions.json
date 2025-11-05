@@ -17,8 +17,8 @@
   },
   "details": {
     "title": "Mission: {{title}}",
-    "loadingMessage": "Loading mission details...",
-    "backToMissions": "Back to Missions",
+    "loadingMessage": "Chargement de la mission...",
+    "backToMissions": "Retour aux missions",
     "tabs": {
       "details": "Détails",
       "timeline": "Historique",
@@ -217,18 +217,23 @@
     }
   },
   "messages": {
+    "updatingMission": "Mise à jour de la mission...",
+    "creatingMission": "Création de la mission...",
+    "publishingMission": "Publication de la mission...",
+    "deletingMission": "Suppression de la mission...",
     "publishedSuccess": "Mission publiée avec succès",
     "cancelledSuccess": "Mission annulée avec succès",
     "createdSuccess": "Mission créée avec succès",
     "modifiedSuccess": "Mission modifiée avec succès",
     "statusUpdatedSuccess": "Mission {{status}} successfully",
-    "applicationSentSuccess": "Candidature envoyée avec succès"
+    "applicationSentSuccess": "Candidature envoyée avec succès",
+    "missionDataWillBeDeleted": "Les données de la mission seront définitivement supprimées"
   },
   "actions": {
+    "publish": "Publier la mission",
     "start": "Lancer la mission",
     "complete": "Terminer la mission",
     "delete": "Supprimer la Mission",
-    "deleting": "Suppression en cours...",
     "confirmDelete": "supprimer la mission {{ mission }}",
     "warning": "La mission et toutes les données associées seront définitivement supprimées",
     "success": {
@@ -256,5 +261,83 @@
     "estimatedArrival": "Arrivée estimée",
     "progress": "Progression",
     "updates": "Mises à jour"
+  },
+  "invoice": {
+    "title": "Facture de Mission",
+    "invoiceNumber": "Facture N°",
+    "date": "Date",
+    "companyInfo": {
+      "title": "Informations de l'entreprise",
+      "name": "TSA Logistics",
+      "address": "123 Rue du Commerce",
+      "city": "Abidjan, Côte d'Ivoire",
+      "phone": "Tél: +225 XX XX XX XX",
+      "email": "Email: contact@tsa-logistics.com"
+    },
+    "missionDetails": {
+      "title": "Détails de la Mission",
+      "missionId": "ID Mission",
+      "affreteur": "Affréteur",
+      "missionTitle": "Titre de la Mission",
+      "merchandiseType": "Type de Marchandise",
+      "volume": "Volume"
+    },
+    "routeInfo": {
+      "title": "Informations d'Itinéraire",
+      "from": "De",
+      "to": "Vers",
+      "distance": "Distance",
+      "estimatedDuration": "Durée Estimée"
+    },
+    "servicesProvided": {
+      "title": "Services Fournis",
+      "transportService": "Service de Transport",
+      "logistics": "Logistique et Coordination",
+      "tracking": "Suivi en Temps Réel",
+      "insurance": "Assurance Transport"
+    },
+    "totals": {
+      "title": "Totaux",
+      "totalCost": "Coût Total",
+      "transporterPayment": "Paiement Transporteur",
+      "platformFee": "Frais de Plateforme",
+      "taxes": "Taxes",
+      "additionalCosts": "Coûts Supplémentaires",
+      "finalTotal": "Total Final"
+    },
+    "paymentInfo": {
+      "title": "Informations de Paiement",
+      "paymentStatus": "Statut de Paiement",
+      "paymentMethod": "Méthode de Paiement",
+      "transactionId": "ID Transaction",
+      "paymentReference": "Référence de Paiement"
+    },
+    "footer": {
+      "thankYou": "Merci de faire confiance à TSA Logistics pour vos besoins de transport.",
+      "support": "Pour toute question, contactez notre support client.",
+      "terms": "Conditions générales disponibles sur notre site web."
+    },
+    "actions": {
+      "download": "Télécharger",
+      "print": "Imprimer",
+      "email": "Envoyer par Email",
+      "close": "Fermer",
+      "view": "Voir la Facture",
+      "emailSent": "Email envoyé avec succès"
+    },
+    "paymentMethods": {
+      "orange_money": "Orange Money",
+      "mtn_momo": "MTN Mobile Money",
+      "wave": "Wave",
+      "bank_transfer": "Virement Bancaire",
+      "cash_on_delivery": "Paiement à la Livraison",
+      "credit_card": "Carte de Crédit"
+    },
+    "paymentStatuses": {
+      "pending": "En Attente",
+      "completed": "Complété",
+      "failed": "Échoué",
+      "refunded": "Remboursé"
+    }
   }
 }

@@ -17,6 +17,7 @@ import {
   useErrorsTranslation,
   useMissionsTranslation,
 } from '@/hooks/useTranslation';
+import { useMissionStore } from '@/stores/missionStore';
 
 export default function MissionDetailsPage() {
   const navigate = useNavigate();
@@ -26,12 +27,13 @@ export default function MissionDetailsPage() {
   const {
     currentMission,
     isLoading,
-    error,
     fetchMission,
     applyMission,
     updateMission,
     updateMissionStatus,
+    deleteMission,
   } = useMissions();
+  const { error } = useMissionStore.getState();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'details');
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
@@ -111,11 +113,28 @@ export default function MissionDetailsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    toast.loading(tMissions('messages.deletingMission'), {
+      duration: 30000,
+    });
+
+    await deleteMission(id);
+
+    toast.dismiss();
+
+    if (error && currentMission) {
+      toast.error(error || tCommon('error.generic'));
+      return;
+    }
+
+    toast.success(tMissions('actions.success.delete'));
+  };
+
   if (isLoading && !error) {
     return (
       <div className="container mx-auto py-8 flex h-full justify-center items-center">
         <div className="flex items-center gap-2">
-          <Loader2 className="animate-spin h-12 w-12 text-tsa-blue" />
+          <Loader2 className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
           <span>{tMissions('details.loadingMessage')}</span>
         </div>
       </div>
@@ -165,6 +184,7 @@ export default function MissionDetailsPage() {
             onApply={handleApply}
             onUpdate={handleUpdate}
             onStatusUpdate={handleStatusUpdate}
+            onDelete={handleDelete}
             onRefresh={() => fetchMission(id!)}
           />
         </div>

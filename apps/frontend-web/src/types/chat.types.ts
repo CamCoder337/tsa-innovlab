@@ -18,6 +18,7 @@ export enum MessageType {
 export enum ConversationType {
   DIRECT = 'direct',
   MISSION = 'mission',
+  CHATBOT = 'chatbot',
 }
 
 export type ConversationFilter = 'all' | 'unread' | 'groups';
@@ -133,15 +134,72 @@ export interface TypingIndicator {
   timestamp: number;
 }
 
+/**
+ * Chatbot types and interfaces
+ */
+
+export interface ChatbotProfile {
+  id: number; // Special ID for chatbot (e.g., -1)
+  type: ConversationType.CHATBOT;
+  name: string;
+  avatar?: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface ChatbotMessage extends Message {
+  isFromBot: boolean;
+}
+
+export interface ChatbotConversation {
+  id: number; // Special ID for chatbot conversation (e.g., -1)
+  type: ConversationType;
+  profile: ChatbotProfile;
+  messages: ChatbotMessage[];
+  lastMessage?: ChatbotMessage;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatbotResponse {
+  content: string;
+  category?: string;
+  relatedTopics?: string[];
+}
+
+export interface ChatbotCapabilities {
+  canHandleMissions: boolean;
+  canHandleTracking: boolean;
+  canHandleBoutique: boolean;
+  canHandleVehicles: boolean;
+  canHandleSupport: boolean;
+  supportedLanguages: string[];
+}
+
+/**
+ * Extended conversation types to include chatbot
+ */
+export type ExtendedConversationType = ConversationType | 'chatbot';
+
+/**
+ * Union type for all conversation types
+ */
+export type AnyConversation = ConversationListItem | ChatbotConversation;
+
 export interface ChatState {
   // State
   conversations: ConversationListItem[];
-  currentConversation: Conversation | null;
+  currentConversation: ConversationListItem | ChatbotConversation | null;
   messages: Record<number, Message[]>; // conversationId -> messages
   typingIndicators: TypingIndicator[];
   isLoading: boolean;
   error: string | null;
   unreadCount: number;
+
+  // Chatbot state
+  chatbot: ChatbotConversation | null;
+  chatbotCapabilities: ChatbotCapabilities;
 
   // Actions
   fetchConversations: (filters?: ConversationFilters) => Promise<void>;
@@ -154,6 +212,11 @@ export interface ChatState {
   markAllMessagesAsRead: (conversationId: number) => Promise<void>;
   searchUsers: (query: string, role?: UserRole) => Promise<SearchUser[]>;
 
+  // Chatbot actions
+  initializeChatbot: () => void;
+  sendChatbotMessage: (message: string) => Promise<ChatbotResponse>;
+  getChatbotResponse: (userInput: string) => ChatbotResponse;
+
   // Real-time actions
   handleNewMessage: (message: Message) => void;
   handleMessageRead: (messageId: number, conversationId: number) => void;
@@ -162,7 +225,7 @@ export interface ChatState {
   sendTypingIndicator: (conversationId: number, isTyping: boolean) => void;
 
   // Utility actions
-  setCurrentConversation: (conversation: Conversation | null) => void;
+  setCurrentConversation: (conversation: ConversationListItem | ChatbotConversation | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
