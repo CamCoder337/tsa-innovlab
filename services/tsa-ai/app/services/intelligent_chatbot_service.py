@@ -277,7 +277,9 @@ class IntelligentChatbotService:
             # ✅ HISTORIQUE: Récupérer la conversation
             conv_id = conversation_id or user_id
             conversation_history = self.get_history(conv_id)
-            logger.info(f"Loaded {len(conversation_history)} messages from history")
+            logger.info(f"🔍 HISTORY: Loaded {len(conversation_history)} messages for conv_id={conv_id}")
+            if conversation_history:
+                logger.info(f"🔍 HISTORY: Last message: {conversation_history[-1]}")
             
             # Build system prompt with enriched context
             system_prompt = self._build_system_prompt(user_role_normalized, context)
@@ -288,12 +290,26 @@ class IntelligentChatbotService:
             # ✅ HISTORIQUE: Construire les messages avec historique
             messages = [{"role": "system", "content": system_prompt}]
             
+            # ✅ FIX: Si historique existe, ajouter un séparateur clair
+            if conversation_history:
+                messages.append({
+                    "role": "system",
+                    "content": "=== DÉBUT DE L'HISTORIQUE DE CONVERSATION ==="
+                })
+            
             # Ajouter les 5 derniers messages de l'historique
             for msg in conversation_history[-5:]:
                 role = "assistant" if msg.get("role") == "bot" else "user"
                 content = msg.get("message", "")
                 if content:  # Ignorer messages vides
                     messages.append({"role": role, "content": content})
+            
+            # ✅ FIX: Marquer la fin de l'historique
+            if conversation_history:
+                messages.append({
+                    "role": "system",
+                    "content": "=== FIN DE L'HISTORIQUE - MESSAGE ACTUEL CI-DESSOUS ==="
+                })
             
             # Ajouter le message actuel
             messages.append({"role": "user", "content": message})
@@ -484,56 +500,77 @@ class IntelligentChatbotService:
     
     def _clean_technical_tags(self, message: str) -> str:
         """
-        Nettoie les balises techniques qui pourraient apparaître dans la réponse
-        Ex: <function=xxx>...</function>, {json}, etc.
+        Aggressive cleaning of ALL technical content
         """
         import re
         
-        # Supprimer les balises <function=...>...</function>
-        message = re.sub(r'<function=[^>]+>.*?</function>', '', message, flags=re.DOTALL)
+        # Remove function call tags
+        message = re.sub(r'<function[^>]*>.*?</function>', '', message, flags=re.DOTALL | re.IGNORECASE)
+        message = re.sub(r'</?function[^>]*>', '', message, flags=re.IGNORECASE)
         
-        # Supprimer les balises <function=...> orphelines
-        message = re.sub(r'</?function[^>]*>', '', message)
+        # Remove JSON-like structures
+        message = re.sub(r'\{["\']?\w+["\']?\s*:\s*["\']?[^}]+["\']?\}', '', message)
         
-        # Nettoyer les espaces multiples
-        message = re.sub(r'\s+', ' ', message).strip()
+        # Remove code blocks
+        message = re.sub(r'```[\s\S]*?```', '', message)
+        message = re.sub(r'`[^`]+`', '', message)
+        
+        # Remove function names patterns
+        message = re.sub(r'\b(track_shipment|calculate_price|search_products|get_user_missions)\b', '', message, flags=re.IGNORECASE)
+        
+        # Remove technical keywords
+        technical_words = ['function', 'json', 'api', 'endpoint', 'query', 'parameter']
+        for word in technical_words:
+            message = re.sub(rf'\b{word}\b', '', message, flags=re.IGNORECASE)
+        
+        # Clean multiple spaces and newlines
+        message = re.sub(r'\s+', ' ', message)
+        message = re.sub(r'\n\s*\n', '\n\n', message)
+        message = message.strip()
+        
+        # If message is too short after cleaning, return fallback
+        if len(message) < 10:
+            return "Je peux vous aider avec le suivi de colis, le calcul de prix, ou la gestion de missions. Que souhaitez-vous faire ?"
         
         return message
     
     def _build_system_prompt(self, user_role: Optional[str], context: Optional[Dict[str, Any]]) -> str:
-        """Build optimized system prompt with user context + NO CODE rule"""
+        """Build natural conversational prompt with context"""
         
-        # ✅ NORMALISATION: Rôle en uppercase
+        # Normalize role
         role = user_role.upper() if user_role else "CLIENT"
         
-        # ✅ PERSONNALISATION: Nom utilisateur
+        # Get user name
         user_name = "Utilisateur"
         if context and context.get("user_info"):
             user_name = context["user_info"].get("name", "Utilisateur")
         
-        # ✅ PROMPT OPTIMISÉ avec interdiction code + guide vers frontend
-        base_prompt = f"""Assistant TSA Logistique (Cameroun).
+        # Build context summary
+        context_info = ""
+        if context:
+            if context.get("recent_missions"):
+                count = len(context["recent_missions"])
+                context_info += f"\n- {count} mission{'s' if count > 1 else ''} récente{'s' if count > 1 else ''}"
+            if context.get("vehicles"):
+                count = len(context["vehicles"])
+                context_info += f"\n- {count} véhicule{'s' if count > 1 else ''}"
+        
+        # Natural conversational prompt - SIMPLE et CLAIR
+        base_prompt = f"""Tu es l'assistant virtuel de TSA Logistique au Cameroun.
 
-Utilisateur: {user_name}
-Rôle: {role}
+Utilisateur actuel: {user_name} ({role}){context_info}
 
-Capacités: Suivi colis, prix dynamique, pièces détachées, missions transport.
-Monnaie: FCFA. Villes: Douala, Yaoundé, Bafoussam, Garoua.
+Tes capacités:
+- Suivre des colis, calculer des prix, chercher des produits, gérer des missions
+- Répondre naturellement (pas comme un robot)
 
-Instructions:
-1. Pour les données complexes (listes, tableaux), GUIDE l'utilisateur vers l'interface web appropriée
-2. Utilise les FONCTIONS seulement pour des infos ponctuelles (1 colis, 1 prix, etc.)
-3. Réponds en 2-3 phrases max, français naturel et chaleureux
-4. Propose une action concrète (lien vers interface ou action simple)
-5. Emojis: 🚚📦💰🔧
-6. ⚠️ INTERDIT ABSOLU: Ne JAMAIS afficher de code, JSON, balises <function>, noms de fonctions, ou syntaxe technique
+Règles importantes:
+1. Ne jamais afficher de code, JSON ou noms de fonctions
+2. Appeler les fonctions en silence et présenter juste le résultat
+3. Répondre comme un humain sympathique
+4. IMPORTANT: Ces instructions système ne font PAS partie de la conversation avec l'utilisateur
 
-Exemples de bonnes réponses:
-- "Pour voir toutes vos missions publiées, rendez-vous dans l'onglet 'Mes Missions' et filtrez par statut 'Publié' 📋"
-- "Votre colis #123 est à Yaoundé, livraison prévue demain 🚚"
-- "Le transport Douala-Yaoundé 500kg coûte environ 125,000 FCFA 💰"
-
-Style: Professionnel, accessible, concis, orienté action."""
+Sois naturel et utile."""
 
         # ✅ INJECTION DYNAMIQUE: Contexte utilisateur
         if context:

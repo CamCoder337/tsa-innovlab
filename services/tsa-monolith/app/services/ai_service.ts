@@ -312,57 +312,32 @@ export default class AIService {
    */
   async queryChatbot(request: ChatbotQueryRequest): Promise<ChatbotResponse | null> {
     try {
-      logger.info('Querying chatbot V3 (Intent-First)', {
+      logger.info('Querying chatbot V2 (LLM-Enhanced)', {
         userId: request.user_id,
         messageLength: request.message.length,
       })
 
-      // Try V3 first (Intent-First with Frontend Guidance)
-      const responseV3 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/v3/query`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-        signal: AbortSignal.timeout(15000), // 15 seconds for intent detection + action
-      })
-
-      if (responseV3.ok) {
-        const data = (await responseV3.json()) as ChatbotResponse
-        logger.info('Chatbot V3 response received', {
-          userId: request.user_id,
-          intent: data.intent?.name,
-          hasNavigation: !!data.navigation,
-        })
-        return data
-      }
-
-      // Fallback to V2 if V3 fails
-      logger.warn('Chatbot V3 failed, falling back to V2', {
-        status: responseV3.status,
-        userId: request.user_id,
-      })
-
+      // Use V2 (LLM with enhanced prompt + aggressive post-processing)
       const responseV2 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(20000), // 20 seconds for LLM + function calls
+        signal: AbortSignal.timeout(20000),
       })
 
       if (responseV2.ok) {
         const data = (await responseV2.json()) as ChatbotResponse
-        logger.info('Chatbot V2 response received (fallback)', {
+        logger.info('Chatbot V2 response received', {
           userId: request.user_id,
-          requiresHuman: data.requires_human,
+          intent: data.intent?.name,
         })
         return data
       }
 
-      // Fallback to V1 if V2 also fails
-      logger.warn('Chatbot V2 also failed, falling back to V1', {
+      // Fallback to V1 if V2 fails
+      logger.warn('Chatbot V2 failed, falling back to V1', {
         status: responseV2.status,
         userId: request.user_id,
       })
