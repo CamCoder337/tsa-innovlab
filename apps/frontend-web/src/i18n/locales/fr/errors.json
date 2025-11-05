@@ -66,7 +66,8 @@
   },
   "missions": {
     "errorLoading": "Error loading mission: {{error}}",
-    "statusUpdateFailed": "Failed to update mission status",
+    "updateFailed": "Erreur lors de la mise à jour de la mission",
+    "statusUpdateFailed": "Erreur lors de la mise à jour du statut de la mission",
     "timelineLoadingError": "Erreur lors du chargement de l'historique",
     "evaluationLoadingError": "Erreur lors du chargement de l'évaluation",
     "evaluationSubmitError": "Erreur lors de la soumission de l'évaluation",

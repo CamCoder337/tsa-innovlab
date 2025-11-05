@@ -177,7 +177,7 @@ export const CreateConversationModal: React.FC<CreateConversationModalProps> = (
 
         <div className="space-y-4">
           {/* Conversation Type Selection */}
-          <div className="flex gap-2">
+          <div className="hidden gap-2">
             <Button
               variant={conversationType === ConversationType.DIRECT ? 'default' : 'outline'}
               size="sm"

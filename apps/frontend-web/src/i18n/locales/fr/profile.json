@@ -156,6 +156,7 @@
         "backupCodesDescription": "Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte si vous perdez votre téléphone.",
         "regenerateCodes": "Régénérer les codes",
         "enableSuccess": "MFA activé avec succès",
+        "regenerateSuccess": "Codes de récuperation régénerées avec succès",
         "disableSuccess": "MFA désactivé avec succès"
       }
     }

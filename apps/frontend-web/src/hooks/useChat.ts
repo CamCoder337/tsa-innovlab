@@ -15,12 +15,17 @@ export const useChat = () => {
     isLoading: store.isLoading,
     error: store.error,
     unreadCount: store.unreadCount,
+    chatbot: store.chatbot,
+    chatbotCapabilities: store.chatbotCapabilities,
 
     // Actions
+    initializeChatbot: store.initializeChatbot,
     fetchConversations: store.fetchConversations,
     fetchConversation: store.fetchConversation,
     fetchMessages: store.fetchMessages,
+    getChatbotResponse: store.getChatbotResponse,
     sendMessage: store.sendMessage,
+    sendChatbotMessage: store.sendChatbotMessage,
     createDirectConversation: store.createDirectConversation,
     createMissionConversation: store.createMissionConversation,
     markMessageAsRead: store.markMessageAsRead,

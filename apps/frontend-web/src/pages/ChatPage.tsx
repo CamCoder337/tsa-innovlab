@@ -6,7 +6,7 @@ import ChatList from '@/components/chat/ChatList';
 import { ChatWindow } from '@/components/chat/ChatWindow';
 import { CreateConversationModal } from '@/components/chat/CreateConversationModal';
 import { useChat } from '@/hooks/useChat';
-import type { ConversationListItem } from '@/types/chat.types';
+import type { AnyConversation, ConversationListItem } from '@/types/chat.types';
 
 export const ChatPage: React.FC = () => {
   const { t } = useTranslation('chat');
@@ -14,7 +14,7 @@ export const ChatPage: React.FC = () => {
   const [showMobileChatList, setShowMobileChatList] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const handleSelectConversation = (conversation: ConversationListItem) => {
+  const handleSelectConversation = (conversation: AnyConversation) => {
     setCurrentConversation(conversation);
     setShowMobileChatList(false);
   };

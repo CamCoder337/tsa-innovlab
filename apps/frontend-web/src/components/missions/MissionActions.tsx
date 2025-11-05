@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Edit, Trash2, Send, X, Check, Clock, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTransla
 import { useVehicles } from '@/hooks/useVehicles';
 import { VehicleTypeLabels } from '@/types/vehicle.types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useMissions } from '@/hooks/useMissions';
 
 interface MissionActionsProps {
   mission: Mission;
@@ -30,6 +31,7 @@ interface MissionActionsProps {
   onApply?: (selectedVehicleId: string) => void;
   onUpdate?: (status: MissionStatus, comment?: string) => Promise<void>;
   onStatusUpdate?: (status: MissionStatus) => Promise<void>;
+  onDelete?: (missionId: string) => void;
   onRefresh: () => void;
 }
 
@@ -39,9 +41,10 @@ export function MissionActions({
   onApply,
   onUpdate,
   onStatusUpdate,
+  onDelete,
   onRefresh,
 }: MissionActionsProps) {
-  const navigate = useNavigate();
+  const { setCurrentMission } = useMissions();
   const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
@@ -70,10 +73,12 @@ export function MissionActions({
         case 'start':
           await onStatusUpdate?.('in_progress');
           break;
+        case 'delete':
+          await onDelete?.(mission.id);
+          break;
         default:
           await onUpdate?.(action.type as MissionStatus, comment || undefined);
       }
-      toast.success(tMissions(`actions.success.${action.type}`));
       setIsDialogOpen(false);
       setIsApplyDialogOpen(false);
       onRefresh();
@@ -89,13 +94,15 @@ export function MissionActions({
     const getCommonActions = () => {
       return (
         <>
-          <DropdownMenuItem onClick={() => navigate(`/missions/${mission.id}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            <span>{tCommon('actions.edit')}</span>
-          </DropdownMenuItem>
+          <Link to={`/app/missions/create`}>
+            <DropdownMenuItem onClick={() => setCurrentMission(mission)}>
+              <Edit className="mr-2 h-4 w-4" />
+              <span>{tCommon('actions.edit')}</span>
+            </DropdownMenuItem>
+          </Link>
           <DropdownMenuItem
             className="text-red-600"
-            onClick={() => handleAction('delete', tMissions('actions.deleteMission'))}
+            onClick={() => handleAction('delete', tMissions('actions.delete'))}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             <span>{tCommon('actions.delete')}</span>
@@ -110,7 +117,7 @@ export function MissionActions({
           return (
             <>
               <DropdownMenuItem
-                onClick={() => handleAction('publish', tMissions('actions.publishMission'))}
+                onClick={() => handleAction('publish', tMissions('actions.publish'))}
               >
                 <Send className="mr-2 h-4 w-4" />
                 <span>{tCommon('actions.publish')}</span>
@@ -247,8 +254,8 @@ export function MissionActions({
 
             {action?.type === 'delete' && (
               <div className="bg-red-50 text-red-700 p-2 sm:p-3 rounded-md text-xs sm:text-sm">
-                <p className="font-medium">{tMissions('actions.warningIrreversible')}</p>
-                <p>{tMissions('actions.missionDataWillBeDeleted')}</p>
+                <p className="font-medium">{tCommon('actions.warning.irreversible')}</p>
+                <p>{tMissions('messages.missionDataWillBeDeleted')}</p>
               </div>
             )}
           </div>
@@ -266,7 +273,7 @@ export function MissionActions({
               variant={action?.type === 'delete' ? 'destructive' : 'default'}
               onClick={confirmAction}
               disabled={isLoading}
-              className="w-full sm:w-auto text-xs sm:text-sm"
+              className="w-full sm:w-auto text-xs sm:text-sm text-white"
             >
               {isLoading ? tCommon('messages.processing') : tCommon('actions.confirm')}
             </Button>

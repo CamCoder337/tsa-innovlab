@@ -17,8 +17,8 @@
   },
   "details": {
     "title": "Mission: {{title}}",
-    "loadingMessage": "Loading mission details...",
-    "backToMissions": "Back to Missions",
+    "loadingMessage": "Chargement de la mission...",
+    "backToMissions": "Retour aux missions",
     "tabs": {
       "details": "Détails",
       "timeline": "Historique",
@@ -217,18 +217,23 @@
     }
   },
   "messages": {
+    "updatingMission": "Mise à jour de la mission...",
+    "creatingMission": "Création de la mission...",
+    "publishingMission": "Publication de la mission...",
+    "deletingMission": "Suppression de la mission...",
     "publishedSuccess": "Mission publiée avec succès",
     "cancelledSuccess": "Mission annulée avec succès",
     "createdSuccess": "Mission créée avec succès",
     "modifiedSuccess": "Mission modifiée avec succès",
     "statusUpdatedSuccess": "Mission {{status}} successfully",
-    "applicationSentSuccess": "Candidature envoyée avec succès"
+    "applicationSentSuccess": "Candidature envoyée avec succès",
+    "missionDataWillBeDeleted": "Les données de la mission seront définitivement supprimées"
   },
   "actions": {
+    "publish": "Publier la mission",
     "start": "Lancer la mission",
     "complete": "Terminer la mission",
     "delete": "Supprimer la Mission",
-    "deleting": "Suppression en cours...",
     "confirmDelete": "supprimer la mission {{ mission }}",
     "warning": "La mission et toutes les données associées seront définitivement supprimées",
     "success": {

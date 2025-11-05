@@ -199,6 +199,31 @@ function TransporteurSettings() {
     }
   };
 
+  const handleCodesRegeneration = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await authService.regenMFACodes();
+
+      if (response.error) {
+        toast.error(tErrors('general.somethingWentWrong'));
+        return;
+      }
+
+      if (response.data) {
+        setMfaStatus({
+          ...mfaStatus,
+          backupCodes: response.data.recoveryCodes,
+        });
+        toast.success(tProfile('settings.security.mfa.regenerateSuccess'));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success(tCommon('messages.copiedToClipboard'));
@@ -502,12 +527,18 @@ function TransporteurSettings() {
               </div>
 
               {mfaStatus.enabled && (
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    {tProfile('settings.security.mfa.enabled')}
-                  </AlertDescription>
-                </Alert>
+                <>
+                  <Alert className="border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      {tProfile('settings.security.mfa.enabled')}
+                    </AlertDescription>
+                  </Alert>
+                  <Button variant="outline" size="sm" onClick={handleCodesRegeneration}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {tProfile('settings.security.mfa.regenerateCodes')}
+                  </Button>
+                </>
               )}
 
               {mfaStatus.setupRequired && (

@@ -9,6 +9,7 @@ import {
   Check,
   ArrowLeft,
   CheckCheck,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,12 +21,19 @@ import {
   useChatTranslation,
   useErrorsTranslation,
 } from '@/hooks/useTranslation';
-import type { ConversationListItem, Message } from '@/types/chat.types';
+import { ConversationType } from '@/types/chat.types';
+import type {
+  ConversationListItem,
+  ChatbotConversation,
+  AnyConversation,
+  Message,
+  ChatbotMessage,
+} from '@/types/chat.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface ChatWindowProps {
-  conversation: ConversationListItem;
+  conversation: AnyConversation;
   onBack?: () => void;
   onClose?: () => void;
 }
@@ -39,6 +47,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     error,
     fetchMessages,
     sendMessage,
+    sendChatbotMessage,
     markAllMessagesAsRead,
     sendTypingIndicator,
     typingIndicators,
@@ -51,37 +60,60 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
   const typingTimeoutRef = useRef<NodeJS.Timeout>(null);
   const currentConversationIdRef = useRef<number | null>(null);
 
+  // Check if this is a chatbot conversation
+  const isChatbotConversation = conversation.type === ConversationType.CHATBOT;
+  const chatbotConversation = isChatbotConversation ? (conversation as ChatbotConversation) : null;
+
   const currentMessages = useMemo(() => {
+    if (isChatbotConversation && chatbotConversation) {
+      // For chatbot conversations, use chatbot messages
+      return chatbotConversation.messages.map((msg) => ({
+        id: msg.id,
+        conversationId: msg.conversationId,
+        senderId: msg.isFromBot ? 'bot' : user?.id || '',
+        content: msg.content,
+        type: 'text' as const,
+        isRead: true,
+        createdAt: msg.createdAt,
+        updatedAt: msg.updatedAt,
+      }));
+    }
     return messages[conversation.id] || [];
-  }, [messages, conversation.id]);
+  }, [messages, conversation.id, isChatbotConversation, chatbotConversation, user?.id]);
 
   const typingUsers = useMemo(() => {
+    // Skip typing indicators for chatbot conversations
+    if (isChatbotConversation) return [];
+
     return typingIndicators
       .filter((indicator) => indicator.conversationId === conversation.id && indicator.isTyping)
       .map((indicator) => {
         // Map userId to actual user data
-        // For now, use otherParticipant if it matches, otherwise fallback to userId
-        if (!conversation.otherParticipant) return null;
-        const isOtherParticipant = indicator.userId === conversation.otherParticipant?.id;
+        const regularConv = conversation as ConversationListItem;
+        if (!regularConv.otherParticipant) return null;
+        const isOtherParticipant = indicator.userId === regularConv.otherParticipant?.id;
 
         if (!isOtherParticipant) return null;
         return {
           userId: indicator.userId,
-          firstName: conversation.otherParticipant?.firstName,
-          lastName: conversation.otherParticipant?.lastName,
+          firstName: regularConv.otherParticipant?.firstName,
+          lastName: regularConv.otherParticipant?.lastName,
         };
       });
-  }, [typingIndicators, conversation.id, conversation.otherParticipant]);
+  }, [isChatbotConversation, typingIndicators, conversation]);
 
   // Create stable function references to avoid infinite loops
   const loadMessagesForConversation = useCallback(
     async (conversationId: number) => {
+      // Skip API calls for chatbot conversations
+      if (isChatbotConversation) return;
+
       await fetchMessages(conversationId);
       if (messages) {
         await markAllMessagesAsRead(conversationId);
       }
     },
-    [fetchMessages, markAllMessagesAsRead, messages]
+    [fetchMessages, markAllMessagesAsRead, messages, isChatbotConversation]
   );
 
   useEffect(() => {
@@ -93,20 +125,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.id]);
 
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [currentMessages, typingUsers]);
-
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
     try {
-      await sendMessage(conversation.id, newMessage);
+      if (isChatbotConversation) {
+        await sendChatbotMessage(newMessage);
+      } else {
+        await sendMessage(conversation.id, newMessage);
+      }
       setNewMessage('');
       setIsTyping(false);
     } catch (error) {
@@ -116,6 +144,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
+
+    // Skip typing indicators for chatbot conversations
+    if (isChatbotConversation) return;
 
     if (value.trim() && !isTyping) {
       setIsTyping(true);
@@ -135,28 +166,39 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
   };
 
   const getConversationTitle = () => {
-    if (conversation.type === 'mission' && conversation.mission) {
-      return `Mission: ${conversation.mission.title}`;
+    if (isChatbotConversation && chatbotConversation) {
+      return chatbotConversation.profile.name;
+    }
+    const regularConv = conversation as ConversationListItem;
+    if (regularConv.type === 'mission' && regularConv.mission) {
+      return `Mission: ${regularConv.mission.title}`;
     }
     return (
-      conversation.otherParticipant?.firstName + ' ' + conversation.otherParticipant?.lastName ||
+      regularConv.otherParticipant?.firstName + ' ' + regularConv.otherParticipant?.lastName ||
       tChat('messages.unknownUser')
     );
   };
 
   const getConversationSubtitle = () => {
-    if (conversation.type === 'mission') {
-      return `avec ${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`;
+    if (isChatbotConversation && chatbotConversation) {
+      return chatbotConversation.profile.description;
     }
-    if (conversation.otherParticipant?.role) {
+    const regularConv = conversation as ConversationListItem;
+    if (regularConv.type === 'mission') {
+      return `avec ${regularConv.otherParticipant?.firstName} ${regularConv.otherParticipant?.lastName}`;
+    }
+    if (regularConv.otherParticipant?.role) {
       return (
-        conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-          conversation.otherParticipant?.role?.slice(1) || ''
+        regularConv.otherParticipant?.role?.charAt(0).toUpperCase() +
+          regularConv.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
 
   const getConversationIcon = () => {
+    if (isChatbotConversation) {
+      return <Bot className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
+    }
     if (conversation.type === 'mission') {
       return <Hash className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
     }
@@ -191,17 +233,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
           <div className="relative flex-shrink-0">
             <Avatar className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10">
-              <AvatarImage
-                src={conversation.otherParticipant?.avatarUrl}
-                alt={`${conversation.otherParticipant?.firstName} ${conversation.otherParticipant?.lastName}`}
-              />
-              <AvatarFallback className="text-xs">
-                {conversation.otherParticipant?.firstName?.charAt(0) || ''}
-                {conversation.otherParticipant?.lastName?.charAt(0) || ''}
-                {!conversation.otherParticipant?.firstName &&
-                  !conversation.otherParticipant?.lastName &&
-                  '?'}
-              </AvatarFallback>
+              {isChatbotConversation ? (
+                <AvatarFallback className="bg-purple-100 text-purple-600">
+                  <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+                </AvatarFallback>
+              ) : (
+                <>
+                  <AvatarImage
+                    src={(conversation as ConversationListItem).otherParticipant?.avatarUrl}
+                    alt={`${(conversation as ConversationListItem).otherParticipant?.firstName} ${(conversation as ConversationListItem).otherParticipant?.lastName}`}
+                  />
+                  <AvatarFallback className="text-xs">
+                    {(conversation as ConversationListItem).otherParticipant?.firstName?.charAt(
+                      0
+                    ) || ''}
+                    {(conversation as ConversationListItem).otherParticipant?.lastName?.charAt(0) ||
+                      ''}
+                    {!(conversation as ConversationListItem).otherParticipant?.firstName &&
+                      !(conversation as ConversationListItem).otherParticipant?.lastName &&
+                      '?'}
+                  </AvatarFallback>
+                </>
+              )}
             </Avatar>
             <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
               {getConversationIcon()}
@@ -217,7 +270,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
         </div>
 
         <div className="flex items-center gap-1 flex-shrink-0">
-          {conversation.type === 'direct' && (
+          {conversation.type === 'direct' && !isChatbotConversation && (
             <>
               <Button
                 variant="ghost"
@@ -253,7 +306,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
       {/* Messages - Scrollable Area */}
       <div className="flex-1 flex flex-col justify-end py-1 sm:py-2 gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 overflow-y-auto">
-        {isLoading ? (
+        {isLoading && !isChatbotConversation ? (
           <div className="flex items-center justify-center py-6 sm:py-8 lg:py-12 h-full">
             <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-600"></div>
             <span className="ml-2 text-gray-500 text-xs sm:text-sm lg:text-base">
@@ -262,27 +315,44 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
           </div>
         ) : currentMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-6 sm:py-8 lg:py-12 text-gray-500">
-            <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-gray-300" />
+            {isChatbotConversation ? (
+              <Bot className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-purple-300" />
+            ) : (
+              <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-gray-300" />
+            )}
             <p className="text-xs sm:text-sm lg:text-base">
-              {tChat('messages.noMessagesInConversation')}
+              {isChatbotConversation
+                ? tChat('messages.noChatbotMessages', 'Commencez une conversation avec le bot')
+                : tChat('messages.noMessagesInConversation')}
             </p>
-            <p className="text-xs text-gray-400 mt-1">{tChat('messages.sendFirstMessage')}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {isChatbotConversation
+                ? tChat('messages.askBotQuestion', 'Posez votre première question')
+                : tChat('messages.sendFirstMessage')}
+            </p>
           </div>
         ) : (
           <>
             {currentMessages.map((message, index) => {
               const isCurrentUser = message.senderId === user?.id;
+              const isBotMessage = message.senderId === 'bot';
               const showAvatar =
                 !isCurrentUser &&
+                !isBotMessage &&
                 (index === 0 || currentMessages[index - 1]?.senderId !== message.senderId);
-
+              const msg = isBotMessage ? (message as Message) : (message as ChatbotMessage);
               return (
                 <MessageBubble
                   key={message.id}
-                  message={message}
+                  message={msg}
                   isCurrentUser={isCurrentUser}
+                  isBotMessage={isBotMessage}
                   showAvatar={showAvatar}
-                  otherParticipant={conversation.otherParticipant}
+                  otherParticipant={
+                    !isChatbotConversation
+                      ? (conversation as ConversationListItem).otherParticipant
+                      : undefined
+                  }
                 />
               );
             })}
@@ -319,15 +389,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
           <Input
             value={newMessage}
             onChange={(e) => handleTyping(e.target.value)}
-            placeholder={tChat('placeholders.sendMessageTo', {
-              name: conversation.otherParticipant?.firstName || tChat('user'),
-            })}
+            placeholder={
+              isChatbotConversation
+                ? tChat('placeholders.sendMessageToBot', 'Posez votre question au bot...')
+                : tChat('placeholders.sendMessageTo', {
+                    name:
+                      (conversation as ConversationListItem).otherParticipant?.firstName ||
+                      tChat('user'),
+                  })
+            }
             className="flex-1 text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10"
-            disabled={isLoading}
+            disabled={isLoading && !isChatbotConversation}
           />
           <Button
             type="submit"
-            disabled={!newMessage.trim() || isLoading}
+            disabled={!newMessage.trim() || (isLoading && !isChatbotConversation)}
             className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 p-0 flex-shrink-0"
           >
             <Send className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -339,8 +415,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 };
 
 interface MessageBubbleProps {
-  message: Message;
+  message: Message | ChatbotMessage;
   isCurrentUser: boolean;
+  isBotMessage?: boolean;
   showAvatar: boolean;
   otherParticipant?: {
     firstName?: string;
@@ -352,13 +429,15 @@ interface MessageBubbleProps {
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isCurrentUser,
+  isBotMessage = false,
   showAvatar,
   otherParticipant,
 }) => {
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
+
   const getMessageStatusIcon = () => {
-    if (!isCurrentUser) return null;
+    if (!isCurrentUser || isBotMessage) return null;
 
     if (message.isRead) {
       return <CheckCheck className="h-2 w-2 sm:h-3 sm:w-3 text-tsa-white" />;
@@ -402,7 +481,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     >
       {!isCurrentUser && (
         <div className="w-5 sm:w-6 lg:w-8 flex-shrink-0">
-          {showAvatar && (
+          {showAvatar && !isBotMessage && (
             <Avatar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8">
               <AvatarImage
                 src={otherParticipant?.avatar}
@@ -412,6 +491,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 {otherParticipant?.firstName?.charAt(0) || ''}
                 {otherParticipant?.lastName?.charAt(0) || ''}
                 {!otherParticipant?.firstName && !otherParticipant?.lastName && '?'}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          {showAvatar && isBotMessage && (
+            <Avatar className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8">
+              <AvatarFallback className="bg-purple-100 text-purple-600">
+                <Bot className="h-3 w-3 sm:h-4 sm:w-4" />
               </AvatarFallback>
             </Avatar>
           )}
@@ -425,7 +511,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${
             isCurrentUser
               ? 'bg-tsa-blue text-white rounded-br-sm sm:rounded-br-md'
-              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
+              : isBotMessage
+                ? 'bg-purple-100 text-purple-900 rounded-bl-sm sm:rounded-bl-md'
+                : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
           }`}
         >
           <div className="text-xs sm:text-sm lg:text-base whitespace-pre-wrap break-words leading-relaxed">
@@ -433,7 +521,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           </div>
 
           <div className={`flex items-center gap-1 mt-1 text-xs justify-end`}>
-            <span className="text-xs opacity-75">{formatMessageTime(message.createdAt)}</span>
+            <span className={`text-xs opacity-75 ${isBotMessage ? 'text-purple-700' : ''}`}>
+              {formatMessageTime(message.createdAt)}
+            </span>
             {getMessageStatusIcon()}
           </div>
         </div>

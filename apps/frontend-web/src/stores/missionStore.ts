@@ -353,21 +353,20 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-            const currentMyMissions = get().myMissions;
-
-            set({
-              missions: currentMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+            set((state) => ({
+              missions: state.missions.map((mission) =>
+                mission.id === id ? { ...mission, ...response.data! } : mission
               ),
-              myMissions: currentMyMissions.map((mission) =>
-                mission.id === id ? response.data! : mission
+              myMissions: state.myMissions.map((mission) =>
+                mission.id === id ? { ...mission, ...response.data! } : mission
               ),
               currentMission:
-                get().currentMission?.id === id ? response.data : get().currentMission,
+                state.currentMission?.id === id
+                  ? { ...state.currentMission, ...response.data! }
+                  : state.currentMission,
               isLoading: false,
               error: null,
-            });
+            }));
           }
         } catch (error) {
           set({
