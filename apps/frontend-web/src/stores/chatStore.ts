@@ -17,6 +17,7 @@ import {
   MessageType,
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
+import { chatbotService } from '@/services/chatbot.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
 
 const initialState = {
@@ -198,51 +199,130 @@ export const useChatStore = create<ChatState>()(
 
       // Send message to chatbot
       sendChatbotMessage: async (message: string, userId?: string): Promise<ChatbotResponse> => {
+        set({ isLoading: true, error: null });
+
         const { chatbot } = get();
-        if (!chatbot) return generateChatbotResponse(message);
+        if (!chatbot) {
+          set({ isLoading: false });
+          return generateChatbotResponse(message);
+        }
 
-        // Generate unique IDs based on current message count
-        const currentMessageCount = chatbot.messages.length;
-        const userMessageId = currentMessageCount + 1;
-        const botMessageId = currentMessageCount + 2;
+        try {
+          const conversationId = userId || 'default';
 
-        // Add user message
-        const userMessage: ChatbotMessage = {
-          id: userMessageId,
-          content: message,
-          createdAt: new Date().toISOString(),
-          isFromBot: false,
-          senderId: userId || 'user',
-          conversationId: -1,
-          type: MessageType.TEXT,
-          isRead: true,
-          updatedAt: new Date().toISOString(),
-        };
+          // Generate unique IDs based on timestamp
+          const userMessageId = Date.now();
+          const botMessageId = Date.now() + 1;
 
-        // Generate bot response
-        const response = generateChatbotResponse(message);
-        const botMessage: ChatbotMessage = {
-          id: botMessageId,
-          content: response.content,
-          createdAt: new Date().toISOString(),
-          isFromBot: true,
-          senderId: 'bot',
-          conversationId: -1,
-          type: MessageType.TEXT,
-          isRead: true,
-          updatedAt: new Date().toISOString(),
-        };
+          // Add user message
+          const userMessage: ChatbotMessage = {
+            id: userMessageId,
+            content: message,
+            createdAt: new Date().toISOString(),
+            isFromBot: false,
+            senderId: userId || 'user',
+            conversationId: -1,
+            type: MessageType.TEXT,
+            isRead: true,
+            updatedAt: new Date().toISOString(),
+          };
 
-        // Update chatbot conversation
-        const updatedChatbot: ChatbotConversation = {
-          ...chatbot,
-          messages: [...chatbot.messages, userMessage, botMessage],
-          lastMessage: botMessage,
-          updatedAt: new Date().toISOString(),
-        };
+          // Update chatbot with user message immediately
+          const chatbotWithUserMessage: ChatbotConversation = {
+            ...chatbot,
+            messages: [...chatbot.messages, userMessage],
+            updatedAt: new Date().toISOString(),
+          };
+          set({ chatbot: chatbotWithUserMessage });
 
-        set({ chatbot: updatedChatbot });
-        return response;
+          // Call chatbot service
+          const response = await chatbotService.sendMessage({
+            message,
+            conversationId,
+            context: {}, // Can be enriched with contextual data
+          });
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            // Return fallback response on error
+            const fallbackResponse = {
+              content: "Désolé, je rencontre des difficultés à traiter votre demande. Veuillez réessayer.",
+              suggestions: ["Aide", "Support"],
+            };
+
+            // Add fallback bot message
+            const fallbackBotMessage: ChatbotMessage = {
+              id: botMessageId,
+              content: fallbackResponse.content,
+              createdAt: new Date().toISOString(),
+              isFromBot: true,
+              senderId: 'bot',
+              conversationId: -1,
+              type: MessageType.TEXT,
+              isRead: true,
+              updatedAt: new Date().toISOString(),
+              suggestions: fallbackResponse.suggestions,
+            };
+
+            const updatedChatbot: ChatbotConversation = {
+              ...chatbotWithUserMessage,
+              messages: [...chatbotWithUserMessage.messages, fallbackBotMessage],
+              lastMessage: fallbackBotMessage,
+              updatedAt: new Date().toISOString(),
+            };
+
+            set({ chatbot: updatedChatbot, isLoading: false });
+            return fallbackResponse;
+          }
+
+          const botResponse = response.data!;
+
+          // Create bot message with data from API
+          const botMessage: ChatbotMessage = {
+            id: botMessageId,
+            content: botResponse.message,
+            createdAt: botResponse.timestamp || new Date().toISOString(),
+            isFromBot: true,
+            senderId: 'bot',
+            conversationId: -1,
+            type: MessageType.TEXT,
+            isRead: true,
+            updatedAt: botResponse.timestamp || new Date().toISOString(),
+            suggestions: botResponse.suggestions,
+            navigation: botResponse.navigation,
+            requiresHuman: botResponse.requires_human,
+          };
+
+          // Update chatbot conversation with bot response
+          const updatedChatbot: ChatbotConversation = {
+            ...chatbotWithUserMessage,
+            messages: [...chatbotWithUserMessage.messages, botMessage],
+            lastMessage: botMessage,
+            updatedAt: new Date().toISOString(),
+          };
+
+          set({ chatbot: updatedChatbot, isLoading: false });
+
+          // Return response for compatibility
+          return {
+            content: botResponse.message,
+            suggestions: botResponse.suggestions,
+            navigation: botResponse.navigation,
+            requiresHuman: botResponse.requires_human,
+          };
+        } catch (error) {
+          console.error('Failed to send chatbot message:', error);
+          set({
+            error: 'Failed to communicate with chatbot',
+            isLoading: false,
+          });
+          return {
+            content: 'Erreur lors de la communication avec le chatbot',
+          };
+        }
       },
 
       // Get chatbot response (synchronous version)
