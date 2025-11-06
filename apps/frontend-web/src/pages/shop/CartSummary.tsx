@@ -315,7 +315,9 @@ export default function CartSummaryPage() {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {tShop('cart.title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{tShop('cart.reviewItems')}</p>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              {tShop('cart.reviewItems')}
+            </p>
           </div>
 
           {error && (

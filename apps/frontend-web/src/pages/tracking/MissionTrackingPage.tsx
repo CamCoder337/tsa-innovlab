@@ -95,8 +95,12 @@ export default function MissionTrackingPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{tTracking('mission.notFound')}</h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-8">{tTracking('mission.notFoundMessage', { id })}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            {tTracking('mission.notFound')}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            {tTracking('mission.notFoundMessage', { id })}
+          </p>
           <Button onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {tTracking('navigation.backToDashboard')}
@@ -528,7 +532,9 @@ export default function MissionTrackingPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{step.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                            {step.description}
+                          </p>
                         </div>
                       </div>
                     ))}
