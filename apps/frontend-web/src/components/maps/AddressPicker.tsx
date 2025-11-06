@@ -346,9 +346,10 @@ export default function AddressPicker({
 
       // Default center (Cameroon center)
       const defaultCenter = { lat: 4.0511, lng: 9.7679 };
-      const initialCenter = selectedAddress?.latitude && selectedAddress?.longitude
-        ? { lat: Number(selectedAddress.latitude), lng: Number(selectedAddress.longitude) }
-        : defaultCenter;
+      const initialCenter =
+        selectedAddress?.latitude && selectedAddress?.longitude
+          ? { lat: Number(selectedAddress.latitude), lng: Number(selectedAddress.longitude) }
+          : defaultCenter;
 
       const map = new google.maps.Map(mapContainer, {
         center: initialCenter,

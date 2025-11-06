@@ -111,7 +111,7 @@ function TransporteurDashboard() {
               bgColor: 'bg-blue-50',
               borderColor: read ? null : 'border-blue-200',
               textColor: 'text-blue-800',
-              iconColor: 'text-tsa-blue',
+              iconColor: 'text-tsa-blue dark:text-tsa-white',
             };
           case 'mission_status_changed':
             return {
@@ -153,7 +153,7 @@ function TransporteurDashboard() {
               bgColor: 'bg-blue-50',
               borderColor: 'border-blue-200',
               textColor: 'text-blue-800',
-              iconColor: 'text-tsa-blue',
+              iconColor: 'text-tsa-blue dark:text-tsa-white',
             };
         }
       };

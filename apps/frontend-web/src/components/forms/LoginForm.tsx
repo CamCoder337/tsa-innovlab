@@ -57,7 +57,11 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
               onBlur={handleBlur}
               aria-label="email"
               aria-invalid={touched.email && !!errors.email}
-              className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+              className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                          "
               required
               disabled={showMFA}
             />
@@ -77,7 +81,11 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                 onBlur={handleBlur}
                 aria-label="password"
                 aria-invalid={touched.password && !!errors.password}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                          "
                 required
                 disabled={showMFA}
               />
@@ -97,7 +105,10 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                 {}
               </div>
               {!showMFA && (
-                <Link to="/forgot-password" className="text-tsa-blue text-sm font-medium">
+                <Link
+                  to="/forgot-password"
+                  className="text-tsa-blue dark:text-tsa-white text-sm font-medium"
+                >
                   {tAuth('login.forgotPassword')}
                 </Link>
               )}
@@ -107,7 +118,9 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           {showMFA && (
             <div className="flex flex-col gap-4">
               <div className="text-center">
-                <p className="text-sm text-tsa-gray mb-2">{tAuth('mfa.subtitle')}</p>
+                <p className="text-sm text-tsa-gray dark:text-tsa-white mb-2">
+                  {tAuth('mfa.subtitle')}
+                </p>
               </div>
               <OTPInput
                 length={6}
@@ -135,7 +148,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                     setShowMFA(false);
                     setFieldValue('mfaCode', '');
                   }}
-                  className="text-tsa-blue text-sm font-medium"
+                  className="text-tsa-blue dark:text-tsa-white text-sm font-medium"
                 >
                   {tAuth('mfa.backToLogin')}
                 </button>
@@ -146,7 +159,9 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           <Button
             name="login"
             type="submit"
-            className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 text-white font-semibold text-2xl p-10"
+            className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 
+              hover:bg-tsa-blue active:bg-tsa-blue/80 text-white font-semibold 
+              text-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -164,13 +179,23 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
           {!showMFA && (
             <>
               <div className="text-center">
-                <span className="text-gray-600">{tAuth('login.noAccount')} </span>
-                <Link to="/register" className="text-tsa-blue font-medium">
+                <span className="text-gray-600 dark:text-gray-400">
+                  {tAuth('login.noAccount')}{' '}
+                </span>
+                <Link
+                  to="/register"
+                  className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
+                    dark:hover:text-tsa-blue font-medium text-sm transition-colors "
+                >
                   {tAuth('register.label')}
                 </Link>
               </div>
               <div className="text-center">
-                <Link to="/verify-email" className="text-tsa-blue font-medium">
+                <Link
+                  to="/verify-email"
+                  className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
+                dark:hover:text-tsa-blue font-medium text-sm transition-colors "
+                >
                   {tAuth('login.verifyEmail')}
                 </Link>
               </div>

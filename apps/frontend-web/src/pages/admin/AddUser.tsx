@@ -44,7 +44,9 @@ export default function AddUser() {
               {tCommon('actions.back')}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tAdmin('addUser.title')}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {tAdmin('addUser.title')}
+              </h1>
               <p className="text-muted-foreground">{tAdmin('addUser.subtitle')}</p>
             </div>
           </div>

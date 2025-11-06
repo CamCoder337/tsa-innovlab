@@ -195,7 +195,9 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
                         {product.name}
                       </p>
                     </Link>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{product.price.toLocaleString()} FCFA</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {product.price.toLocaleString()} FCFA
+                    </p>
                   </div>
                   <Button
                     size="sm"
