@@ -213,7 +213,7 @@ export default class OrderService {
    * Récupère les détails d'une commande spécifique
    */
   async getOrderById(orderId: string, userId: string): Promise<Order> {
-    const order = await Order.query()
+    return await Order.query()
       .where('id', orderId)
       .where('userId', userId)
       .preload('items', (itemsQuery) => {
@@ -223,8 +223,6 @@ export default class OrderService {
       .preload('billingAddress')
       .preload('payment')
       .firstOrFail()
-
-    return order
   }
 
   /**
@@ -292,13 +290,11 @@ export default class OrderService {
   }> {
     const orders = await Order.query().where('userId', userId)
 
-    const stats = {
+    return {
       totalOrders: orders.length,
       totalSpent: orders.reduce((sum, order) => sum + Number(order.totalAmount), 0),
       pendingOrders: orders.filter((o) => o.status === OrderStatus.PENDING).length,
       completedOrders: orders.filter((o) => o.status === OrderStatus.DELIVERED).length,
     }
-
-    return stats
   }
 }
