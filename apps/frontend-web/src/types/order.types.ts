@@ -36,42 +36,54 @@ export interface OrderItem extends Partial<Timestamps> {
   productImageUrl?: string;
   quantity: number;
   unitPrice: string; // Decimal stored as string
-  subtotal: string; // Decimal stored as string
+  totalPrice: string; // Backend uses totalPrice instead of subtotal
+  subtotal?: string; // Alias for compatibility
 }
 
 export interface Order extends Timestamps {
   id: string;
   userId: string;
-  user?: User; // Optional populated relation
-  orderNumber: string; // Numéro de commande unique (ex: ORD-20250101-0001)
+  user?: User; // Optional populated relation (contains firstName, lastName, email, phone)
+  orderNumber: string; // Numéro de commande unique (ex: ORD-202511-0001)
   status: OrderStatus;
-  paymentMethod: PaymentMethod | null;
+  paymentMethod: string; // PaymentMethod as string from backend
   paymentStatus: PaymentStatus;
-  paymentReference: string | null; // Référence de paiement externe
-  subtotal: string; // Sous-total (produits uniquement)
-  shippingCost: string; // Frais de livraison
-  tax: string; // Taxes
-  total: string; // Total final
-  shippingAddressId: string | null;
-  billingAddressId: string | null;
+  totalAmount: string; // Total amount from backend as string (decimal)
+  shippingAddressId: string;
+  billingAddressId: string;
   shippingAddress?: Address; // Optional populated relation
   billingAddress?: Address; // Optional populated relation
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
   notes: string | null; // Notes de la commande
-  trackingNumber: string | null; // Numéro de suivi de livraison
   items?: OrderItem[]; // Optional populated relation
-  paidAt: string | null;
-  shippedAt: string | null;
-  deliveredAt: string | null;
-  cancelledAt: string | null;
+  payment?: any; // Optional payment relation
 }
 
 // DTOs for API requests
 export interface CreateOrderRequest {
-  shippingAddressId: string;
-  billingAddressId: string;
+  // Option 1: Use existing addresses by ID
+  shippingAddressId?: string;
+  billingAddressId?: string;
+  // Option 2: Provide address data to create new addresses
+  shippingAddress?: {
+    street: string;
+    city: string;
+    region: string;
+    country: string;
+    postalCode?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    label?: string | null;
+  };
+  billingAddress?: {
+    street: string;
+    city: string;
+    region: string;
+    country: string;
+    postalCode?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    label?: string | null;
+  };
   paymentMethod: PaymentMethod | string; // Accept both enum and string values
   notes?: string;
 }

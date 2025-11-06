@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -86,6 +86,12 @@ export default function OrdersManagement() {
 
   const allStats = useAllAdminStats();
 
+  // Load orders on mount
+  useEffect(() => {
+    fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Filter orders based on search and filters
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -136,10 +142,10 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.total), 0),
+    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.totalAmount), 0),
     averageOrderValue:
       orders.length > 0
-        ? orders.reduce((sum, order) => sum + parseFloat(order.total), 0) / orders.length
+        ? orders.reduce((sum, order) => sum + parseFloat(order.totalAmount), 0) / orders.length
         : 0,
   };
 
@@ -310,7 +316,7 @@ export default function OrdersManagement() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-sm">
-                          {formatCurrency(parseFloat(order.total))}
+                          {formatCurrency(parseFloat(order.totalAmount))}
                         </p>
                         <Badge
                           variant="secondary"
@@ -499,7 +505,7 @@ export default function OrdersManagement() {
                             {formatDate(order.createdAt!)}
                           </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(parseFloat(order.total))}
+                            {formatCurrency(parseFloat(order.totalAmount))}
                           </TableCell>
                           <TableCell>
                             <Badge

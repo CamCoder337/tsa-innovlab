@@ -201,6 +201,9 @@ export class ShopService extends BaseApi {
       return { data: response.data.data };
     } catch (error) {
       console.error('Order creation error:', error);
+      if (this.isAxiosError(error) && error.response) {
+        console.error('Backend validation errors:', error.response.data);
+      }
       return { error: this.getErrorResponse(error) };
     }
   }

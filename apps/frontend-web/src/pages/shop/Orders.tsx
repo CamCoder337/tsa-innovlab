@@ -296,7 +296,7 @@ export default function OrdersPage() {
                             </span>
                           </span>
                           <span className="font-semibold text-zinc-900">
-                            {parseFloat(order.total).toLocaleString('fr-FR')} FCFA
+                            {parseFloat(order.totalAmount).toLocaleString('fr-FR')} FCFA
                           </span>
                           {order.items && (
                             <span className="text-zinc-500">
@@ -345,10 +345,17 @@ export default function OrdersPage() {
                               <div className="text-right flex-shrink-0">
                                 <p className="font-medium text-xs sm:text-sm">
                                   {item.quantity} ×{' '}
-                                  {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
+                                  {item.unitPrice ? parseFloat(item.unitPrice).toLocaleString('fr-FR') : '0'} FCFA
                                 </p>
                                 <p className="text-xs text-zinc-500">
-                                  {parseFloat(item.subtotal).toLocaleString('fr-FR')} FCFA
+                                  {item.totalPrice
+                                    ? parseFloat(item.totalPrice).toLocaleString('fr-FR')
+                                    : item.subtotal
+                                      ? parseFloat(item.subtotal).toLocaleString('fr-FR')
+                                      : item.unitPrice
+                                        ? (parseFloat(item.unitPrice) * item.quantity).toLocaleString('fr-FR')
+                                        : '0'}{' '}
+                                  FCFA
                                 </p>
                               </div>
                             </div>
