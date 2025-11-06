@@ -44,8 +44,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PENDING,
       date: order.createdAt,
       completed: true,
-      title: tShop('orderDetails.timeline.created.title'),
-      description: tShop('orderDetails.timeline.created.description'),
+      title: tShop('orderDetails.tracking.created'),
+      description: tShop('orderDetails.tracking.createdDesc'),
     });
   }
 
@@ -54,8 +54,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PAID,
       date: order.paidAt,
       completed: true,
-      title: tShop('orderDetails.timeline.paid.title'),
-      description: tShop('orderDetails.timeline.paid.description'),
+      title: tShop('orderDetails.tracking.paid'),
+      description: tShop('orderDetails.tracking.paidDesc'),
     });
   }
 
@@ -64,8 +64,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.PROCESSING,
       date: order.updatedAt!, // Safe because we check for existence above
       completed: true,
-      title: tShop('orderDetails.timeline.processing.title'),
-      description: tShop('orderDetails.timeline.processing.description'),
+      title: tShop('orderDetails.tracking.processing'),
+      description: tShop('orderDetails.tracking.processingDesc'),
     });
   }
 
@@ -74,12 +74,12 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.SHIPPED,
       date: order.shippedAt,
       completed: true,
-      title: tShop('orderDetails.timeline.shipped.title'),
+      title: tShop('orderDetails.tracking.shipped'),
       description: order.trackingNumber
-        ? tShop('orderDetails.timeline.shipped.descriptionWithTracking', {
-            trackingNumber: order.trackingNumber,
+        ? tShop('orderDetails.tracking.shippedWithTracking', {
+            number: order.trackingNumber,
           })
-        : tShop('orderDetails.timeline.shipped.description'),
+        : tShop('orderDetails.tracking.shippedDesc'),
     });
   }
 
@@ -88,8 +88,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.DELIVERED,
       date: order.deliveredAt,
       completed: true,
-      title: tShop('orderDetails.timeline.delivered.title'),
-      description: tShop('orderDetails.timeline.delivered.description'),
+      title: tShop('orderDetails.tracking.delivered'),
+      description: tShop('orderDetails.tracking.deliveredDesc'),
     });
   }
 
@@ -98,8 +98,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
       status: OrderStatus.CANCELLED,
       date: order.cancelledAt,
       completed: true,
-      title: tShop('orderDetails.timeline.cancelled.title'),
-      description: order.notes || tShop('orderDetails.timeline.cancelled.description'),
+      title: tShop('orderDetails.tracking.cancelled'),
+      description: order.notes || tShop('orderDetails.tracking.cancelledDesc'),
     });
   }
 
@@ -224,38 +224,39 @@ export default function OrderDetailsPage() {
             className="flex items-center gap-1 hover:text-zinc-900 transition-colors"
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="hidden sm:inline">{tShop('orderDetails.breadcrumb.myOrders')}</span>
+            <span className="hidden sm:inline">{tShop('orderDetails.backToOrders')}</span>
           </Link>
           <span>/</span>
           <span className="truncate">
-            {tShop('orderDetails.breadcrumb.order', { number: order.orderNumber })}
+            {tShop('orderDetails.orderNumber', { number: order.orderNumber })}
           </span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-zinc-900 mb-2 truncate">
-              {tShop('orderDetails.title', { number: order.orderNumber })}
+              {tShop('orderDetails.orderNumber', { number: order.orderNumber })}
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-zinc-600">
               <span className="flex items-center gap-1">
                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="truncate">
-                  {tShop('orderDetails.orderedOn')}{' '}
-                  {order.createdAt
-                    ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : 'N/A'}
+                  {tShop('orderDetails.orderedOn', {
+                    date: order.createdAt
+                      ? new Date(order.createdAt).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })
+                      : 'N/A'
+                  })}
                 </span>
               </span>
               <span className="flex items-center gap-1">
                 <Package className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 {(order.items?.length || 0) === 1
-                  ? tShop('orderDetails.itemCount', { count: order.items?.length || 0 })
-                  : tShop('orderDetails.itemCountPlural', { count: order.items?.length || 0 })}
+                  ? tShop('orders.orderItem.items', { count: order.items?.length || 0 })
+                  : tShop('orders.orderItem.itemsPlural', { count: order.items?.length || 0 })}
               </span>
             </div>
           </div>
@@ -275,7 +276,7 @@ export default function OrderDetailsPage() {
                 className="flex items-center gap-2 text-xs sm:text-sm w-full sm:w-auto"
               >
                 <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tShop('orderDetails.copyTracking')}</span>
+                <span className="hidden sm:inline">{tShop('orderDetails.actions.copyTracking')}</span>
               </Button>
             )}
           </div>
@@ -289,7 +290,7 @@ export default function OrderDetailsPage() {
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                {tShop('orderDetails.orderTracking')}
+                {tShop('orderDetails.tracking.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -347,7 +348,7 @@ export default function OrderDetailsPage() {
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Package className="h-4 w-4 sm:h-5 sm:w-5" />
-                {tShop('orderDetails.orderedItems')}
+                {tShop('orderDetails.items.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -369,15 +370,15 @@ export default function OrderDetailsPage() {
                         {item.productName}
                       </h3>
                       <p className="text-xs sm:text-sm text-zinc-600 mb-1 truncate">
-                        {tShop('orderDetails.reference')}: {item.productReference}
+                        {tShop('orderDetails.items.reference')}: {item.productReference}
                       </p>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
                         <span className="text-zinc-600">
-                          {tShop('orderDetails.quantity')}:{' '}
+                          {tShop('orderDetails.items.quantity')}:{' '}
                           <span className="font-medium">{item.quantity}</span>
                         </span>
                         <span className="text-zinc-600">
-                          {tShop('orderDetails.unitPrice')}:{' '}
+                          {tShop('orderDetails.items.unitPrice')}:{' '}
                           <span className="font-medium">
                             {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
                           </span>
@@ -386,7 +387,7 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className="text-center sm:text-right w-full sm:w-auto">
                       <div className="font-semibold text-base sm:text-lg text-zinc-900">
-                        {parseFloat(item.subtotal).toLocaleString('fr-FR')} FCFA
+                        {parseFloat(item.totalPrice || item.subtotal || '0').toLocaleString('fr-FR')} FCFA
                       </div>
                     </div>
                   </div>
@@ -400,7 +401,7 @@ export default function OrderDetailsPage() {
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
-                {tShop('orderDetails.deliveryInfo')}
+                {tShop('orderDetails.delivery.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
@@ -408,11 +409,10 @@ export default function OrderDetailsPage() {
                 <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 text-zinc-500 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-zinc-900 text-sm sm:text-base">
-                    {tShop('orderDetails.deliveryAddress')}
+                    {tShop('orderDetails.delivery.address')}
                   </p>
                   <p className="text-xs sm:text-sm text-zinc-600 mt-1 break-words">
-                    {order.shippingAddress?.label ||
-                      `${order.customerName}, ${order.customerPhone}`}
+                    {order.shippingAddress?.label || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -422,7 +422,7 @@ export default function OrderDetailsPage() {
                   <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-blue-900 text-sm sm:text-base">
-                      {tShop('orderDetails.trackingNumber')}
+                      {tShop('orderDetails.delivery.trackingNumber')}
                     </p>
                     <p className="text-xs sm:text-sm text-blue-700 font-mono break-all">
                       {order.trackingNumber}
@@ -444,7 +444,7 @@ export default function OrderDetailsPage() {
                   <Mail className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 text-zinc-500 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-medium text-zinc-900 text-sm sm:text-base">
-                      {tShop('orderDetails.deliveryInstructions')}
+                      {tShop('orderDetails.delivery.instructions')}
                     </p>
                     <p className="text-xs sm:text-sm text-zinc-600 mt-1 break-words">
                       {order.notes}
@@ -462,33 +462,43 @@ export default function OrderDetailsPage() {
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-                {tShop('orderDetails.orderSummary')}
+                {tShop('orderDetails.summary.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               <div className="space-y-2 sm:space-y-3">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.subtotal')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.subtotal).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.shippingCost')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.shippingCost).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.taxes')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.tax).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <Separator />
+                {(order.subtotal || order.shippingCost || order.tax) && (
+                  <>
+                    {order.subtotal && (
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-zinc-600">{tShop('orderDetails.summary.subtotal')}</span>
+                        <span className="font-medium">
+                          {parseFloat(order.subtotal).toLocaleString('fr-FR')} FCFA
+                        </span>
+                      </div>
+                    )}
+                    {order.shippingCost && (
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-zinc-600">{tShop('orderDetails.summary.shipping')}</span>
+                        <span className="font-medium">
+                          {parseFloat(order.shippingCost).toLocaleString('fr-FR')} FCFA
+                        </span>
+                      </div>
+                    )}
+                    {order.tax && (
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span className="text-zinc-600">{tShop('orderDetails.summary.tax')}</span>
+                        <span className="font-medium">
+                          {parseFloat(order.tax).toLocaleString('fr-FR')} FCFA
+                        </span>
+                      </div>
+                    )}
+                    <Separator />
+                  </>
+                )}
                 <div className="flex justify-between text-base sm:text-lg font-semibold">
-                  <span>{tShop('orderDetails.total')}</span>
-                  <span>{parseFloat(order.total).toLocaleString('fr-FR')} FCFA</span>
+                  <span>{tShop('orderDetails.summary.total')}</span>
+                  <span>{parseFloat(order.totalAmount || order.total || '0').toLocaleString('fr-FR')} FCFA</span>
                 </div>
               </div>
 
@@ -496,14 +506,14 @@ export default function OrderDetailsPage() {
                 <div className="pt-3 sm:pt-4 border-t">
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-600">
                     <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span>{tShop('orderDetails.paymentMethod')}: </span>
+                    <span>{tShop('orderDetails.summary.paymentMethod')} </span>
                     <span className="font-medium capitalize truncate">
-                      {order.paymentMethod.replace('_', ' ')}
+                      {tShop(`orders.payment.methods.${order.paymentMethod}`)}
                     </span>
                   </div>
                   {order.paymentReference && (
                     <p className="text-xs text-zinc-500 mt-1 break-all">
-                      {tShop('orderDetails.paymentReference')}: {order.paymentReference}
+                      {tShop('orderDetails.summary.paymentReference')}: {order.paymentReference}
                     </p>
                   )}
                 </div>
@@ -512,54 +522,62 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Informations client */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
-                {tShop('orderDetails.customerInfo')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 sm:space-y-3">
-              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                <span className="text-zinc-600">{tShop('orderDetails.name')}:</span>
-                <span className="font-medium truncate">{order.customerName}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                <span className="text-zinc-600 truncate">{order.customerEmail}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm">
-                <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                <span className="text-zinc-600">{order.customerPhone}</span>
-              </div>
-            </CardContent>
-          </Card>
+          {(order.customerName || order.customerEmail || order.customerPhone) && (
+            <Card>
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {tShop('orderDetails.customer.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 sm:space-y-3">
+                {order.customerName && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
+                    <span className="text-zinc-600">{tShop('orderDetails.customer.name')}</span>
+                    <span className="font-medium truncate">{order.customerName}</span>
+                  </div>
+                )}
+                {order.customerEmail && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
+                    <span className="text-zinc-600 truncate">{order.customerEmail}</span>
+                  </div>
+                )}
+                {order.customerPhone && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm">
+                    <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
+                    <span className="text-zinc-600">{order.customerPhone}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="space-y-2 sm:space-y-3">
             {order.status !== OrderStatus.CANCELLED && order.status !== OrderStatus.REFUNDED && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{tShop('orderDetails.downloadInvoice')}</span>
+                <span>{tShop('orderDetails.actions.downloadInvoice')}</span>
               </Button>
             )}
 
             {order.trackingNumber && (
               <Button variant="outline" className="w-full text-xs sm:text-sm">
                 <ExternalLink className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{tShop('orderDetails.trackPackage')}</span>
+                <span>{tShop('orderDetails.actions.trackPackage')}</span>
               </Button>
             )}
 
             <Button asChild className="w-full bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
               <Link to="/app/shop">
-                <span>{tShop('orderDetails.continueShopping')}</span>
+                <span>{tShop('orderDetails.actions.continueShopping')}</span>
               </Link>
             </Button>
 
             <Button asChild variant="outline" className="w-full text-xs sm:text-sm">
               <Link to="/app/shop/orders">
-                <span>{tShop('orderDetails.backToOrders')}</span>
+                <span>{tShop('orderDetails.actions.backToOrders')}</span>
               </Link>
             </Button>
           </div>
