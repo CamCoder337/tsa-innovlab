@@ -96,7 +96,7 @@ export default function OrdersPage() {
     const filtered = orders.filter((order) => {
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.items?.some((item) =>
           item.productName?.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -111,7 +111,7 @@ export default function OrdersPage() {
           comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
           break;
         case 'total':
-          comparison = parseFloat(a.total) - parseFloat(b.total);
+          comparison = parseFloat(a.total || a.totalAmount || '0') - parseFloat(b.total || b.totalAmount || '0');
           break;
         case 'status':
           comparison = a.status.localeCompare(b.status);

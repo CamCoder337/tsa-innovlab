@@ -49,6 +49,7 @@ export interface Order extends Timestamps {
   paymentMethod: string; // PaymentMethod as string from backend
   paymentStatus: PaymentStatus;
   totalAmount: string; // Total amount from backend as string (decimal)
+  total?: string; // Alias for totalAmount for backward compatibility
   shippingAddressId: string;
   billingAddressId: string;
   shippingAddress?: Address; // Optional populated relation
@@ -56,6 +57,20 @@ export interface Order extends Timestamps {
   notes: string | null; // Notes de la commande
   items?: OrderItem[]; // Optional populated relation
   payment?: any; // Optional payment relation
+
+  // Customer information
+  customerName?: string; // Customer name (from user or custom)
+  customerPhone?: string; // Customer phone (from user or custom)
+
+  // Payment and tracking information
+  paymentReference?: string | null; // Payment reference/transaction ID
+  trackingNumber?: string | null; // Shipping tracking number
+
+  // Timestamp fields for order lifecycle
+  paidAt?: string | null; // When the order was paid
+  shippedAt?: string | null; // When the order was shipped
+  deliveredAt?: string | null; // When the order was delivered
+  cancelledAt?: string | null; // When the order was cancelled
 }
 
 // DTOs for API requests
