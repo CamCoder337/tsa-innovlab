@@ -36,7 +36,8 @@ export interface OrderItem extends Partial<Timestamps> {
   productImageUrl?: string;
   quantity: number;
   unitPrice: string; // Decimal stored as string
-  subtotal: string; // Decimal stored as string
+  subtotal?: string; // Decimal stored as string (optional for backward compatibility)
+  totalPrice?: string; // Decimal stored as string (used by backend)
 }
 
 export interface Order extends Timestamps {
@@ -48,17 +49,18 @@ export interface Order extends Timestamps {
   paymentMethod: PaymentMethod | null;
   paymentStatus: PaymentStatus;
   paymentReference: string | null; // Référence de paiement externe
-  subtotal: string; // Sous-total (produits uniquement)
-  shippingCost: string; // Frais de livraison
-  tax: string; // Taxes
-  total: string; // Total final
+  subtotal?: string; // Sous-total (produits uniquement) - optional for backward compatibility
+  shippingCost?: string; // Frais de livraison - optional for backward compatibility
+  tax?: string; // Taxes - optional for backward compatibility
+  total?: string; // Total final - optional for backward compatibility
+  totalAmount?: string; // Total amount (used by backend)
   shippingAddressId: string | null;
   billingAddressId: string | null;
   shippingAddress?: Address; // Optional populated relation
   billingAddress?: Address; // Optional populated relation
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
+  customerName?: string; // Optional - may not be provided by backend
+  customerEmail?: string; // Optional - may not be provided by backend
+  customerPhone?: string; // Optional - may not be provided by backend
   notes: string | null; // Notes de la commande
   trackingNumber: string | null; // Numéro de suivi de livraison
   items?: OrderItem[]; // Optional populated relation
