@@ -693,6 +693,15 @@ export const useChatStore = create<ChatState>()(
         messages: state.messages,
         chatbot: state.chatbot,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Fix chatbot messages array after rehydration
+        if (state && state.chatbot) {
+          const messages = state.chatbot.messages;
+          if (!Array.isArray(messages) && messages && typeof messages === 'object') {
+            state.chatbot.messages = Object.values(messages) as ChatbotMessage[];
+          }
+        }
+      },
     }
   )
 );

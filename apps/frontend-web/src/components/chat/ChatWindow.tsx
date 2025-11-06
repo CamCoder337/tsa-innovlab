@@ -67,7 +67,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
   const currentMessages = useMemo(() => {
     if (isChatbotConversation && chatbotConversation) {
       // For chatbot conversations, use chatbot messages directly
-      return chatbotConversation.messages;
+      // Convert to array if it's an object (happens after persist/rehydrate)
+      const msgs = chatbotConversation.messages;
+      if (Array.isArray(msgs)) {
+        return msgs;
+      }
+      // If it's an object with numeric keys, convert to array
+      if (msgs && typeof msgs === 'object') {
+        return Object.values(msgs) as ChatbotMessage[];
+      }
+      return [];
     }
     return messages[conversation.id] || [];
   }, [messages, conversation.id, isChatbotConversation, chatbotConversation]);
