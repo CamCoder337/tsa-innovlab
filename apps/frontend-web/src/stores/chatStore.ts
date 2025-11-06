@@ -194,7 +194,11 @@ export const useChatStore = create<ChatState>()(
           updatedAt: new Date().toISOString(),
         };
 
-        set({ chatbot });
+        // ✅ FIX: Initialiser currentConversation aussi
+        set({
+          chatbot,
+          currentConversation: chatbot
+        });
       },
 
       // Send message to chatbot
@@ -233,7 +237,11 @@ export const useChatStore = create<ChatState>()(
             messages: [...chatbot.messages, userMessage],
             updatedAt: new Date().toISOString(),
           };
-          set({ chatbot: chatbotWithUserMessage });
+          // ✅ FIX: Synchroniser currentConversation
+          set({
+            chatbot: chatbotWithUserMessage,
+            currentConversation: chatbotWithUserMessage
+          });
 
           // Call chatbot service
           const response = await chatbotService.sendMessage({
@@ -275,7 +283,12 @@ export const useChatStore = create<ChatState>()(
               updatedAt: new Date().toISOString(),
             };
 
-            set({ chatbot: updatedChatbot, isLoading: false });
+            // ✅ FIX: Synchroniser currentConversation même en cas d'erreur
+            set({
+              chatbot: updatedChatbot,
+              currentConversation: updatedChatbot,
+              isLoading: false
+            });
             return fallbackResponse;
           }
 
@@ -305,7 +318,12 @@ export const useChatStore = create<ChatState>()(
             updatedAt: new Date().toISOString(),
           };
 
-          set({ chatbot: updatedChatbot, isLoading: false });
+          // ✅ FIX: Synchroniser currentConversation
+          set({
+            chatbot: updatedChatbot,
+            currentConversation: updatedChatbot,
+            isLoading: false
+          });
 
           // Return response for compatibility
           return {
@@ -700,6 +718,11 @@ export const useChatStore = create<ChatState>()(
           const messages = state.chatbot.messages;
           if (!Array.isArray(messages) && messages && typeof messages === 'object') {
             state.chatbot.messages = Object.values(messages) as ChatbotMessage[];
+          }
+
+          // ✅ FIX: Synchroniser currentConversation si c'est le chatbot
+          if (state.currentConversation?.id === -1) {
+            state.currentConversation = state.chatbot;
           }
         }
       },
