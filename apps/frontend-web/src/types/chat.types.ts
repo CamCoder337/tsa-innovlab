@@ -149,6 +149,13 @@ export interface ChatbotProfile {
 
 export interface ChatbotMessage extends Message {
   isFromBot: boolean;
+  suggestions?: string[];
+  navigation?: {
+    path: string;
+    description: string;
+    filters?: Record<string, unknown>;
+  };
+  requiresHuman?: boolean;
 }
 
 export interface ChatbotConversation {
@@ -166,6 +173,13 @@ export interface ChatbotResponse {
   content: string;
   category?: string;
   relatedTopics?: string[];
+  suggestions?: string[];
+  navigation?: {
+    path: string;
+    description: string;
+    filters?: Record<string, unknown>;
+  };
+  requiresHuman?: boolean;
 }
 
 export interface ChatbotCapabilities {
@@ -214,7 +228,7 @@ export interface ChatState {
 
   // Chatbot actions
   initializeChatbot: () => void;
-  sendChatbotMessage: (message: string) => Promise<ChatbotResponse>;
+  sendChatbotMessage: (message: string, userId?: string) => Promise<ChatbotResponse>;
   getChatbotResponse: (userInput: string) => ChatbotResponse;
 
   // Real-time actions

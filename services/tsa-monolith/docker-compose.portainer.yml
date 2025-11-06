@@ -197,11 +197,11 @@ services:
       - InnovlabG1
 
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://tsa-ai:8000/api/ai/health/live']
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/ai/health/live']
       interval: 30s
       timeout: 15s
-      retries: 5
-      start_period: 180s
+      retries: 3
+      start_period: 40s
 
 # Volumes pour persistance des données
 volumes:

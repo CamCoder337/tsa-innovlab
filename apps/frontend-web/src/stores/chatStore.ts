@@ -17,6 +17,7 @@ import {
   MessageType,
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
+import { chatbotService } from '@/services/chatbot.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
 
 const initialState = {
@@ -162,7 +163,7 @@ export const useChatStore = create<ChatState>()(
             'Bonjour ! Je suis votre assistant TSA Logistics. Je peux vous aider avec vos missions, le suivi de vos livraisons, la boutique et bien plus encore. Comment puis-je vous assister ?',
           createdAt: new Date().toISOString(),
           isFromBot: true,
-          senderId: '-1',
+          senderId: 'bot',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,
@@ -175,7 +176,7 @@ export const useChatStore = create<ChatState>()(
             "Voici ce que je peux faire pour vous :\n• Gestion des missions de transport\n• Suivi en temps réel\n• Boutique de pièces reconditionnées\n• Support et assistance\n\nN'hésitez pas à me poser vos questions !",
           createdAt: new Date().toISOString(),
           isFromBot: true,
-          senderId: '-1',
+          senderId: 'bot',
           conversationId: -1,
           type: MessageType.TEXT,
           isRead: true,
@@ -193,51 +194,153 @@ export const useChatStore = create<ChatState>()(
           updatedAt: new Date().toISOString(),
         };
 
-        set({ chatbot });
+        // ✅ FIX: Initialiser currentConversation aussi
+        set({
+          chatbot,
+          currentConversation: chatbot
+        });
       },
 
       // Send message to chatbot
-      sendChatbotMessage: async (message: string): Promise<ChatbotResponse> => {
+      sendChatbotMessage: async (message: string, userId?: string): Promise<ChatbotResponse> => {
+        set({ isLoading: true, error: null });
+
         const { chatbot } = get();
-        if (!chatbot) return generateChatbotResponse(message);
+        if (!chatbot) {
+          set({ isLoading: false });
+          return generateChatbotResponse(message);
+        }
 
-        // Add user message
-        const userMessage: ChatbotMessage = {
-          id: 3,
-          content: message,
-          createdAt: new Date().toISOString(),
-          isFromBot: false,
-          senderId: '-1',
-          conversationId: -1,
-          type: MessageType.TEXT,
-          isRead: true,
-          updatedAt: new Date().toISOString(),
-        };
+        try {
+          const conversationId = userId || 'default';
 
-        // Generate bot response
-        const response = generateChatbotResponse(message);
-        const botMessage: ChatbotMessage = {
-          id: 4,
-          content: response.content,
-          createdAt: new Date().toISOString(),
-          isFromBot: true,
-          senderId: '-1',
-          conversationId: -1,
-          type: MessageType.TEXT,
-          isRead: true,
-          updatedAt: new Date().toISOString(),
-        };
+          // Generate unique IDs based on timestamp
+          const userMessageId = Date.now();
+          const botMessageId = Date.now() + 1;
 
-        // Update chatbot conversation
-        const updatedChatbot: ChatbotConversation = {
-          ...chatbot,
-          messages: [...chatbot.messages, userMessage, botMessage],
-          lastMessage: botMessage,
-          updatedAt: new Date().toISOString(),
-        };
+          // Add user message
+          const userMessage: ChatbotMessage = {
+            id: userMessageId,
+            content: message,
+            createdAt: new Date().toISOString(),
+            isFromBot: false,
+            senderId: userId || 'user',
+            conversationId: -1,
+            type: MessageType.TEXT,
+            isRead: true,
+            updatedAt: new Date().toISOString(),
+          };
 
-        set({ chatbot: updatedChatbot });
-        return response;
+          // Update chatbot with user message immediately
+          const chatbotWithUserMessage: ChatbotConversation = {
+            ...chatbot,
+            messages: [...chatbot.messages, userMessage],
+            updatedAt: new Date().toISOString(),
+          };
+          // ✅ FIX: Synchroniser currentConversation
+          set({
+            chatbot: chatbotWithUserMessage,
+            currentConversation: chatbotWithUserMessage
+          });
+
+          // Call chatbot service
+          const response = await chatbotService.sendMessage({
+            message,
+            conversationId,
+            context: {}, // Can be enriched with contextual data
+          });
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            // Return fallback response on error
+            const fallbackResponse = {
+              content: "Désolé, je rencontre des difficultés à traiter votre demande. Veuillez réessayer.",
+              suggestions: ["Aide", "Support"],
+            };
+
+            // Add fallback bot message
+            const fallbackBotMessage: ChatbotMessage = {
+              id: botMessageId,
+              content: fallbackResponse.content,
+              createdAt: new Date().toISOString(),
+              isFromBot: true,
+              senderId: 'bot',
+              conversationId: -1,
+              type: MessageType.TEXT,
+              isRead: true,
+              updatedAt: new Date().toISOString(),
+              suggestions: fallbackResponse.suggestions,
+            };
+
+            const updatedChatbot: ChatbotConversation = {
+              ...chatbotWithUserMessage,
+              messages: [...chatbotWithUserMessage.messages, fallbackBotMessage],
+              lastMessage: fallbackBotMessage,
+              updatedAt: new Date().toISOString(),
+            };
+
+            // ✅ FIX: Synchroniser currentConversation même en cas d'erreur
+            set({
+              chatbot: updatedChatbot,
+              currentConversation: updatedChatbot,
+              isLoading: false
+            });
+            return fallbackResponse;
+          }
+
+          const botResponse = response.data!;
+
+          // Create bot message with data from API
+          const botMessage: ChatbotMessage = {
+            id: botMessageId,
+            content: botResponse.message,
+            createdAt: botResponse.timestamp || new Date().toISOString(),
+            isFromBot: true,
+            senderId: 'bot',
+            conversationId: -1,
+            type: MessageType.TEXT,
+            isRead: true,
+            updatedAt: botResponse.timestamp || new Date().toISOString(),
+            suggestions: botResponse.suggestions,
+            navigation: botResponse.navigation,
+            requiresHuman: botResponse.requires_human,
+          };
+
+          // Update chatbot conversation with bot response
+          const updatedChatbot: ChatbotConversation = {
+            ...chatbotWithUserMessage,
+            messages: [...chatbotWithUserMessage.messages, botMessage],
+            lastMessage: botMessage,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // ✅ FIX: Synchroniser currentConversation
+          set({
+            chatbot: updatedChatbot,
+            currentConversation: updatedChatbot,
+            isLoading: false
+          });
+
+          // Return response for compatibility
+          return {
+            content: botResponse.message,
+            suggestions: botResponse.suggestions,
+            navigation: botResponse.navigation,
+            requiresHuman: botResponse.requires_human,
+          };
+        } catch (error) {
+          console.error('Failed to send chatbot message:', error);
+          set({
+            error: 'Failed to communicate with chatbot',
+            isLoading: false,
+          });
+          return {
+            content: 'Erreur lors de la communication avec le chatbot',
+          };
+        }
       },
 
       // Get chatbot response (synchronous version)
@@ -608,6 +711,20 @@ export const useChatStore = create<ChatState>()(
         messages: state.messages,
         chatbot: state.chatbot,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Fix chatbot messages array after rehydration
+        if (state && state.chatbot) {
+          const messages = state.chatbot.messages;
+          if (!Array.isArray(messages) && messages && typeof messages === 'object') {
+            state.chatbot.messages = Object.values(messages) as ChatbotMessage[];
+          }
+
+          // ✅ FIX: Synchroniser currentConversation si c'est le chatbot
+          if (state.currentConversation?.id === -1) {
+            state.currentConversation = state.chatbot;
+          }
+        }
+      },
     }
   )
 );

@@ -285,7 +285,9 @@ export const MTNPaymentForm: React.FC<MTNPaymentFormProps> = ({
                       <div className="font-medium">{method.name}</div>
                       <div className="text-xs text-gray-500">{method.description}</div>
                     </div>
-                    {isSelected && <CheckCircle className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />}
+                    {isSelected && (
+                      <CheckCircle className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
+                    )}
                   </div>
                 </button>
               );

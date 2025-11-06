@@ -93,7 +93,9 @@ export default function TransporteurTrackingDashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {tTracking('dashboard.title')}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{tTracking('dashboard.subtitle')}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            {tTracking('dashboard.subtitle')}
+          </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           <Button variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
@@ -143,8 +145,12 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Distance Totale</p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{totalDistance} km</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Distance Totale
+                </p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {totalDistance} km
+                </p>
               </div>
               <Route className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 dark:text-gray-400" />
             </div>
@@ -155,7 +161,9 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Gains du Jour</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Gains du Jour
+                </p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">
                   {totalEarnings.toLocaleString()} FCFA
                 </p>
@@ -169,7 +177,9 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Note Chauffeur</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Note Chauffeur
+                </p>
                 <p className="text-xl sm:text-2xl font-bold text-yellow-600">{driverRating}/5</p>
               </div>
               <Star className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-500" />
@@ -415,7 +425,9 @@ export default function TransporteurTrackingDashboard() {
                             {getStatusText(assignment.status, tCommon)}
                           </span>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">{assignment.description}</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
+                          {assignment.description}
+                        </p>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {assignment.typeMarchandise} - {assignment.poids}kg
                         </p>
@@ -463,7 +475,9 @@ export default function TransporteurTrackingDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">0</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">
+                    0
+                  </p>
                   <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">FCFA</p>
                   <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">0</p>
                 </div>

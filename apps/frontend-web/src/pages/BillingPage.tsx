@@ -351,7 +351,10 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500"
+              >
                 Voir toutes les factures<span className="sr-only">Factures en attente</span>
               </a>
             </div>
@@ -393,7 +396,10 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500"
+              >
                 Voir l'historique<span className="sr-only">Factures payées</span>
               </a>
             </div>
@@ -435,7 +441,10 @@ const BillingPage: React.FC = () => {
           </div>
           <div className="bg-gray-50 px-4 py-4 sm:px-6">
             <div className="text-sm">
-              <a href="#" className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-tsa-blue dark:text-tsa-white hover:text-blue-500"
+              >
                 Voir tous les devis<span className="sr-only">Devis en attente</span>
               </a>
             </div>

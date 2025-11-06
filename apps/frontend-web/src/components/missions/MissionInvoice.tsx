@@ -396,7 +396,10 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
             <p>{tMissions('financial.invoice.thankYou')}</p>
             <p className="mt-2">
               {tMissions('financial.invoice.contactSupport')}{' '}
-              <a href="mailto:support@tsa-logistics.com" className="text-tsa-blue hover:underline">
+              <a
+                href="mailto:support@tsa-logistics.com"
+                className="text-tsa-blue dark:text-tsa-white hover:underline"
+              >
                 support@tsa-logistics.com
               </a>
             </p>

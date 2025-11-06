@@ -83,7 +83,9 @@ test.group('PaymentService', (group) => {
     order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
   })
@@ -195,7 +197,9 @@ test.group('PaymentService', (group) => {
     const newOrder = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 

@@ -143,7 +143,7 @@ services:
     expose:
       - "9113"
     command:
-      - '-nginx.scrape-uri=http://tsa-nginx:8080/stub_status'
+      - '-nginx.scrape-uri=http://tsa-nginx:80/stub_status'
     restart: unless-stopped
     networks:
       - InnovlabG1

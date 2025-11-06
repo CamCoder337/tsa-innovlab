@@ -79,7 +79,9 @@ export default class OrdersController {
       const order = await this.orderService.createOrderFromCart(
         user.id,
         data.shippingAddressId,
+        data.shippingAddress,
         data.billingAddressId,
+        data.billingAddress,
         data.paymentMethod,
         data.notes || undefined
       )

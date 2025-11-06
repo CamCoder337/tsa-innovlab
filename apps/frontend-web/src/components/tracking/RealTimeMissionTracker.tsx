@@ -157,8 +157,12 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Total Missions</p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Total Missions
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {stats.total}
+                </p>
               </div>
               <Truck className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 dark:text-gray-400" />
             </div>
@@ -169,8 +173,12 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">En Cours</p>
-                <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">{stats.inProgress}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  En Cours
+                </p>
+                <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                  {stats.inProgress}
+                </p>
               </div>
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
             </div>
@@ -181,7 +189,9 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Publiées</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Publiées
+                </p>
                 <p className="text-lg sm:text-2xl font-bold text-orange-600">{stats.published}</p>
               </div>
               <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
@@ -193,7 +203,9 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Terminées</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Terminées
+                </p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">{stats.completed}</p>
               </div>
               <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
@@ -205,7 +217,9 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Prioritaires</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Prioritaires
+                </p>
                 <p className="text-lg sm:text-2xl font-bold text-red-600">{stats.highPriority}</p>
               </div>
               <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />

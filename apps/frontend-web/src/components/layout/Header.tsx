@@ -36,7 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+// import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export default function Header({ className }: { className?: string }) {
   const { user, logout } = useAuth();
@@ -151,9 +151,7 @@ export default function Header({ className }: { className?: string }) {
         </div>
 
         {/* Theme Toggle - Always visible */}
-        <div className="hidden lg:block">
-          <ThemeToggle />
-        </div>
+        {/* <ThemeToggle /> */}
 
         {/* Desktop Notifications - Hidden on mobile/tablet */}
         {user && <NotificationCenter />}
