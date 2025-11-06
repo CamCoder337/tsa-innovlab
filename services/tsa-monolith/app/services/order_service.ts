@@ -15,37 +15,101 @@ export default class OrderService {
 
   /**
    * Crée une commande à partir du panier actif de l'utilisateur
+   * Supporte la création d'adresses inline ou l'utilisation d'adresses existantes
    */
   async createOrderFromCart(
     userId: string,
-    shippingAddressId: string,
-    billingAddressId: string,
+    shippingAddressId: string | undefined,
+    shippingAddressData:
+      | {
+          street: string
+          city: string
+          region?: string | null
+          country: string
+          postalCode?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          label?: string | null
+          placeId?: string | null
+        }
+      | undefined,
+    billingAddressId: string | undefined,
+    billingAddressData:
+      | {
+          street: string
+          city: string
+          region?: string | null
+          country: string
+          postalCode?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          label?: string | null
+          placeId?: string | null
+        }
+      | undefined,
     paymentMethod: string,
     notes?: string
   ): Promise<Order> {
     // Transaction pour garantir la cohérence des données
     const order = await db.transaction(async (trx) => {
-      // Valider que les adresses existent et appartiennent à l'utilisateur
-      const shippingAddress = await Address.query({ client: trx })
-        .where('id', shippingAddressId)
-        .where('userId', userId)
-        .first()
+      // Résoudre l'adresse de livraison (créer ou utiliser existante)
+      let resolvedShippingAddressId: string
 
-      if (!shippingAddress) {
-        throw new Error(
-          'Shipping address not found or does not belong to you. Please create a valid shipping address first.'
+      if (shippingAddressId) {
+        // Option 1: Utiliser une adresse existante
+        const shippingAddress = await Address.query({ client: trx })
+          .where('id', shippingAddressId)
+          .where('userId', userId)
+          .first()
+
+        if (!shippingAddress) {
+          throw new Error(
+            'Shipping address not found or does not belong to you. Please provide a valid shipping address.'
+          )
+        }
+        resolvedShippingAddressId = shippingAddress.id
+      } else if (shippingAddressData) {
+        // Option 2: Créer une nouvelle adresse
+        const newShippingAddress = await Address.create(
+          {
+            userId,
+            ...shippingAddressData,
+          },
+          { client: trx }
         )
+        resolvedShippingAddressId = newShippingAddress.id
+      } else {
+        throw new Error('Either shippingAddressId or shippingAddressData must be provided')
       }
 
-      const billingAddress = await Address.query({ client: trx })
-        .where('id', billingAddressId)
-        .where('userId', userId)
-        .first()
+      // Résoudre l'adresse de facturation (créer ou utiliser existante)
+      let resolvedBillingAddressId: string
 
-      if (!billingAddress) {
-        throw new Error(
-          'Billing address not found or does not belong to you. Please create a valid billing address first.'
+      if (billingAddressId) {
+        // Option 1: Utiliser une adresse existante
+        const billingAddress = await Address.query({ client: trx })
+          .where('id', billingAddressId)
+          .where('userId', userId)
+          .first()
+
+        if (!billingAddress) {
+          throw new Error(
+            'Billing address not found or does not belong to you. Please provide a valid billing address.'
+          )
+        }
+        resolvedBillingAddressId = billingAddress.id
+      } else if (billingAddressData) {
+        // Option 2: Créer une nouvelle adresse
+        const newBillingAddress = await Address.create(
+          {
+            userId,
+            ...billingAddressData,
+          },
+          { client: trx }
         )
+        resolvedBillingAddressId = newBillingAddress.id
+      } else {
+        throw new Error('Either billingAddressId or billingAddressData must be provided')
       }
 
       // Récupérer le panier actif avec ses articles
@@ -71,14 +135,14 @@ export default class OrderService {
       // Calculer le montant total
       const totalAmount = cart.items.reduce((sum, item) => sum + item.priceAtAdd * item.quantity, 0)
 
-      // Créer la commande
+      // Créer la commande avec les adresses résolues
       const createdOrder = await Order.create(
         {
           userId,
           status: OrderStatus.PENDING,
           totalAmount,
-          shippingAddressId,
-          billingAddressId,
+          shippingAddressId: resolvedShippingAddressId,
+          billingAddressId: resolvedBillingAddressId,
           paymentMethod,
           paymentStatus: PaymentStatus.PENDING,
           notes: notes || null,

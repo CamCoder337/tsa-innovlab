@@ -18,6 +18,7 @@ const addressDataSchema = vine.object({
 /**
  * Validator for creating an order from cart
  * Accepts either address IDs (if addresses exist) or address data (to create new addresses)
+ * At least one option must be provided for both shipping and billing addresses
  */
 export const createOrderValidator = vine.compile(
   vine.object({

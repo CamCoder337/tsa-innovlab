@@ -365,6 +365,13 @@ router
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
   .group(() => {
+    // Adresses (tous les rôles peuvent gérer leurs adresses)
+    router.get('/addresses', '#controllers/addresses_controller.index')
+    router.post('/addresses', '#controllers/addresses_controller.store')
+    router.get('/addresses/:id', '#controllers/addresses_controller.show')
+    router.put('/addresses/:id', '#controllers/addresses_controller.update')
+    router.delete('/addresses/:id', '#controllers/addresses_controller.destroy')
+
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
     // Support both hyphenated and slash-separated search routes for frontend compatibility

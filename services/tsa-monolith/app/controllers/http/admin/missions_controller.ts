@@ -183,10 +183,26 @@ export default class MissionsController {
       // Gérer l'adresse de départ
       if (validatedData.adresseDepart) {
         if (validatedData.adresseDepart.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur ciblé
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseDepart.id)
+            .where('user_id', validatedData.affreteurId)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Departure address not found or does not belong to this affreteur',
+              errors: ["L'adresse de départ n'existe pas ou n'appartient pas à cet affréteur"],
+            })
+          }
           adresseDepartId = validatedData.adresseDepart.id
         } else if (validatedData.adresseDepart.street && validatedData.adresseDepart.city) {
+          // ✅ Créer avec userId de l'affréteur ciblé
           const adresseDepart = await Address.create(
             {
+              userId: validatedData.affreteurId, // 🔑 Associer à l'affréteur ciblé
               street: validatedData.adresseDepart.street,
               city: validatedData.adresseDepart.city,
               region: validatedData.adresseDepart.region,
@@ -205,10 +221,26 @@ export default class MissionsController {
       // Gérer l'adresse d'arrivée
       if (validatedData.adresseArrivee) {
         if (validatedData.adresseArrivee.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur ciblé
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseArrivee.id)
+            .where('user_id', validatedData.affreteurId)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Arrival address not found or does not belong to this affreteur',
+              errors: ["L'adresse d'arrivée n'existe pas ou n'appartient pas à cet affréteur"],
+            })
+          }
           adresseArriveeId = validatedData.adresseArrivee.id
         } else if (validatedData.adresseArrivee.street && validatedData.adresseArrivee.city) {
+          // ✅ Créer avec userId de l'affréteur ciblé
           const adresseArrivee = await Address.create(
             {
+              userId: validatedData.affreteurId, // 🔑 Associer à l'affréteur ciblé
               street: validatedData.adresseArrivee.street,
               city: validatedData.adresseArrivee.city,
               region: validatedData.adresseArrivee.region,
