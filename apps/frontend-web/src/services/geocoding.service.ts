@@ -63,10 +63,7 @@ export class GeocodingService {
   /**
    * Convert address to coordinates (Forward Geocoding)
    */
-  async geocode(
-    address: string,
-    options: GeocodeOptions = {}
-  ): Promise<GeocodeResult | null> {
+  async geocode(address: string, options: GeocodeOptions = {}): Promise<GeocodeResult | null> {
     await this.initialize();
 
     // Check cache first
@@ -114,19 +111,14 @@ export class GeocodingService {
     addresses: string[],
     options: GeocodeOptions = {}
   ): Promise<(GeocodeResult | null)[]> {
-    const results = await Promise.all(
-      addresses.map((address) => this.geocode(address, options))
-    );
+    const results = await Promise.all(addresses.map((address) => this.geocode(address, options)));
     return results;
   }
 
   /**
    * Convert coordinates to address (Reverse Geocoding)
    */
-  async reverseGeocode(
-    lat: number,
-    lng: number
-  ): Promise<ReverseGeocodeResult | null> {
+  async reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult | null> {
     await this.initialize();
 
     // Check cache first
@@ -178,15 +170,9 @@ export class GeocodingService {
     // Determine confidence based on result types and precision
     let confidence: 'high' | 'medium' | 'low' = 'medium';
 
-    if (
-      result.types.includes('street_address') ||
-      result.types.includes('premise')
-    ) {
+    if (result.types.includes('street_address') || result.types.includes('premise')) {
       confidence = 'high';
-    } else if (
-      result.types.includes('locality') ||
-      result.types.includes('sublocality')
-    ) {
+    } else if (result.types.includes('locality') || result.types.includes('sublocality')) {
       confidence = 'medium';
     } else {
       confidence = 'low';
@@ -213,9 +199,7 @@ export class GeocodingService {
   /**
    * Extract city from address components
    */
-  getCityFromComponents(
-    addressComponents: google.maps.GeocoderAddressComponent[]
-  ): string | null {
+  getCityFromComponents(addressComponents: google.maps.GeocoderAddressComponent[]): string | null {
     return (
       this.getAddressComponent(addressComponents, 'locality') ||
       this.getAddressComponent(addressComponents, 'administrative_area_level_2') ||
@@ -263,25 +247,14 @@ export class GeocodingService {
       west: 8.494,
     };
 
-    return (
-      lat >= bounds.south &&
-      lat <= bounds.north &&
-      lng >= bounds.west &&
-      lng <= bounds.east
-    );
+    return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
   }
 
   /**
    * Calculate distance between two addresses
    */
-  async getDistanceBetweenAddresses(
-    address1: string,
-    address2: string
-  ): Promise<number | null> {
-    const [result1, result2] = await Promise.all([
-      this.geocode(address1),
-      this.geocode(address2),
-    ]);
+  async getDistanceBetweenAddresses(address1: string, address2: string): Promise<number | null> {
+    const [result1, result2] = await Promise.all([this.geocode(address1), this.geocode(address2)]);
 
     if (!result1 || !result2) {
       return null;
@@ -368,9 +341,7 @@ export class GeocodingService {
   /**
    * Parse reverse geocode result
    */
-  private parseReverseGeocodeResult(
-    result: google.maps.GeocoderResult
-  ): ReverseGeocodeResult {
+  private parseReverseGeocodeResult(result: google.maps.GeocoderResult): ReverseGeocodeResult {
     return {
       formattedAddress: result.formatted_address,
       location: {

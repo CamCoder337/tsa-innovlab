@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import LanguageDropdown from '@/components/ui/LanguageDropdown';
 import { useAuthStore } from '@/stores/authStore';
+// import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -42,18 +43,21 @@ const Register: React.FC = () => {
         {/* Left side - Form */}
         <div className="flex-1 flex items-center justify-center p-8 relative">
           {/* Language Dropdown - Bottom Right */}
-          <div className="absolute top-10 right-4">
+          <div className="absolute top-10 right-4 flex gap-4">
+            {/* <ThemeToggle /> */}
             <LanguageDropdown position="bottom-right" />
           </div>
 
           <div className="w-full xl:max-w-3/4 md:max-w-xl">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{tAuth('register.title')}</h1>
-              <p className="text-gray-600">{tCommon('app.tagline')}</p>
+              <h1 className="text-3xl font-bold text-tsa-blue dark:text-tsa-white mb-2">
+                {tAuth('register.title')}
+              </h1>
+              <p className="text-sm font-semibold text-gray-400">{tCommon('app.tagline')}</p>
             </div>
 
-            <Card className="shadow-xl bg-[#D9D9D980]">
-              <CardContent className="p-8">
+            <Card className="shadow-xl bg-[#D9D9D980] dark:bg-gray-800 transition-colors duration-200">
+              <CardContent className="px-8 py-6">
                 <RegisterForm onSubmit={handleRegister} />
               </CardContent>
             </Card>

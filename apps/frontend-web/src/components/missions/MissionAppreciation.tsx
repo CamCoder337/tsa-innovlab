@@ -196,14 +196,18 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               <div className="text-2xl font-bold text-green-600">
                 {mission.status === 'completed' ? '✓' : '⏳'}
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tCommon('status.title')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                {tCommon('status.title')}
+              </p>
               <p className="font-medium capitalize">{tCommon(`status.${mission.status}`)}</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                 {mission.dateArriveePrevue ? '100%' : '0%'}
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{tMissions('tracking.progress')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                {tMissions('tracking.progress')}
+              </p>
               <p className="font-medium">
                 {mission.dateArriveePrevue
                   ? tCommon('status.completed')
@@ -232,7 +236,9 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('roles.transporteur')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {tCommon('roles.transporteur')}
+              </p>
               <p className="font-medium">
                 {transporteurName ||
                   mission.transporteur?.fullName ||
@@ -241,7 +247,9 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('roles.affreteur')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {tCommon('roles.affreteur')}
+              </p>
               <p className="font-medium">
                 {affreteurName ||
                   mission.affreteur?.fullName ||
@@ -585,7 +593,9 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                   </div>
                 </div>
                 {existingFeedback.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{existingFeedback.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    {existingFeedback.description}
+                  </p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {tMissions('appreciation.submittedOn')}{' '}

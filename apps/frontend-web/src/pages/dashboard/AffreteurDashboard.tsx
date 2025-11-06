@@ -280,7 +280,7 @@ function AffreteurDashboard() {
                     orange: 'bg-orange-50 border-orange-200 text-orange-800',
                   };
                   const iconColors = {
-                    blue: 'text-tsa-blue',
+                    blue: 'text-tsa-blue dark:text-tsa-white',
                     green: 'text-green-600',
                     orange: 'text-orange-600',
                   };

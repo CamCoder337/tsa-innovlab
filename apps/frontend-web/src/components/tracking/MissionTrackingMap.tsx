@@ -379,7 +379,9 @@ export default function MissionTrackingMap({
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t('map.errorLoadingMap')}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">{error}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-3 sm:mb-4">
+            {error}
+          </p>
           <button
             onClick={() => void initializeMap()}
             className="px-3 sm:px-4 py-2 bg-tsa-blue/90 text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
@@ -400,7 +402,9 @@ export default function MissionTrackingMap({
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {t('map.noMissionsToDisplay')}
           </h3>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{t('map.noMissionsMessage')}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            {t('map.noMissionsMessage')}
+          </p>
         </div>
       </div>
     );
@@ -412,7 +416,9 @@ export default function MissionTrackingMap({
         <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 flex items-center justify-center z-10 rounded-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-500 mx-auto mb-3 sm:mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">{t('map.loadingMap')}</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
+              {t('map.loadingMap')}
+            </p>
           </div>
         </div>
       )}
@@ -470,8 +476,10 @@ export default function MissionTrackingMap({
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">Avec trafic:</span>
                       <span className="font-medium text-blue-600">
-                        {Math.floor((routeInfo.get(selectedMission.id)?.durationInTraffic || 0) / 60)}h{' '}
-                        {(routeInfo.get(selectedMission.id)?.durationInTraffic || 0) % 60}min
+                        {Math.floor(
+                          (routeInfo.get(selectedMission.id)?.durationInTraffic || 0) / 60
+                        )}
+                        h {(routeInfo.get(selectedMission.id)?.durationInTraffic || 0) % 60}min
                       </span>
                     </div>
 
@@ -491,8 +499,10 @@ export default function MissionTrackingMap({
                 <div className="flex justify-between pt-1 border-t">
                   <span className="text-gray-600 dark:text-gray-300">ETA:</span>
                   <span className="font-medium text-green-600">
-                    {(routeInfo.get(selectedMission.id)?.etaWithTraffic ||
-                      routeInfo.get(selectedMission.id)?.eta)?.toLocaleTimeString('fr-FR', {
+                    {(
+                      routeInfo.get(selectedMission.id)?.etaWithTraffic ||
+                      routeInfo.get(selectedMission.id)?.eta
+                    )?.toLocaleTimeString('fr-FR', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
@@ -521,7 +531,9 @@ export default function MissionTrackingMap({
                 <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                 <div>
                   <p className="text-xs sm:text-sm font-medium">{t('map.detectedPosition')}</p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300">±{Math.round(userPosition.accuracy)}m</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                    ±{Math.round(userPosition.accuracy)}m
+                  </p>
                 </div>
               </div>
             </CardContent>

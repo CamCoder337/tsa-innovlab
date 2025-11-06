@@ -39,7 +39,9 @@ export default function AffréteurTrackingDashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             {tTracking('dashboard.title')}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">{tTracking('dashboard.subtitle')}</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+            {tTracking('dashboard.subtitle')}
+          </p>
         </div>
         <Link to="/app/missions/create">
           <Button className="bg-tsa-blue hover:bg-tsa-blue/80 w-full sm:w-auto">
@@ -58,7 +60,9 @@ export default function AffréteurTrackingDashboard() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tTracking('kpis.totalMissions')}
                 </p>
-                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{totalMissions}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {totalMissions}
+                </p>
               </div>
               <Package className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
             </div>
@@ -118,7 +122,9 @@ export default function AffréteurTrackingDashboard() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tTracking('performance.responseTime')}
                 </p>
-                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{avgDeliveryTime}</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {avgDeliveryTime}
+                </p>
               </div>
               <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-gray-500 dark:text-gray-400" />
             </div>
@@ -222,7 +228,9 @@ export default function AffréteurTrackingDashboard() {
                             className={`w-2 h-2 rounded-full ${getStatusColor(mission.status)}`}
                           />
                         </div>
-                        <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">{mission.description}</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
+                          {mission.description}
+                        </p>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           <span>
                             {mission.typeMarchandise} - {mission.poids}kg
@@ -290,7 +298,9 @@ export default function AffréteurTrackingDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">2,450,000</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-tsa-blue dark:text-tsa-white">
+                    2,450,000
+                  </p>
                   <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
                     {tTracking('performance.fcfaThisMonth')}
                   </p>

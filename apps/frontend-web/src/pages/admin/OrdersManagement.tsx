@@ -157,7 +157,9 @@ export default function OrdersManagement() {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{tAdmin('orders.title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {tAdmin('orders.title')}
+        </h1>
         <p className="text-gray-600 dark:text-gray-300">{tAdmin('orders.subtitle')}</p>
       </div>
 
@@ -189,7 +191,9 @@ export default function OrdersManagement() {
                     <Package className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalOrders')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.totalOrders')}
+                    </p>
                     <p className="text-2xl font-bold">{orderStats.total.toLocaleString()}</p>
                   </div>
                 </div>
@@ -203,7 +207,9 @@ export default function OrdersManagement() {
                     <DollarSign className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalRevenue')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.totalRevenue')}
+                    </p>
                     <p className="text-2xl font-bold">{formatCurrency(orderStats.totalRevenue)}</p>
                   </div>
                 </div>
@@ -217,7 +223,9 @@ export default function OrdersManagement() {
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.averageBasket')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.averageBasket')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {formatCurrency(orderStats.averageOrderValue)}
                     </p>
@@ -254,19 +262,29 @@ export default function OrdersManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <p className="text-2xl font-bold text-yellow-600">{orderStats.pending}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.pending')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.pending')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">{orderStats.processing}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.processing')}s</p>
+                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                        {orderStats.processing}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.processing')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
                       <p className="text-2xl font-bold text-purple-600">{orderStats.shipped}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.shipped')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.shipped')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">{orderStats.delivered}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.delivered')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.delivered')}s
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -472,7 +490,9 @@ export default function OrdersManagement() {
                               <p className="font-medium text-xs sm:text-sm truncate">
                                 {order.user?.firstName} {order.user?.lastName}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{order.user?.email}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {order.user?.email}
+                              </p>
                             </div>
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-xs sm:text-sm">
@@ -594,7 +614,9 @@ export default function OrdersManagement() {
           {filteredOrders.length === 0 && (
             <div className="text-center py-6 sm:py-8">
               <Package className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">{tAdmin('orders.empty')}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                {tAdmin('orders.empty')}
+              </p>
             </div>
           )}
         </TabsContent>

@@ -94,11 +94,7 @@ export class MapsCacheService {
   /**
    * Get or set pattern - if not in cache, fetch and cache
    */
-  async getOrSet<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
+  async getOrSet<T>(key: string, fetcher: () => Promise<T>, ttl?: number): Promise<T> {
     const cached = this.get<T>(key);
     if (cached !== null) {
       return cached;
@@ -149,12 +145,8 @@ export class MapsCacheService {
     options?: Record<string, unknown>
   ): string {
     return this.generateKey('distancematrix', {
-      origins: origins
-        .map((o) => `${o.lat.toFixed(6)},${o.lng.toFixed(6)}`)
-        .join(';'),
-      destinations: destinations
-        .map((d) => `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`)
-        .join(';'),
+      origins: origins.map((o) => `${o.lat.toFixed(6)},${o.lng.toFixed(6)}`).join(';'),
+      destinations: destinations.map((d) => `${d.lat.toFixed(6)},${d.lng.toFixed(6)}`).join(';'),
       ...options,
     });
   }
@@ -252,9 +244,12 @@ export class MapsCacheService {
    * Start automatic cleanup
    */
   private startCleanup(): void {
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 2 * 60 * 1000); // Every 2 minutes
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      2 * 60 * 1000
+    ); // Every 2 minutes
   }
 
   /**

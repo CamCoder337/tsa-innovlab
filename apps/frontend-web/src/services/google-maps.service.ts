@@ -213,11 +213,14 @@ export class GoogleMapsService {
   /**
    * Create heatmap from points
    */
-  createHeatmap(points: HeatmapPoint[], options?: {
-    radius?: number;
-    opacity?: number;
-    gradient?: string[];
-  }): void {
+  createHeatmap(
+    points: HeatmapPoint[],
+    options?: {
+      radius?: number;
+      opacity?: number;
+      gradient?: string[];
+    }
+  ): void {
     if (!this.map) return;
 
     // Clear existing heatmap
@@ -709,8 +712,10 @@ export class GoogleMapsService {
       if (errorMessage.includes('ZERO_RESULTS')) {
         console.warn(
           '⚠️ Aucune route trouvée entre origine et destination. Vérifiez que les coordonnées sont sur le réseau routier.',
-          '\nOrigine:', origin,
-          '\nDestination:', destination
+          '\nOrigine:',
+          origin,
+          '\nDestination:',
+          destination
         );
       } else if (errorMessage.includes('INVALID_REQUEST')) {
         console.error('❌ Requête invalide. Vérifiez les paramètres:', {
@@ -1055,11 +1060,7 @@ export class GoogleMapsService {
       const departure = departureTime || new Date();
 
       // Use Distance Matrix Service for efficient batch calculation
-      const result = await distanceMatrixService.getETAScenarios(
-        origin,
-        destination,
-        departure
-      );
+      const result = await distanceMatrixService.getETAScenarios(origin, destination, departure);
 
       if (!result) return null;
 
@@ -1092,26 +1093,27 @@ export class GoogleMapsService {
    * Much more efficient than calling getETAWithTraffic multiple times
    */
   async getBatchETA(
-    routes: Array<{ origin: { lat: number; lng: number }; destination: { lat: number; lng: number } }>,
+    routes: Array<{
+      origin: { lat: number; lng: number };
+      destination: { lat: number; lng: number };
+    }>,
     departureTime?: Date
-  ): Promise<Array<{
-    distance: number;
-    duration: number;
-    durationInTraffic?: number;
-    trafficDelay?: number;
-  } | null>> {
+  ): Promise<
+    Array<{
+      distance: number;
+      duration: number;
+      durationInTraffic?: number;
+      trafficDelay?: number;
+    } | null>
+  > {
     try {
       const origins = routes.map((r) => r.origin);
       const destinations = routes.map((r) => r.destination);
 
-      const result = await distanceMatrixService.calculateBatch(
-        origins,
-        destinations,
-        {
-          departureTime: departureTime || new Date(),
-          trafficModel: 'best_guess',
-        }
-      );
+      const result = await distanceMatrixService.calculateBatch(origins, destinations, {
+        departureTime: departureTime || new Date(),
+        trafficModel: 'best_guess',
+      });
 
       console.log(
         `✅ Batch ETA calculated for ${routes.length} routes (${result.totalRequests} API calls, ${result.cachedResults} from cache)`
