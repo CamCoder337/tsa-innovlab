@@ -146,5 +146,56 @@
   "languages": {
     "french": "Français",
     "english": "Anglais"
+  },
+  "landing": {
+    "hero": {
+      "title": "Votre Plateforme Logistique",
+      "subtitle": "Tout-en-Un",
+      "description": "Découvrez nos produits reconditionnés ou gérez vos transports en toute simplicité"
+    },
+    "commerce": {
+      "title": "Boutique en Ligne",
+      "description": "Découvrez notre sélection de pièces automobiles reconditionnées. Qualité garantie, prix compétitifs.",
+      "features": {
+        "certified": "Pièces reconditionnées certifiées",
+        "quality": "Garantie qualité",
+        "delivery": "Livraison rapide"
+      },
+      "browse": "Parcourir la Boutique",
+      "register": "Créer un Compte Client"
+    },
+    "transport": {
+      "title": "Services Transport",
+      "description": "Gérez vos missions de transport, trouvez des transporteurs ou proposez vos services de livraison.",
+      "subtitle": "Pour affréteurs et transporteurs",
+      "features": {
+        "tracking": "Suivi GPS en temps réel",
+        "secure": "Transactions sécurisées",
+        "simple": "Gestion simplifiée"
+      },
+      "join": "Rejoindre la Plateforme"
+    },
+    "features": {
+      "title": "Pourquoi Choisir TSA Logistics ?",
+      "secure": {
+        "title": "Sécurisé",
+        "description": "Transactions et données protégées"
+      },
+      "fast": {
+        "title": "Rapide",
+        "description": "Processus optimisés et efficaces"
+      },
+      "traceable": {
+        "title": "Traçable",
+        "description": "Suivi en temps réel"
+      },
+      "quality": {
+        "title": "Qualité",
+        "description": "Produits certifiés et services fiables"
+      }
+    },
+    "footer": {
+      "copyright": " 2025 TSA Logistics. Tous droits réservés."
+    }
   }
 }

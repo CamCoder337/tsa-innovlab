@@ -167,7 +167,7 @@ export default function AffréteurTrackingDashboard() {
                           const selected = missions.find((m) => m.id === e.target.value);
                           if (selected) setCurrentMission(selected);
                         }}
-                        className="flex-1 px-3 py-2 text-xs sm:text-sm border dark:border-gray-800 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">-- Sélectionner une mission --</option>
                         {missions.map((mission) => (

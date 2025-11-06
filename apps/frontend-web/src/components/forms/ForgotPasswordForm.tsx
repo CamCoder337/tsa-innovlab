@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
@@ -30,6 +30,7 @@ export default function ForgotPasswordForm({
 }: ForgotPasswordFormProps) {
   const { t: tForms } = useFormsTranslation();
   const { t: tAuth } = useAuthTranslation();
+  const navigate = useNavigate();
 
   return (
     <Formik<ForgotPasswordRequest>
@@ -85,14 +86,12 @@ export default function ForgotPasswordForm({
               {tAuth('forgotPassword.sendLink')}
             </Button>
 
-            <div className="text-center">
-              <Link
-                to="/"
-                className="text-tsa-blue dark:text-tsa-white hover:underline 
-                          font-medium text-sm transition-colors "
-              >
-                {tAuth('forgotPassword.backToLogin')}
-              </Link>
+            <div
+              className="text-center text-tsa-blue dark:text-tsa-white hover:underline 
+                          font-medium text-sm transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              {tAuth('forgotPassword.backToLogin')}
             </div>
           </Form>
         )
