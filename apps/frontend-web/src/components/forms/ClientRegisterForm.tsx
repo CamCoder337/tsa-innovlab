@@ -4,22 +4,25 @@ import 'react-phone-input-2/lib/style.css';
 import libphonenumber from 'google-libphonenumber';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import type { RegisterFormData } from '@/types/forms.types';
-import type { UserRole, CreateUserRequest } from '@/types/auth.types';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
+import type { CreateUserRequest } from '@/types/auth.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import {
-  useAuthTranslation,
-  useCommonTranslation,
-  useFormsTranslation,
-} from '@/hooks/useTranslation';
+import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
-const INITIAL_VALUES: RegisterFormData = {
+// Simplified form data without role selection
+interface ClientRegisterFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phone: string;
+  country: string;
+}
+
+const INITIAL_VALUES: ClientRegisterFormData = {
   firstName: '',
   lastName: '',
   email: '',
@@ -27,10 +30,7 @@ const INITIAL_VALUES: RegisterFormData = {
   confirmPassword: '',
   phone: '',
   country: 'cm',
-  role: 'affreteur',
 };
-
-const USER_ROLES: UserRole[] = ['affreteur', 'transporteur'];
 
 const validationSchema = (t: (key: string) => string) =>
   Yup.object({
@@ -48,7 +48,7 @@ const validationSchema = (t: (key: string) => string) =>
       .test('isValidPhone', t('validation.phone'), (value, context) => {
         try {
           const phoneUtil = libphonenumber.PhoneNumberUtil.getInstance();
-          const countryCode = context.parent.country || 'CM'; // Default to Cameroon if not provided
+          const countryCode = context.parent.country || 'CM';
           const number = phoneUtil.parseAndKeepRawInput(value, countryCode.toUpperCase());
           return phoneUtil.isValidNumber(number);
         } catch (error) {
@@ -56,40 +56,40 @@ const validationSchema = (t: (key: string) => string) =>
           return false;
         }
       }),
-
-    role: Yup.string().required(t('validation.required')).oneOf(USER_ROLES, t('validation.role')),
   });
 
-interface RegisterFormProps {
+interface ClientRegisterFormProps {
   onSubmit: (data: CreateUserRequest) => Promise<void>;
   isSubmitting?: boolean;
 }
 
-export default function RegisterForm({ onSubmit, isSubmitting = false }: RegisterFormProps) {
+export default function ClientRegisterForm({
+  onSubmit,
+  isSubmitting = false,
+}: ClientRegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { t: tAuth } = useAuthTranslation();
-  const { t: tCommon } = useCommonTranslation();
   const { t: tForms } = useFormsTranslation();
 
+  const handleSubmit = async (values: ClientRegisterFormData) => {
+    // Add the client role to the form data
+    const submitData: CreateUserRequest = {
+      ...values,
+      role: 'client',
+    };
+    await onSubmit(submitData);
+  };
+
   return (
-    <Formik<RegisterFormData>
+    <Formik<ClientRegisterFormData>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema(tForms)}
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       validateOnBlur={true}
       validateOnChange={true}
     >
-      {({
-        values,
-        errors,
-        touched,
-        handleChange,
-        handleBlur,
-        setFieldValue,
-        setFieldError,
-        setValues,
-      }) => {
+      {({ values, errors, touched, handleChange, handleBlur, setValues }) => {
         const handleChangePhoneNumber = (value: string, country: { countryCode: string }) => {
           const countryCode = country.countryCode.toLowerCase();
           setValues({
@@ -100,9 +100,9 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
         };
 
         return (
-          <Form className="space-y-8">
-            <div className="grid md:grid-cols-2 md:gap-4 gap-8">
-              <div className="flex flex-col gap-4">
+          <Form className="space-y-6">
+            <div className="grid md:grid-cols-2 md:gap-4 gap-6">
+              <div className="flex flex-col gap-2">
                 <Input
                   name="firstName"
                   id="firstName"
@@ -115,14 +115,14 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
                           dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50"
                   required
                 />
                 {touched.firstName && errors.firstName ? (
                   <div className="text-sm text-red-600">{errors.firstName}</div>
                 ) : null}
               </div>
+
               <div className="flex flex-col gap-2">
                 <Input
                   name="lastName"
@@ -136,8 +136,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
                           dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50"
                   required
                 />
                 {touched.lastName && errors.lastName ? (
@@ -159,8 +158,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
                           dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50"
                 required
               />
               {touched.email && errors.email ? (
@@ -182,8 +180,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
                           dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50"
                   required
                 />
                 <Button
@@ -215,8 +212,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
                           dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50"
                   required
                 />
                 <Button
@@ -259,28 +255,23 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   dz: '.. .. .. .. ..',
                   tn: '.. ... ...',
                 }}
-                // Tailwind-driven styles via className + dynamic dark mode
                 inputClass="!text-tsa-blue dark:!text-tsa-white !font-medium !text-base 
-                            !h-full !w-full !px-12 !py-1 !bg-transparent !border-0 
+                            !h-full !w-full !px-12 !py-1 !bg-white !border-0 
                             !outline-none placeholder:!text-tsa-blue/60 
                             dark:placeholder:!text-tsa-white/60 focus:!ring-2 
-                            focus:!ring-tsa-blue/50 dark:focus:!ring-tsa-blue/40
-                            "
-                containerClass="!h-12 !bg-transparent dark:!bg-gray-700 !border 
+                            focus:!ring-tsa-blue/50 dark:focus:!ring-tsa-blue/40"
+                containerClass="!h-12 !bg-white dark:!bg-gray-700 !border 
                                 !border-tsa-blue dark:!border-tsa-gray !rounded-lg
                                 focus-within:!ring-2 focus-within:!ring-tsa-blue/30 
                                 dark:focus-within:!ring-tsa-blue/40 transition-all 
                                 duration-200"
                 buttonClass="!bg-transparent dark:!bg-gray-700 !border-0 !border-r 
-                              !border-r-tsa-blue dark:!border-r-tsa-gray 
-                              "
+                              !border-r-tsa-blue dark:!border-r-tsa-gray"
                 dropdownClass="!border !border-tsa-blue dark:!border-tsa-blue/60 
                               !rounded-lg !shadow-lg !bg-white dark:!bg-gray-700 
-                              !text-gray-900 dark:!text-tsa-white !mt-1
-                              "
+                              !text-gray-900 dark:!text-tsa-white !mt-1"
                 searchClass="dark:bg-gray-700 !placeholder-tsa-blue/50 dark:!placeholder-tsa-white/50
-                            !text-sm !px-3 !py-2
-                            "
+                            !text-sm !px-3 !py-2"
               />
               {errors.phone && (
                 <p className="text-sm text-red-600 dark:text-red-400 font-medium mt-1" role="alert">
@@ -289,39 +280,15 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium text-tsa-blue dark:text-tsa-white/90 flex">
-                {tAuth('register.role')}
-              </Label>
-              <div className="w-full flex flex-1 justify-between max-sm:grid max-sm:grid-cols max-sm:justify-center max-sm:gap-4">
-                {USER_ROLES.map((role) => (
-                  <Checkbox
-                    key={role}
-                    checked={values.role === role}
-                    onCheckedChange={() => setFieldValue('role', values.role === role ? '' : role)}
-                    onError={() => setFieldError('role', VALIDATION_MESSAGES.REQUIRED_ROLE)}
-                    label={tCommon(`roles.${role}`)}
-                    className="rounded-none"
-                    labelClassName="text-tsa-blue dark:text-tsa-white/90 text-sm font-medium"
-                  />
-                ))}
-              </div>
-              {touched.role && errors.role && (
-                <p className="text-red-500 text-sm mt-1" role="alert">
-                  {errors.role}
-                </p>
-              )}
-            </div>
-
             <Button
               type="submit"
-              className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 
-              hover:bg-tsa-blue active:bg-tsa-blue/80 text-white font-semibold 
-              text-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
+              className="w-4/5 justify-self-center flex h-12 bg-green-600 
+              hover:bg-green-700 active:bg-green-600/80 text-white font-semibold 
+              text-xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
               loading={isSubmitting}
               disabled={isSubmitting || Object.keys(errors).length > 0}
             >
-              {isSubmitting ? tAuth('register.loading') : tAuth('register.button')}
+              {isSubmitting ? tAuth('register.loading') : tAuth('register.client.button')}
             </Button>
 
             <div className="text-center">
@@ -329,11 +296,17 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 {tAuth('register.hasAccount')}{' '}
               </span>
               <Link
-                to="/app/login"
+                to="/login"
                 className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
-                dark:hover:text-tsa-blue font-medium text-sm transition-colors "
+                dark:hover:text-tsa-blue font-medium text-sm transition-colors"
               >
-                {tAuth('login.label')}
+                {tAuth('login.client.link')}
+              </Link>
+            </div>
+
+            <div className="text-center">
+              <Link to="/" className="text-gray-500 dark:text-white text-sm transition-colors">
+                {tAuth('common.backToHome')}
               </Link>
             </div>
           </Form>

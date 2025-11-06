@@ -183,7 +183,7 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                   {tAuth('login.noAccount')}{' '}
                 </span>
                 <Link
-                  to="/register"
+                  to="/app/register"
                   className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
                     dark:hover:text-tsa-blue font-medium text-sm transition-colors "
                 >
@@ -197,6 +197,12 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
                 dark:hover:text-tsa-blue font-medium text-sm transition-colors "
                 >
                   {tAuth('login.verifyEmail')}
+                </Link>
+              </div>
+
+              <div className="text-center">
+                <Link to="/" className="text-gray-500 dark:text-white text-sm transition-colors">
+                  {tAuth('common.backToHome')}
                 </Link>
               </div>
             </>

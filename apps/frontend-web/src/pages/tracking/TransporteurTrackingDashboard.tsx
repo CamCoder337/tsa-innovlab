@@ -221,7 +221,7 @@ export default function TransporteurTrackingDashboard() {
                             const selected = activeAssignments.find((m) => m.id === e.target.value);
                             if (selected) setCurrentAssignment(selected);
                           }}
-                          className="flex-1 px-3 py-2 text-xs sm:text-sm border dark:border-gray-800 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           {activeAssignments.map((mission) => (
                             <option key={mission.id} value={mission.id}>

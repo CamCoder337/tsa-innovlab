@@ -80,17 +80,11 @@ export class ChatbotService extends BaseApi {
   /**
    * Send a message to the chatbot
    */
-  async sendMessage(
-    request: ChatbotQueryRequest
-  ): Promise<ApiResponse<ChatbotQueryResponse>> {
+  async sendMessage(request: ChatbotQueryRequest): Promise<ApiResponse<ChatbotQueryResponse>> {
     try {
-      const response = await this.insertToken().post(
-        '/api/common/chatbot/query',
-        request,
-        {
-          timeout: 20000, // 20 seconds for LLM processing
-        }
-      );
+      const response = await this.insertToken().post('/api/common/chatbot/query', request, {
+        timeout: 20000, // 20 seconds for LLM processing
+      });
       return { data: response.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

@@ -8,9 +8,12 @@ import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 // Lazy-loaded components
 const Login = lazy(() => import('./pages/auth/Login'));
+const ClientLogin = lazy(() => import('./pages/auth/ClientLogin'));
 const Register = lazy(() => import('./pages/auth/Register'));
+const RegisterClient = lazy(() => import('./pages/auth/RegisterClient'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
 
@@ -67,8 +70,19 @@ function App() {
 
   return (
     <Routes>
+      {/* Landing Page */}
       <Route
         path="/"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        }
+      />
+
+      {/* Authentication Routes */}
+      <Route
+        path="/app/login"
         element={
           <Suspense fallback={<LoadingFallback />}>
             <Login />
@@ -76,10 +90,26 @@ function App() {
         }
       />
       <Route
-        path="/register"
+        path="/login"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ClientLogin />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/app/register"
         element={
           <Suspense fallback={<LoadingFallback />}>
             <Register />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <RegisterClient />
           </Suspense>
         }
       />
@@ -100,6 +130,7 @@ function App() {
         }
       />
 
+      {/* Protected App Routes */}
       <Route
         path="/app"
         element={
@@ -303,7 +334,7 @@ function App() {
         />
       </Route>
 
-      <Route path="*" element={<Navigate to="/app" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
