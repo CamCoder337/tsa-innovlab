@@ -257,8 +257,9 @@ export const useChatStore = create<ChatState>()(
             });
             // Return fallback response on error
             const fallbackResponse = {
-              content: "Désolé, je rencontre des difficultés à traiter votre demande. Veuillez réessayer.",
-              suggestions: ["Aide", "Support"],
+              content:
+                'Désolé, je rencontre des difficultés à traiter votre demande. Veuillez réessayer.',
+              suggestions: ['Aide', 'Support'],
             };
 
             // Add fallback bot message

@@ -4,7 +4,6 @@ import { type TFunction } from 'i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { Separator } from '../../components/ui/separator';
 import {
   ArrowLeft,
   CheckCircle,
@@ -206,7 +205,13 @@ export default function OrderDetailsPage() {
     );
   }
 
-  const statusInfo = statusConfig[order.status];
+  // Debug: Log order status if not found in config
+  if (!statusConfig[order.status]) {
+    console.warn('Unknown order status:', order.status, 'Order:', order);
+  }
+
+  // Fallback to PENDING if status is not found in config
+  const statusInfo = statusConfig[order.status] || statusConfig[OrderStatus.PENDING];
   const timeline = getOrderTimeline(order, tShop);
   const StatusIcon = statusInfo.icon;
 
@@ -379,14 +384,21 @@ export default function OrderDetailsPage() {
                         <span className="text-zinc-600">
                           {tShop('orderDetails.unitPrice')}:{' '}
                           <span className="font-medium">
-                            {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
+                            {item.unitPrice ? parseFloat(item.unitPrice).toLocaleString('fr-FR') : '0'} FCFA
                           </span>
                         </span>
                       </div>
                     </div>
                     <div className="text-center sm:text-right w-full sm:w-auto">
                       <div className="font-semibold text-base sm:text-lg text-zinc-900">
-                        {parseFloat(item.subtotal).toLocaleString('fr-FR')} FCFA
+                        {item.totalPrice
+                          ? parseFloat(item.totalPrice).toLocaleString('fr-FR')
+                          : item.subtotal
+                            ? parseFloat(item.subtotal).toLocaleString('fr-FR')
+                            : item.unitPrice
+                              ? (parseFloat(item.unitPrice) * item.quantity).toLocaleString('fr-FR')
+                              : '0'}{' '}
+                        FCFA
                       </div>
                     </div>
                   </div>
@@ -467,28 +479,9 @@ export default function OrderDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-3 sm:space-y-4">
               <div className="space-y-2 sm:space-y-3">
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.subtotal')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.subtotal).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.shippingCost')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.shippingCost).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-zinc-600">{tShop('orderDetails.taxes')}</span>
-                  <span className="font-medium">
-                    {parseFloat(order.tax).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-                <Separator />
                 <div className="flex justify-between text-base sm:text-lg font-semibold">
                   <span>{tShop('orderDetails.total')}</span>
-                  <span>{parseFloat(order.total).toLocaleString('fr-FR')} FCFA</span>
+                  <span>{parseFloat(order.totalAmount).toLocaleString('fr-FR')} FCFA</span>
                 </div>
               </div>
 
@@ -522,15 +515,19 @@ export default function OrderDetailsPage() {
             <CardContent className="space-y-2 sm:space-y-3">
               <div className="flex items-center gap-2 text-xs sm:text-sm">
                 <span className="text-zinc-600">{tShop('orderDetails.name')}:</span>
-                <span className="font-medium truncate">{order.customerName}</span>
+                <span className="font-medium truncate">
+                  {order.user?.firstName && order.user?.lastName
+                    ? `${order.user.firstName} ${order.user.lastName}`
+                    : 'N/A'}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-xs sm:text-sm">
                 <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                <span className="text-zinc-600 truncate">{order.customerEmail}</span>
+                <span className="text-zinc-600 truncate">{order.user?.email || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2 text-xs sm:text-sm">
                 <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                <span className="text-zinc-600">{order.customerPhone}</span>
+                <span className="text-zinc-600">{order.user?.phone || 'N/A'}</span>
               </div>
             </CardContent>
           </Card>

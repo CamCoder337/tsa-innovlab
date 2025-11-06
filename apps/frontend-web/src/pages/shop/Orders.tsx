@@ -96,7 +96,7 @@ export default function OrdersPage() {
     const filtered = orders.filter((order) => {
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.items?.some((item) =>
           item.productName?.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -111,7 +111,7 @@ export default function OrdersPage() {
           comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
           break;
         case 'total':
-          comparison = parseFloat(a.total) - parseFloat(b.total);
+          comparison = parseFloat(a.total || a.totalAmount || '0') - parseFloat(b.total || b.totalAmount || '0');
           break;
         case 'status':
           comparison = a.status.localeCompare(b.status);
@@ -296,7 +296,7 @@ export default function OrdersPage() {
                             </span>
                           </span>
                           <span className="font-semibold text-zinc-900">
-                            {parseFloat(order.total).toLocaleString('fr-FR')} FCFA
+                            {parseFloat(order.totalAmount).toLocaleString('fr-FR')} FCFA
                           </span>
                           {order.items && (
                             <span className="text-zinc-500">
@@ -345,10 +345,17 @@ export default function OrdersPage() {
                               <div className="text-right flex-shrink-0">
                                 <p className="font-medium text-xs sm:text-sm">
                                   {item.quantity} ×{' '}
-                                  {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
+                                  {item.unitPrice ? parseFloat(item.unitPrice).toLocaleString('fr-FR') : '0'} FCFA
                                 </p>
                                 <p className="text-xs text-zinc-500">
-                                  {parseFloat(item.subtotal).toLocaleString('fr-FR')} FCFA
+                                  {item.totalPrice
+                                    ? parseFloat(item.totalPrice).toLocaleString('fr-FR')
+                                    : item.subtotal
+                                      ? parseFloat(item.subtotal).toLocaleString('fr-FR')
+                                      : item.unitPrice
+                                        ? (parseFloat(item.unitPrice) * item.quantity).toLocaleString('fr-FR')
+                                        : '0'}{' '}
+                                  FCFA
                                 </p>
                               </div>
                             </div>

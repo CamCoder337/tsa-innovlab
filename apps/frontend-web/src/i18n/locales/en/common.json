@@ -146,5 +146,56 @@
   "languages": {
     "french": "French",
     "english": "English"
+  },
+  "landing": {
+    "hero": {
+      "title": "Your All-in-One",
+      "subtitle": "Logistics Platform",
+      "description": "Discover our refurbished products or manage your transport operations with ease"
+    },
+    "commerce": {
+      "title": "Online Shop",
+      "description": "Discover our selection of refurbished automotive parts. Quality guaranteed, competitive prices.",
+      "features": {
+        "certified": "Certified refurbished parts",
+        "quality": "Quality warranty",
+        "delivery": "Fast delivery"
+      },
+      "browse": "Browse Shop",
+      "register": "Create Client Account"
+    },
+    "transport": {
+      "title": "Transport Services",
+      "description": "Manage your transport missions, find carriers or offer your delivery services.",
+      "subtitle": "For shippers and carriers",
+      "features": {
+        "tracking": "Real-time GPS tracking",
+        "secure": "Secure transactions",
+        "simple": "Simplified management"
+      },
+      "join": "Join Platform"
+    },
+    "features": {
+      "title": "Why Choose TSA Logistics?",
+      "secure": {
+        "title": "Secure",
+        "description": "Protected transactions and data"
+      },
+      "fast": {
+        "title": "Fast",
+        "description": "Optimized and efficient processes"
+      },
+      "traceable": {
+        "title": "Traceable",
+        "description": "Real-time tracking"
+      },
+      "quality": {
+        "title": "Quality",
+        "description": "Certified products and reliable services"
+      }
+    },
+    "footer": {
+      "copyright": " 2025 TSA Logistics. All rights reserved."
+    }
   }
 }

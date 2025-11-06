@@ -42,7 +42,6 @@ import Facture from '@/components/invoice/Facture';
 import type { Payment, PaymentMethodType } from '@/types/payment.types';
 import { useOrders } from '@/hooks/useOrders';
 import { type Order } from '@/types/order.types';
-import { useAddresses } from '@/hooks/useAddresses';
 import { useShopTranslation } from '@/hooks/useTranslation';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 
@@ -82,7 +81,6 @@ export default function CartSummaryPage() {
   } = useCart();
 
   const { createOrder } = useOrders();
-  const { createAddress } = useAddresses();
 
   const {
     selectedAddress,
@@ -173,62 +171,46 @@ export default function CartSummaryPage() {
         }
       };
 
-      // Generate UUIDs for addresses (since we don't have real API yet)
-      const generateUUID = () => {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          const r = (Math.random() * 16) | 0;
-          const v = c == 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
+      // Prepare address data to send to backend
+      // Backend will create the addresses automatically
+      // Helper to convert empty strings and 0 to null for optional fields
+      const toNullIfEmpty = (value: string | number | null | undefined): string | number | null => {
+        if (value === '' || value === 0 || value === undefined) return null;
+        return value;
       };
 
-      const shippingAddressId = generateUUID();
-      const billingAddressId = generateUUID();
-
-      // Create shipping address first
-      const shippingAddressData = {
-        id: shippingAddressId,
+      const shippingAddress = {
         street: formik.values.deliveryAddress,
         city: formik.values.deliveryCity,
         region: formik.values.deliveryCity, // Using city as region for now
         country: 'Cameroun', // Default country
-        postalCode: formik.values.deliveryPostalCode || '',
-        latitude: formik.values.latitude || 0,
-        longitude: formik.values.longitude || 0,
-        label: formik.values.deliveryAddress,
-        placeId: formik.values.placeId, // Store Google Places ID separately
+        postalCode: toNullIfEmpty(formik.values.deliveryPostalCode),
+        latitude: toNullIfEmpty(formik.values.latitude),
+        longitude: toNullIfEmpty(formik.values.longitude),
+        label: formik.values.deliveryAddress || null, // Don't use toNullIfEmpty, keep the value or null
       };
 
-      const shippingAddressCreated = await createAddress(shippingAddressData);
-      if (!shippingAddressCreated) {
-        throw new Error('Failed to create shipping address');
-      }
-
-      // For billing, use the same address data but with different ID and label
-      const billingAddressData = {
-        id: billingAddressId,
+      const billingAddress = {
         street: formik.values.deliveryAddress,
         city: formik.values.deliveryCity,
         region: formik.values.deliveryCity,
         country: 'Cameroun',
-        postalCode: formik.values.deliveryPostalCode || '',
-        latitude: formik.values.latitude || 0,
-        longitude: formik.values.longitude || 0,
+        postalCode: toNullIfEmpty(formik.values.deliveryPostalCode),
+        latitude: toNullIfEmpty(formik.values.latitude),
+        longitude: toNullIfEmpty(formik.values.longitude),
         label: 'Billing Address',
-        placeId: formik.values.placeId,
       };
 
-      const billingAddressCreated = await createAddress(billingAddressData);
-      if (!billingAddressCreated) {
-        throw new Error('Failed to create billing address');
-      }
-
-      const orderData = {
-        shippingAddressId: shippingAddressId, // Use the generated UUID
-        billingAddressId: billingAddressId, // Use the generated UUID
+      const orderData: any = {
+        shippingAddress,
+        billingAddress,
         paymentMethod: getPaymentMethod(payment.method),
-        notes: formik.values.deliveryNotes || undefined,
       };
+
+      // Only add notes if it has a value
+      if (formik.values.deliveryNotes && formik.values.deliveryNotes.trim() !== '') {
+        orderData.notes = formik.values.deliveryNotes.trim();
+      }
 
       console.log('Order data to send:', orderData);
       const order = await createOrder(orderData);

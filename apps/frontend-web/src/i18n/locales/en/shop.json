@@ -329,9 +329,65 @@
     }
   },
   "orderDetails": {
+    "title": "Order {{number}}",
     "backToOrders": "My Orders",
     "orderNumber": "Order {{number}}",
-    "orderedOn": "Ordered on {{date}}",
+    "orderedOn": "Ordered on",
+    "itemCount": "{{count}} item",
+    "itemCountPlural": "{{count}} items",
+    "orderedItems": "Ordered Items",
+    "reference": "Ref",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "deliveryInfo": "Delivery Information",
+    "deliveryAddress": "Delivery Address",
+    "trackingNumber": "Tracking Number",
+    "deliveryInstructions": "Delivery Instructions",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "shippingCost": "Shipping Cost",
+    "taxes": "Taxes",
+    "total": "Total",
+    "paymentMethod": "Payment Method",
+    "paymentReference": "Payment Reference",
+    "customerInfo": "Customer Information",
+    "name": "Name",
+    "downloadInvoice": "Download Invoice",
+    "trackPackage": "Track Package",
+    "continueShopping": "Continue Shopping",
+    "copyTracking": "Copy Tracking",
+    "orderTracking": "Order Tracking",
+    "breadcrumb": {
+      "myOrders": "My Orders",
+      "order": "Order {{number}}"
+    },
+    "timeline": {
+      "created": {
+        "title": "Order Created",
+        "description": "Your order has been registered"
+      },
+      "paid": {
+        "title": "Payment Confirmed",
+        "description": "Your payment has been processed successfully"
+      },
+      "processing": {
+        "title": "Processing",
+        "description": "Your order is being prepared"
+      },
+      "shipped": {
+        "title": "Order Shipped",
+        "description": "Your order has been shipped",
+        "descriptionWithTracking": "Tracking number: {{trackingNumber}}"
+      },
+      "delivered": {
+        "title": "Order Delivered",
+        "description": "Your order has been delivered successfully"
+      },
+      "cancelled": {
+        "title": "Order Cancelled",
+        "description": "Your order has been cancelled"
+      }
+    },
     "tracking": {
       "title": "Order Tracking",
       "created": "Order Created",

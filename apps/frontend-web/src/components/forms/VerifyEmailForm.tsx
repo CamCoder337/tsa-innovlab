@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { VerifyEmailFormData } from '@/types/forms.types';
@@ -27,6 +27,7 @@ export default function VerifyEmailForm({
   isAutoVerifying = false,
 }: VerifyEmailFormProps) {
   const { t: tForms } = useFormsTranslation();
+  const navigate = useNavigate();
 
   return (
     <Formik<VerifyEmailFormData>
@@ -112,14 +113,12 @@ export default function VerifyEmailForm({
             </Button>
 
             {/* Back to Login Link */}
-            <div className="text-center">
-              <Link
-                to="/"
-                className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
-                dark:hover:text-tsa-blue font-medium text-sm transition-colors "
-              >
-                {tForms('buttons.backToLogin')}
-              </Link>
+            <div
+              className="text-center text-tsa-blue dark:text-tsa-white hover:underline 
+                          font-medium text-sm transition-colors"
+              onClick={() => navigate(-1)}
+            >
+              {tForms('buttons.backToLogin')}
             </div>
           </Form>
         );

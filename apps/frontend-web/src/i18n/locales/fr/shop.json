@@ -254,9 +254,65 @@
     }
   },
   "orderDetails": {
+    "title": "Commande {{number}}",
     "backToOrders": "Mes commandes",
     "orderNumber": "Commande {{number}}",
-    "orderedOn": "Commandé le {{date}}",
+    "orderedOn": "Commandé le",
+    "itemCount": "{{count}} article",
+    "itemCountPlural": "{{count}} articles",
+    "orderedItems": "Articles commandés",
+    "reference": "Réf",
+    "quantity": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "deliveryInfo": "Informations de livraison",
+    "deliveryAddress": "Adresse de livraison",
+    "trackingNumber": "Numéro de suivi",
+    "deliveryInstructions": "Instructions de livraison",
+    "orderSummary": "Résumé de la commande",
+    "subtotal": "Sous-total",
+    "shippingCost": "Frais de livraison",
+    "taxes": "Taxes",
+    "total": "Total",
+    "paymentMethod": "Méthode de paiement",
+    "paymentReference": "Référence de paiement",
+    "customerInfo": "Informations client",
+    "name": "Nom",
+    "downloadInvoice": "Télécharger la facture",
+    "trackPackage": "Suivre le colis",
+    "continueShopping": "Continuer mes achats",
+    "copyTracking": "Copier le suivi",
+    "orderTracking": "Suivi de commande",
+    "breadcrumb": {
+      "myOrders": "Mes commandes",
+      "order": "Commande {{number}}"
+    },
+    "timeline": {
+      "created": {
+        "title": "Commande créée",
+        "description": "Votre commande a été enregistrée"
+      },
+      "paid": {
+        "title": "Paiement confirmé",
+        "description": "Votre paiement a été traité avec succès"
+      },
+      "processing": {
+        "title": "En préparation",
+        "description": "Votre commande est en cours de préparation"
+      },
+      "shipped": {
+        "title": "Commande expédiée",
+        "description": "Votre commande a été expédiée",
+        "descriptionWithTracking": "Numéro de suivi: {{trackingNumber}}"
+      },
+      "delivered": {
+        "title": "Commande livrée",
+        "description": "Votre commande a été livrée avec succès"
+      },
+      "cancelled": {
+        "title": "Commande annulée",
+        "description": "Votre commande a été annulée"
+      }
+    },
     "tracking": {
       "title": "Suivi de commande",
       "created": "Commande créée",
