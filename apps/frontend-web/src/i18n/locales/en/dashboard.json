@@ -70,7 +70,8 @@
       "successRate": "Success Rate",
       "new": "new",
       "todayEarnings": "Today's Earnings",
-      "vsYesterday": "vs yesterday"
+      "vsYesterday": "vs yesterday",
+      "thisWeek": "this week"
     },
     "sections": {
       "myActiveMissions": "My Active Missions",

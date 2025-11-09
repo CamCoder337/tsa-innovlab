@@ -1,22 +1,12 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useVehicleStore } from '@/stores/vehicleStore';
 import type { Vehicle, VehicleStatus, VehicleType } from '@/types/vehicle.types';
-import { useAuth } from './useAuth';
 
 /**
  * Main vehicles hook providing all vehicle functionality
  */
 export const useVehicles = () => {
   const store = useVehicleStore();
-  const { user } = useAuth();
-
-  // Auto-fetch vehicles for transporteurs
-  useEffect(() => {
-    if (user && user.role === 'transporteur') {
-      store.fetchVehicles();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   const getVehicleById = useCallback(
     (id: string): Vehicle | undefined => {

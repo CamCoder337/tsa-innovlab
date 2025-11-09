@@ -33,11 +33,20 @@ function createAxiosInstance(): AxiosInstance {
 
       // Handle 401 errors (unauthorized)
       if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip token refresh for logout requests
+        const isLogoutRequest =
+          originalRequest.url?.includes('auth/logout') ||
+          originalRequest.url?.includes('/auth/logout');
+
+        if (isLogoutRequest) {
+          return Promise.reject(error);
+        }
+
         originalRequest._retry = true;
 
         // Tenter de rafraîchir le token si l'utilisateur est actif
-        if (tokenManager.timeSinceLastActivity < 30 * 60 * 1000) {
-          // 30 minutes
+        if (tokenManager.timeSinceLastActivity < 2 * 60 * 1000) {
+          // 2 minutes
           const refreshSuccess = await tokenManager.manualRefresh();
 
           if (refreshSuccess) {
@@ -51,7 +60,7 @@ function createAxiosInstance(): AxiosInstance {
         }
 
         // Si le refresh échoue ou l'utilisateur est inactif, déconnecter
-        // useAuthStore.getState().logout();
+        useAuthStore.getState().logout();
       }
 
       return Promise.reject(error);

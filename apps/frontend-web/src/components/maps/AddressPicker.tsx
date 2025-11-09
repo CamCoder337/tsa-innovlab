@@ -12,24 +12,10 @@ import {
 } from '@/hooks/useTranslation';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { toast } from 'sonner';
-import type { Address } from '@/types/address.types';
-
-export interface AddressDetails {
-  formatted_address: string;
-  street_number?: string;
-  route?: string;
-  locality?: string;
-  administrative_area_level_1?: string;
-  country?: string;
-  postal_code?: string;
-  label?: string;
-  latitude: number;
-  longitude: number;
-  place_id: string;
-}
+import type { Address, AddressDetails, CreateAddressDto } from '@/types/address.types';
 
 interface AddressPickerProps {
-  selectedAddress?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
+  selectedAddress?: Address | CreateAddressDto;
   onAddressSelect: (address: AddressDetails) => void;
   onClear?: () => void;
   placeholder?: string;
@@ -64,104 +50,6 @@ export default function AddressPicker({
   const [error, setError] = useState<{ key: string; options?: Record<string, unknown> } | null>(
     null
   );
-
-  // Extract address details function for useGeolocation
-  // const extractAddressDetailsFromGeocoderResult = useCallback(
-  //   (place: google.maps.GeocoderResult): AddressDetails => {
-  //     const components = place.address_components || [];
-  //     const details: Partial<AddressDetails> = {
-  //       formatted_address: place.formatted_address || '',
-  //       latitude: place.geometry!.location!.lat(),
-  //       longitude: place.geometry!.location!.lng(),
-  //       place_id: place.place_id || '',
-  //       label: place.formatted_address || '',
-  //     };
-
-  //     components.forEach((component) => {
-  //       const types = component.types;
-
-  //       if (types.includes('street_number')) {
-  //         details.street_number = component.long_name;
-  //       } else if (types.includes('plus_code')) {
-  //         details.street_number = component.long_name;
-  //       } else details.street_number = place.plus_code?.global_code;
-  //       if (types.includes('route')) {
-  //         details.route = component.long_name;
-  //       }
-  //       if (types.includes('locality')) {
-  //         details.locality = component.long_name;
-  //       }
-  //       if (types.includes('administrative_area_level_1')) {
-  //         details.administrative_area_level_1 = component.long_name;
-  //       }
-  //       if (types.includes('country')) {
-  //         details.country = component.long_name;
-  //       }
-  //       if (types.includes('postal_code')) {
-  //         details.postal_code = component.long_name;
-  //       }
-  //     });
-
-  //     return details as AddressDetails;
-  //   },
-  //   []
-  // );
-
-  // Initialize useGeolocation hook with proper configuration
-  const {
-    getLocation,
-    reset,
-    isLoading,
-    error: geolocationError,
-  } = useGeolocation({
-    tErrors,
-    tMaps,
-    onAddressSelect: (addressDetails) => {
-      if (addressDetails) {
-        setInputValue(addressDetails.formatted_address);
-        onAddressSelect(addressDetails);
-        if (showMap && mapInstanceRef.current) {
-          updateMapLocation(addressDetails.latitude, addressDetails.longitude);
-        }
-      }
-    },
-    minAccuracy: 80,
-    maxAttempts: 3,
-  });
-
-  // Load Google Maps script
-  useEffect(() => {
-    const loadGoogleMaps = async () => {
-      try {
-        const apiKey =
-          window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        if (!apiKey) {
-          throw new Error(tErrors('maps.googleMapsApiKeyMissing'));
-        }
-
-        await googleMapsLoader.load({ libraries: ['places', 'marker'] });
-
-        if (!window.google?.maps) {
-          throw new Error(tErrors('maps.googleMapsNotAvailable'));
-        }
-
-        setIsLoaded(true);
-        setError(null);
-      } catch (error) {
-        console.error(tErrors('maps.googleMapsLoadError'), error);
-        const errorMessage = error instanceof Error ? error.message : tErrors('errors.unknown');
-        setError({ key: 'maps.googleMapsLoadError', options: { error: errorMessage } });
-      }
-    };
-
-    loadGoogleMaps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update input value when prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
 
   const extractAddressDetails = useCallback(
     (place: google.maps.places.PlaceResult): AddressDetails => {
@@ -203,6 +91,63 @@ export default function AddressPicker({
     },
     []
   );
+
+  // Initialize useGeolocation hook with proper configuration
+  const {
+    getLocation,
+    reset,
+    isLoading,
+    error: geolocationError,
+  } = useGeolocation({
+    tErrors,
+    tMaps,
+    onAddressSelect: (addressDetails) => {
+      if (addressDetails) {
+        setInputValue(addressDetails.formatted_address);
+        onAddressSelect(addressDetails);
+        if (showMap && mapInstanceRef.current) {
+          updateMapLocation(addressDetails.latitude, addressDetails.longitude);
+        }
+      }
+    },
+    extractAddressDetails: (place) => extractAddressDetails(place),
+    minAccuracy: 80,
+    maxAttempts: 3,
+  });
+
+  // Load Google Maps script
+  useEffect(() => {
+    const loadGoogleMaps = async () => {
+      try {
+        const apiKey =
+          window._env_?.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          throw new Error(tErrors('maps.googleMapsApiKeyMissing'));
+        }
+
+        await googleMapsLoader.load({ libraries: ['places', 'marker'] });
+
+        if (!window.google?.maps) {
+          throw new Error(tErrors('maps.googleMapsNotAvailable'));
+        }
+
+        setIsLoaded(true);
+        setError(null);
+      } catch (error) {
+        console.error(tErrors('maps.googleMapsLoadError'), error);
+        const errorMessage = error instanceof Error ? error.message : tErrors('errors.unknown');
+        setError({ key: 'maps.googleMapsLoadError', options: { error: errorMessage } });
+      }
+    };
+
+    loadGoogleMaps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update input value when prop changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   const updateMapLocation = useCallback((lat: number, lng: number) => {
     if (!mapInstanceRef.current) return;
@@ -531,7 +476,7 @@ export default function AddressPicker({
       {/* Interactive map */}
       {showMap && !error && (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="relative p-0">
             <div
               ref={mapRef}
               className="w-full h-64 sm:h-80 lg:h-96 rounded-lg border border-gray-200"

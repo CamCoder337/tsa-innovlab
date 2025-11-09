@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Address, AddressStore } from '../types/address.types';
+import type {
+  Address,
+  AddressDetails,
+  AddressStore,
+  CreateAddressDto,
+  UpdateAddressDto,
+} from '../types/address.types';
+import { addressService } from '@/services/address.service';
 
 export const useAddressStore = create<AddressStore>()(
   persist(
@@ -13,40 +20,47 @@ export const useAddressStore = create<AddressStore>()(
 
       // Async actions (placeholder for future API integration)
       fetchAddresses: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          // TODO: Replace with actual API call when address service is available
-          // const response = await addressService.getAddresses();
-          // if (response.error) {
-          //   set({ error: response.error.message, isLoading: false });
-          // } else {
-          //   set({ addresses: response.data || [], isLoading: false });
-          // }
+        set({
+          isLoading: true,
+          error: null,
+        });
 
-          // For now, just set loading to false
-          set({ isLoading: false });
+        try {
+          const response = await addressService.getAddresses();
+
+          if (response.error) {
+            set({ error: response.error.message, isLoading: false });
+            return;
+          }
+
+          if (response.data) set({ addresses: response.data || [], isLoading: false });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch addresses',
             isLoading: false,
           });
+        } finally {
+          set({ isLoading: false });
         }
       },
 
       fetchAddress: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          // TODO: Replace with actual API call when address service is available
-          // const response = await addressService.getAddress(id);
-          // if (response.error) {
-          //   set({ error: response.error.message, isLoading: false });
-          // } else {
-          //   set({ currentAddress: response.data, isLoading: false });
-          // }
+        set({
+          isLoading: true,
+          error: null,
+        });
 
-          // For now, find in local store
-          const address = get().addresses.find((addr) => addr.id === id);
-          set({ currentAddress: address || null, isLoading: false });
+        try {
+          const response = await addressService.getAddress(id);
+
+          if (response.error) {
+            set({ error: response.error.message, isLoading: false });
+            return;
+          }
+
+          if (response.data) {
+            set({ currentAddress: response.data, isLoading: false });
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch address',
@@ -55,121 +69,107 @@ export const useAddressStore = create<AddressStore>()(
         }
       },
 
-      createAddress: async (addressData: Omit<Address, 'createdAt'>) => {
-        set({ isLoading: true, error: null });
-        try {
-          // TODO: Replace with actual API call when address service is available
-          // const response = await addressService.createAddress(addressData);
-          // if (response.error) {
-          //   set({ error: response.error.message, isLoading: false });
-          //   return false;
-          // } else {
-          //   const addresses = get().addresses;
-          //   set({ addresses: [...addresses, response.data], isLoading: false });
-          //   return true;
-          // }
+      createAddress: async (addressData: CreateAddressDto) => {
+        set({
+          isLoading: true,
+          error: null,
+        });
 
-          // For now, create locally with mock ID
-          const newAddress: Address = {
-            ...addressData,
-            createdAt: new Date().toISOString(),
-          };
-          const addresses = get().addresses;
-          set({ addresses: [...addresses, newAddress], isLoading: false });
-          return true;
+        try {
+          const response = await addressService.createAddress(addressData);
+
+          if (response.error) {
+            set({ error: response.error.message, isLoading: false });
+            return;
+          }
+
+          if (response.data) {
+            set((state) => ({
+              addresses: [...state.addresses, response.data as Address],
+              isLoading: false,
+              error: null,
+            }));
+            return;
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to create address',
             isLoading: false,
           });
-          return false;
+          return;
         }
       },
 
-      updateAddressAsync: async (id: string, updates: Partial<Address>) => {
-        set({ isLoading: true, error: null });
-        try {
-          // TODO: Replace with actual API call when address service is available
-          // const response = await addressService.updateAddress(id, updates);
-          // if (response.error) {
-          //   set({ error: response.error.message, isLoading: false });
-          //   return false;
-          // } else {
-          //   const addresses = get().addresses;
-          //   const updatedAddresses = addresses.map((addr) =>
-          //     addr.id === id ? { ...addr, ...response.data } : addr
-          //   );
-          //   set({ addresses: updatedAddresses, isLoading: false });
-          //   return true;
-          // }
+      updateAddress: async (id: string, updates: UpdateAddressDto) => {
+        set({
+          isLoading: true,
+          error: null,
+        });
 
-          // For now, update locally
-          const addresses = get().addresses;
-          const updatedAddresses = addresses.map((addr) =>
-            addr.id === id ? { ...addr, ...updates } : addr
-          );
-          set({ addresses: updatedAddresses, isLoading: false });
-          return true;
+        try {
+          const response = await addressService.updateAddress(id, updates);
+
+          if (response.error) {
+            set({ error: response.error.message, isLoading: false });
+            return;
+          }
+
+          if (response.data) {
+            set((state) => ({
+              addresses: state.addresses.map((address) =>
+                address.id === id ? (response.data as Address) : address
+              ),
+              currentAddress:
+                state.currentAddress?.id === id ? (response.data as Address) : state.currentAddress,
+              isLoading: false,
+              error: null,
+            }));
+            return;
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to update address',
             isLoading: false,
           });
-          return false;
+          return;
         }
       },
 
-      deleteAddressAsync: async (id: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          // TODO: Replace with actual API call when address service is available
-          // const response = await addressService.deleteAddress(id);
-          // if (response.error) {
-          //   set({ error: response.error.message, isLoading: false });
-          //   return false;
-          // } else {
-          //   const addresses = get().addresses;
-          //   const updatedAddresses = addresses.filter((addr) => addr.id !== id);
-          //   set({ addresses: updatedAddresses, isLoading: false });
-          //   return true;
-          // }
+      deleteAddress: async (id: string) => {
+        set({
+          isLoading: true,
+          error: null,
+        });
 
-          // For now, delete locally
-          const addresses = get().addresses;
-          const updatedAddresses = addresses.filter((addr) => addr.id !== id);
-          set({ addresses: updatedAddresses, isLoading: false });
-          return true;
+        try {
+          const response = await addressService.deleteAddress(id);
+
+          if (response.error) {
+            set({ error: response.error.message, isLoading: false });
+            return;
+          }
+
+          if (response.data) {
+            set((state) => ({
+              addresses: state.addresses.filter((address) => address.id !== id),
+              currentAddress: state.currentAddress?.id === id ? null : state.currentAddress,
+              isLoading: false,
+              error: null,
+            }));
+            return;
+          }
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to delete address',
             isLoading: false,
           });
-          return false;
+          return;
         }
       },
 
       // Basic actions
       setAddresses: (addresses: Address[]) => {
         set({ addresses });
-      },
-
-      addAddress: (address: Address) => {
-        const addresses = get().addresses;
-        set({ addresses: [...addresses, address] });
-      },
-
-      updateAddress: (id: string, updates: Partial<Address>) => {
-        const addresses = get().addresses;
-        const updatedAddresses = addresses.map((addr) =>
-          addr.id === id ? { ...addr, ...updates } : addr
-        );
-        set({ addresses: updatedAddresses });
-      },
-
-      deleteAddress: (id: string) => {
-        const addresses = get().addresses;
-        const updatedAddresses = addresses.filter((addr) => addr.id !== id);
-        set({ addresses: updatedAddresses });
       },
 
       setCurrentAddress: (address: Address | null) => {
@@ -218,6 +218,19 @@ export const useAddressStore = create<AddressStore>()(
         return get().addresses.filter(
           (addr) => addr.region?.toLowerCase() === region.toLowerCase()
         );
+      },
+
+      convertAddress: (addressDetails: AddressDetails): CreateAddressDto => {
+        return {
+          label: addressDetails.label || addressDetails.formatted_address || 'Nouvelle adresse',
+          street: `${addressDetails.street_number || ''}`.trim() || '',
+          city: addressDetails.locality || '',
+          region: addressDetails.administrative_area_level_1 || '',
+          country: addressDetails.country || '',
+          postalCode: addressDetails.postal_code || '',
+          latitude: addressDetails.latitude,
+          longitude: addressDetails.longitude,
+        };
       },
     }),
     {

@@ -2,37 +2,147 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShoppingBag, Truck, ArrowRight, Package, MapPin, Shield, Clock } from 'lucide-react';
-import logo from '@/assets/logo_white_bg.png';
+import {
+  ShoppingBag,
+  Truck,
+  ArrowRight,
+  Package,
+  MapPin,
+  Shield,
+  Clock,
+  LogIn,
+  ChevronDown,
+  Globe,
+  Menu,
+  User,
+} from 'lucide-react';
+import logo from '@/assets/logo_blue_bg.png';
 import LanguageDropdown from '@/components/ui/LanguageDropdown';
-import { useAuthTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { useAuthTranslation, useCommonTranslation, useTranslation } from '@/hooks/useTranslation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
 
 const LandingPage: React.FC = () => {
   const { t: tCommon } = useCommonTranslation();
   const { t: tAuth } = useAuthTranslation();
+  const { i18n } = useTranslation();
+  const { user, isAuthenticated } = useAuth();
+
+  const currentLanguage = i18n.language || 'fr';
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-tsa-blue via-tsa-blue/80 to-tsa-blue/60">
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between p-4 sm:p-6">
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="TSA Logistics" className="h-12 w-12 sm:h-16 sm:w-16" />
+        <div className="flex items-center gap-3 w-4/5 h-16">
+          <img src={logo} alt="TSA Logistics" className="h-full w-auto sm:h-16 sm:w-auto" />
           <div className="text-white">
             <h1 className="text-xl sm:text-2xl font-bold">{tCommon('app.name')}</h1>
             <p className="text-sm text-blue-100">{tCommon('app.tagline')}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-4">
           <LanguageDropdown position="bottom-left" />
-          <Link to="/login">
-            <Button
-              variant="outline"
-              className="bg-tsa-blue text-white hover:bg-white hover:text-tsa-blue"
-            >
-              {tAuth('login.label')}
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link to="/app">
+              <Button
+                variant="outline"
+                className="bg-tsa-blue text-white hover:bg-white hover:text-tsa-blue"
+              >
+                <User className="mr-2 h-4 w-4 flex-shrink-0" />
+                {user?.firstName + ' ' + user?.lastName}
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/login">
+              <Button
+                variant="outline"
+                className="bg-tsa-blue text-white hover:bg-white hover:text-tsa-blue"
+              >
+                <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />
+                {tAuth('login.label')}
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {/* Mobile Menu Dropdown - Show on mobile/tablet */}
+        <div className="sm:hidden">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 sm:h-9 sm:w-9 p-0 flex-shrink-0 text-white"
+                aria-label="Menu"
+              >
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-40 w-fit flex flex-col flex-1 gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex flex-1 items-center px-2">
+                    <div className="w-1/4">
+                      <Globe className="h-4 w-4 flex-shrink-0" />
+                    </div>
+                    <span className="w-2/4 text-sm font-medium">
+                      {currentLanguage.startsWith('fr')
+                        ? tCommon('languages.french')
+                        : tCommon('languages.english')}
+                    </span>
+                    <div className="w-6 flex justify-end">
+                      <ChevronDown className="h-3 w-3 flex-shrink-0" />
+                    </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[140px]">
+                  <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+                    🇫🇷 {tCommon('languages.french')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => changeLanguage('en')}>
+                    🇺🇸 {tCommon('languages.english')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {isAuthenticated ? (
+                <Link to="/app">
+                  <DropdownMenuItem className="py-0 cursor-pointer flex flex-1 items-center px-2">
+                    <div className="w-1/4">
+                      <User className="mr-2 h-4 w-4 flex-shrink-0" />
+                    </div>
+                    <span className="w-2/4 text-sm font-medium no-wrap">
+                      {user?.firstName + ' ' + user?.lastName}
+                    </span>
+                    <div className="w-1/5"> </div>
+                  </DropdownMenuItem>
+                </Link>
+              ) : (
+                <Link to="/login">
+                  <DropdownMenuItem className="py-0 cursor-pointer flex flex-1 items-center px-2">
+                    <div className="w-1/4">
+                      <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />
+                    </div>
+                    <span className="w-2/4 text-sm font-medium no-wrap">
+                      {tAuth('login.label')}
+                    </span>
+                    <div className="w-1/5"> </div>
+                  </DropdownMenuItem>
+                </Link>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

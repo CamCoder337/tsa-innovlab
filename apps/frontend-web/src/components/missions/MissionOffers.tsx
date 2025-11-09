@@ -22,7 +22,7 @@
 // import { DollarSign, Clock, Check, X } from 'lucide-react';
 // import type { Mission } from '@/types/mission.types';
 // import { missionService } from '@/services/mission.service';
-// import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
+// import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/utils';
 // import { PropositionForm } from '../forms/PropositionForm';
 // import { useMissions } from '@/hooks/useMissions';
 

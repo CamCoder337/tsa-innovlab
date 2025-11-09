@@ -36,7 +36,7 @@ export default class NotificationManagerService {
           message: `Mission de ${mission.adresseDepart?.city} vers ${mission.adresseArrivee?.city}. Budget: ${mission.getBudgetRange()}`,
           priority: NotificationPriority.NORMAL,
           missionId: mission.id,
-          actionUrl: `${env.get('FRONTEND_URL')}/missions/${mission.id}`,
+          actionUrl: `/missions/${mission.id}`,
           emailSent: false,
         })
 
@@ -80,7 +80,7 @@ export default class NotificationManagerService {
         message: `Vous avez été assigné à la mission "${mission.title}". Préparez-vous pour le transport.`,
         priority: NotificationPriority.HIGH,
         missionId: mission.id,
-        actionUrl: `${env.get('FRONTEND_URL')}/my-missions/${mission.id}`,
+        actionUrl: `/missions/${mission.id}`,
         emailSent: false,
       })
 
@@ -126,7 +126,7 @@ export default class NotificationManagerService {
         message: `Le statut de votre mission est passé de "${oldStatus}" à "${newStatus}" par ${transporteur.fullName}.`,
         priority: this.getStatusChangePriority(newStatus),
         missionId: mission.id,
-        actionUrl: `${env.get('FRONTEND_URL')}/missions/${mission.id}/tracking`,
+        actionUrl: `/missions/${mission.id}`,
         emailSent: false,
       })
 
@@ -202,7 +202,7 @@ export default class NotificationManagerService {
           transporteurId: previousTransporteurId,
           reason: reason,
         },
-        actionUrl: `${env.get('FRONTEND_URL')}/missions/${mission.id}`,
+        actionUrl: `/missions/${mission.id}`,
         emailSent: false,
       })
 
@@ -262,7 +262,7 @@ export default class NotificationManagerService {
         message:
           messageContent.length > 100 ? messageContent.substring(0, 100) + '...' : messageContent,
         priority: NotificationPriority.NORMAL,
-        actionUrl: `${env.get('FRONTEND_URL')}/messages`,
+        actionUrl: `/chat`,
         emailSent: false,
       })
 

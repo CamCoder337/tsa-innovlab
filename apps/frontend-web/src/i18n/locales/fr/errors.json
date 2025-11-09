@@ -77,7 +77,7 @@
     "downloadError": "Erreur lors du téléchargement de la facture",
     "selectVehicleError": "Veuillez sélectionner un véhicule",
     "applicationError": "Erreur lors de la candidature",
-    "fillAddressesForPricing": "Veuillez remplir les adresses, le poids et le volume pour calculer le prix dynamique",
+    "fillAddressesForPricing": "Veuillez remplir les adresses et le poids pour calculer le prix dynamique",
     "addressesNeedCoordinates": "Les adresses doivent avoir des coordonnées valides pour calculer la distance",
     "cannotCalculateDistance": "Impossible de calculer la distance entre les adresses",
     "dynamicPricingError": "Erreur lors du calcul du prix dynamique"

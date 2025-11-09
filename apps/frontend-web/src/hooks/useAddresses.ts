@@ -1,18 +1,7 @@
 import { useAddressStore } from '../stores/address.store';
-import { useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
 
 export const useAddresses = () => {
   const store = useAddressStore();
-  const { user } = useAuth();
-
-  // Auto-initialize on first use
-  useEffect(() => {
-    if (user) {
-      store.fetchAddresses();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   return {
     // State
@@ -25,8 +14,8 @@ export const useAddresses = () => {
     fetchAddresses: store.fetchAddresses,
     fetchAddress: store.fetchAddress,
     createAddress: store.createAddress,
-    updateAddressAsync: store.updateAddressAsync,
-    deleteAddressAsync: store.deleteAddressAsync,
+    updateAddress: store.updateAddress,
+    deleteAddress: store.deleteAddress,
 
     // Utility actions
     setLoading: store.setLoading,
@@ -36,9 +25,6 @@ export const useAddresses = () => {
 
     // Basic actions
     setAddresses: store.setAddresses,
-    addAddress: store.addAddress,
-    updateAddress: store.updateAddress,
-    deleteAddress: store.deleteAddress,
     setCurrentAddress: store.setCurrentAddress,
 
     // Utility methods
@@ -46,5 +32,6 @@ export const useAddresses = () => {
     searchAddresses: store.searchAddresses,
     getAddressesByCity: store.getAddressesByCity,
     getAddressesByRegion: store.getAddressesByRegion,
+    convertAddress: store.convertAddress,
   };
 };

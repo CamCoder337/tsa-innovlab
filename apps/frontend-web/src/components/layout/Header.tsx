@@ -221,7 +221,7 @@ export default function Header({ className }: { className?: string }) {
 
               {isInvite ? (
                 <>
-                  <Link to="/">
+                  <Link to="/login">
                     <DropdownMenuItem className="cursor-pointer">
                       <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{tAuth('login.label')}</span>
@@ -327,7 +327,7 @@ export default function Header({ className }: { className?: string }) {
 
               {isInvite && (
                 <>
-                  <Link to="/">
+                  <Link to="/login">
                     <DropdownMenuItem className="py-0 cursor-pointer flex flex-1 items-center px-2">
                       <div className="w-1/4">
                         <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />

@@ -115,7 +115,7 @@ export default function VerifyEmailForm({
             {/* Back to Login Link */}
             <div
               className="text-center text-tsa-blue dark:text-tsa-white hover:underline 
-                          font-medium text-sm transition-colors"
+                          font-medium text-sm transition-colors cursor-pointer"
               onClick={() => navigate(-1)}
             >
               {tForms('buttons.backToLogin')}

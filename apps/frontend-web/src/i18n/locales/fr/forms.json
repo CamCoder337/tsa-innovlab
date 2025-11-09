@@ -184,7 +184,8 @@
     "deliveryAddress": "Adresse de livraison",
     "calculatedDistance": "Distance calculée",
     "negotiationRange": "Fourchette de négociation",
-    "margin": "Marge"
+    "margin": "Marge",
+    "instructions": "Instructions"
   },
   "buttons": {
     "save": "Enregistrer",

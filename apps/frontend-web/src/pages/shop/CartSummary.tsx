@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -30,35 +29,49 @@ import {
   ArrowLeft,
   MapPin,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@/hooks/useCart';
 import { Label } from '@/components/ui/label';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import AddressPicker from '@/components/maps/AddressPicker';
-import { useAddressSelection } from '@/hooks/useAddressSelection';
 import PaymentForm from '@/components/forms/PaymentForm';
 import Facture from '@/components/invoice/Facture';
-import type { Payment, PaymentMethodType } from '@/types/payment.types';
+import type { Payment } from '@/types/payment.types';
 import { useOrders } from '@/hooks/useOrders';
-import { type Order } from '@/types/order.types';
+import { PaymentMethod, type Order } from '@/types/order.types';
 import { useAddresses } from '@/hooks/useAddresses';
-import { useShopTranslation } from '@/hooks/useTranslation';
+import {
+  useErrorsTranslation,
+  useFormsTranslation,
+  useShopTranslation,
+} from '@/hooks/useTranslation';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
+import { cn } from '@/lib/utils';
+import { useOrderStore } from '@/stores/orderStore';
+import { toast } from 'sonner';
 
-const OrderSchema = Yup.object().shape({
-  deliveryAddress: Yup.string().required('validation.addressRequired'),
-  deliveryCity: Yup.string().required('validation.cityRequired'),
-  deliveryPostalCode: Yup.string(),
-  deliveryNotes: Yup.string().max(200, 'validation.notesMaxLength'),
-  // Google Maps coordinates
-  latitude: Yup.number(),
-  longitude: Yup.number(),
-  placeId: Yup.string(),
-});
+const OrderSchema = (tForms: (key: string) => string) =>
+  Yup.object().shape({
+    deliveryAddress: Yup.object({
+      street: Yup.string().nullable(),
+      city: Yup.string().required(tForms('validation.required')),
+      postalCode: Yup.string().nullable(),
+      country: Yup.string().required(tForms('validation.required')),
+      label: Yup.string().required(tForms('validation.required')),
+      region: Yup.string().required(tForms('validation.required')),
+      latitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+      longitude: Yup.number().required(tForms('validation.coordinatesRequired')),
+    }).required(tForms('validation.addressRequired')),
+    deliveryNotes: Yup.string().max(200, tForms('validation.notesMaxLength')),
+  });
 
 export default function CartSummaryPage() {
+  const { addresses, currentAddress, setCurrentAddress, convertAddress } = useAddresses();
+  const { t: tErrors } = useErrorsTranslation();
+  const { t: tForms } = useFormsTranslation();
   const { t: tShop } = useShopTranslation();
+  const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState('');
   const [deliveryOption, setDeliveryOption] = useState('standard');
   const [showPayment, setShowPayment] = useState(false);
@@ -67,10 +80,11 @@ export default function CartSummaryPage() {
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [useManualAddress, setUseManualAddress] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH_ON_DELIVERY);
 
   const {
     cart,
+    fetchCart,
     updateQuantity,
     removeFromCart,
     getTotalPrice,
@@ -82,59 +96,33 @@ export default function CartSummaryPage() {
   } = useCart();
 
   const { createOrder } = useOrders();
-  const { createAddress } = useAddresses();
-
-  const {
-    selectedAddress,
-    isAddressSelected,
-    selectAddress,
-    clearAddress,
-    getFormattedAddress,
-    getAddressComponents,
-  } = useAddressSelection();
 
   const formik = useFormik({
     initialValues: {
-      deliveryAddress: '',
-      deliveryCity: '',
-      deliveryPostalCode: '',
+      deliveryAddress: {
+        street: '',
+        city: '',
+        region: '',
+        country: '',
+        postalCode: '',
+        label: '',
+        latitude: null,
+        longitude: null,
+        id: null,
+      },
       deliveryNotes: '',
-      latitude: 0,
-      longitude: 0,
-      placeId: '',
     },
-    validationSchema: OrderSchema,
+    validationSchema: OrderSchema(tForms),
     onSubmit: async (values) => {
-      console.log('Order submission:', {
-        ...values,
-        selectedAddress,
-        coordinates: selectedAddress
-          ? {
-              lat: selectedAddress.latitude,
-              lng: selectedAddress.longitude,
-            }
-          : null,
-      });
+      console.log('Order submission:', { ...values });
       setShowPayment(true);
     },
   });
 
-  // Update form when address is selected from Google Maps
   useEffect(() => {
-    if (selectedAddress && !useManualAddress) {
-      const components = getAddressComponents();
-      formik.setValues({
-        ...formik.values,
-        deliveryAddress: getFormattedAddress(),
-        deliveryCity: components.city,
-        deliveryPostalCode: components.postal_code,
-        latitude: selectedAddress.latitude,
-        longitude: selectedAddress.longitude,
-        placeId: selectedAddress.place_id,
-      });
-    }
+    fetchCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAddress, useManualAddress]);
+  }, []);
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     updateQuantity(productId, newQuantity);
@@ -173,65 +161,48 @@ export default function CartSummaryPage() {
         }
       };
 
-      // Generate UUIDs for addresses (since we don't have real API yet)
-      const generateUUID = () => {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-          const r = (Math.random() * 16) | 0;
-          const v = c == 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
-      };
-
-      const shippingAddressId = generateUUID();
-      const billingAddressId = generateUUID();
-
       // Create shipping address first
       const shippingAddressData = {
-        id: shippingAddressId,
-        street: formik.values.deliveryAddress,
-        city: formik.values.deliveryCity,
-        region: formik.values.deliveryCity, // Using city as region for now
-        country: 'Cameroun', // Default country
-        postalCode: formik.values.deliveryPostalCode || '',
-        latitude: formik.values.latitude || 0,
-        longitude: formik.values.longitude || 0,
-        label: formik.values.deliveryAddress,
-        placeId: formik.values.placeId, // Store Google Places ID separately
+        street: formik.values.deliveryAddress.street,
+        city: formik.values.deliveryAddress.city,
+        region: formik.values.deliveryAddress.region, // Using city as region for now
+        country: formik.values.deliveryAddress.country || 'Cameroun', // Default country
+        postalCode: formik.values.deliveryAddress.postalCode || '',
+        latitude: formik.values.deliveryAddress.latitude || 0,
+        longitude: formik.values.deliveryAddress.longitude || 0,
+        label: formik.values.deliveryAddress.label, // Store Google Places ID separately
       };
-
-      const shippingAddressCreated = await createAddress(shippingAddressData);
-      if (!shippingAddressCreated) {
-        throw new Error('Failed to create shipping address');
-      }
 
       // For billing, use the same address data but with different ID and label
       const billingAddressData = {
-        id: billingAddressId,
-        street: formik.values.deliveryAddress,
-        city: formik.values.deliveryCity,
-        region: formik.values.deliveryCity,
-        country: 'Cameroun',
-        postalCode: formik.values.deliveryPostalCode || '',
-        latitude: formik.values.latitude || 0,
-        longitude: formik.values.longitude || 0,
-        label: 'Billing Address',
-        placeId: formik.values.placeId,
+        street: formik.values.deliveryAddress.street,
+        city: formik.values.deliveryAddress.city,
+        region: formik.values.deliveryAddress.region, // Using city as region for now
+        country: formik.values.deliveryAddress.country || 'Cameroun', // Default country
+        postalCode: formik.values.deliveryAddress.postalCode || '',
+        latitude: formik.values.deliveryAddress.latitude || 0,
+        longitude: formik.values.deliveryAddress.longitude || 0,
+        label: formik.values.deliveryAddress.label,
       };
 
-      const billingAddressCreated = await createAddress(billingAddressData);
-      if (!billingAddressCreated) {
-        throw new Error('Failed to create billing address');
-      }
-
       const orderData = {
-        shippingAddressId: shippingAddressId, // Use the generated UUID
-        billingAddressId: billingAddressId, // Use the generated UUID
+        shippingAddressId: formik.values.deliveryAddress.id, // Use the generated UUID
+        billingAddressId: formik.values.deliveryAddress.id,
+        shippingAddress: shippingAddressData, // Use the generated UUID
+        billingAddress: billingAddressData, // Use the generated UUID
         paymentMethod: getPaymentMethod(payment.method),
         notes: formik.values.deliveryNotes || undefined,
       };
-
-      console.log('Order data to send:', orderData);
       const order = await createOrder(orderData);
+
+      const { error } = useOrderStore.getState();
+
+      if (error) {
+        console.error(error);
+        toast.error(error || tErrors('general.somethingWentWrong'));
+        return null;
+      }
+
       return order;
     } catch (error) {
       console.error('Failed to create order:', error);
@@ -255,21 +226,9 @@ export default function CartSummaryPage() {
         <Facture
           payment={completedPayment}
           order={createdOrder}
-          orderNumber={createdOrder.orderNumber}
-          items={cart.items}
-          deliveryAddress={{
-            address: selectedAddress?.formatted_address || formik.values.deliveryAddress,
-            city: formik.values.deliveryCity,
-            postalCode: formik.values.deliveryPostalCode,
-            country: 'Cameroun',
-          }}
+          deliveryAddress={currentAddress!}
           deliveryOption={deliveryOption}
           deliveryFee={deliveryFee}
-          customerInfo={{
-            name: 'Client TSA', // You can get this from auth context
-            email: 'client@example.com', // You can get this from auth context
-            phone: '+237 6XX XXX XXX', // You can get this from form or auth context
-          }}
           onDownload={() => {
             console.log('Download PDF');
             // Implement PDF download functionality
@@ -288,18 +247,33 @@ export default function CartSummaryPage() {
             setOrderNumber('');
             // Clear cart after successful order
             clearCart();
+            navigate('/app/shop/orders/' + createdOrder.id);
           }}
         />
       </main>
     );
   }
 
+  const clearAddress = () => {
+    formik.setFieldValue('deliveryAddress', {
+      street: '',
+      city: '',
+      region: '',
+      country: '',
+      postalCode: '',
+      label: '',
+      latitude: null,
+      longitude: null,
+      id: null,
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 flex-1 flex-col p-3 sm:p-4 lg:p-6">
       <div className="w-full">
         <div className="container mx-auto px-2 sm:px-4">
           {/* Header */}
-          <div className="mb-4 sm:mb-6">
+          <div className="mb-3">
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <Link to="/shop">
                 <Button
@@ -311,10 +285,10 @@ export default function CartSummaryPage() {
                   <span className="hidden sm:inline">{tShop('cart.continueShopping')}</span>
                 </Button>
               </Link>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                {tShop('cart.title')}
+              </h1>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {tShop('cart.title')}
-            </h1>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
               {tShop('cart.reviewItems')}
             </p>
@@ -352,16 +326,16 @@ export default function CartSummaryPage() {
               ) : (
                 <>
                   {cart.items.map((item) => (
-                    <Card key={item.productId}>
-                      <CardContent className="p-4 lg:p-6">
+                    <Card key={item.productId} className="py-3">
+                      <CardContent className="p-2 lg:p-4">
                         <div className="flex items-center gap-4">
                           <img
                             src={item.product?.images[0] || item.product?.imageUrl || ''}
                             alt={item.product?.name || ''}
                             className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                           />
-                          <div className="flex-1 min-w-0 text-left">
-                            <h3 className="font-semibold text-base sm:text-lg mb-1 truncate">
+                          <div className="flex flex-1 flex-col sm:min-w-0 text-left gap-1">
+                            <h3 className="font-semibold text-base sm:text-lg mb-1">
                               {item.product?.name || ''}
                             </h3>
                             <div className="flex flex-wrap items-center justify-start gap-2 mb-3">
@@ -372,7 +346,7 @@ export default function CartSummaryPage() {
                                 {item.product?.unit || ''}
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 mb-2">
                               <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
@@ -410,9 +384,30 @@ export default function CartSummaryPage() {
                                 </Button>
                               </div>
                             </div>
+                            <div className="sm:hidden w-full flex justify-betwween">
+                              <div className="flex flex-col gap-1 mb-2 w-full relative">
+                                <p className="text-base sm:text-lg font-bold">
+                                  {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
+                                  FCFA
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {parseFloat(item.priceAtAdd)} FCFA {tShop('cart.item.each')}
+                                </p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 w-auto"
+                                disabled={isLoading}
+                              >
+                                <Trash2 className="h-4 w-4 mr-0" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="text-right w-auto">
-                            <div className="flex flex-col items-end gap-1 mb-2">
+
+                          <div className="hidden sm:flex text-right w-auto">
+                            <div className="flex flex-col sm:items-end gap-1 mb-2">
                               <p className="text-base sm:text-lg font-bold">
                                 {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()}{' '}
                                 FCFA
@@ -454,15 +449,6 @@ export default function CartSummaryPage() {
                             setUseManualAddress(!useManualAddress);
                             if (!useManualAddress) {
                               clearAddress();
-                              formik.setValues({
-                                ...formik.values,
-                                deliveryAddress: '',
-                                deliveryCity: '',
-                                deliveryPostalCode: '',
-                                latitude: 0,
-                                longitude: 0,
-                                placeId: '',
-                              });
                             }
                           }}
                           className="text-xs w-auto"
@@ -487,123 +473,97 @@ export default function CartSummaryPage() {
                               {tShop('cart.delivery.searchAddress')} *
                             </Label>
                             <AddressPicker
-                              onAddressSelect={selectAddress}
+                              selectedAddress={formik.values.deliveryAddress}
+                              onAddressSelect={(addressDetails) => {
+                                formik.setFieldTouched('deliveryAddress', true);
+                                const convertedAddress = convertAddress(addressDetails);
+                                formik.setFieldValue('deliveryAddress', convertedAddress);
+                              }}
                               onClear={clearAddress}
                               placeholder={tShop('cart.delivery.addressPlaceholder')}
-                              value={getFormattedAddress()}
                               showMap={true}
                               className="mt-2"
                             />
-                            {formik.touched.deliveryAddress &&
-                              formik.errors.deliveryAddress &&
-                              !isAddressSelected && (
-                                <p className="text-xs sm:text-sm text-red-600 mt-1">
-                                  {formik.errors.deliveryAddress}
-                                </p>
-                              )}
+                            {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
+                              <p className="text-xs sm:text-sm text-red-600 mt-1">
+                                {tForms('validation.addressRequired')}
+                              </p>
+                            )}
                           </div>
-
-                          {isAddressSelected && (
+                          {formik.values.deliveryAddress && (
                             <div className="p-3 bg-green-50 border dark:border-gray-800 border-green-200 rounded-lg">
                               <div className="flex items-start gap-2">
                                 <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs sm:text-sm font-medium text-green-800">
-                                    {tShop('cart.delivery.addressSelected')}
+                                  <p className="font-medium truncate">
+                                    {formik.values.deliveryAddress.label}
                                   </p>
-                                  <p className="text-xs sm:text-sm text-green-700 truncate">
-                                    {selectedAddress?.label}
+                                  <p className="truncate">{formik.values.deliveryAddress.street}</p>
+                                  <p className="truncate">
+                                    {formik.values.deliveryAddress.postalCode}{' '}
+                                    {formik.values.deliveryAddress.city}
                                   </p>
-                                  <p className="text-xs sm:text-sm text-green-700 truncate">
-                                    {selectedAddress?.formatted_address}
+                                  {formik.values.deliveryAddress.region && (
+                                    <p className="truncate">
+                                      {formik.values.deliveryAddress.region}
+                                    </p>
+                                  )}
+                                  <p className="truncate">
+                                    {formik.values.deliveryAddress.country}
                                   </p>
-                                  <div className="mt-1 text-xs text-green-600">
-                                    {tShop('cart.delivery.coordinates')}:{' '}
-                                    {selectedAddress?.latitude.toFixed(6)},{' '}
-                                    {selectedAddress?.longitude.toFixed(6)}
-                                  </div>
+                                  <p className="text-xs text-gray-500 mt-1 truncate">
+                                    {tForms('labels.coordinates')}:{' '}
+                                    {Number(formik.values.deliveryAddress.latitude)?.toFixed(6)},{' '}
+                                    {Number(formik.values.deliveryAddress.longitude)?.toFixed(6)}
+                                  </p>
                                 </div>
                               </div>
                             </div>
                           )}
                         </>
                       ) : (
-                        <>
-                          <div>
-                            <Label htmlFor="deliveryAddress" className="text-xs sm:text-sm">
-                              {tShop('cart.delivery.address')} *
-                            </Label>
-                            <Textarea
-                              id="deliveryAddress"
-                              name="deliveryAddress"
-                              placeholder={tShop('cart.delivery.fullAddress')}
-                              value={formik.values.deliveryAddress}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
-                              rows={3}
-                              className={`text-sm ${
-                                formik.touched.deliveryAddress && formik.errors.deliveryAddress
-                                  ? 'border-red-500'
-                                  : ''
-                              }`}
-                            />
-                            {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
-                              <p className="text-xs sm:text-sm text-red-600 mt-1">
-                                {formik.errors.deliveryAddress}
-                              </p>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                            <div>
-                              <Label htmlFor="deliveryCity" className="text-xs sm:text-sm">
-                                {tShop('cart.delivery.city')} *
-                              </Label>
-                              <Input
-                                id="deliveryCity"
-                                name="deliveryCity"
-                                placeholder={tShop('cart.delivery.cityPlaceholder')}
-                                value={formik.values.deliveryCity}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`text-sm ${
-                                  formik.touched.deliveryCity && formik.errors.deliveryCity
-                                    ? 'border-red-500'
-                                    : ''
-                                }`}
-                              />
-                              {formik.touched.deliveryCity && formik.errors.deliveryCity && (
-                                <p className="text-xs sm:text-sm text-red-600 mt-1">
-                                  {formik.errors.deliveryCity}
-                                </p>
+                        <div>
+                          <Label htmlFor="deliveryAddress" className="text-xs sm:text-sm">
+                            {tShop('cart.delivery.address')} *
+                          </Label>
+                          <Select
+                            value={formik.values.deliveryAddress.id || ''}
+                            onValueChange={(value) => {
+                              const selectedAddress = addresses.find((addr) => addr.id === value);
+                              if (selectedAddress)
+                                formik.setFieldValue('deliveryAddress', selectedAddress);
+                            }}
+                          >
+                            <SelectTrigger
+                              className={cn(
+                                'pl-10',
+                                'w-full',
+                                formik.touched.deliveryAddress &&
+                                  formik.errors.deliveryAddress &&
+                                  'border-red-500'
                               )}
-                            </div>
-                            <div>
-                              <Label htmlFor="deliveryPostalCode" className="text-xs sm:text-sm">
-                                {tShop('cart.delivery.postalCode')} *
-                              </Label>
-                              <Input
-                                id="deliveryPostalCode"
-                                name="deliveryPostalCode"
-                                placeholder={tShop('cart.delivery.postalCodePlaceholder')}
-                                value={formik.values.deliveryPostalCode}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`text-sm ${
-                                  formik.touched.deliveryPostalCode &&
-                                  formik.errors.deliveryPostalCode
-                                    ? 'border-red-500'
-                                    : ''
-                                }`}
+                            >
+                              <SelectValue
+                                placeholder={
+                                  formik.values.deliveryAddress?.label ||
+                                  tForms('placeholders.selectAddress')
+                                }
                               />
-                              {formik.touched.deliveryPostalCode &&
-                                formik.errors.deliveryPostalCode && (
-                                  <p className="text-xs sm:text-sm text-red-600 mt-1">
-                                    {formik.errors.deliveryPostalCode}
-                                  </p>
-                                )}
-                            </div>
-                          </div>
-                        </>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {addresses.map((address) => (
+                                <SelectItem key={address.id} value={address.id}>
+                                  {address.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
+                            <p className="text-xs sm:text-sm text-red-600 mt-1">
+                              {tForms('validation.addressRequired')}
+                            </p>
+                          )}
+                        </div>
                       )}
                       <div>
                         <Label htmlFor="deliveryNotes" className="text-xs sm:text-sm">
@@ -699,26 +659,21 @@ export default function CartSummaryPage() {
                       className="w-full gap-2"
                       type="button"
                       style={{ backgroundColor: 'var(--tsa-blue)' }}
-                      disabled={isEmpty() || isLoading || (!useManualAddress && !isAddressSelected)}
+                      disabled={isEmpty() || isLoading || Object.keys(formik.errors).length > 0}
                       onClick={() => {
-                        console.log('Test');
                         const validationErrors = formik.validateForm();
                         console.error(validationErrors);
                         if (Object.keys(validationErrors).length === 0) {
                           formik.handleSubmit();
                         } else {
-                          formik.setTouched({
-                            deliveryAddress: true,
-                            deliveryCity: true,
-                            deliveryPostalCode: true,
-                          });
+                          formik.setFieldTouched('deliveryAddress', true);
                         }
                       }}
                     >
                       <CreditCard className="h-4 w-4" />
                       {tShop('cart.orderSummary.proceedToCheckout')}
                     </Button>
-                    {!useManualAddress && !isAddressSelected && (
+                    {formik.touched.deliveryAddress && formik.errors.deliveryAddress && (
                       <p className="text-xs text-amber-600 text-center mt-1">
                         {tShop('cart.delivery.selectAddressRequired')}
                       </p>
@@ -761,8 +716,8 @@ export default function CartSummaryPage() {
       {/* Payment Dialog */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogDescription className="hidden"> Finaliser le paiement </DialogDescription>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <DialogHeader className="space-y-4 flex flex-1">
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
@@ -771,9 +726,9 @@ export default function CartSummaryPage() {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col flex-1">
             {/* Order Summary in Dialog */}
-            <div className="bg-gray-50 dark:bg-gray-950 rounded-lg p-4">
+            <div className="bg-gray-50 dark:bg-gray-950 rounded-lg p-2 sm:p-4">
               <h3 className="font-semibold text-lg mb-3">{tShop('payment.orderSummary')}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -806,6 +761,7 @@ export default function CartSummaryPage() {
                 if (order) {
                   setCreatedOrder(order);
                   setOrderNumber(order.orderNumber);
+                  setCurrentAddress(order.shippingAddress);
                   setCompletedPayment(payment);
                   setPaymentSuccess(true);
                   setShowPayment(false);

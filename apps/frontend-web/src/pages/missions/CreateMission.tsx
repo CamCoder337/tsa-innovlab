@@ -51,8 +51,6 @@ export default function CreateMission() {
           return;
         }
 
-        console.log('no Error');
-
         if ((currentMission || missionId) && action === 'update') {
           toast.success(tMissions('messages.modifiedSuccess'));
         } else {

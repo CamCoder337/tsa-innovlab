@@ -19,6 +19,7 @@ import {
 import type { NotificationPriority, NotificationType } from '@/types/notification.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 
 interface NotificationCenterProps {
   className?: string;
@@ -38,17 +39,24 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     deleteNotification,
     clearError,
   } = useNotifications();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
   const unreadCount = stats?.unread || 0;
   const filteredNotifications =
-    filter === 'unread' ? notifications?.filter((n) => !n.readAt) : notifications;
+    filter === 'unread' ? notifications?.filter((n) => !n.isRead) : notifications;
 
   const handleNotificationClick = async (notificationId: string) => {
     const notification = notifications.find((n) => n.id === notificationId);
-    if (notification && !notification.readAt) {
-      await markNotificationRead(notificationId);
+    if (notification) {
+      if (!notification.isRead) await markNotificationRead(notificationId);
+      if (notification.actionUrl) {
+        if (
+          ['mission_new', 'missions_assigned', 'mission_status_changed'].includes(notification.type)
+        )
+          navigate('/app' + notification.actionUrl);
+      }
     }
   };
 
@@ -184,7 +192,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                   <div
                     key={notification.id}
                     className={`p-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.readAt ? 'bg-blue-50' : ''
+                      !notification.isRead ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => handleNotificationClick(notification.id)}
                   >
@@ -202,7 +210,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                         <div className="flex items-center justify-between mb-1">
                           <h4
                             className={`text-sm font-medium truncate ${
-                              !notification.readAt ? 'text-gray-900' : 'text-gray-600'
+                              !notification.isRead ? 'text-gray-900' : 'text-gray-600'
                             }`}
                           >
                             {notification.title}
@@ -222,7 +230,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
 
                         <p
                           className={`text-xs break-words ${
-                            !notification.readAt ? 'text-gray-700' : 'text-gray-500'
+                            !notification.isRead ? 'text-gray-700' : 'text-gray-500'
                           }`}
                         >
                           {notification.message || 'Pas de message'}
@@ -245,7 +253,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
                               {getPriorityLabel(notification.priority)}
                             </span>
                           </div>
-                          {!notification.readAt && (
+                          {!notification.isRead && (
                             <div className="w-2 h-2 bg-tsa-blue/90 rounded-full" />
                           )}
                         </div>

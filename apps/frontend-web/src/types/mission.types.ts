@@ -1,5 +1,5 @@
 import type { Timestamps } from './common.types';
-import type { Address } from './address.types';
+import type { Address, CreateAddressDto } from './address.types';
 import type { User } from './auth.types';
 import type { Vehicle, VehicleType } from './vehicle.types';
 
@@ -65,13 +65,13 @@ export interface CreateMissionDto {
   affreteurId: string;
   description?: string;
   typeMarchandise?: string;
-  poids?: number;
+  poids: number;
   volume?: number;
-  dateDepartEstime?: string;
-  dateArriveePrevue?: string;
-  adresseDepart?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
-  adresseArrivee?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
-  budgetMin?: number;
+  dateDepartEstime: string;
+  dateArriveePrevue: string;
+  adresseDepart: Address | CreateAddressDto;
+  adresseArrivee: Address | CreateAddressDto;
+  budgetMin: number;
   budgetMax?: number;
   requiredVehicleType?: VehicleType;
 }

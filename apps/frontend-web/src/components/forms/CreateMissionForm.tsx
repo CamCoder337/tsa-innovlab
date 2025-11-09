@@ -12,7 +12,17 @@ import {
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Package, DollarSign, Clock, X, Calculator, Loader2 } from 'lucide-react';
+import {
+  CalendarIcon,
+  Package,
+  DollarSign,
+  Plus,
+  MapPin,
+  Clock,
+  X,
+  Calculator,
+  Loader2,
+} from 'lucide-react';
 import type {
   CreateMissionDto,
   DynamicPricingRequest,
@@ -25,13 +35,13 @@ import { cn } from '@/lib/utils';
 import { useState, Suspense, lazy, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUsers } from '@/hooks/useUsers';
-import type { Address } from '@/types/address.types';
+import type { Address, AddressDetails, CreateAddressDto } from '@/types/address.types';
 import { useMissions } from '@/hooks/useMissions';
 import { missionService } from '@/services/mission.service';
 import { GoogleMapsService } from '@/services/google-maps.service';
 import { toast } from 'sonner';
 import { useErrorsTranslation, useFormsTranslation } from '@/hooks/useTranslation';
-import type { AddressDetails } from '@/components/maps/AddressPicker';
+import { useAddresses } from '@/hooks/useAddresses';
 
 // Lazy load ModernAddressPicker with Suspense for client-side rendering
 const AddressPicker = lazy(() => import('@/components/maps/AddressPicker'));
@@ -48,7 +58,7 @@ const AddressPickerLoading = () => {
 
 // Define props type for ClientSideAddressPicker
 interface AddressPickerProps {
-  selectedAddress?: Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
+  selectedAddress?: Address | CreateAddressDto;
   onAddressSelect: (address: AddressDetails) => void;
   onClear?: () => void;
   placeholder?: string;
@@ -109,10 +119,7 @@ const validationSchema = (tForms: (key: string, options?: Record<string, unknown
       .min(0, tForms('validation.positive'))
       .required(tForms('validation.required'))
       .nullable(),
-    volume: Yup.number()
-      .min(0, tForms('validation.positive'))
-      .required(tForms('validation.required'))
-      .nullable(),
+    volume: Yup.number().min(0, tForms('validation.positive')).nullable(),
     dateDepartEstime: Yup.date()
       .required(tForms('validation.required'))
       .typeError(tForms('validation.date')),
@@ -151,30 +158,17 @@ export interface CreateMissionFormProps {
   addresses: Address[];
 }
 
-// Type for the form data when creating a new address
-type NewAddressFormData = Omit<Address, 'id' | 'createdAt' | 'updatedAt'>;
-
-// Helper function to convert AddressDetails to Address format
-const convertAddressDetailsToAddress = (addressDetails: AddressDetails): NewAddressFormData => {
-  console.log(addressDetails);
-  return {
-    label: addressDetails.label || addressDetails.formatted_address || 'Nouvelle adresse',
-    street: `${addressDetails.street_number || ''}`.trim() || '',
-    city: addressDetails.locality || '',
-    region: addressDetails.administrative_area_level_1 || '',
-    country: addressDetails.country || '',
-    postalCode: addressDetails.postal_code || '',
-    latitude: addressDetails.latitude,
-    longitude: addressDetails.longitude,
-  };
-};
-
 export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMissionFormProps) {
   const { user } = useAuth();
+  const { addresses, convertAddress } = useAddresses();
   const { getUsersByRole } = useUsers();
   const { currentMission } = useMissions();
   const { t: tForms } = useFormsTranslation();
   const { t: tErrors } = useErrorsTranslation();
+
+  const [showNewAddressForm, setShowNewAddressForm] = useState<'departure' | 'arrival' | null>(
+    null
+  );
 
   // Dynamic pricing state
   const [dynamicPricing, setDynamicPricing] = useState<DynamicPricingResponse | null>(null);
@@ -186,7 +180,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
     description: currentMission?.description || '',
     typeMarchandise: currentMission?.typeMarchandise || '',
-    poids: currentMission?.poids || undefined,
+    poids: currentMission?.poids || 0,
     volume: currentMission?.volume || undefined,
     dateDepartEstime: currentMission?.dateDepartEstime || '',
     dateArriveePrevue: currentMission?.dateArriveePrevue || '',
@@ -215,13 +209,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
   };
 
   // Calculate dynamic pricing
-  const calculateDynamicPricing = async (formValues: CreateMissionDto) => {
-    if (
-      !formValues.adresseDepart ||
-      !formValues.adresseArrivee ||
-      !formValues.poids ||
-      !formValues.volume
-    ) {
+  const calculateDynamicPricing = async (
+    formValues: CreateMissionDto,
+    autoApply = false,
+    setFieldValue?: (field: string, value: number) => void
+  ) => {
+    if (!formValues.adresseDepart || !formValues.adresseArrivee || !formValues.poids) {
       toast.error(tErrors('missions.fillAddressesForPricing'));
       return;
     }
@@ -243,12 +236,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
       const googleMapsService = new GoogleMapsService();
       const distanceResult = await googleMapsService.calculateDistanceWithDirections(
         {
-          lat: formValues.adresseDepart.latitude,
-          lng: formValues.adresseDepart.longitude,
+          lat: Number(formValues.adresseDepart.latitude),
+          lng: Number(formValues.adresseDepart.longitude),
         },
         {
-          lat: formValues.adresseArrivee.latitude,
-          lng: formValues.adresseArrivee.longitude,
+          lat: Number(formValues.adresseArrivee.latitude),
+          lng: Number(formValues.adresseArrivee.longitude),
         }
       );
 
@@ -256,12 +249,12 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
         // Fallback to straight-line distance if directions fail
         const straightLineDistance = await googleMapsService.calculateDistance(
           {
-            lat: formValues.adresseDepart.latitude,
-            lng: formValues.adresseDepart.longitude,
+            lat: Number(formValues.adresseDepart.latitude),
+            lng: Number(formValues.adresseDepart.longitude),
           },
           {
-            lat: formValues.adresseArrivee.latitude,
-            lng: formValues.adresseArrivee.longitude,
+            lat: Number(formValues.adresseArrivee.latitude),
+            lng: Number(formValues.adresseArrivee.longitude),
           }
         );
 
@@ -274,8 +267,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
         const estimatedDistance = Math.round(straightLineDistance * 1.3);
 
         const pricingRequest: DynamicPricingRequest = {
-          origin: formValues.adresseDepart.label,
-          destination: formValues.adresseArrivee.label,
+          origin: formValues.adresseDepart.label!,
+          destination: formValues.adresseArrivee.label!,
           distance_km: estimatedDistance,
           weight_tons: formValues.poids,
           cargo_type: formValues.typeMarchandise || 'general',
@@ -295,6 +288,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
         } else if (response.data) {
           setDynamicPricing(response.data);
           setShowDynamicPricing(true);
+          if (autoApply && setFieldValue) {
+            setFieldValue('budgetMin', response.data.calculated_price);
+          }
           toast.success(
             `${tForms('messages.dynamicPricingCalculated')} (Distance estimée: ${estimatedDistance} km)`
           );
@@ -302,8 +298,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
       } else {
         // Use actual driving distance from Google Directions API
         const pricingRequest: DynamicPricingRequest = {
-          origin: formValues.adresseDepart.label,
-          destination: formValues.adresseArrivee.label,
+          origin: formValues.adresseDepart.label!,
+          destination: formValues.adresseArrivee.label!,
           distance_km: distanceResult.distance,
           weight_tons: formValues.poids,
           cargo_type: formValues.typeMarchandise || 'general',
@@ -323,6 +319,10 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
         } else if (response.data) {
           setDynamicPricing(response.data);
           setShowDynamicPricing(true);
+          if (autoApply) {
+            // Auto-apply pricing when called from useEffect
+            return response.data;
+          }
           toast.success(
             `${tForms('messages.dynamicPricingCalculated')} (Distance: ${distanceResult.distance} km, Durée: ${Math.round(distanceResult.duration / 60)}h${distanceResult.duration % 60}min)`
           );
@@ -373,16 +373,26 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
       {({ values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched }) => {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         useEffect(() => {
-          if (values.adresseDepart) {
-            console.log(values.adresseDepart);
+          if (
+            (!currentMission && values.budgetMin > 0) ||
+            currentMission?.budgetMin !== values.budgetMin ||
+            currentMission?.adresseDepart?.latitude !== values.adresseDepart.latitude ||
+            currentMission?.adresseDepart?.longitude !== values.adresseDepart.longitude ||
+            currentMission?.adresseArrivee?.latitude !== values.adresseArrivee.latitude ||
+            currentMission?.adresseArrivee?.longitude !== values.adresseArrivee.longitude ||
+            currentMission?.poids !== values.poids
+          ) {
+            calculateDynamicPricing(values, true, setFieldValue);
+            applyDynamicPricing(setFieldValue);
           }
-          if (values.adresseArrivee) {
-            console.log(values.adresseArrivee);
-          }
-          if (errors) {
-            console.error(errors);
-          }
-        }, [values.adresseDepart, values.adresseArrivee, errors]);
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [
+          values.adresseDepart.latitude,
+          values.adresseDepart.longitude,
+          values.adresseArrivee.latitude,
+          values.adresseArrivee.longitude,
+          values.poids,
+        ]);
 
         return (
           <Form className="space-y-4 sm:space-y-6">
@@ -449,67 +459,130 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
-                      <div className="flex flex-1 justify-between items-center mb-3 sm:mb-4">
-                        <h1 className="font-medium text-sm sm:text-base">
-                          {tForms('labels.departureAddress')}
-                        </h1>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart)
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        <div className="flex flex-col space-y-2 w-full">
-                          <Label htmlFor="label" className="text-xs sm:text-sm">
-                            {tForms('labels.addressLabel')}
-                          </Label>
-                          <Input
-                            name="label"
-                            value={values.adresseDepart!.label}
-                            onChange={(e) => handleNewAddressChange(e, 'departure', setFieldValue)}
-                            onBlur={handleBlur}
-                            placeholder={tForms('placeholders.addressLabel')}
-                            className={cn(
-                              'w-full',
-                              (touched.adresseDepart || touched.adresseDepart) &&
-                                errors.adresseDepart &&
-                                'border-red-500'
-                            )}
-                          />
+                    {showNewAddressForm === 'departure' ? (
+                      <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                        <div className="flex flex-1 justify-between items-center mb-3 sm:mb-4">
+                          <h1 className="font-medium text-sm sm:text-base">
+                            {tForms('labels.departureAddress')}
+                          </h1>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowNewAddressForm(null);
+                              setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <div>
-                          <Label className="text-xs sm:text-sm">
-                            {tForms('labels.selectWithGoogleMaps')}
-                          </Label>
-                          <div className="mt-2">
-                            <ClientSideAddressPicker
-                              selectedAddress={values.adresseDepart}
-                              onAddressSelect={(addressDetails) => {
-                                setFieldTouched('adresseDepart', true);
-                                const convertedAddress =
-                                  convertAddressDetailsToAddress(addressDetails);
-                                setFieldValue('adresseDepart', convertedAddress);
-                              }}
-                              onClear={() =>
-                                setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart)
+                        <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                          <div className="flex flex-col space-y-2 w-full">
+                            <Label htmlFor="label" className="text-xs sm:text-sm">
+                              {tForms('labels.addressLabel')}
+                            </Label>
+                            <Input
+                              name="label"
+                              value={values.adresseDepart!.label}
+                              onChange={(e) =>
+                                handleNewAddressChange(e, 'departure', setFieldValue)
                               }
-                              placeholder={tForms('placeholders.searchDepartureAddress')}
-                              showMap={true}
-                              className="w-full"
+                              onBlur={handleBlur}
+                              placeholder={tForms('placeholders.addressLabel')}
+                              className={cn(
+                                'w-full',
+                                (touched.adresseDepart || touched.adresseDepart) &&
+                                  errors.adresseDepart &&
+                                  'border-red-500'
+                              )}
                             />
                           </div>
                         </div>
+                        <div className="space-y-3 sm:space-y-4">
+                          <div>
+                            <Label className="text-xs sm:text-sm">
+                              {tForms('labels.selectWithGoogleMaps')}
+                            </Label>
+                            <div className="mt-2">
+                              <ClientSideAddressPicker
+                                selectedAddress={values.adresseDepart}
+                                onAddressSelect={(addressDetails) => {
+                                  setFieldTouched('adresseDepart', true);
+                                  const convertedAddress = convertAddress(addressDetails);
+                                  setFieldValue('adresseDepart', convertedAddress);
+                                }}
+                                onClear={() =>
+                                  setFieldValue('adresseDepart', INITIAL_VALUES.adresseDepart)
+                                }
+                                placeholder={tForms('placeholders.searchDepartureAddress')}
+                                showMap={true}
+                                className="w-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                        <div className="flex flex-1 justify-between items-center mb-3 sm:mb-4">
+                          <h1 className="font-medium text-sm sm:text-base">
+                            {tForms('labels.departureAddress')}
+                          </h1>
+                        </div>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Select
+                            value={
+                              'id' in values.adresseDepart && values.adresseDepart.id
+                                ? values.adresseDepart.id
+                                : ''
+                            }
+                            onValueChange={(value) => {
+                              if (value === 'new') {
+                                setShowNewAddressForm('departure');
+                              } else {
+                                const selectedAddress = addresses.find((addr) => addr.id === value);
+                                if (selectedAddress)
+                                  setFieldValue('adresseDepart', selectedAddress);
+                              }
+                            }}
+                          >
+                            <SelectTrigger
+                              className={cn(
+                                'pl-10',
+                                'w-full',
+                                touched.adresseDepart && errors.adresseDepart && 'border-red-500'
+                              )}
+                            >
+                              <SelectValue
+                                placeholder={
+                                  values.adresseDepart?.label ||
+                                  tForms('placeholders.selectAddress')
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {addresses.map((address) => (
+                                <SelectItem key={address.id} value={address.id}>
+                                  {address.label}
+                                </SelectItem>
+                              ))}
+                              <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                <button
+                                  type="button"
+                                  className="flex w-full items-center gap-2 text-primary"
+                                  onClick={() => setShowNewAddressForm('departure')}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  <span>{tForms('labels.newAddress')}</span>
+                                </button>
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
 
                     {values.adresseDepart && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs sm:text-sm">
@@ -538,67 +611,129 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                   </div>
 
                   <div>
-                    <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
-                      <div className="flex justify-between items-center mb-3 sm:mb-4">
-                        <h1 className="font-medium text-sm sm:text-base">
-                          {tForms('labels.arrivalAddress')}
-                        </h1>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee)
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-                        <div className="flex flex-col space-y-2 w-full">
-                          <Label htmlFor="label" className="text-xs sm:text-sm">
-                            {tForms('labels.addressLabel')}
-                          </Label>
-                          <Input
-                            name="label"
-                            value={values.adresseArrivee!.label}
-                            onChange={(e) => handleNewAddressChange(e, 'arrival', setFieldValue)}
-                            onBlur={handleBlur}
-                            placeholder={tForms('placeholders.addressLabel')}
-                            className={cn(
-                              'w-full',
-                              (touched.adresseArrivee || touched.adresseArrivee) &&
-                                errors.adresseArrivee &&
-                                'border-red-500'
-                            )}
-                          />
+                    {showNewAddressForm === 'arrival' ? (
+                      <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                        <div className="flex justify-between items-center mb-3 sm:mb-4">
+                          <h1 className="font-medium text-sm sm:text-base">
+                            {tForms('labels.arrivalAddress')}
+                          </h1>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowNewAddressForm(null);
+                              setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <div>
-                          <Label className="text-xs sm:text-sm">
-                            {tForms('labels.selectWithGoogleMaps')}
-                          </Label>
-                          <div className="mt-2">
-                            <ClientSideAddressPicker
-                              selectedAddress={values.adresseArrivee}
-                              onAddressSelect={(addressDetails) => {
-                                setFieldTouched('adresseArrivee', true);
-                                const convertedAddress =
-                                  convertAddressDetailsToAddress(addressDetails);
-                                setFieldValue('adresseArrivee', convertedAddress);
-                              }}
-                              onClear={() =>
-                                setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee)
-                              }
-                              placeholder={tForms('placeholders.searchArrivalAddress')}
-                              showMap={true}
-                              className="w-full"
+                        <div className="flex justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                          <div className="flex flex-col space-y-2 w-full">
+                            <Label htmlFor="label" className="text-xs sm:text-sm">
+                              {tForms('labels.addressLabel')}
+                            </Label>
+                            <Input
+                              name="label"
+                              value={values.adresseArrivee!.label}
+                              onChange={(e) => handleNewAddressChange(e, 'arrival', setFieldValue)}
+                              onBlur={handleBlur}
+                              placeholder={tForms('placeholders.addressLabel')}
+                              className={cn(
+                                'w-full',
+                                (touched.adresseArrivee || touched.adresseArrivee) &&
+                                  errors.adresseArrivee &&
+                                  'border-red-500'
+                              )}
                             />
                           </div>
                         </div>
+                        <div className="space-y-3 sm:space-y-4">
+                          <div>
+                            <Label className="text-xs sm:text-sm">
+                              {tForms('labels.selectWithGoogleMaps')}
+                            </Label>
+                            <div className="mt-2">
+                              <ClientSideAddressPicker
+                                selectedAddress={values.adresseArrivee}
+                                onAddressSelect={(addressDetails) => {
+                                  setFieldTouched('adresseArrivee', true);
+                                  const convertedAddress = convertAddress(addressDetails);
+                                  setFieldValue('adresseArrivee', convertedAddress);
+                                }}
+                                onClear={() =>
+                                  setFieldValue('adresseArrivee', INITIAL_VALUES.adresseArrivee)
+                                }
+                                placeholder={tForms('placeholders.searchArrivalAddress')}
+                                showMap={true}
+                                className="w-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-3 sm:p-4 border rounded-lg bg-gray-50">
+                        <div className="flex justify-between items-center mb-3 sm:mb-4">
+                          <h1 className="font-medium text-sm sm:text-base">
+                            {tForms('labels.arrivalAddress')}
+                          </h1>
+                        </div>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <Select
+                            value={
+                              'id' in values.adresseArrivee && values.adresseArrivee.id
+                                ? values.adresseArrivee.id
+                                : ''
+                            }
+                            onValueChange={(value) => {
+                              if (value === 'new') {
+                                setShowNewAddressForm('arrival');
+                              } else {
+                                const selectedAddress = addresses.find((addr) => addr.id === value);
+                                if (selectedAddress) {
+                                  setFieldValue('adresseArrivee', selectedAddress);
+                                }
+                              }
+                            }}
+                          >
+                            <SelectTrigger
+                              className={cn(
+                                'pl-10',
+                                'w-full',
+                                touched.adresseArrivee && errors.adresseArrivee && 'border-red-500'
+                              )}
+                            >
+                              <SelectValue
+                                placeholder={
+                                  values.adresseArrivee?.label ||
+                                  tForms('placeholders.selectAddress')
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {addresses.map((address) => (
+                                <SelectItem key={address.id} value={address.id}>
+                                  {address.label}
+                                </SelectItem>
+                              ))}
+                              <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                <button
+                                  type="button"
+                                  className="flex w-full items-center gap-2 text-primary"
+                                  onClick={() => setShowNewAddressForm('arrival')}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  <span>{tForms('labels.newAddress')}</span>
+                                </button>
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
 
                     {values.adresseArrivee && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-md text-xs sm:text-sm">
@@ -923,7 +1058,8 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                       name="budgetMin"
                       type="number"
                       min="0"
-                      step="1000"
+                      max={dynamicPricing?.negotiation_range.max_price}
+                      step="0.1"
                       placeholder={tForms('placeholders.budgetExample')}
                       value={values.budgetMin || ''}
                       onChange={(e) =>
@@ -940,6 +1076,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                         'pl-10',
                         touched.budgetMin && errors.budgetMin && 'border-red-500'
                       )}
+                      disabled={!dynamicPricing}
                     />
                   </div>
                   {touched.budgetMin && errors.budgetMin && (

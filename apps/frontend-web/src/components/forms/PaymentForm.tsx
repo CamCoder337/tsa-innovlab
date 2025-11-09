@@ -19,18 +19,18 @@ import {
 import { CreditCard, Smartphone, Banknote, AlertCircle } from 'lucide-react';
 import type {
   Payment,
-  PaymentMethod,
   PaymentMethodType,
   MobileMoneyProvider,
   CardDetails,
 } from '@/types/payment.types';
-import { PaymentMethod as PaymentMethods } from '@/types/order.types';
+import { PaymentMethod } from '@/types/order.types';
+import { usePaymentTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 
 interface PaymentFormProps {
   amount: number;
   orderId: string;
-  paymentMethod?: PaymentMethodType;
-  setPaymentMethod: Dispatch<SetStateAction<PaymentMethodType>>;
+  paymentMethod?: PaymentMethod;
+  setPaymentMethod: Dispatch<SetStateAction<PaymentMethod>>;
   onSuccess: (payment: Payment) => void;
   onError: (error: Error) => void;
   savedCards?: CardDetails[];
@@ -38,6 +38,7 @@ interface PaymentFormProps {
 
 interface PaymentFormData {
   paymentMethod: PaymentMethod;
+  PaymentMethodType: PaymentMethodType;
   // Card fields
   cardNumber: string;
   expiryDate: string;
@@ -67,11 +68,11 @@ const validateCameroonPhone = (phone: string): boolean => {
 
 const PaymentValidationSchema = Yup.object().shape({
   paymentMethod: Yup.string()
-    .oneOf(Object.values(PaymentMethods), 'Méthode de paiement invalide')
+    .oneOf(Object.values(PaymentMethod), 'Méthode de paiement invalide')
     .required('Veuillez sélectionner une méthode de paiement'),
 
   // Card validation (conditional)
-  cardNumber: Yup.string().when('paymentMethod', {
+  cardNumber: Yup.string().when('paymentMethodType', {
     is: 'card',
     then: (schema) =>
       schema
@@ -82,7 +83,7 @@ const PaymentValidationSchema = Yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  expiryDate: Yup.string().when('paymentMethod', {
+  expiryDate: Yup.string().when('paymentMethodType', {
     is: 'card',
     then: (schema) =>
       schema
@@ -91,20 +92,20 @@ const PaymentValidationSchema = Yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  cvv: Yup.string().when('paymentMethod', {
+  cvv: Yup.string().when('paymentMethodType', {
     is: 'card',
     then: (schema) => schema.required('CVV requis').min(3, 'CVV invalide').max(4, 'CVV invalide'),
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  cardholderName: Yup.string().when('paymentMethod', {
+  cardholderName: Yup.string().when('paymentMethodType', {
     is: 'card',
     then: (schema) => schema.required('Nom du titulaire requis').min(2, 'Nom trop court'),
     otherwise: (schema) => schema.notRequired(),
   }),
 
   // Mobile money validation (conditional)
-  mobilePhone: Yup.string().when('paymentMethod', {
+  mobilePhone: Yup.string().when('paymentMethodType', {
     is: 'mobile',
     then: (schema) =>
       schema
@@ -113,7 +114,7 @@ const PaymentValidationSchema = Yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
 
-  receiverName: Yup.string().when('paymentMethod', {
+  receiverName: Yup.string().when('paymentMethodType', {
     is: 'mobile',
     then: (schema) => schema.required('Nom du bénéficiaire requis').min(2, 'Nom trop court'),
     otherwise: (schema) => schema.notRequired(),
@@ -123,17 +124,20 @@ const PaymentValidationSchema = Yup.object().shape({
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
   orderId,
-  paymentMethod = 'cash',
+  paymentMethod = PaymentMethod.CASH_ON_DELIVERY,
   setPaymentMethod,
   onSuccess,
   onError,
   savedCards = [],
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { t: tPayment } = usePaymentTranslation();
+  const { t: tForms } = useFormsTranslation();
 
   const formik = useFormik<PaymentFormData>({
     initialValues: {
-      paymentMethod: 'cash_on_delivery',
+      paymentMethod: paymentMethod,
+      PaymentMethodType: 'cash',
       // Card fields
       cardNumber: '',
       expiryDate: '',
@@ -181,7 +185,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         const errorMessage =
           err instanceof Error
             ? err.message
-            : 'Une erreur est survenue lors du traitement du paiement';
+            : tPayment('messages.paymentError', {
+                defaultValue: 'Une erreur est survenue lors du traitement du paiement',
+              });
         onError(new Error(errorMessage));
       } finally {
         setIsProcessing(false);
@@ -211,19 +217,29 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const renderPaymentMethodSelector = () => (
     <Card className="mb-4">
       <CardHeader>
-        <CardTitle className="text-lg">Méthode de paiement</CardTitle>
+        <CardTitle className="text-lg">{tPayment('labels.paymentMethod')}</CardTitle>
       </CardHeader>
       <CardContent>
         <RadioGroup
-          value={paymentMethod}
+          value={formik.values.PaymentMethodType}
           onValueChange={(value: PaymentMethodType) => {
-            setPaymentMethod(value);
-            if (paymentMethod === 'cash') formik.setFieldValue('paymentMethod', 'cash_on_delivery');
-            if (paymentMethod === 'mobile')
+            if (value === 'cash') {
+              formik.setFieldValue('PaymentMethodType', 'cash');
+              formik.setFieldValue('paymentMethod', 'cash_on_delivery');
+              setPaymentMethod(PaymentMethod.CASH_ON_DELIVERY);
+            }
+            if (value === 'mobile') {
+              formik.setFieldValue('PaymentMethodType', 'mobile');
               formik.setFieldValue('paymentMethod', 'mtn_mobile_money');
-            if (paymentMethod === 'card') formik.setFieldValue('paymentMethod', 'bank_transfer');
+              setPaymentMethod(PaymentMethod.MTN_MOMO);
+            }
+            if (value === 'card') {
+              formik.setFieldValue('PaymentMethodType', 'card');
+              formik.setFieldValue('paymentMethod', 'bank_transfer');
+              setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+            }
           }}
-          className="flex gap-4 justify-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem
@@ -232,7 +248,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               className="border-2 border-accent-foreground/50 shadow-xl"
             />
             <Banknote className="h-5 w-5 text-yellow-600" />
-            <Label htmlFor="cash">Espèces</Label>
+            <Label htmlFor="cash">{tPayment('labels.cash')}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem
@@ -241,7 +257,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               className="border-2 border-accent-foreground/50 shadow-xl"
             />
             <Smartphone className="h-5 w-5 text-green-600" />
-            <Label htmlFor="mobile">Mobile Money</Label>
+            <Label htmlFor="mobile">{tPayment('labels.mobileMoney')}</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem
@@ -250,7 +266,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               className="border-2 border-accent-foreground/50 shadow-xl"
             />
             <CreditCard className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
-            <Label htmlFor="card">Carte bancaire</Label>
+            <Label htmlFor="card">{tPayment('labels.bankCard')}</Label>
           </div>
         </RadioGroup>
       </CardContent>
@@ -262,22 +278,22 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Paiement par carte
+          {tPayment('labels.cardPayment')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {savedCards.length > 0 && (
           <div>
-            <Label>Carte enregistrée</Label>
+            <Label>{tPayment('labels.savedCard')}</Label>
             <Select
               value={formik.values.useSavedCard}
               onValueChange={(value) => formik.setFieldValue('useSavedCard', value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une carte enregistrée" />
+                <SelectValue placeholder={tPayment('placeholders.selectSavedCard')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Nouvelle carte</SelectItem>
+                <SelectItem value="">{tPayment('labels.newCard')}</SelectItem>
                 {savedCards.map((card) => (
                   <SelectItem key={card.cardNumber} value={card.cardNumber}>
                     {card.cardNumber.slice(0, 4)} •••• {card.cardNumber.slice(-4)} (Exp:{' '}
@@ -292,7 +308,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         {!formik.values.useSavedCard && (
           <>
             <div>
-              <Label htmlFor="cardNumber">Numéro de carte *</Label>
+              <Label htmlFor="cardNumber">{tPayment('labels.cardNumber')} *</Label>
               <Input
                 id="cardNumber"
                 name="cardNumber"
@@ -302,7 +318,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   formik.setFieldValue('cardNumber', formatted);
                 }}
                 onBlur={formik.handleBlur}
-                placeholder="1234 5678 9012 3456"
+                placeholder={tPayment('placeholders.cardNumber')}
                 maxLength={19}
                 className={formik.errors.cardNumber ? 'border-red-500' : ''}
               />
@@ -313,7 +329,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="expiryDate">Date d'expiration *</Label>
+                <Label htmlFor="expiryDate">{tPayment('labels.expiryDate')} *</Label>
                 <Input
                   id="expiryDate"
                   name="expiryDate"
@@ -323,7 +339,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                     formik.setFieldValue('expiryDate', formatted);
                   }}
                   onBlur={formik.handleBlur}
-                  placeholder="MM/AA"
+                  placeholder={tPayment('placeholders.expiryDate')}
                   maxLength={5}
                   className={formik.errors.expiryDate ? 'border-red-500' : ''}
                 />
@@ -332,14 +348,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 )}
               </div>
               <div>
-                <Label htmlFor="cvv">CVV *</Label>
+                <Label htmlFor="cvv">{tPayment('labels.cvv')} *</Label>
                 <Input
                   id="cvv"
                   name="cvv"
                   value={formik.values.cvv}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder="123"
+                  placeholder={tPayment('placeholders.cvv')}
                   maxLength={4}
                   className={formik.errors.cvv ? 'border-red-500' : ''}
                 />
@@ -350,14 +366,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="cardholderName">Titulaire de la carte *</Label>
+              <Label htmlFor="cardholderName">{tPayment('labels.cardholderName')} *</Label>
               <Input
                 id="cardholderName"
                 name="cardholderName"
                 value={formik.values.cardholderName}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                placeholder="Nom comme indiqué sur la carte"
+                placeholder={tPayment('placeholders.cardholderName')}
                 className={formik.errors.cardholderName ? 'border-red-500' : ''}
               />
               {formik.errors.cardholderName && (
@@ -375,7 +391,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 className="h-4 w-4 text-tsa-blue dark:text-tsa-white focus:ring-blue-500 border-gray-300 rounded"
               />
               <Label htmlFor="saveCard" className="text-sm">
-                Enregistrer cette carte pour des paiements futurs
+                {tPayment('messages.saveCardForFuture')}
               </Label>
             </div>
           </>
@@ -389,37 +405,40 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Smartphone className="h-5 w-5" />
-          Paiement Mobile Money
+          {tPayment('labels.mobileMoneyPayment')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label>Service de paiement *</Label>
+          <Label>{tPayment('labels.mobileProvider')} *</Label>
           <Select
             value={formik.values.mobileProvider}
             onValueChange={(value: MobileMoneyProvider) => {
-              formik.setFieldValue('payment_method', value);
+              console.log(formik.values);
+              formik.setFieldValue('paymentMethod', value);
               formik.setFieldValue('mobileProvider', value);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="mtn_mobile_money">MTN Mobile Money</SelectItem>
-              <SelectItem value="orange_money">Orange Money</SelectItem>
+              <SelectItem value="orange_money">{tPayment('labels.orange_money')}</SelectItem>
+              <SelectItem value="mtn_mobile_money">
+                {tPayment('labels.mtn_mobile_money')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div>
-          <Label>Numéro de téléphone *</Label>
+          <Label>{tPayment('labels.mobilePhone')} *</Label>
           <PhoneInput
             country={'cm'}
             onlyCountries={['cm']}
             value={formik.values.mobilePhone}
             onChange={handlePhoneChange}
-            placeholder="237 6 55 55 55 55"
+            placeholder={tPayment('placeholders.cameroonPhone')}
             enableSearch={false}
             disableDropdown={false}
             masks={{
@@ -445,34 +464,32 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
           {formik.errors.mobilePhone && (
             <p className="text-sm text-red-600 mt-1">{formik.errors.mobilePhone}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            Assurez-vous d'entrer un numéro camerounais valide
-          </p>
+          <p className="text-xs text-gray-500 mt-1">{tPayment('messages.validCameroonNumber')}</p>
         </div>
 
         <div>
-          <Label htmlFor="receiverName">Nom du bénéficiaire *</Label>
+          <Label htmlFor="receiverName">{tPayment('labels.receiverName')} *</Label>
           <Input
             id="receiverName"
             name="receiverName"
             value={formik.values.receiverName}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
-            placeholder="Nom complet du bénéficiaire"
+            placeholder={tPayment('placeholders.receiverName')}
             className={formik.errors.receiverName ? 'border-red-500' : ''}
           />
           {formik.errors.receiverName && (
             <p className="text-sm text-red-600 mt-1">{formik.errors.receiverName}</p>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            Le nom doit correspondre au compte Mobile Money
+            {tPayment('messages.mobileMoneyAccountMatch')}
           </p>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-sm text-blue-800">
-            <strong>Instructions:</strong> Vous recevrez un SMS avec les détails de la transaction.
-            Suivez les instructions pour confirmer le paiement sur votre téléphone.
+            <strong>{tForms('labels.instructions', { defaultValue: 'Instructions' })}:</strong>{' '}
+            {tPayment('messages.paymentInstructions')}
           </p>
         </div>
       </CardContent>
@@ -484,17 +501,16 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Banknote className="h-5 w-5" />
-          Paiement en espèces
+          {tPayment('labels.cashPayment')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-800 mb-2">
-            <strong>Paiement à la livraison</strong>
+            <strong>{tPayment('messages.cashOnDelivery')}</strong>
           </p>
           <p className="text-sm text-yellow-700">
-            Vous paierez en espèces lors de la réception de votre commande. Assurez-vous d'avoir le
-            montant exact: <strong>{amount.toLocaleString()} FCFA</strong>
+            {tPayment('messages.cashPaymentInfo')}: <strong>{amount.toLocaleString()} FCFA</strong>
           </p>
         </div>
       </CardContent>
@@ -512,9 +528,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
 
       {renderPaymentMethodSelector()}
 
-      {paymentMethod === 'card' && renderCardPayment()}
-      {paymentMethod === 'mobile' && renderMobileMoneyPayment()}
-      {paymentMethod === 'cash' && renderCashPayment()}
+      {formik.values.PaymentMethodType === 'card' && renderCardPayment()}
+      {formik.values.PaymentMethodType === 'mobile' && renderMobileMoneyPayment()}
+      {formik.values.PaymentMethodType === 'cash' && renderCashPayment()}
 
       <div className="pt-4">
         <Button
@@ -547,14 +563,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               </svg>
               {formik.values.paymentMethod === 'mtn_mobile_money' ||
               formik.values.paymentMethod === 'orange_money'
-                ? 'Envoi de la demande...'
+                ? tPayment('messages.sendingRequest')
                 : formik.values.paymentMethod === 'bank_transfer' ||
                     formik.values.paymentMethod === 'wave'
-                  ? 'Traitement du paiement...'
-                  : 'Confirmation...'}
+                  ? tPayment('messages.processingPayment')
+                  : tPayment('messages.confirming')}
             </>
           ) : (
-            `${formik.values.paymentMethod === 'cash_on_delivery' ? 'Confirmer la commande' : 'Payer'} ${amount.toLocaleString()} $FCFA`
+            `${formik.values.paymentMethod === 'cash_on_delivery' ? tPayment('buttons.confirmOrder') : tPayment('buttons.pay')} ${amount.toLocaleString()} FCFA`
           )}
         </Button>
       </div>

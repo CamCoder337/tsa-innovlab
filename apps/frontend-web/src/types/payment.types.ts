@@ -1,16 +1,8 @@
 import type { Timestamps } from './common.types';
-import type { Order } from './order.types';
+import type { Order, PaymentMethod } from './order.types';
 
 // Align with backend Order model PaymentStatus enum
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-
-// Align with backend Order model PaymentMethod enum
-export type PaymentMethod =
-  | 'orange_money'
-  | 'mtn_mobile_money'
-  | 'wave'
-  | 'bank_transfer'
-  | 'cash_on_delivery';
 
 // Legacy type for backward compatibility
 export type PaymentMethodType = 'card' | 'mobile' | 'cash';
