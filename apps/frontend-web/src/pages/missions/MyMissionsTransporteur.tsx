@@ -20,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
-import { useAddresses } from '@/hooks/useAddresses';
 import { useVehicles } from '@/hooks/useVehicles';
 import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
@@ -42,13 +41,12 @@ export default function MissionsTransporteurPage() {
     applyMission,
     updateMissionStatus,
   } = useMissions();
-  const { addresses } = useAddresses();
   const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'available');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('all');
-  const [filterUrgency, setFilterUrgency] = useState('all');
+  const [filterDestination, setFilterDestination] = useState('all');
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
@@ -57,19 +55,66 @@ export default function MissionsTransporteurPage() {
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
 
+  // Create unique lists of origin and destination cities from all missions
+  const allMissions = [...missions, ...myMissions];
+
+  const uniqueOrigin = Array.from(
+    new Set(
+      allMissions
+        .map((mission) => mission.adresseDepart?.city)
+        .filter((city) => city && city.trim() !== '')
+    )
+  ).sort();
+
+  const uniqueDestination = Array.from(
+    new Set(
+      allMissions
+        .map((mission) => mission.adresseArrivee?.city)
+        .filter((city) => city && city.trim() !== '')
+    )
+  ).sort();
+
   const filteredMissions = (() => {
+    let baseMissions: Mission[] = [];
+
     if (activeTab === 'all') {
-      return [...missions, ...myMissions];
+      baseMissions = [...missions, ...myMissions];
+    } else if (activeTab === 'available') {
+      baseMissions = missions.filter((mission) => mission.status === 'published');
+    } else {
+      // For other tabs, filter myMissions by status
+      baseMissions = myMissions.filter((mission) => {
+        if (activeTab === 'completed') return mission.status === 'completed';
+        if (activeTab === 'active') return ['assigned', 'in_progress'].includes(mission.status);
+        return true;
+      });
     }
 
-    if (activeTab === 'available') {
-      return missions.filter((mission) => mission.status === 'published');
-    }
+    // Apply additional filters
+    return baseMissions.filter((mission) => {
+      // Search term filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          mission.title?.toLowerCase().includes(searchLower) ||
+          mission.description?.toLowerCase().includes(searchLower) ||
+          mission.typeMarchandise?.toLowerCase().includes(searchLower) ||
+          mission.adresseDepart?.label?.toLowerCase().includes(searchLower) ||
+          mission.adresseArrivee?.label?.toLowerCase().includes(searchLower);
 
-    // For other tabs, filter myMissions by status
-    return myMissions.filter((mission) => {
-      if (activeTab === 'completed') return mission.status === 'completed';
-      if (activeTab === 'active') return ['assigned', 'in_progress'].includes(mission.status);
+        if (!matchesSearch) return false;
+      }
+
+      // Origin filter
+      if (filterOrigin !== 'all') {
+        if (mission.adresseDepart?.city !== filterOrigin) return false;
+      }
+
+      // Destination filter
+      if (filterDestination !== 'all') {
+        if (mission.adresseArrivee?.city !== filterDestination) return false;
+      }
+
       return true;
     });
   })();
@@ -242,36 +287,28 @@ export default function MissionsTransporteurPage() {
                   <SelectItem value="all">
                     {tMissions('myMissions.transporteur.search.allOrigins')}
                   </SelectItem>
-                  {addresses.map((adresseDepart, index) => (
-                    <SelectItem
-                      key={`${adresseDepart.id || 'unknown'}-${index}`}
-                      value={adresseDepart.id || 'unknown'}
-                    >
-                      {adresseDepart.label ||
-                        tMissions('myMissions.transporteur.search.unspecified')}
+                  {uniqueOrigin.map((city) => (
+                    <SelectItem key={city} value={city!}>
+                      {city}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={filterUrgency} onValueChange={setFilterUrgency}>
+              <Select value={filterDestination} onValueChange={setFilterDestination}>
                 <SelectTrigger className="w-full lg:w-48">
                   <SelectValue
-                    placeholder={tMissions('myMissions.transporteur.search.filterUrgency')}
+                    placeholder={tMissions('myMissions.transporteur.search.filterDestination')}
                   />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    {tMissions('myMissions.transporteur.search.allUrgencies')}
+                    {tMissions('myMissions.transporteur.search.allDestinations')}
                   </SelectItem>
-                  <SelectItem value="high">
-                    {tMissions('myMissions.transporteur.search.urgent')}
-                  </SelectItem>
-                  <SelectItem value="medium">
-                    {tMissions('myMissions.transporteur.search.priority')}
-                  </SelectItem>
-                  <SelectItem value="low">
-                    {tMissions('myMissions.transporteur.search.standard')}
-                  </SelectItem>
+                  {uniqueDestination.map((city) => (
+                    <SelectItem key={city} value={city!}>
+                      {city}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

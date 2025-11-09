@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { VisualSearch } from '@/components/shop/VisualSearch';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,7 +22,17 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@/components/ui/pagination';
-import { AlertTriangle, Eye, Grid, List, Loader, Search, SlidersHorizontal } from 'lucide-react';
+import {
+  AlertTriangle,
+  Clock,
+  Eye,
+  Grid,
+  List,
+  Loader,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+} from 'lucide-react';
 import type { Product } from '@/types/product.types';
 import { useProducts } from '@/hooks/useProducts';
 import type { ProductFilterParams } from '@/types/product.types';
@@ -289,6 +300,35 @@ export default function ShopPage() {
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-5 w-5 text-orange-600" />
               <h3 className="font-medium text-orange-800">{`${VisualError}`}</h3>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Results Section */}
+      {results && (
+        <Card className="mb-6 border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-5 w-5 text-green-600" />
+              <h3 className="font-medium text-green-800">{tShop('visualSearch.title')}</h3>
+            </div>
+            <div className="space-y-1">
+              <Clock className="h-5 w-5" />
+              <p className="font-medium text-green-800">{results.processing_time_ms}ms</p>
+            </div>
+            <div className="space-y-1">
+              {results.products.map((product) => (
+                <p key={product.id} className="text-sm text-green-700">
+                  {tShop('visualSearch.results.foundPlural', { count: product.stock })}
+                </p>
+              ))}
+              <Badge variant="outline">
+                {tCommon('search.results.foundPlural', {
+                  count: results.total,
+                  type: tShop('product.title').toLowerCase(),
+                })}
+              </Badge>
             </div>
           </CardContent>
         </Card>

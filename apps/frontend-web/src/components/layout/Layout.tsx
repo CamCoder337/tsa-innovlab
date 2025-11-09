@@ -11,11 +11,14 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
+import { useVehicles } from '@/hooks/useVehicles';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
+import { useAddresses } from '@/hooks/useAddresses';
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, token, isAuthenticated, logout } = useAuth();
+  const { fetchAddresses } = useAddresses();
   const { fetchAllStats } = useAllAdminStats();
   const { fetchCart } = useCart();
   const { fetchAdminCategories, fetchCategories } = useCategories();
@@ -25,12 +28,16 @@ export default function Layout() {
   const { fetchOrders } = useOrders();
   const { fetchAdminProducts, fetchProducts, fetchProductStats } = useProducts();
   const { fetchUsers, fetchUserStats } = useUsers();
+  const { fetchVehicles } = useVehicles();
 
   useEffect(() => {
     if (user && user.role !== 'client') {
       if (user && user.role !== 'affreteur') fetchAllMissions();
       if (user && user.role !== 'admin') {
         fetchMyMissions();
+      }
+      if (user && user.role === 'transporteur') {
+        fetchVehicles();
       }
       if (user && user.role === 'admin') {
         fetchAdminCategories();
@@ -41,6 +48,7 @@ export default function Layout() {
         fetchUserStats();
         fetchAllStats();
       }
+      fetchAddresses();
       fetchConversations();
       fetchNotifications();
       fetchNotificationStats();
@@ -55,6 +63,11 @@ export default function Layout() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && !token) logout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   return (
     <SidebarProvider>

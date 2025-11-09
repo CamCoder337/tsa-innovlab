@@ -10,19 +10,9 @@ import * as Yup from 'yup';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
+import type { RegisterFormData } from '@/types/forms.types';
 
-// Simplified form data without role selection
-interface ClientRegisterFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  phone: string;
-  country: string;
-}
-
-const INITIAL_VALUES: ClientRegisterFormData = {
+const INITIAL_VALUES: RegisterFormData = {
   firstName: '',
   lastName: '',
   email: '',
@@ -30,6 +20,7 @@ const INITIAL_VALUES: ClientRegisterFormData = {
   confirmPassword: '',
   phone: '',
   country: 'cm',
+  role: 'client',
 };
 
 const validationSchema = (t: (key: string) => string) =>
@@ -72,17 +63,12 @@ export default function ClientRegisterForm({
   const { t: tAuth } = useAuthTranslation();
   const { t: tForms } = useFormsTranslation();
 
-  const handleSubmit = async (values: ClientRegisterFormData) => {
-    // Add the client role to the form data
-    const submitData: CreateUserRequest = {
-      ...values,
-      role: 'client',
-    };
-    await onSubmit(submitData);
+  const handleSubmit = async (values: RegisterFormData) => {
+    await onSubmit(values);
   };
 
   return (
-    <Formik<ClientRegisterFormData>
+    <Formik<RegisterFormData>
       initialValues={INITIAL_VALUES}
       validationSchema={validationSchema(tForms)}
       onSubmit={handleSubmit}

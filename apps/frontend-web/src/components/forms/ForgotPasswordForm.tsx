@@ -1,21 +1,19 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuthTranslation, useFormsTranslation } from '@/hooks/useTranslation';
 import type { ForgotPasswordRequest } from '@/types/auth.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
 
 const INITIAL_VALUES: ForgotPasswordRequest = {
   email: '',
 };
 
-const validationSchema = Yup.object({
-  email: Yup.string()
-    .email(VALIDATION_MESSAGES.INVALID_EMAIL)
-    .required(VALIDATION_MESSAGES.REQUIRED_EMAIL),
-});
+const validationSchema = (tForms: (key: string) => string) =>
+  Yup.object({
+    email: Yup.string().email(tForms('validation.email')).required(tForms('validation.required')),
+  });
 
 interface ForgotPasswordFormProps {
   onSubmit: (data: ForgotPasswordRequest) => Promise<void>;
@@ -35,7 +33,7 @@ export default function ForgotPasswordForm({
   return (
     <Formik<ForgotPasswordRequest>
       initialValues={INITIAL_VALUES}
-      validationSchema={validationSchema}
+      validationSchema={validationSchema(tForms)}
       onSubmit={onSubmit}
       validateOnBlur={true}
       validateOnChange={true}
@@ -46,11 +44,12 @@ export default function ForgotPasswordForm({
             <p className="text-gray-600 dark:text-tsa-white mb-6">
               {tAuth('forgotPassword.successMessage')} <strong>{values.email}</strong>
             </p>
-            <Link to="/">
-              <Button className="w-full h-12 bg-tsa-blue/90 text-white font-semibold">
-                {tAuth('forgotPassword.returnToLogin')}
-              </Button>
-            </Link>
+            <Button
+              className="w-full h-12 bg-tsa-blue/90 text-white font-semibold"
+              onClick={() => navigate(-1)}
+            >
+              {tAuth('forgotPassword.returnToLogin')}
+            </Button>
           </>
         ) : (
           <Form className="space-y-6">
@@ -88,7 +87,7 @@ export default function ForgotPasswordForm({
 
             <div
               className="text-center text-tsa-blue dark:text-tsa-white hover:underline 
-                          font-medium text-sm transition-colors"
+                          font-medium text-sm transition-colors cursor-pointer"
               onClick={() => navigate(-1)}
             >
               {tAuth('forgotPassword.backToLogin')}

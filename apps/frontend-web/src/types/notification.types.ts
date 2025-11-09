@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PaginationMeta } from './common.types';
+import type { PaginationMeta, Timestamps } from './common.types';
 
 export enum NotificationType {
   MISSION_ASSIGNED = 'mission_assigned',
@@ -21,10 +21,12 @@ export enum NotificationPriority {
 // Notification data types for different notification types
 export interface MissionNotificationData {
   missionId: string;
-  missionTitle?: string;
+  title?: string;
   status?: string;
   affreteurId?: string;
+  affreteurName?: string;
   transporteurId?: string;
+  transporteurName?: string;
 }
 
 export interface MessageNotificationData {
@@ -55,7 +57,7 @@ export type NotificationData =
   | SystemNotificationData
   | Record<string, string | number | boolean | null>;
 
-export interface Notification {
+export interface Notification extends Timestamps {
   id: string;
   userId: string;
   description?: string;
@@ -65,8 +67,10 @@ export interface Notification {
   message: string;
   data?: NotificationData;
   readAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  actionUrl: string;
+  emailSent: false;
+  isRead: boolean;
+  missionId: string;
 }
 
 export interface NotificationFilters {

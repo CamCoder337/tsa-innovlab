@@ -18,6 +18,7 @@ import { useMissions } from '@/hooks/useMissions';
 import { DashboardUtils } from '@/lib/dashboard.utils';
 import { useMemo } from 'react';
 import { useCommonTranslation, useDashboardTranslation } from '@/hooks/useTranslation';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
 
 function AffreteurDashboard() {
   const { user } = useAuth();
@@ -55,7 +56,7 @@ function AffreteurDashboard() {
     {
       title: tDash('affreteur.insights.averageCost'),
       icon: Euro,
-      value: DashboardUtils.formatCurrency(metrics?.averageCost || 0),
+      value: formatCurrency(metrics?.averageCost || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.averageCost || 0,
@@ -75,7 +76,7 @@ function AffreteurDashboard() {
     {
       title: tDash('affreteur.insights.successRate'),
       icon: CheckCircle,
-      value: DashboardUtils.formatPercentage(metrics?.successRate || 0),
+      value: formatPercentage(metrics?.successRate || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           metrics?.successRate || 0,
@@ -102,7 +103,7 @@ function AffreteurDashboard() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2 truncate">
             {tDash('affreteur.welcome', { name: user.fullName })}
             <div
-              className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"
+              className="w-2 h-2 bg-green-500 rounded-full flex items-center animate-pulse flex-shrink-0"
               title={tDash('affreteur.systemOnline')}
             />
           </h1>
@@ -151,15 +152,15 @@ function AffreteurDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="lg:col-span-2 gap-2">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Package className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('affreteur.sections.recentMissions')}
               <div className="w-2 h-2 bg-tsa-blue/90 rounded-full animate-pulse" />
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent>
             <div className="space-y-3 sm:space-y-4">
               {recentMissions.length > 0 ? (
                 recentMissions.map((mission) => (
@@ -216,14 +217,14 @@ function AffreteurDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="gap-2">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('affreteur.sections.quickActions')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 sm:space-y-3 pt-0">
+          <CardContent className="space-y-2 sm:space-y-4 pt-0">
             <Link to="/app/missions/create">
               <Button
                 variant="outline"
@@ -255,9 +256,9 @@ function AffreteurDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 sm:gap-6">
+        <Card className="gap-2">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
               {tDash('affreteur.sections.recommendations')}
@@ -313,8 +314,8 @@ function AffreteurDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="gap-2">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('affreteur.sections.monthlySummary')}
@@ -342,7 +343,7 @@ function AffreteurDashboard() {
                 {tDash('affreteur.monthlySummary.totalCost')}
               </span>
               <span className="font-semibold text-sm sm:text-base">
-                {DashboardUtils.formatCurrency(monthlySummary?.totalCost || 0)}
+                {formatCurrency(monthlySummary?.totalCost || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -350,12 +351,12 @@ function AffreteurDashboard() {
                 {tDash('affreteur.monthlySummary.savingsRealized')}
               </span>
               <span className="font-semibold text-green-600 text-sm sm:text-base">
-                {DashboardUtils.formatCurrency(monthlySummary?.savings || 0)}
+                {formatCurrency(monthlySummary?.savings || 0)}
               </span>
             </div>
             <Progress value={monthlySummary?.onTimeRate || 0} className="w-full" />
             <p className="text-xs text-muted-foreground text-center">
-              {DashboardUtils.formatPercentage(monthlySummary?.onTimeRate || 0)}{' '}
+              {formatPercentage(monthlySummary?.onTimeRate || 0)}{' '}
               {tDash('affreteur.monthlySummary.onTimeDelivery')}
             </p>
           </CardContent>

@@ -1,13 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Camera, X, Clock } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
-import {
-  useShopTranslation,
-  useErrorsTranslation,
-  useCommonTranslation,
-} from '@/hooks/useTranslation';
+import { useShopTranslation, useErrorsTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 
 interface VisualSearchProps {
@@ -18,7 +13,6 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
   className = '',
 }: VisualSearchProps) => {
   const { t: tShop } = useShopTranslation();
-  const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -121,25 +115,6 @@ export const VisualSearch: React.FC<VisualSearchProps> = ({
               </Button>{' '}
             </>
           )}
-        </div>
-      )}
-
-      {/* Results Section */}
-      {results && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">{tShop('visualSearch.title')}</h3>
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <Clock className="h-4 w-4" />
-              {results.processing_time_ms}ms
-              <Badge variant="outline">
-                {tCommon('search.results.foundPlural', {
-                  count: results.total,
-                  type: tShop('product.title').toLowerCase(),
-                })}
-              </Badge>
-            </div>
-          </div>
         </div>
       )}
     </div>

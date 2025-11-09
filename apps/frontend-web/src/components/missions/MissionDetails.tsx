@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
-import { getStatusColor } from '@/lib/mission-utils';
-import { getStatusLabel } from '@/lib/mission-utils';
+import { getStatusColor } from '@/lib/utils';
+import { getStatusLabel } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import {
   useMissionsTranslation,
@@ -11,7 +11,7 @@ import {
   useFormsTranslation,
 } from '@/hooks/useTranslation';
 import { useUserSearch } from '@/hooks/useUserSearch';
-import { useVehicleInfo } from '@/hooks/useVehicleInfo';
+import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MissionDetailsProps {
@@ -21,7 +21,7 @@ interface MissionDetailsProps {
 export function MissionDetails({ mission }: MissionDetailsProps) {
   const { user } = useAuth();
   const { getUserName } = useUserSearch();
-  const { getVehicleRegistration } = useVehicleInfo();
+  const { getVehicleById } = useVehicles();
   const [transporteurName, setTransporteurName] = useState<string>('');
   const [affreteurName, setAffreteurName] = useState<string>('');
   const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
@@ -33,7 +33,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   useEffect(() => {
     const fetchInfo = async () => {
       // Use preloaded transporteur data first, fallback to fetch
-      if (user?.role === 'affreteur' && mission.transporteurId) {
+      if (user?.role !== 'transporteur' && mission.transporteurId) {
         if (mission.transporteur) {
           const name = `${mission.transporteur.firstName} ${mission.transporteur.lastName}`;
           setTransporteurName(name);
@@ -44,7 +44,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       }
 
       // Use preloaded affreteur data first, fallback to fetch
-      if (user?.role === 'transporteur' && mission.affreteurId) {
+      if (user?.role !== 'affreteur' && mission.affreteurId) {
         if (mission.affreteur) {
           const name = `${mission.affreteur.firstName} ${mission.affreteur.lastName}`;
           setAffreteurName(name);
@@ -59,8 +59,8 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
         if (mission.vehicle) {
           setVehicleRegistration(mission.vehicle.registration);
         } else {
-          const registration = await getVehicleRegistration(mission.vehicleId);
-          setVehicleRegistration(registration);
+          const vehicle = await getVehicleById(mission.vehicleId);
+          setVehicleRegistration(vehicle?.registration || '');
         }
       }
     };
@@ -75,21 +75,21 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
     mission.vehicle,
     user?.role,
     getUserName,
-    getVehicleRegistration,
+    getVehicleById,
   ]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="">
       <Card>
-        <CardHeader className="pb-3 sm:pb-6">
+        <CardHeader className="pb-3">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl flex flex-1 justify-between sm:flex-row sm:items-center gap-2">
                 <p className="truncate flex flex-col">
                   {mission.title}
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
+                  <span className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
                     {mission.id}
-                  </p>
+                  </span>
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className={getStatusColor(mission.status)}>

@@ -19,6 +19,7 @@ import { DashboardUtils } from '@/lib/dashboard.utils';
 import { useMemo } from 'react';
 import { useCommonTranslation, useDashboardTranslation } from '@/hooks/useTranslation';
 import { useNotifications } from '@/hooks/useNotifications';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
 
 function TransporteurDashboard() {
   const { user } = useAuth();
@@ -30,8 +31,8 @@ function TransporteurDashboard() {
   // Calculate real metrics from mission data
   const metrics = useMemo(() => {
     if (!myMissions.length) return null;
-    return DashboardUtils.calculateMissionMetrics(myMissions);
-  }, [myMissions]);
+    return DashboardUtils.calculateMissionMetrics(myMissions, missions);
+  }, [myMissions, missions]);
 
   const earnings = useMemo(() => {
     if (!myMissions.length) return null;
@@ -43,19 +44,23 @@ function TransporteurDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myMissions]);
 
+  const monthlySummary = useMemo(() => {
+    return DashboardUtils.getMonthlySummary(myMissions);
+  }, [myMissions]);
+
   const transporteurInsights = [
     {
       title: tDash('transporteur.insights.availableMissions'),
       icon: Search,
       value: missions.length,
-      change: `+${Math.max(0, missions.length - 8)} ${tDash('transporteur.insights.new')}`,
+      change: `+${metrics?.currentNewMissions || 0} ${tDash('transporteur.insights.new')} ${tDash('transporteur.insights.thisWeek')}`,
       color: 'blue',
       href: '/app/missions',
     },
     {
       title: tDash('transporteur.insights.todayEarnings'),
       icon: Euro,
-      value: DashboardUtils.formatCurrency(earnings?.today || 0),
+      value: formatCurrency(earnings?.today || 0),
       change:
         DashboardUtils.calculateGrowthPercentage(
           earnings?.today || 0,
@@ -75,25 +80,21 @@ function TransporteurDashboard() {
     {
       title: tDash('transporteur.insights.successRate'),
       icon: CheckCircle,
-      value: 0, // DashboardUtils.formatPercentage(metrics?.successRate || 0)
+      value: formatPercentage(metrics?.successRate || 0),
       change:
-        DashboardUtils.calculateGrowthPercentage(
-          metrics?.successRate || 0,
-          (metrics?.successRate || 0) - 2
-        ) + ` ${tCommon('time.thisMonth')}`,
+        metrics?.completedMissions +
+        `/` +
+        metrics?.totalActiveMissions +
+        ` ${tCommon('status.completed')} ${tCommon('time.thisMonth').toLowerCase()}`,
       color: 'green',
       href: '/transporteur/profile',
     },
   ];
 
-  const monthlySummary = useMemo(() => {
-    return DashboardUtils.getMonthlySummary(myMissions);
-  }, [myMissions]);
-
   const latestNotification = useMemo(() => {
     return (
       notifications
-        .filter((notification) => notification.readAt === null)
+        .filter((notification) => notification.isRead === null)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ||
       null
     );
@@ -161,7 +162,7 @@ function TransporteurDashboard() {
       const style = getNotificationStyle(
         notification.type,
         notification.priority,
-        notification.readAt !== null
+        notification.isRead !== null
       );
 
       return {
@@ -245,7 +246,7 @@ function TransporteurDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3">
-        <Card className="lg:col-span-2 gap-0">
+        <Card className="lg:col-span-2 gap-2">
           <CardHeader className="">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Package className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -312,8 +313,8 @@ function TransporteurDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="gap-2">
+          <CardHeader className="">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('transporteur.sections.quickActions')}
@@ -361,12 +362,12 @@ function TransporteurDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="gap-2">
+          <CardHeader className="">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
               {tDash('transporteur.sections.alertsNotifications')}
-              {notifications.some((n) => !n.readAt) && (
+              {notifications.some((n) => !n.isRead) && (
                 <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
               )}
             </CardTitle>
@@ -379,7 +380,7 @@ function TransporteurDashboard() {
                   return (
                     <div
                       key={notification.id}
-                      className={`p-3 ${notification.bgColor} border ${notification.borderColor} rounded-lg ${!notification.readAt ? 'ring-1 ring-blue-200' : ''}`}
+                      className={`p-3 ${notification.bgColor} border ${notification.borderColor} rounded-lg ${!notification.isRead ? 'ring-1 ring-blue-200' : ''}`}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <IconComponent
@@ -390,7 +391,7 @@ function TransporteurDashboard() {
                         >
                           {notification.title}
                         </p>
-                        {!notification.readAt && (
+                        {!notification.isRead && (
                           <div className="w-2 h-2 bg-tsa-blue/90 rounded-full flex-shrink-0" />
                         )}
                       </div>
@@ -418,8 +419,8 @@ function TransporteurDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3 sm:pb-6">
+        <Card className="gap-2">
+          <CardHeader className="">
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
               {tDash('transporteur.sections.monthlyStats')}
@@ -445,7 +446,7 @@ function TransporteurDashboard() {
                 {tDash('transporteur.monthlyStats.earningsThisMonth')}
               </span>
               <span className="font-semibold text-sm sm:text-base">
-                {DashboardUtils.formatCurrency(monthlySummary?.totalCost || 0)}
+                {formatCurrency(monthlySummary?.totalCost || 0)}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -453,10 +454,10 @@ function TransporteurDashboard() {
                 {tDash('transporteur.insights.successRate')}
               </span>
               <span className="font-semibold text-green-600 text-sm sm:text-base">
-                {monthlySummary?.successRate || 0}
+                {formatPercentage(monthlySummary?.successRate || 0)}
               </span>
             </div>
-            <Progress value={metrics?.successRate || 0} className="w-full" />
+            <Progress value={monthlySummary?.successRate || 0} className="w-full" />
             <Link to="/app/profile">
               <Button variant="outline" className="w-full gap-2 bg-transparent text-sm">
                 <Settings className="h-4 w-4" />

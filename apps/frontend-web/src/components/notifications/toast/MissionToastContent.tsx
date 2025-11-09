@@ -55,10 +55,10 @@ export function MissionToastContent({ notification, onClose }: MissionToastConte
       {data && (
         <div className="space-y-2 pl-11">
           {/* Trajet */}
-          {data.missionTitle && (
+          {data.title && (
             <div className="flex items-center gap-2 text-sm">
               <MapPin className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-700 font-medium">{data.missionTitle}</span>
+              <span className="text-gray-700 font-medium">{data.title}</span>
             </div>
           )}
 

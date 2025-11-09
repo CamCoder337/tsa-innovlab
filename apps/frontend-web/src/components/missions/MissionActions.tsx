@@ -28,9 +28,11 @@ import { useMissions } from '@/hooks/useMissions';
 interface MissionActionsProps {
   mission: Mission;
   userRole?: string;
+  onPublish?: (missionId: string) => void;
   onApply?: (selectedVehicleId: string) => void;
   onUpdate?: (status: MissionStatus, comment?: string) => Promise<void>;
   onStatusUpdate?: (status: MissionStatus) => Promise<void>;
+  onCancel?: (missionId: string) => void;
   onDelete?: (missionId: string) => void;
   onRefresh: () => void;
 }
@@ -38,9 +40,11 @@ interface MissionActionsProps {
 export function MissionActions({
   mission,
   userRole,
+  onPublish,
   onApply,
   onUpdate,
   onStatusUpdate,
+  onCancel,
   onDelete,
   onRefresh,
 }: MissionActionsProps) {
@@ -67,11 +71,17 @@ export function MissionActions({
     setIsLoading(true);
     try {
       switch (action.type) {
+        case 'publish':
+          await onPublish?.(mission.id);
+          break;
         case 'apply':
           await onApply?.(selectedVehicleId);
           break;
         case 'start':
           await onStatusUpdate?.('in_progress');
+          break;
+        case 'cancel':
+          await onCancel?.(mission.id);
           break;
         case 'delete':
           await onDelete?.(mission.id);
@@ -132,7 +142,7 @@ export function MissionActions({
               {getCommonActions()}
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => handleAction('cancel', tMissions('actions.cancelMission'))}
+                onClick={() => handleAction('cancel', tMissions('actions.cancel'))}
               >
                 <X className="mr-2 h-4 w-4" />
                 <span>{tCommon('actions.cancel')}</span>
@@ -155,9 +165,7 @@ export function MissionActions({
           )}
 
           {mission.status === 'assigned' && (
-            <DropdownMenuItem
-              onClick={() => handleAction('start', tMissions('actions.startMission'))}
-            >
+            <DropdownMenuItem onClick={() => handleAction('start', tMissions('actions.start'))}>
               <Clock className="mr-2 h-4 w-4" />
               <span>{tMissions('actions.start')}</span>
             </DropdownMenuItem>
@@ -175,7 +183,7 @@ export function MissionActions({
           {!['published', 'completed'].includes(mission.status) && (
             <DropdownMenuItem
               className="text-red-600"
-              onClick={() => handleAction('cancel', tMissions('actions.cancelMission'))}
+              onClick={() => handleAction('cancel', tMissions('actions.cancel'))}
             >
               <X className="mr-2 h-4 w-4" />
               <span>{tCommon('actions.cancel')}</span>
@@ -217,7 +225,7 @@ export function MissionActions({
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md gap-0">
           <DialogDescription className="hidden">
             {mission.status === 'draft' ? tCommon('actions.publish') : action?.title}
           </DialogDescription>
@@ -230,22 +238,16 @@ export function MissionActions({
               {tCommon('actions.warning.confirmAction')} {action?.title.toLowerCase()} ?
             </p>
 
-            {(action?.type === 'cancel' || action?.type === 'complete') && (
+            {action?.type === 'complete' && (
               <div className="space-y-2">
                 <Label htmlFor="comment" className="text-xs sm:text-sm">
-                  {action.type === 'cancel'
-                    ? tMissions('actions.cancellationReason')
-                    : tMissions('actions.optionalComment')}
+                  {tMissions('actions.optionalComment')}
                 </Label>
                 <Textarea
                   id="comment"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder={
-                    action.type === 'cancel'
-                      ? tMissions('actions.whyCancelMission')
-                      : tMissions('actions.addMissionDetails')
-                  }
+                  placeholder={tMissions('actions.addMissionDetails')}
                   rows={3}
                   className="text-xs sm:text-sm"
                 />

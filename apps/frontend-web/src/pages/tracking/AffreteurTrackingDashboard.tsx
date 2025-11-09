@@ -5,7 +5,7 @@ import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import { Truck, Package, Clock, MapPin, AlertTriangle, DollarSign } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
-import { getStatusColor } from '@/lib/mission-utils';
+import { getStatusColor } from '@/lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import MissionTrackingButton from '@/components/missions/MissionTrackingButton';
 

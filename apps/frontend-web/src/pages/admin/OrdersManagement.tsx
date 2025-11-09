@@ -57,9 +57,8 @@ import {
 } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
-import { getOrderStatusColor, getOrderStatusLabel } from '@/lib/order-utils';
 import { OrderStatus, PaymentStatus } from '@/types/order.types';
 import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
@@ -136,10 +135,10 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.totalAmount || order.total || '0'), 0),
+    totalRevenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
     averageOrderValue:
       orders.length > 0
-        ? orders.reduce((sum, order) => sum + parseFloat(order.totalAmount || order.total || '0'), 0) / orders.length
+        ? orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0) / orders.length
         : 0,
   };
 
@@ -242,7 +241,7 @@ export default function OrdersManagement() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {getOrderStatusLabel(OrderStatus.PENDING)}
+                      {getStatusLabel(OrderStatus.PENDING as OrderStatus, tCommon)}
                     </p>
                     <p className="text-2xl font-bold">{orderStats.pending}</p>
                   </div>
@@ -310,13 +309,13 @@ export default function OrdersManagement() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-sm">
-                          {formatCurrency(parseFloat(order.totalAmount || order.total || '0'))}
+                          {formatCurrency(order.totalAmount || 0)}
                         </p>
                         <Badge
                           variant="secondary"
-                          className={`${getOrderStatusColor(order.status)} text-white`}
+                          className={`${getStatusColor(order.status)} text-white`}
                         >
-                          {getOrderStatusLabel(order.status)}
+                          {getStatusLabel(order.status, tCommon)}
                         </Badge>
                       </div>
                     </div>
@@ -499,14 +498,14 @@ export default function OrdersManagement() {
                             {formatDate(order.createdAt!)}
                           </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(parseFloat(order.totalAmount || order.total || '0'))}
+                            {formatCurrency(order.totalAmount || 0)}
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant="secondary"
-                              className={`${getOrderStatusColor(order.status)} text-white text-xs`}
+                              className={`${getStatusColor(order.status)} text-white text-xs`}
                             >
-                              {getOrderStatusLabel(order.status)}
+                              {getStatusLabel(order.status, tCommon)}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">

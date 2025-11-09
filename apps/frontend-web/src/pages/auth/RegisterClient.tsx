@@ -19,9 +19,7 @@ const RegisterClient: React.FC = () => {
   const { t: tCommon } = useCommonTranslation();
 
   const handleRegister = async (data: CreateUserRequest) => {
-    // Force role to 'client' for client registration
-    const clientData = { ...data, role: 'client' as const };
-    const response = await signup(clientData);
+    const response = await signup(data);
 
     const { error } = useAuthStore.getState();
 
