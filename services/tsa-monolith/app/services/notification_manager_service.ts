@@ -4,7 +4,6 @@ import Mission from '#models/mission'
 import User from '#models/user'
 import WebSocketService from './websocket_service.js'
 import EmailService from './email_service.js'
-import env from '#start/env'
 
 @inject()
 export default class NotificationManagerService {
