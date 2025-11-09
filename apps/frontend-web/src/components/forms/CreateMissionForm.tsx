@@ -563,11 +563,6 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {addresses.map((address) => (
-                                <SelectItem key={address.id} value={address.id}>
-                                  {address.label}
-                                </SelectItem>
-                              ))}
                               <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                                 <button
                                   type="button"
@@ -578,6 +573,11 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                                   <span>{tForms('labels.newAddress')}</span>
                                 </button>
                               </div>
+                              {addresses.map((address) => (
+                                <SelectItem key={address.id} value={address.id}>
+                                  {address.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -714,11 +714,6 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {addresses.map((address) => (
-                                <SelectItem key={address.id} value={address.id}>
-                                  {address.label}
-                                </SelectItem>
-                              ))}
                               <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
                                 <button
                                   type="button"
@@ -729,6 +724,11 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                                   <span>{tForms('labels.newAddress')}</span>
                                 </button>
                               </div>
+                              {addresses.map((address) => (
+                                <SelectItem key={address.id} value={address.id}>
+                                  {address.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
