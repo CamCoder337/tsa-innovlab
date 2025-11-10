@@ -97,7 +97,7 @@ export default class UsersController {
           // Statistiques pour les clients
           const orders = await Order.query().where('user_id', user.id)
           stats.totalOrders = orders.length
-          stats.totalSpent = orders.reduce((sum, order) => sum + Number(order.totalAmount), 0)
+          stats.totalSpent = orders.reduce((sum, order) => sum + Number(order.total), 0)
           stats.pendingOrders = orders.filter((o) => o.status === 'pending').length
           stats.completedOrders = orders.filter((o) => o.status === 'delivered').length
           break

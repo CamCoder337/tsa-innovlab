@@ -36,7 +36,7 @@ test.group('Order Model', (group) => {
     const order1 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -47,7 +47,7 @@ test.group('Order Model', (group) => {
     const order2 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 20000,
+      total: 20000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -95,7 +95,7 @@ test.group('Order Model', (group) => {
     const pendingOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -108,7 +108,7 @@ test.group('Order Model', (group) => {
     const paidOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PAID,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -121,7 +121,7 @@ test.group('Order Model', (group) => {
     const shippedOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.SHIPPED,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -134,7 +134,7 @@ test.group('Order Model', (group) => {
     const deliveredOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.DELIVERED,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -147,7 +147,7 @@ test.group('Order Model', (group) => {
     const processingOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PROCESSING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -185,7 +185,7 @@ test.group('Order Model', (group) => {
     const paidOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PAID,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -198,7 +198,7 @@ test.group('Order Model', (group) => {
     const unpaidOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -211,7 +211,7 @@ test.group('Order Model', (group) => {
     const failedOrder = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -248,7 +248,7 @@ test.group('Order Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',

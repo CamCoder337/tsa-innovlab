@@ -37,6 +37,12 @@
     "settings": "Paramètres",
     "support": "Support",
     "viewDetails": "Voir les détails",
+    "markProcessing": "Marquer en traitement",
+    "markShipped": "Marquer comme expédiée",
+    "markDelivered": "Marquer comme livrée",
+    "cancelOrder": "Annuler la commande",
+    "updateStatus": "Mettre à jour le statut",
+    "bulkSelected": "{{count}} élément(s) sélectionné(s)",
     "retry": "Réessayer",
     "warning": {
       "title": "Attention",

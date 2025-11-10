@@ -108,7 +108,7 @@ test.group('E-commerce Complete Flow', (group) => {
 
     cartResponse.assertStatus(200)
     assert.equal(cartResponse.body().data.itemCount, 0, 'Cart should be empty initially')
-    assert.equal(cartResponse.body().data.totalAmount, 0, 'Total should be 0 initially')
+    assert.equal(cartResponse.body().data.total, 0, 'Total should be 0 initially')
 
     // ÉTAPE 3 : Ajouter produit 1 au panier
     const addProduct1Response = await httpClient
@@ -140,7 +140,7 @@ test.group('E-commerce Complete Flow', (group) => {
     cartSummaryResponse.assertStatus(200)
     assert.equal(cartSummaryResponse.body().data.itemCount, 3, 'Should have 3 items (1+2)')
     assert.equal(
-      cartSummaryResponse.body().data.totalAmount,
+      cartSummaryResponse.body().data.total,
       530000,
       'Total should be 530000 (500000 + 15000*2)'
     )
@@ -162,7 +162,7 @@ test.group('E-commerce Complete Flow', (group) => {
     const order = createOrderResponse.body().data
     assert.isDefined(order.orderNumber, 'Order should have order number')
     assert.equal(order.status, 'pending', 'Order status should be pending')
-    assert.equal(order.totalAmount, 530000, 'Order total should match cart total')
+    assert.equal(order.total, 530000, 'Order total should match cart total')
 
     // ÉTAPE 7 : Vérifier que le panier a été converti (nouveau panier vide)
     const cartAfterOrderResponse = await httpClient.get('/api/client/cart').bearerToken(accessToken)

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,7 @@ import {
   DollarSign,
   TrendingUp,
 } from 'lucide-react';
-import { useOrders } from '@/hooks/useOrders';
+import { useAdminOrders } from '@/hooks/useAdminOrders';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
 import { formatCurrency, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
@@ -70,6 +70,7 @@ export default function OrdersManagement() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const navigate = useNavigate();
 
   // Hooks
   const {
@@ -80,10 +81,16 @@ export default function OrdersManagement() {
     fetchOrder,
     updateOrderStatus,
     cancelOrder,
-    clearError,
-  } = useOrders();
+    setError: clearError,
+  } = useAdminOrders();
 
   const allStats = useAllAdminStats();
+
+  // Load orders and stats on mount
+  useEffect(() => {
+    fetchOrders();
+    allStats.fetchAllStats();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter orders based on search and filters
   const filteredOrders = orders.filter((order) => {
@@ -102,7 +109,7 @@ export default function OrdersManagement() {
   // Handle order status update
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      await updateOrderStatus(orderId, newStatus);
+      await updateOrderStatus(orderId, { status: newStatus });
       // Refresh orders list
       fetchOrders();
     } catch (error) {
@@ -135,10 +142,10 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
+    totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
     averageOrderValue:
       orders.length > 0
-        ? orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0) / orders.length
+        ? orders.reduce((sum, order) => sum + (order.total || 0), 0) / orders.length
         : 0,
   };
 
@@ -166,7 +173,7 @@ export default function OrdersManagement() {
         <div className="mb-4 p-4 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg">
           <div className="flex items-center justify-between">
             <p className="text-red-600">{error}</p>
-            <Button variant="ghost" size="sm" onClick={clearError}>
+            <Button variant="ghost" size="sm" onClick={() => clearError(null)}>
               <XCircle className="h-4 w-4" />
             </Button>
           </div>
@@ -309,7 +316,7 @@ export default function OrdersManagement() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-sm">
-                          {formatCurrency(order.totalAmount || 0)}
+                          {formatCurrency(order.total || 0)}
                         </p>
                         <Badge
                           variant="secondary"
@@ -465,8 +472,17 @@ export default function OrdersManagement() {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
-                      <Link to={`/app/shop/orders/${order.id}`} key={order.id}>
-                        <TableRow>
+                        <TableRow
+                          key={order.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={(e) => {
+                            // Don't navigate if clicking on checkbox or action buttons
+                            if ((e.target as HTMLElement).closest('input, button, [role="menuitem"]')) {
+                              return;
+                            }
+                            navigate(`/app/shop/order/${order.id}`);
+                          }}
+                        >
                           <TableCell>
                             <input
                               type="checkbox"
@@ -498,7 +514,7 @@ export default function OrdersManagement() {
                             {formatDate(order.createdAt!)}
                           </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(order.totalAmount || 0)}
+                            {formatCurrency(order.total || 0)}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -602,7 +618,6 @@ export default function OrdersManagement() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      </Link>
                     ))}
                   </TableBody>
                 </Table>
@@ -635,7 +650,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.conversionRate')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {allStats.overview.stats?.conversion.total.toFixed(1)}%
+                      {((allStats.overview.stats?.conversion?.total || 0) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -643,7 +658,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.averageBasket')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {formatCurrency(allStats.overview.stats?.averageBasket.total || 0)}
+                      {formatCurrency(allStats.overview.stats?.averageBasket?.total || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -651,7 +666,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.ordersToday')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {allStats.overview.stats?.orders.byPeriod.today || 0}
+                      {allStats.overview.stats?.orders?.byPeriod?.today || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -659,7 +674,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.revenueThisMonth')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {formatCurrency(allStats.overview.stats?.revenue.last30Days || 0)}
+                      {formatCurrency(allStats.overview.stats?.revenue?.last30Days || 0)}
                     </span>
                   </div>
                 </div>

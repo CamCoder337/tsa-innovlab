@@ -48,13 +48,25 @@ export interface Order extends Timestamps {
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
-  totalAmount?: number; // Total amount (used by backend)
+  paymentReference?: string | null;
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  trackingNumber?: string | null;
   shippingAddressId: string | null;
   billingAddressId: string | null;
   shippingAddress: Address; // Optional populated relation
   billingAddress: Address; // Optional populated relation
   notes: string | null; // Notes de la commande
   items: OrderItem[]; // Optional populated relation
+  paidAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
 }
 
 // DTOs for API requests
@@ -128,4 +140,72 @@ export interface OrderFiltersQuery {
   status?: OrderStatus;
   sortBy?: 'createdAt' | 'total' | 'status';
   sortOrder?: 'asc' | 'desc';
+}
+
+// Admin-specific types
+export interface AdminOrderFilterParams {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  search?: string;
+  sortBy?: 'createdAt' | 'total' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AdminOrderStats {
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  ordersByStatus: {
+    pending: number;
+    paid: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+  };
+  ordersByPaymentStatus: {
+    pending: number;
+    completed: number;
+    failed: number;
+    refunded: number;
+  };
+  recentOrders: Order[];
+  topProducts?: Array<{
+    productId: string;
+    productName: string;
+    quantitySold: number;
+    revenue: number;
+  }>;
+}
+
+export interface RefundOrderRequest {
+  amount?: number;
+  reason: string;
+  refundShipping?: boolean;
+}
+
+export interface BulkOrderActionRequest {
+  orderIds: string[];
+  action: 'cancel' | 'update_status' | 'export' | 'delete';
+  data?: {
+    status?: OrderStatus;
+    reason?: string;
+  };
+}
+
+export interface BulkOrderActionResult {
+  success: number;
+  failed: number;
+  errors: Array<{
+    orderId: string;
+    error: string;
+  }>;
 }

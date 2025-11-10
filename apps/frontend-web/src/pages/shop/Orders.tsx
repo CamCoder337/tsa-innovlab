@@ -109,7 +109,7 @@ export default function OrdersPage() {
           comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
           break;
         case 'total':
-          comparison = (a.totalAmount || 0) - (b.totalAmount || 0);
+          comparison = (Number(a.total) || 0) - (Number(b.total) || 0);
           break;
         case 'status':
           comparison = a.status.localeCompare(b.status);
@@ -294,7 +294,7 @@ export default function OrdersPage() {
                             </span>
                           </span>
                           <span className="font-semibold text-zinc-900">
-                            {(order.totalAmount || 0).toLocaleString('fr-FR')} FCFA
+                            {(Number(order.total) || 0).toLocaleString('fr-FR')} FCFA
                           </span>
                           {order.items && (
                             <span className="text-zinc-500">
