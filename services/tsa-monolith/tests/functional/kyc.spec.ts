@@ -4,10 +4,9 @@ import Database from '@adonisjs/lucid/services/db'
 import User, { UserRole, UserStatus } from '#models/user'
 import env from '#start/env'
 
-
 /**
  * Tests fonctionnels pour le module KYC
- * 
+ *
  * Ces tests vérifient :
  * 1. Extraction de documents CNI
  * 2. Gestion des erreurs
@@ -69,12 +68,13 @@ test.group('KYC Module', (group) => {
     assert.properties(response.body(), ['success'])
   })
 
-  test('should reject extraction without authentication', async ({ assert, client: httpClient }) => {
-    const response = await httpClient
-      .post('/api/kyc/extract')
-      .fields({
-        document_type: 'CNI_ANCIEN',
-      })
+  test('should reject extraction without authentication', async ({
+    assert,
+    client: httpClient,
+  }) => {
+    const response = await httpClient.post('/api/kyc/extract').fields({
+      document_type: 'CNI_ANCIEN',
+    })
 
     assert.equal(response.status(), 401)
   })
@@ -83,12 +83,9 @@ test.group('KYC Module', (group) => {
     assert,
     client: httpClient,
   }) => {
-    const response = await httpClient
-      .post('/api/kyc/extract')
-      .bearerToken(clientToken)
-      .fields({
-        document_type: 'INVALID_TYPE',
-      })
+    const response = await httpClient.post('/api/kyc/extract').bearerToken(clientToken).fields({
+      document_type: 'INVALID_TYPE',
+    })
 
     assert.equal(response.status(), 400)
     assert.equal(response.body().success, false)
@@ -96,22 +93,16 @@ test.group('KYC Module', (group) => {
   })
 
   test('should reject extraction without recto file', async ({ assert, client: httpClient }) => {
-    const response = await httpClient
-      .post('/api/kyc/extract')
-      .bearerToken(clientToken)
-      .fields({
-        document_type: 'CNI_ANCIEN',
-      })
+    const response = await httpClient.post('/api/kyc/extract').bearerToken(clientToken).fields({
+      document_type: 'CNI_ANCIEN',
+    })
 
     assert.equal(response.status(), 400)
     assert.equal(response.body().success, false)
     assert.include(response.body().message.toLowerCase(), 'recto')
   })
 
-  test('should reject stats access for non-admin users', async ({
-    assert,
-    client: httpClient,
-  }) => {
+  test('should reject stats access for non-admin users', async ({ assert, client: httpClient }) => {
     const response = await httpClient.get('/api/kyc/stats').bearerToken(clientToken)
 
     assert.equal(response.status(), 403)

@@ -11,7 +11,7 @@ export default class KYCController {
 
   /**
    * Extract KYC document information
-   * 
+   *
    * @swagger
    * /api/kyc/extract:
    *   post:
@@ -55,7 +55,7 @@ export default class KYCController {
   async extract({ auth, request, response }: HttpContext) {
     try {
       const user = auth.user!
-      
+
       // Validate request
       const documentType = request.input('document_type')
       if (!['CNI_ANCIEN', 'CNI_NOUVEAU', 'PERMIS_CONDUIRE'].includes(documentType)) {
@@ -141,14 +141,14 @@ export default class KYCController {
       logger.error('KYC extraction error', { error })
       return response.internalServerError({
         success: false,
-        message: 'Erreur lors de l\'extraction du document',
+        message: "Erreur lors de l'extraction du document",
       })
     }
   }
 
   /**
    * Get KYC service statistics
-   * 
+   *
    * @swagger
    * /api/kyc/stats:
    *   get:
@@ -168,7 +168,7 @@ export default class KYCController {
   async stats({ auth, response }: HttpContext) {
     try {
       const user = auth.user!
-      
+
       // Only admins can view stats
       if (user.role !== 'admin') {
         return response.forbidden({
@@ -201,7 +201,7 @@ export default class KYCController {
 
   /**
    * Check KYC service health
-   * 
+   *
    * @swagger
    * /api/kyc/health:
    *   get:

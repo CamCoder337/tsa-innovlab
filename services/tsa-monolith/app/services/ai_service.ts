@@ -458,7 +458,7 @@ export default class AIService {
       // Créer FormData avec les fichiers
       const formData = new FormDataNode()
       formData.append('document_type', request.document_type)
-      
+
       // Détecter le type de fichier depuis le buffer (magic bytes)
       const getContentType = (buffer: Buffer): string => {
         const header = buffer.toString('hex', 0, 4)
@@ -467,21 +467,21 @@ export default class AIService {
         if (header.startsWith('25504446')) return 'application/pdf'
         return 'application/octet-stream'
       }
-      
+
       const rectoContentType = getContentType(rectoFile)
       const rectoExt = rectoContentType === 'application/pdf' ? 'pdf' : 'jpg'
-      
+
       // Ajouter les fichiers avec les bonnes options
       formData.append('recto', rectoFile, {
         filename: `recto.${rectoExt}`,
         contentType: rectoContentType,
         knownLength: rectoFile.length,
       })
-      
+
       if (versoFile) {
         const versoContentType = getContentType(versoFile)
         const versoExt = versoContentType === 'application/pdf' ? 'pdf' : 'jpg'
-        
+
         formData.append('verso', versoFile, {
           filename: `verso.${versoExt}`,
           contentType: versoContentType,
@@ -512,13 +512,13 @@ export default class AIService {
         method: data.extraction_method,
         cost: data.extraction_cost_usd,
       })
-      
+
       return data
     } catch (error: any) {
       if (error.response) {
-        logger.error('KYC extraction error response', { 
-          status: error.response.status, 
-          body: error.response.data 
+        logger.error('KYC extraction error response', {
+          status: error.response.status,
+          body: error.response.data,
         })
       } else {
         logger.error('Failed to extract KYC document from AI service', { error: error.message })
