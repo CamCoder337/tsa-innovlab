@@ -2,33 +2,44 @@ import type { Timestamps } from './common.types';
 
 export interface Address extends Partial<Timestamps> {
   id: string;
-  street: string;
+  userId: string;
+  street: string | null;
   city: string;
   region: string;
   country: string;
-  postalCode: string;
+  postalCode: string | null;
+  latitude: number;
+  longitude: number;
+  label: string;
+}
+
+export interface CreateAddressDto {
+  street?: string;
+  city: string;
+  region: string;
+  postalCode?: string;
+  country: string;
   latitude: number | null;
   longitude: number | null;
   label: string;
 }
 
-export interface CreateAddressDto {
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  latitude?: number;
-  longitude?: number;
-  isDefault?: boolean;
-  type?: 'shipping' | 'billing' | 'both';
-  company?: string;
-  phone?: string;
-  notes?: string | null;
-}
-
 export interface UpdateAddressDto extends Partial<CreateAddressDto> {
   id: string;
+}
+
+export interface AddressDetails {
+  formatted_address: string;
+  street_number?: string;
+  route?: string;
+  locality?: string;
+  administrative_area_level_1?: string;
+  country?: string;
+  postal_code?: string;
+  label?: string;
+  latitude: number;
+  longitude: number;
+  place_id: string;
 }
 
 interface AddressState {
@@ -42,15 +53,12 @@ interface AddressActions {
   // Async actions
   fetchAddresses: () => Promise<void>;
   fetchAddress: (id: string) => Promise<void>;
-  createAddress: (addressData: Omit<Address, 'createdAt'>) => Promise<boolean>;
-  updateAddressAsync: (id: string, updates: Partial<Address>) => Promise<boolean>;
-  deleteAddressAsync: (id: string) => Promise<boolean>;
+  createAddress: (addressData: CreateAddressDto) => Promise<void>;
+  updateAddress: (id: string, updates: UpdateAddressDto) => Promise<void>;
+  deleteAddress: (id: string) => Promise<void>;
 
   // Basic actions
   setAddresses: (addresses: Address[]) => void;
-  addAddress: (address: Address) => void;
-  updateAddress: (id: string, updates: Partial<Address>) => void;
-  deleteAddress: (id: string) => void;
   setCurrentAddress: (address: Address | null) => void;
 
   // Utility actions
@@ -64,6 +72,7 @@ interface AddressActions {
   searchAddresses: (query: string) => Address[];
   getAddressesByCity: (city: string) => Address[];
   getAddressesByRegion: (region: string) => Address[];
+  convertAddress: (details: AddressDetails) => CreateAddressDto;
 }
 
 export type AddressStore = AddressState & AddressActions;

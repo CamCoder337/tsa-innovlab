@@ -97,7 +97,7 @@ export const useOrderStore = create<OrderStore>()(
 
           if (response.data) {
             // Extract the order from the response (it's wrapped in a Record<string, Order>)
-            const order = Object.values(response.data)[0];
+            const order = response.data;
 
             // Add the new order to the orders list
             const { orders } = get();

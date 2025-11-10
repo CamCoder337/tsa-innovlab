@@ -77,7 +77,7 @@
     "downloadError": "Error downloading invoice",
     "selectVehicleError": "Please select a vehicle",
     "applicationError": "Error submitting application",
-    "fillAddressesForPricing": "Please fill in addresses, weight and volume to calculate dynamic pricing",
+    "fillAddressesForPricing": "Please fill in addresses and weight to calculate dynamic pricing",
     "addressesNeedCoordinates": "Addresses must have valid coordinates to calculate distance",
     "cannotCalculateDistance": "Cannot calculate distance between addresses",
     "dynamicPricingError": "Error calculating dynamic pricing"

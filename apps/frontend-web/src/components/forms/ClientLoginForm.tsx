@@ -117,18 +117,19 @@ export default function ClientLoginForm({ onSubmit, isSubmitting = false }: Clie
               {isSubmitting ? tAuth('login.loading') : tAuth('login.client.link')}
             </Button>
 
-            <div className="text-center">
-              <span className="text-gray-600 dark:text-gray-400">{tAuth('login.noAccount')} </span>
-              <Link
-                to="/register"
-                className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
+            <div className="text-center flex flex-col gap-3">
+              <div className="text-center">
+                <span className="text-gray-600 dark:text-gray-400">
+                  {tAuth('login.noAccount')}{' '}
+                </span>
+                <Link
+                  to="/register"
+                  className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
                 dark:hover:text-tsa-blue font-medium text-sm transition-colors"
-              >
-                {tAuth('register.client.button')}
-              </Link>
-            </div>
-
-            <div className="text-center flex flex-col gap-2">
+                >
+                  {tAuth('register.client.button')}
+                </Link>
+              </div>
               <Link
                 to="/app/login"
                 className="text-gray-500 dark:text-white text-sm transition-colors"

@@ -48,7 +48,14 @@
     "paymentInfo": "Informations de paiement",
     "paymentDate": "Date de paiement",
     "transactionId": "ID de transaction",
-    "orderStatus": "Statut commande"
+    "orderStatus": "Statut commande",
+    "standardDelivery": "Standard (3-5 jours)",
+    "expressDelivery": "Express (1-2 jours)",
+    "sameDayDelivery": "Livraison le jour même",
+    "companyDescription": "Société de transport et logistique",
+    "companyLocation": "Yaoundé, Cameroun",
+    "phone": "Tél",
+    "defaultCountry": "Cameroun"
   },
   "placeholders": {
     "cardNumber": "1234 5678 9012 3456",
@@ -94,6 +101,7 @@
     "thankYouTrust": "Merci pour votre confiance en TSA Logistics !",
     "questionOrder": "Pour toute question concernant votre commande, contactez-nous à",
     "noPayments": "Aucun paiement",
-    "noPaymentsDescription": "Aucun paiement n'a été effectué pour le moment."
+    "noPaymentsDescription": "Aucun paiement n'a été effectué pour le moment.",
+    "paymentError": "Une erreur est survenue lors du traitement du paiement"
   }
 }

@@ -68,9 +68,10 @@
       "availableMissions": "Missions Disponibles",
       "activeMissions": "Missions Actives",
       "successRate": "Taux de Réussite",
-      "new": "nouvelles",
+      "new": "nouvelle(s)",
       "todayEarnings": "Gains Aujourd'hui",
-      "vsYesterday": "vs hier"
+      "vsYesterday": "vs hier",
+      "thisWeek": "cette semaine"
     },
     "sections": {
       "myActiveMissions": "Mes Missions Actives",

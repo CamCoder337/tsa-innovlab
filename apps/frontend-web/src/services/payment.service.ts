@@ -8,6 +8,7 @@ import type {
 import { BaseApi } from './api';
 import type { ApiResponse } from '@/types/common.types';
 import type { AxiosError } from 'axios';
+import { PaymentMethod, PaymentStatus } from '@/types/order.types';
 
 class PaymentService extends BaseApi {
   private isAxiosError(
@@ -108,8 +109,8 @@ class PaymentService extends BaseApi {
             id: 'pay_1',
             orderId: params.orderId || 'order_1',
             amount: 150000, // Amount in cents (1500 FCFA)
-            method: 'orange_money',
-            status: 'completed',
+            method: PaymentMethod.ORANGE_MONEY,
+            status: PaymentStatus.COMPLETED,
             transactionId: 'TXN_OM_123456',
             phoneNumber: '+237600000000',
             createdAt: '2024-01-15T10:30:00Z',
@@ -119,8 +120,8 @@ class PaymentService extends BaseApi {
             id: 'pay_2',
             orderId: params.orderId || 'order_2',
             amount: 75000, // Amount in cents (750 FCFA)
-            method: 'bank_transfer',
-            status: 'pending',
+            method: PaymentMethod.BANK_TRANSFER,
+            status: PaymentStatus.PENDING,
             transactionId: 'TXN_BT_789012',
             createdAt: '2024-01-10T14:20:00Z',
             updatedAt: '2024-01-10T14:20:00Z',
@@ -129,8 +130,8 @@ class PaymentService extends BaseApi {
             id: 'pay_3',
             orderId: params.orderId || 'order_3',
             amount: 200000, // Amount in cents (2000 FCFA)
-            method: 'mtn_mobile_money',
-            status: 'failed',
+            method: PaymentMethod.MTN_MOMO,
+            status: PaymentStatus.FAILED,
             transactionId: 'TXN_MTN_345678',
             phoneNumber: '+237677000000',
             createdAt: '2024-01-05T09:15:00Z',

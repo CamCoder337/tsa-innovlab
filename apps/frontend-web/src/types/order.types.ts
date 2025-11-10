@@ -1,6 +1,7 @@
 import type { Address } from './address.types';
 import type { User } from './auth.types';
 import type { Timestamps } from './common.types';
+import type { Product } from './product.types';
 
 export enum OrderStatus {
   PENDING = 'pending', // En attente de paiement
@@ -15,6 +16,7 @@ export enum OrderStatus {
 export enum PaymentMethod {
   ORANGE_MONEY = 'orange_money',
   MTN_MOMO = 'mtn_mobile_money',
+  MOOV = 'moov_money',
   WAVE = 'wave',
   BANK_TRANSFER = 'bank_transfer',
   CASH_ON_DELIVERY = 'cash_on_delivery',
@@ -32,12 +34,10 @@ export interface OrderItem extends Partial<Timestamps> {
   orderId: string;
   productId: string;
   productName?: string;
-  productReference?: string;
-  productImageUrl?: string;
+  product?: Product;
   quantity: number;
   unitPrice: string; // Decimal stored as string
-  subtotal?: string; // Decimal stored as string (optional for backward compatibility)
-  totalPrice?: string; // Decimal stored as string (used by backend)
+  totalPrice: string; // Decimal stored as string (used by backend)
 }
 
 export interface Order extends Timestamps {
@@ -46,34 +46,35 @@ export interface Order extends Timestamps {
   user?: User; // Optional populated relation
   orderNumber: string; // Numéro de commande unique (ex: ORD-20250101-0001)
   status: OrderStatus;
-  paymentMethod: PaymentMethod | null;
+  paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
-  paymentReference: string | null; // Référence de paiement externe
-  subtotal?: string; // Sous-total (produits uniquement) - optional for backward compatibility
-  shippingCost?: string; // Frais de livraison - optional for backward compatibility
-  tax?: string; // Taxes - optional for backward compatibility
-  total?: string; // Total final - optional for backward compatibility
-  totalAmount?: string; // Total amount (used by backend)
+  paymentReference?: string | null;
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  trackingNumber?: string | null;
   shippingAddressId: string | null;
   billingAddressId: string | null;
-  shippingAddress?: Address; // Optional populated relation
-  billingAddress?: Address; // Optional populated relation
-  customerName?: string; // Optional - may not be provided by backend
-  customerEmail?: string; // Optional - may not be provided by backend
-  customerPhone?: string; // Optional - may not be provided by backend
+  shippingAddress: Address; // Optional populated relation
+  billingAddress: Address; // Optional populated relation
   notes: string | null; // Notes de la commande
-  trackingNumber: string | null; // Numéro de suivi de livraison
-  items?: OrderItem[]; // Optional populated relation
-  paidAt: string | null;
-  shippedAt: string | null;
-  deliveredAt: string | null;
-  cancelledAt: string | null;
+  items: OrderItem[]; // Optional populated relation
+  paidAt?: string | null;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
 }
 
 // DTOs for API requests
 export interface CreateOrderRequest {
-  shippingAddressId: string;
-  billingAddressId: string;
+  shippingAddressId?: string | null;
+  billingAddressId?: string | null;
+  shippingAddress?: Omit<Address, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
+  billingAddress?: Omit<Address, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
   paymentMethod: PaymentMethod | string; // Accept both enum and string values
   notes?: string;
 }
@@ -139,4 +140,72 @@ export interface OrderFiltersQuery {
   status?: OrderStatus;
   sortBy?: 'createdAt' | 'total' | 'status';
   sortOrder?: 'asc' | 'desc';
+}
+
+// Admin-specific types
+export interface AdminOrderFilterParams {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  search?: string;
+  sortBy?: 'createdAt' | 'total' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface AdminOrderStats {
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  ordersByStatus: {
+    pending: number;
+    paid: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+  };
+  ordersByPaymentStatus: {
+    pending: number;
+    completed: number;
+    failed: number;
+    refunded: number;
+  };
+  recentOrders: Order[];
+  topProducts?: Array<{
+    productId: string;
+    productName: string;
+    quantitySold: number;
+    revenue: number;
+  }>;
+}
+
+export interface RefundOrderRequest {
+  amount?: number;
+  reason: string;
+  refundShipping?: boolean;
+}
+
+export interface BulkOrderActionRequest {
+  orderIds: string[];
+  action: 'cancel' | 'update_status' | 'export' | 'delete';
+  data?: {
+    status?: OrderStatus;
+    reason?: string;
+  };
+}
+
+export interface BulkOrderActionResult {
+  success: number;
+  failed: number;
+  errors: Array<{
+    orderId: string;
+    error: string;
+  }>;
 }

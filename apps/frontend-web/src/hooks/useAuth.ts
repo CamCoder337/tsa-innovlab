@@ -1,5 +1,4 @@
 import { useAuthStore } from '@/stores/authStore';
-import { useEffect } from 'react';
 
 export const useAuth = () => {
   const user = useAuthStore((s) => s.currentUser);
@@ -14,11 +13,6 @@ export const useAuth = () => {
   const logout = useAuthStore((s) => s.logout);
   const setToken = useAuthStore((s) => s.setToken);
   const updateUser = useAuthStore((s) => s.updateUser);
-
-  useEffect(() => {
-    if (isAuthenticated && !token) logout();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
 
   return {
     user,

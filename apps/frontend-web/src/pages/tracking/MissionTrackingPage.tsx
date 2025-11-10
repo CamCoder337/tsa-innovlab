@@ -29,8 +29,8 @@ import { useMissions } from '@/hooks/useMissions';
 import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
-import { useVehicleInfo } from '@/hooks/useVehicleInfo';
 import { useAuth } from '@/hooks/useAuth';
+import { useVehicles } from '@/hooks/useVehicles';
 
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
@@ -71,7 +71,7 @@ export default function MissionTrackingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { myMissions: missions } = useMissions();
-  const { getVehicleRegistration } = useVehicleInfo();
+  const { getVehicleById } = useVehicles();
   const { t: tCommon } = useCommonTranslation();
   const { t: tTracking } = useTrackingTranslation();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -83,13 +83,13 @@ export default function MissionTrackingPage() {
   useEffect(() => {
     const fetchInfo = async () => {
       if (user?.role === 'transporteur' && mission?.vehicleId) {
-        const registration = await getVehicleRegistration(mission.vehicleId);
-        setVehicleRegistration(registration);
+        const vehicle = await getVehicleById(mission.vehicleId);
+        setVehicleRegistration(vehicle?.registration || '');
       }
     };
 
     fetchInfo();
-  }, [mission?.vehicleId, user?.role, getVehicleRegistration]);
+  }, [mission?.vehicleId, user?.role, getVehicleById]);
 
   if (!mission) {
     return (

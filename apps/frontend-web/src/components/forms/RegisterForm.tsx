@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { RegisterFormData } from '@/types/forms.types';
 import type { UserRole, CreateUserRequest } from '@/types/auth.types';
-import { VALIDATION_MESSAGES } from '@/lib/validation';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState } from 'react';
@@ -56,7 +55,6 @@ const validationSchema = (t: (key: string) => string) =>
           return false;
         }
       }),
-
     role: Yup.string().required(t('validation.required')).oneOf(USER_ROLES, t('validation.role')),
   });
 
@@ -261,7 +259,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 }}
                 // Tailwind-driven styles via className + dynamic dark mode
                 inputClass="!text-tsa-blue dark:!text-tsa-white !font-medium !text-base 
-                            !h-full !w-full !px-12 !py-1 !bg-transparent !border-0 
+                            !h-full !w-full !px-12 !py-1 !border-0 
                             !outline-none placeholder:!text-tsa-blue/60 
                             dark:placeholder:!text-tsa-white/60 focus:!ring-2 
                             focus:!ring-tsa-blue/50 dark:focus:!ring-tsa-blue/40
@@ -289,29 +287,33 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium text-tsa-blue dark:text-tsa-white/90 flex">
-                {tAuth('register.role')}
-              </Label>
-              <div className="w-full flex flex-1 justify-between max-sm:grid max-sm:grid-cols max-sm:justify-center max-sm:gap-4">
-                {USER_ROLES.map((role) => (
-                  <Checkbox
-                    key={role}
-                    checked={values.role === role}
-                    onCheckedChange={() => setFieldValue('role', values.role === role ? '' : role)}
-                    onError={() => setFieldError('role', VALIDATION_MESSAGES.REQUIRED_ROLE)}
-                    label={tCommon(`roles.${role}`)}
-                    className="rounded-none"
-                    labelClassName="text-tsa-blue dark:text-tsa-white/90 text-sm font-medium"
-                  />
-                ))}
+            {values.role !== 'client' && (
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm font-medium text-tsa-blue dark:text-tsa-white/90 flex">
+                  {tAuth('register.role')}
+                </Label>
+                <div className="w-full flex flex-1 justify-between max-sm:grid max-sm:grid-cols max-sm:justify-center max-sm:gap-4">
+                  {USER_ROLES.map((role) => (
+                    <Checkbox
+                      key={role}
+                      checked={values.role === role}
+                      onCheckedChange={() =>
+                        setFieldValue('role', values.role === role ? '' : role)
+                      }
+                      onError={() => setFieldError('role', tForms('validation.required'))}
+                      label={tCommon(`roles.${role}`)}
+                      className="rounded-none"
+                      labelClassName="text-tsa-blue dark:text-tsa-white/90 text-sm font-medium"
+                    />
+                  ))}
+                </div>
+                {touched.role && errors.role && (
+                  <p className="text-red-500 text-sm mt-1" role="alert">
+                    {errors.role}
+                  </p>
+                )}
               </div>
-              {touched.role && errors.role && (
-                <p className="text-red-500 text-sm mt-1" role="alert">
-                  {errors.role}
-                </p>
-              )}
-            </div>
+            )}
 
             <Button
               type="submit"

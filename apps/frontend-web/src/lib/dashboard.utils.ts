@@ -1,20 +1,30 @@
 import type { Mission } from '@/types/mission.types';
 import type { User } from '@/types/auth.types';
-import { getStatusColor } from '@/lib/mission-utils';
+import { getStatusColor } from '@/lib/utils';
+import { getTimeAgo, formatCurrency } from './utils';
 
 export interface DashboardMetrics {
   activeMissions: number;
+  totalActiveMissions: number;
   completedMissions: number;
   totalRevenue: number;
   averageCost: number;
   successRate: number;
   growthRate: number;
+  currentNewMissions: number;
 }
 
 export class DashboardUtils {
-  static calculateMissionMetrics(missions: Mission[]): DashboardMetrics {
+  static calculateMissionMetrics(
+    missions: Mission[],
+    availableMissions?: Mission[]
+  ): DashboardMetrics {
     const activeMissions = missions.filter((m) =>
       ['assigned', 'in_progress'].includes(m.status)
+    ).length;
+
+    const totalActiveMissions = missions.filter((m) =>
+      ['assigned', 'in_progress', 'completed'].includes(m.status)
     ).length;
 
     const completedMissions = missions.filter((m) => m.status === 'completed').length;
@@ -24,12 +34,16 @@ export class DashboardUtils {
       .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const averageCost = completedMissions > 0 ? totalRevenue / completedMissions : 0;
-    const successRate = missions.length > 0 ? (completedMissions / missions.length) * 100 : 0;
+    const successRate = missions.length > 0 ? (completedMissions / totalActiveMissions) * 100 : 0;
 
     // Calculate growth rate based on recent missions
     const now = new Date();
+    const thisWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const previousMonth = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+    const currentNewMissions =
+      availableMissions?.filter((m) => new Date(m.createdAt) >= thisWeek).length || 0;
 
     const currentMonthMissions = missions.filter((m) => new Date(m.createdAt) >= lastMonth).length;
 
@@ -44,11 +58,13 @@ export class DashboardUtils {
 
     return {
       activeMissions,
+      totalActiveMissions,
       completedMissions,
       totalRevenue,
       averageCost,
       successRate,
       growthRate,
+      currentNewMissions,
     };
   }
 
@@ -93,8 +109,8 @@ export class DashboardUtils {
         statusColor: getStatusColor(mission.status),
         statusLabel: mission.status,
         progress: this.calculateProgress(mission.status),
-        timeAgo: this.getTimeAgo(mission.updatedAt, t),
-        formattedBudget: this.formatCurrency(mission.budgetMin || 0),
+        timeAgo: getTimeAgo(mission.updatedAt, t),
+        formattedBudget: formatCurrency(mission.budgetMin || 0),
       }));
   }
 
@@ -107,45 +123,6 @@ export class DashboardUtils {
       cancelled: 0,
     };
     return progress[status as keyof typeof progress] || 0;
-  }
-
-  static formatCurrency(amount: number): string {
-    if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(1)}M FCFA`;
-    }
-    if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(0)}K FCFA`;
-    }
-    return `${amount.toLocaleString('fr-FR')} FCFA`;
-  }
-
-  static formatPercentage(value: number): string {
-    return `${value.toFixed(1)}%`;
-  }
-
-  static getTimeAgo(
-    date: string,
-    t?: (key: string, options?: Record<string, unknown>) => string
-  ): string {
-    const now = new Date();
-    const past = new Date(date);
-    const diffMs = now.getTime() - past.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (t) {
-      if (diffHours < 1) return t('time.lessThanHour');
-      if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
-      if (diffDays < 7)
-        return t('time.daysAgo', { days: diffDays, plural: diffDays > 1 ? 's' : '' });
-      return past.toLocaleDateString();
-    }
-
-    // Fallback to French if no translation function
-    if (diffHours < 1) return "Il y a moins d'une heure";
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-    return past.toLocaleDateString('fr-FR');
   }
 
   static calculateGrowthPercentage(current: number, previous: number): string {

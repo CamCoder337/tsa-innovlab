@@ -318,13 +318,13 @@ export const useMissionStore = create<MissionStoreExtended>()(
           }
 
           if (response.data) {
-            const currentMissions = get().missions;
-            set({
-              missions: [response.data, ...currentMissions],
+            set((state) => ({
+              missions: [response.data as Mission, ...state.missions],
+              myMissions: [response.data as Mission, ...state.myMissions],
               currentMission: response.data,
               isLoading: false,
               error: null,
-            });
+            }));
             return response.data;
           }
 

@@ -158,7 +158,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {Array.from({ length: limit }).map((_, index) => (
               <div key={index} className="space-y-3">
                 <Skeleton className="h-48 w-full rounded-lg" />
@@ -214,7 +214,7 @@ export const ProductRecommendations: React.FC<ProductRecommendationsProps> = ({
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {recommendations.products.map((product) => (
                 <div
                   key={product.id}

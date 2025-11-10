@@ -70,7 +70,7 @@ export const MyVehicles: React.FC = () => {
   useEffect(() => {
     fetchVehicles(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filters]);
 
   const handleCreateVehicle = async (data: CreateVehicleRequest) => {
     await createVehicle(data);

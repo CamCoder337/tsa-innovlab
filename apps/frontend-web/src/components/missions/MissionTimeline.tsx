@@ -11,7 +11,7 @@ import {
   useCommonTranslation,
   useErrorsTranslation,
 } from '@/hooks/useTranslation';
-import { getStatusLabel } from '@/lib/mission-utils';
+import { getStatusLabel } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 
 interface TimelineEvent {

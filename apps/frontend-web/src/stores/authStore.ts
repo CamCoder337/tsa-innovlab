@@ -217,7 +217,9 @@ export const useAuthStore = create<AuthStore>()(
         tokenManager.stopTokenManagement();
         try {
           await authService.logout();
-
+        } catch (error) {
+          console.error(error);
+        } finally {
           removeCookie('tsa_access_token');
           removeCookie('tsa_refresh_token');
           set({
@@ -228,8 +230,6 @@ export const useAuthStore = create<AuthStore>()(
           });
           // Clear only TSA-specific localStorage items instead of all localStorage
           clearTSALocalStorage();
-        } catch (error) {
-          console.error(error);
         }
       },
 

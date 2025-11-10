@@ -19,11 +19,12 @@ import {
 } from 'lucide-react';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
 import { DashboardUtils } from '@/lib/dashboard.utils';
-import { getStatusColor, getStatusLabel } from '@/lib/mission-utils';
+import { getStatusColor, getStatusLabel } from '@/lib/utils';
 import { useMissions } from '@/hooks/useMissions';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
 import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { formatCurrency, getTimeAgo } from '@/lib/utils';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -322,7 +323,7 @@ export default function AdminDashboard() {
                             <span className="hidden sm:inline">•</span>
                           </>
                         )}
-                        <span>{DashboardUtils.getTimeAgo(activity.createdAt)}</span>
+                        <span>{getTimeAgo(activity.createdAt)}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
@@ -590,9 +591,7 @@ export default function AdminDashboard() {
                       >
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-xs sm:text-sm truncate">{mission.title}</p>
-                          <p className="text-xs text-gray-500">
-                            {DashboardUtils.getTimeAgo(mission.createdAt)}
-                          </p>
+                          <p className="text-xs text-gray-500">{getTimeAgo(mission.createdAt)}</p>
                         </div>
                         <Badge className={`${getStatusColor(mission.status)} flex-shrink-0`}>
                           {getStatusLabel(mission.status, tCommon)}
@@ -745,7 +744,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
                     <p className="text-lg sm:text-2xl font-bold text-green-600">
-                      {DashboardUtils.formatCurrency(productStats?.inventory?.totalValue || 0)}
+                      {formatCurrency(productStats?.inventory?.totalValue || 0)}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600">
                       {tAdmin('dashboard.shop.totalValue')}
@@ -1068,9 +1067,7 @@ export default function AdminDashboard() {
                             {tAdmin('dashboard.shop.analytics.today')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">
-                            {DashboardUtils.formatCurrency(
-                              allStats.overview.stats?.revenue?.today || 0
-                            )}
+                            {formatCurrency(allStats.overview.stats?.revenue?.today || 0)}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -1078,9 +1075,7 @@ export default function AdminDashboard() {
                             {tAdmin('dashboard.shop.analytics.last7Days')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">
-                            {DashboardUtils.formatCurrency(
-                              allStats.overview.stats?.revenue?.last7Days || 0
-                            )}
+                            {formatCurrency(allStats.overview.stats?.revenue?.last7Days || 0)}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -1088,9 +1083,7 @@ export default function AdminDashboard() {
                             {tAdmin('dashboard.shop.analytics.last30Days')}
                           </span>
                           <span className="font-medium text-xs sm:text-sm">
-                            {DashboardUtils.formatCurrency(
-                              allStats.overview.stats?.revenue?.last30Days || 0
-                            )}
+                            {formatCurrency(allStats.overview.stats?.revenue?.last30Days || 0)}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -1098,9 +1091,7 @@ export default function AdminDashboard() {
                             {tAdmin('dashboard.shop.analytics.total')}
                           </span>
                           <span className="font-medium text-green-600 text-xs sm:text-sm">
-                            {DashboardUtils.formatCurrency(
-                              allStats.overview.stats?.revenue?.total || 0
-                            )}
+                            {formatCurrency(allStats.overview.stats?.revenue?.total || 0)}
                           </span>
                         </div>
                       </div>

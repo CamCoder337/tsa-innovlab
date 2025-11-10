@@ -16,12 +16,12 @@ import {
   Truck,
   ArrowDown,
 } from 'lucide-react';
-import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/mission-utils';
+import { getStatusColor, getStatusIcon, getStatusLabel } from '@/lib/utils';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission } from '@/types/mission.types';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { useUserSearch } from '@/hooks/useUserSearch';
-import { useVehicleInfo } from '@/hooks/useVehicleInfo';
+import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect } from 'react';
 
@@ -43,7 +43,7 @@ export default function MissionCard({
   const { user } = useAuth();
   const { setCurrentMission } = useMissions();
   const { getUserName } = useUserSearch();
-  const { getVehicleRegistration } = useVehicleInfo();
+  const { getVehicleById } = useVehicles();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
   const [transporteurName, setTransporteurName] = useState<string>('');
@@ -54,7 +54,7 @@ export default function MissionCard({
   useEffect(() => {
     const fetchInfo = async () => {
       // Use preloaded transporteur data first, fallback to fetch
-      if (user?.role === 'affreteur' && mission.transporteurId) {
+      if (user?.role !== 'transporteur' && mission.transporteurId) {
         if (mission.transporteur) {
           const name = `${mission.transporteur.firstName} ${mission.transporteur.lastName}`;
           setTransporteurName(name);
@@ -65,7 +65,7 @@ export default function MissionCard({
       }
 
       // Use preloaded affreteur data first, fallback to fetch
-      if (user?.role === 'transporteur' && mission.affreteurId) {
+      if (user?.role !== 'affreteur' && mission.affreteurId) {
         if (mission.affreteur) {
           const name = `${mission.affreteur.firstName} ${mission.affreteur.lastName}`;
           setAffreteurName(name);
@@ -76,12 +76,12 @@ export default function MissionCard({
       }
 
       // Use preloaded vehicle data first, fallback to fetch
-      if (mission.vehicleId) {
+      if (user?.role === 'transporteur' && mission.vehicleId) {
         if (mission.vehicle) {
           setVehicleRegistration(mission.vehicle.registration);
         } else {
-          const registration = await getVehicleRegistration(mission.vehicleId);
-          setVehicleRegistration(registration);
+          const vehicle = await getVehicleById(mission.vehicleId);
+          setVehicleRegistration(vehicle?.registration || '');
         }
       }
     };
@@ -96,7 +96,7 @@ export default function MissionCard({
     mission.vehicle,
     user?.role,
     getUserName,
-    getVehicleRegistration,
+    getVehicleById,
   ]);
 
   return (
@@ -261,9 +261,9 @@ export default function MissionCard({
               variant="outline"
               size="sm"
               asChild
-              className="w-full sm:w-auto lg:w-full text-xs sm:text-sm px-3 py-2"
+              className="gap-2 w-full sm:w-auto lg:w-full text-xs sm:text-sm px-3 py-2"
             >
-              <Link to={`/app/missions/${mission.id}`}>
+              <Link to={`/app/missions/${mission.id}`} onClick={() => setCurrentMission(mission)}>
                 <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{tCommon('actions.viewDetails')}</span>
               </Link>

@@ -157,6 +157,13 @@ router
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
 
+    // Gestion des commandes
+    router.get('/orders/stats', '#controllers/http/admin/orders_controller.stats')
+    router.get('/orders', '#controllers/http/admin/orders_controller.index')
+    router.get('/orders/:id', '#controllers/http/admin/orders_controller.show')
+    router.put('/orders/:id/status', '#controllers/http/admin/orders_controller.updateStatus')
+    router.post('/orders/:id/cancel', '#controllers/http/admin/orders_controller.cancel')
+
     // Audit logs
     router.get('/audit-logs', '#controllers/http/admin/audit_logs_controller.index')
 
