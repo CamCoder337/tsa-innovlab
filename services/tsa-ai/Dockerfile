@@ -16,6 +16,16 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     curl \
     ca-certificates \
+    # Dependencies for OpenCV (EasyOCR)
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    # Dependencies for PyMuPDF
+    libmupdf-dev \
+    mupdf-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -31,11 +41,18 @@ COPY . .
 # Create directories for ML models, logs, and credentials
 RUN mkdir -p ml_models logs data/visual_recognition/images
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app && \
+# Create non-root user FIRST
+RUN useradd --create-home --shell /bin/bash app
+
+# Create EasyOCR cache directory in user home
+RUN mkdir -p /home/app/.EasyOCR && \
+    chown -R app:app /home/app && \
     chown -R app:app /app
 
 USER app
+
+# Set EasyOCR home to user directory
+ENV EASYOCR_MODULE_PATH=/home/app/.EasyOCR
 
 # Expose port
 EXPOSE 8000

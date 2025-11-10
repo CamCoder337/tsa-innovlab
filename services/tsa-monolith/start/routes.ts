@@ -335,6 +335,21 @@ router
     )
   })
   .prefix('/api/shop')
+  .use(middleware.auth())
+
+// ===== ROUTES KYC (AUTHENTIFIÉES) =====
+router
+  .group(() => {
+    // Extraction de documents KYC
+    router.post('/extract', '#controllers/http/kyc_controller.extract')
+
+    // Statistiques KYC (admin uniquement)
+    router.get('/stats', '#controllers/http/kyc_controller.stats')
+
+    // Health check KYC (public)
+    router.get('/health', '#controllers/http/kyc_controller.health')
+  })
+  .prefix('/api/kyc')
   .middleware(middleware.auth())
 
 // ===== ROUTES E-COMMERCE (CLIENT, AFFRETEUR, TRANSPORTEUR) =====
