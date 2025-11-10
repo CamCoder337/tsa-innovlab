@@ -37,6 +37,12 @@
     "settings": "Settings",
     "support": "Support",
     "viewDetails": "View details",
+    "markProcessing": "Mark as processing",
+    "markShipped": "Mark as shipped",
+    "markDelivered": "Mark as delivered",
+    "cancelOrder": "Cancel order",
+    "updateStatus": "Update status",
+    "bulkSelected": "{{count}} item(s) selected",
     "retry": "Retry",
     "warning": {
       "title": "Warning",

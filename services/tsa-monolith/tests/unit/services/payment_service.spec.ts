@@ -95,7 +95,7 @@ test.group('PaymentService', (group) => {
 
     assert.isDefined(payment, 'Payment should be created')
     assert.equal(payment.orderId, order.id, 'Payment should be linked to order')
-    assert.equal(payment.amount, order.totalAmount, 'Payment amount should match order total')
+    assert.equal(payment.amount, order.total, 'Payment amount should match order total')
     assert.equal(payment.status, PaymentStatus.PENDING, 'Payment should be PENDING')
     assert.equal(payment.phoneNumber, '+237650000000', 'Phone number should be saved')
   })

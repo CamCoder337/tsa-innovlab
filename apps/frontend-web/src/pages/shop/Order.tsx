@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { type TFunction } from 'i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -23,6 +23,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { OrderStatus, type Order } from '@/types/order.types';
 import { useShopTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { adminService } from '@/services/admin.service';
 
 // Status config will be created dynamically using translations
 
@@ -65,8 +66,13 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
 export default function OrderDetailsPage() {
   const { t: tShop } = useShopTranslation();
   const { id: orderId } = useParams<{ id: string }>();
-  const { currentOrder, isLoading, fetchOrder } = useOrders();
+  const { currentOrder, isLoading: clientLoading, fetchOrder } = useOrders();
   const { user } = useAuth();
+  const [adminOrder, setAdminOrder] = useState<Order | null>(null);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isAdmin = user?.role === 'admin';
 
   // Create status config with translations
   const statusConfig = {
@@ -122,13 +128,57 @@ export default function OrderDetailsPage() {
   };
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrder(orderId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderId]);
+    const loadOrder = async () => {
+      if (!orderId) return;
 
-  const order = currentOrder;
+      if (isAdmin) {
+        // Admin can view any order
+        setAdminLoading(true);
+        setError(null);
+        try {
+          const response = await adminService.adminGetOrder(orderId);
+          if (response.error) {
+            setError(response.error.message);
+          } else if (response.data) {
+            setAdminOrder(response.data);
+          }
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to load order');
+        } finally {
+          setAdminLoading(false);
+        }
+      } else {
+        // Client can only view their own orders
+        fetchOrder(orderId);
+      }
+    };
+
+    loadOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, isAdmin]);
+
+  const order = isAdmin ? adminOrder : currentOrder;
+  const isLoading = isAdmin ? adminLoading : clientLoading;
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-4xl px-3 sm:px-4 lg:px-8 py-6 sm:py-10">
+        <Card>
+          <CardContent className="text-center py-8 sm:py-12">
+            <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-2">Error Loading Order</h1>
+            <p className="text-sm sm:text-base text-zinc-600 mb-4 sm:mb-6">{error}</p>
+            <Link to="/app/shop/orders">
+              <Button variant="outline" className="text-xs sm:text-sm">
+                <ArrowLeft className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Back to Orders
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -387,7 +437,7 @@ export default function OrderDetailsPage() {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between text-base sm:text-lg font-semibold">
                   <span>{tShop('orderDetails.summary.total')}</span>
-                  <span>{(order.totalAmount || 0).toLocaleString('fr-FR')} FCFA</span>
+                  <span>{(Number(order.total) || 0).toLocaleString('fr-FR')} FCFA</span>
                 </div>
               </div>
 
@@ -406,7 +456,7 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Informations client */}
-          {user && (
+          {(order.user || (order.customerName && order.customerEmail)) && (
             <Card>
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -418,17 +468,23 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-2 text-xs sm:text-sm">
                   <span className="text-zinc-600">{tShop('orderDetails.customer.name')}</span>
                   <span className="font-medium truncate">
-                    {user.firstName + ' ' + user.lastName}
+                    {order.user
+                      ? `${order.user.firstName} ${order.user.lastName}`
+                      : order.customerName}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm">
                   <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                  <span className="text-zinc-600 truncate">{user.email}</span>
+                  <span className="text-zinc-600 truncate">
+                    {order.user ? order.user.email : order.customerEmail}
+                  </span>
                 </div>
-                {user.phone && (
+                {(order.user?.phone || order.customerPhone) && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm">
                     <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                    <span className="text-zinc-600">{user.phone}</span>
+                    <span className="text-zinc-600">
+                      {order.user ? order.user.phone : order.customerPhone}
+                    </span>
                   </div>
                 )}
               </CardContent>

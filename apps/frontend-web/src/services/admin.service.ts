@@ -11,6 +11,7 @@ import type {
   ApiResponse,
   PaginatedKeyResponse,
   PaginatedMetaResponse,
+  PaginationMeta,
 } from '@/types/common.types';
 import type {
   Category,
@@ -38,6 +39,15 @@ import type {
   AdminProductStats,
   UserStats as AdminUserStats,
 } from '@/types/admin-stats.types';
+import type {
+  Order,
+  AdminOrderFilterParams,
+  AdminOrderStats,
+  UpdateOrderStatusRequest,
+  RefundOrderRequest,
+  BulkOrderActionRequest,
+  BulkOrderActionResult,
+} from '@/types/order.types';
 
 export class AdminService extends BaseApi {
   private isAxiosError(
@@ -389,6 +399,88 @@ export class AdminService extends BaseApi {
   async getAdminProductsStats(): Promise<ApiResponse<AdminProductStats>> {
     try {
       const response = await this.insertToken().get('/api/admin/stats/products');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  // Order Operations
+
+  async adminGetOrders(
+    params?: AdminOrderFilterParams
+  ): Promise<ApiResponse<{ data: Order[]; meta: PaginationMeta }>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/orders', { params });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminGetOrder(id: string): Promise<ApiResponse<Order>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/orders/${id}`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminUpdateOrderStatus(
+    id: string,
+    data: UpdateOrderStatusRequest
+  ): Promise<ApiResponse<Order>> {
+    try {
+      const response = await this.insertToken().put(`/api/admin/orders/${id}/status`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminCancelOrder(id: string, reason?: string): Promise<ApiResponse<Order>> {
+    try {
+      const response = await this.insertToken().post(`/api/admin/orders/${id}/cancel`, { reason });
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminRefundOrder(id: string, data: RefundOrderRequest): Promise<ApiResponse<Order>> {
+    try {
+      const response = await this.insertToken().post(`/api/admin/orders/${id}/refund`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async getAdminOrderStats(): Promise<ApiResponse<AdminOrderStats>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/orders/stats');
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async exportOrders(params?: Partial<AdminOrderFilterParams>): Promise<ApiResponse<Blob>> {
+    try {
+      const response = await this.insertToken().get('/api/admin/orders/export', {
+        params,
+        responseType: 'blob',
+      });
+      return { data: response.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async bulkOrderAction(data: BulkOrderActionRequest): Promise<ApiResponse<BulkOrderActionResult>> {
+    try {
+      const response = await this.insertToken().post('/api/admin/orders/bulk-action', data);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
