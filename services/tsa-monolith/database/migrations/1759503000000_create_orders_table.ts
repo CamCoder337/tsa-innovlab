@@ -14,7 +14,32 @@ export default class Orders extends BaseSchema {
           enumName: 'order_status',
         })
         .defaultTo('pending')
-      table.decimal('total_amount', 12, 2).notNullable().checkPositive()
+      table.enum(
+        'payment_method',
+        [
+          'orange_money',
+          'mtn_mobile_money',
+          'moov_money',
+          'wave',
+          'bank_transfer',
+          'cash_on_delivery',
+        ],
+        {
+          useNative: true,
+          enumName: 'payment_method',
+        }
+      )
+      table
+        .enum('payment_status', ['pending', 'completed', 'failed', 'refunded'], {
+          useNative: true,
+          enumName: 'payment_status',
+        })
+        .defaultTo('pending')
+      table.string('payment_reference', 100).nullable()
+      table.decimal('subtotal', 12, 2).notNullable().checkPositive()
+      table.decimal('shipping_cost', 12, 2).defaultTo(0)
+      table.decimal('tax', 12, 2).defaultTo(0)
+      table.decimal('total', 12, 2).notNullable().checkPositive()
       table
         .uuid('shipping_address_id')
         .notNullable()
@@ -27,14 +52,15 @@ export default class Orders extends BaseSchema {
         .references('id')
         .inTable('addresses')
         .onDelete('RESTRICT')
-      table.string('payment_method', 50).notNullable()
-      table
-        .enum('payment_status', ['pending', 'completed', 'failed', 'refunded'], {
-          useNative: true,
-          enumName: 'payment_status',
-        })
-        .defaultTo('pending')
-      table.text('notes')
+      table.string('customer_name', 200).notNullable()
+      table.string('customer_email', 200).notNullable()
+      table.string('customer_phone', 20).notNullable()
+      table.text('notes').nullable()
+      table.string('tracking_number', 100).nullable()
+      table.timestamp('paid_at', { useTz: true }).nullable()
+      table.timestamp('shipped_at', { useTz: true }).nullable()
+      table.timestamp('delivered_at', { useTz: true }).nullable()
+      table.timestamp('cancelled_at', { useTz: true }).nullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
 

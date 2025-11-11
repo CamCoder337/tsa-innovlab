@@ -28,9 +28,11 @@ export default function MissionDetailsPage() {
     currentMission,
     isLoading,
     fetchMission,
+    publishMission,
     applyMission,
     updateMission,
     updateMissionStatus,
+    unpublishMission,
     deleteMission,
   } = useMissions();
   const { error } = useMissionStore.getState();
@@ -113,6 +115,42 @@ export default function MissionDetailsPage() {
     }
   };
 
+  const handlePublish = async (id: string) => {
+    toast.loading(tMissions('messages.publishingMission'), {
+      duration: 30000,
+    });
+
+    await publishMission(id);
+
+    toast.dismiss();
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
+    }
+
+    toast.success(tMissions('messages.publishedSuccess'));
+  };
+
+  const handleUnpublish = async (id: string) => {
+    toast.loading(tMissions('messages.cancellingMission'), {
+      duration: 30000,
+    });
+
+    await unpublishMission(id);
+
+    toast.dismiss();
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
+    }
+
+    toast.success(tMissions('messages.cancelledSuccess'));
+  };
+
   const handleDelete = async (id: string) => {
     toast.loading(tMissions('messages.deletingMission'), {
       duration: 30000,
@@ -181,9 +219,11 @@ export default function MissionDetailsPage() {
           <MissionActions
             mission={currentMission}
             userRole={user?.role}
+            onPublish={handlePublish}
             onApply={handleApply}
             onUpdate={handleUpdate}
             onStatusUpdate={handleStatusUpdate}
+            onCancel={handleUnpublish}
             onDelete={handleDelete}
             onRefresh={() => fetchMission(id!)}
           />
@@ -199,7 +239,7 @@ export default function MissionDetailsPage() {
           className={
             currentMission.status !== 'draft'
               ? `w-full grid ${user?.role === 'transporteur' ? 'grid-cols-3' : 'grid-cols-4'}`
-              : ''
+              : 'hidden'
           }
         >
           {currentMission.status !== 'draft' && (

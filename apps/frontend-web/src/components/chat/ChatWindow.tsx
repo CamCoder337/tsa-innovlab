@@ -66,20 +66,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
   const currentMessages = useMemo(() => {
     if (isChatbotConversation && chatbotConversation) {
-      // For chatbot conversations, use chatbot messages
-      return chatbotConversation.messages.map((msg) => ({
-        id: msg.id,
-        conversationId: msg.conversationId,
-        senderId: msg.isFromBot ? 'bot' : user?.id || '',
-        content: msg.content,
-        type: 'text' as const,
-        isRead: true,
-        createdAt: msg.createdAt,
-        updatedAt: msg.updatedAt,
-      }));
+      // For chatbot conversations, use chatbot messages directly
+      // Convert to array if it's an object (happens after persist/rehydrate)
+      const msgs = chatbotConversation.messages;
+      if (Array.isArray(msgs)) {
+        return msgs;
+      }
+      // If it's an object with numeric keys, convert to array
+      if (msgs && typeof msgs === 'object') {
+        return Object.values(msgs) as ChatbotMessage[];
+      }
+      return [];
     }
     return messages[conversation.id] || [];
-  }, [messages, conversation.id, isChatbotConversation, chatbotConversation, user?.id]);
+  }, [messages, conversation.id, isChatbotConversation, chatbotConversation]);
 
   const typingUsers = useMemo(() => {
     // Skip typing indicators for chatbot conversations
@@ -131,7 +131,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
 
     try {
       if (isChatbotConversation) {
-        await sendChatbotMessage(newMessage);
+        await sendChatbotMessage(newMessage, user.id);
       } else {
         await sendMessage(conversation.id, newMessage);
       }
@@ -338,22 +338,33 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
               const isBotMessage = message.senderId === 'bot';
               const showAvatar =
                 !isCurrentUser &&
-                !isBotMessage &&
                 (index === 0 || currentMessages[index - 1]?.senderId !== message.senderId);
-              const msg = isBotMessage ? (message as Message) : (message as ChatbotMessage);
+              const chatbotMsg = message as ChatbotMessage;
+              const hasSuggestions =
+                isBotMessage && chatbotMsg.suggestions && chatbotMsg.suggestions.length > 0;
+
               return (
-                <MessageBubble
-                  key={message.id}
-                  message={msg}
-                  isCurrentUser={isCurrentUser}
-                  isBotMessage={isBotMessage}
-                  showAvatar={showAvatar}
-                  otherParticipant={
-                    !isChatbotConversation
-                      ? (conversation as ConversationListItem).otherParticipant
-                      : undefined
-                  }
-                />
+                <div key={message.id} className="flex flex-col gap-1 sm:gap-2">
+                  <MessageBubble
+                    message={message}
+                    isCurrentUser={isCurrentUser}
+                    isBotMessage={isBotMessage}
+                    showAvatar={showAvatar}
+                    otherParticipant={
+                      !isChatbotConversation
+                        ? (conversation as ConversationListItem).otherParticipant
+                        : undefined
+                    }
+                  />
+                  {hasSuggestions && (
+                    <Suggestions
+                      suggestions={chatbotMsg.suggestions!}
+                      onSuggestionClick={(suggestion) => {
+                        setNewMessage(suggestion);
+                      }}
+                    />
+                  )}
+                </div>
               );
             })}
 
@@ -376,6 +387,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
                     ? tChat('messages.isTyping', { name: typingUsers[0]?.firstName })
                     : tChat('messages.peopleTyping', { count: typingUsers.length })}
                 </span>
+              </div>
+            )}
+
+            {/* Bot thinking indicator */}
+            {isLoading && isChatbotConversation && (
+              <div className="flex items-center gap-2 text-purple-600 px-1 sm:px-2">
+                <div className="flex gap-1">
+                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.1s' }}
+                  ></div>
+                  <div
+                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: '0.2s' }}
+                  ></div>
+                </div>
+                <span className="text-xs">Le bot réfléchit...</span>
               </div>
             )}
           </>
@@ -425,6 +454,31 @@ interface MessageBubbleProps {
     avatar?: string;
   };
 }
+
+interface SuggestionsProps {
+  suggestions: string[];
+  onSuggestionClick: (suggestion: string) => void;
+}
+
+const Suggestions: React.FC<SuggestionsProps> = ({ suggestions, onSuggestionClick }) => {
+  if (!suggestions || suggestions.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 sm:gap-2 mt-1 px-1 sm:px-2 ml-6 sm:ml-8 lg:ml-10">
+      {suggestions.map((suggestion, index) => (
+        <button
+          key={index}
+          onClick={() => onSuggestionClick(suggestion)}
+          className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm bg-purple-100 hover:bg-purple-200
+                     text-purple-700 rounded-full transition-colors duration-200
+                     border border-purple-200 hover:border-purple-300"
+        >
+          {suggestion}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,

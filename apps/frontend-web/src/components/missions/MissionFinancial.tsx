@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MissionInvoice } from './MissionInvoice';
+import { PaymentStatus } from '@/types/order.types';
 
 interface MissionFinancialProps {
   mission: Mission;
@@ -42,7 +43,7 @@ interface FinancialData {
   platformFee: number;
   taxes: number;
   additionalCosts: number;
-  paymentStatus: 'pending' | 'partial' | 'completed' | 'overdue';
+  paymentStatus: PaymentStatus;
   invoiceGenerated: boolean;
   paymentMethod: string;
   transactionId?: string;
@@ -53,7 +54,7 @@ interface PaymentRecord {
   amount: number;
   date: string;
   method: string;
-  status: 'completed' | 'pending' | 'failed';
+  status: PaymentStatus;
   reference: string;
 }
 
@@ -68,7 +69,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
     platformFee: 0,
     taxes: 0,
     additionalCosts: 0,
-    paymentStatus: 'pending',
+    paymentStatus: PaymentStatus.PENDING,
     invoiceGenerated: false,
     paymentMethod: 'bank_transfer',
   });
@@ -105,7 +106,8 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         platformFee,
         taxes,
         additionalCosts: 0,
-        paymentStatus: mission.status === 'completed' ? 'completed' : 'pending',
+        paymentStatus:
+          mission.status === 'completed' ? PaymentStatus.COMPLETED : PaymentStatus.PENDING,
         invoiceGenerated: mission.status === 'completed',
         paymentMethod: 'bank_transfer',
       });
@@ -118,7 +120,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
             amount: totalCost,
             date: mission.dateArriveePrevue || new Date().toISOString(),
             method: 'Virement bancaire',
-            status: 'completed',
+            status: PaymentStatus.COMPLETED,
             reference: `PAY-${mission.id}-001`,
           },
         ]);
@@ -157,7 +159,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
     }
   };
 
-  const getPaymentStatusColor = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800';
@@ -301,11 +303,11 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
             <div className="flex items-center gap-2 sm:gap-3">
               {getPaymentStatusIcon(financialData.paymentStatus)}
               <div className="flex-1 min-w-0">
-                <Badge className={getPaymentStatusColor(financialData.paymentStatus)}>
+                <Badge className={getStatusColor(financialData.paymentStatus)}>
                   {financialData.paymentStatus === 'completed' && tCommon('status.paid')}
                   {financialData.paymentStatus === 'pending' && tCommon('status.pending')}
-                  {financialData.paymentStatus === 'partial' && tCommon('status.partial')}
-                  {financialData.paymentStatus === 'overdue' && tCommon('status.overdue')}
+                  {/* {financialData.paymentStatus === 'partial' && tCommon('status.partial')}
+                  {financialData.paymentStatus === 'overdue' && tCommon('status.overdue')} */}
                 </Badge>
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 truncate">
                   {tMissions('financial.paymentMethod')}:{' '}
@@ -406,7 +408,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                     </div>
                   </div>
                   <div className="text-left sm:text-right">
-                    <Badge className={getPaymentStatusColor(payment.status)}>
+                    <Badge className={getStatusColor(payment.status)}>
                       {payment.status === 'completed' && tCommon('status.completed')}
                       {payment.status === 'pending' && tCommon('status.pending')}
                       {payment.status === 'failed' && tCommon('status.failed')}

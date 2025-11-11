@@ -19,7 +19,6 @@ import {
 import {
   Package,
   Calendar,
-  MapPin,
   Search,
   Filter,
   RefreshCw,
@@ -96,7 +95,6 @@ export default function OrdersPage() {
     const filtered = orders.filter((order) => {
       const matchesSearch =
         order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.items?.some((item) =>
           item.productName?.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -111,7 +109,7 @@ export default function OrdersPage() {
           comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
           break;
         case 'total':
-          comparison = parseFloat(a.total) - parseFloat(b.total);
+          comparison = (Number(a.total) || 0) - (Number(b.total) || 0);
           break;
         case 'status':
           comparison = a.status.localeCompare(b.status);
@@ -296,7 +294,7 @@ export default function OrdersPage() {
                             </span>
                           </span>
                           <span className="font-semibold text-zinc-900">
-                            {parseFloat(order.total).toLocaleString('fr-FR')} FCFA
+                            {(Number(order.total) || 0).toLocaleString('fr-FR')} FCFA
                           </span>
                           {order.items && (
                             <span className="text-zinc-500">
@@ -326,9 +324,9 @@ export default function OrdersPage() {
                               className="flex items-center justify-between text-xs sm:text-sm gap-3"
                             >
                               <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                                {item.productImageUrl && (
+                                {item.product?.imageUrl && (
                                   <img
-                                    src={item.productImageUrl}
+                                    src={item.product?.imageUrl}
                                     alt={item.productName || 'Product'}
                                     className="h-8 w-8 sm:h-10 sm:w-10 rounded-md object-cover border dark:border-gray-800 flex-shrink-0"
                                   />
@@ -336,9 +334,6 @@ export default function OrdersPage() {
                                 <div className="min-w-0 flex-1">
                                   <p className="font-medium text-zinc-900 truncate">
                                     {item.productName}
-                                  </p>
-                                  <p className="text-zinc-500 text-xs truncate">
-                                    {item.productReference}
                                   </p>
                                 </div>
                               </div>
@@ -348,7 +343,7 @@ export default function OrdersPage() {
                                   {parseFloat(item.unitPrice).toLocaleString('fr-FR')} FCFA
                                 </p>
                                 <p className="text-xs text-zinc-500">
-                                  {parseFloat(item.subtotal).toLocaleString('fr-FR')} FCFA
+                                  {(item.totalPrice || 0).toLocaleString('fr-FR')} FCFA
                                 </p>
                               </div>
                             </div>
@@ -365,28 +360,6 @@ export default function OrdersPage() {
                             </p>
                           )}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Delivery Status */}
-                    {(order.deliveredAt || order.shippedAt || order.trackingNumber) && (
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-600 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
-                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                        <span className="truncate">
-                          {order.deliveredAt
-                            ? tShop('orders.orderItem.deliveredOn', {
-                                date: new Date(order.deliveredAt).toLocaleDateString('fr-FR'),
-                              })
-                            : order.shippedAt
-                              ? tShop('orders.orderItem.shippedOn', {
-                                  date: new Date(order.shippedAt).toLocaleDateString('fr-FR'),
-                                })
-                              : order.trackingNumber
-                                ? tShop('orders.orderItem.trackingNumber', {
-                                    number: order.trackingNumber,
-                                  })
-                                : null}
-                        </span>
                       </div>
                     )}
                   </CardContent>

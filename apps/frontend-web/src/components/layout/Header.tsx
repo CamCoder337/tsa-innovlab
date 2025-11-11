@@ -36,7 +36,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
+// import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export default function Header({ className }: { className?: string }) {
   const { user, logout } = useAuth();
@@ -151,9 +151,7 @@ export default function Header({ className }: { className?: string }) {
         </div>
 
         {/* Theme Toggle - Always visible */}
-        <div className="hidden lg:block">
-          <ThemeToggle />
-        </div>
+        {/* <ThemeToggle /> */}
 
         {/* Desktop Notifications - Hidden on mobile/tablet */}
         {user && <NotificationCenter />}
@@ -223,7 +221,7 @@ export default function Header({ className }: { className?: string }) {
 
               {isInvite ? (
                 <>
-                  <Link to="/">
+                  <Link to="/login">
                     <DropdownMenuItem className="cursor-pointer">
                       <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{tAuth('login.label')}</span>
@@ -329,7 +327,7 @@ export default function Header({ className }: { className?: string }) {
 
               {isInvite && (
                 <>
-                  <Link to="/">
+                  <Link to="/login">
                     <DropdownMenuItem className="py-0 cursor-pointer flex flex-1 items-center px-2">
                       <div className="w-1/4">
                         <LogIn className="mr-2 h-4 w-4 flex-shrink-0" />

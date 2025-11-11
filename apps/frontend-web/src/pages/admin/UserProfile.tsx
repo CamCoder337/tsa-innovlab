@@ -404,7 +404,10 @@ export default function UserProfile() {
         );
       default:
         return (
-          <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700">
+          <Badge
+            variant="outline"
+            className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-700"
+          >
             <AlertTriangle className="h-3 w-3 mr-1" />
             {tCommon('status.missing')}
           </Badge>
@@ -427,7 +430,9 @@ export default function UserProfile() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           {tAdmin('userProfile.userNotFound')}
         </h2>
-        <p className="text-gray-600 dark:text-gray-300">{tAdmin('userProfile.userNotFoundDescription')}</p>
+        <p className="text-gray-600 dark:text-gray-300">
+          {tAdmin('userProfile.userNotFoundDescription')}
+        </p>
         <Button onClick={() => navigate('/app/users')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {tAdmin('userProfile.backToList')}
@@ -469,7 +474,9 @@ export default function UserProfile() {
             {tCommon('actions.back')}
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tAdmin('userProfile.title')}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {tAdmin('userProfile.title')}
+            </h1>
             <p className="text-muted-foreground">{tAdmin('userProfile.subtitle')}</p>
           </div>
         </div>
@@ -651,7 +658,10 @@ export default function UserProfile() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {userStats.map((stat, index) => (
-                  <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
+                  <div
+                    key={index}
+                    className="text-center p-4 bg-gray-50 dark:bg-gray-950 rounded-lg"
+                  >
                     <stat.icon className="h-8 w-8 mx-auto mb-2 text-tsa-blue dark:text-tsa-white" />
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</p>
@@ -673,7 +683,9 @@ export default function UserProfile() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('userProfile.emailVerified')}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {tAdmin('userProfile.emailVerified')}
+                </span>
                 <Badge variant={selectedUser.emailVerifiedAt ? 'default' : 'secondary'}>
                   {selectedUser.emailVerifiedAt ? tCommon('yes') : tCommon('no')}
                 </Badge>
@@ -762,11 +774,15 @@ export default function UserProfile() {
                           <div className="flex items-center gap-3">
                             <FileText className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                             <div>
-                              <h4 className="font-medium text-gray-900 dark:text-white">{document.label}</h4>
+                              <h4 className="font-medium text-gray-900 dark:text-white">
+                                {document.label}
+                              </h4>
                               <div className="flex items-center gap-2 mt-1">
                                 {getStatusBadgeForKYC(document.status)}
                                 {document.fileName && (
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">{document.fileName}</span>
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    {document.fileName}
+                                  </span>
                                 )}
                               </div>
                             </div>

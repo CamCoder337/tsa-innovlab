@@ -1,5 +1,7 @@
 import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
+import FormDataNode from 'form-data'
+import axios from 'axios'
 
 export interface RecommendationRequest {
   userId: string
@@ -87,6 +89,42 @@ export interface ChatbotResponse {
   navigation?: NavigationInfo // V3: Frontend navigation info
   requires_human: boolean
   timestamp: string
+}
+
+export interface KYCExtractionRequest {
+  document_type: 'CNI_ANCIEN' | 'CNI_NOUVEAU' | 'PERMIS_CONDUIRE'
+}
+
+export interface KYCExtractionResponse {
+  success: boolean
+  status: 'success' | 'partial' | 'failed'
+  document_type: string
+  data: {
+    nom?: string | null
+    prenoms?: string | null
+    date_naissance?: string | null
+    lieu_naissance?: string | null
+    sexe?: string | null
+    taille?: string | null
+    profession?: string | null
+    pere?: string | null
+    mere?: string | null
+    numero?: string | null
+    date_delivrance?: string | null
+    date_expiration?: string | null
+    confidence_score: number
+    extraction_method?: string
+  }
+  raw_text_recto?: string
+  raw_text_verso?: string
+  extraction_time_ms: number
+  confidence_score: number
+  warnings: string[]
+  errors: string[]
+  extraction_method: string
+  extraction_cost_usd: number
+  requires_manual_validation: boolean
+  validation_notes?: string
 }
 
 export default class AIService {
@@ -400,6 +438,132 @@ export default class AIService {
       return response.ok
     } catch (error) {
       logger.warn('Chatbot health check failed', { error })
+      return false
+    }
+  }
+
+  /**
+   * Extract KYC document information (CNI, Permis de conduire)
+   */
+  async extractKYCDocument(
+    request: KYCExtractionRequest,
+    rectoFile: Buffer,
+    versoFile?: Buffer
+  ): Promise<KYCExtractionResponse | null> {
+    try {
+      logger.info('Requesting KYC document extraction', {
+        documentType: request.document_type,
+      })
+
+      // Créer FormData avec les fichiers
+      const formData = new FormDataNode()
+      formData.append('document_type', request.document_type)
+
+      // Détecter le type de fichier depuis le buffer (magic bytes)
+      const getContentType = (buffer: Buffer): string => {
+        const header = buffer.toString('hex', 0, 4)
+        if (header.startsWith('ffd8ff')) return 'image/jpeg'
+        if (header.startsWith('89504e47')) return 'image/png'
+        if (header.startsWith('25504446')) return 'application/pdf'
+        return 'application/octet-stream'
+      }
+
+      const rectoContentType = getContentType(rectoFile)
+      const rectoExt = rectoContentType === 'application/pdf' ? 'pdf' : 'jpg'
+
+      // Ajouter les fichiers avec les bonnes options
+      formData.append('recto', rectoFile, {
+        filename: `recto.${rectoExt}`,
+        contentType: rectoContentType,
+        knownLength: rectoFile.length,
+      })
+
+      if (versoFile) {
+        const versoContentType = getContentType(versoFile)
+        const versoExt = versoContentType === 'application/pdf' ? 'pdf' : 'jpg'
+
+        formData.append('verso', versoFile, {
+          filename: `verso.${versoExt}`,
+          contentType: versoContentType,
+          knownLength: versoFile.length,
+        })
+      }
+
+      logger.info('Envoi requête KYC', {
+        url: `${this.baseUrl}/api/ai/kyc/extract`,
+        rectoSize: rectoFile.length,
+        versoSize: versoFile?.length,
+      })
+
+      // Utiliser axios avec les bons headers
+      const response = await axios.post(`${this.baseUrl}/api/ai/kyc/extract`, formData, {
+        headers: {
+          ...formData.getHeaders(),
+        },
+        timeout: 180000, // 3 minutes pour laisser le temps à EasyOCR
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      })
+
+      const data = response.data as KYCExtractionResponse
+      logger.info('KYC extraction completed', {
+        status: data.status,
+        confidence: data.confidence_score,
+        method: data.extraction_method,
+        cost: data.extraction_cost_usd,
+      })
+
+      return data
+    } catch (error: any) {
+      if (error.response) {
+        logger.error('KYC extraction error response', {
+          status: error.response.status,
+          body: error.response.data,
+        })
+      } else {
+        logger.error('Failed to extract KYC document from AI service', { error: error.message })
+      }
+      return null
+    }
+  }
+
+  /**
+   * Get KYC service statistics
+   */
+  async getKYCStats(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/kyc/stats`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      return await response.json()
+    } catch (error) {
+      logger.error('Failed to get KYC stats from AI service', { error })
+      return null
+    }
+  }
+
+  /**
+   * Check KYC service health
+   */
+  async checkKYCHealth(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/kyc/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(5000),
+      })
+
+      return response.ok
+    } catch (error) {
+      logger.warn('KYC health check failed', { error })
       return false
     }
   }

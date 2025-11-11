@@ -1,6 +1,5 @@
 import { authService } from './auth.service';
 import { useAuthStore } from '@/stores/authStore';
-import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 interface TokenManagerConfig {
   /** Durée d'inactivité avant d'arrêter le refresh automatique (en ms) */
@@ -17,7 +16,7 @@ export class TokenManagerService {
   private config: TokenManagerConfig = {
     inactivityTimeout: 15 * 60 * 1000, // 15 minutes (match token expiry)
     tokenLifetime: 15 * 60 * 1000, // 15 minutes
-    refreshBeforeExpiry: 1 * 60 * 1000, // 1 minute before expiry
+    refreshBeforeExpiry: 2 * 60 * 1000, // 2 minutes before expiry
     maxRetryAttempts: 3,
   };
 
@@ -58,7 +57,7 @@ export class TokenManagerService {
     }, checkTime);
 
     // Programmer le refresh 1 minute avant la fin calculée
-    const refreshTime = this.config.tokenLifetime - this.config.refreshBeforeExpiry; // 14 minutes
+    const refreshTime = this.config.tokenLifetime - this.config.refreshBeforeExpiry; // 13 minutes
     this.refreshTimeoutId = setTimeout(() => {
       this.performScheduledRefresh();
     }, refreshTime);
@@ -127,7 +126,7 @@ export class TokenManagerService {
   }
 
   /**
-   * Effectue le refresh programmé 1 minute avant expiration
+   * Effectue le refresh programmé 2 minutes avant expiration
    */
   private async performScheduledRefresh(): Promise<void> {
     const { token, refreshToken, isAuthenticated } = useAuthStore.getState();
@@ -233,7 +232,6 @@ export class TokenManagerService {
    */
   private handleLogout(): void {
     console.log('Token management: Logging out user due to token issues');
-    clearTSALocalStorage();
     useAuthStore.getState().logout();
   }
 

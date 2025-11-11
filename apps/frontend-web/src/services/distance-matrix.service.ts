@@ -228,8 +228,15 @@ export class DistanceMatrixService {
       distance: realisticResult.distance,
       baseTime: realisticResult.duration,
       optimistic: {
-        duration: optimisticResult?.durationInTraffic || optimisticResult?.duration || realisticResult.duration,
-        eta: calculateETA(optimisticResult?.durationInTraffic || optimisticResult?.duration || realisticResult.duration),
+        duration:
+          optimisticResult?.durationInTraffic ||
+          optimisticResult?.duration ||
+          realisticResult.duration,
+        eta: calculateETA(
+          optimisticResult?.durationInTraffic ||
+            optimisticResult?.duration ||
+            realisticResult.duration
+        ),
       },
       realistic: {
         duration: realisticResult.durationInTraffic || realisticResult.duration,
@@ -237,8 +244,15 @@ export class DistanceMatrixService {
         trafficDelay: realisticResult.trafficDelay,
       },
       pessimistic: {
-        duration: pessimisticResult?.durationInTraffic || pessimisticResult?.duration || realisticResult.duration,
-        eta: calculateETA(pessimisticResult?.durationInTraffic || pessimisticResult?.duration || realisticResult.duration),
+        duration:
+          pessimisticResult?.durationInTraffic ||
+          pessimisticResult?.duration ||
+          realisticResult.duration,
+        eta: calculateETA(
+          pessimisticResult?.durationInTraffic ||
+            pessimisticResult?.duration ||
+            realisticResult.duration
+        ),
       },
     };
   }
@@ -259,9 +273,10 @@ export class DistanceMatrixService {
       origins: origins.map((o) => new google.maps.LatLng(o.lat, o.lng)),
       destinations: destinations.map((d) => new google.maps.LatLng(d.lat, d.lng)),
       travelMode: this.getTravelMode(options.travelMode),
-      unitSystem: options.unitSystem === 'IMPERIAL'
-        ? google.maps.UnitSystem.IMPERIAL
-        : google.maps.UnitSystem.METRIC,
+      unitSystem:
+        options.unitSystem === 'IMPERIAL'
+          ? google.maps.UnitSystem.IMPERIAL
+          : google.maps.UnitSystem.METRIC,
       avoidHighways: options.avoidHighways || false,
       avoidTolls: options.avoidTolls || false,
       avoidFerries: options.avoidFerries || false,

@@ -70,7 +70,7 @@ export const MyVehicles: React.FC = () => {
   useEffect(() => {
     fetchVehicles(filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filters]);
 
   const handleCreateVehicle = async (data: CreateVehicleRequest) => {
     await createVehicle(data);
@@ -221,7 +221,9 @@ export const MyVehicles: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs sm:text-sm font-medium text-gray-600">En mission</p>
-              <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">{getInUseCount()}</p>
+              <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                {getInUseCount()}
+              </p>
             </div>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center text-xs sm:text-base">
               🚚

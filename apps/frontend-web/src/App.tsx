@@ -4,13 +4,14 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import { Loader } from 'lucide-react';
 import { getCookie, useAuthStore } from '@/stores/authStore';
-import { clearTSALocalStorage } from '@/utils/localStorage.utils';
 
 // Lazy-loaded components
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
+const RegisterClient = lazy(() => import('./pages/auth/RegisterClient'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const MyProfile = lazy(() => import('./pages/profiles/MyProfile'));
 const MySettings = lazy(() => import('./pages/settings/MySettings'));
 
@@ -53,11 +54,11 @@ const LoadingFallback2 = () => (
 
 function App() {
   const [token, setToken] = useState(getCookie('tsa_access_token'));
-  const { currentUser: user, isLoading, getUser } = useAuthStore.getState();
+  const { currentUser: user, isLoading, getUser, logout } = useAuthStore.getState();
 
   useEffect(() => {
     if (!token) {
-      clearTSALocalStorage();
+      logout();
       setToken(null);
     } else {
       if (!user && !isLoading) getUser();
@@ -67,8 +68,19 @@ function App() {
 
   return (
     <Routes>
+      {/* Landing Page */}
       <Route
         path="/"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        }
+      />
+
+      {/* Authentication Routes */}
+      <Route
+        path="/app/login"
         element={
           <Suspense fallback={<LoadingFallback />}>
             <Login />
@@ -76,10 +88,26 @@ function App() {
         }
       />
       <Route
-        path="/register"
+        path="/login"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <Login />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/app/register"
         element={
           <Suspense fallback={<LoadingFallback />}>
             <Register />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <Suspense fallback={<LoadingFallback />}>
+            <RegisterClient />
           </Suspense>
         }
       />
@@ -100,6 +128,7 @@ function App() {
         }
       />
 
+      {/* Protected App Routes */}
       <Route
         path="/app"
         element={

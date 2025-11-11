@@ -13,6 +13,7 @@ export enum OrderStatus {
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
+  REFUNDED = 'refunded',
 }
 
 export enum PaymentStatus {
@@ -36,7 +37,16 @@ export default class Order extends BaseModel {
   declare status: OrderStatus
 
   @column()
-  declare totalAmount: number
+  declare subtotal: number
+
+  @column()
+  declare shippingCost: number
+
+  @column()
+  declare tax: number
+
+  @column()
+  declare total: number
 
   @column()
   declare shippingAddressId: string
@@ -51,7 +61,34 @@ export default class Order extends BaseModel {
   declare paymentStatus: PaymentStatus
 
   @column()
+  declare paymentReference: string | null
+
+  @column()
+  declare customerName: string
+
+  @column()
+  declare customerEmail: string
+
+  @column()
+  declare customerPhone: string
+
+  @column()
+  declare trackingNumber: string | null
+
+  @column()
   declare notes: string | null
+
+  @column.dateTime()
+  declare paidAt: DateTime | null
+
+  @column.dateTime()
+  declare shippedAt: DateTime | null
+
+  @column.dateTime()
+  declare deliveredAt: DateTime | null
+
+  @column.dateTime()
+  declare cancelledAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -91,11 +128,13 @@ export default class Order extends BaseModel {
     const month = String(now.month).padStart(2, '0')
 
     // Compter les commandes du mois en cours
-    const count = await Order.query()
+    const result = await Order.query()
       .where('order_number', 'like', `ORD-${year}${month}%`)
       .count('* as total')
 
-    const sequence = String(Number(count[0].$extras.total) + 1).padStart(4, '0')
+    // Extraire le count de manière sûre
+    const total = result[0]?.$extras?.total || result[0]?.total || 0
+    const sequence = String(Number(total) + 1).padStart(4, '0')
     order.orderNumber = `ORD-${year}${month}-${sequence}`
   }
 

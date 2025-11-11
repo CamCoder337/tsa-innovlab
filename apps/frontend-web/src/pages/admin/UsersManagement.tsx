@@ -149,7 +149,9 @@ export default function AdminUsersPage() {
       <div className="flex-1 p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{tAdmin('users.title')}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {tAdmin('users.title')}
+            </h1>
             <p className="text-gray-600 dark:text-gray-300 mt-1">{tAdmin('users.subtitle')}</p>
           </div>
           <Link to="/admin/users/add">
@@ -169,7 +171,9 @@ export default function AdminUsersPage() {
                   <Users className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.totalUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {tAdmin('users.totalUsers')}
+                  </p>
                   <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
               </div>
@@ -183,7 +187,9 @@ export default function AdminUsersPage() {
                   <UserCheck className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.activeUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {tAdmin('users.activeUsers')}
+                  </p>
                   <p className="text-2xl font-bold">{stats.active}</p>
                 </div>
               </div>
@@ -197,7 +203,9 @@ export default function AdminUsersPage() {
                   <Clock className="h-5 w-5 text-yellow-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.pendingUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {tAdmin('users.pendingUsers')}
+                  </p>
                   <p className="text-2xl font-bold">{stats.pending}</p>
                 </div>
               </div>
@@ -211,7 +219,9 @@ export default function AdminUsersPage() {
                   <UserX className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('users.suspendedUsers')}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {tAdmin('users.suspendedUsers')}
+                  </p>
                   <p className="text-2xl font-bold">{stats.suspended}</p>
                 </div>
               </div>
@@ -314,7 +324,9 @@ export default function AdminUsersPage() {
 
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-medium text-gray-900 dark:text-white">{formatUserName(user)}</h4>
+                              <h4 className="font-medium text-gray-900 dark:text-white">
+                                {formatUserName(user)}
+                              </h4>
                               <Badge className={getStatusColor(user.status)}>
                                 {user.status.toUpperCase()}
                               </Badge>
@@ -402,7 +414,9 @@ export default function AdminUsersPage() {
 
                 {!isLoading && filteredUsers?.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-500 dark:text-gray-400">{tAdmin('users.noUsersFound')}</p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      {tAdmin('users.noUsersFound')}
+                    </p>
                   </div>
                 )}
               </CardContent>

@@ -9,33 +9,23 @@ import {
   Printer,
   Mail,
   Calendar,
-  CreditCard,
   MapPin,
   Package,
   User,
 } from 'lucide-react';
 import type { Payment } from '@/types/payment.types';
-import type { CartItem } from '@/types/cart.types';
-import type { Order } from '@/types/order.types';
+import { type Order, OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order.types';
+import type { Address } from '@/types/address.types';
+import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { useCommonTranslation, usePaymentTranslation } from '@/hooks/useTranslation';
 
 interface FactureProps {
   payment: Payment;
-  order?: Order; // Optional order information
-  orderNumber: string;
-  items: CartItem[];
-  deliveryAddress: {
-    address: string;
-    city: string;
-    postalCode: string;
-    country?: string;
-  };
+  order: Order;
+  deliveryAddress: Address;
   deliveryOption: string;
   deliveryFee: number;
-  customerInfo: {
-    name: string;
-    email: string;
-    phone?: string;
-  };
   onDownload?: () => void;
   onPrint?: () => void;
   onEmailSend?: () => void;
@@ -45,21 +35,19 @@ interface FactureProps {
 export const Facture: React.FC<FactureProps> = ({
   payment,
   order,
-  orderNumber,
-  items,
   deliveryAddress,
   deliveryOption,
   deliveryFee,
-  customerInfo,
   onDownload,
   onPrint,
   onEmailSend,
   onClose,
 }) => {
-  const subtotal = items.reduce(
-    (sum, item) => sum + parseFloat(item.priceAtAdd) * item.quantity,
-    0
-  );
+  const { user } = useAuth();
+  const { t: tPayment } = usePaymentTranslation();
+  const { t: tCommon } = useCommonTranslation();
+
+  const subtotal = order.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
   const total = subtotal + deliveryFee;
 
   const formatDate = (date: Date) => {
@@ -72,14 +60,16 @@ export const Facture: React.FC<FactureProps> = ({
     }).format(date);
   };
 
-  const getPaymentMethodLabel = (method: string) => {
+  const getPaymentMethodLabel = (method: PaymentMethod) => {
     switch (method) {
-      case 'card':
-        return 'Carte bancaire';
-      case 'mobile':
-        return 'Mobile Money';
-      case 'cash':
-        return 'Espèces à la livraison';
+      case PaymentMethod.BANK_TRANSFER:
+        return tPayment('labels.bank_transfer');
+      case PaymentMethod.MTN_MOMO:
+        return tPayment('labels.mtn_mobile_money');
+      case PaymentMethod.ORANGE_MONEY:
+        return tPayment('labels.orange_money');
+      case PaymentMethod.CASH_ON_DELIVERY:
+        return tPayment('labels.cash_on_delivery');
       default:
         return method;
     }
@@ -88,11 +78,11 @@ export const Facture: React.FC<FactureProps> = ({
   const getDeliveryOptionLabel = (option: string) => {
     switch (option) {
       case 'standard':
-        return 'Standard (3-5 jours)';
+        return tPayment('labels.standardDelivery', { defaultValue: 'Standard (3-5 jours)' });
       case 'express':
-        return 'Express (1-2 jours)';
+        return tPayment('labels.expressDelivery', { defaultValue: 'Express (1-2 jours)' });
       case 'same-day':
-        return 'Livraison le jour même';
+        return tPayment('labels.sameDayDelivery', { defaultValue: 'Livraison le jour même' });
       default:
         return option;
     }
@@ -105,23 +95,25 @@ export const Facture: React.FC<FactureProps> = ({
         <div className="flex items-center justify-center gap-3 mb-4">
           <CheckCircle className="h-12 w-12 text-green-500" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Paiement Confirmé</h1>
-            <p className="text-gray-600">Merci pour votre commande !</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {tPayment('messages.paymentConfirmed')}
+            </h1>
+            <p className="text-gray-600">{tPayment('messages.thankYouOrder')}</p>
           </div>
         </div>
 
         <div className="flex justify-center gap-3 mb-6">
           <Button variant="outline" onClick={onDownload} className="gap-2">
             <Download className="h-4 w-4" />
-            Télécharger PDF
+            {tPayment('buttons.downloadPdf')}
           </Button>
           <Button variant="outline" onClick={onPrint} className="gap-2">
             <Printer className="h-4 w-4" />
-            Imprimer
+            {tPayment('buttons.print')}
           </Button>
           <Button variant="outline" onClick={onEmailSend} className="gap-2">
             <Mail className="h-4 w-4" />
-            Envoyer par email
+            {tPayment('buttons.sendByEmail')}
           </Button>
         </div>
       </div>
@@ -131,21 +123,19 @@ export const Facture: React.FC<FactureProps> = ({
         <CardHeader className="bg-blue-50">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold text-blue-900">FACTURE</h2>
+              <h2 className="text-2xl font-bold text-blue-900">{tPayment('labels.invoice')}</h2>
               <p className="text-blue-700">TSA Logistics</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">Numéro de commande</p>
-              <p className="text-xl font-bold text-blue-900">{order?.orderNumber || orderNumber}</p>
-              <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
-                {order?.paymentStatus === 'completed' || payment.status === 'completed'
-                  ? 'Payé'
-                  : 'En attente'}
-              </Badge>
+              <p className="text-sm text-gray-600">{tPayment('labels.orderNumber')}</p>
+              <p className="text-xl font-bold text-blue-900">{order?.orderNumber}</p>
               {order && (
                 <div className="mt-2">
-                  <Badge variant="outline" className="text-xs">
-                    Statut: {order.status}
+                  <Badge
+                    variant="outline"
+                    className={`text-xs ${getStatusColor(order.status as OrderStatus)}`}
+                  >
+                    {getStatusLabel(order.status as OrderStatus, tCommon)}
                   </Badge>
                 </div>
               )}
@@ -162,22 +152,26 @@ export const Facture: React.FC<FactureProps> = ({
                 TSA Logistics
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>Société de transport et logistique</p>
-                <p>Yaoundé, Cameroun</p>
+                <p>
+                  {tPayment('labels.companyDescription', {
+                    defaultValue: 'Société de transport et logistique',
+                  })}
+                </p>
+                <p>{tPayment('labels.companyLocation', { defaultValue: 'Yaoundé, Cameroun' })}</p>
                 <p>Email: contact@tsa-logistics.com</p>
-                <p>Tél: +237 6 XX XX XX XX</p>
+                <p>{tPayment('labels.phone', { defaultValue: 'Tél' })}: +237 6 XX XX XX XX</p>
               </div>
             </div>
 
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <User className="h-4 w-4" />
-                Facturé à
+                {tPayment('labels.billedTo')}
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
-                <p className="font-medium">{customerInfo.name}</p>
-                <p>{customerInfo.email}</p>
-                {customerInfo.phone && <p>{customerInfo.phone}</p>}
+                <p className="font-medium">{user?.firstName + ' ' + user?.lastName}</p>
+                <p>{user?.email}</p>
+                {user?.phone && <p>{user?.phone}</p>}
               </div>
             </div>
           </div>
@@ -187,42 +181,43 @@ export const Facture: React.FC<FactureProps> = ({
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                Détails de la commande
+                {tPayment('labels.orderDetails')}
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>
-                  <span className="font-medium">Date:</span>{' '}
+                  <span className="font-medium">{tPayment('labels.date')}:</span>{' '}
                   {formatDate(new Date(order?.createdAt || payment.createdAt))}
                 </p>
                 <p>
-                  <span className="font-medium">ID Commande:</span> {order?.id || 'N/A'}
+                  <span className="font-medium">{tPayment('labels.orderId')}:</span>{' '}
+                  {order?.id || 'N/A'}
                 </p>
                 <p>
-                  <span className="font-medium">ID Paiement:</span> {payment.id}
+                  <span className="font-medium">{tPayment('labels.method')}:</span>{' '}
+                  {getPaymentMethodLabel(order?.paymentMethod)}
                 </p>
+
                 <p>
-                  <span className="font-medium">Méthode:</span>{' '}
-                  {order?.paymentMethod || getPaymentMethodLabel(payment.method)}
+                  <span className="font-medium">{tPayment('labels.paymentStatus')}:</span>{' '}
+                  {getStatusLabel(order?.paymentStatus as PaymentStatus, tCommon)}
                 </p>
-                {order?.paymentReference && (
-                  <p>
-                    <span className="font-medium">Référence:</span> {order.paymentReference}
-                  </p>
-                )}
               </div>
             </div>
 
             <div>
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                Adresse de livraison
+                {tPayment('labels.deliveryAddress')}
               </h3>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>{deliveryAddress.address}</p>
+                <p>{deliveryAddress.label}</p>
                 <p>
                   {deliveryAddress.city}, {deliveryAddress.postalCode}
                 </p>
-                <p>{deliveryAddress.country || 'Cameroun'}</p>
+                <p>
+                  {deliveryAddress.country ||
+                    tPayment('labels.defaultCountry', { defaultValue: 'Cameroun' })}
+                </p>
                 <p className="font-medium text-tsa-blue dark:text-tsa-white">
                   {getDeliveryOptionLabel(deliveryOption)}
                 </p>
@@ -234,25 +229,31 @@ export const Facture: React.FC<FactureProps> = ({
 
           {/* Items Table */}
           <div className="mb-8">
-            <h3 className="font-semibold text-gray-900 mb-4">Articles commandés</h3>
+            <h3 className="font-semibold text-gray-900 mb-4">{tPayment('labels.orderedItems')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-2 font-medium text-gray-700">Article</th>
-                    <th className="text-center py-3 px-2 font-medium text-gray-700">Quantité</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">
-                      Prix unitaire
+                    <th className="text-left py-3 px-2 font-medium text-gray-700">
+                      {tPayment('labels.item')}
                     </th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">Total</th>
+                    <th className="text-center py-3 px-2 font-medium text-gray-700">
+                      {tPayment('labels.quantity')}
+                    </th>
+                    <th className="text-right py-3 px-2 font-medium text-gray-700">
+                      {tPayment('labels.unitPrice')}
+                    </th>
+                    <th className="text-right py-3 px-2 font-medium text-gray-700">
+                      {tPayment('labels.total')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item, index) => (
+                  {order?.items.map((item, index) => (
                     <tr key={index} className="border-b border-gray-100">
                       <td className="py-4 px-2">
                         <div>
-                          <p className="font-medium text-gray-900">{item.product?.name}</p>
+                          <p className="font-medium text-gray-900">{item.productName}</p>
                           {item.product?.description && (
                             <p className="text-sm text-gray-500 mt-1">
                               {item.product?.description}
@@ -266,10 +267,10 @@ export const Facture: React.FC<FactureProps> = ({
                         </span>
                       </td>
                       <td className="py-4 px-2 text-right font-medium">
-                        {item.priceAtAdd.toLocaleString()} FCFA
+                        {item.unitPrice.toLocaleString()} FCFA
                       </td>
                       <td className="py-4 px-2 text-right font-bold">
-                        {(parseFloat(item.priceAtAdd) * item.quantity).toLocaleString()} FCFA
+                        {item.totalPrice.toLocaleString()} FCFA
                       </td>
                     </tr>
                   ))}
@@ -284,68 +285,39 @@ export const Facture: React.FC<FactureProps> = ({
           <div className="flex justify-end">
             <div className="w-full max-w-sm space-y-3">
               <div className="flex justify-between text-gray-600">
-                <span>Sous-total ({items.length} articles)</span>
+                <span>
+                  {tPayment('labels.subtotal')} ({order?.items.length} {tPayment('labels.items')})
+                </span>
                 <span>{subtotal.toLocaleString()} FCFA</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Frais de livraison</span>
+                <span>{tPayment('labels.deliveryFee')}</span>
                 <span>{deliveryFee.toLocaleString()} FCFA</span>
               </div>
               <Separator />
               <div className="flex justify-between text-xl font-bold text-gray-900">
-                <span>Total</span>
+                <span>{tPayment('labels.total')}</span>
                 <span>{total.toLocaleString()} FCFA</span>
               </div>
               <div className="flex justify-between text-sm text-green-600 font-medium">
-                <span>Statut du paiement</span>
+                <span>{tPayment('labels.paymentStatus')}</span>
                 <span className="flex items-center gap-1">
                   <CheckCircle className="h-4 w-4" />
-                  Confirmé
+                  {tPayment('labels.confirmed')}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Payment Info */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <CreditCard className="h-4 w-4 text-gray-600" />
-              <span className="font-medium text-gray-900">Informations de paiement</span>
-            </div>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>
-                <span className="font-medium">Méthode:</span>{' '}
-                {order?.paymentMethod || getPaymentMethodLabel(payment.method)}
-              </p>
-              <p>
-                <span className="font-medium">Montant:</span>{' '}
-                {order?.total
-                  ? parseFloat(order.total).toLocaleString()
-                  : payment.amount.toLocaleString()}{' '}
-                FCFA
-              </p>
-              <p>
-                <span className="font-medium">Date de paiement:</span>{' '}
-                {formatDate(new Date(order?.paidAt || payment.createdAt))}
-              </p>
-              <p>
-                <span className="font-medium">ID de transaction:</span>{' '}
-                {order?.paymentReference || payment.transactionId}
-              </p>
-              {order?.status && (
-                <p>
-                  <span className="font-medium">Statut commande:</span> {order.status}
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
-            <p>Merci pour votre confiance en TSA Logistics !</p>
+            <p>{tPayment('messages.thankYouTrust')}</p>
             <p className="mt-2">
-              Pour toute question concernant votre commande, contactez-nous à{' '}
-              <a href="mailto:support@tsa-logistics.com" className="text-tsa-blue dark:text-tsa-white hover:underline">
+              {tPayment('messages.questionOrder')}{' '}
+              <a
+                href="mailto:support@tsa-logistics.com"
+                className="text-tsa-blue dark:text-tsa-white hover:underline"
+              >
                 support@tsa-logistics.com
               </a>
             </p>
@@ -356,14 +328,14 @@ export const Facture: React.FC<FactureProps> = ({
       {/* Action Buttons */}
       <div className="flex justify-center gap-4">
         <Button onClick={onClose} variant="outline" className="px-8">
-          Fermer
+          {tPayment('buttons.close')}
         </Button>
         <Button
           onClick={() => (window.location.href = '/app/shop')}
           className="px-8"
           style={{ backgroundColor: 'var(--tsa-blue)' }}
         >
-          Continuer mes achats
+          {tPayment('buttons.continueShopping')}
         </Button>
       </div>
     </div>

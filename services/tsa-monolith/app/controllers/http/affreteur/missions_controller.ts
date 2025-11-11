@@ -130,10 +130,26 @@ export default class MissionsController {
       // Gérer l'adresse de départ
       if (validatedData.adresseDepart) {
         if (validatedData.adresseDepart.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseDepart.id)
+            .where('user_id', user.id)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Departure address not found or does not belong to you',
+              errors: ["L'adresse de départ n'existe pas ou ne vous appartient pas"],
+            })
+          }
           adresseDepartId = validatedData.adresseDepart.id
         } else if (validatedData.adresseDepart.street && validatedData.adresseDepart.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
           const adresseDepart = await Address.create(
             {
+              userId: user.id, // 🔑 Associer l'adresse à l'affréteur connecté
               street: validatedData.adresseDepart.street,
               city: validatedData.adresseDepart.city,
               region: validatedData.adresseDepart.region,
@@ -152,10 +168,26 @@ export default class MissionsController {
       // Gérer l'adresse d'arrivée
       if (validatedData.adresseArrivee) {
         if (validatedData.adresseArrivee.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseArrivee.id)
+            .where('user_id', user.id)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Arrival address not found or does not belong to you',
+              errors: ["L'adresse d'arrivée n'existe pas ou ne vous appartient pas"],
+            })
+          }
           adresseArriveeId = validatedData.adresseArrivee.id
         } else if (validatedData.adresseArrivee.street && validatedData.adresseArrivee.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
           const adresseArrivee = await Address.create(
             {
+              userId: user.id, // 🔑 Associer l'adresse à l'affréteur connecté
               street: validatedData.adresseArrivee.street,
               city: validatedData.adresseArrivee.city,
               region: validatedData.adresseArrivee.region,
@@ -324,10 +356,26 @@ export default class MissionsController {
       // Gérer les adresses si fournies
       if (validatedData.adresseDepart) {
         if (validatedData.adresseDepart.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseDepart.id)
+            .where('user_id', user.id)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Departure address not found or does not belong to you',
+              errors: ["L'adresse de départ n'existe pas ou ne vous appartient pas"],
+            })
+          }
           mission.adresseDepartId = validatedData.adresseDepart.id
         } else if (validatedData.adresseDepart.street && validatedData.adresseDepart.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
           const adresse = await Address.create(
             {
+              userId: user.id, // 🔑 Associer l'adresse à l'affréteur connecté
               street: validatedData.adresseDepart.street,
               city: validatedData.adresseDepart.city,
               region: validatedData.adresseDepart.region,
@@ -345,10 +393,26 @@ export default class MissionsController {
 
       if (validatedData.adresseArrivee) {
         if (validatedData.adresseArrivee.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseArrivee.id)
+            .where('user_id', user.id)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Arrival address not found or does not belong to you',
+              errors: ["L'adresse d'arrivée n'existe pas ou ne vous appartient pas"],
+            })
+          }
           mission.adresseArriveeId = validatedData.adresseArrivee.id
         } else if (validatedData.adresseArrivee.street && validatedData.adresseArrivee.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
           const adresse = await Address.create(
             {
+              userId: user.id, // 🔑 Associer l'adresse à l'affréteur connecté
               street: validatedData.adresseArrivee.street,
               city: validatedData.adresseArrivee.city,
               region: validatedData.adresseArrivee.region,

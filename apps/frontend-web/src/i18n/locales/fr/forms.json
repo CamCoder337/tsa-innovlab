@@ -46,6 +46,7 @@
     "enterPassword": "Entrez votre mot de passe",
     "enterName": "Entrez votre nom",
     "enterPhone": "Entrez votre numéro de téléphone",
+    "searchCountry": "Rechercher un pays...",
     "rolePlaceholder": "Sélectionner un rôle",
     "selectOption": "Sélectionnez une option",
     "searchPlaceholder": "Rechercher...",
@@ -183,7 +184,8 @@
     "deliveryAddress": "Adresse de livraison",
     "calculatedDistance": "Distance calculée",
     "negotiationRange": "Fourchette de négociation",
-    "margin": "Marge"
+    "margin": "Marge",
+    "instructions": "Instructions"
   },
   "buttons": {
     "save": "Enregistrer",

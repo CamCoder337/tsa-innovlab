@@ -16,13 +16,15 @@ import {
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { getStatusLabel } from '@/lib/utils';
+import type { PaymentStatus } from '@/types/order.types';
 
 interface PaymentRecord {
   id: string;
   amount: number;
   date: string;
   method: string;
-  status: 'completed' | 'pending' | 'failed';
+  status: PaymentStatus;
   reference: string;
 }
 
@@ -34,7 +36,7 @@ interface MissionInvoiceProps {
     platformFee: number;
     taxes: number;
     additionalCosts: number;
-    paymentStatus: 'pending' | 'partial' | 'completed' | 'overdue';
+    paymentStatus: PaymentStatus;
     paymentMethod: string;
     transactionId?: string;
   };
@@ -85,36 +87,6 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return tCommon('status.completed');
-      case 'in_progress':
-        return tCommon('status.inProgress');
-      case 'assigned':
-        return tCommon('status.assigned');
-      case 'published':
-        return tCommon('status.published');
-      default:
-        return status;
-    }
-  };
-
-  const getPaymentStatusLabel = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return tCommon('status.paid');
-      case 'pending':
-        return tCommon('status.pending');
-      case 'partial':
-        return tCommon('status.partial');
-      case 'overdue':
-        return tCommon('status.overdue');
-      default:
-        return status;
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white">
       {/* Header */}
@@ -161,11 +133,11 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
               </p>
               <p className="text-xl font-bold text-blue-900">#{mission.id}</p>
               <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
-                {getPaymentStatusLabel(financialData.paymentStatus)}
+                {getStatusLabel(financialData.paymentStatus, tCommon)}
               </Badge>
               <div className="mt-2">
                 <Badge variant="outline" className="text-xs">
-                  {tMissions('status.label')}: {getStatusLabel(mission.status)}
+                  {tMissions('status.label')}: {getStatusLabel(mission.status, tCommon)}
                 </Badge>
               </div>
             </div>
@@ -351,7 +323,7 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
                 <span>{tMissions('financial.invoice.paymentStatus')}</span>
                 <span className="flex items-center gap-1">
                   <CheckCircle className="h-4 w-4" />
-                  {getPaymentStatusLabel(financialData.paymentStatus)}
+                  {getStatusLabel(financialData.paymentStatus, tCommon)}
                 </span>
               </div>
             </div>
@@ -385,7 +357,7 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
                 </p>
                 <p>
                   <span className="font-medium">{tMissions('financial.invoice.status')}:</span>{' '}
-                  {getPaymentStatusLabel(paymentRecord.status)}
+                  {getStatusLabel(paymentRecord.status, tCommon)}
                 </p>
               </div>
             </div>
@@ -396,7 +368,10 @@ export const MissionInvoice: React.FC<MissionInvoiceProps> = ({
             <p>{tMissions('financial.invoice.thankYou')}</p>
             <p className="mt-2">
               {tMissions('financial.invoice.contactSupport')}{' '}
-              <a href="mailto:support@tsa-logistics.com" className="text-tsa-blue hover:underline">
+              <a
+                href="mailto:support@tsa-logistics.com"
+                className="text-tsa-blue dark:text-tsa-white hover:underline"
+              >
                 support@tsa-logistics.com
               </a>
             </p>

@@ -43,7 +43,7 @@ export default class PaymentService {
     } else {
       payment = await Payment.create({
         orderId: order.id,
-        amount: order.totalAmount,
+        amount: Number(order.total),
         method: PaymentMethod.MTN_MOBILE_MONEY,
         status: PaymentStatus.PENDING,
         phoneNumber,
@@ -93,7 +93,7 @@ export default class PaymentService {
       📱 SIMULATION PAIEMENT MTN MOBILE MONEY
       ════════════════════════════════════════════════════════════
       Commande:      ${order.orderNumber}
-      Montant:       ${order.totalAmount} XAF
+      Montant:       ${order.total} XAF
       Téléphone:     ${phoneNumber}
 
       ⚠️  Mode développement - Paiement en attente

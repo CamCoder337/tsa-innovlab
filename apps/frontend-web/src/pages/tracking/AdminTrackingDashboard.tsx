@@ -226,7 +226,9 @@ export default function AdminTrackingDashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="flex items-center gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-tsa-blue dark:text-tsa-white" />
-            <span className="text-lg text-gray-600 dark:text-gray-300">Chargement du tableau de bord...</span>
+            <span className="text-lg text-gray-600 dark:text-gray-300">
+              Chargement du tableau de bord...
+            </span>
           </div>
         </div>
       </div>
@@ -428,7 +430,7 @@ export default function AdminTrackingDashboard() {
                             const selected = trackableMissions.find((m) => m.id === e.target.value);
                             if (selected) setSelectedMission(selected);
                           }}
-                          className="flex-1 px-3 py-2 border dark:border-gray-800 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <option value="">-- Sélectionner une mission --</option>
                           {trackableMissions.map((mission) => (
@@ -568,7 +570,9 @@ export default function AdminTrackingDashboard() {
                       <span className="text-sm text-gray-600 dark:text-gray-300">
                         {tTracking('metrics.dailyRevenue')}
                       </span>
-                      <span className="font-medium text-tsa-blue dark:text-tsa-white">{850000} FCFA</span>
+                      <span className="font-medium text-tsa-blue dark:text-tsa-white">
+                        {850000} FCFA
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600 dark:text-gray-300">
@@ -615,7 +619,9 @@ export default function AdminTrackingDashboard() {
                 <Card key={index}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{metric.metric}</span>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                        {metric.metric}
+                      </span>
                       {getTrendIcon(metric.trend)}
                     </div>
                     <div className="flex items-baseline gap-2">

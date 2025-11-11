@@ -16,7 +16,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
 from app.core.metrics import setup_metrics
-from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot, intelligent_chatbot
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot, intelligent_chatbot, kyc
 from prometheus_client import make_asgi_app
 
 # Configure logging
@@ -204,6 +204,12 @@ app.include_router(
     tags=["Chatbot V2 (Intelligent)"]
 )
 
+app.include_router(
+    kyc.router,
+    prefix="/api/ai",
+    tags=["KYC (Document Verification)"]
+)
+
 # TODO: Add other AI routers
 # app.include_router(predictions.router, prefix="/api/ai/predictions", tags=["Predictions"])
 # app.include_router(anomalies.router, prefix="/api/ai/anomalies", tags=["Anomaly Detection"])
@@ -236,6 +242,7 @@ async def ai_root():
             "/api/ai/eta - ETA predictions ✅",
             "/api/ai/product-recommendations - Product recommendations ✅",
             "/api/ai/chatbot - Chatbot assistant ✅",
+            "/api/ai/kyc - KYC document verification ✅",
             "/api/ai/predictions - General predictions (TODO)",
             "/api/ai/anomalies - Anomaly detection (TODO)"
         ],
@@ -244,6 +251,7 @@ async def ai_root():
             "eta": "✅ Operational",
             "product_recommendation": "✅ Operational",
             "chatbot": "✅ Operational",
+            "kyc_ocr": "✅ Operational (Google Vision)",
             "anomaly": "🚧 In development"
         }
     }

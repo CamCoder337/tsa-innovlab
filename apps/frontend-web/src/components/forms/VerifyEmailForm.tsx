@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { VerifyEmailFormData } from '@/types/forms.types';
@@ -27,6 +27,7 @@ export default function VerifyEmailForm({
   isAutoVerifying = false,
 }: VerifyEmailFormProps) {
   const { t: tForms } = useFormsTranslation();
+  const navigate = useNavigate();
 
   return (
     <Formik<VerifyEmailFormData>
@@ -42,7 +43,9 @@ export default function VerifyEmailForm({
         if (isSubmitting || isAutoVerifying) {
           return (
             <div className="space-y-6 text-center">
-              <div className="text-tsa-blue dark:text-tsa-white font-medium">{tForms('messages.autoVerifying')}</div>
+              <div className="text-tsa-blue dark:text-tsa-white font-medium">
+                {tForms('messages.autoVerifying')}
+              </div>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tsa-blue mx-auto"></div>
             </div>
           );
@@ -50,6 +53,7 @@ export default function VerifyEmailForm({
 
         return (
           <Form className="space-y-6">
+            {/* Email Field */}
             <div className="flex flex-col gap-2">
               <Input
                 name="email"
@@ -59,14 +63,21 @@ export default function VerifyEmailForm({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 aria-invalid={touched.email && !!errors.email}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue dark:text-tsa-white/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                          "
                 required
               />
               {touched.email && errors.email ? (
-                <div className="text-sm text-red-600">{errors.email}</div>
+                <div className="text-sm text-red-600 dark:text-red-400 font-medium">
+                  {errors.email}
+                </div>
               ) : null}
             </div>
 
+            {/* Token Field */}
             <div className="flex flex-col gap-2">
               <Input
                 name="token"
@@ -76,26 +87,38 @@ export default function VerifyEmailForm({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 aria-invalid={touched.token && !!errors.token}
-                className="h-12 border-tsa-blue placeholder:text-tsa-blue dark:text-tsa-white/90 placeholder:text-sm placeholder:font-medium"
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                        text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                          "
                 required
               />
               {touched.token && errors.token ? (
-                <div className="text-sm text-red-600">{errors.token}</div>
+                <div className="text-sm text-red-600 dark:text-red-400 font-medium">
+                  {errors.token}
+                </div>
               ) : null}
             </div>
 
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 text-white font-semibold text-2xl p-10"
+              className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 
+              hover:bg-tsa-blue active:bg-tsa-blue/80 text-white font-semibold 
+              text-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
               disabled={isSubmitting}
             >
               {tForms('buttons.verify')}
             </Button>
 
-            <div className="text-center">
-              <Link to="/" className="text-tsa-blue dark:text-tsa-white font-medium">
-                {tForms('buttons.backToLogin')}
-              </Link>
+            {/* Back to Login Link */}
+            <div
+              className="text-center text-tsa-blue dark:text-tsa-white hover:underline 
+                          font-medium text-sm transition-colors cursor-pointer"
+              onClick={() => navigate(-1)}
+            >
+              {tForms('buttons.backToLogin')}
             </div>
           </Form>
         );

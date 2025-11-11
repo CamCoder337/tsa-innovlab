@@ -1,4 +1,4 @@
-import type { AddressDetails } from '@/components/maps/AddressPicker';
+import type { AddressDetails } from '@/types/address.types';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 

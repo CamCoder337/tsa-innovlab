@@ -29,6 +29,8 @@ volumes:
     driver: local
   monolith_logs:
     driver: local
+  easyocr_models:
+    driver: local
 
 # =====================================
 # Services Configuration
@@ -287,6 +289,13 @@ services:
       # Option 2: Chemin vers fichier monté en volume
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/credentials/google-credentials.json}
       
+      # KYC OCR Configuration
+      KYC_STRATEGY: ${KYC_STRATEGY:-hybrid}
+      KYC_EASYOCR_TIMEOUT: ${KYC_EASYOCR_TIMEOUT:-60}
+      KYC_EASYOCR_FIRST_CALL_TIMEOUT: ${KYC_EASYOCR_FIRST_CALL_TIMEOUT:-180}
+      KYC_FALLBACK_ENABLED: ${KYC_FALLBACK_ENABLED:-true}
+      KYC_MIN_CONFIDENCE: ${KYC_MIN_CONFIDENCE:-0.3}
+      
       # ML Model settings
       MODEL_CACHE_SIZE: 3
       MODEL_PREDICTION_TIMEOUT: 30
@@ -298,6 +307,8 @@ services:
     volumes:
       - ai_models:/app/ml_models
       - ai_logs:/app/logs
+      # Cache des modèles EasyOCR (évite re-téléchargement)
+      - easyocr_models:/home/app/.EasyOCR
       # Monter le fichier de credentials seulement s'il existe (développement)
       # En production, utiliser GOOGLE_CREDENTIALS_JSON dans .env
       - ./services/tsa-ai/google-credentials.json:/app/credentials/google-credentials.json:ro
@@ -326,11 +337,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G
-          cpus: '1.5'
+          memory: 8G  # Augmenté pour EasyOCR
+          cpus: '4.0'  # Augmenté pour meilleures performances
         reservations:
-          memory: 1G
-          cpus: '0.5'
+          memory: 3G
+          cpus: '2.0'
     
     networks:
       - tsa-network

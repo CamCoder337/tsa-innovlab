@@ -37,7 +37,7 @@ test.group('Payment Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -64,7 +64,7 @@ test.group('Payment Model', (group) => {
     const order2 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 20000,
+      total: 20000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -89,7 +89,7 @@ test.group('Payment Model', (group) => {
     const order3 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 30000,
+      total: 30000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -139,7 +139,7 @@ test.group('Payment Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -193,7 +193,7 @@ test.group('Payment Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -250,7 +250,7 @@ test.group('Payment Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',
@@ -306,7 +306,7 @@ test.group('Payment Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
-      totalAmount: 10000,
+      total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
       paymentMethod: 'mtn_mobile_money',

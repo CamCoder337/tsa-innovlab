@@ -29,8 +29,8 @@ import { useMissions } from '@/hooks/useMissions';
 import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
-import { useVehicleInfo } from '@/hooks/useVehicleInfo';
 import { useAuth } from '@/hooks/useAuth';
+import { useVehicles } from '@/hooks/useVehicles';
 
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
@@ -71,7 +71,7 @@ export default function MissionTrackingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { myMissions: missions } = useMissions();
-  const { getVehicleRegistration } = useVehicleInfo();
+  const { getVehicleById } = useVehicles();
   const { t: tCommon } = useCommonTranslation();
   const { t: tTracking } = useTrackingTranslation();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -83,20 +83,24 @@ export default function MissionTrackingPage() {
   useEffect(() => {
     const fetchInfo = async () => {
       if (user?.role === 'transporteur' && mission?.vehicleId) {
-        const registration = await getVehicleRegistration(mission.vehicleId);
-        setVehicleRegistration(registration);
+        const vehicle = await getVehicleById(mission.vehicleId);
+        setVehicleRegistration(vehicle?.registration || '');
       }
     };
 
     fetchInfo();
-  }, [mission?.vehicleId, user?.role, getVehicleRegistration]);
+  }, [mission?.vehicleId, user?.role, getVehicleById]);
 
   if (!mission) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{tTracking('mission.notFound')}</h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-8">{tTracking('mission.notFoundMessage', { id })}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            {tTracking('mission.notFound')}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            {tTracking('mission.notFoundMessage', { id })}
+          </p>
           <Button onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             {tTracking('navigation.backToDashboard')}
@@ -528,7 +532,9 @@ export default function MissionTrackingPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{step.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                            {step.description}
+                          </p>
                         </div>
                       </div>
                     ))}

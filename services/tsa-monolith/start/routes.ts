@@ -157,6 +157,13 @@ router
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
 
+    // Gestion des commandes
+    router.get('/orders/stats', '#controllers/http/admin/orders_controller.stats')
+    router.get('/orders', '#controllers/http/admin/orders_controller.index')
+    router.get('/orders/:id', '#controllers/http/admin/orders_controller.show')
+    router.put('/orders/:id/status', '#controllers/http/admin/orders_controller.updateStatus')
+    router.post('/orders/:id/cancel', '#controllers/http/admin/orders_controller.cancel')
+
     // Audit logs
     router.get('/audit-logs', '#controllers/http/admin/audit_logs_controller.index')
 
@@ -328,6 +335,21 @@ router
     )
   })
   .prefix('/api/shop')
+  .use(middleware.auth())
+
+// ===== ROUTES KYC (AUTHENTIFIÉES) =====
+router
+  .group(() => {
+    // Extraction de documents KYC
+    router.post('/extract', '#controllers/http/kyc_controller.extract')
+
+    // Statistiques KYC (admin uniquement)
+    router.get('/stats', '#controllers/http/kyc_controller.stats')
+
+    // Health check KYC (public)
+    router.get('/health', '#controllers/http/kyc_controller.health')
+  })
+  .prefix('/api/kyc')
   .middleware(middleware.auth())
 
 // ===== ROUTES E-COMMERCE (CLIENT, AFFRETEUR, TRANSPORTEUR) =====
@@ -365,6 +387,13 @@ router
 // ===== ROUTES COMMUNES PROTÉGÉES =====
 router
   .group(() => {
+    // Adresses (tous les rôles peuvent gérer leurs adresses)
+    router.get('/addresses', '#controllers/addresses_controller.index')
+    router.post('/addresses', '#controllers/addresses_controller.store')
+    router.get('/addresses/:id', '#controllers/addresses_controller.show')
+    router.put('/addresses/:id', '#controllers/addresses_controller.update')
+    router.delete('/addresses/:id', '#controllers/addresses_controller.destroy')
+
     // Conversations
     router.get('/conversations', '#controllers/http/common/conversations_controller.index')
     // Support both hyphenated and slash-separated search routes for frontend compatibility

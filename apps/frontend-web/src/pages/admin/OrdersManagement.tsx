@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,11 +55,10 @@ import {
   DollarSign,
   TrendingUp,
 } from 'lucide-react';
-import { useOrders } from '@/hooks/useOrders';
+import { useAdminOrders } from '@/hooks/useAdminOrders';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
-import { getOrderStatusColor, getOrderStatusLabel } from '@/lib/order-utils';
 import { OrderStatus, PaymentStatus } from '@/types/order.types';
 import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 
@@ -71,6 +70,7 @@ export default function OrdersManagement() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const navigate = useNavigate();
 
   // Hooks
   const {
@@ -81,10 +81,16 @@ export default function OrdersManagement() {
     fetchOrder,
     updateOrderStatus,
     cancelOrder,
-    clearError,
-  } = useOrders();
+    setError: clearError,
+  } = useAdminOrders();
 
   const allStats = useAllAdminStats();
+
+  // Load orders and stats on mount
+  useEffect(() => {
+    fetchOrders();
+    allStats.fetchAllStats();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Filter orders based on search and filters
   const filteredOrders = orders.filter((order) => {
@@ -103,7 +109,7 @@ export default function OrdersManagement() {
   // Handle order status update
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      await updateOrderStatus(orderId, newStatus);
+      await updateOrderStatus(orderId, { status: newStatus });
       // Refresh orders list
       fetchOrders();
     } catch (error) {
@@ -136,10 +142,10 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(order.total), 0),
+    totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
     averageOrderValue:
       orders.length > 0
-        ? orders.reduce((sum, order) => sum + parseFloat(order.total), 0) / orders.length
+        ? orders.reduce((sum, order) => sum + (order.total || 0), 0) / orders.length
         : 0,
   };
 
@@ -157,7 +163,9 @@ export default function OrdersManagement() {
   return (
     <div className="flex-1 p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{tAdmin('orders.title')}</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          {tAdmin('orders.title')}
+        </h1>
         <p className="text-gray-600 dark:text-gray-300">{tAdmin('orders.subtitle')}</p>
       </div>
 
@@ -165,7 +173,7 @@ export default function OrdersManagement() {
         <div className="mb-4 p-4 bg-red-50 border dark:border-gray-800 border-red-200 rounded-lg">
           <div className="flex items-center justify-between">
             <p className="text-red-600">{error}</p>
-            <Button variant="ghost" size="sm" onClick={clearError}>
+            <Button variant="ghost" size="sm" onClick={() => clearError(null)}>
               <XCircle className="h-4 w-4" />
             </Button>
           </div>
@@ -189,7 +197,9 @@ export default function OrdersManagement() {
                     <Package className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalOrders')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.totalOrders')}
+                    </p>
                     <p className="text-2xl font-bold">{orderStats.total.toLocaleString()}</p>
                   </div>
                 </div>
@@ -203,7 +213,9 @@ export default function OrdersManagement() {
                     <DollarSign className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.totalRevenue')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.totalRevenue')}
+                    </p>
                     <p className="text-2xl font-bold">{formatCurrency(orderStats.totalRevenue)}</p>
                   </div>
                 </div>
@@ -217,7 +229,9 @@ export default function OrdersManagement() {
                     <TrendingUp className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{tAdmin('orders.stats.averageBasket')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('orders.stats.averageBasket')}
+                    </p>
                     <p className="text-2xl font-bold">
                       {formatCurrency(orderStats.averageOrderValue)}
                     </p>
@@ -234,7 +248,7 @@ export default function OrdersManagement() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {getOrderStatusLabel(OrderStatus.PENDING)}
+                      {getStatusLabel(OrderStatus.PENDING as OrderStatus, tCommon)}
                     </p>
                     <p className="text-2xl font-bold">{orderStats.pending}</p>
                   </div>
@@ -254,19 +268,29 @@ export default function OrdersManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <p className="text-2xl font-bold text-yellow-600">{orderStats.pending}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.pending')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.pending')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">{orderStats.processing}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.processing')}s</p>
+                      <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                        {orderStats.processing}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.processing')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
                       <p className="text-2xl font-bold text-purple-600">{orderStats.shipped}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.shipped')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.shipped')}s
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <p className="text-2xl font-bold text-green-600">{orderStats.delivered}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{tCommon('status.delivered')}s</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tCommon('status.delivered')}s
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -292,13 +316,13 @@ export default function OrdersManagement() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-sm">
-                          {formatCurrency(parseFloat(order.total))}
+                          {formatCurrency(order.total || 0)}
                         </p>
                         <Badge
                           variant="secondary"
-                          className={`${getOrderStatusColor(order.status)} text-white`}
+                          className={`${getStatusColor(order.status)} text-white`}
                         >
-                          {getOrderStatusLabel(order.status)}
+                          {getStatusLabel(order.status, tCommon)}
                         </Badge>
                       </div>
                     </div>
@@ -448,8 +472,17 @@ export default function OrdersManagement() {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
-                      <Link to={`/app/shop/orders/${order.id}`} key={order.id}>
-                        <TableRow>
+                        <TableRow
+                          key={order.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={(e) => {
+                            // Don't navigate if clicking on checkbox or action buttons
+                            if ((e.target as HTMLElement).closest('input, button, [role="menuitem"]')) {
+                              return;
+                            }
+                            navigate(`/app/shop/order/${order.id}`);
+                          }}
+                        >
                           <TableCell>
                             <input
                               type="checkbox"
@@ -472,21 +505,23 @@ export default function OrdersManagement() {
                               <p className="font-medium text-xs sm:text-sm truncate">
                                 {order.user?.firstName} {order.user?.lastName}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{order.user?.email}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {order.user?.email}
+                              </p>
                             </div>
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-xs sm:text-sm">
                             {formatDate(order.createdAt!)}
                           </TableCell>
                           <TableCell className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(parseFloat(order.total))}
+                            {formatCurrency(order.total || 0)}
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant="secondary"
-                              className={`${getOrderStatusColor(order.status)} text-white text-xs`}
+                              className={`${getStatusColor(order.status)} text-white text-xs`}
                             >
-                              {getOrderStatusLabel(order.status)}
+                              {getStatusLabel(order.status, tCommon)}
                             </Badge>
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
@@ -583,7 +618,6 @@ export default function OrdersManagement() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      </Link>
                     ))}
                   </TableBody>
                 </Table>
@@ -594,7 +628,9 @@ export default function OrdersManagement() {
           {filteredOrders.length === 0 && (
             <div className="text-center py-6 sm:py-8">
               <Package className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">{tAdmin('orders.empty')}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                {tAdmin('orders.empty')}
+              </p>
             </div>
           )}
         </TabsContent>
@@ -614,7 +650,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.conversionRate')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {allStats.overview.stats?.conversion.total.toFixed(1)}%
+                      {((allStats.overview.stats?.conversion?.total || 0) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -622,7 +658,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.averageBasket')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {formatCurrency(allStats.overview.stats?.averageBasket.total || 0)}
+                      {formatCurrency(allStats.overview.stats?.averageBasket?.total || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -630,7 +666,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.ordersToday')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {allStats.overview.stats?.orders.byPeriod.today || 0}
+                      {allStats.overview.stats?.orders?.byPeriod?.today || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -638,7 +674,7 @@ export default function OrdersManagement() {
                       {tAdmin('orders.analytics.revenueThisMonth')}
                     </span>
                     <span className="font-medium text-xs sm:text-sm flex-shrink-0">
-                      {formatCurrency(allStats.overview.stats?.revenue.last30Days || 0)}
+                      {formatCurrency(allStats.overview.stats?.revenue?.last30Days || 0)}
                     </span>
                   </div>
                 </div>

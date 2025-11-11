@@ -1,6 +1,34 @@
 import { getGoogleMapsApiKey } from '@/config/env';
 import i18n from '@/i18n';
 
+declare global {
+  interface Window {
+    [key: string]: (() => void) | undefined;
+    google?: {
+      maps?: {
+        Map: new (element: HTMLElement, options?: google.maps.MapOptions) => google.maps.Map;
+        places?: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: google.maps.places.AutocompleteOptions
+          ) => google.maps.places.Autocomplete;
+          PlacesService: new (
+            map: google.maps.Map | HTMLDivElement
+          ) => google.maps.places.PlacesService;
+          PlaceAutocompleteElement: typeof google.maps.places.PlaceAutocompleteElement;
+        };
+        geometry?: {
+          spherical: typeof google.maps.geometry.spherical;
+        };
+        marker?: {
+          AdvancedMarkerElement: typeof google.maps.marker.AdvancedMarkerElement;
+        };
+        [key: string]: unknown;
+      };
+    };
+  }
+}
+
 interface GoogleMapsLoaderOptions {
   libraries?: string[];
   version?: string;
@@ -46,104 +74,73 @@ class GoogleMapsLoader {
 
   private loadScript(options: GoogleMapsLoaderOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Check if script already exists
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (existingScript) {
-        // Script exists, wait for it to load
-        if (window.google?.maps?.Map) {
-          console.log('🗺️ Google Maps déjà chargé');
-          resolve();
-          return;
-        }
-
-        console.log('🔄 Script Google Maps existant trouvé, attente du chargement...');
-        // Add listener to existing script
-        existingScript.addEventListener('load', () => {
-          this.waitForGoogleMapsAPI().then(resolve).catch(reject);
-        });
-        existingScript.addEventListener('error', () => {
-          console.error('❌ Erreur lors du chargement du script Google Maps existant');
-          reject(new Error('Failed to load existing Google Maps script'));
-        });
-        return;
-      }
+      // --- 1. Nettoyer les anciens scripts ---
+      document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach((s) => s.remove());
+      document.querySelectorAll('script[src*="google.com/maps/api/js"]').forEach((s) => s.remove());
 
       const apiKey = getGoogleMapsApiKey();
-      if (!apiKey) {
-        reject(
-          new Error('Google Maps API key is missing. Please check your environment variables.')
-        );
-        return;
-      }
+      if (!apiKey) return reject(new Error('Missing API key'));
 
       const { libraries = ['places', 'geometry', 'marker'], version = 'weekly' } = options;
-
-      const script = document.createElement('script');
-      const librariesParam = libraries.length > 0 ? `&libraries=${libraries.join(',')}` : '';
       const language = i18n.language;
 
-      // In google-maps-loader.ts
-      const scriptUrl = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=${language}${librariesParam}&v=${version}&loading=async`;
-      console.log('🚀 Chargement du script Google Maps:', scriptUrl.replace(apiKey, '***'));
+      // --- 2. Callback officiel ---
+      const callbackName = `gmaps_cb_${Date.now()}`;
+      window[callbackName] = () => {
+        delete window[callbackName];
+        console.log('Google Maps API prête via callback');
+        resolve();
+      };
 
-      script.src = scriptUrl;
+      const script = document.createElement('script');
+      script.src =
+        `https://maps.googleapis.com/maps/api/js` +
+        `?key=${apiKey}` +
+        `&language=${language}` +
+        `&libraries=${libraries.join(',')}` +
+        `&v=${version}` +
+        `&callback=${callbackName}`;
       script.async = true;
       script.defer = true;
 
-      // Add timeout
-      const timeoutId = setTimeout(() => {
-        console.error('⏰ Timeout lors du chargement de Google Maps');
-        reject(new Error('Google Maps script loading timeout'));
-      }, 15000);
+      const timeoutId = setTimeout(() => reject(new Error('Timeout')), 20000);
 
-      script.onload = () => {
+      script.onload = () => clearTimeout(timeoutId); // le vrai succès arrive dans le callback
+      script.onerror = (e) => {
         clearTimeout(timeoutId);
-        console.log('📦 Script Google Maps chargé');
-
-        // Wait for Google Maps API to be fully available
-        this.waitForGoogleMapsAPI().then(resolve).catch(reject);
-      };
-
-      script.onerror = (event) => {
-        clearTimeout(timeoutId);
-        console.error('❌ Erreur lors du chargement du script Google Maps:', event);
-        reject(
-          new Error(
-            'Failed to load Google Maps script. Please check your API key and network connection.'
-          )
-        );
+        reject(new Error('Script load failed: ' + e));
       };
 
       document.head.appendChild(script);
     });
   }
 
-  private waitForGoogleMapsAPI(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      let attempts = 0;
-      const maxAttempts = 50; // 5 seconds max (50 * 100ms)
+  // private waitForGoogleMapsAPI(): Promise<void> {
+  //   return new Promise((resolve, reject) => {
+  //     let attempts = 0;
+  //     const maxAttempts = 50; // 5 seconds max (50 * 100ms)
 
-      const checkAPI = () => {
-        attempts++;
+  //     const checkAPI = () => {
+  //       attempts++;
 
-        if (window.google?.maps?.Map && typeof window.google.maps.Map === 'function') {
-          console.log('✅ Google Maps API disponible');
-          resolve();
-          return;
-        }
+  //       if (window.google?.maps?.Map && typeof window.google.maps.Map === 'function') {
+  //         console.log('✅ Google Maps API disponible');
+  //         resolve();
+  //         return;
+  //       }
 
-        if (attempts >= maxAttempts) {
-          console.error('❌ Google Maps API non disponible après le chargement du script');
-          reject(new Error('Google Maps API not available after script load'));
-          return;
-        }
+  //       if (attempts >= maxAttempts) {
+  //         console.error('❌ Google Maps API non disponible après le chargement du script');
+  //         reject(new Error('Google Maps API not available after script load'));
+  //         return;
+  //       }
 
-        setTimeout(checkAPI, 100);
-      };
+  //       setTimeout(checkAPI, 100);
+  //     };
 
-      checkAPI();
-    });
-  }
+  //     checkAPI();
+  //   });
+  // }
 
   isGoogleMapsLoaded(): boolean {
     return (

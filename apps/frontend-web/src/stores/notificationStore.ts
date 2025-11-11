@@ -58,7 +58,7 @@ export const useNotificationStore = create<NotificationStore>()(
           set((state) => ({
             notifications: state.notifications.map((notification) =>
               notification.id === notificationId
-                ? { ...notification, readAt: new Date().toISOString() }
+                ? { ...notification, readAt: new Date().toISOString(), isRead: true }
                 : notification
             ),
           }));
@@ -74,7 +74,7 @@ export const useNotificationStore = create<NotificationStore>()(
           set((state) => ({
             notifications: state.notifications.map((notification) =>
               notification.id === notificationId
-                ? { ...notification, readAt: undefined }
+                ? { ...notification, readAt: undefined, isRead: false }
                 : notification
             ),
             error: error instanceof Error ? error.message : 'Failed to mark notification as read',
@@ -90,6 +90,7 @@ export const useNotificationStore = create<NotificationStore>()(
             notifications: state.notifications.map((notification) => ({
               ...notification,
               readAt: notification.readAt || now,
+              isRead: true,
             })),
           }));
 
@@ -99,10 +100,15 @@ export const useNotificationStore = create<NotificationStore>()(
           get().fetchNotificationStats();
         } catch (error) {
           console.error('Failed to mark all notifications as read:', error);
-          set({
+          set((state) => ({
+            notifications: state.notifications.map((notification) => ({
+              ...notification,
+              readAt: undefined,
+              isRead: false,
+            })),
             error:
               error instanceof Error ? error.message : 'Failed to mark all notifications as read',
-          });
+          }));
 
           // Refresh notifications to revert optimistic update
           get().fetchNotifications();

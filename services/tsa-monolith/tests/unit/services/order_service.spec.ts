@@ -38,8 +38,9 @@ test.group('OrderService', (group) => {
       failedLoginAttempts: 0,
     })
 
-    // Créer adresses
+    // Créer adresses associées à l'utilisateur
     shippingAddress = await Address.create({
+      userId: user.id,
       street: '123 Test Street',
       city: 'Douala',
       region: 'Littoral',
@@ -48,6 +49,7 @@ test.group('OrderService', (group) => {
     })
 
     billingAddress = await Address.create({
+      userId: user.id,
       street: '456 Billing Street',
       city: 'Yaoundé',
       region: 'Centre',
@@ -82,7 +84,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money',
       'Test order notes'
     )
@@ -91,7 +95,7 @@ test.group('OrderService', (group) => {
     assert.isDefined(order.orderNumber, 'Order should have order number')
     assert.equal(order.userId, user.id, 'Order should belong to user')
     assert.equal(order.status, OrderStatus.PENDING, 'Order should be PENDING')
-    assert.equal(order.totalAmount, 2000, 'Total should be 2000 (2 * 1000)')
+    assert.equal(order.total, 2000, 'Total should be 2000 (2 * 1000)')
     assert.equal(order.paymentStatus, PaymentStatus.PENDING, 'Payment should be PENDING')
 
     // Vérifier que les items ont été créés
@@ -107,7 +111,9 @@ test.group('OrderService', (group) => {
       await orderService.createOrderFromCart(
         user.id,
         shippingAddress.id,
+        undefined,
         billingAddress.id,
+        undefined,
         'mtn_mobile_money'
       )
     }, 'Cart is empty. Cannot create order.')
@@ -123,7 +129,9 @@ test.group('OrderService', (group) => {
     await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -139,7 +147,9 @@ test.group('OrderService', (group) => {
     await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -147,7 +157,9 @@ test.group('OrderService', (group) => {
     await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -163,7 +175,9 @@ test.group('OrderService', (group) => {
     const createdOrder = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -183,7 +197,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -204,7 +220,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -224,7 +242,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -245,7 +265,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -265,7 +287,9 @@ test.group('OrderService', (group) => {
     const order1 = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -273,7 +297,9 @@ test.group('OrderService', (group) => {
     await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 
@@ -298,7 +324,9 @@ test.group('OrderService', (group) => {
     const order = await orderService.createOrderFromCart(
       user.id,
       shippingAddress.id,
+      undefined,
       billingAddress.id,
+      undefined,
       'mtn_mobile_money'
     )
 

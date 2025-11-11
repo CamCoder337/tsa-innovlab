@@ -46,6 +46,7 @@
     "enterPassword": "Enter your password",
     "enterName": "Enter your name",
     "enterPhone": "Enter your phone number",
+    "searchCountry": "Search country...",
     "rolePlaceholder": "Select a role",
     "selectOption": "Select an option",
     "searchPlaceholder": "Search...",
@@ -184,8 +185,7 @@
     "calculatedDistance": "Calculated distance",
     "negotiationRange": "Negotiation range",
     "margin": "Margin",
-    "budgetWillingToPay": "Price you are willing to pay (FCFA)",
-    "budgetHelper": "Enter the amount you want to pay for this mission"
+    "instructions": "Instructions"
   },
   "buttons": {
     "save": "Save",
@@ -233,7 +233,9 @@
     "close": "Close",
     "continueShopping": "Continue Shopping",
     "createConversation": "Create Conversation",
-    "applyPrice": "Apply this price"
+    "calculating": "Calculating...",
+    "applyPrice": "Apply this price",
+    "updatingAndPublishing": "Updating and publishing..."
   },
   "sections": {
     "missionDetails": "Mission Details",

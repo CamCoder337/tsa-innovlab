@@ -77,7 +77,7 @@ export default function MyMissionsAffreteur() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <Card>
+        <Card className="gap-2">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -92,7 +92,7 @@ export default function MyMissionsAffreteur() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="gap-2">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
@@ -113,7 +113,7 @@ export default function MyMissionsAffreteur() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="gap-2">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
@@ -130,7 +130,7 @@ export default function MyMissionsAffreteur() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="gap-2">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
@@ -147,15 +147,15 @@ export default function MyMissionsAffreteur() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
+      <Card className="gap-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base sm:text-lg">
             {tMissions('myMissions.affreteur.history')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 h-24 sm:h-auto sm:mb-0">
               <TabsTrigger value="all" className="text-xs sm:text-sm">
                 {tMissions('myMissions.affreteur.tabs.all')}
               </TabsTrigger>
