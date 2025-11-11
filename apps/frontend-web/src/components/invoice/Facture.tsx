@@ -14,9 +14,9 @@ import {
   User,
 } from 'lucide-react';
 import type { Payment } from '@/types/payment.types';
-import { type Order, OrderStatus, PaymentMethod, PaymentStatus } from '@/types/order.types';
+import { type Order, OrderStatus, PaymentStatus } from '@/types/order.types';
 import type { Address } from '@/types/address.types';
-import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { formatDate, getPaymentMethodLabel, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommonTranslation, usePaymentTranslation } from '@/hooks/useTranslation';
 
@@ -49,31 +49,6 @@ export const Facture: React.FC<FactureProps> = ({
 
   const subtotal = order.items.reduce((sum, item) => sum + parseFloat(item.totalPrice), 0);
   const total = subtotal + deliveryFee;
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
-
-  const getPaymentMethodLabel = (method: PaymentMethod) => {
-    switch (method) {
-      case PaymentMethod.BANK_TRANSFER:
-        return tPayment('labels.bank_transfer');
-      case PaymentMethod.MTN_MOMO:
-        return tPayment('labels.mtn_mobile_money');
-      case PaymentMethod.ORANGE_MONEY:
-        return tPayment('labels.orange_money');
-      case PaymentMethod.CASH_ON_DELIVERY:
-        return tPayment('labels.cash_on_delivery');
-      default:
-        return method;
-    }
-  };
 
   const getDeliveryOptionLabel = (option: string) => {
     switch (option) {
@@ -194,7 +169,7 @@ export const Facture: React.FC<FactureProps> = ({
                 </p>
                 <p>
                   <span className="font-medium">{tPayment('labels.method')}:</span>{' '}
-                  {getPaymentMethodLabel(order?.paymentMethod)}
+                  {getPaymentMethodLabel(order?.paymentMethod, tPayment)}
                 </p>
 
                 <p>

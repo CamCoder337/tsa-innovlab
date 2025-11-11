@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Clock, CheckCircle, AlertTriangle, FileText, MessageSquare, Loader2 } from 'lucide-react';
-import type { Mission } from '@/types/mission.types';
+import { Clock, CheckCircle, AlertTriangle, FileText, Loader2, MapPin } from 'lucide-react';
+import type { Mission, MissionUpdate } from '@/types/mission.types';
 import { missionService } from '@/services/mission.service';
 import { useEffect, useState } from 'react';
 import {
@@ -11,22 +11,7 @@ import {
   useCommonTranslation,
   useErrorsTranslation,
 } from '@/hooks/useTranslation';
-import { getStatusLabel } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
-
-interface TimelineEvent {
-  id: string;
-  type: 'status_change' | 'message' | 'document' | 'note';
-  title: string;
-  description?: string;
-  date: string;
-  user?: {
-    id: string;
-    name: string;
-    role: string;
-  };
-  metadata?: Record<string, unknown>;
-}
 
 interface MissionTimelineProps {
   mission: Mission;
@@ -34,7 +19,7 @@ interface MissionTimelineProps {
 
 export function MissionTimeline({ mission }: MissionTimelineProps) {
   const { user } = useAuth();
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [events, setEvents] = useState<MissionUpdate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t: tMissions } = useMissionsTranslation();
@@ -55,16 +40,11 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
         if (response.error) {
           setError(tErrors('missions.timelineLoadingError'));
-        } else if (response.data?.missions?.data) {
-          // Transform API response to timeline events
-          const historyEvents = transformHistoryToEvents(response.data.missions.data);
-          // Remove duplicates and sort
-          const uniqueEvents = historyEvents.filter(
-            (event, index, self) => index === self.findIndex((e) => e.id === event.id)
-          );
-          setEvents(
-            uniqueEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          );
+        }
+
+        if (response.data) {
+          console.log(response.data)
+          setEvents(response.data.updates.data);
         }
       } catch {
         setError(tErrors('missions.timelineLoadingError'));
@@ -77,63 +57,35 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mission.id]);
 
-  // Transform mission history data to timeline events
-  const transformHistoryToEvents = (historyMissions: Mission[]): TimelineEvent[] => {
-    const historyEvents: TimelineEvent[] = [];
-
-    historyMissions.forEach((historyMission, index) => {
-      if (index > 0) {
-        const previousMission = historyMissions[index - 1];
-
-        // Status changes
-        if (historyMission.status !== previousMission.status) {
-          historyEvents.push({
-            id: `history-status-${historyMission.id}-${index}`,
-            type: 'status_change',
-            title: `${tMissions('timeline.statusUpdated', { status: getStatusLabel(historyMission.status, tCommon) })}`,
-            description: `${tMissions('timeline.statusChange', { oldStatus: getStatusLabel(previousMission.status, tCommon), newStatus: getStatusLabel(historyMission.status, tCommon) })}`,
-            date: historyMission.updatedAt,
-          });
-        }
-
-        // Location updates
-        if (
-          historyMission.currentPosition &&
-          (!previousMission.currentPosition ||
-            historyMission.currentPosition.lat !== previousMission.currentPosition.lat ||
-            historyMission.currentPosition.lng !== previousMission.currentPosition.lng)
-        ) {
-          historyEvents.push({
-            id: `history-location-${historyMission.id}-${index}`,
-            type: 'status_change',
-            title: tMissions('timeline.positionUpdated'),
-            description: `${tMissions('timeline.newPosition')}: ${historyMission.currentPosition.lat.toFixed(4)}, ${historyMission.currentPosition.lng.toFixed(4)}`,
-            date: historyMission.lastPositionUpdate || historyMission.updatedAt,
-          });
-        }
-      }
-    });
-
-    return historyEvents;
-  };
-
-  const getEventIcon = (event: TimelineEvent) => {
+  const getEventIcon = (event: MissionUpdate) => {
     switch (event.type) {
       case 'status_change':
         return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
-      case 'message':
-        return <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
-      case 'document':
+      case 'location_update':
+        return <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
+      case 'proof_upload':
         return <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
       case 'note':
-        return event.title.includes('évaluation') ? (
-          <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
-        ) : (
-          <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
-        );
+        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />;
+      case 'issue':
+        return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />;
       default:
         return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />;
     }
+  };
+
+  const getLocalizedEventTitle = (event: MissionUpdate) => {
+    if (event.type === 'status_change' && event.oldStatus && event.newStatus) {
+      const oldStatusTranslated = tCommon(`status.${event.oldStatus}`, event.oldStatus);
+      const newStatusTranslated = tCommon(`status.${event.newStatus}`, event.newStatus);
+
+      return tMissions('timeline.statusChangeTitle', {
+        oldStatus: oldStatusTranslated,
+        newStatus: newStatusTranslated
+      });
+    }
+
+    return event.title;
   };
 
   if (isLoading) {
@@ -176,7 +128,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
   return (
     <Card>
-      <CardHeader className="pb-3 sm:pb-6">
+      <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
           {tMissions('timeline.title')}
@@ -201,10 +153,10 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                   <div className="space-y-1 sm:space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
                       <h4 className="text-xs sm:text-sm font-medium leading-tight">
-                        {event.title}
+                        {getLocalizedEventTitle(event)}
                       </h4>
                       <time className="text-xs text-muted-foreground flex-shrink-0">
-                        {format(new Date(event.date), 'PPPp', { locale: fr })}
+                        {format(new Date(event.createdAt), 'PPPp', { locale: fr })}
                       </time>
                     </div>
                     {event.description && (
@@ -212,9 +164,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                         {event.description}
                       </p>
                     )}
-                    {event.user && (
+                    {event.transporteur && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {tCommon('by')} {event.user.name}
+                        {tCommon('by')} {event.transporteur.firstName + ' ' + event.transporteur.lastName}
                       </p>
                     )}
                   </div>

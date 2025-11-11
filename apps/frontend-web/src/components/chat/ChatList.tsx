@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, MessageCircle, Clock, Hash, Users, Bot } from 'lucide-react';
+import { Search, Plus, MessageCircle, Clock, Hash, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
   const { t: tChat } = useChatTranslation();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
+  // const [filterType, setFilterType] = useState<ConversationType | 'all'>('all');
 
   const {
     conversations,
@@ -91,7 +91,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-          conversation.otherParticipant?.role?.slice(1) || ''
+        conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
     return 'Utilisateur inconnu';
@@ -113,9 +113,8 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     return (
       <div
         key={chatbotConv.id}
-        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-        }`}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+          }`}
         onClick={() => onSelectConversation(chatbotConv)}
       >
         <div className="flex items-start gap-2 sm:gap-3">
@@ -137,9 +136,8 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h4
-                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
-                  isActive ? 'text-blue-900' : 'text-gray-900'
-                }`}
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${isActive ? 'text-blue-900' : 'text-gray-900'
+                  }`}
               >
                 {chatbotConv.profile.name}
               </h4>
@@ -158,12 +156,12 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             </div>
 
             {/* Last message preview */}
-            {chatbotConv.lastMessage && (
+            {/* {chatbotConv.lastMessage && (
               <p className="text-xs mt-1 truncate text-gray-500">
                 {chatbotConv.lastMessage.isFromBot ? '' : tForms('messages.you') + ': '}
                 {chatbotConv.lastMessage.content}
               </p>
-            )}
+            )} */}
           </div>
         </div>
       </div>
@@ -179,9 +177,8 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     return (
       <div
         key={conversation.id}
-        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-        }`}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+          }`}
         onClick={() => onSelectConversation(conversation)}
       >
         <div className="flex items-start gap-2 sm:gap-3">
@@ -210,9 +207,8 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h4
-                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
-                  isActive ? 'text-blue-900' : 'text-gray-900'
-                }`}
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${isActive ? 'text-blue-900' : 'text-gray-900'
+                  }`}
               >
                 {getConversationTitle(conversation)}
               </h4>
@@ -245,11 +241,10 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             {/* Last message preview */}
             {conversation.lastMessage && (
               <p
-                className={`text-xs mt-1 truncate ${
-                  conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
-                    ? 'font-medium text-gray-700'
-                    : 'text-gray-500'
-                }`}
+                className={`text-xs mt-1 truncate ${conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
+                  ? 'font-medium text-gray-700'
+                  : 'text-gray-500'
+                  }`}
               >
                 {conversation.lastMessage.senderId === user?.id
                   ? tForms('messages.you') + ': '
@@ -287,8 +282,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
             <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="hidden sm:inline">{tForms('sections.messages')}</span>
-            <span className="sm:hidden">Messages</span>
+            <span>{tForms('sections.messages')}</span>
           </h2>
 
           {/* Search */}
@@ -309,8 +303,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             className="text-tsa-blue dark:text-tsa-white hover:text-blue-700 p-1 sm:p-2"
           >
             <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">{tChat('buttons.newConversation')}</span>
-            <span className="sm:hidden text-xs">Nouveau</span>
+            <span>{tChat('buttons.newConversation')}</span>
           </Button>
         </div>
 
@@ -326,7 +319,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-1">
+        {/* <div className="flex gap-1">
           <Button
             variant={filterType === 'all' ? 'default' : 'ghost'}
             size="sm"
@@ -357,7 +350,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             <span className="hidden sm:inline">{tChat('buttons.mission')}</span>
             <span className="sm:hidden">Mission</span>
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {/* Error Display */}

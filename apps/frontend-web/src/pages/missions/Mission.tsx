@@ -238,7 +238,7 @@ export default function MissionDetailsPage() {
         <TabsList
           className={
             currentMission.status !== 'draft'
-              ? `w-full grid ${user?.role === 'transporteur' ? 'grid-cols-3' : 'grid-cols-4'}`
+              ? `w-full bg-muted grid ${user?.role === 'transporteur' ? 'grid-cols-3' : 'grid-cols-4'}`
               : 'hidden'
           }
         >

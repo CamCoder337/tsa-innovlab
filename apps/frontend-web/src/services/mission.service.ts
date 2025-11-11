@@ -4,7 +4,7 @@
 
 import { BaseApi } from './api';
 import { webSocketService } from './websocket.service';
-import type { ApiResponse, PaginatedMetaResponse } from '@/types/common.types';
+import type { ApiResponse, PaginatedMetaResponse, PaginationMeta } from '@/types/common.types';
 import type {
   Mission,
   MissionStatus,
@@ -18,6 +18,7 @@ import type {
   DynamicPricingResponse,
   UpdateMissionStatus,
   proofType,
+  MissionUpdate,
 } from '@/types/mission.types';
 import type { Vehicle } from '@/types/vehicle.types';
 import type { AxiosError } from 'axios';
@@ -357,7 +358,23 @@ export class MissionService extends BaseApi {
   async getMissionHistory(
     id: string,
     params?: MissionUpdateFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
+  ): Promise<ApiResponse<{
+    mission: {
+      id: string,
+      title: string,
+      status: MissionStatus
+    },
+    pagination: {
+      current_page: number,
+      per_page: number,
+      total: number,
+      last_page: number,
+    },
+    updates:{
+      meta: PaginationMeta,
+      data: MissionUpdate[]
+    }
+  }>> {
     try {
       const response = await this.insertToken().get(`/api/affreteur/missions/${id}/history`, {
         params,
@@ -472,7 +489,23 @@ export class MissionService extends BaseApi {
   async getTransporteurMissionHistory(
     id: string,
     params?: MissionUpdateFilterParams
-  ): Promise<ApiResponse<PaginatedMetaResponse<Mission, 'missions'>>> {
+  ): Promise<ApiResponse<{
+    mission: {
+      id: string,
+      title: string,
+      status: MissionStatus
+    },
+    pagination: {
+      current_page: number,
+      per_page: number,
+      total: number,
+      last_page: number,
+    },
+    updates: {
+      meta: PaginationMeta,
+      data: MissionUpdate[]
+    }
+  }>> {
     try {
       const response = await this.insertToken().get(`/api/transporteur/missions/${id}/history`, {
         params,

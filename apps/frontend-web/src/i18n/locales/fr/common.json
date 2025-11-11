@@ -22,6 +22,9 @@
     "export": "Exporter",
     "import": "Importer",
     "download": "Télécharger",
+    "downloadPdf": "Télécharger PDF",
+    "print": "Imprimer",
+    "sendByEmail": "Envoyer par mail",
     "upload": "Téléverser",
     "submit": "Soumettre",
     "apply": "Postuler",
@@ -104,6 +107,8 @@
   },
   "messages": {
     "loading": "Chargement...",
+    "downloading": "Téléchargement...",
+    "generating": "Génération...",
     "submission": "Soumission...",
     "suspending": "Suspension...",
     "activating": "Activation...",

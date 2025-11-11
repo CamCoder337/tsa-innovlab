@@ -236,7 +236,6 @@ export interface FeedbackStats {
 export interface MissionUpdate extends Timestamps {
   id: string;
   missionId: string;
-  mission?: Mission;
   transporteurId?: string;
   transporteur?: User;
   type: MissionUpdateType;
@@ -244,9 +243,11 @@ export interface MissionUpdate extends Timestamps {
   description?: string;
   oldStatus?: string;
   newStatus?: string;
-  latitude?: number;
-  longitude?: number;
-  address?: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  } | null;
   attachments?: string[];
   isPublic: boolean;
 }

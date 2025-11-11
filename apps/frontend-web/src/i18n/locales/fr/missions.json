@@ -47,7 +47,8 @@
     "document": "Document",
     "note": "Note",
     "scheduled_for": "Prévu pour",
-    "noEvents": "Aucun événement à afficher pour le moment"
+    "noEvents": "Aucun événement à afficher pour le moment",
+    "statusChangeTitle": "Statut changé: {{ oldStatus }} → {{ newStatus }}"
   },
   "appreciation": {
     "title": "Évaluation du Transporteur",
@@ -154,7 +155,42 @@
     "noPaymentHistory": "Aucun historique de paiement disponible",
     "generateInvoice": "Générer une Facture",
     "downloadInvoice": "Télécharger la Facture",
-    "requestInvoice": "Demander une Facture"
+    "requestInvoice": "Demander une Facture",
+    "methods": {
+      "bankTransfer": "Virement Bancaire",
+      "cashOnDelivery": "Paiement à la Livraison"
+    },
+    "invoice": {
+      "title": "Facture",
+      "subtitle": "Confirmation de paiement et détails de la transaction",
+      "invoiceTitle": "FACTURE",
+      "missionNumber": "Numéro de Mission",
+      "companyDescription": "Services professionnels de transport et logistique",
+      "billedTo": "Facturé à",
+      "missionDetails": "Détails de la Mission",
+      "createdDate": "Date de Création",
+      "missionId": "ID Mission",
+      "paymentMethod": "Méthode de Paiement",
+      "transactionId": "ID Transaction",
+      "route": "Itinéraire",
+      "merchandise": "Marchandise",
+      "servicesProvided": "Services Fournis",
+      "service": "Service",
+      "quantity": "Qté",
+      "unitPrice": "Prix Unitaire",
+      "subtotal": "Sous-total",
+      "transportService": "Service de Transport",
+      "paymentStatus": "Statut de Paiement",
+      "paymentInformation": "Informations de Paiement",
+      "method": "Méthode",
+      "amount": "Montant",
+      "paymentDate": "Date de Paiement",
+      "reference": "Référence",
+      "status": "Statut",
+      "thankYou": "Merci d'avoir choisi TSA Logistics pour vos besoins de transport.",
+      "contactSupport": "Pour toute question, veuillez contacter notre équipe de support à",
+      "backToMissions": "Retour aux Missions"
+    }
   },
   "myMissions": {
     "affreteur": {
@@ -262,6 +298,9 @@
   "duration": "Durée",
   "departure": "Départ",
   "arrival": "Arrivée",
+  "status": {
+    "label": "Statut"
+  },
   "track": "Suivre",
   "trackShipment": "Suivre l'expédition",
   "tracking": {

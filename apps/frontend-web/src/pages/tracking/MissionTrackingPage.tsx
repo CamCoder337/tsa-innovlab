@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  Download,
   Maximize2,
   MapPin,
   Package,
@@ -20,62 +19,39 @@ import {
   CheckCircle,
   Info,
   AlertTriangle,
+  Clock,
+  FileText,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMissions } from '@/hooks/useMissions';
-import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
+import { useCommonTranslation, useErrorsTranslation, useMissionsTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
 import { useAuth } from '@/hooks/useAuth';
 import { useVehicles } from '@/hooks/useVehicles';
-
-const getStatusBadgeColor = (status: string) => {
-  switch (status) {
-    case 'published':
-      return 'bg-blue-100 text-blue-800';
-    case 'assigned':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'in_progress':
-      return 'bg-orange-100 text-orange-800';
-    case 'completed':
-      return 'bg-green-100 text-green-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
-
-const getStatusLabel = (status: string, tCommon: (key: string) => string) => {
-  switch (status) {
-    case 'published':
-      return tCommon('status.published');
-    case 'assigned':
-      return tCommon('status.assigned');
-    case 'in_progress':
-      return tCommon('status.in_progress');
-    case 'completed':
-      return tCommon('status.completed');
-    case 'cancelled':
-      return tCommon('status.cancelled');
-    default:
-      return status;
-  }
-};
+import { missionService } from '@/services/mission.service';
+import type { MissionUpdate } from '@/types/mission.types';
+import { getStatusColor, getStatusLabel } from '@/lib/utils';
+import { ScrollArea } from '@radix-ui/react-scroll-area';
+import { fr } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 export default function MissionTrackingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { myMissions: missions } = useMissions();
+  const { myMissions: missions, fetchMission } = useMissions();
   const { getVehicleById } = useVehicles();
   const { t: tCommon } = useCommonTranslation();
   const { t: tTracking } = useTrackingTranslation();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
+  const [events, setEvents] = useState<MissionUpdate[]>([]);
+  const { t: tMissions } = useMissionsTranslation();
+  const { t: tErrors } = useErrorsTranslation();
 
   const mission = missions.find((m) => m.id === id);
 
@@ -90,6 +66,61 @@ export default function MissionTrackingPage() {
 
     fetchInfo();
   }, [mission?.vehicleId, user?.role, getVehicleById]);
+
+  useEffect(() => {
+    const fetchMissionHistory = async () => {
+      try {
+        if (!mission) return;
+
+        // Fetch mission history from API
+        const response =
+          user?.role === 'transporteur'
+            ? await missionService.getTransporteurMissionHistory(mission.id)
+            : await missionService.getMissionHistory(mission.id);
+
+        if (response.data) {
+          console.log(response.data)
+          setEvents(response.data.updates.data);
+        }
+      } catch {
+        toast.error(tErrors('missions.timelineLoadingError'));
+      }
+    };
+
+    if (mission) fetchMissionHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mission]);
+
+  const getEventIcon = (event: MissionUpdate) => {
+    switch (event.type) {
+      case 'status_change':
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
+      case 'location_update':
+        return <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
+      case 'proof_upload':
+        return <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
+      case 'note':
+        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />;
+      case 'issue':
+        return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />;
+      default:
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />;
+    }
+  };
+
+  const getLocalizedEventTitle = (event: MissionUpdate) => {
+    if (event.type === 'status_change' && event.oldStatus && event.newStatus) {
+      const oldStatusTranslated = tCommon(`status.${event.oldStatus}`, event.oldStatus);
+      const newStatusTranslated = tCommon(`status.${event.newStatus}`, event.newStatus);
+
+      return tMissions('timeline.statusChangeTitle', {
+        oldStatus: oldStatusTranslated,
+        newStatus: newStatusTranslated
+      });
+    }
+
+    return event.title;
+  };
 
   if (!mission) {
     return (
@@ -110,50 +141,13 @@ export default function MissionTrackingPage() {
     );
   }
 
-  const handleExport = () => {
-    toast.success(tTracking('actions.export'));
-  };
-
   const handleRefresh = () => {
-    // Add refresh logic here
+    fetchMission(mission.id);
   };
-
-  const timeline = [
-    {
-      status: 'published',
-      label: tTracking('timeline.published.label'),
-      date: mission.createdAt,
-      completed: true,
-      description: tTracking('timeline.published.description'),
-    },
-    {
-      status: 'assigned',
-      label: tTracking('timeline.assigned.label'),
-      date: mission.transporteurId ? new Date().toISOString() : null,
-      completed: !!mission.transporteurId,
-      description: mission.transporteurId
-        ? tTracking('timeline.assigned.description')
-        : tTracking('timeline.assigned.pending'),
-    },
-    {
-      status: 'assigned',
-      label: tTracking('timeline.inProgress.label'),
-      date: mission.status === 'assigned' ? new Date().toISOString() : null,
-      completed: mission.status === 'assigned' || mission.status === 'completed',
-      description: tTracking('timeline.inProgress.description'),
-    },
-    {
-      status: 'completed',
-      label: tTracking('timeline.completed.label'),
-      date: mission.status === 'completed' ? mission.dateArriveePrevue : null,
-      completed: mission.status === 'completed',
-      description: tTracking('timeline.completed.description'),
-    },
-  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 sm:p-6 w-full">
+      <div className="mx-auto space-y-4 sm:space-y-6">
         {/* En-tête avec informations mission */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex-1">
@@ -168,7 +162,7 @@ export default function MissionTrackingPage() {
                 {tTracking('actions.back')}
               </Button>
               <div className="flex items-center gap-2">
-                <Badge className={`text-xs ${getStatusBadgeColor(mission.status)}`}>
+                <Badge className={`text-xs ${getStatusColor(mission.status)}`}>
                   {getStatusLabel(mission.status, tCommon)}
                 </Badge>
               </div>
@@ -214,7 +208,7 @@ export default function MissionTrackingPage() {
               )}
               {isFullscreen ? tTracking('actions.exitFullscreen') : tTracking('actions.fullscreen')}
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
@@ -222,7 +216,7 @@ export default function MissionTrackingPage() {
             >
               <Download className="w-3 h-3 sm:w-4 sm:h-4" />
               {tTracking('actions.export')}
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               size="sm"
@@ -272,8 +266,8 @@ export default function MissionTrackingPage() {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Carte de suivi */}
                 <div className="lg:col-span-3">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
+                  <Card className='gap-2'>
+                    <CardHeader>
                       <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -308,8 +302,8 @@ export default function MissionTrackingPage() {
 
                 {/* Panneau d'informations */}
                 <div className="space-y-4">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
+                  <Card className='gap-2'>
+                    <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
                         {tTracking('tracking.liveStatus')}
@@ -364,8 +358,8 @@ export default function MissionTrackingPage() {
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
+                  <Card className='gap-2'>
+                    <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
                         {tTracking('alerts.title')}
@@ -398,27 +392,28 @@ export default function MissionTrackingPage() {
 
             <TabsContent value="details" className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
+                <Card className='gap-2'>
                   <CardHeader>
                     <CardTitle>{tTracking('mission.information')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
+                    {mission.description && <div>
                       <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                         {tTracking('mission.description')}
                       </label>
                       <p className="text-gray-900 dark:text-white">{mission.description}</p>
-                    </div>
+                    </div>}
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
+
+                      {mission.typeMarchandise && <div>
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('mission.merchandiseType')}
                         </label>
                         <p className="text-gray-900 dark:text-white">{mission.typeMarchandise}</p>
-                      </div>
+                      </div>}
                       <div>
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('mission.weight', { weight: '' })}
+                          {tTracking('realTime.weight')}
                         </label>
                         <p className="text-gray-900 dark:text-white">
                           {tTracking('mission.weight', { weight: mission.poids })}
@@ -466,7 +461,8 @@ export default function MissionTrackingPage() {
                           <User className="w-6 h-6 text-tsa-blue dark:text-tsa-white" />
                         </div>
                         <div>
-                          <p className="font-medium">Transporteur #{mission.transporteurId}</p>
+                          <p className="font-medium">{tCommon('roles.transporteur') + ' ' + mission.transporteur?.firstName + ' ' + mission.transporteur?.lastName}</p>
+                          <p className="font-base">#{mission.transporteurId}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('transporter.verified')}
                           </p>
@@ -494,51 +490,46 @@ export default function MissionTrackingPage() {
                   <CardTitle>{tTracking('timeline.title')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    {timeline.map((step, index) => (
-                      <div key={step.status} className="flex items-start gap-4">
-                        <div className="flex flex-col items-center">
+                  {events.length === 0 ? (
+                    <p className="text-center text-gray-500 dark:text-gray-400 py-6 sm:py-8 text-xs sm:text-sm">
+                      {tMissions('timeline.noEvents')}
+                    </p>
+                  ) : (
+                    <ScrollArea className="h-[300px] sm:h-[400px] pr-2 sm:pr-4">
+                      <div className="space-y-4 sm:space-y-6">
+                        {events.map((event) => (
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              step.completed ? 'bg-green-500' : 'bg-gray-300'
-                            }`}
+                            key={event.id}
+                            className="relative pb-4 sm:pb-6 pl-6 sm:pl-8 border-l-2 border-gray-200 dark:border-gray-700"
                           >
-                            {step.completed ? (
-                              <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full" />
-                            ) : (
-                              <div className="w-2 h-2 bg-gray-50 dark:bg-gray-9500 rounded-full" />
-                            )}
+                            <div className="absolute -left-2 sm:-left-2.5 mt-1 sm:mt-1.5 h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-tsa-blue/90 flex items-center justify-center">
+                              {getEventIcon(event)}
+                            </div>
+                            <div className="space-y-1 sm:space-y-2">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                <h4 className="text-xs sm:text-sm font-medium leading-tight">
+                                  {getLocalizedEventTitle(event)}
+                                </h4>
+                                <time className="text-xs text-muted-foreground flex-shrink-0">
+                                  {format(new Date(event.createdAt), 'PPPp', { locale: fr })}
+                                </time>
+                              </div>
+                              {event.description && (
+                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                  {event.description}
+                                </p>
+                              )}
+                              {event.transporteur && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  {tCommon('by')} {event.transporteur.firstName + ' ' + event.transporteur.lastName}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          {index < timeline.length - 1 && (
-                            <div
-                              className={`w-0.5 h-12 ${
-                                step.completed ? 'bg-green-500' : 'bg-gray-300'
-                              }`}
-                            />
-                          )}
-                        </div>
-                        <div className="flex-1 pb-6">
-                          <div className="flex items-center justify-between">
-                            <h3
-                              className={`font-medium ${
-                                step.completed ? 'text-gray-900' : 'text-gray-500'
-                              }`}
-                            >
-                              {step.label}
-                            </h3>
-                            {step.date && (
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(step.date).toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                            {step.description}
-                          </p>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </ScrollArea>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

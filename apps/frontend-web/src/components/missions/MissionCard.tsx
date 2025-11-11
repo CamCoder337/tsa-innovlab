@@ -213,7 +213,7 @@ export default function MissionCard({
             </div>
           </Link>
 
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2 lg:w-auto">
+          <div className="flex flex-col gap-2 lg:w-auto">
             {mission.status === 'draft' && onPublish && (
               <Button
                 className="gap-2 w-full sm:w-auto lg:w-full text-xs sm:text-sm px-3 py-2"

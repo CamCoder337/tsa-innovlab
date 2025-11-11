@@ -44,6 +44,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
   const {
     messages,
     isLoading,
+    isReplying,
     error,
     fetchMessages,
     sendMessage,
@@ -125,18 +126,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.id]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentMessages]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
     try {
+      setNewMessage('');
       if (isChatbotConversation) {
         await sendChatbotMessage(newMessage, user.id);
       } else {
         await sendMessage(conversation.id, newMessage);
       }
-      setNewMessage('');
-      setIsTyping(false);
     } catch (error) {
       console.error('Failed to send message:', error);
     }
@@ -190,7 +197,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     if (regularConv.otherParticipant?.role) {
       return (
         regularConv.otherParticipant?.role?.charAt(0).toUpperCase() +
-          regularConv.otherParticipant?.role?.slice(1) || ''
+        regularConv.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -217,7 +224,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-white justify-between h-full">
+    <div className="flex flex-1 flex-col bg-white justify-between h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
       {/* Header - Fixed Height */}
       <div className="flex items-center justify-between p-2 sm:p-3 lg:p-4 border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -305,7 +312,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
       </div>
 
       {/* Messages - Scrollable Area */}
-      <div className="flex-1 flex flex-col justify-end py-1 sm:py-2 gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 overflow-y-auto">
+      <div className="flex-1 overflow-y-scroll min-h-0">
+        <div className="flex flex-col justify-end min-h-full py-1 sm:py-2 gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4">
         {isLoading && !isChatbotConversation ? (
           <div className="flex items-center justify-center py-6 sm:py-8 lg:py-12 h-full">
             <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-600"></div>
@@ -391,7 +399,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
             )}
 
             {/* Bot thinking indicator */}
-            {isLoading && isChatbotConversation && (
+            {isReplying && isChatbotConversation && (
               <div className="flex items-center gap-2 text-purple-600 px-1 sm:px-2">
                 <div className="flex gap-1">
                   <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"></div>
@@ -410,6 +418,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
           </>
         )}
         <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Message Input - Fixed Height */}
@@ -422,17 +431,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
               isChatbotConversation
                 ? tChat('placeholders.sendMessageToBot', 'Posez votre question au bot...')
                 : tChat('placeholders.sendMessageTo', {
-                    name:
-                      (conversation as ConversationListItem).otherParticipant?.firstName ||
-                      tChat('user'),
-                  })
+                  name:
+                    (conversation as ConversationListItem).otherParticipant?.firstName ||
+                    tChat('user'),
+                })
             }
             className="flex-1 text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10"
             disabled={isLoading && !isChatbotConversation}
           />
           <Button
             type="submit"
-            disabled={!newMessage.trim() || (isLoading && !isChatbotConversation)}
+            disabled={!newMessage.trim() || (isReplying && !isChatbotConversation)}
             className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 p-0 flex-shrink-0"
           >
             <Send className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -562,13 +571,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         className={`max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg min-w-16 sm:min-w-20 lg:min-w-24 ${isCurrentUser ? 'order-1' : ''}`}
       >
         <div
-          className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${
-            isCurrentUser
-              ? 'bg-tsa-blue text-white rounded-br-sm sm:rounded-br-md'
-              : isBotMessage
-                ? 'bg-purple-100 text-purple-900 rounded-bl-sm sm:rounded-bl-md'
-                : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
-          }`}
+          className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${isCurrentUser
+            ? 'bg-tsa-blue text-white rounded-br-sm sm:rounded-br-md'
+            : isBotMessage
+              ? 'bg-purple-100 text-purple-900 rounded-bl-sm sm:rounded-bl-md'
+              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
+            }`}
         >
           <div className="text-xs sm:text-sm lg:text-base whitespace-pre-wrap break-words leading-relaxed">
             {message.content}

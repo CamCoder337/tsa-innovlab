@@ -79,9 +79,9 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   ]);
 
   return (
-    <div className="">
-      <Card>
-        <CardHeader className="pb-3">
+    <div>
+      <Card className="gap-3">
+        <CardHeader className="">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl flex flex-1 justify-between sm:flex-row sm:items-center gap-2">
@@ -130,10 +130,10 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="space-y-2 sm:space-y-3">
-              <h3 className="font-medium flex items-center gap-2 text-sm sm:text-base">
+              <h2 className="font-bold flex items-center gap-2 text-base">
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />{' '}
                 {tMissions('details.route')}
-              </h3>
+              </h2>
               <div className="text-xs sm:text-sm space-y-2 sm:space-y-3">
                 <div>
                   <div className="font-medium mb-1">{tMissions('departure')}</div>
@@ -151,10 +151,10 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
             </div>
 
             <div className="space-y-2 sm:space-y-3">
-              <h3 className="font-medium flex items-center gap-2 text-sm sm:text-base">
+              <h2 className="font-bold flex items-center gap-2 text-base">
                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />{' '}
                 {tMissions('details.dates')}
-              </h3>
+              </h2>
               <div className="text-xs sm:text-sm space-y-2 sm:space-y-3">
                 <div>
                   <span className="font-medium block sm:inline">
@@ -180,9 +180,9 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
             </div>
 
             <div className="space-y-2 sm:space-y-3">
-              <h3 className="font-medium flex items-center gap-2 text-sm sm:text-base">
+              <h2 className="font-bold flex items-center gap-2 text-base">
                 <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" /> {tMissions('budget')}
-              </h3>
+              </h2>
               <div className="text-xs sm:text-sm space-y-2 sm:space-y-3">
                 <div>
                   <span className="font-medium block sm:inline">{tMissions('budget')}:</span>{' '}
@@ -210,7 +210,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-3 sm:pt-4 border-t">
             {affreteurName && (
               <div className="space-y-2">
-                <h3 className="font-medium text-sm sm:text-base">{tCommon('roles.affreteur')}</h3>
+                <h2 className="font-bold text-base">{tCommon('roles.affreteur')}</h2>
                 <p className="text-xs sm:text-sm text-muted-foreground break-words">
                   {affreteurName ||
                     mission.affreteur?.fullName ||
@@ -222,9 +222,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
             {transporteurName && (
               <div className="space-y-2">
-                <h3 className="font-medium text-sm sm:text-base">
-                  {tCommon('roles.transporteur')}
-                </h3>
+                <h2 className="font-bold text-base">{tCommon('roles.transporteur')}</h2>
                 <p className="text-xs sm:text-sm text-muted-foreground break-words">
                   {transporteurName ||
                     mission.transporteur?.fullName ||
@@ -236,7 +234,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
             {vehicleRegistration && (
               <div className="space-y-2">
-                <h3 className="font-medium text-sm sm:text-base">{tMissions('details.vehicle')}</h3>
+                <h2 className="font-bold text-base">{tMissions('details.vehicle')}</h2>
                 <p className="text-xs sm:text-sm text-muted-foreground break-words">
                   {vehicleRegistration}
                 </p>
@@ -246,10 +244,10 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
           {mission.notesComplementaires && (
             <div>
-              <h3 className="font-medium mb-2 flex items-center gap-2 text-sm sm:text-base">
+              <h2 className="font-bold flex items-center gap-2 text-base">
                 <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />{' '}
                 {tMissions('details.additionalNotes')}
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
                 {mission.notesComplementaires}
               </p>
@@ -258,9 +256,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
           {mission.documents && mission.documents.length > 0 && (
             <div>
-              <h3 className="font-medium mb-2 text-sm sm:text-base">
-                {tMissions('details.documents')}
-              </h3>
+              <h2 className="font-bold text-base">{tMissions('details.documents')}</h2>
               <div className="flex flex-wrap gap-2">
                 {mission.documents.map((doc, index) => (
                   <a
