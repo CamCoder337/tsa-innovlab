@@ -26,6 +26,7 @@ const initialState = {
   messages: {},
   typingIndicators: [],
   isLoading: false,
+  isReplying: false,
   error: null,
   unreadCount: 0,
   chatbot: null,
@@ -199,9 +200,10 @@ export const useChatStore = create<ChatState>()(
 
       // Send message to chatbot
       sendChatbotMessage: async (message: string, userId?: string): Promise<ChatbotResponse> => {
-        set({ isLoading: true, error: null });
+        set({ error: null });
 
         const { chatbot } = get();
+
         if (!chatbot) {
           set({ isLoading: false });
           return generateChatbotResponse(message);
@@ -233,7 +235,13 @@ export const useChatStore = create<ChatState>()(
             messages: [...chatbot.messages, userMessage],
             updatedAt: new Date().toISOString(),
           };
-          set({ chatbot: chatbotWithUserMessage });
+          
+          set({ 
+            chatbot: chatbotWithUserMessage, 
+            currentConversation: chatbotWithUserMessage,
+            messages: [chatbotWithUserMessage.messages],
+            isReplying: true 
+          });
 
           // Call chatbot service
           const response = await chatbotService.sendMessage({
@@ -275,7 +283,12 @@ export const useChatStore = create<ChatState>()(
               updatedAt: new Date().toISOString(),
             };
 
-            set({ chatbot: updatedChatbot, isLoading: false });
+            set({ 
+              chatbot: updatedChatbot,
+              currentConversation: updatedChatbot,
+              messages: [updatedChatbot.messages],
+              isReplying: false 
+            });
             return fallbackResponse;
           }
 
@@ -305,7 +318,12 @@ export const useChatStore = create<ChatState>()(
             updatedAt: new Date().toISOString(),
           };
 
-          set({ chatbot: updatedChatbot, isLoading: false });
+          set({ 
+            chatbot: updatedChatbot, 
+            currentConversation: updatedChatbot, 
+            messages: [updatedChatbot.messages],
+            isReplying: false
+          });
 
           // Return response for compatibility
           return {

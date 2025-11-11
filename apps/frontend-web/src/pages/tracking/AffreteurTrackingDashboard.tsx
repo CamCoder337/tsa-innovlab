@@ -134,7 +134,7 @@ export default function AffréteurTrackingDashboard() {
 
       {/* Contenu principal */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="w-full grid grid-cols-2 lg:grid-cols-4">
+        <TabsList className="w-full h-24 sm:h-auto grid grid-cols-2 lg:grid-cols-4">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">
             {tTracking('tabs.overview')}
           </TabsTrigger>
@@ -159,7 +159,7 @@ export default function AffréteurTrackingDashboard() {
                   <CardContent className="p-3 sm:p-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                        Mission à suivre:
+                        {tTracking('mission.tracked')}:
                       </label>
                       <select
                         value={currentMission?.id || ''}
@@ -169,8 +169,8 @@ export default function AffréteurTrackingDashboard() {
                         }}
                         className="flex-1 px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">-- Sélectionner une mission --</option>
-                        {missions.map((mission) => (
+                        <option value="">-- {tTracking('mission.select')} --</option>
+                        {ongoingMissions.map((mission) => (
                           <option key={mission.id} value={mission.id}>
                             {mission.title} - {mission.adresseDepart?.city} →{' '}
                             {mission.adresseArrivee?.city}
@@ -208,8 +208,8 @@ export default function AffréteurTrackingDashboard() {
         </TabsContent>
 
         <TabsContent value="missions" className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+          <Card className='gap-2'>
+            <CardHeader>
               <CardTitle className="text-base sm:text-lg">{tTracking('missions.list')}</CardTitle>
             </CardHeader>
             <CardContent>
@@ -236,7 +236,7 @@ export default function AffréteurTrackingDashboard() {
                             {mission.typeMarchandise} - {mission.poids}kg
                           </span>
                           <span>{mission.budgetMin?.toLocaleString()} FCFA</span>
-                          {mission.transporteurId && <span>👤 {tCommon('status.assigned')}</span>}
+                          {mission.transporteur && <span>👤 {mission.transporteur.firstName + ' ' + mission.transporteur.lastName}</span>}
                         </div>
                       </div>
                       <div className="text-left lg:text-right flex flex-row lg:flex-col items-center lg:items-end gap-2">
@@ -260,8 +260,8 @@ export default function AffréteurTrackingDashboard() {
 
         <TabsContent value="analytics" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className='gap-2'>
+              <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
                   {tTracking('analytics.shipmentEvolution')}
                 </CardTitle>
@@ -273,8 +273,8 @@ export default function AffréteurTrackingDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className='gap-2'>
+              <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
                   {tTracking('analytics.destinationBreakdown')}
                 </CardTitle>
@@ -290,8 +290,8 @@ export default function AffréteurTrackingDashboard() {
 
         <TabsContent value="costs" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className='gap-2'>
+              <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
                   {tTracking('performance.monthlyBudget')}
                 </CardTitle>
@@ -314,8 +314,8 @@ export default function AffréteurTrackingDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className='gap-2'>
+              <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
                   {tTracking('analytics.costPerTransport')}
                 </CardTitle>
@@ -336,8 +336,8 @@ export default function AffréteurTrackingDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+            <Card className='gap-2'>
+              <CardHeader>
                 <CardTitle className="text-base sm:text-lg">
                   {tTracking('analytics.savingsRealized')}
                 </CardTitle>

@@ -8,8 +8,6 @@ import {
   Receipt,
   CreditCard,
   AlertCircle,
-  CheckCircle,
-  Clock,
   FileText,
   Download,
   Eye,
@@ -22,6 +20,7 @@ import {
   useCommonTranslation,
   usePaymentTranslation,
 } from '@/hooks/useTranslation';
+import { generateInvoicePDF } from '@/lib/pdfUtils';
 import {
   Dialog,
   DialogTrigger,
@@ -30,7 +29,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MissionInvoice } from './MissionInvoice';
-import { PaymentStatus } from '@/types/order.types';
+import { PaymentMethod, PaymentStatus } from '@/types/order.types';
+import { getStatusColor, getStatusIcon } from '@/lib/utils';
 
 interface MissionFinancialProps {
   mission: Mission;
@@ -45,7 +45,7 @@ interface FinancialData {
   additionalCosts: number;
   paymentStatus: PaymentStatus;
   invoiceGenerated: boolean;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   transactionId?: string;
 }
 
@@ -71,12 +71,13 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
     additionalCosts: 0,
     paymentStatus: PaymentStatus.PENDING,
     invoiceGenerated: false,
-    paymentMethod: 'bank_transfer',
+    paymentMethod: PaymentMethod.ORANGE_MONEY,
   });
 
   const [paymentHistory, setPaymentHistory] = useState<PaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     loadFinancialData();
@@ -109,7 +110,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         paymentStatus:
           mission.status === 'completed' ? PaymentStatus.COMPLETED : PaymentStatus.PENDING,
         invoiceGenerated: mission.status === 'completed',
-        paymentMethod: 'bank_transfer',
+        paymentMethod: PaymentMethod.ORANGE_MONEY,
       });
 
       // Mock payment history
@@ -145,45 +146,15 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
   };
 
   const handleDownloadInvoice = async () => {
+    setIsDownloading(true);
     try {
-      // TODO: Implement invoice download
-      // const blob = await missionService.downloadInvoice(mission.id);
-      // const url = window.URL.createObjectURL(blob);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = `facture-mission-${mission.id}.pdf`;
-      // a.click();
+      await generateInvoicePDF(mission, financialData, tCommon, tMissions, tPayment);
       toast.success(tMissions('financial.success.downloadingInvoice'));
-    } catch {
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
       toast.error(tMissions('financial.errors.downloadError'));
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'partial':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'pending':
-        return 'bg-blue-100 text-blue-800';
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPaymentStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />;
-      case 'pending':
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />;
-      case 'overdue':
-        return <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />;
-      default:
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />;
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -291,8 +262,8 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </div>
 
       {/* Payment Status */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
+      <Card className='gap-2'>
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
             {tMissions('financial.paymentStatus')}
@@ -301,7 +272,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
         <CardContent>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              {getPaymentStatusIcon(financialData.paymentStatus)}
+              {getStatusIcon(financialData.paymentStatus)}
               <div className="flex-1 min-w-0">
                 <Badge className={getStatusColor(financialData.paymentStatus)}>
                   {financialData.paymentStatus === 'completed' && tCommon('status.paid')}
@@ -340,18 +311,18 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                         <span>{tMissions('invoice.actions.view')}</span>
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
                       <DialogHeader>
-                        <DialogTitle>{tMissions('invoice.title')}</DialogTitle>
+                        <DialogTitle className='sr-only'>{tMissions('invoice.title')}</DialogTitle>
                       </DialogHeader>
                       <MissionInvoice
                         mission={mission}
                         financialData={financialData}
-                        paymentRecord={paymentHistory}
                         onDownload={handleDownloadInvoice}
                         onPrint={() => window.print()}
                         onEmailSend={() => toast.info(tMissions('invoice.actions.emailSent'))}
                         onClose={() => setShowInvoice(false)}
+                        isDownloading={isDownloading}
                       />
                     </DialogContent>
                   </Dialog>
@@ -360,9 +331,19 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto text-xs sm:text-sm"
+                    disabled={isDownloading}
                   >
-                    <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    <span>{tMissions('financial.downloadInvoice')}</span>
+                    {isDownloading ? (
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-current mr-1 sm:mr-2"></div>
+                    ) : (
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    )}
+                    <span>
+                      {isDownloading
+                        ? tCommon('messages.generating') || 'Génération...'
+                        : tMissions('financial.downloadInvoice')
+                      }
+                    </span>
                   </Button>
                 </>
               )}
@@ -381,8 +362,8 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </Card>
 
       {/* Payment History */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
+      <Card className='gap-2'>
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
             {tMissions('financial.paymentHistory')}
@@ -397,7 +378,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 p-2 sm:p-3 border dark:border-gray-800 rounded-lg"
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    {getPaymentStatusIcon(payment.status)}
+                    {getStatusIcon(payment.status)}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs sm:text-sm truncate">
                         {payment.amount.toLocaleString()} FCFA
@@ -431,8 +412,8 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </Card>
 
       {/* Cost Breakdown */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
+      <Card className='gap-2'>
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
             {tMissions('financial.costBreakdown')}

@@ -24,7 +24,9 @@
     "completedToday": "Completed Today"
   },
   "mission": {
+    "tracked": "Tracked Mission",
     "notFound": "Mission not found",
+    "select": "Select a mission",
     "notFoundMessage": "The mission with ID \"{{id}}\" does not exist.",
     "status": "Status",
     "price": "Price",
@@ -35,7 +37,9 @@
     "description": "Description",
     "merchandiseType": "Merchandise type",
     "estimatedDeparture": "Estimated departure date",
-    "expectedArrival": "Expected arrival date"
+    "expectedArrival": "Expected arrival date",
+    "loading": "Loading...",
+    "noDate": "Date not set"
   },
   "timeline": {
     "title": "Mission timeline",
@@ -104,7 +108,7 @@
     "loadingMap": "Loading mission map...",
     "missions": "Missions",
     "totalMissions": "Total: {{count}} missions",
-    "assignedMissions": "Assigned: {{count}}",
+    "assignedMissions": "In Progress: {{count}}",
     "detectedPosition": "Position detected",
     "departure": "Departure: {{title}}",
     "arrival": "Arrival: {{title}}",
@@ -117,7 +121,28 @@
     "apiKeyNotConfigured": "Google Maps API key not configured. Add VITE_GOOGLE_MAPS_API_KEY to your .env file",
     "mapInitializationError": "Map initialization error:",
     "unknownError": "Unknown error",
-    "positionUnavailable": "Unable to get user position:"
+    "positionUnavailable": "Unable to get user position:",
+    "baseDuration": "Base duration:",
+    "withTraffic": "With traffic:",
+    "trafficDelay": "Traffic delay:",
+    "realTimeTraffic": "Real-time traffic",
+    "routeInfoShort": "Route",
+    "routeInfoFull": "Route information",
+    "legend": {
+      "title": "Mission Legend",
+      "markerTypes": "Marker Types",
+      "routes": "Routes",
+      "departureLocation": "Departure location",
+      "arrivalLocation": "Arrival location",
+      "transporterPosition": "Transporter position",
+      "yourPosition": "Your position",
+      "routeTrace": "Route trace",
+      "alternativeRoute": "Alternative route",
+      "merchandisePickup": "Merchandise pickup point",
+      "finalDelivery": "Final delivery point",
+      "currentVehiclePosition": "Current vehicle position",
+      "currentGpsPosition": "Your current GPS position"
+    }
   },
   "actions": {
     "share": "Share",
@@ -141,7 +166,10 @@
     "viewHistory": "View history",
     "editMission": "Edit mission",
     "cancelMission": "Cancel mission",
-    "completeMission": "Complete mission"
+    "completeMission": "Complete mission",
+    "back": "Back",
+    "export": "Export",
+    "exitFullscreen": "Exit fullscreen"
   },
   "alerts": {
     "title": "Recent Alerts",
@@ -157,7 +185,9 @@
     "deliveryDelay": "Delivery delay",
     "delayMessage": "Mission {{mission}} will be {{delay}} late",
     "newDriver": "New driver",
-    "newDriverMessage": "{{name}} has joined the transport team"
+    "newDriverMessage": "{{name}} has joined the transport team",
+    "onSchedule": "On schedule",
+    "normalTraffic": "Normal traffic"
   },
   "performance": {
     "title": "Performance",
@@ -278,5 +308,19 @@
     "delivery": "Delivery:",
     "loadingError": "Error loading missions:",
     "refreshError": "Error during refresh:"
+  },
+  "tracking": {
+    "liveTracking": "Live Tracking",
+    "centerOnVehicle": "Center on vehicle",
+    "showRoute": "Show route",
+    "liveStatus": "Live Status",
+    "currentSpeed": "Current speed",
+    "estimatedArrival": "Estimated arrival",
+    "remainingDistance": "Remaining distance",
+    "progress": "Progress",
+    "vehicleOnline": "Vehicle online",
+    "lastUpdate": "Last update",
+    "onSchedule": "On schedule",
+    "normalTraffic": "Normal traffic"
   }
 }
