@@ -343,60 +343,172 @@ export default class AIService {
   }
 
   /**
-   * Query the chatbot with a user message
+   * Query the chatbot with a user message (V5 - Function Calling)
    *
-   * Uses V3 (Intent-First with Frontend Guidance) by default
-   * Falls back to V2 (LLM-First) then V1 (Regex-based) if needed
+   * Uses pure function calling with:
+   * - 15 critical functions
+   * - Conversation memory
+   * - Error recovery & retry
+   * - Intelligent navigation hints
+   * - Contextual suggestions
    */
   async queryChatbot(request: ChatbotQueryRequest): Promise<ChatbotResponse | null> {
     try {
-      logger.info('Querying chatbot V2 (LLM-Enhanced)', {
+      logger.info('Querying chatbot V5 (Function Calling)', {
         userId: request.user_id,
         messageLength: request.message.length,
+        conversationId: request.conversation_id,
       })
 
-      // Use V2 (LLM with enhanced prompt + aggressive post-processing)
-      const responseV2 = await fetch(`${this.baseUrl}/api/ai/chatbot/v2/query`, {
+      // Call function calling endpoint
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(15000), // 15s timeout
       })
 
-      if (responseV2.ok) {
-        const data = (await responseV2.json()) as ChatbotResponse
-        logger.info('Chatbot V2 response received', {
+      if (response.ok) {
+        const data = (await response.json()) as ChatbotResponse
+        logger.info('Chatbot response received', {
           userId: request.user_id,
-          intent: data.intent?.name,
+          hasNavigation: !!data.navigation,
+          suggestionsCount: data.suggestions?.length || 0,
+          processingTime: data.timestamp,
         })
         return data
       }
 
-      // Fallback to V1 if V2 fails
-      logger.warn('Chatbot V2 failed, falling back to V1', {
-        status: responseV2.status,
+      // Log error and return null
+      logger.error('Chatbot service error', {
+        status: response.status,
         userId: request.user_id,
       })
+      return null
+    } catch (error) {
+      logger.error('Failed to query chatbot from AI service', { error })
+      return null
+    }
+  }
 
-      const responseV1 = await fetch(`${this.baseUrl}/api/ai/chatbot/query`, {
+  /**
+   * Query the chatbot with streaming (SSE)
+   *
+   * Returns an async generator that yields chunks as they arrive
+   *
+   * Usage:
+   * ```typescript
+   * for await (const chunk of aiService.queryChatbotStream(request)) {
+   *   if (chunk.type === 'chunk') {
+   *     console.log(chunk.content);
+   *   }
+   * }
+   * ```
+   */
+  async *queryChatbotStream(request: ChatbotQueryRequest): AsyncGenerator<any> {
+    try {
+      logger.info('Querying chatbot V5 (Streaming)', {
+        userId: request.user_id,
+        messageLength: request.message.length,
+      })
+
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/query/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(30000), // 30s timeout for streaming
       })
 
-      if (!responseV1.ok) {
-        throw new Error(`All chatbot versions (V3, V2, V1) failed`)
+      if (!response.ok) {
+        logger.error('Chatbot streaming error', {
+          status: response.status,
+          userId: request.user_id,
+        })
+        yield {
+          type: 'error',
+          message: 'Erreur lors de la communication avec le chatbot',
+        }
+        return
       }
 
-      const data = (await responseV1.json()) as ChatbotResponse
+      // Parse SSE stream
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (!reader) {
+        yield {
+          type: 'error',
+          message: 'Impossible de lire le stream',
+        }
+        return
+      }
+
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            if (data === '[DONE]') break
+
+            try {
+              const chunk = JSON.parse(data)
+              yield chunk
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to stream chatbot response', { error })
+      yield {
+        type: 'error',
+        message: 'Erreur lors du streaming',
+      }
+    }
+  }
+
+  /**
+   * Get chatbot analytics and metrics
+   *
+   * Returns:
+   * - Total queries processed
+   * - Success rate
+   * - Average response time
+   * - Most used functions
+   * - Error rate
+   */
+  async getChatbotMetrics(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/ai/chatbot/metrics`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(5000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI Service responded with status ${response.status}`)
+      }
+
+      const data = await response.json()
       return data
     } catch (error) {
-      logger.error('Failed to query chatbot from AI service', { error })
+      logger.error('Failed to get chatbot metrics', { error })
       return null
     }
   }

@@ -448,8 +448,10 @@ router
       '#controllers/http/common/notifications_controller.markAllAsRead'
     )
 
-    // Chatbot AI
+    // Chatbot AI V5 (Function Calling)
     router.post('/chatbot/query', '#controllers/http/common/chatbot_controller.query')
+    router.post('/chatbot/query/stream', '#controllers/http/common/chatbot_controller.queryStream') // NEW: Streaming
+    router.get('/chatbot/metrics', '#controllers/http/common/chatbot_controller.metrics') // NEW: Analytics
     router.get(
       '/chatbot/history/:conversationId',
       '#controllers/http/common/chatbot_controller.history'
