@@ -13,6 +13,7 @@ export const useChat = () => {
     messages: store.messages,
     typingIndicators: store.typingIndicators,
     isLoading: store.isLoading,
+    isReplying: store.isReplying,
     error: store.error,
     unreadCount: store.unreadCount,
     chatbot: store.chatbot,

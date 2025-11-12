@@ -13,7 +13,7 @@ import {
   useErrorsTranslation,
   useFormsTranslation,
 } from '@/hooks/useTranslation';
-import { useUserSearch } from '@/hooks/useUserSearch';
+import GoogleMapsService from '@/services/google-maps.service';
 
 interface MissionAppreciationProps {
   mission: Mission;
@@ -35,7 +35,6 @@ interface AppreciationData {
 
 export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ mission, onUpdate }) => {
   const { user } = useAuth();
-  const { getUserName } = useUserSearch();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
@@ -49,12 +48,11 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
     comment: '',
     wouldRecommend: false,
   });
+  const [distance, setDistance] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingFeedback, setExistingFeedback] = useState<MissionFeedback | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
-  const [transporteurName, setTransporteurName] = useState<string>('');
-  const [affreteurName, setAffreteurName] = useState<string>('');
 
   useEffect(() => {
     const fetchExistingFeedback = async () => {
@@ -79,6 +77,43 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               comment: response.data?.description || '',
             }));
           }
+
+          const googleMapsService = new GoogleMapsService();
+          const distanceResult = await googleMapsService.calculateDistanceWithDirections(
+            {
+              lat: Number(mission.adresseDepart!.latitude),
+              lng: Number(mission.adresseDepart!.longitude),
+            },
+            {
+              lat: Number(mission.adresseArrivee!.latitude),
+              lng: Number(mission.adresseArrivee!.longitude),
+            }
+          );
+
+          if (!distanceResult) {
+            // Fallback to straight-line distance if directions fail
+            const straightLineDistance = await googleMapsService.calculateDistance(
+              {
+                lat: Number(mission.adresseDepart!.latitude),
+                lng: Number(mission.adresseDepart!.longitude),
+              },
+              {
+                lat: Number(mission.adresseArrivee!.latitude),
+                lng: Number(mission.adresseArrivee!.longitude),
+              }
+            );
+
+            if (!straightLineDistance) {
+              toast.error(tErrors('missions.cannotCalculateDistance'));
+              return;
+            }
+
+            setDistance(Math.round(straightLineDistance * 1.3))
+          }
+
+          if (distanceResult) {
+            setDistance(distanceResult.distance)
+          }
         }
       } catch {
         setFeedbackError(tErrors('missions.evaluationLoadingError'));
@@ -90,22 +125,6 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
     fetchExistingFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mission.id]);
-
-  // Fetch user names
-  useEffect(() => {
-    const fetchUserNames = async () => {
-      if (mission.transporteurId) {
-        const name = await getUserName(mission.transporteurId);
-        setTransporteurName(name);
-      }
-      if (mission.affreteurId) {
-        const name = await getUserName(mission.affreteurId);
-        setAffreteurName(name);
-      }
-    };
-
-    fetchUserNames();
-  }, [mission.transporteurId, mission.affreteurId, getUserName]);
 
   // Calcul automatique de la note générale
   const calculateOverallRating = (
@@ -180,6 +199,25 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
     return user?.role === 'affreteur' || user?.role === 'admin';
   };
 
+  if (isLoadingFeedback) {
+    return (
+      <Card>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <ThumbsUp className="h-5 w-5" />
+            {tMissions('appreciation.performanceMetrics')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-6 sm:py-8">
+            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
+            <span className="ml-2 text-xs sm:text-sm">{tCommon('loading')}</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Performance Metrics */}
@@ -215,11 +253,23 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
               </p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">N/A</div>
+              <div className="text-2xl font-bold text-purple-600">{existingFeedback?.rating + '/5' || appreciation.rating + '/5' || 'N/A'}</div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                 {tMissions('appreciation.averageRating')}
               </p>
-              <p className="font-medium">{tMissions('appreciation.notYetRated')}</p>
+              {existingFeedback?.rating || appreciation.rating ?
+                <div className="flex w-full justify-center gap-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-4 w-4 ${star <= appreciation.rating
+                        ? 'text-yellow-400 fill-current'
+                        : 'text-gray-300'
+                        }`}
+                    />
+                  ))}
+                </div> :
+                <p className="font-medium">{tMissions('appreciation.notYetRated')}</p>}
             </div>
           </div>
         </CardContent>
@@ -240,8 +290,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                 {tCommon('roles.transporteur')}
               </p>
               <p className="font-medium">
-                {transporteurName ||
-                  mission.transporteur?.fullName ||
+                {mission.transporteur?.fullName ||
                   `${mission.transporteur?.firstName} ${mission.transporteur?.lastName}` ||
                   tCommon('status.notAssigned')}
               </p>
@@ -251,8 +300,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                 {tCommon('roles.affreteur')}
               </p>
               <p className="font-medium">
-                {affreteurName ||
-                  mission.affreteur?.fullName ||
+                {mission.affreteur?.fullName ||
                   `${mission.affreteur?.firstName} ${mission.affreteur?.lastName}` ||
                   tCommon('status.notAssigned')}
               </p>
@@ -267,18 +315,18 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">{tMissions('budget')}</p>
-              <p className="font-medium">{mission.budgetMax?.toLocaleString()} FCFA</p>
+              <p className="font-medium">{mission.budgetMin?.toLocaleString()} FCFA</p>
             </div>
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300">{tMissions('distance')}</p>
-              <p className="font-medium">{tCommon('status.notAvailable')}</p>
+              <p className="font-medium">{distance + ' km' || tCommon('status.notAvailable')}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Appreciation Form */}
-      {canSubmitAppreciation() && (
+      {canSubmitAppreciation() && !existingFeedback && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -315,11 +363,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                         key={star}
                         type="button"
                         onClick={() => handleCriteriaRating('ponctualite', star)}
-                        className={`p-1 rounded transition-colors ${
-                          star <= appreciation.ponctualite
-                            ? 'text-yellow-400 hover:text-yellow-500'
-                            : 'text-gray-300 hover:text-gray-400'
-                        }`}
+                        className={`p-1 rounded transition-colors ${star <= appreciation.ponctualite
+                          ? 'text-yellow-400 hover:text-yellow-500'
+                          : 'text-gray-300 hover:text-gray-400'
+                          }`}
                       >
                         <Star className="h-5 w-5 fill-current" />
                       </button>
@@ -359,11 +406,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                         key={star}
                         type="button"
                         onClick={() => handleCriteriaRating('fiabilite', star)}
-                        className={`p-1 rounded transition-colors ${
-                          star <= appreciation.fiabilite
-                            ? 'text-yellow-400 hover:text-yellow-500'
-                            : 'text-gray-300 hover:text-gray-400'
-                        }`}
+                        className={`p-1 rounded transition-colors ${star <= appreciation.fiabilite
+                          ? 'text-yellow-400 hover:text-yellow-500'
+                          : 'text-gray-300 hover:text-gray-400'
+                          }`}
                       >
                         <Star className="h-5 w-5 fill-current" />
                       </button>
@@ -403,11 +449,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                         key={star}
                         type="button"
                         onClick={() => handleCriteriaRating('qualiteService', star)}
-                        className={`p-1 rounded transition-colors ${
-                          star <= appreciation.qualiteService
-                            ? 'text-yellow-400 hover:text-yellow-500'
-                            : 'text-gray-300 hover:text-gray-400'
-                        }`}
+                        className={`p-1 rounded transition-colors ${star <= appreciation.qualiteService
+                          ? 'text-yellow-400 hover:text-yellow-500'
+                          : 'text-gray-300 hover:text-gray-400'
+                          }`}
                       >
                         <Star className="h-5 w-5 fill-current" />
                       </button>
@@ -447,11 +492,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                         key={star}
                         type="button"
                         onClick={() => handleCriteriaRating('gestionIncidents', star)}
-                        className={`p-1 rounded transition-colors ${
-                          star <= appreciation.gestionIncidents
-                            ? 'text-yellow-400 hover:text-yellow-500'
-                            : 'text-gray-300 hover:text-gray-400'
-                        }`}
+                        className={`p-1 rounded transition-colors ${star <= appreciation.gestionIncidents
+                          ? 'text-yellow-400 hover:text-yellow-500'
+                          : 'text-gray-300 hover:text-gray-400'
+                          }`}
                       >
                         <Star className="h-5 w-5 fill-current" />
                       </button>
@@ -491,11 +535,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
-                            className={`h-6 w-6 ${
-                              star <= appreciation.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
-                            }`}
+                            className={`h-6 w-6 ${star <= appreciation.rating
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                              }`}
                           />
                         ))}
                       </div>
@@ -582,11 +625,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                        className={`h-4 w-4 ${
-                          star <= (existingFeedback.rating || 0)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
+                        className={`h-4 w-4 ${star <= (existingFeedback.rating || 0)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                          }`}
                       />
                     ))}
                     <span className="ml-1 text-sm font-medium">{existingFeedback.rating}/5</span>

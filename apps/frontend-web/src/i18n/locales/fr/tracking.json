@@ -24,7 +24,9 @@
     "completedToday": "Terminées Aujourd'hui"
   },
   "mission": {
+    "tracked": "Mission à suivre",
     "notFound": "Mission non trouvée",
+    "select": "Sélectionner une mission",
     "notFoundMessage": "La mission avec l'ID \"{{id}}\" n'existe pas.",
     "status": "Statut",
     "price": "Prix",
@@ -35,7 +37,9 @@
     "description": "Description",
     "merchandiseType": "Type de marchandise",
     "estimatedDeparture": "Date de départ estimée",
-    "expectedArrival": "Date d'arrivée prévue"
+    "expectedArrival": "Date d'arrivée prévue",
+    "loading": "Chargement...",
+    "noDate": "Date non définie"
   },
   "timeline": {
     "title": "Chronologie de la mission",
@@ -104,7 +108,7 @@
     "loadingMap": "Chargement de la carte des missions...",
     "missions": "Missions",
     "totalMissions": "Total: {{count}} missions",
-    "assignedMissions": "Assignées: {{count}}",
+    "assignedMissions": "En cours: {{count}}",
     "detectedPosition": "Position détectée",
     "departure": "Départ: {{title}}",
     "arrival": "Arrivée: {{title}}",
@@ -117,7 +121,28 @@
     "apiKeyNotConfigured": "Clé API Google Maps non configurée. Ajoutez VITE_GOOGLE_MAPS_API_KEY dans votre fichier .env",
     "mapInitializationError": "Erreur lors de l'initialisation de la carte:",
     "unknownError": "Erreur inconnue",
-    "positionUnavailable": "Impossible d'obtenir la position de l'utilisateur:"
+    "positionUnavailable": "Impossible d'obtenir la position de l'utilisateur:",
+    "baseDuration": "Durée base:",
+    "withTraffic": "Avec trafic:",
+    "trafficDelay": "Retard trafic:",
+    "realTimeTraffic": "Trafic en temps réel",
+    "routeInfoShort": "Trajet",
+    "routeInfoFull": "Informations de trajet",
+    "legend": {
+      "title": "Légende des Missions",
+      "markerTypes": "Types de marqueurs",
+      "routes": "Itinéraires",
+      "departureLocation": "Lieu de départ",
+      "arrivalLocation": "Lieu d'arrivée",
+      "transporterPosition": "Position transporteur",
+      "yourPosition": "Votre position",
+      "routeTrace": "Tracé de l'itinéraire",
+      "alternativeRoute": "Route alternative",
+      "merchandisePickup": "Point de collecte de la marchandise",
+      "finalDelivery": "Point de livraison final",
+      "currentVehiclePosition": "Position actuelle du véhicule",
+      "currentGpsPosition": "Votre position GPS actuelle"
+    }
   },
   "actions": {
     "share": "Partager",
@@ -141,7 +166,10 @@
     "viewHistory": "Voir historique",
     "editMission": "Modifier mission",
     "cancelMission": "Annuler mission",
-    "completeMission": "Terminer mission"
+    "completeMission": "Terminer mission",
+    "back": "Retour",
+    "export": "Exporter",
+    "exitFullscreen": "Quitter plein écran"
   },
   "alerts": {
     "title": "Alertes Récentes",
@@ -157,7 +185,9 @@
     "deliveryDelay": "Retard de livraison",
     "delayMessage": "La mission {{mission}} sera {{delay}} en retard",
     "newDriver": "Nouveau chauffeur",
-    "newDriverMessage": "{{name}} a rejoint le transport"
+    "newDriverMessage": "{{name}} a rejoint le transport",
+    "onSchedule": "Dans les temps",
+    "normalTraffic": "Trafic normal"
   },
   "performance": {
     "title": "Performance",
@@ -278,5 +308,19 @@
     "delivery": "Livraison:",
     "loadingError": "Erreur lors du chargement des missions:",
     "refreshError": "Erreur lors de l'actualisation:"
+  },
+  "tracking": {
+    "liveTracking": "Suivi en temps réel",
+    "centerOnVehicle": "Centrer sur véhicule",
+    "showRoute": "Afficher itinéraire",
+    "liveStatus": "Statut en direct",
+    "currentSpeed": "Vitesse actuelle",
+    "estimatedArrival": "Arrivée estimée",
+    "remainingDistance": "Distance restante",
+    "progress": "Progression",
+    "vehicleOnline": "Véhicule en ligne",
+    "lastUpdate": "Dernière mise à jour",
+    "onSchedule": "Dans les temps",
+    "normalTraffic": "Trafic normal"
   }
 }

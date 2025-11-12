@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Package } from 'lucide-react';
+import { useTrackingTranslation } from '@/hooks/useTranslation';
 
 interface LegendItem {
   type: 'origin' | 'destination' | 'vehicle' | 'user';
@@ -14,33 +15,35 @@ interface MapLegendProps {
 }
 
 export default function MapLegend({ showUserLocation = false, className = '' }: MapLegendProps) {
+  const { t } = useTrackingTranslation();
+  
   const legendItems: LegendItem[] = [
     {
       type: 'origin',
-      label: 'Lieu de départ',
+      label: t('map.legend.departureLocation'),
       iconUrl: 'https://maps.google.com/mapfiles/kml/paddle/go.png',
-      description: 'Point de collecte de la marchandise',
+      description: t('map.legend.merchandisePickup'),
     },
     {
       type: 'destination',
-      label: "Lieu d'arrivée",
+      label: t('map.legend.arrivalLocation'),
       iconUrl: 'https://maps.google.com/mapfiles/kml/shapes/flag.png',
-      description: 'Point de livraison final',
+      description: t('map.legend.finalDelivery'),
     },
     {
       type: 'vehicle',
-      label: 'Position transporteur',
+      label: t('map.legend.transporterPosition'),
       iconUrl: 'https://maps.google.com/mapfiles/kml/shapes/truck.png',
-      description: 'Position actuelle du véhicule',
+      description: t('map.legend.currentVehiclePosition'),
     },
   ];
 
   if (showUserLocation) {
     legendItems.push({
       type: 'user',
-      label: 'Votre position',
+      label: t('map.legend.yourPosition'),
       iconUrl: 'https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png',
-      description: 'Votre position GPS actuelle',
+      description: t('map.legend.currentGpsPosition'),
     });
   }
 
@@ -50,14 +53,14 @@ export default function MapLegend({ showUserLocation = false, className = '' }: 
         <CardContent className="px-4">
           <h4 className="font-semibold mb-3 flex items-center gap-2 text-gray-800">
             <Package className="w-4 h-4" />
-            Légende des Missions
+            {t('map.legend.title')}
           </h4>
 
           <div className="space-y-4">
             {/* Types de marqueurs */}
             <div>
               <h5 className="text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-                Types de marqueurs
+                {t('map.legend.markerTypes')}
               </h5>
               <div className="space-y-2">
                 {legendItems.map((item) => (
@@ -89,20 +92,20 @@ export default function MapLegend({ showUserLocation = false, className = '' }: 
             {/* Itinéraires */}
             <div>
               <h5 className="text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-                Itinéraires
+                {t('map.legend.routes')}
               </h5>
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center">
                     <div className="w-8 h-1 bg-tsa-blue/90 rounded-full shadow-sm"></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-800">Tracé de l'itinéraire</span>
+                  <span className="text-sm font-medium text-gray-800">{t('map.legend.routeTrace')}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center">
                     <div className="w-8 h-1 bg-orange-500 rounded-full shadow-sm"></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-800">Route alternative</span>
+                  <span className="text-sm font-medium text-gray-800">{t('map.legend.alternativeRoute')}</span>
                 </div>
               </div>
             </div>

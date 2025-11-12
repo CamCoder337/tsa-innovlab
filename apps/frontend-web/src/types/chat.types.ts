@@ -208,6 +208,7 @@ export interface ChatState {
   messages: Record<number, Message[]>; // conversationId -> messages
   typingIndicators: TypingIndicator[];
   isLoading: boolean;
+  isReplying: boolean;
   error: string | null;
   unreadCount: number;
 

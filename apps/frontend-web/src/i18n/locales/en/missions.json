@@ -47,7 +47,8 @@
     "document": "Document",
     "note": "Note",
     "scheduled_for": "Scheduled for",
-    "noEvents": "No events to display at the moment"
+    "noEvents": "No events to display at the moment",
+    "statusChangeTitle": "Status changed: {{ oldStatus }} → {{ newStatus }}"
   },
   "appreciation": {
     "title": "Carrier Evaluation",
@@ -154,7 +155,42 @@
     "noPaymentHistory": "No payment history available",
     "generateInvoice": "Generate Invoice",
     "downloadInvoice": "Download Invoice",
-    "requestInvoice": "Request Invoice"
+    "requestInvoice": "Request Invoice",
+    "methods": {
+      "bankTransfer": "Bank Transfer",
+      "cashOnDelivery": "Cash on Delivery"
+    },
+    "invoice": {
+      "title": "Invoice",
+      "subtitle": "Payment confirmation and transaction details",
+      "invoiceTitle": "INVOICE",
+      "missionNumber": "Mission Number",
+      "companyDescription": "Professional transport and logistics services",
+      "billedTo": "Billed To",
+      "missionDetails": "Mission Details",
+      "createdDate": "Created Date",
+      "missionId": "Mission ID",
+      "paymentMethod": "Payment Method",
+      "transactionId": "Transaction ID",
+      "route": "Route",
+      "merchandise": "Merchandise",
+      "servicesProvided": "Services Provided",
+      "service": "Service",
+      "quantity": "Qty",
+      "unitPrice": "Unit Price",
+      "subtotal": "Subtotal",
+      "transportService": "Transport Service",
+      "paymentStatus": "Payment Status",
+      "paymentInformation": "Payment Information",
+      "method": "Method",
+      "amount": "Amount",
+      "paymentDate": "Payment Date",
+      "reference": "Reference",
+      "status": "Status",
+      "thankYou": "Thank you for choosing TSA Logistics for your transport needs.",
+      "contactSupport": "For any questions, please contact our support team at",
+      "backToMissions": "Back to Missions"
+    }
   },
   "myMissions": {
     "affreteur": {
@@ -262,6 +298,9 @@
   "duration": "Duration",
   "departure": "Departure",
   "arrival": "Arrival",
+  "status": {
+    "label": "Status"
+  },
   "track": "Track",
   "trackShipment": "Track shipment",
   "tracking": {
