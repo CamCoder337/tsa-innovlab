@@ -395,9 +395,9 @@ export default class AIService {
 
   /**
    * Query the chatbot with streaming (SSE)
-   * 
+   *
    * Returns an async generator that yields chunks as they arrive
-   * 
+   *
    * Usage:
    * ```typescript
    * for await (const chunk of aiService.queryChatbotStream(request)) {
@@ -483,7 +483,7 @@ export default class AIService {
 
   /**
    * Get chatbot analytics and metrics
-   * 
+   *
    * Returns:
    * - Total queries processed
    * - Success rate

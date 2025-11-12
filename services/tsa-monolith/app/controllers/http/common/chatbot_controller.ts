@@ -125,9 +125,9 @@ export default class ChatbotController {
   /**
    * Query the chatbot with streaming (SSE)
    * POST /api/common/chatbot/query/stream
-   * 
+   *
    * Returns Server-Sent Events for real-time streaming
-   * 
+   *
    * Benefits:
    * - First response in < 500ms (vs 2s normal)
    * - 60% reduction in perceived latency
@@ -199,14 +199,14 @@ export default class ChatbotController {
   /**
    * Get chatbot analytics and metrics
    * GET /api/common/chatbot/metrics
-   * 
+   *
    * Returns:
    * - Total queries processed
    * - Success rate
    * - Average response time
    * - Most used functions
    * - Error rate
-   * 
+   *
    * Useful for:
    * - Monitoring chatbot performance
    * - Identifying popular functions
