@@ -193,7 +193,12 @@ export default class AdminStatsService {
 
     // Récupérer toutes les commandes payées (PAID ou DELIVERED)
     const allOrders = await Order.query()
-      .whereIn('paymentStatus', [PaymentStatus.COMPLETED])
+      .where((query) => {
+        query
+          .where('paymentStatus', PaymentStatus.COMPLETED)
+          .orWhere('status', OrderStatus.PAID)
+          .orWhere('status', OrderStatus.DELIVERED)
+      })
       .select('total', 'createdAt')
 
     // Calculer les totaux par période
@@ -357,7 +362,12 @@ export default class AdminStatsService {
 
     // Récupérer toutes les commandes payées
     const allOrders = await Order.query()
-      .whereIn('paymentStatus', [PaymentStatus.COMPLETED])
+      .where((query) => {
+        query
+          .where('paymentStatus', PaymentStatus.COMPLETED)
+          .orWhere('status', OrderStatus.PAID)
+          .orWhere('status', OrderStatus.DELIVERED)
+      })
       .select('total', 'createdAt')
 
     // Helper pour calculer le panier moyen
@@ -388,7 +398,12 @@ export default class AdminStatsService {
     const topProducts = await db
       .from('order_items')
       .join('orders', 'order_items.order_id', 'orders.id')
-      .where('orders.payment_status', PaymentStatus.COMPLETED)
+      .where((query) => {
+        query
+          .where('orders.payment_status', PaymentStatus.COMPLETED)
+          .orWhere('orders.status', OrderStatus.PAID)
+          .orWhere('orders.status', OrderStatus.DELIVERED)
+      })
       .select('order_items.product_id as productId')
       .select('order_items.product_name as productName')
       .sum('order_items.quantity as quantitySold')
