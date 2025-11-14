@@ -155,7 +155,9 @@ export const OrderDetailsModal = ({ order, open, onOpenChange }: OrderDetailsMod
                       </p>
                     </div>
                     <p className="font-semibold">
-                      {formatCurrency(parseFloat(item.totalPrice || item.unitPrice) * item.quantity)}
+                      {formatCurrency(
+                        parseFloat(item.totalPrice || item.unitPrice) * item.quantity
+                      )}
                     </p>
                   </div>
                 ))}
@@ -188,12 +190,6 @@ export const OrderDetailsModal = ({ order, open, onOpenChange }: OrderDetailsMod
                     {getPaymentStatusLabel(order.paymentStatus)}
                   </Badge>
                 </div>
-                {order.paymentReference && (
-                  <div>
-                    <p className="text-muted-foreground">Référence</p>
-                    <p className="font-medium">{order.paymentReference}</p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -231,7 +227,7 @@ export const OrderDetailsModal = ({ order, open, onOpenChange }: OrderDetailsMod
                     })}
                   </span>
                 </div>
-                {order.paidAt && (
+                {/* {order.paidAt && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Payée le</span>
                     <span>
@@ -286,7 +282,7 @@ export const OrderDetailsModal = ({ order, open, onOpenChange }: OrderDetailsMod
                       })}
                     </span>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </div>

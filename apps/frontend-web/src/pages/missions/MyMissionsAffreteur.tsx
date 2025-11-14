@@ -121,7 +121,7 @@ export default function MyMissionsAffreteur() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
-                  {tCommon('status.completed')}s
+                  {tCommon('status.completed')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">
                   {myMissions.filter((m) => m.status === 'completed').length}
@@ -166,7 +166,7 @@ export default function MyMissionsAffreteur() {
                 {tCommon('status.active')}s
               </TabsTrigger>
               <TabsTrigger value="completed" className="text-xs sm:text-sm">
-                {tCommon('status.completed')}s
+                {tCommon('status.completed')}
               </TabsTrigger>
               <TabsTrigger value="draft" className="text-xs sm:text-sm">
                 {tCommon('status.draft')}s

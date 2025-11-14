@@ -1,0 +1,61 @@
+{
+  "title": "Mes Véhicules",
+  "subtitle": "Gérez votre flotte de véhicules",
+  "buttons": {
+    "addVehicle": "Ajouter un véhicule",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "filters": "Filtres",
+    "reset": "Réinitialiser"
+  },
+  "status": {
+    "total": "Total",
+    "available": "Disponibles",
+    "in_mission": "En mission",
+    "maintenance": "Maintenance",
+    "inactive": "Inactive"
+  },
+  "types": {
+    "truck": "Camion",
+    "van": "Van",
+    "motorcycle": "Moto",
+    "car": "Voiture"
+  },
+  "search": {
+    "placeholder": "Rechercher par immatriculation...",
+    "noResults": "Aucun véhicule trouvé",
+    "addFirstVehicle": "Ajouter votre premier véhicule"
+  },
+  "filters": {
+    "vehicleType": "Type de véhicule",
+    "status": "Statut",
+    "allTypes": "Tous les types",
+    "allStatuses": "Tous les statuts"
+  },
+  "table": {
+    "headers": {
+      "vehicle": "Véhicule",
+      "type": "Type",
+      "status": "Statut",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "noDescription": "Aucune description"
+  },
+  "messages": {
+    "loading": "Chargement des véhicules...",
+    "vehicleAdded": "Vehicule ajouté avec succès",
+    "vehicleUpdated": "Vehicule mis à jour avec succès",
+    "vehicleDeleted": "Vehicule supprimé avec succès",
+    "statusUpdated": "Status mis à jour avec succès",
+    "addError": "Erreur lors de l'ajout du véhicule",
+    "updateError": "Erreur lors de la modification du véhicule",
+    "deleteError": "Erreur lors de la suppression du véhicule",
+    "statusError": "Erreur lors de la modification du statut",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce véhicule ?"
+  },
+  "tooltips": {
+    "edit": "Modifier",
+    "delete": "Supprimer"
+  }
+}

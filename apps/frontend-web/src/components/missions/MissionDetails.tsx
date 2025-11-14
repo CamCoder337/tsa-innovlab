@@ -176,6 +176,16 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                       : tCommon('notDefined')}
                   </span>
                 </div>
+                {mission.status === 'completed' && (
+                  <div>
+                    <span className="font-medium block sm:inline">{tMissions('completedOn')}:</span>{' '}
+                    <span className="text-muted-foreground">
+                      {mission.updatedAt
+                        ? new Date(mission.updatedAt).toLocaleDateString()
+                        : tCommon('notDefined')}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -193,7 +203,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                 <div>
                   <span className="font-medium block sm:inline">{tForms('labels.weight')}:</span>{' '}
                   <span className="text-muted-foreground">
-                    {mission.poids ? `${mission.poids} kg` : tCommon('notSpecified')}
+                    {mission.poids ? `${mission.poids} t` : tCommon('notSpecified')}
                   </span>
                 </div>
                 <div>

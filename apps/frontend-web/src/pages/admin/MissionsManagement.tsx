@@ -7,10 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, Clock, CheckCircle, AlertTriangle, Package, Plus } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-import { VehicleType, VehicleTypeLabels } from '@/types/vehicle.types';
+import { type VehicleType, VehicleTypes } from '@/types/vehicle.types';
 import { Link } from 'react-router-dom';
 import MissionCard from '@/components/missions/MissionCard';
-import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useAdminTranslation,
+  useCommonTranslation,
+  useVehiclesTranslation,
+} from '@/hooks/useTranslation';
 import {
   Select,
   SelectContent,
@@ -27,6 +31,7 @@ export default function MissionsManagement() {
   const [activeTab, setActiveTab] = useState<MissionStatus | 'all'>('all');
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tVehicles } = useVehiclesTranslation();
 
   const filteredMissions = missions.filter((mission: Mission) => {
     const matchesSearch =
@@ -183,9 +188,9 @@ export default function MissionsManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{tAdmin('missions.allVehicles')}</SelectItem>
-                  {Object.values(VehicleType).map((type) => (
+                  {Object.values(VehicleTypes).map((type) => (
                     <SelectItem key={type} value={type}>
-                      {VehicleTypeLabels[type]}
+                      {tVehicles('types.' + type)}
                     </SelectItem>
                   ))}
                 </SelectContent>

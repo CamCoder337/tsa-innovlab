@@ -31,8 +31,8 @@
     "typeNotSpecified": "Type non spécifié",
     "route": "Itinéraire",
     "dates": "Dates",
-    "estimatedDeparture": "Departure estimée",
-    "expectedArrival": "Arrival prévue",
+    "estimatedDeparture": "Depart estimé",
+    "expectedArrival": "Arrivée prévue",
     "additionalNotes": "Notes supplémentaires",
     "documents": "Documents",
     "vehicle": "Véhicule"
@@ -293,6 +293,7 @@
     }
   },
   "createdOn": "Crée le",
+  "completedOn": "Terminée le",
   "budget": "Budget",
   "distance": "Distance",
   "duration": "Durée",

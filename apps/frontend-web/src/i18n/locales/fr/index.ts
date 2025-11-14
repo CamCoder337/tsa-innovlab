@@ -14,6 +14,7 @@ import tracking from './tracking.json';
 import payment from './payment.json';
 import chat from './chat.json';
 import maps from './maps.json';
+import vehicles from './vehicles.json';
 
 export default {
   common,
@@ -32,4 +33,5 @@ export default {
   payment,
   chat,
   maps,
+  vehicles,
 };

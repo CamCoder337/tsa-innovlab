@@ -17,7 +17,8 @@ export type Namespace =
   | 'tracking'
   | 'payment'
   | 'maps'
-  | 'chat';
+  | 'chat'
+  | 'vehicles';
 
 // Enhanced useTranslation hook with TypeScript support
 export function useTranslation(
@@ -44,6 +45,7 @@ export const useFormsTranslation = () => useTranslation('forms');
 export const useErrorsTranslation = () => useTranslation('errors');
 export const useNotificationsTranslation = () => useTranslation('notifications');
 export const useTrackingTranslation = () => useTranslation('tracking');
+export const useVehiclesTranslation = () => useTranslation('vehicles');
 
 // Re-export other i18next hooks for convenience
 export { useTranslation as useI18nTranslation } from 'react-i18next';

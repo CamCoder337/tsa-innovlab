@@ -2,15 +2,27 @@ import type { Timestamps } from './common.types';
 import type { User } from './auth.types';
 import type { Mission } from './mission.types';
 
+export type VehicleType =
+  | 'truck' // Camion (poids lourd)
+  | 'van' // Camionnette/Fourgon
+  | 'motorcycle' // Moto/Scooter
+  | 'car'; // Voiture
+
+export type VehicleStatus =
+  | 'available' // Disponible pour missions
+  | 'in_mission' // Actuellement en mission
+  | 'maintenance' // En maintenance
+  | 'inactive'; // Inactif (retiré temporairement)
+
 // Vehicle Enums
-export enum VehicleType {
+export enum VehicleTypes {
   TRUCK = 'truck', // Camion (poids lourd)
   VAN = 'van', // Camionnette/Fourgon
   MOTORCYCLE = 'motorcycle', // Moto/Scooter
   CAR = 'car', // Voiture
 }
 
-export enum VehicleStatus {
+export enum VehicleStatuses {
   AVAILABLE = 'available', // Disponible pour missions
   IN_MISSION = 'in_mission', // Actuellement en mission
   MAINTENANCE = 'maintenance', // En maintenance
@@ -164,34 +176,18 @@ export interface VehicleFormData {
   status: VehicleStatus;
 }
 
-// Vehicle Type Labels (for UI)
-export const VehicleTypeLabels: Record<VehicleType, string> = {
-  [VehicleType.TRUCK]: 'Camion',
-  [VehicleType.VAN]: 'Camionnette',
-  [VehicleType.MOTORCYCLE]: 'Moto',
-  [VehicleType.CAR]: 'Voiture',
-};
-
-// Vehicle Status Labels (for UI)
-export const VehicleStatusLabels: Record<VehicleStatus, string> = {
-  [VehicleStatus.AVAILABLE]: 'Disponible',
-  [VehicleStatus.IN_MISSION]: 'En mission',
-  [VehicleStatus.MAINTENANCE]: 'En maintenance',
-  [VehicleStatus.INACTIVE]: 'Inactif',
-};
-
 // Vehicle Status Colors (for UI)
 export const VehicleStatusColors: Record<VehicleStatus, string> = {
-  [VehicleStatus.AVAILABLE]: 'green',
-  [VehicleStatus.IN_MISSION]: 'blue',
-  [VehicleStatus.MAINTENANCE]: 'orange',
-  [VehicleStatus.INACTIVE]: 'gray',
+  available: 'green',
+  in_mission: 'blue',
+  maintenance: 'orange',
+  inactive: 'gray',
 };
 
 // Vehicle Type Icons (for UI)
 export const VehicleTypeIcons: Record<VehicleType, string> = {
-  [VehicleType.TRUCK]: '🚛',
-  [VehicleType.VAN]: '🚐',
-  [VehicleType.MOTORCYCLE]: '🏍️',
-  [VehicleType.CAR]: '🚗',
+  truck: '🚛',
+  van: '🚐',
+  motorcycle: '🏍️',
+  car: '🚗',
 };

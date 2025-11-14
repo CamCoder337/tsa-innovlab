@@ -262,7 +262,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </div>
 
       {/* Payment Status */}
-      <Card className='gap-2'>
+      <Card className="gap-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -313,7 +313,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
                       <DialogHeader>
-                        <DialogTitle className='sr-only'>{tMissions('invoice.title')}</DialogTitle>
+                        <DialogTitle className="sr-only">{tMissions('invoice.title')}</DialogTitle>
                       </DialogHeader>
                       <MissionInvoice
                         mission={mission}
@@ -341,8 +341,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
                     <span>
                       {isDownloading
                         ? tCommon('messages.generating') || 'Génération...'
-                        : tMissions('financial.downloadInvoice')
-                      }
+                        : tMissions('financial.downloadInvoice')}
                     </span>
                   </Button>
                 </>
@@ -362,7 +361,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </Card>
 
       {/* Payment History */}
-      <Card className='gap-2'>
+      <Card className="gap-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Receipt className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -412,7 +411,7 @@ export const MissionFinancial: React.FC<MissionFinancialProps> = ({ mission, onU
       </Card>
 
       {/* Cost Breakdown */}
-      <Card className='gap-2'>
+      <Card className="gap-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />

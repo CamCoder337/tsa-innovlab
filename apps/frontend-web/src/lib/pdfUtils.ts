@@ -34,23 +34,23 @@ export const generateInvoicePDF = async (
     iframe.style.width = '210mm';
     iframe.style.height = '297mm';
     iframe.style.border = 'none';
-    
+
     document.body.appendChild(iframe);
-    
+
     // Wait for iframe to load
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       iframe.onload = resolve;
       iframe.src = 'about:blank';
     });
-    
+
     const iframeDoc = iframe.contentDocument!;
-    
+
     // Create the invoice HTML in the isolated iframe
     const invoiceHTML = generateInvoiceHTML(mission, financialData, tCommon, tMissions, tPayment);
     iframeDoc.open();
     iframeDoc.write(invoiceHTML);
     iframeDoc.close();
-    
+
     // Get the container from the iframe
     const tempContainer = iframeDoc.body.firstElementChild as HTMLElement;
 
@@ -69,7 +69,7 @@ export const generateInvoicePDF = async (
         if (element.tagName === 'STYLE' || element.tagName === 'SCRIPT') {
           return true;
         }
-        
+
         // Skip elements with computed styles that might contain oklch
         if (element instanceof HTMLElement) {
           const computedStyle = window.getComputedStyle(element);
@@ -78,14 +78,14 @@ export const generateInvoicePDF = async (
             return true;
           }
         }
-        
+
         return false;
       },
       onclone: (clonedDoc) => {
         // Remove ALL external stylesheets and styles to avoid oklch issues
         const styles = clonedDoc.querySelectorAll('style, link[rel="stylesheet"]');
-        styles.forEach(style => style.remove());
-        
+        styles.forEach((style) => style.remove());
+
         // Function to convert oklch and other modern colors to safe hex colors
         const convertUnsupportedColors = (cssText: string): string => {
           return cssText
@@ -96,37 +96,37 @@ export const generateInvoicePDF = async (
             .replace(/hwb\([^)]+\)/g, '#000000') // Replace hwb with black
             .replace(/--[^:;]+:[^;]+;/g, ''); // Remove CSS custom properties
         };
-        
+
         // Remove any CSS custom properties and classes that might contain oklch
         const allElements = clonedDoc.querySelectorAll('*');
-        allElements.forEach(element => {
+        allElements.forEach((element) => {
           if (element instanceof HTMLElement) {
             // Clear any CSS custom properties and classes
             element.removeAttribute('class');
-            
+
             // If element has inline styles, clean them
             if (element.style.cssText) {
               const cleanedStyle = convertUnsupportedColors(element.style.cssText);
               element.style.cssText = cleanedStyle;
             }
-            
+
             // Remove any data attributes that might contain style info
-            Array.from(element.attributes).forEach(attr => {
+            Array.from(element.attributes).forEach((attr) => {
               if (attr.name.startsWith('data-') || attr.name.startsWith('style')) {
                 element.removeAttribute(attr.name);
               }
             });
           }
         });
-        
+
         // Clean any remaining style elements that might have been added
         const remainingStyles = clonedDoc.querySelectorAll('style');
-        remainingStyles.forEach(style => {
+        remainingStyles.forEach((style) => {
           if (style.textContent) {
             style.textContent = convertUnsupportedColors(style.textContent);
           }
         });
-        
+
         // Apply minimal, safe styles with explicit color values
         const safeStyle = clonedDoc.createElement('style');
         safeStyle.textContent = `
@@ -161,13 +161,14 @@ export const generateInvoicePDF = async (
           }
         `;
         clonedDoc.head.appendChild(safeStyle);
-        
+
         // Re-apply inline styles from our HTML with safe colors
         const container = clonedDoc.querySelector('div');
         if (container) {
-          container.style.cssText = 'max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff; font-family: Arial, sans-serif; color: #000000;';
+          container.style.cssText =
+            'max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff; font-family: Arial, sans-serif; color: #000000;';
         }
-      }
+      },
     });
 
     // Remove temporary iframe
@@ -234,10 +235,15 @@ const generateInvoiceHTML = (
       font-size: 0.75rem;
       font-weight: 500;
       line-height: 1;
-      ${colorClass.includes('green') ? 'background-color: #dcfce7; color: #166534;' :
-      colorClass.includes('yellow') ? 'background-color: #fef9c3; color: #854d0e;' :
-        colorClass.includes('red') ? 'background-color: #fee2e2; color: #991b1b;' :
-          'background-color: #f3f4f6; color: #374151;'}
+      ${
+        colorClass.includes('green')
+          ? 'background-color: #dcfce7; color: #166534;'
+          : colorClass.includes('yellow')
+            ? 'background-color: #fef9c3; color: #854d0e;'
+            : colorClass.includes('red')
+              ? 'background-color: #fee2e2; color: #991b1b;'
+              : 'background-color: #f3f4f6; color: #374151;'
+      }
     ">
       ${text}
     </span>
@@ -441,11 +447,15 @@ const generateInvoiceHTML = (
             <span>${tMissions('financial.vatPercent')} (18%)</span>
             <span>${financialData.taxes.toLocaleString()} FCFA</span>
           </div>
-          ${financialData.additionalCosts > 0 ? `
+          ${
+            financialData.additionalCosts > 0
+              ? `
           <div style="display:flex; justify-content:space-between; color:#6b7280; margin-bottom:0.5rem;">
             <span>${tMissions('financial.additionalCosts')}</span>
             <span>${financialData.additionalCosts.toLocaleString()} FCFA</span>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
           <hr class="separator" />
           <div style="display:flex; justify-content:space-between; font-size:1.25rem; font-weight:700; color:#111827;">
             <span>${tCommon('total')}</span>

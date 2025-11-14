@@ -23,11 +23,11 @@ import { useMissions } from '@/hooks/useMissions';
 import { useVehicles } from '@/hooks/useVehicles';
 import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
-import { VehicleTypeLabels } from '@/types/vehicle.types';
 import {
   useMissionsTranslation,
   useErrorsTranslation,
   useCommonTranslation,
+  useVehiclesTranslation,
 } from '@/hooks/useTranslation';
 import { useSearchParams } from 'react-router-dom';
 import { useMissionStore } from '@/stores/missionStore';
@@ -54,6 +54,7 @@ export default function MissionsTransporteurPage() {
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
+  const { t: tVehicles } = useVehiclesTranslation();
 
   // Create unique lists of origin and destination cities from all missions
   const allMissions = [...missions, ...myMissions];
@@ -404,7 +405,7 @@ export default function MissionsTransporteurPage() {
                       {currentMission.requiredVehicleType && (
                         <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">
                           {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
-                          {VehicleTypeLabels[currentMission.requiredVehicleType]}
+                          {tVehicles('types.' + currentMission.requiredVehicleType)}
                         </p>
                       )}
                     </div>
@@ -443,7 +444,7 @@ export default function MissionsTransporteurPage() {
                               <div className="flex items-center gap-2">
                                 <span className="text-xs sm:text-sm">{vehicle.registration}</span>
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  ({VehicleTypeLabels[vehicle.type]})
+                                  {tVehicles('types.' + vehicle.type)}
                                 </span>
                               </div>
                             </SelectItem>
