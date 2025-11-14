@@ -142,10 +142,11 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
+    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0),
     averageOrderValue:
       orders.length > 0
-        ? orders.reduce((sum, order) => sum + (order.total || 0), 0) / orders.length
+        ? orders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0) /
+          orders.length
         : 0,
   };
 
