@@ -27,7 +27,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMissions } from '@/hooks/useMissions';
-import { useCommonTranslation, useErrorsTranslation, useMissionsTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
+import {
+  useCommonTranslation,
+  useErrorsTranslation,
+  useMissionsTranslation,
+  useTrackingTranslation,
+} from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
 import { useAuth } from '@/hooks/useAuth';
@@ -79,7 +84,7 @@ export default function MissionTrackingPage() {
             : await missionService.getMissionHistory(mission.id);
 
         if (response.data) {
-          console.log(response.data)
+          console.log(response.data);
           setEvents(response.data.updates.data);
         }
       } catch {
@@ -115,7 +120,7 @@ export default function MissionTrackingPage() {
 
       return tMissions('timeline.statusChangeTitle', {
         oldStatus: oldStatusTranslated,
-        newStatus: newStatusTranslated
+        newStatus: newStatusTranslated,
       });
     }
 
@@ -266,7 +271,7 @@ export default function MissionTrackingPage() {
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 {/* Carte de suivi */}
                 <div className="lg:col-span-3">
-                  <Card className='gap-2'>
+                  <Card className="gap-2">
                     <CardHeader>
                       <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -302,7 +307,7 @@ export default function MissionTrackingPage() {
 
                 {/* Panneau d'informations */}
                 <div className="space-y-4">
-                  <Card className='gap-2'>
+                  <Card className="gap-2">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -358,7 +363,7 @@ export default function MissionTrackingPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className='gap-2'>
+                  <Card className="gap-2">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -392,25 +397,28 @@ export default function MissionTrackingPage() {
 
             <TabsContent value="details" className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className='gap-2'>
+                <Card className="gap-2">
                   <CardHeader>
                     <CardTitle>{tTracking('mission.information')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {mission.description && <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                        {tTracking('mission.description')}
-                      </label>
-                      <p className="text-gray-900 dark:text-white">{mission.description}</p>
-                    </div>}
-                    <div className="grid grid-cols-2 gap-4">
-
-                      {mission.typeMarchandise && <div>
+                    {mission.description && (
+                      <div>
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('mission.merchandiseType')}
+                          {tTracking('mission.description')}
                         </label>
-                        <p className="text-gray-900 dark:text-white">{mission.typeMarchandise}</p>
-                      </div>}
+                        <p className="text-gray-900 dark:text-white">{mission.description}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      {mission.typeMarchandise && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                            {tTracking('mission.merchandiseType')}
+                          </label>
+                          <p className="text-gray-900 dark:text-white">{mission.typeMarchandise}</p>
+                        </div>
+                      )}
                       <div>
                         <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                           {tTracking('realTime.weight')}
@@ -461,7 +469,13 @@ export default function MissionTrackingPage() {
                           <User className="w-6 h-6 text-tsa-blue dark:text-tsa-white" />
                         </div>
                         <div>
-                          <p className="font-medium">{tCommon('roles.transporteur') + ' ' + mission.transporteur?.firstName + ' ' + mission.transporteur?.lastName}</p>
+                          <p className="font-medium">
+                            {tCommon('roles.transporteur') +
+                              ' ' +
+                              mission.transporteur?.firstName +
+                              ' ' +
+                              mission.transporteur?.lastName}
+                          </p>
                           <p className="font-base">#{mission.transporteurId}</p>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             {tTracking('transporter.verified')}
@@ -521,7 +535,8 @@ export default function MissionTrackingPage() {
                               )}
                               {event.transporteur && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  {tCommon('by')} {event.transporteur.firstName + ' ' + event.transporteur.lastName}
+                                  {tCommon('by')}{' '}
+                                  {event.transporteur.firstName + ' ' + event.transporteur.lastName}
                                 </p>
                               )}
                             </div>

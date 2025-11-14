@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,53 +20,8 @@ import {
 import type { Mission } from '@/types/mission.types';
 import { useMissions } from '@/hooks/useMissions';
 import { useCommonTranslation, useTrackingTranslation } from '@/hooks/useTranslation';
-
-const getStatusColor = (status: Mission['status']) => {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-500';
-    case 'assigned':
-      return 'bg-tsa-blue/90';
-    case 'published':
-      return 'bg-yellow-500';
-    case 'draft':
-      return 'bg-gray-500';
-    case 'cancelled':
-      return 'bg-red-500';
-    default:
-      return 'bg-gray-500';
-  }
-};
-
-const getStatusText = (status: Mission['status'], tCommon: (key: string) => string) => {
-  switch (status) {
-    case 'completed':
-      return tCommon('status.completed');
-    case 'assigned':
-      return tCommon('status.assigned');
-    case 'published':
-      return tCommon('status.published');
-    case 'draft':
-      return tCommon('status.draft');
-    case 'cancelled':
-      return tCommon('status.cancelled');
-    default:
-      return status;
-  }
-};
-
-// const getMaintenanceColor = (status: VehicleStatus['maintenanceStatus']) => {
-//   switch (status) {
-//     case 'good':
-//       return 'text-green-600';
-//     case 'warning':
-//       return 'text-yellow-600';
-//     case 'critical':
-//       return 'text-red-600';
-//     default:
-//       return 'text-gray-600';
-//   }
-// };
+import { calculateDistance } from '@/lib/map-utils';
+import { getStatusColor, getStatusLabel } from '@/lib/utils';
 
 export default function TransporteurTrackingDashboard() {
   const { myMissions: missions } = useMissions();
@@ -76,7 +31,7 @@ export default function TransporteurTrackingDashboard() {
   // Calculs des KPIs
   const activeAssignments = missions.filter((m) => m.status === 'in_progress');
   const completedToday = missions.filter((m) => m.status === 'completed').length; // Calculé dynamiquement
-  const totalDistance = 0; // Calculé à partir des adresses
+  const [totalDistance, setTotalDistance] = useState<number>(0); // Calculé à partir des adresses
   const totalEarnings = 0;
   const driverRating = 0;
 
@@ -84,6 +39,42 @@ export default function TransporteurTrackingDashboard() {
   const [currentAssignment, setCurrentAssignment] = useState<Mission | null>(
     activeAssignments.length > 0 ? activeAssignments[0] : null
   );
+
+  // Calculate total distance for in-progress missions
+  useEffect(() => {
+    const calculateTotalDistance = async () => {
+      if (activeAssignments.length === 0) {
+        setTotalDistance(0);
+        return;
+      }
+
+      try {
+        let total = 0;
+
+        for (const mission of activeAssignments) {
+          if (mission.adresseDepart && mission.adresseArrivee) {
+            const distance = await calculateDistance(
+              mission.adresseDepart,
+              mission.adresseArrivee,
+              tCommon
+            );
+
+            if (distance) {
+              console.log(distance);
+              total += distance;
+            }
+          }
+        }
+
+        setTotalDistance(total);
+      } catch (error) {
+        console.error('Error calculating total distance:', error);
+        setTotalDistance(0);
+      }
+    };
+
+    calculateTotalDistance();
+  }, [activeAssignments, tCommon]);
 
   return (
     <div className="flex flex-col flex-1 bg-gray-50 dark:bg-gray-950 p-3 sm:p-6">
@@ -115,7 +106,7 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="h-10 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tTracking('kpis.activeMissions')}
                 </p>
                 <p className="text-xl sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
@@ -131,7 +122,7 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="h-10 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   {tTracking('kpis.completedToday')}
                 </p>
                 <p className="text-xl sm:text-2xl font-bold text-green-600">{completedToday}</p>
@@ -145,7 +136,7 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="h-10 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   Distance Totale
                 </p>
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -161,7 +152,7 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="h-10 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   Gains du Jour
                 </p>
                 <p className="text-lg sm:text-2xl font-bold text-green-600">
@@ -177,7 +168,7 @@ export default function TransporteurTrackingDashboard() {
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                <p className="h-10 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                   Note Chauffeur
                 </p>
                 <p className="text-xl sm:text-2xl font-bold text-yellow-600">{driverRating}/5</p>
@@ -210,7 +201,7 @@ export default function TransporteurTrackingDashboard() {
                 {/* Sélecteur de mission */}
                 {activeAssignments.length > 1 && (
                   <Card>
-                    <CardContent className="p-3 sm:p-4">
+                    <CardContent className="">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
                           Mission à suivre:
@@ -236,7 +227,7 @@ export default function TransporteurTrackingDashboard() {
                 )}
 
                 <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
+                  <CardHeader className="">
                     <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                       <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
                       Navigation - {currentAssignment.title}
@@ -259,7 +250,7 @@ export default function TransporteurTrackingDashboard() {
                             className={`w-3 h-3 rounded-full ${getStatusColor(currentAssignment.status)}`}
                           />
                           <span className="font-medium text-xs sm:text-sm">
-                            {getStatusText(currentAssignment.status, tCommon)}
+                            {getStatusLabel(currentAssignment.status, tCommon)}
                           </span>
                         </div>
                       </div>
@@ -275,7 +266,7 @@ export default function TransporteurTrackingDashboard() {
               {/* Détails de la mission */}
               <div className="space-y-4">
                 <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
+                  <CardHeader className="">
                     <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <span className="text-base sm:text-lg">Mission en Cours</span>
                       {currentAssignment.budgetMin! > 200000 && (
@@ -297,13 +288,13 @@ export default function TransporteurTrackingDashboard() {
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 flex-shrink-0" />
                         <span className="text-xs sm:text-sm">
-                          {tTracking('mission.departure')}: {currentAssignment.adresseDepartId}
+                          {tTracking('mission.departure')}: {currentAssignment.adresseDepart!.label}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 flex-shrink-0" />
                         <span className="text-xs sm:text-sm">
-                          {tTracking('mission.arrival')}: {currentAssignment.adresseArriveeId}
+                          {tTracking('mission.arrival')}: {currentAssignment.adresseArrivee!.label}
                         </span>
                       </div>
                     </div>
@@ -422,7 +413,7 @@ export default function TransporteurTrackingDashboard() {
                             className={`w-2 h-2 rounded-full ${getStatusColor(assignment.status)}`}
                           />
                           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            {getStatusText(assignment.status, tCommon)}
+                            {getStatusLabel(assignment.status, tCommon)}
                           </span>
                         </div>
                         <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">

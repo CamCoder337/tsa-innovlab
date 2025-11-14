@@ -293,6 +293,7 @@
     }
   },
   "createdOn": "Created on",
+  "completedOn": "Completed on",
   "budget": "Budget",
   "distance": "Distance",
   "duration": "Duration",

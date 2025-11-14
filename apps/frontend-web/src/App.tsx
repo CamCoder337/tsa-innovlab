@@ -3,7 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/routing/ProtectedRoute';
 import { Loader } from 'lucide-react';
-import { getCookie, useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
+import { useTokenManager } from './hooks/useTokenManager';
+import { getCookie } from './lib/cookie-utils';
 
 // Lazy-loaded components
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -54,15 +56,15 @@ const LoadingFallback2 = () => (
 
 function App() {
   const [token, setToken] = useState(getCookie('tsa_access_token'));
-  const { currentUser: user, isLoading, getUser, logout } = useAuthStore.getState();
+  const { currentUser: user, isLoading, getUser, logout } = useAuthStore();
+
+  useTokenManager();
 
   useEffect(() => {
-    if (!token) {
+    if (user && !token) {
       logout();
       setToken(null);
-    } else {
-      if (!user && !isLoading) getUser();
-    }
+    } else if (token && !user && !isLoading) getUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 

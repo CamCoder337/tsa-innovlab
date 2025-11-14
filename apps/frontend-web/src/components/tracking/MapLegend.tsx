@@ -16,7 +16,7 @@ interface MapLegendProps {
 
 export default function MapLegend({ showUserLocation = false, className = '' }: MapLegendProps) {
   const { t } = useTrackingTranslation();
-  
+
   const legendItems: LegendItem[] = [
     {
       type: 'origin',
@@ -99,13 +99,17 @@ export default function MapLegend({ showUserLocation = false, className = '' }: 
                   <div className="flex items-center">
                     <div className="w-8 h-1 bg-tsa-blue/90 rounded-full shadow-sm"></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-800">{t('map.legend.routeTrace')}</span>
+                  <span className="text-sm font-medium text-gray-800">
+                    {t('map.legend.routeTrace')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center">
                     <div className="w-8 h-1 bg-orange-500 rounded-full shadow-sm"></div>
                   </div>
-                  <span className="text-sm font-medium text-gray-800">{t('map.legend.alternativeRoute')}</span>
+                  <span className="text-sm font-medium text-gray-800">
+                    {t('map.legend.alternativeRoute')}
+                  </span>
                 </div>
               </div>
             </div>

@@ -69,7 +69,7 @@ function AffreteurDashboard() {
       title: tDash('affreteur.insights.pendingMissions'),
       icon: Clock,
       value: myMissions.filter((m) => m.status === 'published').length,
-      change: `${myMissions.filter((m) => ['assigned', 'in_progress'].includes(m.status)).length} ${tCommon('status.in_progress')}`,
+      change: `${myMissions.filter((m) => ['in_progress'].includes(m.status)).length} ${tCommon('status.in_progress')}`,
       color: 'purple',
       href: '/app/missions?tab=pending',
     },

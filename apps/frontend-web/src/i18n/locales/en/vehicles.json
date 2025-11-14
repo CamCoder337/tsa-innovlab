@@ -1,0 +1,61 @@
+{
+  "title": "My Vehicles",
+  "subtitle": "Manage your vehicle fleet",
+  "buttons": {
+    "addVehicle": "Add Vehicle",
+    "edit": "Edit",
+    "delete": "Delete",
+    "filters": "Filters",
+    "reset": "Reset"
+  },
+  "status": {
+    "total": "Total",
+    "available": "Available",
+    "in_mission": "On Mission",
+    "maintenance": "Maintenance",
+    "inactive": "Inactive"
+  },
+  "types": {
+    "truck": "Truck",
+    "van": "Van",
+    "motorcycle": "Motorcycle",
+    "car": "Car"
+  },
+  "search": {
+    "placeholder": "Search by registration...",
+    "noResults": "No vehicles found",
+    "addFirstVehicle": "Add your first vehicle"
+  },
+  "filters": {
+    "vehicleType": "Vehicle Type",
+    "status": "Status",
+    "allTypes": "All Types",
+    "allStatuses": "All Statuses"
+  },
+  "table": {
+    "headers": {
+      "vehicle": "Vehicle",
+      "type": "Type",
+      "status": "Status",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "noDescription": "No description"
+  },
+  "messages": {
+    "loading": "Loading vehicles...",
+    "vehicleAdded": "Vehicle added successfully",
+    "vehicleUpdated": "Vehicle updated successfully",
+    "vehicleDeleted": "Vehicle deleted successfully",
+    "statusUpdated": "Status updated successfully",
+    "addError": "Error adding vehicle",
+    "updateError": "Error updating vehicle",
+    "deleteError": "Error deleting vehicle",
+    "statusError": "Error updating status",
+    "deleteConfirm": "Are you sure you want to delete this vehicle?"
+  },
+  "tooltips": {
+    "edit": "Edit",
+    "delete": "Delete"
+  }
+}

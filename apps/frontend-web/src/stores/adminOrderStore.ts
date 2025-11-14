@@ -168,8 +168,7 @@ export const useAdminOrderStore = create<AdminOrderState>()(
             );
 
             // Update current order if it matches
-            const updatedCurrentOrder =
-              currentOrder?.id === orderId ? response.data : currentOrder;
+            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
 
             set({
               orders: updatedOrders,
@@ -215,8 +214,7 @@ export const useAdminOrderStore = create<AdminOrderState>()(
             );
 
             // Update current order if it matches
-            const updatedCurrentOrder =
-              currentOrder?.id === orderId ? response.data : currentOrder;
+            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
 
             set({
               orders: updatedOrders,
@@ -262,8 +260,7 @@ export const useAdminOrderStore = create<AdminOrderState>()(
             );
 
             // Update current order if it matches
-            const updatedCurrentOrder =
-              currentOrder?.id === orderId ? response.data : currentOrder;
+            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
 
             set({
               orders: updatedOrders,

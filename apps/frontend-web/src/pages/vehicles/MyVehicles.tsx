@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Search, Filter, Edit, Trash2 } from 'lucide-react';
 import { CreateVehicleForm } from '@/components/forms/CreateVehicleForm';
 import { useVehicles } from '@/hooks/useVehicles';
 import {
   type Vehicle,
-  VehicleType,
-  VehicleStatus,
-  VehicleTypeLabels,
-  VehicleStatusLabels,
+  type VehicleType,
+  type VehicleStatus,
+  VehicleTypes,
+  VehicleStatuses,
   VehicleStatusColors,
   VehicleTypeIcons,
   type CreateVehicleRequest,
   type UpdateVehicleRequest,
-  type VehicleFiltersQuery,
 } from '../../types/vehicle.types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -31,24 +30,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+import { useFormsTranslation, useVehiclesTranslation } from '@/hooks/useTranslation';
 
 export const MyVehicles: React.FC = () => {
   const { t: tForms } = useFormsTranslation();
+  const { t: tVehicles } = useVehiclesTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<VehicleStatus | ''>('');
-  const [typeFilter, setTypeFilter] = useState<VehicleType | ''>('');
+  const [statusFilter, setStatusFilter] = useState<VehicleStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<VehicleType | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
-
-  const filters: VehicleFiltersQuery = {
-    search: searchTerm || undefined,
-    status: statusFilter || undefined,
-    type: typeFilter || undefined,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
-  };
 
   const {
     vehicles,
@@ -58,7 +50,6 @@ export const MyVehicles: React.FC = () => {
     updateVehicle,
     updateVehicleStatus,
     deleteVehicle,
-    fetchVehicles,
     clearError,
     getTotalVehicles,
     getAvailableCount,
@@ -66,20 +57,14 @@ export const MyVehicles: React.FC = () => {
     getMaintenanceCount,
   } = useVehicles();
 
-  // Refresh data when filters change
-  useEffect(() => {
-    fetchVehicles(filters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
   const handleCreateVehicle = async (data: CreateVehicleRequest) => {
     await createVehicle(data);
     if (!error) {
       setShowCreateForm(false);
-      toast.success('Vehicule ajouté avec succès');
+      toast.success(tVehicles('messages.vehicleAdded'));
     } else {
       console.error(error);
-      toast.error("Erreur lors de l'ajout du véhicule");
+      toast.error(tVehicles('messages.addError'));
     }
   };
 
@@ -88,10 +73,10 @@ export const MyVehicles: React.FC = () => {
       await updateVehicle(editingVehicle.id, data);
       if (!error) {
         setEditingVehicle(null);
-        toast.success('Vehicule mis à jour avec succès');
+        toast.success(tVehicles('messages.vehicleUpdated'));
       } else {
         console.error(error);
-        toast.error('Erreur lors de la modification du véhicule');
+        toast.error(tVehicles('messages.updateError'));
       }
     }
   };
@@ -99,29 +84,55 @@ export const MyVehicles: React.FC = () => {
   const handleStatusChange = async (vehicleId: string, newStatus: VehicleStatus) => {
     await updateVehicleStatus(vehicleId, newStatus);
     if (!error) {
-      toast.success('Status mis à jour avec succès');
+      toast.success(tVehicles('messages.statusUpdated'));
     } else {
       console.error(error);
-      toast.error('Erreur lors de la modification du statut');
+      toast.error(tVehicles('messages.statusError'));
     }
   };
 
   const handleDeleteVehicle = async (vehicleId: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
+    if (window.confirm(tVehicles('messages.deleteConfirm'))) {
       await deleteVehicle(vehicleId);
       if (!error) {
-        toast.success('Vehicule supprimé avec succès');
+        toast.success(tVehicles('messages.vehicleDeleted'));
       } else {
         console.error(error);
-        toast.error('Erreur lors de la suppression du véhicule');
+        toast.error(tVehicles('messages.deleteError'));
       }
     }
   };
 
+  const filteredVehicles = (() => {
+    return vehicles.filter((vehicle) => {
+      // Search term filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          vehicle.registration?.toLowerCase().includes(searchLower) ||
+          vehicle.description?.toLowerCase().includes(searchLower);
+
+        if (!matchesSearch) return false;
+      }
+
+      // Origin filter
+      if (statusFilter !== 'all') {
+        if (vehicle.status !== statusFilter) return false;
+      }
+
+      // Destination filter
+      if (typeFilter !== 'all') {
+        if (vehicle.type !== typeFilter) return false;
+      }
+
+      return true;
+    });
+  })();
+
   const resetFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setTypeFilter('');
+    setStatusFilter('all');
+    setTypeFilter('all');
   };
 
   const getStatusBadgeColor = (status: VehicleStatus) => {
@@ -140,15 +151,15 @@ export const MyVehicles: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-start sm:items-center">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mes Véhicules</h1>
-          <p className="text-sm sm:text-base text-gray-600">Gérez votre flotte de véhicules</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{tVehicles('title')}</h1>
+          <p className="text-sm sm:text-base text-gray-600">{tVehicles('subtitle')}</p>
         </div>
         <Button
           onClick={() => setShowCreateForm(true)}
           className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 bg-tsa-blue text-white rounded-lg hover:bg-tsa-blue transition-colors text-sm sm:text-base"
         >
           <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-          <span>Ajouter un véhicule</span>
+          <span>{tVehicles('buttons.addVehicle')}</span>
         </Button>
 
         <Sheet
@@ -196,7 +207,9 @@ export const MyVehicles: React.FC = () => {
         <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {tVehicles('status.total')}
+              </p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">{getTotalVehicles()}</p>
             </div>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center text-xs sm:text-base">
@@ -208,7 +221,9 @@ export const MyVehicles: React.FC = () => {
         <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Disponibles</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {tVehicles('status.available')}
+              </p>
               <p className="text-lg sm:text-2xl font-bold text-green-600">{getAvailableCount()}</p>
             </div>
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-100 rounded-lg flex items-center justify-center text-xs sm:text-base">
@@ -220,7 +235,9 @@ export const MyVehicles: React.FC = () => {
         <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600">En mission</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {tVehicles('status.in_mission')}
+              </p>
               <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
                 {getInUseCount()}
               </p>
@@ -234,7 +251,9 @@ export const MyVehicles: React.FC = () => {
         <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Maintenance</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {tVehicles('status.maintenance')}
+              </p>
               <p className="text-lg sm:text-2xl font-bold text-orange-600">
                 {getMaintenanceCount()}
               </p>
@@ -255,7 +274,7 @@ export const MyVehicles: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" />
               <input
                 type="text"
-                placeholder="Rechercher par immatriculation..."
+                placeholder={tVehicles('search.placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
@@ -269,67 +288,65 @@ export const MyVehicles: React.FC = () => {
             className="flex items-center justify-center px-3 sm:px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm sm:text-base"
           >
             <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-            <span className="hidden sm:inline">Filtres</span>
+            <span className="hidden sm:inline">{tVehicles('buttons.filters')}</span>
           </button>
         </div>
 
         {/* Expanded Filters */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-medium text-gray-700">
-                  Type de véhicule
-                </Label>
-                <Select
-                  value={typeFilter}
-                  onValueChange={(value) => setTypeFilter(value as VehicleType | '')}
-                >
-                  <SelectTrigger className="text-xs sm:text-sm">
-                    <SelectValue placeholder="Tous les types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Tous les types</SelectItem>
-                    {Object.values(VehicleType).map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {VehicleTypeLabels[type]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm font-medium text-gray-700">
+                {tVehicles('filters.vehicleType')}
+              </Label>
+              <Select
+                value={typeFilter}
+                onValueChange={(value) => setTypeFilter(value as VehicleType | 'all')}
+              >
+                <SelectTrigger className="text-xs sm:text-sm w-full">
+                  <SelectValue placeholder={tVehicles('filters.allTypes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{tVehicles('filters.allTypes')}</SelectItem>
+                  {Object.values(VehicleTypes).map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {tVehicles('types.' + type)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm font-medium text-gray-700">Statut</Label>
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as VehicleStatus | '')}
-                >
-                  <SelectTrigger className="text-xs sm:text-sm">
-                    <SelectValue placeholder="Tous les statuts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Tous les statuts</SelectItem>
-                    {Object.values(VehicleStatus)
-                      .filter((status) => status !== 'in_mission')
-                      .map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {VehicleStatusLabels[status]}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm font-medium text-gray-700">
+                {tVehicles('filters.status')}
+              </Label>
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as VehicleStatus | 'all')}
+              >
+                <SelectTrigger className="text-xs sm:text-sm w-full">
+                  <SelectValue placeholder={tVehicles('filters.allStatuses')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{tVehicles('filters.allStatuses')}</SelectItem>
+                  {Object.values(VehicleStatuses).map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {tVehicles(`status.${status}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="flex items-end sm:col-span-2 lg:col-span-1">
-                <Button
-                  variant="outline"
-                  onClick={resetFilters}
-                  className="w-full text-xs sm:text-sm"
-                >
-                  Réinitialiser
-                </Button>
-              </div>
+            <div className="flex items-end sm:col-span-2 lg:col-span-1">
+              <Button
+                variant="outline"
+                onClick={resetFilters}
+                className="w-full text-xs sm:text-sm bg-muted"
+              >
+                {tVehicles('buttons.reset')}
+              </Button>
             </div>
           </div>
         )}
@@ -355,16 +372,18 @@ export const MyVehicles: React.FC = () => {
         {isLoading ? (
           <div className="p-6 sm:p-8 text-center">
             <div className="inline-block w-5 h-5 sm:w-6 sm:h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-2 text-gray-600 text-sm sm:text-base">Chargement des véhicules...</p>
+            <p className="mt-2 text-gray-600 text-sm sm:text-base">
+              {tVehicles('messages.loading')}
+            </p>
           </div>
-        ) : vehicles.length === 0 ? (
+        ) : filteredVehicles.length === 0 ? (
           <div className="p-6 sm:p-8 text-center">
-            <p className="text-gray-600 text-sm sm:text-base">Aucun véhicule trouvé</p>
+            <p className="text-gray-600 text-sm sm:text-base">{tVehicles('search.noResults')}</p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="mt-4 text-tsa-blue dark:text-tsa-white hover:text-blue-800 text-sm sm:text-base"
             >
-              Ajouter votre premier véhicule
+              {tVehicles('search.addFirstVehicle')}
             </button>
           </div>
         ) : (
@@ -373,24 +392,24 @@ export const MyVehicles: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Véhicule
+                    {tVehicles('table.headers.vehicle')}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Type
+                    {tVehicles('table.headers.type')}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
+                    {tVehicles('table.headers.status')}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    Description
+                    {tVehicles('table.headers.description')}
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {tVehicles('table.headers.actions')}
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {vehicles.map((vehicle) => (
+                {filteredVehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="hover:bg-gray-50">
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -402,7 +421,7 @@ export const MyVehicles: React.FC = () => {
                             {vehicle.registration}
                           </div>
                           <div className="text-xs text-gray-500 sm:hidden">
-                            {VehicleTypeLabels[vehicle.type]}
+                            {tVehicles('types.' + vehicle.type)}
                           </div>
                           <div className="text-xs text-gray-500 hidden sm:block">
                             ID: {vehicle.id.slice(0, 8)}...
@@ -412,7 +431,7 @@ export const MyVehicles: React.FC = () => {
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                       <span className="text-xs sm:text-sm text-gray-900">
-                        {VehicleTypeLabels[vehicle.type]}
+                        {tVehicles('types.' + vehicle.type)}
                       </span>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
@@ -429,11 +448,13 @@ export const MyVehicles: React.FC = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.values(VehicleStatus)
-                            .filter((status) => status !== 'in_mission')
+                          {Object.values(VehicleStatuses)
+                            .filter((status) =>
+                              vehicle.status !== 'in_mission' ? status !== 'in_mission' : true
+                            )
                             .map((status) => (
                               <SelectItem key={status} value={status}>
-                                {VehicleStatusLabels[status]}
+                                {tVehicles(`status.${status}`)}
                               </SelectItem>
                             ))}
                         </SelectContent>
@@ -441,7 +462,7 @@ export const MyVehicles: React.FC = () => {
                     </td>
                     <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
                       <div className="text-xs sm:text-sm text-gray-900 max-w-xs truncate">
-                        {vehicle.description || 'Aucune description'}
+                        {vehicle.description || tVehicles('table.noDescription')}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
@@ -449,15 +470,15 @@ export const MyVehicles: React.FC = () => {
                         <button
                           onClick={() => setEditingVehicle(vehicle)}
                           className="text-tsa-blue dark:text-tsa-white hover:text-blue-900 p-1"
-                          title="Modifier"
+                          title={tVehicles('tooltips.edit')}
                         >
                           <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteVehicle(vehicle.id)}
                           className="text-red-600 hover:text-red-900 p-1"
-                          title="Supprimer"
-                          disabled={vehicle.status === VehicleStatus.IN_MISSION}
+                          title={tVehicles('tooltips.delete')}
+                          disabled={vehicle.status === 'in_mission'}
                         >
                           <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>

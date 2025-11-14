@@ -358,23 +358,25 @@ export class MissionService extends BaseApi {
   async getMissionHistory(
     id: string,
     params?: MissionUpdateFilterParams
-  ): Promise<ApiResponse<{
-    mission: {
-      id: string,
-      title: string,
-      status: MissionStatus
-    },
-    pagination: {
-      current_page: number,
-      per_page: number,
-      total: number,
-      last_page: number,
-    },
-    updates:{
-      meta: PaginationMeta,
-      data: MissionUpdate[]
-    }
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      mission: {
+        id: string;
+        title: string;
+        status: MissionStatus;
+      };
+      pagination: {
+        current_page: number;
+        per_page: number;
+        total: number;
+        last_page: number;
+      };
+      updates: {
+        meta: PaginationMeta;
+        data: MissionUpdate[];
+      };
+    }>
+  > {
     try {
       const response = await this.insertToken().get(`/api/affreteur/missions/${id}/history`, {
         params,
@@ -489,23 +491,25 @@ export class MissionService extends BaseApi {
   async getTransporteurMissionHistory(
     id: string,
     params?: MissionUpdateFilterParams
-  ): Promise<ApiResponse<{
-    mission: {
-      id: string,
-      title: string,
-      status: MissionStatus
-    },
-    pagination: {
-      current_page: number,
-      per_page: number,
-      total: number,
-      last_page: number,
-    },
-    updates: {
-      meta: PaginationMeta,
-      data: MissionUpdate[]
-    }
-  }>> {
+  ): Promise<
+    ApiResponse<{
+      mission: {
+        id: string;
+        title: string;
+        status: MissionStatus;
+      };
+      pagination: {
+        current_page: number;
+        per_page: number;
+        total: number;
+        last_page: number;
+      };
+      updates: {
+        meta: PaginationMeta;
+        data: MissionUpdate[];
+      };
+    }>
+  > {
     try {
       const response = await this.insertToken().get(`/api/transporteur/missions/${id}/history`, {
         params,

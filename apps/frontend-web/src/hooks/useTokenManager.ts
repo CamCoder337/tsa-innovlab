@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
-import { tokenManager } from '@/services/token-manager.service';
 
 /**
  * Hook pour initialiser et gérer automatiquement les tokens
@@ -14,6 +13,12 @@ export const useTokenManager = () => {
     if (isAuthenticated && token && refreshToken) {
       initializeTokenManagement();
     }
+
+    // Cleanup lors du démontage du composant
+    return () => {
+      // Note: On ne fait pas de cleanup complet ici car le token manager
+      // doit persister tant que l'app est montée. Le cleanup se fait au logout.
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token, refreshToken]);
 
@@ -21,15 +26,5 @@ export const useTokenManager = () => {
   return {
     isAuthenticated,
     hasValidTokens: !!(token && refreshToken),
-  };
-};
-
-/**
- * Hook pour obtenir des informations sur l'activité de l'utilisateur
- */
-export const useUserActivity = () => {
-  return {
-    timeSinceLastActivity: tokenManager.timeSinceLastActivity,
-    isRefreshing: tokenManager.isCurrentlyRefreshing,
   };
 };

@@ -474,7 +474,9 @@ export default function MissionTrackingMap({
                 {routeInfo.get(selectedMission.id)?.durationInTraffic && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-300">{t('map.withTraffic')}</span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {t('map.withTraffic')}
+                      </span>
                       <span className="font-medium text-blue-600">
                         {Math.floor(
                           (routeInfo.get(selectedMission.id)?.durationInTraffic || 0) / 60
@@ -486,7 +488,9 @@ export default function MissionTrackingMap({
                     {/* Traffic delay indicator */}
                     {routeInfo.get(selectedMission.id)?.trafficDelay && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-300">{t('map.trafficDelay')}</span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                          {t('map.trafficDelay')}
+                        </span>
                         <span className="font-medium text-orange-600">
                           +{routeInfo.get(selectedMission.id)?.trafficDelay}min
                         </span>

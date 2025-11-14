@@ -235,12 +235,12 @@ export const useChatStore = create<ChatState>()(
             messages: [...chatbot.messages, userMessage],
             updatedAt: new Date().toISOString(),
           };
-          
-          set({ 
-            chatbot: chatbotWithUserMessage, 
+
+          set({
+            chatbot: chatbotWithUserMessage,
             currentConversation: chatbotWithUserMessage,
             messages: [chatbotWithUserMessage.messages],
-            isReplying: true 
+            isReplying: true,
           });
 
           // Call chatbot service
@@ -283,11 +283,11 @@ export const useChatStore = create<ChatState>()(
               updatedAt: new Date().toISOString(),
             };
 
-            set({ 
+            set({
               chatbot: updatedChatbot,
               currentConversation: updatedChatbot,
               messages: [updatedChatbot.messages],
-              isReplying: false 
+              isReplying: false,
             });
             return fallbackResponse;
           }
@@ -318,11 +318,11 @@ export const useChatStore = create<ChatState>()(
             updatedAt: new Date().toISOString(),
           };
 
-          set({ 
-            chatbot: updatedChatbot, 
-            currentConversation: updatedChatbot, 
+          set({
+            chatbot: updatedChatbot,
+            currentConversation: updatedChatbot,
             messages: [updatedChatbot.messages],
-            isReplying: false
+            isReplying: false,
           });
 
           // Return response for compatibility

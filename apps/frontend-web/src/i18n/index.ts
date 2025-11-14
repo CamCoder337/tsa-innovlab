@@ -47,6 +47,7 @@ i18n
       'payment',
       'maps',
       'chat',
+      'vehicles',
     ],
   });
 
