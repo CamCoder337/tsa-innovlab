@@ -135,6 +135,12 @@ export default function OrdersManagement() {
   };
 
   // Calculate order statistics
+  // Filter paid orders (same logic as backend API)
+  const paidOrders = orders.filter(
+    (o) =>
+      o.paymentStatus === 'completed' || o.status === 'paid' || o.status === 'delivered'
+  );
+
   const orderStats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === 'pending').length,
@@ -142,11 +148,14 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0),
+    totalRevenue: paidOrders.reduce(
+      (sum, order) => sum + parseFloat(String(order.total || 0)),
+      0
+    ),
     averageOrderValue:
-      orders.length > 0
-        ? orders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0) /
-          orders.length
+      paidOrders.length > 0
+        ? paidOrders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0) /
+          paidOrders.length
         : 0,
   };
 
