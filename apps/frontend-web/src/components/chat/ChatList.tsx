@@ -91,7 +91,7 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     if (conversation.otherParticipant?.role) {
       return (
         conversation.otherParticipant?.role?.charAt(0).toUpperCase() +
-        conversation.otherParticipant?.role?.slice(1) || ''
+          conversation.otherParticipant?.role?.slice(1) || ''
       );
     }
     return 'Utilisateur inconnu';
@@ -113,8 +113,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     return (
       <div
         key={chatbotConv.id}
-        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-          }`}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+        }`}
         onClick={() => onSelectConversation(chatbotConv)}
       >
         <div className="flex items-start gap-2 sm:gap-3">
@@ -136,8 +137,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h4
-                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${isActive ? 'text-blue-900' : 'text-gray-900'
-                  }`}
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
+                  isActive ? 'text-blue-900' : 'text-gray-900'
+                }`}
               >
                 {chatbotConv.profile.name}
               </h4>
@@ -177,8 +179,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
     return (
       <div
         key={conversation.id}
-        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-          }`}
+        className={`p-2 sm:p-3 lg:p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+          isActive ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+        }`}
         onClick={() => onSelectConversation(conversation)}
       >
         <div className="flex items-start gap-2 sm:gap-3">
@@ -207,8 +210,9 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h4
-                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${isActive ? 'text-blue-900' : 'text-gray-900'
-                  }`}
+                className={`text-xs sm:text-sm lg:text-base font-medium truncate ${
+                  isActive ? 'text-blue-900' : 'text-gray-900'
+                }`}
               >
                 {getConversationTitle(conversation)}
               </h4>
@@ -241,10 +245,11 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             {/* Last message preview */}
             {conversation.lastMessage && (
               <p
-                className={`text-xs mt-1 truncate ${conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
-                  ? 'font-medium text-gray-700'
-                  : 'text-gray-500'
-                  }`}
+                className={`text-xs mt-1 truncate ${
+                  conversation.unreadMessagesCount && conversation.unreadMessagesCount > 0
+                    ? 'font-medium text-gray-700'
+                    : 'text-gray-500'
+                }`}
               >
                 {conversation.lastMessage.senderId === user?.id
                   ? tForms('messages.you') + ': '
@@ -302,8 +307,8 @@ export default function ChatList({ onSelectConversation, onCreateConversation }:
             onClick={onCreateConversation}
             className="text-tsa-blue dark:text-tsa-white hover:text-blue-700 p-1 sm:p-2"
           >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            <span>{tChat('buttons.newConversation')}</span>
+            <Plus className="h-6 w-6 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:flex">{tChat('buttons.newConversation')}</span>
           </Button>
         </div>
 

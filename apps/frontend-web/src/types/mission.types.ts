@@ -27,7 +27,7 @@ export type proofType =
 export interface Mission extends Timestamps {
   id: string;
   affreteurId: string;
-  affreteur?: User;
+  affreteur: User;
   transporteurId?: string | null;
   transporteur?: User;
   vehicleId?: string | null;
@@ -38,13 +38,13 @@ export interface Mission extends Timestamps {
   typeMarchandise?: string | null;
   poids?: number | null;
   volume?: number | null;
-  dateDepartEstime?: string | null;
-  dateArriveePrevue?: string | null;
-  adresseDepartId?: string | null;
-  adresseDepart?: Address;
-  adresseArriveeId?: string | null;
-  adresseArrivee?: Address;
-  budgetMin?: number | null;
+  dateDepartEstime: string | null;
+  dateArriveePrevue: string | null;
+  adresseDepartId: string | null;
+  adresseDepart: Address;
+  adresseArriveeId: string | null;
+  adresseArrivee: Address;
+  budgetMin: number | null;
   budgetMax?: number | null;
   status: MissionStatus;
   isFlexibleDates?: boolean;

@@ -209,6 +209,7 @@ async def intelligent_chatbot_metrics():
     """
     try:
         from app.services.chatbot_function_calling_service import get_chatbot_function_calling
+        from datetime import datetime
         
         chatbot_fc = get_chatbot_function_calling()
         metrics = chatbot_fc.get_metrics()
@@ -224,6 +225,4 @@ async def intelligent_chatbot_metrics():
             "success": False,
             "error": str(e)
         }
-
-
 

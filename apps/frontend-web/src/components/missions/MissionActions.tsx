@@ -19,9 +19,12 @@ import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Mission, MissionStatus } from '@/types/mission.types';
-import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import {
+  useMissionsTranslation,
+  useCommonTranslation,
+  useVehiclesTranslation,
+} from '@/hooks/useTranslation';
 import { useVehicles } from '@/hooks/useVehicles';
-import { VehicleTypeLabels } from '@/types/vehicle.types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useMissions } from '@/hooks/useMissions';
 
@@ -52,6 +55,7 @@ export function MissionActions({
   const { availableVehicles, isLoading: vehiclesLoading } = useVehicles();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tCommon } = useCommonTranslation();
+  const { t: tVehicles } = useVehiclesTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [action, setAction] = useState<{ type: string; title: string } | null>(null);
@@ -211,17 +215,19 @@ export function MissionActions({
           <span className="hidden sm:inline">{tCommon('actions.refresh')}</span>
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
-              <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="sr-only">Actions</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 sm:w-auto">
-            {getStatusActions()}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {mission.status !== 'completed' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
+                <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 sm:w-auto">
+              {getStatusActions()}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -315,7 +321,7 @@ export function MissionActions({
                 {mission.requiredVehicleType && (
                   <p className="text-xs sm:text-sm text-tsa-blue dark:text-tsa-white mt-2">
                     {tMissions('myMissions.transporteur.apply.requiredVehicleType')}{' '}
-                    {VehicleTypeLabels[mission.requiredVehicleType]}
+                    {tVehicles('types.' + mission.requiredVehicleType)}
                   </p>
                 )}
               </div>
@@ -356,7 +362,7 @@ export function MissionActions({
                             {vehicle.registration}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            ({VehicleTypeLabels[vehicle.type]})
+                            {tVehicles('types.' + vehicle.type)}
                           </span>
                         </div>
                       </SelectItem>

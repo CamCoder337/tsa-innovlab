@@ -24,6 +24,8 @@ import { OrderStatus, type Order } from '@/types/order.types';
 import { useShopTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { adminService } from '@/services/admin.service';
+import type { User } from '@/types/auth.types';
+import { useUsers } from '@/hooks/useUsers';
 
 // Status config will be created dynamically using translations
 
@@ -68,7 +70,9 @@ export default function OrderDetailsPage() {
   const { id: orderId } = useParams<{ id: string }>();
   const { currentOrder, isLoading: clientLoading, fetchOrder } = useOrders();
   const { user } = useAuth();
+  const { getUserById } = useUsers();
   const [adminOrder, setAdminOrder] = useState<Order | null>(null);
+  const [orderCustomer, setOrderCustomer] = useState<User | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -153,7 +157,16 @@ export default function OrderDetailsPage() {
       }
     };
 
+    const loadOrderCustomer = async () => {
+      if (!order) return;
+      setAdminLoading(true);
+      setError(null);
+      const customer = getUserById(order.userId);
+      setOrderCustomer(customer || null);
+    };
+
     loadOrder();
+    if (isAdmin) loadOrderCustomer();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, isAdmin]);
 
@@ -166,7 +179,9 @@ export default function OrderDetailsPage() {
         <Card>
           <CardContent className="text-center py-8 sm:py-12">
             <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-2">Error Loading Order</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-2">
+              Error Loading Order
+            </h1>
             <p className="text-sm sm:text-base text-zinc-600 mb-4 sm:mb-6">{error}</p>
             <Link to="/app/shop/orders">
               <Button variant="outline" className="text-xs sm:text-sm">
@@ -276,8 +291,8 @@ export default function OrderDetailsPage() {
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Order Timeline */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+          <Card className="gap-2">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tShop('orderDetails.tracking.title')}
@@ -309,7 +324,7 @@ export default function OrderDetailsPage() {
                           />
                         )}
                       </div>
-                      <div className="flex-1 pb-6 sm:pb-8 min-w-0">
+                      <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
                           <h3 className="font-medium text-zinc-900 text-sm sm:text-base truncate">
                             {step.title}
@@ -334,8 +349,8 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Articles commandés */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+          <Card className="gap-2">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tShop('orderDetails.items.title')}
@@ -387,8 +402,8 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Informations de livraison */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+          <Card className="gap-2">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tShop('orderDetails.delivery.title')}
@@ -426,8 +441,8 @@ export default function OrderDetailsPage() {
 
         <div className="space-y-4 sm:space-y-6">
           {/* Résumé financier */}
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
+          <Card className="gap-2">
+            <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
                 {tShop('orderDetails.summary.title')}
@@ -456,9 +471,9 @@ export default function OrderDetailsPage() {
           </Card>
 
           {/* Informations client */}
-          {(order.user || (order.customerName && order.customerEmail)) && (
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
+          {orderCustomer && (
+            <Card className="gap-2">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
                   {tShop('orderDetails.customer.title')}
@@ -468,23 +483,17 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center gap-2 text-xs sm:text-sm">
                   <span className="text-zinc-600">{tShop('orderDetails.customer.name')}</span>
                   <span className="font-medium truncate">
-                    {order.user
-                      ? `${order.user.firstName} ${order.user.lastName}`
-                      : order.customerName}
+                    {`${orderCustomer.firstName} ${orderCustomer.lastName}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs sm:text-sm">
                   <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                  <span className="text-zinc-600 truncate">
-                    {order.user ? order.user.email : order.customerEmail}
-                  </span>
+                  <span className="text-zinc-600 truncate">{orderCustomer.email}</span>
                 </div>
-                {(order.user?.phone || order.customerPhone) && (
+                {orderCustomer.phone && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm">
                     <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500 flex-shrink-0" />
-                    <span className="text-zinc-600">
-                      {order.user ? order.user.phone : order.customerPhone}
-                    </span>
+                    <span className="text-zinc-600">{orderCustomer.phone}</span>
                   </div>
                 )}
               </CardContent>

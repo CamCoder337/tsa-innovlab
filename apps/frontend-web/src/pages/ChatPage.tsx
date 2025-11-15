@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Plus, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import ChatList from '@/components/chat/ChatList';
@@ -52,19 +52,14 @@ export const ChatPage: React.FC = () => {
         </aside>
 
         {/* Main Chat Area */}
-        <div className="w-full flex flex-1 flex-col bg-white dark:bg-gray-900">
+        <div
+          className={`
+          ${!showMobileChatList ? 'flex' : 'hidden'}
+          w-full flex flex-1 flex-col bg-white dark:bg-gray-900"
+          `}
+        >
           {currentConversation ? (
             <>
-              {/* Mobile Back Button */}
-              <div className="md:hidden flex items-center p-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                <Button variant="ghost" size="sm" onClick={handleBackToList} className="mr-2 p-1">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <span className="font-medium text-sm">
-                  {t('buttons.backToConversations', 'Retour aux conversations')}
-                </span>
-              </div>
-
               {/* Chat Window */}
               <ChatWindow conversation={currentConversation} onClose={handleBackToList} />
             </>

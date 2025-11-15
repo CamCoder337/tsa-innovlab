@@ -192,21 +192,30 @@ export default class AdminStatsService {
     const last30Days = now.minus({ days: 30 }).startOf('day')
 
     // Récupérer toutes les commandes payées (PAID ou DELIVERED)
-    const allOrders = await Order.query()
-      .whereIn('paymentStatus', [PaymentStatus.COMPLETED])
-      .select('total', 'createdAt')
+    const allOrders = await Order.query().where((query) => {
+      query
+        .where('paymentStatus', PaymentStatus.COMPLETED)
+        .orWhere('status', OrderStatus.PAID)
+        .orWhere('status', OrderStatus.DELIVERED)
+    })
 
     // Calculer les totaux par période
-    const total = allOrders.reduce((sum, order) => sum + Number(order.total), 0)
+    const total = allOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
 
     const todayOrders = allOrders.filter((order) => order.createdAt >= today)
-    const todayRevenue = todayOrders.reduce((sum, order) => sum + Number(order.total), 0)
+    const todayRevenue = todayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
 
     const last7DaysOrders = allOrders.filter((order) => order.createdAt >= last7Days)
-    const last7DaysRevenue = last7DaysOrders.reduce((sum, order) => sum + Number(order.total), 0)
+    const last7DaysRevenue = last7DaysOrders.reduce(
+      (sum, order) => sum + parseFloat(String(order.total)),
+      0
+    )
 
     const last30DaysOrders = allOrders.filter((order) => order.createdAt >= last30Days)
-    const last30DaysRevenue = last30DaysOrders.reduce((sum, order) => sum + Number(order.total), 0)
+    const last30DaysRevenue = last30DaysOrders.reduce(
+      (sum, order) => sum + parseFloat(String(order.total)),
+      0
+    )
 
     // Calculer l'évolution jour par jour
     const evolution = this.calculateRevenueEvolution(allOrders, now)
@@ -237,7 +246,9 @@ export default class AdminStatsService {
       const hourOrders = orders.filter(
         (order) => order.createdAt >= hour && order.createdAt < hour.plus({ hours: 1 })
       )
-      todayData.push(hourOrders.reduce((sum, order) => sum + Number(order.total), 0))
+      todayData.push(
+        hourOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+      )
     }
 
     // Évolution pour 7 derniers jours (par jour)
@@ -248,7 +259,9 @@ export default class AdminStatsService {
       const dayOrders = orders.filter(
         (order) => order.createdAt >= day && order.createdAt < day.plus({ days: 1 })
       )
-      last7DaysData.push(dayOrders.reduce((sum, order) => sum + Number(order.total), 0))
+      last7DaysData.push(
+        dayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+      )
     }
 
     // Évolution pour 30 derniers jours (par jour)
@@ -259,7 +272,9 @@ export default class AdminStatsService {
       const dayOrders = orders.filter(
         (order) => order.createdAt >= day && order.createdAt < day.plus({ days: 1 })
       )
-      last30DaysData.push(dayOrders.reduce((sum, order) => sum + Number(order.total), 0))
+      last30DaysData.push(
+        dayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+      )
     }
 
     return {
@@ -356,14 +371,17 @@ export default class AdminStatsService {
     const last30Days = now.minus({ days: 30 }).startOf('day')
 
     // Récupérer toutes les commandes payées
-    const allOrders = await Order.query()
-      .whereIn('paymentStatus', [PaymentStatus.COMPLETED])
-      .select('total', 'createdAt')
+    const allOrders = await Order.query().where((query) => {
+      query
+        .where('paymentStatus', PaymentStatus.COMPLETED)
+        .orWhere('status', OrderStatus.PAID)
+        .orWhere('status', OrderStatus.DELIVERED)
+    })
 
     // Helper pour calculer le panier moyen
     const calculateAverage = (orders: Order[]) => {
       if (orders.length === 0) return 0
-      const total = orders.reduce((sum, order) => sum + Number(order.total), 0)
+      const total = orders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
       return Math.round(total / orders.length)
     }
 
@@ -388,7 +406,12 @@ export default class AdminStatsService {
     const topProducts = await db
       .from('order_items')
       .join('orders', 'order_items.order_id', 'orders.id')
-      .where('orders.payment_status', PaymentStatus.COMPLETED)
+      .where((query) => {
+        query
+          .where('orders.payment_status', PaymentStatus.COMPLETED)
+          .orWhere('orders.status', OrderStatus.PAID)
+          .orWhere('orders.status', OrderStatus.DELIVERED)
+      })
       .select('order_items.product_id as productId')
       .select('order_items.product_name as productName')
       .sum('order_items.quantity as quantitySold')

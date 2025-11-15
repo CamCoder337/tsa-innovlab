@@ -135,6 +135,11 @@ export default function OrdersManagement() {
   };
 
   // Calculate order statistics
+  // Filter paid orders (same logic as backend API)
+  const paidOrders = orders.filter(
+    (o) => o.paymentStatus === 'completed' || o.status === 'paid' || o.status === 'delivered'
+  );
+
   const orderStats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === 'pending').length,
@@ -142,10 +147,11 @@ export default function OrdersManagement() {
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
     cancelled: orders.filter((o) => o.status === 'cancelled').length,
-    totalRevenue: orders.reduce((sum, order) => sum + (order.total || 0), 0),
+    totalRevenue: paidOrders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0),
     averageOrderValue:
-      orders.length > 0
-        ? orders.reduce((sum, order) => sum + (order.total || 0), 0) / orders.length
+      paidOrders.length > 0
+        ? paidOrders.reduce((sum, order) => sum + parseFloat(String(order.total || 0)), 0) /
+          paidOrders.length
         : 0,
   };
 
@@ -315,9 +321,7 @@ export default function OrdersManagement() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium text-sm">
-                          {formatCurrency(order.total || 0)}
-                        </p>
+                        <p className="font-medium text-sm">{formatCurrency(order.total || 0)}</p>
                         <Badge
                           variant="secondary"
                           className={`${getStatusColor(order.status)} text-white`}
@@ -472,152 +476,148 @@ export default function OrdersManagement() {
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.map((order) => (
-                        <TableRow
-                          key={order.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={(e) => {
-                            // Don't navigate if clicking on checkbox or action buttons
-                            if ((e.target as HTMLElement).closest('input, button, [role="menuitem"]')) {
-                              return;
-                            }
-                            navigate(`/app/shop/order/${order.id}`);
-                          }}
-                        >
-                          <TableCell>
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.includes(order.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedOrders([...selectedOrders, order.id]);
-                                } else {
-                                  setSelectedOrders(selectedOrders.filter((id) => id !== order.id));
-                                }
-                              }}
-                              className="h-3 w-3 sm:h-4 sm:w-4"
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium text-xs sm:text-sm">
-                            {order.orderNumber}
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <div>
-                              <p className="font-medium text-xs sm:text-sm truncate">
-                                {order.user?.firstName} {order.user?.lastName}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                {order.user?.email}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell text-xs sm:text-sm">
-                            {formatDate(order.createdAt!)}
-                          </TableCell>
-                          <TableCell className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(order.total || 0)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="secondary"
-                              className={`${getStatusColor(order.status)} text-white text-xs`}
-                            >
-                              {getStatusLabel(order.status, tCommon)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            <Badge
-                              variant={
-                                order.paymentStatus === 'completed' ? 'default' : 'secondary'
+                      <TableRow
+                        key={order.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={(e) => {
+                          // Don't navigate if clicking on checkbox or action buttons
+                          if (
+                            (e.target as HTMLElement).closest('input, button, [role="menuitem"]')
+                          ) {
+                            return;
+                          }
+                          navigate(`/app/shop/order/${order.id}`);
+                        }}
+                      >
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedOrders.includes(order.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedOrders([...selectedOrders, order.id]);
+                              } else {
+                                setSelectedOrders(selectedOrders.filter((id) => id !== order.id));
                               }
-                              className="text-xs"
-                            >
-                              {order.paymentStatus === 'pending' && tCommon('status.pending')}
-                              {order.paymentStatus === 'completed' && tCommon('status.completed')}
-                              {order.paymentStatus === 'failed' && tCommon('status.failed')}
-                              {order.paymentStatus === 'refunded' && tCommon('status.refunded')}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
-                                  <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel className="text-xs sm:text-sm">
-                                  {tCommon('actions.title')}
-                                </DropdownMenuLabel>
-                                <DropdownMenuItem
-                                  onClick={() => fetchOrder(order.id)}
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  {tCommon('actions.viewDetails')}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleStatusUpdate(order.id, OrderStatus.PROCESSING)
-                                  }
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  {tCommon('actions.markProcessing')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleStatusUpdate(order.id, OrderStatus.SHIPPED)}
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <Truck className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  {tCommon('actions.markShipped')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleStatusUpdate(order.id, OrderStatus.DELIVERED)
-                                  }
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                  {tCommon('actions.markDelivered')}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem
-                                      onSelect={(e) => e.preventDefault()}
+                            }}
+                            className="h-3 w-3 sm:h-4 sm:w-4"
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          {order.orderNumber}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div>
+                            <p className="font-medium text-xs sm:text-sm truncate">
+                              {order.user?.firstName} {order.user?.lastName}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                              {order.user?.email}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-xs sm:text-sm">
+                          {formatDate(order.createdAt!)}
+                        </TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          {formatCurrency(order.total || 0)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={`${getStatusColor(order.status)} text-white text-xs`}
+                          >
+                            {getStatusLabel(order.status, tCommon)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge
+                            variant={order.paymentStatus === 'completed' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {order.paymentStatus === 'pending' && tCommon('status.pending')}
+                            {order.paymentStatus === 'completed' && tCommon('status.completed')}
+                            {order.paymentStatus === 'failed' && tCommon('status.failed')}
+                            {order.paymentStatus === 'refunded' && tCommon('status.refunded')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-6 w-6 sm:h-8 sm:w-8 p-0">
+                                <MoreHorizontal className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel className="text-xs sm:text-sm">
+                                {tCommon('actions.title')}
+                              </DropdownMenuLabel>
+                              <DropdownMenuItem
+                                onClick={() => fetchOrder(order.id)}
+                                className="text-xs sm:text-sm"
+                              >
+                                <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                {tCommon('actions.viewDetails')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleStatusUpdate(order.id, OrderStatus.PROCESSING)}
+                                className="text-xs sm:text-sm"
+                              >
+                                <Edit className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                {tCommon('actions.markProcessing')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleStatusUpdate(order.id, OrderStatus.SHIPPED)}
+                                className="text-xs sm:text-sm"
+                              >
+                                <Truck className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                {tCommon('actions.markShipped')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleStatusUpdate(order.id, OrderStatus.DELIVERED)}
+                                className="text-xs sm:text-sm"
+                              >
+                                <CheckCircle className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                {tCommon('actions.markDelivered')}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="text-xs sm:text-sm"
+                                  >
+                                    <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                                    {tCommon('actions.cancelOrder')}
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-base sm:text-lg">
+                                      {tAdmin('orders.dialog.cancelTitle')}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-xs sm:text-sm">
+                                      {tAdmin('orders.dialog.cancelDescription')}
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="text-xs sm:text-sm">
+                                      {tAdmin('orders.dialog.cancel')}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleCancelOrder(order.id)}
                                       className="text-xs sm:text-sm"
                                     >
-                                      <Trash2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                                      {tCommon('actions.cancelOrder')}
-                                    </DropdownMenuItem>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle className="text-base sm:text-lg">
-                                        {tAdmin('orders.dialog.cancelTitle')}
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription className="text-xs sm:text-sm">
-                                        {tAdmin('orders.dialog.cancelDescription')}
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel className="text-xs sm:text-sm">
-                                        {tAdmin('orders.dialog.cancel')}
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleCancelOrder(order.id)}
-                                        className="text-xs sm:text-sm"
-                                      >
-                                        {tAdmin('orders.dialog.confirmCancel')}
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
+                                      {tAdmin('orders.dialog.confirmCancel')}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
                     ))}
                   </TableBody>
                 </Table>

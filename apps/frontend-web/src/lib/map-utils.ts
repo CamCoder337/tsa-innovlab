@@ -24,12 +24,12 @@ export const calculateDistance = async (
     const googleMapsService = new GoogleMapsService();
     const distanceResult = await googleMapsService.calculateDistanceWithDirections(
       {
-        lat: origin.latitude,
-        lng: origin.longitude,
+        lat: Number(origin.latitude),
+        lng: Number(origin.longitude),
       },
       {
-        lat: destination.latitude,
-        lng: destination.longitude,
+        lat: Number(destination.latitude),
+        lng: Number(destination.longitude),
       }
     );
 
@@ -37,12 +37,12 @@ export const calculateDistance = async (
       // Fallback to straight-line distance if directions fail
       const straightLineDistance = await googleMapsService.calculateDistance(
         {
-          lat: origin.latitude,
-          lng: origin.longitude,
+          lat: Number(origin.latitude),
+          lng: Number(origin.longitude),
         },
         {
-          lat: destination.latitude,
-          lng: destination.longitude,
+          lat: Number(destination.latitude),
+          lng: Number(destination.longitude),
         }
       );
 
@@ -53,11 +53,9 @@ export const calculateDistance = async (
 
       // Use straight-line distance with a 1.3 multiplier for road distance estimation
       const estimatedDistance = Math.round(straightLineDistance * 1.3);
-      console.log(estimatedDistance);
 
       return estimatedDistance;
     } else {
-      console.log(distanceResult);
       return distanceResult.distance;
     }
   } catch (error) {

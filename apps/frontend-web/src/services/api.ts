@@ -45,8 +45,8 @@ function createAxiosInstance(): AxiosInstance {
         originalRequest._retry = true;
 
         // Tenter de rafraîchir le token si l'utilisateur est actif
-        if (tokenManager.timeSinceLastActivity < 2 * 60 * 1000) {
-          // 2 minutes
+        if (tokenManager.isUserActive()) {
+          // 15 minutes - consistent with token manager
           const refreshSuccess = await tokenManager.manualRefresh();
 
           if (refreshSuccess) {
@@ -60,7 +60,7 @@ function createAxiosInstance(): AxiosInstance {
         }
 
         // Si le refresh échoue ou l'utilisateur est inactif, déconnecter
-        useAuthStore.getState().logout();
+        // useAuthStore.getState().logout();
       }
 
       return Promise.reject(error);

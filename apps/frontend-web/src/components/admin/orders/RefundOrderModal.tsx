@@ -72,8 +72,8 @@ export const RefundOrderModal = ({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Cette action remboursera le montant total de{' '}
-              <strong>{formatCurrency(Number(order.total) || 0)}</strong>{' '}
-              et annulera la commande. Le stock des produits sera restitué.
+              <strong>{formatCurrency(Number(order.total) || 0)}</strong> et annulera la commande.
+              Le stock des produits sera restitué.
             </AlertDescription>
           </Alert>
 
@@ -90,9 +90,7 @@ export const RefundOrderModal = ({
               className={error ? 'border-red-500' : ''}
             />
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <p className="text-xs text-muted-foreground">
-              {reason.length}/1000 caractères
-            </p>
+            <p className="text-xs text-muted-foreground">{reason.length}/1000 caractères</p>
           </div>
 
           <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
@@ -110,9 +108,7 @@ export const RefundOrderModal = ({
               </div>
               <div>
                 <p className="text-muted-foreground">Montant</p>
-                <p className="font-medium">
-                  {formatCurrency(Number(order.total) || 0)}
-                </p>
+                <p className="font-medium">{formatCurrency(Number(order.total) || 0)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Articles</p>

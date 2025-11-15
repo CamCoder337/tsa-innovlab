@@ -517,10 +517,14 @@ export class GoogleMapsService {
   updateMarkerPosition(markerId: string, position: { lat: number; lng: number }): void {
     const marker = this.markers.get(markerId);
     if (marker) {
-      if (marker instanceof google.maps.marker.AdvancedMarkerElement) {
+      // Check if Google Maps API is loaded and AdvancedMarkerElement is available
+      if (
+        window.google?.maps?.marker?.AdvancedMarkerElement &&
+        marker instanceof google.maps.marker.AdvancedMarkerElement
+      ) {
         marker.position = position;
-      } else {
-        marker.setPosition(position);
+      } else if ('setPosition' in marker) {
+        (marker as google.maps.Marker).setPosition(position);
       }
     }
   }
@@ -528,10 +532,14 @@ export class GoogleMapsService {
   removeMarker(markerId: string): void {
     const marker = this.markers.get(markerId);
     if (marker) {
-      if (marker instanceof google.maps.marker.AdvancedMarkerElement) {
+      // Check if Google Maps API is loaded and AdvancedMarkerElement is available
+      if (
+        window.google?.maps?.marker?.AdvancedMarkerElement &&
+        marker instanceof google.maps.marker.AdvancedMarkerElement
+      ) {
         marker.map = null;
       } else {
-        marker.setMap(null);
+        (marker as google.maps.Marker).setMap(null);
       }
       this.markers.delete(markerId);
     }
@@ -539,10 +547,14 @@ export class GoogleMapsService {
 
   clearMarkers(): void {
     this.markers.forEach((marker) => {
-      if (marker instanceof google.maps.marker.AdvancedMarkerElement) {
+      // Check if Google Maps API is loaded and AdvancedMarkerElement is available
+      if (
+        window.google?.maps?.marker?.AdvancedMarkerElement &&
+        marker instanceof google.maps.marker.AdvancedMarkerElement
+      ) {
         marker.map = null;
-      } else {
-        marker.setMap(null);
+      } else if ('setMap' in marker) {
+        (marker as google.maps.Marker).setMap(null);
       }
     });
     this.markers.clear();
@@ -1147,10 +1159,14 @@ export class GoogleMapsService {
   destroy(): void {
     // Clean up markers
     this.markers.forEach((marker) => {
-      if (marker instanceof google.maps.marker.AdvancedMarkerElement) {
+      // Check if Google Maps API is loaded and AdvancedMarkerElement is available
+      if (
+        window.google?.maps?.marker?.AdvancedMarkerElement &&
+        marker instanceof google.maps.marker.AdvancedMarkerElement
+      ) {
         marker.map = null;
-      } else {
-        marker.setMap(null);
+      } else if ('setMap' in marker) {
+        (marker as google.maps.Marker).setMap(null);
       }
     });
     this.markers.clear();

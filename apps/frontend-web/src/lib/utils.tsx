@@ -19,14 +19,14 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(date: Date) {
-    return new Intl.DateTimeFormat('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
+  return new Intl.DateTimeFormat('fr-FR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
 
 export function formatPercentage(value: number): string {
   return `${value.toFixed(1)}%`;
@@ -45,7 +45,7 @@ export function getPaymentMethodLabel(method: PaymentMethod, tPayment: (key: str
     default:
       return method;
   }
-};
+}
 
 export function getStatusColor(status: MissionStatus | OrderStatus | PaymentStatus) {
   switch (status) {

@@ -43,7 +43,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         }
 
         if (response.data) {
-          console.log(response.data)
+          console.log(response.data);
           setEvents(response.data.updates.data);
         }
       } catch {
@@ -81,7 +81,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
 
       return tMissions('timeline.statusChangeTitle', {
         oldStatus: oldStatusTranslated,
-        newStatus: newStatusTranslated
+        newStatus: newStatusTranslated,
       });
     }
 
@@ -166,7 +166,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                     )}
                     {event.transporteur && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {tCommon('by')} {event.transporteur.firstName + ' ' + event.transporteur.lastName}
+                        {tCommon('by')}{' '}
+                        {event.transporteur.firstName + ' ' + event.transporteur.lastName}
                       </p>
                     )}
                   </div>

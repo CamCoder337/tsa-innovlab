@@ -133,6 +133,32 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     }
   }, [currentMessages]);
 
+  // Auto-scroll to bottom when conversation opens
+  useEffect(() => {
+    if (messagesEndRef.current && conversation.id) {
+      // Use setTimeout to ensure DOM is updated after conversation change
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [conversation.id]);
+
+  // Auto-scroll to bottom when typing indicators appear/disappear
+  useEffect(() => {
+    if (messagesEndRef.current && typingUsers.length > 0) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [typingUsers.length]);
+
+  // Auto-scroll to bottom when bot starts/stops replying
+  useEffect(() => {
+    if (messagesEndRef.current && isReplying && isChatbotConversation) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isReplying, isChatbotConversation]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
@@ -197,7 +223,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
     if (regularConv.otherParticipant?.role) {
       return (
         regularConv.otherParticipant?.role?.charAt(0).toUpperCase() +
-        regularConv.otherParticipant?.role?.slice(1) || ''
+          regularConv.otherParticipant?.role?.slice(1) || ''
       );
     }
   };
@@ -314,110 +340,110 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
       {/* Messages - Scrollable Area */}
       <div className="flex-1 overflow-y-scroll min-h-0">
         <div className="flex flex-col justify-end min-h-full py-1 sm:py-2 gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4">
-        {isLoading && !isChatbotConversation ? (
-          <div className="flex items-center justify-center py-6 sm:py-8 lg:py-12 h-full">
-            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-500 text-xs sm:text-sm lg:text-base">
-              {tChat('messages.loadingMessages')}
-            </span>
-          </div>
-        ) : currentMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-6 sm:py-8 lg:py-12 text-gray-500">
-            {isChatbotConversation ? (
-              <Bot className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-purple-300" />
-            ) : (
-              <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-gray-300" />
-            )}
-            <p className="text-xs sm:text-sm lg:text-base">
-              {isChatbotConversation
-                ? tChat('messages.noChatbotMessages', 'Commencez une conversation avec le bot')
-                : tChat('messages.noMessagesInConversation')}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {isChatbotConversation
-                ? tChat('messages.askBotQuestion', 'Posez votre première question')
-                : tChat('messages.sendFirstMessage')}
-            </p>
-          </div>
-        ) : (
-          <>
-            {currentMessages.map((message, index) => {
-              const isCurrentUser = message.senderId === user?.id;
-              const isBotMessage = message.senderId === 'bot';
-              const showAvatar =
-                !isCurrentUser &&
-                (index === 0 || currentMessages[index - 1]?.senderId !== message.senderId);
-              const chatbotMsg = message as ChatbotMessage;
-              const hasSuggestions =
-                isBotMessage && chatbotMsg.suggestions && chatbotMsg.suggestions.length > 0;
+          {isLoading && !isChatbotConversation ? (
+            <div className="flex items-center justify-center py-6 sm:py-8 lg:py-12 h-full">
+              <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-gray-500 text-xs sm:text-sm lg:text-base">
+                {tChat('messages.loadingMessages')}
+              </span>
+            </div>
+          ) : currentMessages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 sm:py-8 lg:py-12 text-gray-500">
+              {isChatbotConversation ? (
+                <Bot className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-purple-300" />
+              ) : (
+                <MessageCircle className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 mb-2 sm:mb-3 lg:mb-4 text-gray-300" />
+              )}
+              <p className="text-xs sm:text-sm lg:text-base">
+                {isChatbotConversation
+                  ? tChat('messages.noChatbotMessages', 'Commencez une conversation avec le bot')
+                  : tChat('messages.noMessagesInConversation')}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {isChatbotConversation
+                  ? tChat('messages.askBotQuestion', 'Posez votre première question')
+                  : tChat('messages.sendFirstMessage')}
+              </p>
+            </div>
+          ) : (
+            <>
+              {currentMessages.map((message, index) => {
+                const isCurrentUser = message.senderId === user?.id;
+                const isBotMessage = message.senderId === 'bot';
+                const showAvatar =
+                  !isCurrentUser &&
+                  (index === 0 || currentMessages[index - 1]?.senderId !== message.senderId);
+                const chatbotMsg = message as ChatbotMessage;
+                const hasSuggestions =
+                  isBotMessage && chatbotMsg.suggestions && chatbotMsg.suggestions.length > 0;
 
-              return (
-                <div key={message.id} className="flex flex-col gap-1 sm:gap-2">
-                  <MessageBubble
-                    message={message}
-                    isCurrentUser={isCurrentUser}
-                    isBotMessage={isBotMessage}
-                    showAvatar={showAvatar}
-                    otherParticipant={
-                      !isChatbotConversation
-                        ? (conversation as ConversationListItem).otherParticipant
-                        : undefined
-                    }
-                  />
-                  {hasSuggestions && (
-                    <Suggestions
-                      suggestions={chatbotMsg.suggestions!}
-                      onSuggestionClick={(suggestion) => {
-                        setNewMessage(suggestion);
-                      }}
+                return (
+                  <div key={message.id} className="flex flex-col gap-1 sm:gap-2">
+                    <MessageBubble
+                      message={message}
+                      isCurrentUser={isCurrentUser}
+                      isBotMessage={isBotMessage}
+                      showAvatar={showAvatar}
+                      otherParticipant={
+                        !isChatbotConversation
+                          ? (conversation as ConversationListItem).otherParticipant
+                          : undefined
+                      }
                     />
-                  )}
-                </div>
-              );
-            })}
+                    {hasSuggestions && (
+                      <Suggestions
+                        suggestions={chatbotMsg.suggestions!}
+                        onSuggestionClick={(suggestion) => {
+                          setNewMessage(suggestion);
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
-            {/* Typing indicators */}
-            {typingUsers.length > 0 && (
-              <div className="flex items-center gap-2 text-xs text-gray-500 px-1 sm:px-2">
-                <div className="flex gap-1">
-                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.1s' }}
-                  ></div>
-                  <div
-                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.2s' }}
-                  ></div>
+              {/* Typing indicators */}
+              {typingUsers.length > 0 && (
+                <div className="flex items-center gap-2 text-xs text-gray-500 px-1 sm:px-2">
+                  <div className="flex gap-1">
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.1s' }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
+                  </div>
+                  <span className="text-xs">
+                    {typingUsers.length === 1
+                      ? tChat('messages.isTyping', { name: typingUsers[0]?.firstName })
+                      : tChat('messages.peopleTyping', { count: typingUsers.length })}
+                  </span>
                 </div>
-                <span className="text-xs">
-                  {typingUsers.length === 1
-                    ? tChat('messages.isTyping', { name: typingUsers[0]?.firstName })
-                    : tChat('messages.peopleTyping', { count: typingUsers.length })}
-                </span>
-              </div>
-            )}
+              )}
 
-            {/* Bot thinking indicator */}
-            {isReplying && isChatbotConversation && (
-              <div className="flex items-center gap-2 text-purple-600 px-1 sm:px-2">
-                <div className="flex gap-1">
-                  <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.1s' }}
-                  ></div>
-                  <div
-                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
-                    style={{ animationDelay: '0.2s' }}
-                  ></div>
+              {/* Bot thinking indicator */}
+              {isReplying && isChatbotConversation && (
+                <div className="flex items-center gap-2 text-purple-600 px-1 sm:px-2">
+                  <div className="flex gap-1">
+                    <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.1s' }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-purple-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
+                  </div>
+                  <span className="text-xs">Le bot réfléchit...</span>
                 </div>
-                <span className="text-xs">Le bot réfléchit...</span>
-              </div>
-            )}
-          </>
-        )}
-        <div ref={messagesEndRef} />
+              )}
+            </>
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
@@ -431,10 +457,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack, on
               isChatbotConversation
                 ? tChat('placeholders.sendMessageToBot', 'Posez votre question au bot...')
                 : tChat('placeholders.sendMessageTo', {
-                  name:
-                    (conversation as ConversationListItem).otherParticipant?.firstName ||
-                    tChat('user'),
-                })
+                    name:
+                      (conversation as ConversationListItem).otherParticipant?.firstName ||
+                      tChat('user'),
+                  })
             }
             className="flex-1 text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10"
             disabled={isLoading && !isChatbotConversation}
@@ -571,12 +597,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         className={`max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg min-w-16 sm:min-w-20 lg:min-w-24 ${isCurrentUser ? 'order-1' : ''}`}
       >
         <div
-          className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${isCurrentUser
-            ? 'bg-tsa-blue text-white rounded-br-sm sm:rounded-br-md'
-            : isBotMessage
-              ? 'bg-purple-100 text-purple-900 rounded-bl-sm sm:rounded-bl-md'
-              : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
-            }`}
+          className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${
+            isCurrentUser
+              ? 'bg-tsa-blue text-white rounded-br-sm sm:rounded-br-md'
+              : isBotMessage
+                ? 'bg-purple-100 text-purple-900 rounded-bl-sm sm:rounded-bl-md'
+                : 'bg-tsa-gray/25 text-gray-900 rounded-bl-sm sm:rounded-bl-md'
+          }`}
         >
           <div className="text-xs sm:text-sm lg:text-base whitespace-pre-wrap break-words leading-relaxed">
             {message.content}

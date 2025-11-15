@@ -2,17 +2,14 @@ import React from 'react';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import {
-  VehicleType,
-  VehicleStatus,
-  VehicleTypeLabels,
-  VehicleStatusLabels,
-} from '../../types/vehicle.types';
-import type {
-  CreateVehicleRequest,
-  UpdateVehicleRequest,
-  Vehicle,
-} from '../../types/vehicle.types';
-import { useFormsTranslation } from '@/hooks/useTranslation';
+  VehicleTypes,
+  VehicleStatuses,
+  type VehicleType,
+  type CreateVehicleRequest,
+  type UpdateVehicleRequest,
+  type Vehicle,
+} from '@/types/vehicle.types';
+import { useFormsTranslation, useVehiclesTranslation } from '@/hooks/useTranslation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -31,7 +28,7 @@ const createVehicleValidationSchema = (
 ) =>
   Yup.object({
     type: Yup.string()
-      .oneOf(Object.values(VehicleType), tForms('validation.role'))
+      .oneOf(Object.values(VehicleTypes), tForms('validation.role'))
       .required(tForms('validation.required')),
     registration: Yup.string()
       .min(3, tForms('validation.minLength', { min: 3 }))
@@ -42,7 +39,7 @@ const createVehicleValidationSchema = (
       .max(500, tForms('validation.maxLength', { max: 500 }))
       .nullable(),
     status: Yup.string()
-      .oneOf(Object.values(VehicleStatus), tForms('validation.role'))
+      .oneOf(Object.values(VehicleStatuses), tForms('validation.role'))
       .required(tForms('validation.required')),
   });
 
@@ -53,13 +50,14 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
   isLoading = false,
 }) => {
   const { t: tForms } = useFormsTranslation();
+  const { t: tVehicles } = useVehiclesTranslation();
   const isEditing = !!vehicle;
 
   const initialValues: CreateVehicleRequest = {
     type: vehicle?.type as VehicleType,
     registration: vehicle?.registration || '',
     description: vehicle?.description || '',
-    status: vehicle?.status || VehicleStatus.AVAILABLE,
+    status: vehicle?.status || 'available',
   };
 
   const handleSubmit = async (values: CreateVehicleRequest | UpdateVehicleRequest) => {
@@ -91,9 +89,9 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                 <SelectValue placeholder={tForms('messages.selectVehicleType')} />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(VehicleType).map((type) => (
+                {Object.values(VehicleTypes).map((type) => (
                   <SelectItem key={type} value={type}>
-                    {VehicleTypeLabels[type]}
+                    {tVehicles('types.' + type)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -152,9 +150,9 @@ export const CreateVehicleForm: React.FC<CreateVehicleFormProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.values(VehicleStatus).map((status) => (
+                {Object.values(VehicleStatuses).map((status) => (
                   <SelectItem key={status} value={status}>
-                    {VehicleStatusLabels[status]}
+                    {tVehicles('status.' + status)}
                   </SelectItem>
                 ))}
               </SelectContent>
