@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from app.schemas.chatbot import ChatbotQueryRequest, ChatbotResponse
-from app.services.intelligent_chatbot_service import get_intelligent_chatbot, IntelligentChatbotService
+from app.services.chatbot_function_calling_service import get_chatbot_function_calling
 from app.core.dependencies import get_user_from_header
 from app.core.metrics import chatbot_queries_total, chatbot_query_duration
 
@@ -209,6 +209,7 @@ async def intelligent_chatbot_metrics():
     """
     try:
         from app.services.chatbot_function_calling_service import get_chatbot_function_calling
+        from datetime import datetime
         
         chatbot_fc = get_chatbot_function_calling()
         metrics = chatbot_fc.get_metrics()
@@ -224,117 +225,4 @@ async def intelligent_chatbot_metrics():
             "success": False,
             "error": str(e)
         }
-
-
-@router.get("/metrics")
-async def intelligent_chatbot_metrics():
-    """Get chatbot metrics and statistics"""
-    try:
-        from app.services.chatbot_metrics import get_metrics
-        metrics = get_metrics()
-        stats = await metrics.get_stats()
-        
-        return {
-            "success": True,
-            "stats": stats
-        }
-    except Exception as e:
-        logger.error(f"Error getting metrics: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@router.post("/query/stream")
-async def intelligent_chatbot_query_stream(
-    request: ChatbotQueryRequest,
-    chatbot: IntelligentChatbotService = Depends(get_intelligent_chatbot)
-):
-    """
-    🚀 Chatbot TSA - Streaming SSE (Server-Sent Events)
-    
-    Avantages du streaming :
-    - Première réponse en < 500ms (vs 2s en mode normal)
-    - Expérience utilisateur fluide (comme ChatGPT)
-    - Réduction de la latence perçue
-    - Feedback immédiat à l'utilisateur
-    
-    Format SSE :
-    ```
-    data: {"type": "start", "message": ""}
-    data: {"type": "chunk", "content": "💰 Pour"}
-    data: {"type": "chunk", "content": " un transport"}
-    data: {"type": "chunk", "content": " Douala → Yaoundé..."}
-    data: {"type": "done", "suggestions": [...]}
-    ```
-    
-    Usage frontend :
-    ```javascript
-    const eventSource = new EventSource('/api/ai/chatbot/query/stream');
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'chunk') {
-        appendToMessage(data.content);
-      }
-    };
-    ```
-    """
-    
-    async def event_generator():
-        """Generate SSE events"""
-        start_time = time.time()
-        
-        try:
-            user_id = request.user_id
-            user_role = request.user_role
-            
-            logger.info(f"[Chatbot Stream] Query from {user_id} ({user_role}): {request.message[:50]}...")
-            
-            # Send start event
-            yield f"data: {json.dumps({'type': 'start', 'timestamp': time.time()})}\n\n"
-            
-            # Process message with streaming
-            async for chunk in chatbot.process_message_stream(
-                message=request.message,
-                user_id=user_id,
-                user_role=user_role,
-                user_token=request.user_token,
-                conversation_id=request.conversation_id,
-                context=request.context
-            ):
-                if chunk.get('type') == 'chunk':
-                    # Stream text chunks
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                elif chunk.get('type') == 'done':
-                    # Final event with metadata
-                    processing_time = (time.time() - start_time) * 1000
-                    chunk['processing_time_ms'] = round(processing_time, 2)
-                    yield f"data: {json.dumps(chunk)}\n\n"
-                    
-                    # Track metrics
-                    chatbot_queries_total.labels(version='unified-stream', status='success').inc()
-                    chatbot_query_duration.observe(time.time() - start_time)
-            
-        except Exception as e:
-            logger.error(f"[Chatbot Stream] Error: {e}", exc_info=True)
-            error_event = {
-                'type': 'error',
-                'message': 'Désolé, une erreur est survenue. Veuillez réessayer.',
-                'requires_human': True
-            }
-            yield f"data: {json.dumps(error_event)}\n\n"
-            chatbot_queries_total.labels(version='unified-stream', status='error').inc()
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"  # Disable nginx buffering
-        }
-    )
-
-
 

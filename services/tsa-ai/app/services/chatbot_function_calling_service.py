@@ -54,16 +54,16 @@ class ChatbotFunctionCallingService:
     
     def _register_functions(self) -> List[Dict[str, Any]]:
         """
-        Register functions that LLM can call
-        OpenAI-compatible function calling format
+        Register READ-ONLY functions that LLM can call
         
-        15 fonctions critiques couvrant 80% des cas d'usage
+        ⚠️ IMPORTANT: Toutes les fonctions sont READ-ONLY
+        Aucune création, modification ou suppression de données
         """
         return [
-            # === PRODUITS & CATALOGUE ===
+            # === PRODUITS & CATALOGUE (READ-ONLY) ===
             {
                 "name": "search_products",
-                "description": "Rechercher des PIÈCES DÉTACHÉES (amortisseurs, freins, moteurs, etc.) dans le catalogue. Utilise cette fonction pour vérifier la disponibilité, le stock, les PRIX DES PRODUITS, ou chercher des pièces spécifiques. NE PAS utiliser pour calculer un tarif de transport.",
+                "description": "Rechercher des PIÈCES DÉTACHÉES dans le catalogue (LECTURE SEULE). Utilise cette fonction pour vérifier la disponibilité, le stock, les prix des produits.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -77,14 +77,14 @@ class ChatbotFunctionCallingService:
                         },
                         "check_stock_only": {
                             "type": "boolean",
-                            "description": "true si l'utilisateur veut juste savoir si c'est en stock (pas les détails)"
+                            "description": "true si l'utilisateur veut juste savoir si c'est en stock"
                         }
                     }
                 }
             },
             {
                 "name": "get_product_details",
-                "description": "Obtenir les détails complets d'une PIÈCE DÉTACHÉE spécifique (prix du produit, stock, description, specs). Utilise cette fonction quand l'utilisateur demande le prix d'un produit/pièce.",
+                "description": "Obtenir les détails complets d'un produit (LECTURE SEULE): prix, stock, description, specs.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -97,37 +97,18 @@ class ChatbotFunctionCallingService:
                 }
             },
             
-            # === PANIER & COMMANDES ===
+            # === PANIER & COMMANDES (READ-ONLY) ===
             {
                 "name": "get_cart",
-                "description": "Voir le contenu du panier actuel de l'utilisateur.",
+                "description": "Voir le contenu du panier actuel (LECTURE SEULE). Ne peut PAS ajouter/modifier/supprimer des articles.",
                 "parameters": {
                     "type": "object",
                     "properties": {}
                 }
             },
             {
-                "name": "add_to_cart",
-                "description": "Ajouter un produit au panier.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "product_id": {
-                            "type": "string",
-                            "description": "ID du produit à ajouter"
-                        },
-                        "quantity": {
-                            "type": "integer",
-                            "description": "Quantité à ajouter",
-                            "default": 1
-                        }
-                    },
-                    "required": ["product_id"]
-                }
-            },
-            {
                 "name": "get_my_orders",
-                "description": "Récupérer les commandes de l'utilisateur avec leur statut.",
+                "description": "Récupérer les commandes de l'utilisateur (LECTURE SEULE).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -146,7 +127,7 @@ class ChatbotFunctionCallingService:
             },
             {
                 "name": "get_order_details",
-                "description": "Obtenir les détails complets d'une commande spécifique.",
+                "description": "Obtenir les détails complets d'une commande (LECTURE SEULE).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -159,10 +140,10 @@ class ChatbotFunctionCallingService:
                 }
             },
             
-            # === MISSIONS (TRANSPORT) ===
+            # === MISSIONS (TRANSPORT - READ-ONLY) ===
             {
                 "name": "get_user_missions",
-                "description": "Récupérer les missions de l'utilisateur (créées si affréteur, assignées si transporteur).",
+                "description": "Récupérer MES missions (LECTURE SEULE). Créées si affréteur, assignées si transporteur.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -181,7 +162,7 @@ class ChatbotFunctionCallingService:
             },
             {
                 "name": "get_available_missions",
-                "description": "Voir les missions disponibles pour les transporteurs (missions publiées non assignées).",
+                "description": "Voir les missions disponibles pour transporteurs (LECTURE SEULE). Missions publiées non assignées.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -195,7 +176,7 @@ class ChatbotFunctionCallingService:
             },
             {
                 "name": "track_shipment",
-                "description": "Suivre un colis ou une mission par son ID. Retourne la position actuelle, le statut, et l'ETA.",
+                "description": "Obtenir le lien vers le tracking en temps réel d'un colis/mission (NAVIGATION). Redirige vers la page de tracking du frontend.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -209,7 +190,7 @@ class ChatbotFunctionCallingService:
             },
             {
                 "name": "calculate_price",
-                "description": "Calculer le TARIF D'UN TRANSPORT/LIVRAISON entre deux villes (ex: Douala → Yaoundé). Utilise l'IA de pricing dynamique. NE PAS utiliser pour le prix des produits/pièces détachées.",
+                "description": "Calculer le TARIF D'UN TRANSPORT entre deux villes (CALCUL SEUL, pas de création de mission). Utilise l'IA de pricing dynamique.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -230,10 +211,10 @@ class ChatbotFunctionCallingService:
                 }
             },
             
-            # === VÉHICULES (TRANSPORTEUR) ===
+            # === VÉHICULES (TRANSPORTEUR - READ-ONLY) ===
             {
                 "name": "get_my_vehicles",
-                "description": "Récupérer les véhicules du transporteur avec leur statut (disponible, en mission, maintenance).",
+                "description": "Récupérer MES véhicules avec leur statut (LECTURE SEULE).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -246,10 +227,10 @@ class ChatbotFunctionCallingService:
                 }
             },
             
-            # === MESSAGES & NOTIFICATIONS ===
+            # === MESSAGES & NOTIFICATIONS (READ-ONLY) ===
             {
                 "name": "get_unread_messages",
-                "description": "Récupérer le nombre de messages non lus et les conversations récentes.",
+                "description": "Récupérer le nombre de messages non lus (LECTURE SEULE).",
                 "parameters": {
                     "type": "object",
                     "properties": {}
@@ -257,7 +238,7 @@ class ChatbotFunctionCallingService:
             },
             {
                 "name": "get_notifications",
-                "description": "Récupérer les notifications récentes de l'utilisateur.",
+                "description": "Récupérer les notifications récentes (LECTURE SEULE).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -275,18 +256,10 @@ class ChatbotFunctionCallingService:
                 }
             },
             
-            # === COMPTE & PROFIL ===
+            # === COMPTE & PROFIL (READ-ONLY) ===
             {
                 "name": "get_my_profile",
-                "description": "Récupérer les informations du profil utilisateur (nom, email, rôle, stats).",
-                "parameters": {
-                    "type": "object",
-                    "properties": {}
-                }
-            },
-            {
-                "name": "get_my_addresses",
-                "description": "Récupérer les adresses enregistrées de l'utilisateur.",
+                "description": "Récupérer les informations du profil utilisateur (LECTURE SEULE): nom, email, rôle, stats.",
                 "parameters": {
                     "type": "object",
                     "properties": {}
@@ -296,7 +269,7 @@ class ChatbotFunctionCallingService:
             # === CLARIFICATION ===
             {
                 "name": "request_clarification",
-                "description": "Demander une clarification à l'utilisateur quand la requête est AMBIGUË. Utilise cette fonction quand tu n'es pas sûr de ce que l'utilisateur veut (ex: 'prix' peut signifier prix de produit OU tarif de transport).",
+                "description": "Demander une clarification à l'utilisateur quand la requête est AMBIGUË.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -324,55 +297,51 @@ class ChatbotFunctionCallingService:
             "search_products": self._handle_search_products,
             "get_product_details": self._handle_get_product_details,
             
-            # Panier & Commandes
+            # Panier & Commandes (READ-ONLY)
             "get_cart": self._handle_get_cart,
-            "add_to_cart": self._handle_add_to_cart,
             "get_my_orders": self._handle_get_my_orders,
             "get_order_details": self._handle_get_order_details,
             
-            # Missions
+            # Missions (READ-ONLY)
             "get_user_missions": self._handle_get_user_missions,
             "get_available_missions": self._handle_get_available_missions,
             "track_shipment": self._handle_track_shipment,
             "calculate_price": self._handle_calculate_price,
             
-            # Véhicules
+            # Véhicules (READ-ONLY)
             "get_my_vehicles": self._handle_get_my_vehicles,
             
-            # Messages & Notifications
+            # Messages & Notifications (READ-ONLY)
             "get_unread_messages": self._handle_get_unread_messages,
             "get_notifications": self._handle_get_notifications,
             
-            # Profil
+            # Profil (READ-ONLY)
             "get_my_profile": self._handle_get_my_profile,
-            "get_my_addresses": self._handle_get_my_addresses,
             
             # Clarification
             "request_clarification": self._handle_request_clarification,
         }
     
     def _get_function_permissions(self) -> Dict[str, List[str]]:
-        """Define which roles can call which functions"""
+        """Define which roles can call which READ-ONLY functions"""
         return {
-            # Tous les rôles
+            # Tous les rôles (READ-ONLY)
             "search_products": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_product_details": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_cart": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
-            "add_to_cart": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_my_orders": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_order_details": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_my_profile": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
-            "get_my_addresses": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_unread_messages": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "get_notifications": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "track_shipment": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             "request_clarification": ["CLIENT", "TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
             
-            # Missions - Affréteur & Admin
+            # Missions - Affréteur & Admin (READ-ONLY)
             "get_user_missions": ["TRANSPORTEUR", "AFFRETEUR", "ADMIN"],
-            "calculate_price": ["AFFRETEUR", "ADMIN"],
+            "calculate_price": ["AFFRETEUR", "TRANSPORTEUR", "ADMIN"],
             
-            # Missions - Transporteur & Admin
+            # Missions - Transporteur & Admin (READ-ONLY)
             "get_available_missions": ["TRANSPORTEUR", "ADMIN"],
             "get_my_vehicles": ["TRANSPORTEUR", "ADMIN"],
         }
@@ -602,12 +571,19 @@ class ChatbotFunctionCallingService:
         2. LLM decides if it needs to call functions
         3. Backend executes functions
         4. LLM generates natural response with results
+        
+        SECURITY: conversation_id is FORCED to user_id to prevent
+        users from accessing other users' conversation history
         """
         import time
         start_time = time.time()
         
         user_role_normalized = user_role.upper() if user_role else "CLIENT"
-        conv_id = conversation_id or user_id
+        
+        # 🔒 SECURITY FIX: Force conversation_id = user_id
+        # This prevents malicious users from accessing other users' conversation history
+        # by passing arbitrary conversation_id values
+        conv_id = user_id  # ← ALWAYS use user_id, ignore client input
         
         try:
             # Check rate limit
@@ -744,6 +720,11 @@ class ChatbotFunctionCallingService:
                         llm_message["function_call"]["name"],
                         function_result
                     )
+                else:
+                    # Generate contextual hint even without function call
+                    navigation_hint = self._get_contextual_navigation_hint(
+                        message, final_message, user_role_normalized
+                    )
                 
                 processing_time_ms = (time.time() - start_time) * 1000
                 
@@ -868,49 +849,68 @@ CONTEXTE UTILISATEUR:
         
         role_info = role_context.get(user_role, role_context["CLIENT"])
         
-        return f"""Tu es l'assistant virtuel de TSA Logistique au Cameroun.
+        return f"""Tu es l'assistant virtuel INFORMATIF de TSA Logistique au Cameroun.
 
-TON RÔLE:
-- Aider les utilisateurs avec le transport et les pièces détachées
+🎯 TON RÔLE: GUIDE et CONSEILLER (PAS exécutant)
+- Consulter des informations pour l'utilisateur
+- Guider vers les bonnes pages de l'interface
+- Expliquer comment faire les actions
 - Parler naturellement comme un humain camerounais sympathique
-- Utiliser les fonctions disponibles pour récupérer des données réelles
 {page_context}
 {role_info}
 
-FONCTIONS DISPONIBLES (15 fonctions):
-Tu as accès à des fonctions pour récupérer des données réelles:
+⚠️ IMPORTANT - TU ES EN MODE LECTURE SEULE:
+❌ TU NE PEUX PAS créer, modifier ou supprimer quoi que ce soit
+❌ TU NE PEUX PAS ajouter au panier, passer de commandes, créer de missions
+✅ TU PEUX SEULEMENT consulter des informations et guider l'utilisateur
 
-**Produits & Catalogue:**
+FONCTIONS DISPONIBLES (READ-ONLY):
+Tu as accès à des fonctions pour CONSULTER des données réelles:
+
+**Produits & Catalogue (LECTURE SEULE):**
 - search_products(): Chercher des PIÈCES DÉTACHÉES, vérifier stock, voir PRIX DES PRODUITS
 - get_product_details(): Détails et PRIX d'une pièce spécifique
 
-**Panier & Commandes:**
-- get_cart(): Voir le panier
-- add_to_cart(): Ajouter au panier
+**Panier & Commandes (LECTURE SEULE):**
+- get_cart(): Voir le contenu du panier
 - get_my_orders(): Liste des commandes
 - get_order_details(): Détails d'une commande
 
-**Missions (Transport):**
+**Missions Transport (LECTURE SEULE):**
 - get_user_missions(): Missions de l'utilisateur
 - get_available_missions(): Missions disponibles
-- track_shipment(): Suivre un colis
-- calculate_price(): Calculer un TARIF DE TRANSPORT entre villes (PAS pour prix produits)
+- track_shipment(): Obtenir le lien vers le tracking en temps réel
+- calculate_price(): Calculer un TARIF DE TRANSPORT entre villes (CALCUL SEUL, pas de création)
 
-**Véhicules:**
+**Véhicules (LECTURE SEULE):**
 - get_my_vehicles(): Véhicules du transporteur
 
-**Messages & Notifications:**
+**Messages & Notifications (LECTURE SEULE):**
 - get_unread_messages(): Messages non lus
 - get_notifications(): Notifications
 
-**Profil:**
+**Profil (LECTURE SEULE):**
 - get_my_profile(): Informations du profil
-- get_my_addresses(): Adresses enregistrées
 
-CAPACITÉS AVANCÉES:
-- Tu peux appeler PLUSIEURS fonctions si nécessaire
-- Exemple: "mes commandes et mon panier" → appelle get_my_orders() ET get_cart()
-- Tu as accès à l'historique de la conversation pour le contexte
+COMMENT RÉPONDRE AUX DEMANDES D'ACTIONS:
+
+❌ User: "Ajoute un amortisseur au panier"
+✅ Bot: "Je ne peux pas ajouter au panier directement, mais voici l'amortisseur Toyota (180k FCFA, en stock). [Voir le produit] ← Tu pourras l'ajouter en 1 clic"
+
+❌ User: "Crée une mission Douala-Yaoundé"
+✅ Bot: "Je ne peux pas créer de missions, mais je peux t'aider ! 📋
+📍 Douala → Yaoundé
+📦 500kg estimé
+💰 Prix: 125,000 FCFA
+[Ouvrir le formulaire] ← Je vais pré-remplir les infos"
+
+❌ User: "Passe ma commande"
+✅ Bot: "Je ne peux pas passer de commandes, mais ton panier est prêt ! 🛒
+3 articles - 450k FCFA
+[Aller au paiement] ← Finalise ici"
+
+❌ User: "Où est mon colis #123 ?"
+✅ Bot: "Voici le suivi de ton colis #123. [Voir le tracking] ← Suivi en temps réel sur la carte"
 
 EXEMPLES CRITIQUES (pour éviter les confusions):
 ❌ "Les prix des amortisseurs" → NE PAS appeler calculate_price() (c'est pour transport)
@@ -919,9 +919,6 @@ EXEMPLES CRITIQUES (pour éviter les confusions):
 ❌ "Combien coûte Douala Yaoundé" → NE PAS appeler search_products()
 ✅ "Combien coûte Douala Yaoundé" → Appeler calculate_price(origin="Douala", destination="Yaoundé")
 
-❌ "Prix d'un frein" → NE PAS appeler calculate_price()
-✅ "Prix d'un frein" → Appeler search_products(query="frein")
-
 STYLE DE CONVERSATION:
 - Parle comme sur WhatsApp (naturel, pas robotique)
 - Tutoie l'utilisateur
@@ -929,28 +926,63 @@ STYLE DE CONVERSATION:
 - Utilise 1-2 emojis maximum
 - PAS de markdown (**bold**, ##headers)
 - PAS de listes numérotées
+- Toujours proposer un lien/bouton vers la page appropriée
 
 RÈGLES CRITIQUES:
+- Tu es un GUIDE, pas un exécutant
+- Si l'utilisateur demande une ACTION, explique que tu ne peux pas la faire ET propose un lien vers l'interface
 - Si tu as besoin de données, appelle la fonction appropriée
 - Si plusieurs infos sont demandées, appelle plusieurs fonctions
-- Si tu ne sais pas, dis-le honnêtement
 - ⚠️ SI C'EST AMBIGU → Appelle request_clarification() avec 2-3 options claires
-- Sois toujours utile et sympathique
-
-QUAND DEMANDER CLARIFICATION:
-- "prix" sans contexte clair (produit vs transport ?)
-- "coût" sans mention de ville OU de produit
-- "tarif" ambigu
-- Toute requête où tu hésites entre 2+ fonctions
+- Ne JAMAIS prétendre avoir fait une action que tu n'as pas faite
+- Sois toujours honnête sur tes limites
 
 Réponds naturellement à l'utilisateur."""
     
     def _generate_smart_suggestions(self, message: str, response: str, user_role: str) -> List[str]:
-        """Generate contextual suggestions based on role and context"""
-        # Analyze message to provide contextual suggestions
-        message_lower = message.lower()
+        """
+        Generate contextual suggestions based on message, response content, and user role
         
-        # Context-aware suggestions
+        Strategy:
+        1. Analyze bot response for context clues
+        2. Analyze user message for intent
+        3. Provide next logical actions
+        """
+        message_lower = message.lower()
+        response_lower = response.lower()
+        
+        # Analyze response content for better context
+        # If bot mentions creating/mission creation
+        if any(word in response_lower for word in ["créer", "création", "mission", "formulaire", "pré-remplir"]):
+            if user_role == "AFFRETEUR":
+                return ["Créer une mission", "Calculer un autre prix", "Mes missions"]
+            elif user_role == "TRANSPORTEUR":
+                return ["Missions disponibles", "Mes missions", "Mes véhicules"]
+        
+        # If bot mentions price/tarif
+        if any(word in response_lower for word in ["prix", "tarif", "fcfa", "coût"]):
+            if user_role in ["AFFRETEUR", "TRANSPORTEUR"]:
+                return ["Créer une mission", "Calculer un autre prix", "Mes missions"]
+            else:
+                return ["Voir le catalogue", "Mon panier", "Rechercher un produit"]
+        
+        # If bot mentions products/stock
+        if any(word in response_lower for word in ["produit", "pièce", "stock", "catalogue", "disponible"]):
+            return ["Voir le catalogue", "Rechercher un produit", "Mon panier"]
+        
+        # If bot mentions cart/panier
+        if any(word in response_lower for word in ["panier", "article", "commander"]):
+            return ["Voir mon panier", "Passer commande", "Continuer mes achats"]
+        
+        # If bot mentions tracking/suivi
+        if any(word in response_lower for word in ["suivi", "tracking", "colis", "livraison"]):
+            return ["Voir le tracking", "Mes missions", "Contacter le transporteur"]
+        
+        # If bot mentions orders/commandes
+        if any(word in response_lower for word in ["commande", "order", "paiement"]):
+            return ["Mes commandes", "Suivre ma commande", "Mon panier"]
+        
+        # Context-aware suggestions based on user message
         if "panier" in message_lower or "cart" in message_lower:
             return ["Voir mon panier", "Passer commande", "Continuer mes achats"]
         elif "commande" in message_lower or "order" in message_lower:
@@ -978,20 +1010,28 @@ Réponds naturellement à l'utilisateur."""
             return ["Aide", "Mon profil", "Boutique"]
     
     def _save_to_memory(self, conversation_id: str, user_message: str, assistant_message: str):
-        """Save conversation to memory for context"""
+        """
+        Save conversation to memory for context
+        
+        SECURITY NOTE: conversation_id is always equal to user_id (enforced in process_message)
+        so there's no risk of cross-user data leakage. Each user has their own isolated
+        conversation history in memory.
+        """
         if conversation_id not in self.conversation_memory:
             self.conversation_memory[conversation_id] = []
         
         # Add user message
         self.conversation_memory[conversation_id].append({
             "role": "user",
-            "content": user_message
+            "content": user_message,
+            "timestamp": datetime.utcnow().isoformat()
         })
         
         # Add assistant message
         self.conversation_memory[conversation_id].append({
             "role": "assistant",
-            "content": assistant_message
+            "content": assistant_message,
+            "timestamp": datetime.utcnow().isoformat()
         })
         
         # Keep only last N messages to avoid context overflow
@@ -1070,49 +1110,173 @@ Réponds naturellement à l'utilisateur."""
     
     def _get_navigation_hint(self, function_name: str, result: Dict) -> Optional[Dict]:
         """
-        Generate navigation hints for frontend routing
-        This is the HYBRID part: guide frontend to the right page
+        Generate navigation hints aligned with React Router routes
+        Routes from: apps/frontend-web/src/App.tsx
+        
+        All routes use /app/* prefix as defined in the frontend routing
         """
+        
+        # Dynamic navigation based on function result
+        if function_name == "track_shipment":
+            mission_id = result.get("mission", {}).get("id") or result.get("shipment_id")
+            if mission_id:
+                return {
+                    "route": f"/app/mission/{mission_id}/tracking",
+                    "label": "Voir le tracking en temps réel",
+                    "description": "Suivi sur carte interactive"
+                }
+        
+        elif function_name == "get_product_details":
+            product_id = result.get("product", {}).get("id")
+            if product_id:
+                return {
+                    "route": f"/app/shop/product/{product_id}",
+                    "label": "Voir le produit",
+                    "description": "Détails complets et ajout au panier"
+                }
+        
+        elif function_name == "get_order_details":
+            order_id = result.get("order", {}).get("id")
+            if order_id:
+                return {
+                    "route": f"/app/shop/order/{order_id}",
+                    "label": "Voir la commande",
+                    "description": "Détails et statut de livraison"
+                }
+        
+        elif function_name == "calculate_price":
+            pricing = result.get("pricing", {})
+            if pricing:
+                return {
+                    "route": "/app/missions/create",
+                    "label": "Créer cette mission",
+                    "description": f"{pricing.get('origin')} → {pricing.get('destination')}",
+                    "prefill": {
+                        "origin": pricing.get("origin"),
+                        "destination": pricing.get("destination"),
+                        "weight_kg": pricing.get("weight_kg"),
+                        "budget_max": pricing.get("price")
+                    }
+                }
+        
+        elif function_name == "get_cart":
+            cart_count = result.get("cart", {}).get("items_count", 0)
+            if cart_count > 0:
+                return {
+                    "route": "/app/shop/cart",
+                    "label": "Voir mon panier",
+                    "description": f"{cart_count} article(s)"
+                }
+            else:
+                return {
+                    "route": "/app/shop",
+                    "label": "Voir le catalogue",
+                    "description": "Ton panier est vide"
+                }
+        
+        # Static navigation map for other functions
         navigation_map = {
-            "get_cart": {
-                "route": "/client/cart",
-                "description": "Voir le panier complet"
-            },
             "get_my_orders": {
-                "route": "/client/orders",
-                "description": "Voir toutes mes commandes"
-            },
-            "get_order_details": {
-                "route": f"/client/orders/{result.get('order', {}).get('id', '')}",
-                "description": "Détails de la commande"
+                "route": "/app/shop/orders",
+                "label": "Voir toutes mes commandes",
+                "description": "Historique complet"
             },
             "get_user_missions": {
-                "route": "/missions",
-                "description": "Voir toutes mes missions"
+                "route": "/app/missions",
+                "label": "Voir toutes mes missions",
+                "description": "Gérer mes missions"
             },
             "get_available_missions": {
-                "route": "/transporteur/missions/available",
-                "description": "Voir toutes les missions disponibles"
+                "route": "/app/missions",
+                "label": "Voir toutes les missions",
+                "description": "Missions disponibles"
             },
             "get_my_vehicles": {
-                "route": "/transporteur/vehicles",
-                "description": "Gérer mes véhicules"
+                "route": "/app/vehicles",
+                "label": "Gérer mes véhicules",
+                "description": "Ajouter ou modifier"
             },
             "get_notifications": {
-                "route": "/notifications",
-                "description": "Voir toutes les notifications"
+                "route": "/app/notifications",
+                "label": "Voir toutes les notifications",
+                "description": "Centre de notifications"
             },
             "get_my_profile": {
-                "route": "/profile",
-                "description": "Modifier mon profil"
+                "route": "/app/profile",
+                "label": "Voir mon profil",
+                "description": "Paramètres du compte"
             },
             "search_products": {
-                "route": "/shop/products",
-                "description": "Voir le catalogue complet"
+                "route": "/app/shop",
+                "label": "Voir le catalogue",
+                "description": "Tous les produits disponibles"
             }
         }
         
         return navigation_map.get(function_name)
+    
+    def _get_contextual_navigation_hint(self, message: str, response: str, user_role: str) -> Optional[Dict]:
+        """
+        Generate navigation hints based on conversation context
+        Even when no function was called, guide user to relevant pages
+        """
+        message_lower = message.lower()
+        response_lower = response.lower()
+        
+        # Analyze response for context clues
+        if any(word in response_lower for word in ["créer", "création", "mission", "formulaire"]):
+            if user_role in ["AFFRETEUR", "ADMIN"]:
+                return {
+                    "route": "/app/missions/create",
+                    "label": "Créer une mission",
+                    "description": "Formulaire de création"
+                }
+        
+        if any(word in response_lower for word in ["prix", "tarif", "calculer", "coût"]) and \
+           any(word in message_lower for word in ["douala", "yaoundé", "bafoussam", "transport"]):
+            return {
+                "route": "/app/missions/create",
+                "label": "Créer une mission",
+                "description": "Avec calcul de prix"
+            }
+        
+        if any(word in response_lower for word in ["produit", "pièce", "catalogue", "stock"]):
+            return {
+                "route": "/app/shop",
+                "label": "Voir le catalogue",
+                "description": "Tous les produits disponibles"
+            }
+        
+        if any(word in response_lower for word in ["panier", "article"]):
+            return {
+                "route": "/app/shop/cart",
+                "label": "Voir mon panier",
+                "description": "Gérer mes articles"
+            }
+        
+        if any(word in response_lower for word in ["commande", "order"]):
+            return {
+                "route": "/app/shop/orders",
+                "label": "Mes commandes",
+                "description": "Historique et suivi"
+            }
+        
+        if any(word in response_lower for word in ["mission", "transport"]) and user_role != "CLIENT":
+            return {
+                "route": "/app/missions",
+                "label": "Mes missions",
+                "description": "Gérer mes missions"
+            }
+        
+        if any(word in response_lower for word in ["véhicule", "camion"]) and user_role == "TRANSPORTEUR":
+            return {
+                "route": "/app/vehicles",
+                "label": "Mes véhicules",
+                "description": "Gérer ma flotte"
+            }
+        
+        # Default: no specific hint
+        return None
     
     async def _execute_function(
         self,
@@ -1239,10 +1403,16 @@ Réponds naturellement à l'utilisateur."""
             return {"success": False, "error": "Erreur lors de la recherche"}
     
     async def _handle_track_shipment(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
-        """Track shipment"""
+        """
+        Track shipment - Read REAL data from missions table
+        Returns actual mission status, location, and delivery info
+        """
         shipment_id = args.get("shipment_id")
         if not shipment_id:
-            return {"success": False, "error": "ID de colis manquant"}
+            return {"success": False, "error": "Quel est le numéro de ton colis ?"}
+        
+        # Clean shipment_id (remove # or M- prefix)
+        shipment_id = str(shipment_id).replace("#", "").replace("M-", "").strip()
         
         try:
             from app.core.database import SessionLocal
@@ -1251,33 +1421,52 @@ Réponds naturellement à l'utilisateur."""
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, status, origin, destination, current_location, estimated_delivery
-                    FROM shipments
-                    WHERE id = :shipment_id AND (client_id = :user_id OR transporter_id = :user_id)
+                    SELECT m.id, m.status, m.title,
+                           ad.city as origin, aa.city as destination,
+                           m.current_location, m.estimated_delivery_date,
+                           u.first_name || ' ' || u.last_name as transporter_name
+                    FROM missions m
+                    LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                    LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                    LEFT JOIN users u ON m.transporteur_id = u.id
+                    WHERE m.id = :mission_id
+                      AND (m.affreteur_id = :user_id OR m.transporteur_id = :user_id)
                     LIMIT 1
                 """)
                 
-                result = db.execute(query, {"shipment_id": shipment_id, "user_id": user_id}).fetchone()
+                result = db.execute(query, {
+                    "mission_id": shipment_id,
+                    "user_id": user_id
+                }).fetchone()
                 
-                if result:
+                if not result:
                     return {
-                        "success": True,
-                        "shipment": {
-                            "id": shipment_id,
-                            "status": result.status,
-                            "origin": result.origin,
-                            "destination": result.destination,
-                            "current_location": result.current_location or result.origin,
-                            "estimated_delivery": result.estimated_delivery.isoformat() if result.estimated_delivery else None
-                        }
+                        "success": False,
+                        "error": f"Mission #{shipment_id} non trouvée ou tu n'y as pas accès"
                     }
-                else:
-                    return {"success": False, "error": "Colis non trouvé"}
+                
+                return {
+                    "success": True,
+                    "mission": {
+                        "id": result.id,
+                        "status": result.status,
+                        "title": result.title,
+                        "origin": result.origin,
+                        "destination": result.destination,
+                        "current_location": result.current_location or result.origin,
+                        "estimated_delivery": result.estimated_delivery_date.isoformat() if result.estimated_delivery_date else None,
+                        "transporter_name": result.transporter_name
+                    }
+                }
             finally:
                 db.close()
+                
         except Exception as e:
-            logger.error(f"Track shipment error: {e}")
-            return {"success": False, "error": "Erreur lors du suivi"}
+            logger.error(f"Track shipment error: {e}", exc_info=True)
+            return {
+                "success": False,
+                "error": "Erreur lors de la récupération des données de tracking"
+            }
     
     async def _handle_calculate_price(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Calculate transport price"""
@@ -1488,126 +1677,9 @@ Réponds naturellement à l'utilisateur."""
             logger.error(f"Get cart error: {e}")
             return {"success": False, "error": "Erreur lors de la récupération du panier"}
     
-    async def _handle_add_to_cart(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
-        """Add product to cart (COMPLETE implementation)"""
-        product_id = args.get("product_id")
-        quantity = args.get("quantity", 1)
-        
-        if not product_id:
-            return {"success": False, "error": "ID produit manquant"}
-        
-        if quantity <= 0:
-            return {"success": False, "error": "Quantité invalide"}
-        
-        try:
-            from app.core.database import SessionLocal
-            from sqlalchemy import text
-            
-            db = SessionLocal()
-            try:
-                # Check product exists and has stock
-                product_query = text("""
-                    SELECT id, name, price, stock_quantity
-                    FROM products
-                    WHERE id = :product_id AND is_active = true
-                    LIMIT 1
-                """)
-                product = db.execute(product_query, {"product_id": product_id}).fetchone()
-                
-                if not product:
-                    return {"success": False, "error": "Produit non trouvé ou inactif"}
-                
-                if product.stock_quantity < quantity:
-                    return {
-                        "success": False,
-                        "error": f"Stock insuffisant (disponible: {product.stock_quantity})"
-                    }
-                
-                # Get or create cart
-                cart_query = text("""
-                    SELECT id FROM carts
-                    WHERE user_id = :user_id AND status = 'active'
-                    LIMIT 1
-                """)
-                cart = db.execute(cart_query, {"user_id": user_id}).fetchone()
-                
-                if not cart:
-                    # Create cart
-                    create_cart = text("""
-                        INSERT INTO carts (id, user_id, status, created_at, updated_at)
-                        VALUES (gen_random_uuid(), :user_id, 'active', NOW(), NOW())
-                        RETURNING id
-                    """)
-                    cart = db.execute(create_cart, {"user_id": user_id}).fetchone()
-                    db.commit()
-                
-                # Check if item already exists in cart
-                existing_item = text("""
-                    SELECT id, quantity FROM cart_items
-                    WHERE cart_id = :cart_id AND product_id = :product_id
-                    LIMIT 1
-                """)
-                item = db.execute(existing_item, {
-                    "cart_id": cart.id,
-                    "product_id": product_id
-                }).fetchone()
-                
-                if item:
-                    # Update quantity
-                    new_quantity = item.quantity + quantity
-                    
-                    # Check stock for new quantity
-                    if product.stock_quantity < new_quantity:
-                        return {
-                            "success": False,
-                            "error": f"Stock insuffisant pour {new_quantity} unités (disponible: {product.stock_quantity}, déjà dans panier: {item.quantity})"
-                        }
-                    
-                    update_item = text("""
-                        UPDATE cart_items
-                        SET quantity = :quantity, updated_at = NOW()
-                        WHERE id = :item_id
-                    """)
-                    db.execute(update_item, {
-                        "quantity": new_quantity,
-                        "item_id": item.id
-                    })
-                    db.commit()
-                    
-                    return {
-                        "success": True,
-                        "message": f"{product.name} mis à jour dans le panier (x{new_quantity})",
-                        "product_name": product.name,
-                        "quantity": new_quantity,
-                        "action": "updated"
-                    }
-                else:
-                    # Add new item
-                    add_item = text("""
-                        INSERT INTO cart_items (id, cart_id, product_id, quantity, unit_price, created_at, updated_at)
-                        VALUES (gen_random_uuid(), :cart_id, :product_id, :quantity, :price, NOW(), NOW())
-                    """)
-                    db.execute(add_item, {
-                        "cart_id": cart.id,
-                        "product_id": product_id,
-                        "quantity": quantity,
-                        "price": product.price
-                    })
-                    db.commit()
-                    
-                    return {
-                        "success": True,
-                        "message": f"{product.name} ajouté au panier (x{quantity})",
-                        "product_name": product.name,
-                        "quantity": quantity,
-                        "action": "added"
-                    }
-            finally:
-                db.close()
-        except Exception as e:
-            logger.error(f"Add to cart error: {e}", exc_info=True)
-            return {"success": False, "error": "Erreur lors de l'ajout au panier"}
-    
+    # ❌ HANDLER SUPPRIMÉ : add_to_cart (MODE READ-ONLY)
+    # Le chatbot ne peut plus ajouter au panier
+    # Il guide l'utilisateur vers la page produit à la place
     async def _handle_get_my_orders(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Get user orders"""
         try:
