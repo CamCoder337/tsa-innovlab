@@ -11,10 +11,16 @@ export default class RenameTotalAmountToTotal extends BaseSchema {
   protected tableName = 'orders'
 
   public async up() {
-    this.schema.alterTable(this.tableName, (table) => {
-      // Renommer la colonne total_amount en total
-      table.renameColumn('total_amount', 'total')
-    })
+    // Vérifier si la colonne total_amount existe encore (idempotence)
+    const hasTotalAmount = await this.schema.hasColumn(this.tableName, 'total_amount')
+
+    if (hasTotalAmount) {
+      // La colonne existe encore, on peut la renommer
+      this.schema.alterTable(this.tableName, (table) => {
+        // Renommer la colonne total_amount en total
+        table.renameColumn('total_amount', 'total')
+      })
+    }
   }
 
   public async down() {
