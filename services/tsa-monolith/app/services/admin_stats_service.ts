@@ -200,20 +200,23 @@ export default class AdminStatsService {
     })
 
     // Calculer les totaux par période
-    const total = allOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+    const total = allOrders.reduce((sum, order) => sum + Number.parseFloat(String(order.total)), 0)
 
     const todayOrders = allOrders.filter((order) => order.createdAt >= today)
-    const todayRevenue = todayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+    const todayRevenue = todayOrders.reduce(
+      (sum, order) => sum + Number.parseFloat(String(order.total)),
+      0
+    )
 
     const last7DaysOrders = allOrders.filter((order) => order.createdAt >= last7Days)
     const last7DaysRevenue = last7DaysOrders.reduce(
-      (sum, order) => sum + parseFloat(String(order.total)),
+      (sum, order) => sum + Number.parseFloat(String(order.total)),
       0
     )
 
     const last30DaysOrders = allOrders.filter((order) => order.createdAt >= last30Days)
     const last30DaysRevenue = last30DaysOrders.reduce(
-      (sum, order) => sum + parseFloat(String(order.total)),
+      (sum, order) => sum + Number.parseFloat(String(order.total)),
       0
     )
 
@@ -247,7 +250,7 @@ export default class AdminStatsService {
         (order) => order.createdAt >= hour && order.createdAt < hour.plus({ hours: 1 })
       )
       todayData.push(
-        hourOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+        hourOrders.reduce((sum, order) => sum + Number.parseFloat(String(order.total)), 0)
       )
     }
 
@@ -260,7 +263,7 @@ export default class AdminStatsService {
         (order) => order.createdAt >= day && order.createdAt < day.plus({ days: 1 })
       )
       last7DaysData.push(
-        dayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+        dayOrders.reduce((sum, order) => sum + Number.parseFloat(String(order.total)), 0)
       )
     }
 
@@ -273,7 +276,7 @@ export default class AdminStatsService {
         (order) => order.createdAt >= day && order.createdAt < day.plus({ days: 1 })
       )
       last30DaysData.push(
-        dayOrders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+        dayOrders.reduce((sum, order) => sum + Number.parseFloat(String(order.total)), 0)
       )
     }
 
@@ -381,7 +384,7 @@ export default class AdminStatsService {
     // Helper pour calculer le panier moyen
     const calculateAverage = (orders: Order[]) => {
       if (orders.length === 0) return 0
-      const total = orders.reduce((sum, order) => sum + parseFloat(String(order.total)), 0)
+      const total = orders.reduce((sum, order) => sum + Number.parseFloat(String(order.total)), 0)
       return Math.round(total / orders.length)
     }
 
