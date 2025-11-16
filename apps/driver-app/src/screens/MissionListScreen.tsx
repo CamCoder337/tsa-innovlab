@@ -29,7 +29,8 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({
   const missions = activeTab === 'active' ? activeMissions : completedMissions;
 
   const handleMissionPress = (missionId: string) => {
-    navigation.navigate('MissionDetails', { missionId });
+    // Navigation vers la carte pour voir le trajet en live
+    navigation.navigate('Map', { missionId });
   };
 
   const handleSOSAlert = (type: string, description: string) => {
@@ -41,21 +42,11 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
+        <View style={styles.headerLeft} />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Mes Missions</Text>
         </View>
-        <TouchableOpacity
-          style={styles.mapButton}
-          onPress={() => navigation.navigate('Map')}
-        >
-          <Text style={styles.mapButtonText}>🗺️</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight} />
       </View>
 
       {/* Tabs */}
@@ -135,17 +126,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  backButton: {
+  headerLeft: {
     width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.gray[100],
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: Colors.text.primary,
   },
   headerCenter: {
     flex: 1,
@@ -156,16 +138,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.text.primary,
   },
-  mapButton: {
+  headerRight: {
     width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mapButtonText: {
-    fontSize: 20,
   },
   tabs: {
     flexDirection: 'row',

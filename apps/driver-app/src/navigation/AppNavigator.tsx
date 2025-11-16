@@ -6,8 +6,8 @@ import { MissionListScreen } from '../screens/MissionListScreen';
 import { MissionDetailsScreen } from '../screens/MissionDetailsScreen';
 
 export type RootStackParamList = {
-  Map: undefined;
   MissionList: undefined;
+  Map: { missionId: string };
   MissionDetails: { missionId: string };
 };
 
@@ -17,7 +17,7 @@ export const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Map"
+        initialRouteName="MissionList"
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -37,8 +37,8 @@ export const AppNavigator = () => {
           },
         }}
       >
-        <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="MissionList" component={MissionListScreen} />
+        <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="MissionDetails" component={MissionDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>

@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   sosButton: {
     position: 'absolute',
     bottom: 30,
-    right: 20,
+    left: 20,
     zIndex: 1000,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },

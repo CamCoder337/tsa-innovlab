@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,44 +8,67 @@ import {
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Colors } from '../constants/colors';
-import { getActiveMissions } from '../data/mockMissions';
+import { getMissionById } from '../data/mockMissions';
 import { Mission, MissionStatus } from '../types/mission.types';
 import { StatusBadge } from '../components/StatusBadge';
 import { SOSButton } from '../components/SOSButton';
 
 interface MapScreenProps {
+  route: any;
   navigation: any;
 }
 
-export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
+  const { missionId } = route.params;
+  const mission = getMissionById(missionId);
   const mapRef = useRef<MapView>(null);
-  const activeMissions = getActiveMissions();
 
-  // Centre initial de la carte (Cameroun - Douala)
+  if (!mission) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Mission introuvable</Text>
+        <TouchableOpacity
+          style={styles.errorButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.errorButtonText}>Retour</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Centre initial de la carte sur la mission
   const initialRegion = {
-    latitude: 4.0511,
-    longitude: 9.7679,
-    latitudeDelta: 3,
-    longitudeDelta: 3,
+    latitude: mission.pickup.latitude,
+    longitude: mission.pickup.longitude,
+    latitudeDelta: 1.5,
+    longitudeDelta: 1.5,
   };
 
-  const handleMarkerPress = (mission: Mission) => {
-    setSelectedMission(mission);
+  // Auto-centrer la carte sur la mission au chargement
+  useEffect(() => {
+    if (mission && mapRef.current) {
+      // Calculer le centre entre pickup et delivery
+      const centerLat = (mission.pickup.latitude + mission.delivery.latitude) / 2;
+      const centerLng = (mission.pickup.longitude + mission.delivery.longitude) / 2;
 
-    // Centrer la carte sur la mission sélectionnée
-    mapRef.current?.animateToRegion({
-      latitude: mission.pickup.latitude,
-      longitude: mission.pickup.longitude,
-      latitudeDelta: 1,
-      longitudeDelta: 1,
-    });
-  };
+      // Calculer le delta pour inclure les deux points
+      const latDelta = Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
+      const lngDelta = Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
+
+      setTimeout(() => {
+        mapRef.current?.animateToRegion({
+          latitude: centerLat,
+          longitude: centerLng,
+          latitudeDelta: Math.max(latDelta, 0.5),
+          longitudeDelta: Math.max(lngDelta, 0.5),
+        });
+      }, 500);
+    }
+  }, [mission]);
 
   const handleMissionCardPress = () => {
-    if (selectedMission) {
-      navigation.navigate('MissionDetails', { missionId: selectedMission.id });
-    }
+    navigation.navigate('MissionDetails', { missionId: mission.id });
   };
 
   const handleSOSAlert = (type: string, description: string) => {
@@ -64,91 +87,85 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
         showsUserLocation
         showsMyLocationButton
       >
-        {/* Marqueurs pour chaque mission active */}
-        {activeMissions.map((mission) => (
-          <React.Fragment key={mission.id}>
-            {/* Marqueur de ramassage (pickup) */}
-            <Marker
-              coordinate={{
-                latitude: mission.pickup.latitude,
-                longitude: mission.pickup.longitude,
-              }}
-              title={`Ramassage - ${mission.missionNumber}`}
-              description={mission.pickup.address}
-              pinColor={Colors.primary}
-              onPress={() => handleMarkerPress(mission)}
-            />
+        {/* Marqueur de ramassage (pickup) */}
+        <Marker
+          coordinate={{
+            latitude: mission.pickup.latitude,
+            longitude: mission.pickup.longitude,
+          }}
+          title={`Ramassage - ${mission.missionNumber}`}
+          description={mission.pickup.address}
+          pinColor={Colors.primary}
+        />
 
-            {/* Marqueur de livraison (delivery) */}
-            <Marker
-              coordinate={{
-                latitude: mission.delivery.latitude,
-                longitude: mission.delivery.longitude,
-              }}
-              title={`Livraison - ${mission.missionNumber}`}
-              description={mission.delivery.address}
-              pinColor={Colors.success}
-              onPress={() => handleMarkerPress(mission)}
-            />
+        {/* Marqueur de livraison (delivery) */}
+        <Marker
+          coordinate={{
+            latitude: mission.delivery.latitude,
+            longitude: mission.delivery.longitude,
+          }}
+          title={`Livraison - ${mission.missionNumber}`}
+          description={mission.delivery.address}
+          pinColor={Colors.success}
+        />
 
-            {/* Ligne entre pickup et delivery */}
-            <Polyline
-              coordinates={[
-                {
-                  latitude: mission.pickup.latitude,
-                  longitude: mission.pickup.longitude,
-                },
-                {
-                  latitude: mission.delivery.latitude,
-                  longitude: mission.delivery.longitude,
-                },
-              ]}
-              strokeColor={
-                mission.status === MissionStatus.IN_PROGRESS
-                  ? Colors.primary
-                  : Colors.gray[400]
-              }
-              strokeWidth={3}
-              lineDashPattern={[5, 5]}
-            />
+        {/* Ligne entre pickup et delivery */}
+        <Polyline
+          coordinates={[
+            {
+              latitude: mission.pickup.latitude,
+              longitude: mission.pickup.longitude,
+            },
+            {
+              latitude: mission.delivery.latitude,
+              longitude: mission.delivery.longitude,
+            },
+          ]}
+          strokeColor={
+            mission.status === MissionStatus.IN_PROGRESS
+              ? Colors.primary
+              : Colors.gray[400]
+          }
+          strokeWidth={4}
+          lineDashPattern={[1, 0]}
+        />
 
-            {/* Position actuelle pour missions en cours */}
-            {mission.currentLocation && (
-              <Marker
-                coordinate={{
-                  latitude: mission.currentLocation.latitude,
-                  longitude: mission.currentLocation.longitude,
-                }}
-                title="Position actuelle"
-                description={`${mission.missionNumber} - ${mission.progress}%`}
-              >
-                <View style={styles.currentLocationMarker}>
-                  <View style={styles.currentLocationDot} />
-                </View>
-              </Marker>
-            )}
-          </React.Fragment>
-        ))}
+        {/* Position actuelle pour missions en cours */}
+        {mission.currentLocation && (
+          <Marker
+            coordinate={{
+              latitude: mission.currentLocation.latitude,
+              longitude: mission.currentLocation.longitude,
+            }}
+            title="Position actuelle"
+            description={`${mission.missionNumber} - ${mission.progress}%`}
+          >
+            <View style={styles.currentLocationMarker}>
+              <View style={styles.currentLocationDot} />
+            </View>
+          </Marker>
+        )}
       </MapView>
 
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Mes Missions</Text>
+          <Text style={styles.headerTitle}>{mission.missionNumber}</Text>
           <Text style={styles.headerSubtitle}>
-            {activeMissions.length} mission{activeMissions.length > 1 ? 's' : ''} active{activeMissions.length > 1 ? 's' : ''}
+            {mission.pickup.city} → {mission.delivery.city}
           </Text>
         </View>
-        <TouchableOpacity
-          style={styles.listButton}
-          onPress={() => navigation.navigate('MissionList')}
-        >
-          <Text style={styles.listButtonText}>☰</Text>
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* Mission sélectionnée - Carte en bas */}
-      {selectedMission && (
+      {/* Mission info - Carte en bas */}
+      {mission && (
         <View style={styles.bottomSheet}>
           <ScrollView
             horizontal
@@ -164,38 +181,38 @@ export const MapScreen: React.FC<MapScreenProps> = ({ navigation }) => {
               <View style={styles.missionHeader}>
                 <View style={styles.missionHeaderLeft}>
                   <Text style={styles.missionNumber}>
-                    {selectedMission.missionNumber}
+                    {mission.description}
                   </Text>
                   <Text style={styles.cargoType}>
-                    {selectedMission.cargoType}
+                    {mission.cargoType}
                   </Text>
                 </View>
-                <StatusBadge status={selectedMission.status} />
+                <StatusBadge status={mission.status} />
               </View>
 
               {/* Route */}
               <View style={styles.route}>
                 <View style={styles.routePoint}>
                   <View style={[styles.dot, { backgroundColor: Colors.primary }]} />
-                  <Text style={styles.cityText}>{selectedMission.pickup.city}</Text>
+                  <Text style={styles.cityText}>{mission.pickup.city}</Text>
                 </View>
                 <View style={styles.routeArrow}>
                   <Text style={styles.arrowText}>→</Text>
                 </View>
                 <View style={styles.routePoint}>
                   <View style={[styles.dot, { backgroundColor: Colors.success }]} />
-                  <Text style={styles.cityText}>{selectedMission.delivery.city}</Text>
+                  <Text style={styles.cityText}>{mission.delivery.city}</Text>
                 </View>
               </View>
 
               {/* Stats */}
               <View style={styles.stats}>
                 <View style={styles.stat}>
-                  <Text style={styles.statValue}>{selectedMission.distance} km</Text>
+                  <Text style={styles.statValue}>{mission.distance} km</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.stat}>
-                  <Text style={styles.statValue}>{selectedMission.weight} kg</Text>
+                  <Text style={styles.statValue}>{mission.weight} kg</Text>
                 </View>
               </View>
 
@@ -269,6 +286,47 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 24,
     fontWeight: '600',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: Colors.text.primary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: Colors.background,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+    marginBottom: 20,
+  },
+  errorButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  errorButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
   },
   currentLocationMarker: {
     width: 24,
