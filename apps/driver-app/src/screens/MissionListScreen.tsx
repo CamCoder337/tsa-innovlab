@@ -5,8 +5,8 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
 import { getActiveMissions, getCompletedMissions } from '../data/mockMissions';
 import { MissionCard } from '../components/MissionCard';
