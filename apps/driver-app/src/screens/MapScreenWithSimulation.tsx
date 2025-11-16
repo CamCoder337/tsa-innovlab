@@ -1,67 +1,53 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
 import { getMissionById } from '../data/mockMissions';
 import { MissionStatus } from '../types/mission.types';
 import { StatusBadge } from '../components/StatusBadge';
 import { SOSButton } from '../components/SOSButton';
 import {
-  getDirections,
-  decodePolyline,
-  formatDuration,
-  DirectionsResult,
-} from '../services/googleMapsService';
-import {
-  MissionSimulator,
-  SimulationState,
-  formatElapsedTime,
-  formatDistance,
-} from '../utils/missionSimulator';
+  RouteSimulator,
+  RouteSimulationState,
+  formatETA,
+  calculateETA,
+} from '../utils/routeSimulation';
 
 interface MapScreenProps {
   route: any;
   navigation: any;
 }
 
-export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
+export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
+  route,
+  navigation,
+}) => {
   const { missionId } = route.params;
   const mission = getMissionById(missionId);
   const mapRef = useRef<MapView>(null);
-  const simulatorRef = useRef<MissionSimulator | null>(null);
-
-  const [routeCoordinates, setRouteCoordinates] = useState<
-    Array<{ latitude: number; longitude: number }>
-  >([]);
-  const [directionsData, setDirectionsData] = useState<DirectionsResult | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const simulatorRef = useRef<RouteSimulator | null>(null);
 
   // État de la simulation
-  const [simulationState, setSimulationState] = useState<SimulationState>({
-    currentPosition: { latitude: 0, longitude: 0 },
-    currentIndex: 0,
-    totalPoints: 0,
-    progress: 0,
-    remainingDistance: 0,
-    elapsedTime: 0,
-    isRunning: false,
-    isCompleted: false,
-  });
+  const [simulationState, setSimulationState] =
+    useState<RouteSimulationState>({
+      currentPosition: mission
+        ? {
+            latitude: mission.pickup.latitude,
+            longitude: mission.pickup.longitude,
+          }
+        : { latitude: 0, longitude: 0 },
+      progress: 0,
+      remainingDistance: mission?.distance || 0,
+      eta: mission ? calculateETA(mission.distance) : 0,
+      isRunning: false,
+    });
 
   if (!mission) {
     return (
@@ -85,121 +71,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
     longitudeDelta: 1.5,
   };
 
-  // Demander la permission de géolocalisation
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission refusée',
-          'La géolocalisation est nécessaire pour utiliser cette fonctionnalité.'
-        );
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      setUserLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-    })();
-  }, []);
-
-  // Charger les directions depuis Google Maps
-  useEffect(() => {
-    const loadDirections = async () => {
-      try {
-        setLoading(true);
-        const directions = await getDirections(
-          {
-            latitude: mission.pickup.latitude,
-            longitude: mission.pickup.longitude,
-          },
-          {
-            latitude: mission.delivery.latitude,
-            longitude: mission.delivery.longitude,
-          }
-        );
-
-        if (directions) {
-          setDirectionsData(directions);
-          const coordinates = decodePolyline(directions.polyline);
-          setRouteCoordinates(coordinates);
-
-          // Initialiser le simulateur avec les vraies coordonnées
-          simulatorRef.current = new MissionSimulator(
-            coordinates,
-            directions.distance,
-            (state) => {
-              setSimulationState(state);
-
-              // Centrer la carte sur la position actuelle pendant la simulation
-              if (mapRef.current && state.isRunning) {
-                mapRef.current.animateToRegion(
-                  {
-                    latitude: state.currentPosition.latitude,
-                    longitude: state.currentPosition.longitude,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                  },
-                  500
-                );
-              }
-            },
-            () => {
-              // Callback de completion
-              Alert.alert(
-                '🎉 Mission terminée!',
-                `Vous êtes arrivé à ${mission.delivery.city}!\n\nTemps écoulé: ${formatElapsedTime(simulationState.elapsedTime)}`,
-                [{ text: 'OK' }]
-              );
-            },
-            3 // 3 points par seconde
-          );
-
-          // Initialiser l'état de simulation
-          setSimulationState({
-            currentPosition: coordinates[0],
-            currentIndex: 0,
-            totalPoints: coordinates.length,
-            progress: 0,
-            remainingDistance: directions.distance,
-            elapsedTime: 0,
-            isRunning: false,
-            isCompleted: false,
-          });
-        } else {
-          // Fallback
-          setRouteCoordinates([
-            {
-              latitude: mission.pickup.latitude,
-              longitude: mission.pickup.longitude,
-            },
-            {
-              latitude: mission.delivery.latitude,
-              longitude: mission.delivery.longitude,
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des directions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadDirections();
-
-    return () => {
-      if (simulatorRef.current) {
-        simulatorRef.current.stop();
-      }
-    };
-  }, [mission]);
-
   // Auto-centrer la carte sur la mission au chargement
   useEffect(() => {
-    if (mission && mapRef.current && !loading && routeCoordinates.length > 0) {
+    if (mission && mapRef.current) {
       const centerLat =
         (mission.pickup.latitude + mission.delivery.latitude) / 2;
       const centerLng =
@@ -218,15 +92,60 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
         });
       }, 500);
     }
-  }, [mission, loading, routeCoordinates]);
+  }, [mission]);
+
+  // Initialiser le simulateur
+  useEffect(() => {
+    if (mission) {
+      try {
+        simulatorRef.current = new RouteSimulator(
+          mission,
+          (state) => {
+            setSimulationState(state);
+
+            // Centrer la carte sur la position actuelle
+            if (mapRef.current && state.isRunning) {
+              mapRef.current.animateToRegion(
+                {
+                  latitude: state.currentPosition.latitude,
+                  longitude: state.currentPosition.longitude,
+                  latitudeDelta: 0.5,
+                  longitudeDelta: 0.5,
+                },
+                500
+              );
+            }
+
+            // Notification de fin de simulation
+            if (state.progress === 100 && !state.isRunning) {
+              Alert.alert(
+                'Mission terminée',
+                `La livraison à ${mission.delivery.city} a été effectuée avec succès!`,
+                [{ text: 'OK' }]
+              );
+            }
+          },
+          3 // 3 points par seconde pour une simulation plus rapide
+        );
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du simulateur:', error);
+      }
+
+      return () => {
+        if (simulatorRef.current) {
+          simulatorRef.current.stop();
+        }
+      };
+    }
+  }, [mission]);
 
   // Gérer les contrôles de simulation
   const handleStartSimulation = () => {
     if (!simulatorRef.current) return;
 
     Alert.alert(
-      '🚛 Démarrer la simulation',
-      'Suivez votre trajet en temps réel du point de départ à la destination.',
+      'Démarrer la simulation',
+      'Cette simulation va suivre le trajet de la mission en temps réel.',
       [
         {
           text: 'Annuler',
@@ -257,12 +176,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
   const handleSOSAlert = (type: string, description: string) => {
     console.log('SOS Alert:', type, description);
   };
-
-  // Obtenir les routes parcourues et restantes
-  const completedRoute =
-    simulatorRef.current?.getCompletedRoute() || routeCoordinates.slice(0, 1);
-  const remainingRoute =
-    simulatorRef.current?.getRemainingRoute() || routeCoordinates;
 
   return (
     <View style={styles.container}>
@@ -296,29 +209,28 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
           pinColor={Colors.success}
         />
 
-        {/* Route parcourue (gris délavé) */}
-        {completedRoute.length > 1 && simulationState.progress > 0 && (
-          <Polyline
-            coordinates={completedRoute}
-            strokeColor={Colors.gray[300]}
-            strokeWidth={6}
-          />
-        )}
+        {/* Ligne entre pickup et delivery */}
+        <Polyline
+          coordinates={[
+            {
+              latitude: mission.pickup.latitude,
+              longitude: mission.pickup.longitude,
+            },
+            {
+              latitude: mission.delivery.latitude,
+              longitude: mission.delivery.longitude,
+            },
+          ]}
+          strokeColor={
+            mission.status === MissionStatus.IN_PROGRESS
+              ? Colors.primary
+              : Colors.gray[400]
+          }
+          strokeWidth={4}
+          lineDashPattern={[1, 0]}
+        />
 
-        {/* Route restante (bleu foncé) */}
-        {remainingRoute.length > 1 && (
-          <Polyline
-            coordinates={remainingRoute}
-            strokeColor={
-              mission.status === MissionStatus.IN_PROGRESS
-                ? Colors.primary
-                : Colors.gray[400]
-            }
-            strokeWidth={4}
-          />
-        )}
-
-        {/* Position actuelle pendant la simulation */}
+        {/* Position actuelle (simulation) */}
         {simulationState.progress > 0 && simulationState.progress < 100 && (
           <Marker
             coordinate={simulationState.currentPosition}
@@ -331,18 +243,6 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
           </Marker>
         )}
       </MapView>
-
-      {/* Indicateur de chargement */}
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>
-              Chargement de l'itinéraire...
-            </Text>
-          </View>
-        </View>
-      )}
 
       {/* Header */}
       <View style={styles.header}>
@@ -362,66 +262,58 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
       </View>
 
       {/* Panneau de simulation */}
-      {directionsData && !loading && (
-        <View style={styles.simulationPanel}>
-          <View style={styles.simulationStats}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Progression</Text>
-              <Text style={styles.statValue}>{simulationState.progress}%</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Distance restante</Text>
-              <Text style={styles.statValue}>
-                {formatDistance(simulationState.remainingDistance)}
-              </Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>
-                {simulationState.isRunning ? 'Temps écoulé' : 'Durée estimée'}
-              </Text>
-              <Text style={styles.statValue}>
-                {simulationState.isRunning
-                  ? formatElapsedTime(simulationState.elapsedTime)
-                  : formatDuration(directionsData.duration)}
-              </Text>
-            </View>
+      <View style={styles.simulationPanel}>
+        <View style={styles.simulationStats}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Progression</Text>
+            <Text style={styles.statValue}>{simulationState.progress}%</Text>
           </View>
-
-          {/* Contrôles de simulation */}
-          <View style={styles.simulationControls}>
-            {!simulationState.isRunning && !simulationState.isCompleted ? (
-              <TouchableOpacity
-                style={[styles.controlButton, styles.startButton]}
-                onPress={handleStartSimulation}
-              >
-                <Text style={styles.controlButtonText}>
-                  {simulationState.progress === 0
-                    ? '▶ Démarrer simulation'
-                    : '▶ Reprendre'}
-                </Text>
-              </TouchableOpacity>
-            ) : simulationState.isRunning ? (
-              <TouchableOpacity
-                style={[styles.controlButton, styles.pauseButton]}
-                onPress={handlePauseSimulation}
-              >
-                <Text style={styles.controlButtonText}>⏸ Pause</Text>
-              </TouchableOpacity>
-            ) : null}
-
-            {simulationState.progress > 0 && (
-              <TouchableOpacity
-                style={[styles.controlButton, styles.resetButton]}
-                onPress={handleResetSimulation}
-              >
-                <Text style={styles.controlButtonText}>⟲ Réinitialiser</Text>
-              </TouchableOpacity>
-            )}
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Distance restante</Text>
+            <Text style={styles.statValue}>
+              {simulationState.remainingDistance.toFixed(1)} km
+            </Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>ETA</Text>
+            <Text style={styles.statValue}>
+              {formatETA(simulationState.eta)}
+            </Text>
           </View>
         </View>
-      )}
+
+        {/* Contrôles de simulation */}
+        <View style={styles.simulationControls}>
+          {!simulationState.isRunning ? (
+            <TouchableOpacity
+              style={[styles.controlButton, styles.startButton]}
+              onPress={handleStartSimulation}
+            >
+              <Text style={styles.controlButtonText}>
+                {simulationState.progress === 0
+                  ? '▶ Démarrer simulation'
+                  : '▶ Reprendre'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.controlButton, styles.pauseButton]}
+              onPress={handlePauseSimulation}
+            >
+              <Text style={styles.controlButtonText}>⏸ Pause</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[styles.controlButton, styles.resetButton]}
+            onPress={handleResetSimulation}
+          >
+            <Text style={styles.controlButtonText}>⟲ Réinitialiser</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Mission info - Carte en bas */}
       <View style={styles.bottomSheet}>
@@ -463,11 +355,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
 
             <View style={styles.stats}>
               <View style={styles.stat}>
-                <Text style={styles.statValue}>
-                  {directionsData
-                    ? formatDistance(directionsData.distance)
-                    : `${mission.distance} km`}
-                </Text>
+                <Text style={styles.statValue}>{mission.distance} km</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
@@ -497,33 +385,6 @@ const styles = StyleSheet.create({
   map: {
     width: '100%',
     height: '100%',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingContainer: {
-    backgroundColor: Colors.white,
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
   },
   header: {
     position: 'absolute',
@@ -637,20 +498,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.text.secondary,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.primary,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.border,
-    marginHorizontal: 8,
+    color: Colors.text.primary,
   },
   simulationControls: {
     flexDirection: 'row',
@@ -757,10 +612,11 @@ const styles = StyleSheet.create({
   stat: {
     alignItems: 'center',
   },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text.primary,
+  statDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: Colors.border,
+    marginHorizontal: 20,
   },
   cta: {
     backgroundColor: Colors.primary + '10',

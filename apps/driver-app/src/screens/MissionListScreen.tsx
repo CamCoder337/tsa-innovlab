@@ -46,7 +46,12 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Mes Missions</Text>
         </View>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          style={styles.headerRight}
+          onPress={() => navigation.navigate('CreateMission')}
+        >
+          <Text style={styles.addButton}>+</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
@@ -140,6 +145,16 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButton: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: Colors.white,
   },
   tabs: {
     flexDirection: 'row',

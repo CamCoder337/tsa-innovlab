@@ -3,10 +3,16 @@
  */
 
 export enum MissionStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+  ASSIGNED = 'assigned', // Mission assignée au chauffeur
+  ACCEPTED = 'accepted', // Acceptée par le chauffeur
+  EN_ROUTE_PICKUP = 'en_route_pickup', // En route vers le pickup
+  ARRIVED_PICKUP = 'arrived_pickup', // Arrivé au pickup
+  LOADED = 'loaded', // Colis chargé
+  EN_ROUTE_DELIVERY = 'en_route_delivery', // En route vers livraison
+  ARRIVED_DELIVERY = 'arrived_delivery', // Arrivé à destination
+  DELIVERED = 'delivered', // Livré avec succès
+  FAILED = 'failed', // Échec de livraison
+  CANCELLED = 'cancelled', // Annulé
 }
 
 export interface Location {
@@ -55,6 +61,15 @@ export interface Mission {
   // Tracking
   currentLocation?: Location;
   progress: number; // 0-100%
+
+  // Preuve de livraison
+  proofOfDelivery?: {
+    photo?: string; // URI de la photo
+    signature?: string; // URI de la signature (base64)
+    notes?: string;
+    deliveredAt?: Date;
+    recipientName?: string;
+  };
 
   // Métadonnées
   createdAt: Date;

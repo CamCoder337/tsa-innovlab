@@ -1,19 +1,27 @@
 {
   "expo": {
-    "name": "driver-app",
-    "slug": "driver-app",
+    "name": "TSA Driver",
+    "slug": "tsa-driver-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "owner": "your-expo-username",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/your-project-id"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyD5g9ETxr6QFGf06HzSp48f6E-5HT5K0zo"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +32,7 @@
       "predictiveBackGestureEnabled": false,
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+          "apiKey": "AIzaSyD5g9ETxr6QFGf06HzSp48f6E-5HT5K0zo"
         }
       },
       "permissions": [

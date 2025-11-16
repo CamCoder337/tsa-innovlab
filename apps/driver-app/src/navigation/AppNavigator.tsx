@@ -4,11 +4,17 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { MapScreen } from '../screens/MapScreen';
 import { MissionListScreen } from '../screens/MissionListScreen';
 import { MissionDetailsScreen } from '../screens/MissionDetailsScreen';
+import { CreateMissionScreen } from '../screens/CreateMissionScreen';
+import { LiveTrackingScreen } from '../screens/LiveTrackingScreen';
+import { ProofOfDeliveryScreen } from '../screens/ProofOfDeliveryScreen';
 
 export type RootStackParamList = {
   MissionList: undefined;
   Map: { missionId: string };
   MissionDetails: { missionId: string };
+  CreateMission: undefined;
+  LiveTracking: { mission: any };
+  ProofOfDelivery: { mission: any };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -40,6 +46,9 @@ export const AppNavigator = () => {
         <Stack.Screen name="MissionList" component={MissionListScreen} />
         <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="MissionDetails" component={MissionDetailsScreen} />
+        <Stack.Screen name="CreateMission" component={CreateMissionScreen} />
+        <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
+        <Stack.Screen name="ProofOfDelivery" component={ProofOfDeliveryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

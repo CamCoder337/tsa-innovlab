@@ -8,7 +8,7 @@ export const mockMissions: Mission[] = [
   {
     id: '1',
     missionNumber: 'TSA-M-2025-001',
-    status: MissionStatus.IN_PROGRESS,
+    status: MissionStatus.ASSIGNED,
     pickup: {
       latitude: 4.0511,
       longitude: 9.7679,
@@ -26,8 +26,8 @@ export const mockMissions: Mission[] = [
     description: 'Livraison de matériel électronique',
     cargoType: 'Électronique',
     weight: 250,
-    estimatedDuration: 240, // 4 heures
-    distance: 245, // km
+    estimatedDuration: 240,
+    distance: 245,
     shipper: {
       name: 'Jean Mbarga',
       phone: '+237 677 12 34 56',
@@ -38,20 +38,14 @@ export const mockMissions: Mission[] = [
       phone: '+237 699 87 65 43',
     },
     specialInstructions: 'Fragile - Manipuler avec précaution. Appeler 30min avant arrivée.',
-    currentLocation: {
-      latitude: 3.95,
-      longitude: 10.6,
-      address: 'Edéa',
-      city: 'Edéa',
-    },
-    progress: 45,
+    progress: 0,
     createdAt: new Date('2025-11-15T18:00:00'),
     updatedAt: new Date('2025-11-16T10:30:00'),
   },
   {
     id: '2',
     missionNumber: 'TSA-M-2025-002',
-    status: MissionStatus.PENDING,
+    status: MissionStatus.EN_ROUTE_DELIVERY,
     pickup: {
       latitude: 3.8480,
       longitude: 11.5021,
