@@ -10,8 +10,7 @@ import db from '@adonisjs/lucid/services/db'
  */
 export default class FixOrdersColumns extends BaseCommand {
   static commandName = 'fix:orders-columns'
-  static description =
-    'Ajoute les colonnes manquantes à la table orders (customer_email, etc.)'
+  static description = 'Ajoute les colonnes manquantes à la table orders (customer_email, etc.)'
 
   static options: CommandOptions = {
     startApp: true,
@@ -25,15 +24,15 @@ export default class FixOrdersColumns extends BaseCommand {
       const columnsToAdd = [
         {
           name: 'customer_name',
-          sql: 'ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(200) NOT NULL DEFAULT \'\'',
+          sql: "ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(200) NOT NULL DEFAULT ''",
         },
         {
           name: 'customer_email',
-          sql: 'ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(200) NOT NULL DEFAULT \'\'',
+          sql: "ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(200) NOT NULL DEFAULT ''",
         },
         {
           name: 'customer_phone',
-          sql: 'ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(20) NOT NULL DEFAULT \'\'',
+          sql: "ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(20) NOT NULL DEFAULT ''",
         },
         {
           name: 'subtotal',

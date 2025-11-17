@@ -50,7 +50,7 @@ export default function ShopPage() {
   const { t: tShop } = useShopTranslation();
   const { products, isLoading, error } = useProducts();
   const { addToCart, error: cartError } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { results, error: VisualError } = useVisualRecognitionSearch();
   const lowStockProducts = products?.filter((p) => p.stock <= p.stockAlert);
 
@@ -268,7 +268,7 @@ export default function ShopPage() {
       </div>
 
       {/* Low Stock Alert */}
-      {lowStockProducts.length > 0 && (
+      {user?.role === 'admin' && lowStockProducts.length > 0 && (
         <Card className="mb-6 border-orange-200 bg-orange-50">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
