@@ -785,8 +785,6 @@ export default class MissionsController {
   async getHistory({ params, request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const missionUpdateModule = await import('#models/mission_update')
-      const MissionUpdate = missionUpdateModule.default
 
       // Vérifier que la mission appartient à cet affreteur
       const mission = await Mission.query()
