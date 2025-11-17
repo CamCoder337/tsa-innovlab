@@ -80,7 +80,7 @@ export default class MissionUpdate extends BaseModel {
   public static async createStatusUpdate(
     missionId: string,
     transporteurId: string,
-    oldStatus: string,
+    oldStatus: string | null,
     newStatus: string,
     description: string = ''
   ): Promise<MissionUpdate> {

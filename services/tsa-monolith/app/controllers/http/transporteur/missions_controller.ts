@@ -539,6 +539,15 @@ export default class MissionsController {
         // Ne pas faire échouer l'assignation si les notifications échouent
       }
 
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        user.id,
+        MissionStatus.PUBLISHED,
+        MissionStatus.ASSIGNED,
+        'Mission assigné à un transporteur'
+      )
+
       return response.json({
         success: true,
         message: 'Mission claimed successfully with vehicle assignment',

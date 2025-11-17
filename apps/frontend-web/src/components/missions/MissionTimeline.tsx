@@ -88,6 +88,21 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
     return event.title;
   };
 
+  const getLocalizedEventDescription = (event: MissionUpdate) => {
+    if (event.type === 'status_change' && event.oldStatus && event.newStatus) {
+      const oldStatus = tCommon(`status.${event.oldStatus}`, event.oldStatus);
+      const newStatus = tCommon(`status.${event.newStatus}`, event.newStatus);
+
+      const transitionKey = `${event.oldStatus}_${event.newStatus}`;
+      return (
+        tMissions(`timeline.${transitionKey}`) ||
+        `Mission passée de "${oldStatus}" à "${newStatus}".`
+      );
+    } else if (event.type === 'status_change' && !event.oldStatus && event.newStatus) {
+      return tMissions(`timeline.newMission`) || `Nouvelle mission crée`;
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -159,11 +174,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
                         {format(new Date(event.createdAt), 'PPPp', { locale: fr })}
                       </time>
                     </div>
-                    {event.description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                        {event.description}
-                      </p>
-                    )}
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {getLocalizedEventDescription(event)}
+                    </p>
                     {event.transporteur && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {tCommon('by')}{' '}

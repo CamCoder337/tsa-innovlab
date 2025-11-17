@@ -39,6 +39,7 @@
   },
   "timeline": {
     "title": "Historique",
+    "missionCreated": "Mission crée",
     "statusChange": "Changement de {{ old_status }} vers {{ new_status }}",
     "statusUpdated": "Statut mis à jour: {{ status }}",
     "positionUpdated": "Position mise à jour",
@@ -48,7 +49,17 @@
     "note": "Note",
     "scheduled_for": "Prévu pour",
     "noEvents": "Aucun événement à afficher pour le moment",
-    "statusChangeTitle": "Statut changé: {{ oldStatus }} → {{ newStatus }}"
+    "newMission": "Mission crée and enregistré en tant que brouillon",
+    "statusChangeTitle": "Statut changé: {{ oldStatus }} → {{ newStatus }}",
+    "draft_published": "La mission a été publiée et est maintenant visible aux transporteurs.",
+    "published_assigned": "Un transporteur a été assigné à cette mission.",
+    "assigned_in_progress": "Le transporteur a commencé l'exécution de la mission.",
+    "in_progress_completed": "La mission a été terminée avec succès.",
+    "published_draft": "La mission a été revoqué.",
+    "assigned_cancelled": "La mission a été annulée après assignation.",
+    "in_progress_cancelled": "La mission a été annulée en cours d'exécution.",
+    "assigned_published": "L'assignation a été annulée, la mission est de nouveau disponible.",
+    "completed_in_progress": "Le statut de la mission a été révisé."
   },
   "appreciation": {
     "title": "Évaluation du Transporteur",

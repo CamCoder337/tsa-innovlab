@@ -39,6 +39,7 @@
   },
   "timeline": {
     "title": "Timeline",
+    "missionCreated": "Mission created",
     "statusChange": "Changed from {{ old_status }} to {{ new_status }}",
     "statusUpdated": "Status updated: {{ status }}",
     "positionUpdated": "Position updated",
@@ -48,7 +49,17 @@
     "note": "Note",
     "scheduled_for": "Scheduled for",
     "noEvents": "No events to display at the moment",
-    "statusChangeTitle": "Status changed: {{ oldStatus }} → {{ newStatus }}"
+    "newMission": "Mission created and saved as draft",
+    "statusChangeTitle": "Status changed: {{ oldStatus }} → {{ newStatus }}",
+    "draft_published": "The mission has been published and is now visible to carriers.",
+    "published_assigned": "A carrier has been assigned to this mission.",
+    "assigned_in_progress": "The carrier has started executing the mission.",
+    "in_progress_completed": "The mission has been completed successfully.",
+    "published_cancelled": "The mission has been cancelled by the shipper.",
+    "assigned_cancelled": "The mission has been cancelled after assignment.",
+    "in_progress_cancelled": "The mission has been cancelled in progress.",
+    "assigned_published": "The assignment has been cancelled, the mission is now available again.",
+    "completed_in_progress": "The mission status has been revised."
   },
   "appreciation": {
     "title": "Carrier Evaluation",

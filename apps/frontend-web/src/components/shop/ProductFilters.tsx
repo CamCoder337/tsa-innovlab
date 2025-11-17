@@ -139,13 +139,13 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
         {/* Search */}
         <div className="md:flex flex-col space-y-2 hidden">
           <h3 className="font-medium">{tCommon('actions.search')}</h3>
-          <div className="flex flex-1 items-center justify-between border dark:border-gray-800 border-input">
+          <div className="relative flex flex-1 px-2 items-center justify-between border dark:border-gray-800 border-input">
             <SearchIcon className="h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={tShop('filters.searchPlaceholder')}
               value={filters.search || ''}
               onChange={handleSearchChange}
-              className="w-full pl-9"
+              className="w-full pl-9 border-0"
             />
             <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>

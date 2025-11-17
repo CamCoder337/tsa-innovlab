@@ -10,6 +10,7 @@ import {
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
 import MissionNotificationService from '#services/mission_notification_service'
+import MissionUpdate from '#models/mission_update'
 
 /**
  * Contrôleur pour la gestion des missions par les affréteurs
@@ -253,6 +254,15 @@ export default class MissionsController {
           status: MissionStatus.DRAFT,
         },
         { client: trx }
+      )
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        user.id,
+        null,
+        MissionStatus.DRAFT,
+        'Nouvelle mission créé'
       )
 
       await trx.commit()
@@ -529,6 +539,15 @@ export default class MissionsController {
       mission.status = MissionStatus.PUBLISHED
       await mission.save()
 
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        user.id,
+        MissionStatus.DRAFT,
+        MissionStatus.PUBLISHED,
+        'Mission publiée'
+      )
+
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
@@ -581,6 +600,15 @@ export default class MissionsController {
 
       mission.status = MissionStatus.DRAFT
       await mission.save()
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        user.id,
+        MissionStatus.PUBLISHED,
+        MissionStatus.DRAFT,
+        'Mission dépubliée'
+      )
 
       await mission.load('affreteur')
       await mission.load('adresseDepart')
