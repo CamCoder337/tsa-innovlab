@@ -9,23 +9,49 @@ interface StatusBadgeProps {
 
 const getStatusConfig = (status: MissionStatus) => {
   switch (status) {
-    case MissionStatus.PENDING:
+    case MissionStatus.ASSIGNED:
       return {
-        label: 'En attente',
+        label: 'Assignée',
         color: Colors.status.pending,
         backgroundColor: '#FEF3C7', // amber-100
       };
-    case MissionStatus.IN_PROGRESS:
+    case MissionStatus.ACCEPTED:
+      return {
+        label: 'Acceptée',
+        color: Colors.status.inProgress,
+        backgroundColor: '#DBEAFE', // blue-100
+      };
+    case MissionStatus.EN_ROUTE_PICKUP:
+    case MissionStatus.EN_ROUTE_DELIVERY:
       return {
         label: 'En cours',
         color: Colors.status.inProgress,
         backgroundColor: '#DBEAFE', // blue-100
       };
-    case MissionStatus.COMPLETED:
+    case MissionStatus.ARRIVED_PICKUP:
+    case MissionStatus.ARRIVED_DELIVERY:
       return {
-        label: 'Terminée',
+        label: 'Sur place',
+        color: Colors.status.inProgress,
+        backgroundColor: '#DBEAFE', // blue-100
+      };
+    case MissionStatus.LOADED:
+      return {
+        label: 'Chargé',
+        color: Colors.status.inProgress,
+        backgroundColor: '#DBEAFE', // blue-100
+      };
+    case MissionStatus.DELIVERED:
+      return {
+        label: 'Livrée',
         color: Colors.status.completed,
         backgroundColor: '#D1FAE5', // green-100
+      };
+    case MissionStatus.FAILED:
+      return {
+        label: 'Échouée',
+        color: Colors.status.cancelled,
+        backgroundColor: '#FEE2E2', // red-100
       };
     case MissionStatus.CANCELLED:
       return {

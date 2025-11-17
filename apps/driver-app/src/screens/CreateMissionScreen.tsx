@@ -52,30 +52,51 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
   useEffect(() => {
     (async () => {
       try {
+        console.log('Vérification des permissions de localisation...');
         const { status } = await Location.requestForegroundPermissionsAsync();
+        
         if (status !== 'granted') {
+          console.log('Permission de localisation refusée');
           Alert.alert(
             'Permission refusée',
-            'La géolocalisation est nécessaire pour créer une mission.'
+            'La géolocalisation est nécessaire pour créer une mission. Veuillez activer la localisation dans les paramètres de votre appareil.'
           );
           return;
         }
 
+        console.log('Récupération de la position actuelle...');
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
         });
+
+        if (!location || !location.coords) {
+          throw new Error('Impossible de récupérer les coordonnées GPS');
+        }
 
         const coords = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
 
+        console.log('Position actuelle récupérée:', coords);
         setCurrentLocation(coords);
+        
+        // Si l'utilisateur a coché la case pour utiliser la position actuelle
+        if (useCurrentLocation) {
+          setPickup({
+            ...coords,
+            address: 'Ma position actuelle'
+          });
+        }
       } catch (error) {
         console.error('Erreur de géolocalisation:', error);
+        Alert.alert(
+          'Erreur de localisation', 
+          'Impossible de récupérer votre position. Vérifiez que le GPS est activé et que vous avez une bonne réception.'
+        );
       }
     })();
-  }, []);
+  }, [useCurrentLocation]);
 
   const handlePickupSelected = async (prediction: PlacePrediction) => {
     setLoading(true);
@@ -160,14 +181,14 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
       pickup: {
         latitude: pickup.latitude,
         longitude: pickup.longitude,
-        address: pickup.address,
-        city: pickup.address.split(',')[1]?.trim() || 'Départ',
+        address: pickup.address || 'Point de départ',
+        city: pickup.address ? (pickup.address.split(',')[1]?.trim() || 'Départ') : 'Départ',
       },
       delivery: {
         latitude: delivery.latitude,
         longitude: delivery.longitude,
-        address: delivery.address,
-        city: delivery.address.split(',')[1]?.trim() || 'Destination',
+        address: delivery.address || 'Destination',
+        city: delivery.address ? (delivery.address.split(',')[1]?.trim() || 'Destination') : 'Destination',
       },
       isLiveTracking: true,
       autoStart: true, // Démarrer automatiquement le suivi

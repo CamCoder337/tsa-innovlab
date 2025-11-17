@@ -10,6 +10,7 @@ import {
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
+import { LatLng } from 'react-native-maps';
 import { SOSButton } from '../components/SOSButton';
 import {
   getDirections,
@@ -38,10 +39,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
     null
   );
   const [loading, setLoading] = useState(true);
-  const [currentPosition, setCurrentPosition] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<LatLng | undefined>(undefined);
   const [tracking, setTracking] = useState(false);
   const [traveledPath, setTraveledPath] = useState<
     Array<{ latitude: number; longitude: number }>
@@ -152,8 +150,18 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
         return;
       }
 
+      // Vérifier que mission.pickup est défini
+      if (!mission.pickup || !mission.pickup.latitude || !mission.pickup.longitude) {
+        console.error('Point de départ invalide:', mission.pickup);
+        Alert.alert('Erreur', 'Impossible de démarrer le suivi: point de départ invalide');
+        return;
+      }
+
       setTracking(true);
-      setTraveledPath([mission.pickup]);
+      setTraveledPath([{
+        latitude: mission.pickup.latitude,
+        longitude: mission.pickup.longitude,
+      }]);
       startTime.current = Date.now();
 
       // Initialiser l'ETA avec le temps de Google Maps
@@ -228,11 +236,14 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
             if (distToDestination < 50) {
               // Moins de 50m
               stopTracking();
-              Alert.alert(
-                '🎉 Mission accomplie!',
-                `Vous êtes arrivé à destination!\n\nDistance parcourue: ${formatDistance(distanceTraveled)}`,
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-              );
+              navigation.navigate('ProofOfDelivery', { 
+                mission: {
+                  ...mission,
+                  status: 'delivered',
+                  completedAt: new Date().toISOString(),
+                  distanceTraveled
+                }
+              });
             }
           }
 
@@ -261,330 +272,406 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
     setTracking(false);
   };
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      stopTracking();
-    };
-  }, []);
-
-  const handleSOSAlert = (type: string, description: string) => {
-    console.log('SOS Alert:', type, description);
-  };
-
-  const initialRegion = {
-    latitude: mission.pickup.latitude,
-    longitude: mission.pickup.longitude,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
+  const handleSOSAlert = () => {
+    // Implémentation du bouton SOS
+    Alert.alert(
+      'Alerte SOS',
+      'Une alerte a été envoyée au support avec votre position actuelle.',
+      [{ text: 'OK' }]
+    );
   };
 
   return (
     <View style={styles.container}>
-      {/* Maps */}
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={initialRegion}
-        showsUserLocation
-        showsMyLocationButton
-        followsUserLocation={tracking}
-      >
-        {/* Marqueur de départ */}
-        <Marker
-          coordinate={mission.pickup}
-          title="Départ"
-          description={mission.pickup.address}
-          pinColor={Colors.primary}
-        />
-
-        {/* Marqueur d'arrivée */}
-        <Marker
-          coordinate={mission.delivery}
-          title="Destination"
-          description={mission.delivery.address}
-          pinColor={Colors.success}
-        />
-
-        {/* Route complète (bleu foncé) */}
-        {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor={Colors.primary}
-            strokeWidth={4}
-          />
-        )}
-
-        {/* Chemin parcouru (gris) */}
-        {traveledPath.length > 1 && (
-          <Polyline
-            coordinates={traveledPath}
-            strokeColor={Colors.gray[300]}
-            strokeWidth={6}
-          />
-        )}
-
-        {/* Position actuelle */}
-        {currentPosition && (
-          <Marker coordinate={currentPosition} title="Vous êtes ici">
-            <View style={styles.currentLocationMarker}>
-              <View style={styles.currentLocationDot} />
-            </View>
-          </Marker>
-        )}
-      </MapView>
-
-      {/* Indicateur de chargement */}
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>
-              Chargement de l'itinéraire...
-            </Text>
-          </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Chargement de l'itinéraire...</Text>
         </View>
+      ) : (
+        <>
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={{
+              latitude: mission.pickup.latitude,
+              longitude: mission.pickup.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+            followsUserLocation={true}
+            showsCompass={true}
+            toolbarEnabled={true}
+            loadingEnabled={true}
+            loadingIndicatorColor={Colors.primary}
+            loadingBackgroundColor={Colors.background}
+            mapType="mutedStandard"
+            userInterfaceStyle="dark"
+            rotateEnabled={true}
+            pitchEnabled={true}
+            showsBuildings={true}
+            showsTraffic={true}
+            showsIndoors={true}
+            showsIndoorLevelPicker={true}
+            showsScale={true}
+          >
+            {/* Marqueur de départ */}
+            <Marker
+              coordinate={mission.pickup}
+              title="Point de ramassage"
+              description={mission.pickupAddress}
+              pinColor={Colors.primary}
+            >
+              <View style={styles.markerContainer}>
+                <View style={[styles.markerPin, {backgroundColor: Colors.primary}]}>
+                  <Text style={styles.markerText}>D</Text>
+                </View>
+                <View style={[styles.markerPointer, {borderTopColor: Colors.primary}]} />
+              </View>
+            </Marker>
+
+            {/* Marqueur d'arrivée */}
+            <Marker
+              coordinate={mission.delivery}
+              title="Point de livraison"
+              description={mission.deliveryAddress}
+              pinColor="#FF0000"
+            >
+              <View style={styles.markerContainer}>
+                <View style={[styles.markerPin, {backgroundColor: '#FF0000'}]}>
+                  <Text style={styles.markerText}>A</Text>
+                </View>
+                <View style={[styles.markerPointer, {borderTopColor: '#FF0000'}]} />
+              </View>
+            </Marker>
+
+            {/* Itinéraire */}
+            {routeCoordinates.length > 0 && (
+              <Polyline
+                coordinates={routeCoordinates}
+                strokeColor={Colors.primary}
+                strokeWidth={5}
+                lineCap="round"
+                lineJoin="round"
+                lineDashPattern={[1]}
+              />
+            )}
+
+            {/* Chemin parcouru */}
+            {traveledPath.length > 1 && (
+              <Polyline
+                coordinates={traveledPath}
+                strokeColor="#1E90FF"
+                strokeWidth={6}
+                lineCap="round"
+                lineJoin="round"
+              />
+            )}
+          </MapView>
+
+          {/* En-tête avec informations de navigation */}
+          <View style={styles.headerContainer}>
+            <View style={styles.headerInfo}>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                Vers {mission.delivery?.address ? mission.delivery.address.split(',')[0] : 'Destination'}
+              </Text>
+              {directionsData && (
+                <Text style={styles.headerSubtitle}>
+                  {formatDistance(directionsData.distance)} • {formatDuration(directionsData.duration)}
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Panneau d'informations en bas */}
+          <View style={styles.bottomPanel}>
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    {width: `${Math.min(100, Math.max(0, progress))}%`}
+                  ]} 
+                />
+              </View>
+              <Text style={styles.progressText}>
+                {Math.round(progress)}% du trajet effectué
+              </Text>
+            </View>
+
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {formatDistance(distanceTraveled)}
+                </Text>
+                <Text style={styles.statLabel}>Parcouru</Text>
+              </View>
+              
+              <View style={styles.statSeparator} />
+              
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {directionsData ? formatDistance(directionsData.distance - distanceTraveled) : '--'}
+                </Text>
+                <Text style={styles.statLabel}>Restant</Text>
+              </View>
+              
+              <View style={styles.statSeparator} />
+              
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {estimatedTimeRemaining || '--'}
+                </Text>
+                <Text style={styles.statLabel}>Temps restant</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.navigationButton,
+                { backgroundColor: tracking ? Colors.danger : Colors.primary },
+              ]}
+              onPress={tracking ? stopTracking : startTracking}
+            >
+              <Text style={styles.navigationButtonText}>
+                {tracking ? 'Arrêter la navigation' : 'Démarrer la navigation'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Bouton de localisation */}
+          <TouchableOpacity 
+            style={styles.myLocationButton}
+            onPress={() => {
+              if (mapRef.current && currentPosition) {
+                mapRef.current.animateCamera({
+                  center: currentPosition,
+                  zoom: 16,
+                });
+              }
+            }}
+          >
+            <Text style={styles.myLocationButtonText}>📍</Text>
+          </TouchableOpacity>
+        </>
       )}
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => {
-            if (tracking) {
-              Alert.alert(
-                'Arrêter le suivi ?',
-                'Voulez-vous vraiment arrêter le suivi GPS ?',
-                [
-                  { text: 'Annuler', style: 'cancel' },
-                  {
-                    text: 'Arrêter',
-                    style: 'destructive',
-                    onPress: () => {
-                      stopTracking();
-                      navigation.goBack();
-                    },
-                  },
-                ]
-              );
-            } else {
-              navigation.goBack();
-            }
-          }}
-        >
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>{mission.missionNumber}</Text>
-          <Text style={styles.headerSubtitle}>Suivi GPS en temps réel</Text>
-        </View>
-        <View style={{ width: 40 }} />
+      {/* Bouton SOS flottant */}
+      <View style={styles.sosButtonContainer}>
+          <SOSButton />
       </View>
-
-      {/* Panneau de statistiques */}
-      {directionsData && !loading && (
-        <View style={styles.statsPanel}>
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Progression</Text>
-              <Text style={styles.statValue}>{progress}%</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Distance totale</Text>
-              <Text style={styles.statValue}>
-                {formatDistance(directionsData.distance)}
-              </Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statLabel}>Parcourue</Text>
-              <Text style={styles.statValue}>
-                {formatDistance(distanceTraveled)}
-              </Text>
-            </View>
-          </View>
-
-          {/* ETA */}
-          {estimatedTimeRemaining && tracking && (
-            <View style={styles.etaContainer}>
-              <Text style={styles.etaLabel}>⏱️ Temps restant estimé</Text>
-              <Text style={styles.etaValue}>{estimatedTimeRemaining}</Text>
-            </View>
-          )}
-
-          {/* Bouton de contrôle */}
-          {!tracking ? (
-            <TouchableOpacity
-              style={[styles.controlButton, styles.startButton]}
-              onPress={startTracking}
-            >
-              <Text style={styles.controlButtonText}>
-                📍 Démarrer le suivi GPS
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.controlButton, styles.stopButton]}
-              onPress={stopTracking}
-            >
-              <Text style={styles.controlButtonText}>⏹ Arrêter le suivi</Text>
-            </TouchableOpacity>
-          )}
-
-          {tracking && (
-            <Text style={styles.trackingStatus}>
-              🔴 Suivi GPS actif - Déplacez-vous vers la destination
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* Bouton SOS */}
-      <SOSButton onSOSAlert={handleSOSAlert} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // Styles de base
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  map: {
-    width: '100%',
+  
+  // Styles pour les statistiques
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  statSeparator: {
+    width: 1,
+    backgroundColor: '#e0e0e0',
     height: '100%',
   },
-  loadingOverlay: {
+  
+  // Bouton de navigation
+  navigationButton: {
+    backgroundColor: Colors.primary,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  navigationButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  
+  // Bouton de localisation
+  myLocationButton: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    right: 15,
+    bottom: 180,
+    backgroundColor: 'white',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingContainer: {
-    backgroundColor: Colors.white,
-    padding: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  header: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerContent: {
-    backgroundColor: Colors.white,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+  },
+  myLocationButtonText: {
+    fontSize: 24,
+  },
+  
+  // Conteneur du bouton SOS
+  sosButtonContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 120,
+    zIndex: 5,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: Colors.text.primary,
+    fontSize: 16,
+  },
+  
+  // Marqueurs personnalisés
+  markerContainer: {
+    alignItems: 'center',
+  },
+  markerPin: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  markerText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  markerPointer: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -2,
+  },
+  
+  // En-tête
+  headerContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 15,
+    right: 15,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 5,
+  },
+  headerInfo: {
+    flex: 1,
+    marginRight: 10,
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text.primary,
+    fontWeight: '600',
+    color: '#333',
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: Colors.text.secondary,
-    marginTop: 2,
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: Colors.text.primary,
-  },
-  currentLocationMarker: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primary + '40',
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  currentLocationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.primary,
-    borderWidth: 2,
-    borderColor: Colors.white,
+  closeButtonText: {
+    fontSize: 20,
+    color: '#666',
+    marginTop: -2,
   },
-  statsPanel: {
+  
+  // Panneau du bas
+  bottomPanel: {
     position: 'absolute',
-    top: 120,
-    left: 20,
-    right: 20,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    bottom: 20,
+    left: 15,
+    right: 15,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 5,
   },
-  statsRow: {
+  progressContainer: {
+    marginBottom: 15,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.primary,
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+  },
+  statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   statItem: {
-    flex: 1,
     alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 10,
-    color: Colors.text.secondary,
-    marginBottom: 4,
+    flex: 1,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.border,
-    marginHorizontal: 8,
-  },
-  etaContainer: {
     backgroundColor: Colors.primary + '10',
     padding: 12,
     borderRadius: 8,

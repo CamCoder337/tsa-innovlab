@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
-import { getMissionById } from '../data/mockMissions';
 import { StatusBadge } from '../components/StatusBadge';
 import { SOSButton } from '../components/SOSButton';
 import { MissionStatus } from '../types/mission.types';
+import * as ImagePicker from 'expo-image-picker';
+import { getMission, updateMissionStatus } from '../services/missionService';
+import { Mission } from '../types/mission.types';
 
 interface MissionDetailsScreenProps {
   route: any;
@@ -25,7 +27,26 @@ export const MissionDetailsScreen: React.FC<MissionDetailsScreenProps> = ({
   navigation,
 }) => {
   const { missionId } = route.params;
-  const mission = getMissionById(missionId);
+  const [mission, setMission] = React.useState<Mission | undefined>(() => getMission(missionId));
+  
+  // Mettre à jour la mission si elle change dans les paramètres de navigation
+  React.useEffect(() => {
+    if (route.params?.updatedMission) {
+      setMission(route.params.updatedMission);
+    }
+  }, [route.params]);
+  
+  // Recharger la mission à chaque fois que l'écran reçoit le focus
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      const updatedMission = getMission(missionId);
+      if (updatedMission) {
+        setMission(updatedMission);
+      }
+    });
+    
+    return unsubscribe;
+  }, [navigation, missionId]);
 
   if (!mission) {
     return (
@@ -48,6 +69,8 @@ export const MissionDetailsScreen: React.FC<MissionDetailsScreenProps> = ({
   };
 
   const handleStartMission = () => {
+    if (!mission) return;
+    
     Alert.alert(
       'Démarrer la mission',
       'Êtes-vous prêt à commencer cette mission ?',
@@ -55,35 +78,82 @@ export const MissionDetailsScreen: React.FC<MissionDetailsScreenProps> = ({
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Démarrer',
-          onPress: () => {
-            Alert.alert('Mission démarrée', 'La mission a été démarrée avec succès.');
-            // TODO: Mettre à jour le statut au backend
+          onPress: async () => {
+            try {
+              const updatedMission = updateMissionStatus(mission.id, MissionStatus.ACCEPTED);
+              if (updatedMission) {
+                setMission(updatedMission);
+                Alert.alert('Mission démarrée', 'La mission a été démarrée avec succès.');
+              } else {
+                throw new Error('Impossible de démarrer la mission');
+              }
+            } catch (error) {
+              console.error('Erreur lors du démarrage de la mission:', error);
+              Alert.alert('Erreur', 'Impossible de démarrer la mission. Veuillez réessayer.');
+            }
           },
         },
       ]
     );
   };
 
-  const handleCompleteMission = () => {
-    Alert.alert(
-      'Terminer la mission',
-      'Confirmez-vous avoir livré le colis et obtenu la signature du destinataire ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Confirmer',
-          onPress: () => {
-            Alert.alert('Mission terminée', 'La mission a été marquée comme terminée.');
-            // TODO: Envoyer confirmation au backend
-            navigation.goBack();
-          },
-        },
-      ]
-    );
+  const handleCompleteMission = async () => {
+    if (!mission) return;
+    
+    try {
+      // Vérifier les permissions de la caméra
+      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!cameraPermission.granted) {
+        Alert.alert(
+          'Permission requise',
+          'L\'accès à la caméra est nécessaire pour prendre une photo de preuve de livraison.'
+        );
+        return;
+      }
+
+      // Vérifier les permissions du stockage
+      const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!mediaPermission.granted) {
+        Alert.alert(
+          'Permission requise',
+          'L\'accès au stockage est nécessaire pour enregistrer la preuve de livraison.'
+        );
+        return;
+      }
+
+      // Mettre à jour le statut de la mission
+      const updatedMission = updateMissionStatus(mission.id, MissionStatus.EN_ROUTE_DELIVERY);
+      
+      if (updatedMission) {
+        // Naviguer vers l'écran de preuve de livraison
+        navigation.navigate('ProofOfDelivery', { 
+          mission: updatedMission,
+          onGoBack: (updatedMission: Mission) => {
+            // Mettre à jour la mission dans l'écran actuel
+            setMission(updatedMission);
+            
+            // Afficher un message de succès
+            Alert.alert(
+              'Mission terminée',
+              'La mission a été marquée comme terminée avec succès.'
+            );
+          }
+        });
+      } else {
+        throw new Error('Impossible de mettre à jour le statut de la mission');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la préparation de la preuve de livraison:', error);
+      Alert.alert(
+        'Erreur',
+        'Une erreur est survenue lors de la préparation de la preuve de livraison. Veuillez réessayer.'
+      );
+    }
   };
 
-  const formatDateTime = (date: Date): string => {
-    return new Date(date).toLocaleString('fr-FR', {
+  const formatDateTime = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleString('fr-FR', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -244,18 +314,40 @@ export const MissionDetailsScreen: React.FC<MissionDetailsScreenProps> = ({
       </ScrollView>
 
       {/* Action Buttons */}
-      {mission.status === MissionStatus.PENDING && (
+      {mission.status === MissionStatus.ASSIGNED && (
         <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleStartMission}>
-            <Text style={styles.actionButtonText}>Démarrer la mission</Text>
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: Colors.primary }]} 
+            onPress={handleStartMission}
+          >
+            <Text style={styles.actionButtonText}>Accepter la mission</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {mission.status === MissionStatus.IN_PROGRESS && (
+      {[MissionStatus.ACCEPTED, 
+        MissionStatus.EN_ROUTE_PICKUP, 
+        MissionStatus.ARRIVED_PICKUP, 
+        MissionStatus.LOADED, 
+        MissionStatus.EN_ROUTE_DELIVERY, 
+        MissionStatus.ARRIVED_DELIVERY].includes(mission.status) && (
         <View style={styles.actionContainer}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleCompleteMission}>
-            <Text style={styles.actionButtonText}>Terminer la mission</Text>
+          <TouchableOpacity 
+            style={[
+              styles.actionButton, 
+              { 
+                backgroundColor: mission.status === MissionStatus.ARRIVED_DELIVERY 
+                  ? Colors.success 
+                  : Colors.primary 
+              }
+            ]} 
+            onPress={handleCompleteMission}
+          >
+            <Text style={styles.actionButtonText}>
+              {mission.status === MissionStatus.ARRIVED_DELIVERY 
+                ? 'Confirmer la livraison' 
+                : 'Marquer comme terminée'}
+            </Text>
           </TouchableOpacity>
         </View>
       )}

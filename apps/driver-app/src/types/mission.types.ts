@@ -29,11 +29,11 @@ export interface Mission {
 
   // Informations de pickup
   pickup: Location;
-  pickupTime: Date;
+  pickupTime: Date | string;
 
   // Informations de livraison
   delivery: Location;
-  deliveryTime: Date;
+  deliveryTime: Date | string;
 
   // Détails de la mission
   description: string;
@@ -53,27 +53,31 @@ export interface Mission {
   recipient: {
     name: string;
     phone: string;
+    email?: string;
   };
 
   // Instructions spéciales
   specialInstructions?: string;
 
-  // Tracking
-  currentLocation?: Location;
-  progress: number; // 0-100%
+  // Raison d'annulation
+  cancellationReason?: string;
 
   // Preuve de livraison
   proofOfDelivery?: {
-    photo?: string; // URI de la photo
-    signature?: string; // URI de la signature (base64)
+    photo: string;
+    signature: string;
+    recipientName: string;
     notes?: string;
-    deliveredAt?: Date;
-    recipientName?: string;
+    deliveredAt: Date | string;
   };
 
+  // Suivi
+  progress: number; // Pourcentage de progression
+  currentLocation?: Location;
+
   // Métadonnées
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
 }
 
 export interface SOSAlert {

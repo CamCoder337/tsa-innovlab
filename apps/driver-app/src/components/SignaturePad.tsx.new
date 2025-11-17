@@ -7,8 +7,11 @@ import {
   ViewStyle,
   StyleProp,
   ActivityIndicator,
+  Modal,
+  StatusBar,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { Colors } from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -82,127 +85,126 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   );
 
   const signaturePadHTML = `<!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Signature Pad</title>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Signature Pad</title>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      background-color: white;
+    }
+    
+    #signature-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    #signature-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="signature-container">
+    <canvas id="signature-canvas"></canvas>
+  </div>
+  <script>
+    // Fonction pour envoyer un message à React Native
+    function sendMessage(type, data) {
+      try {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type, data }));
+      } catch (error) {
+        console.error('Erreur d\\'envoi du message:', error);
+      }
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      const canvas = document.getElementById('signature-canvas');
+      if (!canvas) {
+        sendMessage('error', 'Canvas non trouvé');
+        return;
       }
 
-      html, body {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        touch-action: none;
-        background-color: white;
+      try {
+        // Configuration du canvas
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(ratio, ratio);
+
+        // Initialisation de SignaturePad
+        const signaturePad = new SignaturePad(canvas, {
+          backgroundColor: 'white',
+          penColor: 'black',
+          minWidth: 1,
+          maxWidth: 3,
+        });
+
+        // Fonction pour effacer la signature
+        window.clearSignature = function() {
+          if (signaturePad) {
+            signaturePad.clear();
+            return true;
+          }
+          return false;
+        };
+
+        // Gestion des événements tactiles
+        canvas.addEventListener('touchend', function() {
+          if (signaturePad && !signaturePad.isEmpty()) {
+            const signatureData = signaturePad.toDataURL('image/png');
+            sendMessage('signature', signatureData);
+          }
+        });
+
+        // Gestion des événements souris (pour le web)
+        canvas.addEventListener('mouseup', function() {
+          if (signaturePad && !signaturePad.isEmpty()) {
+            const signatureData = signaturePad.toDataURL('image/png');
+            sendMessage('signature', signatureData);
+          }
+        });
+
+        // Signaler que le composant est prêt
+        sendMessage('ready', null);
+      } catch (error) {
+        sendMessage('error', error.message);
       }
+    });
+  </script>
+</body>
+</html>`;
 
-      #signature-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-      }
-
-      #signature-canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        background-color: white;
-        touch-action: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="signature-container">
-      <canvas id="signature-canvas"></canvas>
-    </div>
-    <script>
-      // Fonction pour envoyer un message à React Native
-      function sendMessage(type, data) {
-        try {
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type, data }));
-        } catch (error) {
-          console.error("Erreur d'envoi du message:", error);
-        }
-      }
-
-      // Initialisation
-      document.addEventListener('DOMContentLoaded', function() {
-        const canvas = document.getElementById('signature-canvas');
-        if (!canvas) {
-          sendMessage('error', 'Canvas non trouvé');
-          return;
-        }
-
-        try {
-          // Configuration du canvas
-          const ratio = Math.max(window.devicePixelRatio || 1, 1);
-          canvas.width = canvas.offsetWidth * ratio;
-          canvas.height = canvas.offsetHeight * ratio;
-          const ctx = canvas.getContext('2d');
-          ctx.scale(ratio, ratio);
-
-          // Initialisation de SignaturePad
-          const signaturePad = new SignaturePad(canvas, {
-            backgroundColor: 'white',
-            penColor: 'black',
-            minWidth: 1,
-            maxWidth: 3,
-          });
-
-          // Fonction pour effacer la signature
-          window.clearSignature = function() {
-            if (signaturePad) {
-              signaturePad.clear();
-              return true;
-            }
-            return false;
-          };
-
-          // Gestion des événements tactiles
-          canvas.addEventListener('touchend', function() {
-            if (signaturePad && !signaturePad.isEmpty()) {
-              const signatureData = signaturePad.toDataURL('image/png');
-              sendMessage('signature', signatureData);
-            }
-          });
-
-          // Gestion des événements souris (pour le web)
-          canvas.addEventListener('mouseup', function() {
-            if (signaturePad && !signaturePad.isEmpty()) {
-              const signatureData = signaturePad.toDataURL('image/png');
-              sendMessage('signature', signatureData);
-            }
-          });
-
-          // Signaler que le composant est prêt
-          sendMessage('ready', null);
-        } catch (error) {
-          sendMessage('error', error.message);
-        }
-      });
-    </script>
-  </body>
-  </html>`;
-
-  // Rendu du contenu (avec ou sans header selon fullScreen)
-  const content = (
+  const renderMainContent = () => (
     <View style={[styles.container, fullScreen ? styles.fullScreenContainer : {}, containerStyle]}>
       {fullScreen && (
         <View style={styles.header}>
@@ -227,16 +229,11 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
               style={[styles.button, styles.saveButton, !signature && styles.disabledButton]}
               onPress={() => {
                 if (signature) {
-                  console.log('Validation de la signature...');
                   onSave(signature);
-                  // Fermer le modal parent via onClose
                   onClose();
-                } else {
-                  console.log('Aucune signature à valider');
                 }
               }}
               disabled={!signature}
-              activeOpacity={0.7}
             >
               <Text style={[styles.buttonText, styles.saveButtonText]}>Valider</Text>
             </TouchableOpacity>
@@ -270,23 +267,26 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     </View>
   );
 
-  // Wrapper avec SafeAreaView pour fullScreen
   if (fullScreen) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        {content}
-      </SafeAreaView>
+      <Modal
+        visible={true}
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={onClose}
+      >
+        <SafeAreaView style={styles.modalContainer} edges={['top']}>
+          <StatusBar barStyle="dark-content" />
+          {renderMainContent()}
+        </SafeAreaView>
+      </Modal>
     );
   }
 
-  return content;
+  return renderMainContent();
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   container: {
     flex: 1,
     backgroundColor: Colors.white,
@@ -296,7 +296,11 @@ const styles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1,
     backgroundColor: Colors.background,
-    borderRadius: 0,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   webviewContainer: {
     flex: 1,

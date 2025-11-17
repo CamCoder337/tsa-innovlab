@@ -19,6 +19,13 @@
     },
     "ios": {
       "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'application a besoin d'accéder à votre caméra pour scanner les codes QR.",
+        "NSLocationWhenInUseUsageDescription": "L'application a besoin d'accéder à votre position pour afficher les itinéraires.",
+        "UIBackgroundModes": [
+          "location"
+        ]
+      },
       "config": {
         "googleMapsApiKey": "AIzaSyD5g9ETxr6QFGf06HzSp48f6E-5HT5K0zo"
       }
@@ -36,12 +43,22 @@
         }
       },
       "permissions": [
+        "CAMERA",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.tsa.driverapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "L'application a besoin d'accéder à votre caméra pour scanner les codes QR."
+        }
+      ]
+    ]
   }
 }
