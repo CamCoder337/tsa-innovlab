@@ -11,7 +11,7 @@ import {
 
 interface MissionActionsProps {
   mission: Mission;
-  onStatusChange: (newStatus: MissionStatus) => void;
+  onStatusChange: (_newStatus: MissionStatus) => void;
   onProofOfDelivery: () => void;
 }
 
@@ -45,16 +45,11 @@ export const MissionActions: React.FC<MissionActionsProps> = ({
   const handleNavigation = () => {
     // Naviguer vers le pickup ou la livraison selon le statut
     const destination =
-      mission.status === MissionStatus.ACCEPTED ||
-      mission.status === MissionStatus.EN_ROUTE_PICKUP
+      mission.status === MissionStatus.ACCEPTED || mission.status === MissionStatus.EN_ROUTE_PICKUP
         ? mission.pickup
         : mission.delivery;
 
-    promptNavigationChoice(
-      destination.latitude,
-      destination.longitude,
-      destination.address
-    );
+    promptNavigationChoice(destination.latitude, destination.longitude, destination.address);
   };
 
   const actionButtonText = getActionButtonText(mission.status);
@@ -83,19 +78,13 @@ export const MissionActions: React.FC<MissionActionsProps> = ({
       {/* Actions secondaires */}
       <View style={styles.secondaryActions}>
         {/* Appeler le destinataire */}
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleCallRecipient}
-        >
+        <TouchableOpacity style={styles.secondaryButton} onPress={handleCallRecipient}>
           <Text style={styles.secondaryButtonIcon}>📞</Text>
           <Text style={styles.secondaryButtonText}>Appeler</Text>
         </TouchableOpacity>
 
         {/* Navigation */}
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleNavigation}
-        >
+        <TouchableOpacity style={styles.secondaryButton} onPress={handleNavigation}>
           <Text style={styles.secondaryButtonIcon}>🧭</Text>
           <Text style={styles.secondaryButtonText}>Navigation</Text>
         </TouchableOpacity>

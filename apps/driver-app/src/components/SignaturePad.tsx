@@ -14,7 +14,7 @@ import { Colors } from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SignaturePadProps {
-  onSave: (signature: string) => void;
+  onSave: (_signature: string) => void;
   onClear?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
   webStyle?: string;
@@ -38,7 +38,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const handleWebViewMessage = (event: WebViewMessageEvent) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      
+
       if (data.type === 'ready') {
         setIsLoading(false);
       } else if (data.type === 'signature') {
@@ -50,7 +50,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
         setError(data.message || 'Une erreur est survenue');
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Erreur de communication avec la zone de signature');
       setIsLoading(false);
     }
@@ -65,10 +65,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const renderErrorView = () => (
     <View style={styles.errorContainer}>
       <Text style={styles.errorText}>{error}</Text>
-      <TouchableOpacity
-        style={styles.retryButton}
-        onPress={handleRetry}
-      >
+      <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
         <Text style={styles.retryButtonText}>Réessayer</Text>
       </TouchableOpacity>
     </View>
@@ -272,11 +269,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
   // Wrapper avec SafeAreaView pour fullScreen
   if (fullScreen) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        {content}
-      </SafeAreaView>
-    );
+    return <SafeAreaView style={styles.safeArea}>{content}</SafeAreaView>;
   }
 
   return content;

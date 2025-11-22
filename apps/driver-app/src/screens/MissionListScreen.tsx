@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
-import { getActiveMissions, getCompletedMissions } from '../data/mockMissions';
+import { getActiveMissions, getCompletedMissions } from '../services/missionService';
 import { MissionCard } from '../components/MissionCard';
 import { SOSButton } from '../components/SOSButton';
+import { Mission } from '../types/mission.types';
 
 interface MissionListScreenProps {
   navigation: any;
@@ -18,13 +13,30 @@ interface MissionListScreenProps {
 
 type TabType = 'active' | 'completed';
 
-export const MissionListScreen: React.FC<MissionListScreenProps> = ({
-  navigation,
-}) => {
+export const MissionListScreen: React.FC<MissionListScreenProps> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [activeMissions, setActiveMissions] = useState<Mission[]>([]);
+  const [completedMissions, setCompletedMissions] = useState<Mission[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activeMissions = getActiveMissions();
-  const completedMissions = getCompletedMissions();
+  // Charger les missions au montage et quand l'écran reçoit le focus
+  useEffect(() => {
+    const loadMissions = async () => {
+      setLoading(true);
+      const [active, completed] = await Promise.all([
+        getActiveMissions(),
+        getCompletedMissions(),
+      ]);
+      setActiveMissions(active);
+      setCompletedMissions(completed);
+      setLoading(false);
+    };
+
+    loadMissions();
+
+    const unsubscribe = navigation.addListener('focus', loadMissions);
+    return unsubscribe;
+  }, [navigation]);
 
   const missions = activeTab === 'active' ? activeMissions : completedMissions;
 
@@ -60,12 +72,7 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({
           style={[styles.tab, activeTab === 'active' && styles.tabActive]}
           onPress={() => setActiveTab('active')}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'active' && styles.tabTextActive,
-            ]}
-          >
+          <Text style={[styles.tabText, activeTab === 'active' && styles.tabTextActive]}>
             Actives ({activeMissions.length})
           </Text>
         </TouchableOpacity>
@@ -74,41 +81,40 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({
           style={[styles.tab, activeTab === 'completed' && styles.tabActive]}
           onPress={() => setActiveTab('completed')}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'completed' && styles.tabTextActive,
-            ]}
-          >
+          <Text style={[styles.tabText, activeTab === 'completed' && styles.tabTextActive]}>
             Terminées ({completedMissions.length})
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Liste des missions */}
-      <FlatList
-        data={missions}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <MissionCard
-            mission={item}
-            onPress={() => handleMissionPress(item.id)}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Chargement des missions...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={missions}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <MissionCard mission={item} onPress={() => handleMissionPress(item.id)} />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>📦</Text>
             <Text style={styles.emptyTitle}>Aucune mission</Text>
             <Text style={styles.emptySubtitle}>
               {activeTab === 'active'
-                ? 'Vous n\'avez pas de mission active pour le moment'
+                ? "Vous n'avez pas de mission active pour le moment"
                 : 'Aucune mission terminée'}
             </Text>
           </View>
         }
-      />
+        />
+      )}
 
       {/* Bouton SOS flottant */}
       <SOSButton onSOSAlert={handleSOSAlert} />
@@ -204,5 +210,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text.secondary,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.secondary,
   },
 });

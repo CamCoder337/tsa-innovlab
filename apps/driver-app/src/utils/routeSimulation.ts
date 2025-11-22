@@ -71,10 +71,7 @@ export const calculateDistance = (
  * @param averageSpeed Vitesse moyenne en km/h (par défaut 60 km/h)
  * @returns Temps restant en minutes
  */
-export const calculateETA = (
-  remainingDistance: number,
-  averageSpeed: number = 60
-): number => {
+export const calculateETA = (remainingDistance: number, averageSpeed: number = 60): number => {
   return Math.round((remainingDistance / averageSpeed) * 60);
 };
 
@@ -111,12 +108,14 @@ export class RouteSimulator {
   private routePoints: Array<{ latitude: number; longitude: number }>;
   private currentPointIndex: number = 0;
   private intervalId: number | null = null;
+  // eslint-disable-next-line no-unused-vars
   private updateCallback: (state: RouteSimulationState) => void;
   private speed: number; // Points par seconde
   private totalDistance: number;
 
   constructor(
     mission: Mission,
+    // eslint-disable-next-line no-unused-vars
     updateCallback: (state: RouteSimulationState) => void,
     speed: number = 2 // 2 points par seconde par défaut
   ) {

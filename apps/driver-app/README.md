@@ -142,20 +142,152 @@ Les couleurs sont définies dans `src/constants/colors.ts` :
 
 Toutes les couleurs sont synchronisées avec le frontend web.
 
-## 📊 Mock Data
+## 💾 Fonctionnement Autonome - Stockage Local
 
-L'app utilise actuellement des **mock data** (pas de connexion backend).
+L'application est **100% autonome** et fonctionne **sans serveur backend**. Toutes les données sont stockées localement sur votre téléphone Android.
 
-### Missions de test
+### Architecture de Stockage
 
-4 missions disponibles dans `src/data/mockMissions.ts` :
+#### 1. **AsyncStorage** (Stockage Persistant)
+Toutes les missions et paramètres sont sauvegardés dans AsyncStorage :
+- `@tsa_driver_missions` : Toutes les missions (actives et terminées)
+- `@tsa_driver_settings` : Paramètres de l'application
+- `@tsa_driver_profile` : Profil du chauffeur
+- `@tsa_driver_pod_photos` : Index des photos de preuve de livraison
+- `@tsa_driver_pod_signatures` : Index des signatures
 
-1. **TSA-M-2025-001** : Douala → Yaoundé (En cours, 45%)
-2. **TSA-M-2025-002** : Yaoundé → Bamenda (En attente)
-3. **TSA-M-2025-003** : Douala → Limbé (En attente)
-4. **TSA-M-2025-004** : Douala → Buea (Terminée)
+#### 2. **FileSystem** (Fichiers Locaux)
+Les photos et signatures sont sauvegardées dans le répertoire de documents de l'app :
+- Photos de livraison : `${FileSystem.documentDirectory}/pod_photo_*.jpg`
+- Signatures : `${FileSystem.documentDirectory}/pod_signature_*.png`
 
-Villes réelles du Cameroun avec coordonnées GPS réelles.
+### Services Disponibles
+
+#### `localStorageService.ts`
+Service de gestion du stockage persistant :
+```typescript
+import { saveMissions, loadMissions, saveMission } from './services/localStorageService';
+
+// Sauvegarder toutes les missions
+await saveMissions(missions);
+
+// Charger les missions
+const missions = await loadMissions();
+
+// Sauvegarder une mission
+await saveMission(updatedMission);
+```
+
+#### `proofOfDeliveryService.ts`
+Gestion des preuves de livraison :
+```typescript
+import { saveProofPhoto, saveProofSignature, saveProofOfDelivery }
+  from './services/proofOfDeliveryService';
+
+// Sauvegarder une photo
+const photoPath = await saveProofPhoto(missionId, photoUri);
+
+// Sauvegarder une signature
+const signaturePath = await saveProofSignature(missionId, signatureUri);
+
+// Sauvegarder la preuve complète
+await saveProofOfDelivery(mission, proofData);
+```
+
+#### `missionService.ts` (Mis à Jour)
+Service métier avec persistance automatique :
+```typescript
+import {
+  initializeMissions,
+  getAllMissions,
+  updateMissionStatus,
+  createMission
+} from './services/missionService';
+
+// Initialiser au premier lancement
+const missions = await initializeMissions();
+
+// Récupérer toutes les missions
+const allMissions = await getAllMissions();
+
+// Mettre à jour le statut
+await updateMissionStatus(missionId, 'delivered');
+
+// Créer une nouvelle mission
+await createMission(newMission);
+```
+
+### Premier Lancement
+
+Au premier démarrage, l'app :
+1. Vérifie si des données existent dans AsyncStorage
+2. Si aucune donnée : charge **5 missions de démonstration** depuis `mockMissions.ts`
+3. Sauvegarde ces missions dans AsyncStorage
+4. Lors des prochains lancements, charge directement depuis AsyncStorage
+
+### Workflow Complet d'une Mission
+
+```
+1. Consulter missions → Données chargées depuis AsyncStorage
+2. Accepter mission → Statut mis à jour et sauvegardé
+3. Démarrer trajet → État sauvegardé automatiquement
+4. Arriver au pickup → Statut "arrived_pickup" persisté
+5. Charger cargaison → Statut "loaded" sauvegardé
+6. Démarrer livraison → État "en_route_delivery" persisté
+7. Arriver livraison → Statut "arrived_delivery" sauvegardé
+8. Preuve de livraison :
+   - Photo → Sauvegardée dans FileSystem
+   - Signature → Sauvegardée dans FileSystem
+   - Mission mise à jour avec chemins des fichiers
+9. Finaliser → Mission "delivered" + données persistées
+```
+
+### Persistance des Données
+
+✅ **Toutes les modifications sont automatiquement sauvegardées** :
+- Changement de statut de mission
+- Ajout de nouvelle mission
+- Photos et signatures
+- Paramètres utilisateur
+
+✅ **Les données restent disponibles** :
+- Après redémarrage de l'app
+- Après redémarrage du téléphone
+- Même sans connexion internet
+
+### Gestion des Données
+
+#### Voir les données stockées
+```typescript
+// Dans un écran ou composant
+import { loadMissions } from '../services/localStorageService';
+
+const missions = await loadMissions();
+console.log('Missions stockées:', missions);
+```
+
+#### Réinitialiser les données
+```typescript
+import { clearAllData } from '../services/localStorageService';
+
+// Effacer toutes les données
+await clearAllData();
+
+// Réinitialiser avec données par défaut
+const missions = await initializeMissions();
+```
+
+## 📊 Données de Test (Mock Data)
+
+L'app contient **5 missions de démonstration** dans `src/data/mockMissions.ts` :
+
+1. **TSA-M-2025-001** : Douala → Yaoundé (Assignée)
+2. **TSA-M-2025-002** : Yaoundé → Bamenda (Assignée)
+3. **TSA-M-2025-003** : Douala → Limbé (Assignée)
+4. **TSA-M-2025-004** : Aéroport Douala → Hilton Yaoundé (Livrée ✅)
+5. **TSA-M-2025-005** : Yaoundé → Bafoussam (Annulée ❌)
+
+Ces missions utilisent des **villes réelles du Cameroun** avec coordonnées GPS réelles.
 
 ## 🔌 Prochaines Étapes (Connexion Backend)
 

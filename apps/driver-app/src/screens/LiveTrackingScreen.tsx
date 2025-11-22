@@ -1,12 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
@@ -25,34 +18,25 @@ interface LiveTrackingScreenProps {
   navigation: any;
 }
 
-export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
-  route,
-  navigation,
-}) => {
+export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, navigation }) => {
   const { mission } = route.params;
   const mapRef = useRef<MapView>(null);
 
   const [routeCoordinates, setRouteCoordinates] = useState<
     Array<{ latitude: number; longitude: number }>
   >([]);
-  const [directionsData, setDirectionsData] = useState<DirectionsResult | null>(
-    null
-  );
+  const [directionsData, setDirectionsData] = useState<DirectionsResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPosition, setCurrentPosition] = useState<LatLng | undefined>(undefined);
   const [tracking, setTracking] = useState(false);
-  const [traveledPath, setTraveledPath] = useState<
-    Array<{ latitude: number; longitude: number }>
-  >([]);
+  const [traveledPath, setTraveledPath] = useState<Array<{ latitude: number; longitude: number }>>(
+    []
+  );
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<
-    string | null
-  >(null);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<string | null>(null);
 
-  const locationSubscription = useRef<Location.LocationSubscription | null>(
-    null
-  );
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const startTime = useRef<number | null>(null);
 
   // Charger les directions
@@ -60,10 +44,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
     const loadDirections = async () => {
       try {
         setLoading(true);
-        const directions = await getDirections(
-          mission.pickup,
-          mission.delivery
-        );
+        const directions = await getDirections(mission.pickup, mission.delivery);
 
         if (directions) {
           setDirectionsData(directions);
@@ -72,10 +53,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
         }
       } catch (error) {
         console.error('Erreur lors du chargement des directions:', error);
-        Alert.alert(
-          'Erreur',
-          'Impossible de charger l\'itinéraire. Vérifiez votre connexion.'
-        );
+        Alert.alert('Erreur', "Impossible de charger l'itinéraire. Vérifiez votre connexion.");
       } finally {
         setLoading(false);
       }
@@ -87,14 +65,10 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
   // Centrer la carte au chargement
   useEffect(() => {
     if (mapRef.current && !loading && routeCoordinates.length > 0) {
-      const centerLat =
-        (mission.pickup.latitude + mission.delivery.latitude) / 2;
-      const centerLng =
-        (mission.pickup.longitude + mission.delivery.longitude) / 2;
-      const latDelta =
-        Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
-      const lngDelta =
-        Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
+      const centerLat = (mission.pickup.latitude + mission.delivery.latitude) / 2;
+      const centerLng = (mission.pickup.longitude + mission.delivery.longitude) / 2;
+      const latDelta = Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
+      const lngDelta = Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
 
       setTimeout(() => {
         mapRef.current?.animateToRegion({
@@ -118,12 +92,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
   }, [mission.autoStart, loading, directionsData]);
 
   // Calculer la distance entre deux points
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number => {
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; // Rayon de la Terre en mètres
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
@@ -143,10 +112,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission refusée',
-          'La géolocalisation est nécessaire pour le suivi.'
-        );
+        Alert.alert('Permission refusée', 'La géolocalisation est nécessaire pour le suivi.');
         return;
       }
 
@@ -158,10 +124,12 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
       }
 
       setTracking(true);
-      setTraveledPath([{
-        latitude: mission.pickup.latitude,
-        longitude: mission.pickup.longitude,
-      }]);
+      setTraveledPath([
+        {
+          latitude: mission.pickup.latitude,
+          longitude: mission.pickup.longitude,
+        },
+      ]);
       startTime.current = Date.now();
 
       // Initialiser l'ETA avec le temps de Google Maps
@@ -236,13 +204,13 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
             if (distToDestination < 50) {
               // Moins de 50m
               stopTracking();
-              navigation.navigate('ProofOfDelivery', { 
+              navigation.navigate('ProofOfDelivery', {
                 mission: {
                   ...mission,
                   status: 'delivered',
                   completedAt: new Date().toISOString(),
-                  distanceTraveled
-                }
+                  distanceTraveled,
+                },
               });
             }
           }
@@ -272,13 +240,11 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
     setTracking(false);
   };
 
-  const handleSOSAlert = () => {
+  const _handleSOSAlert = () => {
     // Implémentation du bouton SOS
-    Alert.alert(
-      'Alerte SOS',
-      'Une alerte a été envoyée au support avec votre position actuelle.',
-      [{ text: 'OK' }]
-    );
+    Alert.alert('Alerte SOS', 'Une alerte a été envoyée au support avec votre position actuelle.', [
+      { text: 'OK' },
+    ]);
   };
 
   return (
@@ -325,10 +291,10 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
               pinColor={Colors.primary}
             >
               <View style={styles.markerContainer}>
-                <View style={[styles.markerPin, {backgroundColor: Colors.primary}]}>
+                <View style={[styles.markerPin, { backgroundColor: Colors.primary }]}>
                   <Text style={styles.markerText}>D</Text>
                 </View>
-                <View style={[styles.markerPointer, {borderTopColor: Colors.primary}]} />
+                <View style={[styles.markerPointer, { borderTopColor: Colors.primary }]} />
               </View>
             </Marker>
 
@@ -340,10 +306,10 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
               pinColor="#FF0000"
             >
               <View style={styles.markerContainer}>
-                <View style={[styles.markerPin, {backgroundColor: '#FF0000'}]}>
+                <View style={[styles.markerPin, { backgroundColor: '#FF0000' }]}>
                   <Text style={styles.markerText}>A</Text>
                 </View>
-                <View style={[styles.markerPointer, {borderTopColor: '#FF0000'}]} />
+                <View style={[styles.markerPointer, { borderTopColor: '#FF0000' }]} />
               </View>
             </Marker>
 
@@ -375,18 +341,17 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
           <View style={styles.headerContainer}>
             <View style={styles.headerInfo}>
               <Text style={styles.headerTitle} numberOfLines={1}>
-                Vers {mission.delivery?.address ? mission.delivery.address.split(',')[0] : 'Destination'}
+                Vers{' '}
+                {mission.delivery?.address ? mission.delivery.address.split(',')[0] : 'Destination'}
               </Text>
               {directionsData && (
                 <Text style={styles.headerSubtitle}>
-                  {formatDistance(directionsData.distance)} • {formatDuration(directionsData.duration)}
+                  {formatDistance(directionsData.distance)} •{' '}
+                  {formatDuration(directionsData.duration)}
                 </Text>
               )}
             </View>
-            <TouchableOpacity 
-              style={styles.closeButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
               <Text style={styles.closeButtonText}>×</Text>
             </TouchableOpacity>
           </View>
@@ -395,41 +360,37 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
           <View style={styles.bottomPanel}>
             <View style={styles.progressContainer}>
               <View style={styles.progressBar}>
-                <View 
+                <View
                   style={[
-                    styles.progressFill, 
-                    {width: `${Math.min(100, Math.max(0, progress))}%`}
-                  ]} 
+                    styles.progressFill,
+                    { width: `${Math.min(100, Math.max(0, progress))}%` },
+                  ]}
                 />
               </View>
-              <Text style={styles.progressText}>
-                {Math.round(progress)}% du trajet effectué
-              </Text>
+              <Text style={styles.progressText}>{Math.round(progress)}% du trajet effectué</Text>
             </View>
 
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>
-                  {formatDistance(distanceTraveled)}
-                </Text>
+                <Text style={styles.statValue}>{formatDistance(distanceTraveled)}</Text>
                 <Text style={styles.statLabel}>Parcouru</Text>
               </View>
-              
+
               <View style={styles.statSeparator} />
-              
+
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>
-                  {directionsData ? formatDistance(directionsData.distance - distanceTraveled) : '--'}
+                  {directionsData
+                    ? formatDistance(directionsData.distance - distanceTraveled)
+                    : '--'}
                 </Text>
                 <Text style={styles.statLabel}>Restant</Text>
               </View>
-              
+
               <View style={styles.statSeparator} />
-              
+
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>
-                  {estimatedTimeRemaining || '--'}
-                </Text>
+                <Text style={styles.statValue}>{estimatedTimeRemaining || '--'}</Text>
                 <Text style={styles.statLabel}>Temps restant</Text>
               </View>
             </View>
@@ -448,7 +409,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
           </View>
 
           {/* Bouton de localisation */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.myLocationButton}
             onPress={() => {
               if (mapRef.current && currentPosition) {
@@ -466,7 +427,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({
 
       {/* Bouton SOS flottant */}
       <View style={styles.sosButtonContainer}>
-          <SOSButton />
+        <SOSButton />
       </View>
     </View>
   );
@@ -478,7 +439,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  
+
   // Styles pour les statistiques
   statLabel: {
     fontSize: 12,
@@ -490,7 +451,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     height: '100%',
   },
-  
+
   // Bouton de navigation
   navigationButton: {
     backgroundColor: Colors.primary,
@@ -504,7 +465,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-  
+
   // Bouton de localisation
   myLocationButton: {
     position: 'absolute',
@@ -525,7 +486,7 @@ const styles = StyleSheet.create({
   myLocationButtonText: {
     fontSize: 24,
   },
-  
+
   // Conteneur du bouton SOS
   sosButtonContainer: {
     position: 'absolute',
@@ -548,7 +509,7 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     fontSize: 16,
   },
-  
+
   // Marqueurs personnalisés
   markerContainer: {
     alignItems: 'center',
@@ -579,7 +540,7 @@ const styles = StyleSheet.create({
     borderRightColor: 'transparent',
     marginTop: -2,
   },
-  
+
   // En-tête
   headerContainer: {
     position: 'absolute',
@@ -625,7 +586,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: -2,
   },
-  
+
   // Panneau du bas
   bottomPanel: {
     position: 'absolute',

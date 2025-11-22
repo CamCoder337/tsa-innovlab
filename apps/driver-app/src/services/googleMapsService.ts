@@ -107,7 +107,7 @@ export const getDirections = async (
       })),
     };
   } catch (error) {
-    console.error('Erreur lors de l\'appel à Google Directions API:', error);
+    console.error("Erreur lors de l'appel à Google Directions API:", error);
     return null;
   }
 };

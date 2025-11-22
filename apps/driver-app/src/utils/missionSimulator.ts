@@ -17,6 +17,7 @@ export class MissionSimulator {
   private routePoints: Array<{ latitude: number; longitude: number }>;
   private currentIndex: number = 0;
   private intervalId: number | null = null;
+  // eslint-disable-next-line no-unused-vars
   private updateCallback: (state: SimulationState) => void;
   private completionCallback?: () => void;
   private speed: number; // Points par seconde
@@ -26,6 +27,7 @@ export class MissionSimulator {
   constructor(
     routePoints: Array<{ latitude: number; longitude: number }>,
     totalDistance: number,
+    // eslint-disable-next-line no-unused-vars
     updateCallback: (state: SimulationState) => void,
     completionCallback?: () => void,
     speed: number = 2
@@ -78,8 +80,7 @@ export class MissionSimulator {
 
     this.currentIndex++;
     const currentPosition = this.routePoints[this.currentIndex];
-    const progress =
-      (this.currentIndex / (this.routePoints.length - 1)) * 100;
+    const progress = (this.currentIndex / (this.routePoints.length - 1)) * 100;
     const remainingDistance = this.totalDistance * (1 - progress / 100);
     const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
 

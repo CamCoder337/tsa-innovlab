@@ -3,15 +3,25 @@
  */
 
 export enum MissionStatus {
+  // eslint-disable-next-line no-unused-vars
   ASSIGNED = 'assigned', // Mission assignée au chauffeur
+  // eslint-disable-next-line no-unused-vars
   ACCEPTED = 'accepted', // Acceptée par le chauffeur
+  // eslint-disable-next-line no-unused-vars
   EN_ROUTE_PICKUP = 'en_route_pickup', // En route vers le pickup
+  // eslint-disable-next-line no-unused-vars
   ARRIVED_PICKUP = 'arrived_pickup', // Arrivé au pickup
+  // eslint-disable-next-line no-unused-vars
   LOADED = 'loaded', // Colis chargé
+  // eslint-disable-next-line no-unused-vars
   EN_ROUTE_DELIVERY = 'en_route_delivery', // En route vers livraison
+  // eslint-disable-next-line no-unused-vars
   ARRIVED_DELIVERY = 'arrived_delivery', // Arrivé à destination
+  // eslint-disable-next-line no-unused-vars
   DELIVERED = 'delivered', // Livré avec succès
+  // eslint-disable-next-line no-unused-vars
   FAILED = 'failed', // Échec de livraison
+  // eslint-disable-next-line no-unused-vars
   CANCELLED = 'cancelled', // Annulé
 }
 

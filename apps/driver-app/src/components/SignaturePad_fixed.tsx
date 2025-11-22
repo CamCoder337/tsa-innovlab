@@ -17,7 +17,7 @@ import { Colors } from '../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SignaturePadProps {
-  onSave: (signature: string) => void;
+  onSave: (_signature: string) => void;
   onClear?: () => void;
   containerStyle?: StyleProp<ViewStyle>;
   webStyle?: string;
@@ -37,10 +37,13 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [signature, setSignature] = useState<string | null>(null);
 
-  const handleSignature = useCallback((signatureData: string) => {
-    setSignature(signatureData);
-    onSave(signatureData);
-  }, [onSave]);
+  const handleSignature = useCallback(
+    (signatureData: string) => {
+      setSignature(signatureData);
+      onSave(signatureData);
+    },
+    [onSave]
+  );
 
   const handleClear = useCallback(() => {
     if (webViewRef.current) {
@@ -50,16 +53,19 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     }
   }, [onClear]);
 
-  const handleWebViewMessage = useCallback((event: any) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'signatureEnd' && data.signature) {
-        handleSignature(data.signature);
+  const handleWebViewMessage = useCallback(
+    (event: any) => {
+      try {
+        const data = JSON.parse(event.nativeEvent.data);
+        if (data.type === 'signatureEnd' && data.signature) {
+          handleSignature(data.signature);
+        }
+      } catch (error) {
+        console.error('Error parsing message from WebView:', error);
       }
-    } catch (error) {
-      console.error('Error parsing message from WebView:', error);
-    }
-  }, [handleSignature]);
+    },
+    [handleSignature]
+  );
 
   const signaturePadHTML = `
     <!DOCTYPE html>
@@ -165,7 +171,9 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
   const renderSignaturePad = (): ReactElement => {
     return (
-      <View style={[styles.container, fullScreen ? styles.fullScreenContainer : {}, containerStyle]}>
+      <View
+        style={[styles.container, fullScreen ? styles.fullScreenContainer : {}, containerStyle]}
+      >
         {fullScreen && (
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -175,7 +183,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             <View style={{ width: 24 }} />
           </View>
         )}
-        
+
         <WebView
           ref={webViewRef}
           source={{ html: signaturePadHTML }}
@@ -195,25 +203,19 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
             </View>
           )}
         />
-      
+
         {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />
           </View>
         )}
-        
+
         {fullScreen && (
           <View style={styles.footer}>
-            <TouchableOpacity 
-              style={[styles.button, styles.clearButton]} 
-              onPress={handleClear}
-            >
+            <TouchableOpacity style={[styles.button, styles.clearButton]} onPress={handleClear}>
               <Text style={[styles.buttonText, styles.clearButtonText]}>Effacer</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.saveButton]} 
-              onPress={onClose}
-            >
+            <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={onClose}>
               <Text style={[styles.buttonText, styles.saveButtonText]}>Valider</Text>
             </TouchableOpacity>
           </View>
@@ -224,11 +226,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
   if (fullScreen) {
     return (
-      <Modal
-        visible={true}
-        animationType="slide"
-        statusBarTranslucent
-      >
+      <Modal visible={true} animationType="slide" statusBarTranslucent>
         <SafeAreaView style={styles.modalContainer}>
           <StatusBar barStyle="dark-content" />
           {renderSignaturePad()}

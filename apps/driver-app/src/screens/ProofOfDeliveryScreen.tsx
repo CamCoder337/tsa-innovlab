@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   View,
@@ -63,7 +63,7 @@ interface ProofOfDeliveryScreenProps {
   route: {
     params: {
       mission: Mission;
-      onGoBack?: (updatedMission: Mission) => void;
+      onGoBack?: (_updatedMission: Mission) => void;
     };
   };
   navigation: {
@@ -76,13 +76,17 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
   navigation,
 }) => {
   // Convertir les dates de chaînes en objets Date si nécessaire
-  const mission = React.useMemo(() => ({
-    ...route.params.mission,
-    pickupTime: route.params.mission.pickupTime instanceof Date 
-      ? route.params.mission.pickupTime 
-      : new Date(route.params.mission.pickupTime),
-    // Ajoutez d'autres champs de date si nécessaire
-  }), [route.params.mission]);
+  const mission = React.useMemo(
+    () => ({
+      ...route.params.mission,
+      pickupTime:
+        route.params.mission.pickupTime instanceof Date
+          ? route.params.mission.pickupTime
+          : new Date(route.params.mission.pickupTime),
+      // Ajoutez d'autres champs de date si nécessaire
+    }),
+    [route.params.mission]
+  );
   const [photo, setPhoto] = useState<string | null>(null);
   const [signature, setSignature] = useState<string | null>(null);
   const [recipientName, setRecipientName] = useState('');
@@ -95,9 +99,12 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
   const takePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
-        Alert.alert('Permission refusée', 'Vous devez autoriser l\'accès à la caméra pour prendre une photo.');
+        Alert.alert(
+          'Permission refusée',
+          "Vous devez autoriser l'accès à la caméra pour prendre une photo."
+        );
         return;
       }
 
@@ -137,12 +144,12 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    console.log('Tentative de soumission avec:', { 
-      photo: !!photo, 
-      signature: !!signature, 
-      recipientName: recipientName.trim() 
+    console.log('Tentative de soumission avec:', {
+      photo: !!photo,
+      signature: !!signature,
+      recipientName: recipientName.trim(),
     });
-    
+
     if (!photo || !signature || !recipientName.trim()) {
       Alert.alert('Erreur', 'Veuillez compléter tous les champs requis.');
       return;
@@ -152,24 +159,21 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
 
     try {
       // Mise à jour du statut de la mission
-      const updatedMission = updateMissionStatus(mission.id, MissionStatus.DELIVERED);
-      
+      const updatedMission = await updateMissionStatus(mission.id, MissionStatus.DELIVERED);
+
       if (updatedMission) {
-        // Mise à jour des données supplémentaires
-        const missionWithDeliveryData = {
+        // Mettre à jour avec les données de preuve de livraison
+        const missionWithDeliveryData: Mission = {
           ...updatedMission,
-          recipientName: recipientName.trim(),
-          comments: notes,
-          signature,
-          photo,
-          status: MissionStatus.DELIVERED,
-          updatedAt: new Date().toISOString()
+          proofOfDelivery: {
+            photo,
+            signature,
+            recipientName: recipientName.trim(),
+            notes,
+            deliveredAt: new Date().toISOString(),
+          },
         };
-        
-        // Mettre à jour la mission avec les données complètes
-        // Note: Dans une application réelle, vous devriez avoir une fonction updateMission
-        // qui prend un objet Mission complet, pas seulement l'ID et le statut
-        
+
         if (route.params?.onGoBack) {
           route.params.onGoBack(missionWithDeliveryData);
         }
@@ -193,7 +197,7 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
@@ -208,10 +212,7 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
               <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Preuve de livraison</Text>
@@ -231,27 +232,17 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
             <Text style={styles.sectionTitle}>
               Preuve photo <Text style={styles.required}>*</Text>
             </Text>
-            
+
             <View style={styles.photoContainer}>
               {photo ? (
                 <>
-                  <Image 
-                    source={{ uri: photo }} 
-                    style={styles.photoImage} 
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity 
-                    style={styles.retakeButton} 
-                    onPress={removePhoto}
-                  >
+                  <Image source={{ uri: photo }} style={styles.photoImage} resizeMode="cover" />
+                  <TouchableOpacity style={styles.retakeButton} onPress={removePhoto}>
                     <Text style={styles.retakeButtonText}>Reprendre</Text>
                   </TouchableOpacity>
                 </>
               ) : (
-                <TouchableOpacity 
-                  style={styles.takePhotoButton}
-                  onPress={takePhoto}
-                >
+                <TouchableOpacity style={styles.takePhotoButton} onPress={takePhoto}>
                   <Text style={styles.takePhotoIcon}>📷</Text>
                   <Text style={styles.takePhotoText}>Prendre une photo</Text>
                 </TouchableOpacity>
@@ -278,23 +269,21 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
             <Text style={styles.sectionTitle}>
               Signature du destinataire <Text style={styles.required}>*</Text>
             </Text>
-            <TouchableOpacity 
-              style={styles.signatureContainer} 
+            <TouchableOpacity
+              style={styles.signatureContainer}
               onPress={handleOpenSignatureModal}
               activeOpacity={0.9}
             >
               {signature ? (
-                <Image 
-                  source={{ uri: signature }} 
+                <Image
+                  source={{ uri: signature }}
                   style={styles.signaturePreview}
                   resizeMode="contain"
                 />
               ) : (
                 <View style={styles.signaturePlaceholder}>
                   <Ionicons name="pencil" size={24} color={Colors.text.secondary} />
-                  <Text style={styles.signaturePlaceholderText}>
-                    Appuyez pour signer
-                  </Text>
+                  <Text style={styles.signaturePlaceholderText}>Appuyez pour signer</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -315,10 +304,10 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-              styles.submitButton, 
-              (!photo || !signature || !recipientName.trim()) && styles.submitButtonDisabled
+              styles.submitButton,
+              (!photo || !signature || !recipientName.trim()) && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={loading || !photo || !signature || !recipientName.trim()}
@@ -328,16 +317,14 @@ export const ProofOfDeliveryScreen: React.FC<ProofOfDeliveryScreenProps> = ({
                 loading,
                 hasPhoto: !!photo,
                 hasSignature: !!signature,
-                hasRecipientName: !!recipientName.trim()
+                hasRecipientName: !!recipientName.trim(),
               });
             }}
           >
             {loading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>
-                ✓ Confirmer la livraison
-              </Text>
+              <Text style={styles.submitButtonText}>✓ Confirmer la livraison</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

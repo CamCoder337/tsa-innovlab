@@ -13,18 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
 import { PlaceAutocomplete } from '../components/PlaceAutocomplete';
-import {
-  getPlaceDetails,
-  PlacePrediction,
-} from '../services/googlePlacesService';
+import { getPlaceDetails, PlacePrediction } from '../services/googlePlacesService';
 
 interface CreateMissionScreenProps {
   navigation: any;
 }
 
-export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
-  navigation,
-}) => {
+export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({ navigation }) => {
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -54,7 +49,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
       try {
         console.log('Vérification des permissions de localisation...');
         const { status } = await Location.requestForegroundPermissionsAsync();
-        
+
         if (status !== 'granted') {
           console.log('Permission de localisation refusée');
           Alert.alert(
@@ -80,18 +75,18 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
 
         console.log('Position actuelle récupérée:', coords);
         setCurrentLocation(coords);
-        
+
         // Si l'utilisateur a coché la case pour utiliser la position actuelle
         if (useCurrentLocation) {
           setPickup({
             ...coords,
-            address: 'Ma position actuelle'
+            address: 'Ma position actuelle',
           });
         }
       } catch (error) {
         console.error('Erreur de géolocalisation:', error);
         Alert.alert(
-          'Erreur de localisation', 
+          'Erreur de localisation',
           'Impossible de récupérer votre position. Vérifiez que le GPS est activé et que vous avez une bonne réception.'
         );
       }
@@ -182,13 +177,15 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
         latitude: pickup.latitude,
         longitude: pickup.longitude,
         address: pickup.address || 'Point de départ',
-        city: pickup.address ? (pickup.address.split(',')[1]?.trim() || 'Départ') : 'Départ',
+        city: pickup.address ? pickup.address.split(',')[1]?.trim() || 'Départ' : 'Départ',
       },
       delivery: {
         latitude: delivery.latitude,
         longitude: delivery.longitude,
         address: delivery.address || 'Destination',
-        city: delivery.address ? (delivery.address.split(',')[1]?.trim() || 'Destination') : 'Destination',
+        city: delivery.address
+          ? delivery.address.split(',')[1]?.trim() || 'Destination'
+          : 'Destination',
       },
       isLiveTracking: true,
       autoStart: true, // Démarrer automatiquement le suivi
@@ -206,10 +203,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Créer une Mission GPS</Text>
@@ -221,8 +215,8 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
           <View style={styles.infoBox}>
             <Text style={styles.infoEmoji}>🗺️</Text>
             <Text style={styles.infoText}>
-              Utilisez Google Maps pour choisir votre départ et destination, puis
-              suivez votre trajet en temps réel.
+              Utilisez Google Maps pour choisir votre départ et destination, puis suivez votre
+              trajet en temps réel.
             </Text>
           </View>
 
@@ -239,9 +233,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
                   disabled={!currentLocation || loading}
                 >
                   <Text style={styles.currentLocationIcon}>📍</Text>
-                  <Text style={styles.currentLocationText}>
-                    Utiliser ma position actuelle
-                  </Text>
+                  <Text style={styles.currentLocationText}>Utiliser ma position actuelle</Text>
                 </TouchableOpacity>
 
                 <View style={styles.divider}>
@@ -262,15 +254,11 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
               <View>
                 <View style={styles.locationCard}>
                   <View style={styles.locationIcon}>
-                    <Text style={styles.locationEmoji}>
-                      {useCurrentLocation ? '🚩' : '📍'}
-                    </Text>
+                    <Text style={styles.locationEmoji}>{useCurrentLocation ? '🚩' : '📍'}</Text>
                   </View>
                   <View style={styles.locationInfo}>
                     <Text style={styles.locationLabel}>
-                      {useCurrentLocation
-                        ? 'Position actuelle'
-                        : 'Point de départ'}
+                      {useCurrentLocation ? 'Position actuelle' : 'Point de départ'}
                     </Text>
                     <Text style={styles.locationAddress}>{pickup.address}</Text>
                     <Text style={styles.locationCoords}>
@@ -286,9 +274,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
                     setUseCurrentLocation(false);
                   }}
                 >
-                  <Text style={styles.changeButtonText}>
-                    Changer le point de départ
-                  </Text>
+                  <Text style={styles.changeButtonText}>Changer le point de départ</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -320,13 +306,8 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
                   </View>
                 </View>
                 {/* Bouton pour changer la destination */}
-                <TouchableOpacity
-                  style={styles.changeButton}
-                  onPress={() => setDelivery(null)}
-                >
-                  <Text style={styles.changeButtonText}>
-                    Changer la destination
-                  </Text>
+                <TouchableOpacity style={styles.changeButton} onPress={() => setDelivery(null)}>
+                  <Text style={styles.changeButtonText}>Changer la destination</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -356,9 +337,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
             <Text style={styles.instructionItem}>
               2. Sélectionnez une destination avec l'autocomplete
             </Text>
-            <Text style={styles.instructionItem}>
-              3. Le suivi GPS démarrera automatiquement
-            </Text>
+            <Text style={styles.instructionItem}>3. Le suivi GPS démarrera automatiquement</Text>
             <Text style={styles.instructionItem}>
               4. Déplacez-vous vers la destination et observez
             </Text>
@@ -376,9 +355,7 @@ export const CreateMissionScreen: React.FC<CreateMissionScreenProps> = ({
             {loading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
-              <Text style={styles.createButtonText}>
-                🚀 Démarrer le suivi GPS
-              </Text>
+              <Text style={styles.createButtonText}>🚀 Démarrer le suivi GPS</Text>
             )}
           </TouchableOpacity>
         </View>

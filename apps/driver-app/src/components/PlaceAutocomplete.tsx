@@ -8,14 +8,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../constants/colors';
-import {
-  getPlacePredictions,
-  PlacePrediction,
-} from '../services/googlePlacesService';
+import { getPlacePredictions, PlacePrediction } from '../services/googlePlacesService';
 
 interface PlaceAutocompleteProps {
   placeholder: string;
-  onPlaceSelected: (prediction: PlacePrediction) => void;
+  onPlaceSelected: (_prediction: PlacePrediction) => void;
   currentLocation?: { latitude: number; longitude: number };
   initialValue?: string;
 }
@@ -88,9 +85,7 @@ export const PlaceAutocomplete: React.FC<PlaceAutocompleteProps> = ({
                 <Text style={styles.icon}>📍</Text>
               </View>
               <View style={styles.predictionText}>
-                <Text style={styles.mainText}>
-                  {item.structured_formatting.main_text}
-                </Text>
+                <Text style={styles.mainText}>{item.structured_formatting.main_text}</Text>
                 <Text style={styles.secondaryText}>
                   {item.structured_formatting.secondary_text}
                 </Text>

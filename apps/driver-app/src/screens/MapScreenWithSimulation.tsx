@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { Colors } from '../constants/colors';
 import { getMissionById } from '../data/mockMissions';
@@ -25,38 +18,31 @@ interface MapScreenProps {
   navigation: any;
 }
 
-export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
-  route,
-  navigation,
-}) => {
+export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({ route, navigation }) => {
   const { missionId } = route.params;
   const mission = getMissionById(missionId);
   const mapRef = useRef<MapView>(null);
   const simulatorRef = useRef<RouteSimulator | null>(null);
 
   // État de la simulation
-  const [simulationState, setSimulationState] =
-    useState<RouteSimulationState>({
-      currentPosition: mission
-        ? {
-            latitude: mission.pickup.latitude,
-            longitude: mission.pickup.longitude,
-          }
-        : { latitude: 0, longitude: 0 },
-      progress: 0,
-      remainingDistance: mission?.distance || 0,
-      eta: mission ? calculateETA(mission.distance) : 0,
-      isRunning: false,
-    });
+  const [simulationState, setSimulationState] = useState<RouteSimulationState>({
+    currentPosition: mission
+      ? {
+          latitude: mission.pickup.latitude,
+          longitude: mission.pickup.longitude,
+        }
+      : { latitude: 0, longitude: 0 },
+    progress: 0,
+    remainingDistance: mission?.distance || 0,
+    eta: mission ? calculateETA(mission.distance) : 0,
+    isRunning: false,
+  });
 
   if (!mission) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Mission introuvable</Text>
-        <TouchableOpacity
-          style={styles.errorButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.errorButton} onPress={() => navigation.goBack()}>
           <Text style={styles.errorButtonText}>Retour</Text>
         </TouchableOpacity>
       </View>
@@ -74,14 +60,10 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
   // Auto-centrer la carte sur la mission au chargement
   useEffect(() => {
     if (mission && mapRef.current) {
-      const centerLat =
-        (mission.pickup.latitude + mission.delivery.latitude) / 2;
-      const centerLng =
-        (mission.pickup.longitude + mission.delivery.longitude) / 2;
-      const latDelta =
-        Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
-      const lngDelta =
-        Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
+      const centerLat = (mission.pickup.latitude + mission.delivery.latitude) / 2;
+      const centerLng = (mission.pickup.longitude + mission.delivery.longitude) / 2;
+      const latDelta = Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
+      const lngDelta = Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
 
       setTimeout(() => {
         mapRef.current?.animateToRegion({
@@ -128,7 +110,7 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
           3 // 3 points par seconde pour une simulation plus rapide
         );
       } catch (error) {
-        console.error('Erreur lors de l\'initialisation du simulateur:', error);
+        console.error("Erreur lors de l'initialisation du simulateur:", error);
       }
 
       return () => {
@@ -222,7 +204,11 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
             },
           ]}
           strokeColor={
-            mission.status === MissionStatus.IN_PROGRESS
+            [
+              MissionStatus.EN_ROUTE_PICKUP,
+              MissionStatus.EN_ROUTE_DELIVERY,
+              MissionStatus.LOADED,
+            ].includes(mission.status)
               ? Colors.primary
               : Colors.gray[400]
           }
@@ -246,10 +232,7 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
@@ -271,16 +254,12 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>Distance restante</Text>
-            <Text style={styles.statValue}>
-              {simulationState.remainingDistance.toFixed(1)} km
-            </Text>
+            <Text style={styles.statValue}>{simulationState.remainingDistance.toFixed(1)} km</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statLabel}>ETA</Text>
-            <Text style={styles.statValue}>
-              {formatETA(simulationState.eta)}
-            </Text>
+            <Text style={styles.statValue}>{formatETA(simulationState.eta)}</Text>
           </View>
         </View>
 
@@ -292,9 +271,7 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
               onPress={handleStartSimulation}
             >
               <Text style={styles.controlButtonText}>
-                {simulationState.progress === 0
-                  ? '▶ Démarrer simulation'
-                  : '▶ Reprendre'}
+                {simulationState.progress === 0 ? '▶ Démarrer simulation' : '▶ Reprendre'}
               </Text>
             </TouchableOpacity>
           ) : (
@@ -337,18 +314,14 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
 
             <View style={styles.route}>
               <View style={styles.routePoint}>
-                <View
-                  style={[styles.dot, { backgroundColor: Colors.primary }]}
-                />
+                <View style={[styles.dot, { backgroundColor: Colors.primary }]} />
                 <Text style={styles.cityText}>{mission.pickup.city}</Text>
               </View>
               <View style={styles.routeArrow}>
                 <Text style={styles.arrowText}>→</Text>
               </View>
               <View style={styles.routePoint}>
-                <View
-                  style={[styles.dot, { backgroundColor: Colors.success }]}
-                />
+                <View style={[styles.dot, { backgroundColor: Colors.success }]} />
                 <Text style={styles.cityText}>{mission.delivery.city}</Text>
               </View>
             </View>
@@ -364,9 +337,7 @@ export const MapScreenWithSimulation: React.FC<MapScreenProps> = ({
             </View>
 
             <View style={styles.cta}>
-              <Text style={styles.ctaText}>
-                Appuyez pour voir les détails
-              </Text>
+              <Text style={styles.ctaText}>Appuyez pour voir les détails</Text>
             </View>
           </TouchableOpacity>
         </ScrollView>

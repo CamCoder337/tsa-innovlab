@@ -50,7 +50,7 @@ export const getPlacePredictions = async (
 
     return [];
   } catch (error) {
-    console.error('Erreur lors de l\'autocomplete:', error);
+    console.error("Erreur lors de l'autocomplete:", error);
     return [];
   }
 };
@@ -58,9 +58,7 @@ export const getPlacePredictions = async (
 /**
  * Obtenir les détails d'un lieu à partir de son place_id
  */
-export const getPlaceDetails = async (
-  placeId: string
-): Promise<PlaceDetails | null> => {
+export const getPlaceDetails = async (placeId: string): Promise<PlaceDetails | null> => {
   try {
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address,name&key=${GOOGLE_MAPS_API_KEY}`;
 

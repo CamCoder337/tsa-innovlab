@@ -17,7 +17,7 @@ let missions: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Avenue Kennedy, Centre Ville',
       city: 'Yaoundé',
@@ -48,7 +48,7 @@ let missions: Mission[] = [
     missionNumber: 'TSA-M-2025-002',
     status: MissionStatus.ASSIGNED,
     pickup: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Marché Central, Mfoundi',
       city: 'Yaoundé',
@@ -90,7 +90,7 @@ let missions: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 4.1560,
+      latitude: 4.156,
       longitude: 9.2455,
       address: 'Port de Limbé',
       city: 'Limbé',
@@ -111,7 +111,7 @@ let missions: Mission[] = [
       name: 'Garage Central',
       phone: '+237 699 11 22 33',
     },
-    specialInstructions: 'Livraison à l\'entrepôt arrière',
+    specialInstructions: "Livraison à l'entrepôt arrière",
     progress: 0,
     createdAt: new Date('2025-11-16T10:00:00'),
     updatedAt: new Date('2025-11-16T10:00:00'),
@@ -127,7 +127,7 @@ let missions: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Hilton Yaoundé',
       city: 'Yaoundé',
@@ -148,7 +148,7 @@ let missions: Mission[] = [
       name: 'Hilton Yaoundé',
       phone: '+237 222 23 05 55',
     },
-    specialInstructions: 'Accueillir les passagers avec des bouteilles d\'eau',
+    specialInstructions: "Accueillir les passagers avec des bouteilles d'eau",
     progress: 100,
     proofOfDelivery: {
       photo: 'https://example.com/proofs/photo-4.jpg',
@@ -279,7 +279,7 @@ const mockMissionsData: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Avenue Kennedy, Centre Ville',
       city: 'Yaoundé',
@@ -310,7 +310,7 @@ const mockMissionsData: Mission[] = [
     missionNumber: 'TSA-M-2025-002',
     status: MissionStatus.ASSIGNED,
     pickup: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Marché Central, Mfoundi',
       city: 'Yaoundé',
@@ -352,7 +352,7 @@ const mockMissionsData: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 4.1560,
+      latitude: 4.156,
       longitude: 9.2455,
       address: 'Port de Limbé',
       city: 'Limbé',
@@ -373,7 +373,7 @@ const mockMissionsData: Mission[] = [
       name: 'Garage Central',
       phone: '+237 699 11 22 33',
     },
-    specialInstructions: 'Livraison à l\'entrepôt arrière',
+    specialInstructions: "Livraison à l'entrepôt arrière",
     progress: 0,
     createdAt: new Date('2025-11-16T10:00:00'),
     updatedAt: new Date('2025-11-16T10:00:00'),
@@ -389,7 +389,7 @@ const mockMissionsData: Mission[] = [
       city: 'Douala',
     },
     delivery: {
-      latitude: 3.8480,
+      latitude: 3.848,
       longitude: 11.5021,
       address: 'Hilton Yaoundé',
       city: 'Yaoundé',
@@ -410,7 +410,7 @@ const mockMissionsData: Mission[] = [
       name: 'Hilton Yaoundé',
       phone: '+237 222 23 05 55',
     },
-    specialInstructions: 'Accueillir les passagers avec des bouteilles d\'eau',
+    specialInstructions: "Accueillir les passagers avec des bouteilles d'eau",
     progress: 100,
     proofOfDelivery: {
       photo: 'https://example.com/proofs/photo-4.jpg',

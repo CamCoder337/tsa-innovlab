@@ -12,7 +12,7 @@ import {
 import { Colors } from '../constants/colors';
 
 interface SOSButtonProps {
-  onSOSAlert?: (type: string, description: string) => void;
+  onSOSAlert?: (_type: string, _description: string) => void;
 }
 
 const SOS_TYPES = [
@@ -52,12 +52,12 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onSOSAlert }) => {
 
   const handleSendSOS = () => {
     if (!selectedType) {
-      Alert.alert('Erreur', 'Veuillez sélectionner le type d\'alerte');
+      Alert.alert('Erreur', "Veuillez sélectionner le type d'alerte");
       return;
     }
 
     Alert.alert(
-      'Confirmer l\'alerte SOS',
+      "Confirmer l'alerte SOS",
       'Voulez-vous vraiment envoyer une alerte SOS ? Les autorités et votre entreprise seront notifiées immédiatement.',
       [
         {
@@ -93,12 +93,7 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onSOSAlert }) => {
   return (
     <>
       {/* Bouton SOS flottant */}
-      <Animated.View
-        style={[
-          styles.sosButton,
-          { transform: [{ scale: pulseAnim }] },
-        ]}
-      >
+      <Animated.View style={[styles.sosButton, { transform: [{ scale: pulseAnim }] }]}>
         <TouchableOpacity
           style={styles.sosButtonInner}
           onPress={handleSOSPress}
@@ -130,27 +125,19 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onSOSAlert }) => {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSubtitle}>
-              Sélectionnez le type d'urgence :
-            </Text>
+            <Text style={styles.modalSubtitle}>Sélectionnez le type d'urgence :</Text>
 
             {/* Types d'alerte */}
             <View style={styles.typeGrid}>
               {SOS_TYPES.map((type) => (
                 <TouchableOpacity
                   key={type.id}
-                  style={[
-                    styles.typeCard,
-                    selectedType === type.id && styles.typeCardSelected,
-                  ]}
+                  style={[styles.typeCard, selectedType === type.id && styles.typeCardSelected]}
                   onPress={() => setSelectedType(type.id)}
                 >
                   <Text style={styles.typeIcon}>{type.icon}</Text>
                   <Text
-                    style={[
-                      styles.typeLabel,
-                      selectedType === type.id && styles.typeLabelSelected,
-                    ]}
+                    style={[styles.typeLabel, selectedType === type.id && styles.typeLabelSelected]}
                   >
                     {type.label}
                   </Text>
@@ -183,10 +170,7 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onSOSAlert }) => {
                 <Text style={styles.buttonCancelText}>Annuler</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.button, styles.buttonSOS]}
-                onPress={handleSendSOS}
-              >
+              <TouchableOpacity style={[styles.button, styles.buttonSOS]} onPress={handleSendSOS}>
                 <Text style={styles.buttonSOSText}>Envoyer SOS</Text>
               </TouchableOpacity>
             </View>

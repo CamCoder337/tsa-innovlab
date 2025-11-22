@@ -9,7 +9,7 @@ interface MissionCardProps {
   onPress?: () => void;
 }
 
-const formatDate = (date: Date): string => {
+const formatDate = (date: Date | string): string => {
   return new Date(date).toLocaleString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -18,11 +18,7 @@ const formatDate = (date: Date): string => {
 
 export const MissionCard: React.FC<MissionCardProps> = ({ mission, onPress }) => {
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -73,7 +69,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({ mission, onPress }) =>
         </View>
         <View style={styles.divider} />
         <View style={styles.stat}>
-          <Text style={styles.statValue}>{Math.floor(mission.estimatedDuration / 60)}h{mission.estimatedDuration % 60}</Text>
+          <Text style={styles.statValue}>
+            {Math.floor(mission.estimatedDuration / 60)}h{mission.estimatedDuration % 60}
+          </Text>
           <Text style={styles.statLabel}>Durée estimée</Text>
         </View>
       </View>

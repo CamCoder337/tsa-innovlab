@@ -4,9 +4,7 @@ import { MissionStatus } from '../types/mission.types';
 /**
  * Obtenir le prochain statut de mission
  */
-export const getNextStatus = (
-  currentStatus: MissionStatus
-): MissionStatus | null => {
+export const getNextStatus = (currentStatus: MissionStatus): MissionStatus | null => {
   const statusFlow: { [key in MissionStatus]?: MissionStatus } = {
     [MissionStatus.ASSIGNED]: MissionStatus.ACCEPTED,
     [MissionStatus.ACCEPTED]: MissionStatus.EN_ROUTE_PICKUP,
@@ -72,19 +70,15 @@ export const makePhoneCall = (phoneNumber: string) => {
       }
     })
     .catch((err) => {
-      console.error('Erreur lors de l\'appel:', err);
-      Alert.alert('Erreur', 'Impossible de passer l\'appel.');
+      console.error("Erreur lors de l'appel:", err);
+      Alert.alert('Erreur', "Impossible de passer l'appel.");
     });
 };
 
 /**
  * Ouvrir la navigation vers une destination
  */
-export const openNavigation = (
-  latitude: number,
-  longitude: number,
-  address: string
-) => {
+export const openNavigation = (latitude: number, longitude: number, address: string) => {
   const scheme = Platform.select({
     ios: 'maps:0,0?q=',
     android: 'geo:0,0?q=',
@@ -108,8 +102,8 @@ export const openNavigation = (
         }
       })
       .catch((err) => {
-        console.error('Erreur lors de l\'ouverture de la navigation:', err);
-        Alert.alert('Erreur', 'Impossible d\'ouvrir la navigation.');
+        console.error("Erreur lors de l'ouverture de la navigation:", err);
+        Alert.alert('Erreur', "Impossible d'ouvrir la navigation.");
       });
   }
 };
@@ -123,28 +117,21 @@ export const openWaze = (latitude: number, longitude: number) => {
   Linking.canOpenURL(url)
     .then((supported) => {
       if (!supported) {
-        Alert.alert(
-          'Waze non disponible',
-          'L\'application Waze n\'est pas installée.'
-        );
+        Alert.alert('Waze non disponible', "L'application Waze n'est pas installée.");
       } else {
         return Linking.openURL(url);
       }
     })
     .catch((err) => {
-      console.error('Erreur lors de l\'ouverture de Waze:', err);
-      Alert.alert('Erreur', 'Impossible d\'ouvrir Waze.');
+      console.error("Erreur lors de l'ouverture de Waze:", err);
+      Alert.alert('Erreur', "Impossible d'ouvrir Waze.");
     });
 };
 
 /**
  * Ouvrir le choix de navigation
  */
-export const promptNavigationChoice = (
-  latitude: number,
-  longitude: number,
-  address: string
-) => {
+export const promptNavigationChoice = (latitude: number, longitude: number, address: string) => {
   Alert.alert(
     'Navigation',
     'Choisissez votre application de navigation',

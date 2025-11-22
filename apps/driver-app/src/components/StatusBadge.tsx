@@ -72,12 +72,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const config = getStatusConfig(status);
 
   return (
-    <View
-      style={[
-        styles.badge,
-        { backgroundColor: config.backgroundColor },
-      ]}
-    >
+    <View style={[styles.badge, { backgroundColor: config.backgroundColor }]}>
       <View style={[styles.dot, { backgroundColor: config.color }]} />
       <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
     </View>

@@ -11,8 +11,8 @@ import {
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
-import { getMissionById } from '../data/mockMissions';
-import { MissionStatus } from '../types/mission.types';
+import { getMission } from '../services/missionService';
+import { MissionStatus, Mission } from '../types/mission.types';
 import { StatusBadge } from '../components/StatusBadge';
 import { SOSButton } from '../components/SOSButton';
 import {
@@ -35,18 +35,16 @@ interface MapScreenProps {
 
 export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
   const { missionId } = route.params;
-  const mission = getMissionById(missionId);
+  const [mission, setMission] = useState<Mission | undefined>();
   const mapRef = useRef<MapView>(null);
   const simulatorRef = useRef<MissionSimulator | null>(null);
 
   const [routeCoordinates, setRouteCoordinates] = useState<
     Array<{ latitude: number; longitude: number }>
   >([]);
-  const [directionsData, setDirectionsData] = useState<DirectionsResult | null>(
-    null
-  );
+  const [directionsData, setDirectionsData] = useState<DirectionsResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userLocation, setUserLocation] = useState<{
+  const [_userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
@@ -63,27 +61,29 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
     isCompleted: false,
   });
 
-  if (!mission) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Mission introuvable</Text>
-        <TouchableOpacity
-          style={styles.errorButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.errorButtonText}>Retour</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  // Centre initial de la carte sur la mission (ou centre du Cameroun par défaut)
+  const initialRegion = mission
+    ? {
+        latitude: mission.pickup.latitude,
+        longitude: mission.pickup.longitude,
+        latitudeDelta: 1.5,
+        longitudeDelta: 1.5,
+      }
+    : {
+        latitude: 3.848,
+        longitude: 11.5021,
+        latitudeDelta: 5,
+        longitudeDelta: 5,
+      };
 
-  // Centre initial de la carte sur la mission
-  const initialRegion = {
-    latitude: mission.pickup.latitude,
-    longitude: mission.pickup.longitude,
-    latitudeDelta: 1.5,
-    longitudeDelta: 1.5,
-  };
+  // Charger la mission au montage
+  useEffect(() => {
+    const loadMission = async () => {
+      const loadedMission = await getMission(missionId);
+      setMission(loadedMission);
+    };
+    loadMission();
+  }, [missionId]);
 
   // Demander la permission de géolocalisation
   useEffect(() => {
@@ -107,6 +107,8 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
 
   // Charger les directions depuis Google Maps
   useEffect(() => {
+    if (!mission) return;
+
     const loadDirections = async () => {
       try {
         setLoading(true);
@@ -200,14 +202,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
   // Auto-centrer la carte sur la mission au chargement
   useEffect(() => {
     if (mission && mapRef.current && !loading && routeCoordinates.length > 0) {
-      const centerLat =
-        (mission.pickup.latitude + mission.delivery.latitude) / 2;
-      const centerLng =
-        (mission.pickup.longitude + mission.delivery.longitude) / 2;
-      const latDelta =
-        Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
-      const lngDelta =
-        Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
+      const centerLat = (mission.pickup.latitude + mission.delivery.latitude) / 2;
+      const centerLng = (mission.pickup.longitude + mission.delivery.longitude) / 2;
+      const latDelta = Math.abs(mission.pickup.latitude - mission.delivery.latitude) * 1.5;
+      const lngDelta = Math.abs(mission.pickup.longitude - mission.delivery.longitude) * 1.5;
 
       setTimeout(() => {
         mapRef.current?.animateToRegion({
@@ -259,10 +257,20 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
   };
 
   // Obtenir les routes parcourues et restantes
-  const completedRoute =
-    simulatorRef.current?.getCompletedRoute() || routeCoordinates.slice(0, 1);
-  const remainingRoute =
-    simulatorRef.current?.getRemainingRoute() || routeCoordinates;
+  const completedRoute = simulatorRef.current?.getCompletedRoute() || routeCoordinates.slice(0, 1);
+  const remainingRoute = simulatorRef.current?.getRemainingRoute() || routeCoordinates;
+
+  // Afficher un écran de chargement si la mission n'est pas encore chargée
+  if (!mission) {
+    return (
+      <View style={styles.loadingOverlay}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Chargement de la mission...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -298,11 +306,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
 
         {/* Route parcourue (gris délavé) */}
         {completedRoute.length > 1 && simulationState.progress > 0 && (
-          <Polyline
-            coordinates={completedRoute}
-            strokeColor={Colors.gray[300]}
-            strokeWidth={6}
-          />
+          <Polyline coordinates={completedRoute} strokeColor={Colors.gray[300]} strokeWidth={6} />
         )}
 
         {/* Route restante (bleu foncé) */}
@@ -310,7 +314,11 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
           <Polyline
             coordinates={remainingRoute}
             strokeColor={
-              mission.status === MissionStatus.IN_PROGRESS
+              [
+                MissionStatus.EN_ROUTE_PICKUP,
+                MissionStatus.EN_ROUTE_DELIVERY,
+                MissionStatus.LOADED,
+              ].includes(mission.status)
                 ? Colors.primary
                 : Colors.gray[400]
             }
@@ -337,19 +345,14 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>
-              Chargement de l'itinéraire...
-            </Text>
+            <Text style={styles.loadingText}>Chargement de l'itinéraire...</Text>
           </View>
         </View>
       )}
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerContent}>
@@ -397,9 +400,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
                 onPress={handleStartSimulation}
               >
                 <Text style={styles.controlButtonText}>
-                  {simulationState.progress === 0
-                    ? '▶ Démarrer simulation'
-                    : '▶ Reprendre'}
+                  {simulationState.progress === 0 ? '▶ Démarrer simulation' : '▶ Reprendre'}
                 </Text>
               </TouchableOpacity>
             ) : simulationState.isRunning ? (
@@ -445,25 +446,21 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
 
             <View style={styles.route}>
               <View style={styles.routePoint}>
-                <View
-                  style={[styles.dot, { backgroundColor: Colors.primary }]}
-                />
+                <View style={[styles.dot, { backgroundColor: Colors.primary }]} />
                 <Text style={styles.cityText}>{mission.pickup.city}</Text>
               </View>
               <View style={styles.routeArrow}>
                 <Text style={styles.arrowText}>→</Text>
               </View>
               <View style={styles.routePoint}>
-                <View
-                  style={[styles.dot, { backgroundColor: Colors.success }]}
-                />
+                <View style={[styles.dot, { backgroundColor: Colors.success }]} />
                 <Text style={styles.cityText}>{mission.delivery.city}</Text>
               </View>
             </View>
 
             <View style={styles.stats}>
               <View style={styles.stat}>
-                <Text style={styles.statValue}>
+                <Text style={styles.missionStatValue}>
                   {directionsData
                     ? formatDistance(directionsData.distance)
                     : `${mission.distance} km`}
@@ -471,14 +468,12 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.stat}>
-                <Text style={styles.statValue}>{mission.weight} kg</Text>
+                <Text style={styles.missionStatValue}>{mission.weight} kg</Text>
               </View>
             </View>
 
             <View style={styles.cta}>
-              <Text style={styles.ctaText}>
-                Appuyez pour voir les détails
-              </Text>
+              <Text style={styles.ctaText}>Appuyez pour voir les détails</Text>
             </View>
           </TouchableOpacity>
         </ScrollView>
@@ -757,7 +752,7 @@ const styles = StyleSheet.create({
   stat: {
     alignItems: 'center',
   },
-  statValue: {
+  missionStatValue: {
     fontSize: 15,
     fontWeight: '600',
     color: Colors.text.primary,
