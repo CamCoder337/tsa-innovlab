@@ -147,6 +147,12 @@ export interface ProductStats {
     stock: number
     stockAlert: number
   }>
+  outOfStockCount: number
+  outOfStockProducts: Array<{
+    productId: string
+    productName: string
+    stock: number
+  }>
   evolution: {
     labels: string[]
     data: number[]
@@ -695,6 +701,18 @@ export default class AdminStatsService {
 
     const lowStockCount = lowStockProducts.length
 
+    // Produits en stock faible
+    const outOfStockProducts = allProducts
+      .filter((p) => p.isActive && p.stock <= 0)
+      .map((p) => ({
+        productId: p.id,
+        productName: p.name,
+        stock: p.stock,
+      }))
+      .slice(0, 10)
+
+    const outOfStockCount = outOfStockProducts.length
+
     // Évolution du catalogue (30 derniers jours)
     const labels: string[] = []
     const data: number[] = []
@@ -716,6 +734,8 @@ export default class AdminStatsService {
       totalStockValue,
       lowStockCount,
       lowStockProducts,
+      outOfStockCount,
+      outOfStockProducts,
       evolution: {
         labels,
         data,

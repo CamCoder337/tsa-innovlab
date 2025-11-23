@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,21 +30,40 @@ import {
   Loader2,
   Eye,
   Edit,
+  TrendingUp,
+  CheckCircle,
 } from 'lucide-react';
 import { useUsers } from '@/hooks/useUsers';
+import { useAllAdminStats } from '@/hooks/useAdminStats';
 import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import type { UserRole } from '@/types/auth.types';
 import type { UserStatus } from '@/types/user.types';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function AdminUsersPage() {
   const { users, userStats, isLoading, error, fetchUsers, suspendUser, activateUser, deleteUser } =
     useUsers();
+  const allStats = useAllAdminStats();
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('all');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
 
   // Filter users based on search and filters
   const filteredUsers = users?.filter((user) => {
@@ -56,13 +75,8 @@ export default function AdminUsersPage() {
 
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesTab =
-      activeTab === 'all' ||
-      (activeTab === 'affreteurs' && user.role === 'affreteur') ||
-      (activeTab === 'transporteurs' && user.role === 'transporteur') ||
-      (activeTab === 'admins' && user.role === 'admin');
 
-    return matchesSearch && matchesStatus && matchesRole && matchesTab;
+    return matchesSearch && matchesStatus && matchesRole;
   });
 
   const stats = {
@@ -92,7 +106,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Mock data removed - now using real API data
   if (error) {
     return (
       <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
@@ -162,144 +175,300 @@ export default function AdminUsersPage() {
           </Link>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {tAdmin('users.totalUsers')}
-                  </p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <UserCheck className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {tAdmin('users.activeUsers')}
-                  </p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {tAdmin('users.pendingUsers')}
-                  </p>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <UserX className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {tAdmin('users.suspendedUsers')}
-                  </p>
-                  <p className="text-2xl font-bold">{stats.suspended}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filtres et recherche */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder={tAdmin('users.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as UserStatus | 'all')}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder={tAdmin('users.filterByStatus')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{tAdmin('users.allStatuses')}</SelectItem>
-                  <SelectItem value="active">{tCommon('status.active')}</SelectItem>
-                  <SelectItem value="pending">{tCommon('status.pending')}</SelectItem>
-                  <SelectItem value="suspended">{tCommon('status.suspended')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={roleFilter}
-                onValueChange={(value) => setRoleFilter(value as UserRole | 'all')}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder={tAdmin('users.filterByRole')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{tAdmin('users.allRoles')}</SelectItem>
-                  <SelectItem value="admin">{tCommon('roles.admin')}</SelectItem>
-                  <SelectItem value="affreteur">{tCommon('roles.affreteur')}</SelectItem>
-                  <SelectItem value="transporteur">{tCommon('roles.transporteur')}</SelectItem>
-                  <SelectItem value="client">{tCommon('roles.client')}</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                {tAdmin('users.newUser')}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Onglets */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">
-              {tAdmin('users.all')} ({stats.total})
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="overview">
+              {tAdmin('users.tabs.overview') || "Vue d'ensemble"}
             </TabsTrigger>
-            <TabsTrigger value="affreteurs">
-              {tCommon('roles.affreteur')}s ({stats.affreteurs})
+            <TabsTrigger value="users">
+              {tAdmin('users.tabs.allUsers') || 'Tous les utilisateurs'}
             </TabsTrigger>
-            <TabsTrigger value="transporteurs">
-              {tCommon('roles.transporteur')}s ({stats.transporteurs})
-            </TabsTrigger>
-            <TabsTrigger value="admins">
-              {tCommon('roles.admin')}s ({userStats?.byRole?.admin || 0})
+            <TabsTrigger value="analytics">
+              {tAdmin('users.tabs.analytics') || 'Analytiques'}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-6">
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Stats - Top 5 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Users className="h-5 w-5 text-tsa-blue dark:text-tsa-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.totalUsers')}
+                      </p>
+                      <p className="text-2xl font-bold">{stats.total}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <UserCheck className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.activeUsers')}
+                      </p>
+                      <p className="text-2xl font-bold">{stats.active}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-yellow-100 rounded-lg">
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.pendingUsers')}
+                      </p>
+                      <p className="text-2xl font-bold">{stats.pending}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.users.monthlyGrowth')}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        +{allStats.users.stats?.byPeriod.last30Days || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.users.emailVerified') || 'Email Vérifiés'}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {allStats.users.stats?.emailVerified || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* User Distribution by Role & Status */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{tAdmin('users.userManagement')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link to="/app/users?role=admin">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                          {allStats.users.stats?.byRole.admin || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tCommon('roles.admin')}s
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/app/users?role=affreteur">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">
+                          {allStats.users.stats?.byRole.affreteur || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tCommon('roles.affreteur')}s
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/app/users?role=transporteur">
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <p className="text-2xl font-bold text-purple-600">
+                          {allStats.users.stats?.byRole.transporteur || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tCommon('roles.transporteur')}s
+                        </p>
+                      </div>
+                    </Link>
+                    <Link to="/app/users?role=client">
+                      <div className="text-center p-4 bg-orange-50 rounded-lg">
+                        <p className="text-2xl font-bold text-orange-600">
+                          {allStats.users.stats?.byRole.client || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tCommon('roles.client')}s
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('users.stats.userActivity') || 'Activité des Utilisateurs'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">
+                          {allStats.users.stats?.active || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tAdmin('dashboard.users.activeUsers') || 'Utilisateurs Actifs'}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                        <p className="text-2xl font-bold text-gray-600">
+                          {allStats.users.stats?.inactive || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tAdmin('dashboard.users.inactiveUsers') || 'Utilisateurs Inactifs'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {tAdmin('dashboard.users.newUsersThisMonth')}
+                        </span>
+                        <span className="font-medium text-green-600">
+                          +{allStats.users.stats?.byPeriod.last30Days || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* User Growth Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  {tAdmin('dashboard.users.userGrowth') || 'Croissance des Utilisateurs'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart
+                    data={
+                      allStats.users.stats?.evolution.labels.map((label, index) => ({
+                        date: label,
+                        users: allStats.users.stats?.evolution.data[index] || 0,
+                      })) || []
+                    }
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <Tooltip
+                      formatter={(value: number) => [
+                        value,
+                        tAdmin('dashboard.users.newUsers') || 'Nouveaux utilisateurs',
+                      ]}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="users"
+                      stroke="#3b82f6"
+                      fill="#93c5fd"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-6">
+            {/* Filters and Search */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder={tAdmin('users.searchPlaceholder')}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) => setStatusFilter(value as UserStatus | 'all')}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder={tAdmin('users.filterByStatus')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tAdmin('users.allStatuses')}</SelectItem>
+                      <SelectItem value="active">{tCommon('status.active')}</SelectItem>
+                      <SelectItem value="pending">{tCommon('status.pending')}</SelectItem>
+                      <SelectItem value="suspended">{tCommon('status.suspended')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={roleFilter}
+                    onValueChange={(value) => setRoleFilter(value as UserRole | 'all')}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder={tAdmin('users.filterByRole')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{tAdmin('users.allRoles')}</SelectItem>
+                      <SelectItem value="admin">{tCommon('roles.admin')}</SelectItem>
+                      <SelectItem value="affreteur">{tCommon('roles.affreteur')}</SelectItem>
+                      <SelectItem value="transporteur">{tCommon('roles.transporteur')}</SelectItem>
+                      <SelectItem value="client">{tCommon('roles.client')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    {tAdmin('users.newUser')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Users List */}
             <Card>
               <CardHeader>
                 <CardTitle>{tAdmin('users.usersList')}</CardTitle>
@@ -353,11 +522,6 @@ export default function AdminUsersPage() {
                                 <Calendar className="h-3 w-3" />
                                 {tAdmin('users.registeredOn')} {formatDate(user.createdAt)}
                               </div>
-                              {/* {user.lastLoginAt && (
-                                <span>
-                                  {tAdmin('users.lastLogin')}: {formatDate(user.lastLoginAt)}
-                                </span>
-                              )} */}
                             </div>
                           </div>
                         </div>
@@ -421,6 +585,155 @@ export default function AdminUsersPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('users.stats.verification') || 'Vérification Email & MFA'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart
+                      data={[
+                        {
+                          name: 'Email Vérifiés',
+                          value: allStats.users.stats?.emailVerified || 0,
+                        },
+                        {
+                          name: 'Email Non Vérifiés',
+                          value: allStats.users.stats?.emailUnverified || 0,
+                        },
+                        {
+                          name: 'MFA Activé',
+                          value: allStats.users.stats?.mfaEnabled || 0,
+                        },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                      <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Bar dataKey="value" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.stats.verificationRate') || 'Taux de Vérification'}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {allStats.users.stats?.total
+                          ? `${Math.round(((allStats.users.stats?.emailVerified || 0) / allStats.users.stats.total) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('users.stats.roleDistribution') || 'Distribution par Rôle'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          {
+                            name: tCommon('roles.admin'),
+                            value: allStats.users.stats?.byRole.admin || 0,
+                            color: '#3b82f6',
+                          },
+                          {
+                            name: tCommon('roles.affreteur'),
+                            value: allStats.users.stats?.byRole.affreteur || 0,
+                            color: '#10b981',
+                          },
+                          {
+                            name: tCommon('roles.transporteur'),
+                            value: allStats.users.stats?.byRole.transporteur || 0,
+                            color: '#8b5cf6',
+                          },
+                          {
+                            name: tCommon('roles.client'),
+                            value: allStats.users.stats?.byRole.client || 0,
+                            color: '#f59e0b',
+                          },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
+                      >
+                        {[
+                          { color: '#3b82f6' },
+                          { color: '#10b981' },
+                          { color: '#8b5cf6' },
+                          { color: '#f59e0b' },
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value: number) => [value, 'Utilisateurs']}
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{tAdmin('users.stats.growth') || 'Croissance'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.stats.last7Days') || 'Derniers 7 jours'}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        +{allStats.users.stats?.byPeriod.last7Days || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.stats.last30Days') || 'Derniers 30 jours'}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        +{allStats.users.stats?.byPeriod.last30Days || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('users.stats.total') || 'Total'}
+                      </span>
+                      <span className="font-medium">{allStats.users.stats?.total || 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

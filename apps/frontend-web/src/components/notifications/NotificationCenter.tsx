@@ -20,6 +20,7 @@ import type { NotificationPriority, NotificationType } from '@/types/notificatio
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
+import { useMissions } from '@/hooks/useMissions';
 
 interface NotificationCenterProps {
   className?: string;
@@ -39,6 +40,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     deleteNotification,
     clearError,
   } = useNotifications();
+  const { missions, myMissions, setCurrentMission } = useMissions();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
@@ -52,10 +54,13 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
     if (notification) {
       if (!notification.isRead) await markNotificationRead(notificationId);
       if (notification.actionUrl) {
-        if (
-          ['mission_new', 'missions_assigned', 'mission_status_changed'].includes(notification.type)
-        )
+        if (notification.type.startsWith('mission') && notification.missionId) {
+          const thisMission =
+            missions.find((mission) => mission.id === notification.missionId) ||
+            myMissions.find((mission) => mission.id === notification.missionId);
+          setCurrentMission(thisMission!);
           navigate('/app' + notification.actionUrl);
+        }
       }
     }
   };

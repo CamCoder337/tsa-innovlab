@@ -12,12 +12,23 @@ import { adminService } from '@/services/admin.service';
 import { shopService } from '@/services/shop.service';
 import type { PaginatedMetaResponse, Paginator } from '@/types/common.types';
 
+export function getPersistedData(): Partial<ProductStoreExtended> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_products');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted products data:', error);
+  }
+  return null;
+}
+
 const initialState = {
-  products: [] as Product[],
-  currentProduct: null as Product | null,
-  isLoading: false,
-  error: null as string | null,
-  stats: {
+  products: getPersistedData()?.products || [],
+  currentProduct: getPersistedData()?.currentProduct || null,
+  stats: getPersistedData()?.stats || {
     products: {
       total: 0,
       active: 0,
@@ -27,7 +38,9 @@ const initialState = {
     },
     inventory: {},
     topCategories: [],
-  } as ProductStats,
+  },
+  isLoading: false,
+  error: null,
 };
 
 export const useProductStore = create<ProductStoreExtended>()(
@@ -334,7 +347,7 @@ export const useProductStore = create<ProductStoreExtended>()(
 
           if (response.data) {
             set({
-              stats: response.data,
+              stats: response.data.stats,
               isLoading: false,
               error: null,
             });
@@ -425,6 +438,11 @@ export const useProductStore = create<ProductStoreExtended>()(
             product.description?.toLowerCase().includes(lowercaseQuery) ||
             product.reference?.toLowerCase().includes(lowercaseQuery)
         );
+      },
+
+      getProductById: (productId: string) => {
+        const { products } = get();
+        return products.find((product) => product.id === productId);
       },
 
       getProductsByCategory: (categoryId: string) => {

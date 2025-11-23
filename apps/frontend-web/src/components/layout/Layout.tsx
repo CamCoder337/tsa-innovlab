@@ -52,11 +52,11 @@ export default function Layout() {
       fetchConversations();
       fetchNotifications();
       fetchNotificationStats();
+      fetchOrders();
     }
     if (!user || user.role !== 'admin') {
       if (user) {
         fetchCart();
-        fetchOrders();
       }
       fetchCategories();
       fetchProducts();

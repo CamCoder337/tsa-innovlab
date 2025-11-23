@@ -20,16 +20,29 @@ import { chatService } from '@/services/chat.service';
 import { chatbotService } from '@/services/chatbot.service';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
 
+export function getPersistedData(): Partial<ChatState> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_chat');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted chat data:', error);
+  }
+  return null;
+}
+
 const initialState = {
-  conversations: [],
-  currentConversation: null,
-  messages: {},
+  conversations: getPersistedData()?.conversations || [],
+  currentConversation: getPersistedData()?.currentConversation || null,
+  messages: getPersistedData()?.messages || {},
   typingIndicators: [],
   isLoading: false,
   isReplying: false,
   error: null,
   unreadCount: 0,
-  chatbot: null,
+  chatbot: getPersistedData()?.chatbot || null,
   chatbotCapabilities: {
     canHandleMissions: true,
     canHandleTracking: true,

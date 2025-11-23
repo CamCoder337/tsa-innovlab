@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { DateTime } from 'luxon'
 import Mission, { MissionStatus } from '#models/mission'
+import Vehicle, { VehicleStatus } from '#models/vehicle'
 import User, { UserRole } from '#models/user'
 import Address from '#models/address'
 import {
@@ -11,6 +12,7 @@ import {
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
 import MissionNotificationService from '#services/mission_notification_service'
+import MissionUpdate from '#models/mission_update'
 
 @inject()
 export default class MissionsController {
@@ -311,6 +313,15 @@ export default class MissionsController {
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
 
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        null,
+        null,
+        MissionStatus.DRAFT,
+        'Nouvelle mission créé'
+      )
+
       return response.status(201).json({
         success: true,
         message: 'Mission created successfully for affreteur',
@@ -328,6 +339,7 @@ export default class MissionsController {
 
   async updateStatus({ params, request, response }: HttpContext) {
     const trx = await db.transaction()
+    let transporteur
 
     try {
       const validatedData = await request.validateUsing(updateStatusValidator)
@@ -342,9 +354,29 @@ export default class MissionsController {
         })
       }
 
+      // Vérifier les transitions de statut autorisées pour les transporteurs
+      const allowedTransitions: Record<MissionStatus, MissionStatus[]> = {
+        [MissionStatus.ASSIGNED]: [
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.COMPLETED,
+          MissionStatus.CANCELLED,
+        ],
+        [MissionStatus.IN_PROGRESS]: [MissionStatus.COMPLETED, MissionStatus.CANCELLED],
+      } as Record<MissionStatus, MissionStatus[]>
+
+      const currentAllowedStatuses = allowedTransitions[mission.status] || []
+
+      if (!currentAllowedStatuses.includes(validatedData.status as MissionStatus)) {
+        return response.status(422).json({
+          success: false,
+          message: `Cannot transition from ${mission.status} to ${validatedData.status}`,
+          allowedStatuses: currentAllowedStatuses,
+        })
+      }
+
       // Si on assigne un transporteur
       if (validatedData.transporteurId) {
-        const transporteur = await User.query({ client: trx })
+        transporteur = await User.query({ client: trx })
           .where('id', validatedData.transporteurId)
           .where('role', UserRole.TRANSPORTEUR)
           .first()
@@ -361,14 +393,91 @@ export default class MissionsController {
       }
 
       const oldStatus = mission.status
-      mission.status = validatedData.status as MissionStatus
+      let newStatus = validatedData.status as MissionStatus
 
-      await mission.save()
-      await trx.commit()
+      const isTransporteurCancellation = newStatus === MissionStatus.CANCELLED
+      if (isTransporteurCancellation) {
+        newStatus = MissionStatus.PUBLISHED
+        console.log(
+          `🔄 Transporteur ${transporteur?.fullName} annule mission ${mission.id} → PUBLISHED`
+        )
+      }
+
+      // Sauvegarder les IDs avant désassignation
+      const previousTransporteurId = mission.transporteurId
+      const previousVehicleId = mission.vehicleId
+
+      // Utiliser une transaction pour garantir la cohérence
+      await db.transaction(async () => {
+        // Mettre à jour le statut de la mission
+        mission.status = newStatus
+
+        // 🧹 Si annulation transporteur, nettoyer l'assignation
+        if (isTransporteurCancellation) {
+          mission.transporteurId = null
+          mission.vehicleId = null
+        }
+
+        await mission.useTransaction(trx).save()
+
+        // 🚗 Libérer le véhicule si la mission est terminée ou annulée
+        if (
+          previousVehicleId &&
+          (newStatus === MissionStatus.COMPLETED || isTransporteurCancellation)
+        ) {
+          const vehicle = await Vehicle.query({ client: trx })
+            .where('id', previousVehicleId)
+            .first()
+
+          if (vehicle && vehicle.status === VehicleStatus.IN_MISSION) {
+            vehicle.status = VehicleStatus.AVAILABLE
+            await vehicle.save()
+            console.log(
+              `✅ Véhicule ${vehicle.registration} libéré après ${isTransporteurCancellation ? 'annulation' : newStatus} de mission ${mission.id}`
+            )
+          }
+        }
+      })
 
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+      await mission.refresh() // Recharger pour avoir le véhicule mis à jour
+      await mission.load('vehicle')
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      try {
+        if (isTransporteurCancellation) {
+          // Événement 1 : Annulation par transporteur
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            previousTransporteurId,
+            oldStatus,
+            'cancelled' as MissionStatus,
+            `Mission annulée par le transporteur ${transporteur?.fullName}. ${validatedData.commentaire || 'Aucune raison fournie'}`
+          )
+
+          // Événement 2 : Republication automatique
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            previousTransporteurId,
+            'cancelled' as MissionStatus,
+            newStatus,
+            "Mission automatiquement republiée et disponible pour d'autres transporteurs"
+          )
+        } else {
+          // Mise à jour normale
+          await MissionUpdate.createStatusUpdate(
+            mission.id,
+            previousTransporteurId,
+            oldStatus,
+            newStatus,
+            validatedData.commentaire || 'Mise à jour de statut par le transporteur'
+          )
+        }
+      } catch (updateError) {
+        console.error('❌ Erreur création MissionUpdate:', updateError)
+      }
 
       // Notification si mission assignée à un transporteur
       if (
@@ -409,6 +518,65 @@ export default class MissionsController {
       return response.status(500).json({
         success: false,
         message: 'Failed to update mission status',
+        error: error.message,
+      })
+    }
+  }
+
+  async getHistory({ params, request, response }: HttpContext) {
+    try {
+      const mission = await Mission.query().where('id', params.id).first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      // Paramètres de requête optionnels
+      const page = request.input('page', 1)
+      const limit = request.input('limit', 50)
+      const type = request.input('type') // Filtrer par type d'événement
+
+      // Construire la requête
+      const query = MissionUpdate.query()
+        .where('mission_id', mission.id)
+        .preload('transporteur', (transporteurQuery) => {
+          transporteurQuery.select('id', 'firstName', 'lastName', 'email', 'phone')
+        })
+        .orderBy('created_at', 'desc')
+
+      // Filtrer par type si spécifié
+      if (type) {
+        query.where('type', type)
+      }
+
+      // Pagination
+      const updates = await query.paginate(page, limit)
+
+      return response.json({
+        success: true,
+        message: 'Mission history retrieved successfully',
+        data: {
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+          updates: updates.serialize(),
+          pagination: {
+            current_page: updates.currentPage,
+            per_page: updates.perPage,
+            total: updates.total,
+            last_page: updates.lastPage,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve mission history',
         error: error.message,
       })
     }

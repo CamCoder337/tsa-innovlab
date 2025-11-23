@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Star, MessageSquare, ThumbsUp, Award, Loader2, AlertTriangle } from 'lucide-react';
+import { Star, MessageSquare, ThumbsUp, Award, Loader2 } from 'lucide-react';
 import type { Mission, MissionFeedback } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
 import { missionService } from '@/services/mission.service';
@@ -54,18 +54,16 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingFeedback, setExistingFeedback] = useState<MissionFeedback | null>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(true);
-  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchExistingFeedback = async () => {
       setIsLoadingFeedback(true);
-      setFeedbackError(null);
 
       try {
         const response = await missionService.getMissionFeedback(mission.id);
 
         if (response.error) {
-          setFeedbackError(tErrors('missions.evaluationLoadingError'));
+          setExistingFeedback(null);
           return;
         }
 
@@ -81,7 +79,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
           }
         }
       } catch {
-        setFeedbackError(tErrors('missions.evaluationLoadingError'));
+        setExistingFeedback(null);
       } finally {
         const googleMapsService = new GoogleMapsService();
         const distanceResult = await googleMapsService.calculateDistanceWithDirections(
@@ -249,7 +247,7 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {existingFeedback?.rating + '/5' || appreciation.rating + '/5' || 'N/A'}
+                {(existingFeedback?.rating || 0) + '/5' || appreciation.rating + '/5' || 'N/A'}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                 {tMissions('appreciation.averageRating')}
@@ -615,11 +613,6 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
               <span className="text-muted-foreground">{tMissions('appreciation.loading')}</span>
-            </div>
-          ) : feedbackError ? (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-              <p className="text-muted-foreground">{feedbackError}</p>
             </div>
           ) : existingFeedback ? (
             <div className="space-y-4">

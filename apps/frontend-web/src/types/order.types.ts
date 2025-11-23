@@ -91,28 +91,6 @@ export interface OrdersListResponse {
   };
 }
 
-// Store types for order management
-export interface OrderStore {
-  // State
-  orders: Order[];
-  currentOrder: Order | null;
-  isLoading: boolean;
-  error: string | null;
-
-  // Actions
-  fetchOrders: (params?: OrderFiltersQuery) => Promise<void>;
-  fetchOrder: (orderId: string) => Promise<void>;
-  createOrder: (orderData: CreateOrderRequest) => Promise<Order>;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
-  cancelOrder: (orderId: string) => Promise<void>;
-
-  // Utility actions
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  reset: () => void;
-}
-
 export interface OrderFilters {
   page?: number;
   limit?: number;
@@ -123,15 +101,6 @@ export interface OrderFilters {
 
 // Query params version (strings from URL)
 export interface OrderFiltersQuery {
-  page?: string;
-  limit?: string;
-  status?: OrderStatus;
-  sortBy?: 'createdAt' | 'total' | 'status';
-  sortOrder?: 'asc' | 'desc';
-}
-
-// Admin-specific types
-export interface AdminOrderFilterParams {
   page?: number;
   limit?: number;
   status?: OrderStatus;
@@ -196,4 +165,29 @@ export interface BulkOrderActionResult {
     orderId: string;
     error: string;
   }>;
+}
+
+// Store types for order management
+export interface OrderStore {
+  // State
+  orders: Order[];
+  currentOrder: Order | null;
+  stats: AdminOrderStats | OrderStats | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  fetchOrders: (params?: OrderFiltersQuery) => Promise<void>;
+  fetchOrder: (orderId: string) => Promise<void>;
+  createOrder: (orderData: CreateOrderRequest) => Promise<Order>;
+  updateOrderStatus: (orderId: string, data: UpdateOrderStatusRequest) => Promise<Order | null>;
+  cancelOrder: (orderId: string) => Promise<void>;
+  refundOrder: (orderId: string, data: RefundOrderRequest) => Promise<void>;
+  fetchStats: () => Promise<void>;
+
+  // Utility actions
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  reset: () => void;
 }

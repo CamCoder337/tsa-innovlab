@@ -3,15 +3,34 @@ import type {
   Order,
   OrderStore,
   CreateOrderRequest,
-  OrderStatus,
   OrderFiltersQuery,
+  UpdateOrderStatusRequest,
+  RefundOrderRequest,
 } from '@/types/order.types';
 import { shopService } from '@/services/shop.service';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { getPersistedUser } from './authStore';
+import { adminService } from '@/services/admin.service';
+
+const user = getPersistedUser() || null;
+
+export function getPersistedData(): Partial<OrderStore> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_orders');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted orders data:', error);
+  }
+  return null;
+}
 
 const initialState = {
-  orders: [],
-  currentOrder: null,
+  orders: getPersistedData()?.orders || [],
+  currentOrder: getPersistedData()?.currentOrder || null,
+  stats: getPersistedData()?.stats || null,
   isLoading: false,
   error: null,
 };
@@ -27,7 +46,10 @@ export const useOrderStore = create<OrderStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await shopService.getOrders(params);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminGetOrders(params)
+              : await shopService.getOrders(params);
 
           if (response.error) {
             set({
@@ -56,7 +78,10 @@ export const useOrderStore = create<OrderStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          const response = await shopService.getOrder(orderId);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminGetOrder(orderId)
+              : await shopService.getOrder(orderId);
 
           if (response.error) {
             set({
@@ -121,40 +146,59 @@ export const useOrderStore = create<OrderStore>()(
         }
       },
 
-      updateOrderStatus: async (orderId: string, status: OrderStatus) => {
+      updateOrderStatus: async (orderId: string, data: UpdateOrderStatusRequest) => {
         set({ isLoading: true, error: null });
 
         try {
-          const { orders, currentOrder } = get();
+          const response = await adminService.adminUpdateOrderStatus(orderId, data);
 
-          // Update in orders list
-          const updatedOrders = orders.map((order) =>
-            order.id === orderId ? { ...order, status } : order
-          );
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return null;
+          }
 
-          // Update current order if it matches
-          const updatedCurrentOrder =
-            currentOrder?.id === orderId ? { ...currentOrder, status } : currentOrder;
+          if (response.data) {
+            const { orders, currentOrder } = get();
 
-          set({
-            orders: updatedOrders,
-            currentOrder: updatedCurrentOrder,
-            isLoading: false,
-            error: null,
-          });
+            // Update in orders list
+            const updatedOrders = orders.map((order) =>
+              order.id === orderId ? response.data! : order
+            );
+
+            // Update current order if it matches
+            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
+
+            set({
+              orders: updatedOrders,
+              currentOrder: updatedCurrentOrder,
+              isLoading: false,
+              error: null,
+            });
+
+            return response.data;
+          }
+
+          return null;
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to update order status',
             isLoading: false,
           });
+          return null;
         }
       },
 
-      cancelOrder: async (orderId: string) => {
+      cancelOrder: async (orderId: string, reason?: string) => {
         set({ isLoading: true, error: null });
 
         try {
-          const response = await shopService.cancelOrder(orderId);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminCancelOrder(orderId, reason)
+              : await shopService.cancelOrder(orderId);
 
           if (response.error) {
             set({
@@ -166,7 +210,7 @@ export const useOrderStore = create<OrderStore>()(
 
           if (response.data) {
             // Extract the cancelled order from the response
-            const cancelledOrder = Object.values(response.data)[0];
+            const cancelledOrder = response.data;
 
             // Update the orders list
             const { orders, currentOrder } = get();
@@ -188,6 +232,79 @@ export const useOrderStore = create<OrderStore>()(
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to cancel order',
+            isLoading: false,
+          });
+        }
+      },
+      // Refund order
+      refundOrder: async (orderId: string, data: RefundOrderRequest) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const response = await adminService.adminRefundOrder(orderId, data);
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            const { orders, currentOrder } = get();
+
+            // Update in orders list
+            const updatedOrders = orders.map((order) =>
+              order.id === orderId ? response.data! : order
+            );
+
+            // Update current order if it matches
+            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
+
+            set({
+              orders: updatedOrders,
+              currentOrder: updatedCurrentOrder,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to refund order',
+            isLoading: false,
+          });
+        }
+      },
+
+      // Fetch stats
+      fetchStats: async () => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const response =
+            user?.role === 'admin'
+              ? await adminService.getAdminOrderStats()
+              : await shopService.getOrdersStats();
+
+          if (response.error) {
+            set({
+              error: response.error.message,
+              isLoading: false,
+            });
+            return;
+          }
+
+          if (response.data) {
+            set({
+              stats: response.data,
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Failed to fetch stats',
             isLoading: false,
           });
         }
@@ -221,6 +338,7 @@ export const useOrderStore = create<OrderStore>()(
       partialize: (state) => ({
         orders: state.orders,
         currentOrder: state.currentOrder,
+        stats: state.stats,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

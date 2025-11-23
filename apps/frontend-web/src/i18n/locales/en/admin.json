@@ -29,7 +29,23 @@
     "usersList": "Users List",
     "loadingUsers": "Loading users...",
     "registeredOn": "Registered on",
-    "noUsersFound": "No users found with these criteria."
+    "noUsersFound": "No users found with these criteria.",
+    "userManagement": "User Management",
+    "tabs": {
+      "overview": "Overview",
+      "allUsers": "All Users",
+      "analytics": "Analytics"
+    },
+    "stats": {
+      "verification": "Email & MFA Verification",
+      "roleDistribution": "Role Distribution",
+      "growth": "Growth",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "total": "Total",
+      "verificationRate": "Verification Rate",
+      "userActivity": "User Activity"
+    }
   },
   "dashboard": {
     "title": "Admin Dashboard",
@@ -39,8 +55,17 @@
       "subtitle": "Overview of the TSA Logistics platform",
       "totalUsers": "Total Users",
       "totalMissions": "Total Missions",
+      "totalProducts": "Total Products",
+      "totalOrders": "Total Orders",
       "totalRevenue": "Total Revenue",
-      "lowStock": "Low Stock"
+      "lowStock": "Low Stock",
+      "conversionRate": "Conversion Rate",
+      "averageBasket": "Average Basket",
+      "topProducts": "Top Selling Products",
+      "sold": "sold",
+      "noData": "No data",
+      "revenueEvolution": "Revenue Evolution",
+      "ordersByStatus": "Orders by Status"
     },
     "recentMissions": "Recent Missions",
     "quickStats": "Quick Stats",
@@ -50,14 +75,26 @@
       "monthlyGrowth": "Monthly Growth",
       "userManagement": "User Management",
       "viewAllUsers": "View all users",
-      "newUsersThisMonth": "New users this month"
+      "newUsersThisMonth": "New users this month",
+      "emailVerified": "Email Verified",
+      "emailUnverified": "Email Unverified",
+      "mfaEnabled": "MFA Enabled",
+      "activeUsers": "Active Users",
+      "inactiveUsers": "Inactive Users",
+      "userGrowth": "User Growth",
+      "newUsers": "New users"
     },
     "missions": {
+      "title": "Missions",
       "activeMissions": "Active Missions",
       "completedMissions": "Completed Missions",
       "successRate": "Success Rate",
       "missionSupervision": "Mission Supervision",
-      "recentMissions": "Recent Missions"
+      "recentMissions": "Recent Missions",
+      "totalBudget": "Total Budget",
+      "averageBudget": "Average Budget",
+      "completionRate": "Completion Rate",
+      "statusDistribution": "Status Distribution"
     },
     "shop": {
       "title": "Shop",
@@ -82,7 +119,13 @@
       "keyIndicators": "Key Indicators",
       "availabilityRate": "Availability Rate",
       "averageValuePerProduct": "Average Value/Product",
+      "totalValue": "Total Value",
+      "totalQuantity": "Total Quantity",
+      "inventory": "Inventory",
       "outOfStockShort": "Out of Stock",
+      "productsByCategory": "Products by Category",
+      "products": "Products",
+      "stock": "Stock",
       "analytics": {
         "performanceAnalysis": "Performance Analysis",
         "completedMissions": "Completed Missions",
@@ -98,7 +141,11 @@
         "today": "Today",
         "last7Days": "Last 7 Days",
         "last30Days": "Last 30 Days",
-        "total": "Total"
+        "total": "Total",
+        "conversionRate": "Conversion Rate",
+        "ordersVsVisits": "Orders vs Visits",
+        "averageBasket": "Average Basket",
+        "perOrder": "per order"
       }
     },
     "labels": {
@@ -106,10 +153,13 @@
       "missions": "missions",
       "topShipper": "Top Shipper",
       "topCarrier": "Top Carrier",
-      "products": "products",
+      "topProduct": "Top Product",
       "none": "None",
-      "recent": "No recent missions"
-    }
+      "recent": "No recent missions",
+      "products": "products"
+    },
+    "noRecentMissions": "No recent missions",
+    "noData": "No data"
   },
   "products": {
     "title": "Product Management",
@@ -147,6 +197,16 @@
     "totalRevenue": "Total Revenue",
     "productsTab": "Products ({{count}})",
     "categoriesTab": "Categories ({{count}})",
+    "tabs": {
+      "overview": "Overview",
+      "allProducts": "All Products",
+      "categories": "Categories",
+      "analytics": "Analytics"
+    },
+    "analytics": {
+      "salesPerformance": "Sales Performance",
+      "keyIndicators": "Key Indicators"
+    },
     "searchPlaceholder": "Search by name, desc or category...",
     "categoriesSelected": "{{count}} category(ies) selected",
     "filterByCategories": "Filter by categories",
@@ -172,10 +232,18 @@
     "vehicleTypePlaceholder": "Vehicle type",
     "allVehicles": "All vehicles",
     "stats": {
-      "totalMissions": "Total Missions"
+      "totalMissions": "Total Missions",
+      "missionMetrics": "Mission Metrics",
+      "activeMissions": "Active Missions"
     },
     "tabs": {
-      "all": "All"
+      "all": "All",
+      "overview": "Overview",
+      "allMissions": "All Missions",
+      "analytics": "Analytics"
+    },
+    "analytics": {
+      "statusBreakdown": "Status Breakdown"
     },
     "empty": "No missions found with these criteria."
   },
@@ -397,5 +465,17 @@
     "payment": "Payment Methods",
     "shipping": "Shipping Configuration",
     "taxes": "Tax Configuration"
+  },
+  "feedbacks": {
+    "title": "Feedbacks",
+    "total": "Total Feedbacks",
+    "averageRating": "Average Rating",
+    "ratingDistribution": "Rating Distribution",
+    "topTransporteurs": "Top Carriers",
+    "stats": {
+      "overview": "Feedbacks Overview",
+      "5stars": "5 stars",
+      "topTransporteurs": "Top Carriers"
+    }
   }
 }

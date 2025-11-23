@@ -53,13 +53,13 @@ export function getStatusColor(status: MissionStatus | OrderStatus | PaymentStat
       return 'bg-gray-100 text-gray-800';
     case 'published':
     case 'paid':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-yellow-100 text-yellow-800';
     case 'assigned':
     case 'processing':
-      return 'bg-purple-100 text-purple-800';
+      return 'bg-blue-100 text-blue-800';
     case 'in_progress':
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-purple-100 text-purple-800';
     case 'completed':
     case 'delivered':
       return 'bg-green-100 text-green-800';

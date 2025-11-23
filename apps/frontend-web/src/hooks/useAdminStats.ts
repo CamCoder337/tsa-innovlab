@@ -1,49 +1,16 @@
-import { useState } from 'react';
-import { adminService } from '@/services/admin.service';
-import type {
-  OverviewStats,
-  AdminMissionStats,
-  AdminProductStats,
-  UserStats as AdminUserStats,
-  FeedbackStats,
-} from '@/types/admin-stats.types';
+import { useAdminStatsStore } from '@/stores/adminStatsStore';
 
 /**
  * Hook for overview statistics (dashboard main stats)
  */
 export const useOverviewStats = () => {
-  const [stats, setStats] = useState<OverviewStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await adminService.getOverviewStats();
-
-      if (response.error) {
-        console.log('overview error ', response.error.message);
-        setError(response.error.message);
-        return;
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch overview stats');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { overview, fetchOverviewStats } = useAdminStatsStore();
 
   return {
-    stats,
-    isLoading,
-    error,
-    fetchStats,
+    stats: overview.data,
+    isLoading: overview.isLoading,
+    error: overview.error,
+    fetchStats: fetchOverviewStats,
   };
 };
 
@@ -51,38 +18,13 @@ export const useOverviewStats = () => {
  * Hook for admin user statistics
  */
 export const useAdminUserStats = () => {
-  const [stats, setStats] = useState<AdminUserStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await adminService.getAdminUserStats();
-
-      if (response.error) {
-        console.log('user error ', response.error.message);
-        setError(response.error.message);
-        return;
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch user stats');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { users, fetchUserStats } = useAdminStatsStore();
 
   return {
-    stats,
-    isLoading,
-    error,
-    fetchStats,
+    stats: users.data,
+    isLoading: users.isLoading,
+    error: users.error,
+    fetchStats: fetchUserStats,
   };
 };
 
@@ -90,38 +32,13 @@ export const useAdminUserStats = () => {
  * Hook for admin mission statistics
  */
 export const useAdminMissionStats = () => {
-  const [stats, setStats] = useState<AdminMissionStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await adminService.getAdminMissionStats();
-
-      if (response.error) {
-        console.log('mission error ', response.error.message);
-        setError(response.error.message);
-        return;
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch mission stats');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { missions, fetchMissionStats } = useAdminStatsStore();
 
   return {
-    stats,
-    isLoading,
-    error,
-    fetchStats,
+    stats: missions.data,
+    isLoading: missions.isLoading,
+    error: missions.error,
+    fetchStats: fetchMissionStats,
   };
 };
 
@@ -129,38 +46,13 @@ export const useAdminMissionStats = () => {
  * Hook for admin product statistics
  */
 export const useAdminProductStats = () => {
-  const [stats, setStats] = useState<AdminProductStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await adminService.getAdminProductsStats();
-
-      if (response.error) {
-        console.log('product error ', response.error.message);
-        setError(response.error.message);
-        return;
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch product stats');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { products, fetchProductStats } = useAdminStatsStore();
 
   return {
-    stats,
-    isLoading,
-    error,
-    fetchStats,
+    stats: products.data,
+    isLoading: products.isLoading,
+    error: products.error,
+    fetchStats: fetchProductStats,
   };
 };
 
@@ -168,38 +60,13 @@ export const useAdminProductStats = () => {
  * Hook for admin feedback statistics
  */
 export const useAdminFeedbackStats = () => {
-  const [stats, setStats] = useState<FeedbackStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchStats = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await adminService.getFeedbackStats();
-
-      if (response.error) {
-        console.log('feed error ', response.error.message);
-        setError(response.error.message);
-        return;
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch feedback stats');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { feedbacks, fetchFeedbackStats } = useAdminStatsStore();
 
   return {
-    stats,
-    isLoading,
-    error,
-    fetchStats,
+    stats: feedbacks.data,
+    isLoading: feedbacks.isLoading,
+    error: feedbacks.error,
+    fetchStats: fetchFeedbackStats,
   };
 };
 
@@ -207,42 +74,44 @@ export const useAdminFeedbackStats = () => {
  * Comprehensive hook for all admin statistics
  */
 export const useAllAdminStats = () => {
-  const overviewStats = useOverviewStats();
-  const userStats = useAdminUserStats();
-  const missionStats = useAdminMissionStats();
-  const productStats = useAdminProductStats();
-  const feedbackStats = useAdminFeedbackStats();
-
-  const fetchAllStats = async () => {
-    await Promise.all([
-      overviewStats.fetchStats(),
-      userStats.fetchStats(),
-      missionStats.fetchStats(),
-      productStats.fetchStats(),
-      feedbackStats.fetchStats(),
-    ]);
-  };
+  const { overview, users, missions, products, feedbacks, fetchAllStats } = useAdminStatsStore();
 
   const isLoading =
-    overviewStats.isLoading ||
-    userStats.isLoading ||
-    missionStats.isLoading ||
-    productStats.isLoading ||
-    feedbackStats.isLoading;
+    overview.isLoading ||
+    users.isLoading ||
+    missions.isLoading ||
+    products.isLoading ||
+    feedbacks.isLoading;
 
   const error =
-    overviewStats.error ||
-    userStats.error ||
-    missionStats.error ||
-    productStats.error ||
-    feedbackStats.error;
+    overview.error || users.error || missions.error || products.error || feedbacks.error;
 
   return {
-    overview: overviewStats,
-    users: userStats,
-    missions: missionStats,
-    products: productStats,
-    feedbacks: feedbackStats,
+    overview: {
+      stats: overview.data,
+      isLoading: overview.isLoading,
+      error: overview.error,
+    },
+    users: {
+      stats: users.data,
+      isLoading: users.isLoading,
+      error: users.error,
+    },
+    missions: {
+      stats: missions.data,
+      isLoading: missions.isLoading,
+      error: missions.error,
+    },
+    products: {
+      stats: products.data,
+      isLoading: products.isLoading,
+      error: products.error,
+    },
+    feedbacks: {
+      stats: feedbacks.data,
+      isLoading: feedbacks.isLoading,
+      error: feedbacks.error,
+    },
     fetchAllStats,
     isLoading,
     error,

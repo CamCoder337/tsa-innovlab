@@ -34,6 +34,7 @@ export function useProducts() {
     // Utility methods
     filterProducts: store.filterProducts,
     searchProducts: store.searchProducts,
+    getProductById: store.getProductById,
     getProductsByCategory: store.getProductsByCategory,
     getLowStockProducts: store.getLowStockProducts,
     getOutOfStockProducts: store.getOutOfStockProducts,

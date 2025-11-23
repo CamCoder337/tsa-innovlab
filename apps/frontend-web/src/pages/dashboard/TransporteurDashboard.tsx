@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Settings,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useMissions } from '@/hooks/useMissions';
 import { DashboardUtils } from '@/lib/dashboard.utils';
@@ -24,9 +24,10 @@ import { formatCurrency, formatPercentage } from '@/lib/utils';
 function TransporteurDashboard() {
   const { user } = useAuth();
   const { missions, myMissions, setCurrentMission } = useMissions();
-  const { notifications } = useNotifications();
+  const { notifications, markNotificationRead } = useNotifications();
   const { t: tCommon } = useCommonTranslation();
   const { t: tDash } = useDashboardTranslation();
+  const navigate = useNavigate();
 
   // Calculate real metrics from mission data
   const metrics = useMemo(() => {
@@ -172,6 +173,22 @@ function TransporteurDashboard() {
       };
     });
   }, [notifications]);
+
+  const handleNotificationClick = async (notificationId: string) => {
+    const notification = notifications.find((n) => n.id === notificationId);
+    if (notification) {
+      if (!notification.isRead) await markNotificationRead(notificationId);
+      if (notification.actionUrl) {
+        if (notification.type.startsWith('mission') && notification.missionId) {
+          const thisMission =
+            missions.find((mission) => mission.id === notification.missionId) ||
+            myMissions.find((mission) => mission.id === notification.missionId);
+          setCurrentMission(thisMission!);
+          navigate('/app' + notification.actionUrl);
+        }
+      }
+    }
+  };
 
   if (!user) return null;
 
@@ -381,6 +398,7 @@ function TransporteurDashboard() {
                     <div
                       key={notification.id}
                       className={`p-3 ${notification.bgColor} border ${notification.borderColor} rounded-lg ${!notification.isRead ? 'ring-1 ring-blue-200' : ''}`}
+                      onClick={() => handleNotificationClick(notification.id)}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <IconComponent

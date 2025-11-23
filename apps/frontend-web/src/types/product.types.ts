@@ -134,6 +134,7 @@ export interface ProductActions {
 
   filterProducts: (filters: ProductFilterParams) => Product[];
   searchProducts: (query: string) => Product[];
+  getProductById: (productId: string) => Product | undefined;
   getProductsByCategory: (categoryId: string) => Product[];
   getLowStockProducts: () => Product[];
   getOutOfStockProducts: () => Product[];

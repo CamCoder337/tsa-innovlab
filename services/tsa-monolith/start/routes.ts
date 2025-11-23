@@ -156,6 +156,8 @@ router
     router.get('/missions/stats', '#controllers/http/admin/missions_controller.stats')
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
+    // Historique des missions
+    router.get('/missions/:id/history', '#controllers/http/admin/missions_controller.getHistory')
 
     // Gestion des commandes
     router.get('/orders/stats', '#controllers/http/admin/orders_controller.stats')

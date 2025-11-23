@@ -29,7 +29,23 @@
     "usersList": "Liste des Utilisateurs",
     "loadingUsers": "Chargement des utilisateurs...",
     "registeredOn": "Inscrit le",
-    "noUsersFound": "Aucun utilisateur trouvé avec ces critères."
+    "noUsersFound": "Aucun utilisateur trouvé avec ces critères.",
+    "userManagement": "Gestion des Utilisateurs",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "allUsers": "Tous les utilisateurs",
+      "analytics": "Analytiques"
+    },
+    "stats": {
+      "verification": "Vérification Email & MFA",
+      "roleDistribution": "Distribution par Rôle",
+      "growth": "Croissance",
+      "last7Days": "Derniers 7 jours",
+      "last30Days": "Derniers 30 jours",
+      "total": "Total",
+      "verificationRate": "Taux de Vérification",
+      "userActivity": "Activité des Utilisateurs"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord administrateur",
@@ -39,8 +55,17 @@
       "subtitle": "Vue d'ensemble de la plateforme TSA Logistics",
       "totalUsers": "Utilisateurs Total",
       "totalMissions": "Missions Total",
+      "totalProducts": "Produits Total",
+      "totalOrders": "Total Commandes",
       "totalRevenue": "Revenus Total",
-      "lowStock": "Stock Faible"
+      "lowStock": "Stock Faible",
+      "conversionRate": "Taux de Conversion",
+      "averageBasket": "Panier Moyen",
+      "topProducts": "Produits les Plus Vendus",
+      "sold": "vendus",
+      "noData": "Aucune donnée",
+      "revenueEvolution": "Évolution des Revenus",
+      "ordersByStatus": "Commandes par Statut"
     },
     "recentMissions": "Missions Récentes",
     "quickStats": "Statistiques Rapides",
@@ -50,14 +75,26 @@
       "monthlyGrowth": "Croissance Mensuelle",
       "userManagement": "Gestion des Utilisateurs",
       "viewAllUsers": "Voir tous les utilisateurs",
-      "newUsersThisMonth": "Nouveaux utilisateurs ce mois"
+      "newUsersThisMonth": "Nouveaux utilisateurs ce mois",
+      "emailVerified": "Emails Vérifiés",
+      "emailUnverified": "Emails Non Vérifiés",
+      "mfaEnabled": "MFA Activé",
+      "activeUsers": "Utilisateurs Actifs",
+      "inactiveUsers": "Utilisateurs Inactifs",
+      "userGrowth": "Croissance des Utilisateurs",
+      "newUsers": "Nouveaux utilisateurs"
     },
     "missions": {
+      "title": "Missions",
       "activeMissions": "Missions Actives",
       "completedMissions": "Missions Terminées",
       "successRate": "Taux de Réussite",
       "missionSupervision": "Supervision des Missions",
-      "recentMissions": "Missions Récentes"
+      "recentMissions": "Missions Récentes",
+      "totalBudget": "Budget Total",
+      "averageBudget": "Budget Moyen",
+      "completionRate": "Taux de Complétion",
+      "statusDistribution": "Distribution des Statuts"
     },
     "shop": {
       "title": "Boutique",
@@ -82,7 +119,13 @@
       "keyIndicators": "Indicateurs Clés",
       "availabilityRate": "Taux de Disponibilité",
       "averageValuePerProduct": "Valeur Moyenne/Produit",
+      "totalValue": "Valeur Totale",
+      "totalQuantity": "Quantité Totale",
+      "inventory": "Inventaire",
       "outOfStockShort": "Rupture",
+      "productsByCategory": "Produits par Catégorie",
+      "products": "Produits",
+      "stock": "Stock",
       "analytics": {
         "performanceAnalysis": "Analyses de Performance",
         "completedMissions": "Missions Terminées",
@@ -98,7 +141,11 @@
         "today": "Aujourd'hui",
         "last7Days": "7 Derniers Jours",
         "last30Days": "30 Derniers Jours",
-        "total": "Total"
+        "total": "Total",
+        "conversionRate": "Taux de Conversion",
+        "ordersVsVisits": "Commandes vs Visites",
+        "averageBasket": "Panier Moyen",
+        "perOrder": "par commande"
       }
     },
     "labels": {
@@ -106,10 +153,13 @@
       "missions": "missions",
       "topShipper": "Top Affréteur",
       "topCarrier": "Top Transporteur",
-      "products": "produits",
+      "topProduct": "Top Produit",
       "none": "Aucun",
-      "recent": "Aucune mission récente"
-    }
+      "recent": "Aucune mission récente",
+      "products": "produits"
+    },
+    "noRecentMissions": "Aucune mission récente",
+    "noData": "Aucune donnée"
   },
   "products": {
     "title": "Gestion des produits",
@@ -160,7 +210,17 @@
     "inStockCount": "{{count}} en stock",
     "categoryManagement": "Gestion des Catégories",
     "editCategoryDescription": "Modifiez les détails de la catégorie",
-    "addCategoryDescription": "Remplissez les informations pour créer une nouvelle catégorie"
+    "addCategoryDescription": "Remplissez les informations pour créer une nouvelle catégorie",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "allProducts": "Tous les produits",
+      "categories": "Catégories",
+      "analytics": "Analytiques"
+    },
+    "analytics": {
+      "salesPerformance": "Performance des Ventes",
+      "keyIndicators": "Indicateurs Clés"
+    }
   },
   "missions": {
     "title": "Missions",
@@ -172,10 +232,18 @@
     "vehicleTypePlaceholder": "Type de véhicule",
     "allVehicles": "Tous les véhicules",
     "stats": {
-      "totalMissions": "Total des Missions"
+      "totalMissions": "Total des Missions",
+      "missionMetrics": "Métriques des Missions",
+      "activeMissions": "Missions Actives"
     },
     "tabs": {
-      "all": "Toutes"
+      "all": "Toutes",
+      "overview": "Vue d'ensemble",
+      "allMissions": "Toutes les missions",
+      "analytics": "Analytiques"
+    },
+    "analytics": {
+      "statusBreakdown": "Répartition par Statut"
     },
     "empty": "Aucune mission trouvée avec ces critères."
   },
@@ -397,5 +465,17 @@
     "payment": "Payment Methods",
     "shipping": "Shipping Configuration",
     "taxes": "Tax Configuration"
+  },
+  "feedbacks": {
+    "title": "Avis",
+    "total": "Total Avis",
+    "averageRating": "Note Moyenne",
+    "ratingDistribution": "Distribution des Notes",
+    "topTransporteurs": "Meilleurs Transporteurs",
+    "stats": {
+      "overview": "Vue d'ensemble des Avis",
+      "5stars": "5 étoiles",
+      "topTransporteurs": "Meilleurs Transporteurs"
+    }
   }
 }

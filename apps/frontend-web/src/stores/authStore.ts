@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthStore>()(
                 isLoading: false,
               });
             } else if (response.error.errors?.[0] === 'Account is not active') {
-              localStorage.setItem('verificationEmail', data.email);
+              if (data.email) localStorage.setItem('verificationEmail', data.email);
               set({
                 error: `accountInactive`,
                 isLoading: false,

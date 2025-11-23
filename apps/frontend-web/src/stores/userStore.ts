@@ -37,6 +37,15 @@ export const useUserStore = create<UserStore>()(
     (set, get) => ({
       ...initialState,
 
+      // Basic actions
+      setUsers: (users: UserWithStats[]) => {
+        set({ users });
+      },
+
+      setSelectedUser: (mission: UserWithStats | null) => {
+        set({ selectedUser: mission });
+      },
+
       // Data fetching actions
       fetchUsers: async (params?: UserFilterParams) => {
         try {
