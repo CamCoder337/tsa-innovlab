@@ -12,6 +12,7 @@ import {
   useErrorsTranslation,
 } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { adminService } from '@/services/admin.service';
 
 interface MissionTimelineProps {
   mission: Mission;
@@ -36,7 +37,9 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         const response =
           user?.role === 'transporteur'
             ? await missionService.getTransporteurMissionHistory(mission.id)
-            : await missionService.getMissionHistory(mission.id);
+            : user?.role === 'admin'
+              ? await adminService.adminGetMissionHistory(mission.id)
+              : await missionService.getMissionHistory(mission.id);
 
         if (response.error) {
           setError(tErrors('missions.timelineLoadingError'));

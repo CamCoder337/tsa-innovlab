@@ -1,42 +1,51 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Activity,
-  CheckCircle,
-  Clock,
   DollarSign,
   Package,
   TrendingUp,
   Users,
-  AlertTriangle,
   BarChart3,
-  PieChart,
-  Truck,
+  PieChart as PieChartIcon,
+  Star,
+  ShoppingBag,
+  ShoppingCart,
 } from 'lucide-react';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
-import { DashboardUtils } from '@/lib/dashboard.utils';
-import { getStatusColor, getStatusLabel } from '@/lib/utils';
-import { useMissions } from '@/hooks/useMissions';
+import { getStatusLabel } from '@/lib/utils';
+import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
+import { formatCurrency } from '@/lib/utils';
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { useProducts } from '@/hooks/useProducts';
 import { useUsers } from '@/hooks/useUsers';
-import { useAdminTranslation, useCommonTranslation } from '@/hooks/useTranslation';
-import { formatCurrency, getTimeAgo } from '@/lib/utils';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
   const allStats = useAllAdminStats();
-  const { stats: missionStats, isLoading: missionLoading } = useMissions();
-  const { stats: productStats, isLoading: productLoading } = useProducts();
-  const { userStats, isLoading: userLoading } = useUsers();
+  const { setCurrentProduct, getProductById } = useProducts();
+  const { setSelectedUser, getUserById } = useUsers();
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
 
   // Show loading state
-  if (allStats.isLoading || missionLoading || productLoading || userLoading) {
+  if (allStats.isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center h-full">
         <div className="text-center">
@@ -47,1062 +56,622 @@ export default function AdminDashboard() {
     );
   }
 
-  // Show error state
-  // if (getStatsError()) {
-  //   return (
-  //     <div className="flex-1 flex items-center justify-center h-full">
-  //       <div className="text-center">
-  //         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-  //         <p className="text-red-600 mb-2">Erreur lors du chargement des statistiques</p>
-  //         <p className="text-gray-600 text-sm">
-  //           {getStatsError()}
-  //         </p>
-  //         <Button
-  //           onClick={allStats.fetchAllStats}
-  //           className="mt-4"
-  //           variant="outline"
-  //         >
-  //           Réessayer
-  //         </Button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="flex-1 p-3 sm:p-4 lg:p-6">
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {tAdmin('dashboard.title')}
         </h1>
-        <p className="text-gray-600 text-sm sm:text-base">
+        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base">
           {tAdmin('dashboard.overview.subtitle')}
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4 sm:mb-6">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">
-            {tAdmin('dashboard.overview.title')}
-          </TabsTrigger>
-          <TabsTrigger value="users" className="text-xs sm:text-sm">
-            {tAdmin('users.users')}
-          </TabsTrigger>
-          <TabsTrigger value="missions" className="text-xs sm:text-sm">
-            {tAdmin('missions.title')}
-          </TabsTrigger>
-          <TabsTrigger value="boutique" className="text-xs sm:text-sm">
-            {tAdmin('dashboard.shop.title')}
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs sm:text-sm">
-            {tAdmin('analytics.title')}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-4 sm:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.overview.totalUsers')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.overview.stats?.quickStats.totalUsers.toLocaleString() ||
-                        userStats?.total ||
-                        0}
-                    </p>
-                  </div>
+      {/* Quick Stats - Top 5 Most Important Metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <Card>
+          <Link to="/app/users">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.overview.totalMissions')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.overview.stats?.quickStats.totalMissions.toLocaleString() ||
-                        missionStats?.totals?.missions?.toLocaleString() ||
-                        0}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.overview.totalRevenue')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M FCFA
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
-                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.overview.lowStock')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.products.stats?.lowStockCount ||
-                        productStats?.products?.lowStock ||
-                        0}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.labels.topShipper')}s
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2 sm:space-y-3">
-                  {allStats.missions.stats?.topAffreteurs?.slice(0, 5).map((item) => (
-                    <div
-                      key={item.userId}
-                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="min-w-0 flex-1 mr-2">
-                        <p className="font-medium text-xs sm:text-sm truncate">{item.userName}</p>
-                        <p className="text-xs text-gray-500">
-                          {item.missionCount} {tAdmin('dashboard.labels.missions')}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">
-                        {tAdmin('dashboard.labels.topShipper')}
-                      </Badge>
-                    </div>
-                  )) || (
-                    <p className="text-gray-500 text-center py-4 text-sm">
-                      {tAdmin('dashboard.labels.recent')}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.labels.topCarrier')}s
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2 sm:space-y-3">
-                  {allStats.missions.stats?.topTransporteurs?.slice(0, 5).map((item) => (
-                    <div
-                      key={item.userId}
-                      className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="min-w-0 flex-1 mr-2">
-                        <p className="font-medium text-xs sm:text-sm truncate">{item.userName}</p>
-                        <p className="text-xs text-gray-500">
-                          {item.missionCount} {tAdmin('dashboard.labels.missions')}
-                        </p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs flex-shrink-0">
-                        {tAdmin('dashboard.labels.topCarrier')}
-                      </Badge>
-                    </div>
-                  )) || (
-                    <p className="text-gray-500 text-center py-4 text-sm">
-                      {tAdmin('dashboard.labels.recent')}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.quickStats')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
-                      {allStats.users.stats?.byRole.transporteur ||
-                        userStats?.byRole?.transporteur ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tCommon('roles.affreteur')}s
-                    </p>
-                  </div>
-                  <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-green-600">
-                      {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tCommon('roles.transporteur')}s
-                    </p>
-                  </div>
-                  <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-purple-600">
-                      {allStats.products.stats?.active || productStats?.products?.active || 0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.activeProducts')}
-                    </p>
-                  </div>
-                  <div className="text-center p-2 sm:p-3 bg-orange-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-orange-600">
-                      {allStats.missions.stats?.byStatus.completed ||
-                        missionStats?.statusStats?.completed ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.missions.completedMissions')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">
-                {tAdmin('dashboard.recentMissions')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3 sm:space-y-4">
-                {(missionStats?.recentMissions || []).slice(0, 3).map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg gap-3 sm:gap-0"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                        {activity.title}
-                      </h4>
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500 mt-1">
-                        {activity.affreteur && (
-                          <>
-                            <span className="truncate">
-                              {tAdmin('dashboard.labels.by')} {activity.affreteur}
-                            </span>
-                            <span className="hidden sm:inline">•</span>
-                          </>
-                        )}
-                        <span>{getTimeAgo(activity.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <Badge className={getStatusColor(activity.status)}>
-                        {getStatusLabel(activity.status, tCommon)}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="users" className="mt-4 sm:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.users.activeShippers')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.users.stats?.byRole.affreteur.toLocaleString() ||
-                        userStats?.byRole?.affreteur?.toLocaleString() ||
-                        '0'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.users.activeCarriers')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.users.stats?.byRole.transporteur.toLocaleString() ||
-                        userStats?.byRole?.transporteur?.toLocaleString() ||
-                        '0'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.users.monthlyGrowth')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {DashboardUtils.calculateGrowthPercentage(
-                        allStats.users.stats?.byPeriod.last7Days || 0,
-                        allStats.users.stats?.byPeriod.last30Days || 0
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <span className="text-base sm:text-lg">
-                  {tAdmin('dashboard.users.userManagement')}
-                </span>
-                <Link to="/app/users">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto text-xs sm:text-sm"
-                  >
-                    {tAdmin('dashboard.users.viewAllUsers')}
-                  </Button>
-                </Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                  <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
-                    {allStats.users.stats?.byRole.admin || userStats?.byRole?.admin || 0}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('dashboard.overview.totalUsers')}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.admin')}s</p>
-                </div>
-                <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">
-                    {allStats.users.stats?.byRole.affreteur || userStats?.byRole?.affreteur || 0}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600">
-                    {tCommon('roles.transporteur')}s
-                  </p>
-                </div>
-                <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg">
-                  <p className="text-lg sm:text-2xl font-bold text-purple-600">
-                    {allStats.users.stats?.byRole.transporteur ||
-                      userStats?.byRole?.transporteur ||
+                  <p className="text-lg sm:text-2xl font-bold">
+                    {allStats.overview.stats?.quickStats.totalUsers.toLocaleString() ||
+                      allStats.users.stats?.total.toLocaleString() ||
                       0}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.affreteur')}s</p>
                 </div>
-                <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg">
-                  <p className="text-lg sm:text-2xl font-bold text-orange-600">
-                    {allStats.users.stats?.byRole.client || userStats?.byRole?.client || 0}
+              </div>
+            </CardContent>
+          </Link>
+        </Card>
+
+        <Card>
+          <Link to="/app/missions">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('dashboard.overview.totalMissions')}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-600">{tCommon('roles.client')}s</p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    {tAdmin('dashboard.users.newUsersThisMonth')}
-                  </span>
-                  <span className="font-medium text-green-600 text-sm sm:text-base">
-                    +{allStats.users.stats?.byPeriod.last30Days || 0}
-                  </span>
+                  <p className="text-lg sm:text-2xl font-bold">
+                    {allStats.overview.stats?.quickStats.totalMissions.toLocaleString() ||
+                      allStats.missions.stats?.total.toLocaleString() ||
+                      0}
+                  </p>
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+          </Link>
+        </Card>
 
-        <TabsContent value="missions" className="mt-4 sm:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.missions.activeMissions')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.missions.stats?.byStatus.assigned.toLocaleString() ||
-                        missionStats.statusStats.assigned ||
-                        '0'}
-                    </p>
-                  </div>
+        <Card>
+          <Link to="/app/products">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
+                  <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.missions.completedMissions')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.missions.stats?.byStatus.completed ||
-                        missionStats?.statusStats?.completed ||
-                        '0'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.missions.successRate')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {DashboardUtils.calculateSuccessRate(
-                        allStats.missions.stats?.byStatus.completed || 0,
-                        allStats.overview.stats?.quickStats.totalMissions || 0
-                      )}
-                      %
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-base sm:text-lg">
-                {tAdmin('dashboard.missions.missionSupervision')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-4 sm:space-y-6">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="text-center p-3 sm:p-4 bg-yellow-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-yellow-600">
-                      {allStats.missions.stats?.byStatus.published ||
-                        missionStats?.statusStats?.published ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {getStatusLabel('published', tCommon)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
-                      {allStats.missions.stats?.byStatus.assigned ||
-                        missionStats?.statusStats?.assigned ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {getStatusLabel('assigned', tCommon)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-green-600">
-                      {allStats.missions.stats?.byStatus.completed ||
-                        missionStats?.statusStats?.completed ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {getStatusLabel('completed', tCommon)}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-red-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-red-600">
-                      {allStats.missions.stats?.byStatus.cancelled ||
-                        missionStats?.statusStats?.cancelled ||
-                        0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {getStatusLabel('cancelled', tCommon)}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <h4 className="font-medium mb-3 text-sm sm:text-base">
-                    {tAdmin('dashboard.missions.recentMissions')}
-                  </h4>
-                  <div className="space-y-2">
-                    {missionStats?.recentMissions?.slice(0, 5)?.map((mission) => (
-                      <div
-                        key={mission.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2 sm:gap-0"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-xs sm:text-sm truncate">{mission.title}</p>
-                          <p className="text-xs text-gray-500">{getTimeAgo(mission.createdAt)}</p>
-                        </div>
-                        <Badge className={`${getStatusColor(mission.status)} flex-shrink-0`}>
-                          {getStatusLabel(mission.status, tCommon)}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('dashboard.overview.totalProducts')}
+                  </p>
+                  <p className="text-lg sm:text-2xl font-bold">
+                    {allStats.overview.stats?.quickStats.totalProducts.toLocaleString() ||
+                      allStats.products.stats?.total.toLocaleString() ||
+                      0}
+                  </p>
                 </div>
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+          </Link>
+        </Card>
 
-        <TabsContent value="boutique" className="mt-4 sm:mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.shop.totalProducts')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.products.stats?.total || productStats?.products?.total || 0}
-                    </p>
-                  </div>
+        <Card>
+          <Link to="/app/orders">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-indigo-100 rounded-lg flex-shrink-0">
+                  <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.shop.activeProducts')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.products.stats?.active || productStats?.products?.active || 0}
-                    </p>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('dashboard.overview.totalOrders') || 'Total Commandes'}
+                  </p>
+                  <p className="text-lg sm:text-2xl font-bold">
+                    {allStats.overview.stats?.orders.total || 0}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Link>
+        </Card>
 
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
-                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.shop.lowStock')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {allStats.products.stats?.lowStockCount ||
-                        productStats?.products?.lowStock ||
-                        0}
-                    </p>
-                  </div>
+        <Card>
+          <Link to="">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">
-                      {tAdmin('dashboard.shop.totalValue')}
-                    </p>
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {productStats?.inventory?.totalValue
-                        ? `${(productStats.inventory.totalValue / 1000000).toFixed(1)}M`
-                        : '0M'}{' '}
-                      FCFA
-                    </p>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                    {tAdmin('dashboard.overview.totalRevenue')}
+                  </p>
+                  <p className="text-lg sm:text-2xl font-bold">
+                    {formatCurrency(allStats.overview.stats?.revenue.total || 0)}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Link>
+        </Card>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.shop.productStats')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.popularProducts')}
-                    </span>
-                    <span className="font-medium text-sm sm:text-base">
-                      {productStats?.products?.active || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.activeCategories')}
-                    </span>
-                    <span className="font-medium text-sm sm:text-base">
-                      {productStats?.topCategories?.length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.lowStockRate')}
-                    </span>
-                    <span className="font-medium text-sm sm:text-base">
-                      {productStats?.products?.total
-                        ? `${Math.round(((productStats?.products?.lowStock || 0) / productStats.products.total) * 100)}%`
-                        : '0%'}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.shop.inventory')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
-                      {productStats?.inventory?.totalQuantity || 0}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.totalQuantity')}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-                    <p className="text-lg sm:text-2xl font-bold text-green-600">
-                      {formatCurrency(productStats?.inventory?.totalValue || 0)}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {tAdmin('dashboard.shop.totalValue')}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.shop.shopSummary')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                  <div>
-                    <h4 className="font-medium mb-3 text-sm sm:text-base">
-                      {tAdmin('dashboard.shop.productDistribution')}
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tCommon('status.active')}s
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-green-600 h-2 rounded-full"
-                              style={{
-                                width: `${((allStats.products.stats?.active || productStats?.products?.active || 0) / (allStats.products.stats?.total || productStats?.products?.total || 1)) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-xs sm:text-sm font-medium">
-                            {allStats.products.stats?.active || productStats?.products?.active || 0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.lowStock')}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-orange-600 h-2 rounded-full"
-                              style={{
-                                width: `${((allStats.products.stats?.lowStockCount || productStats?.products?.lowStock || 0) / (allStats.products.stats?.total || productStats?.products?.total || 1)) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-xs sm:text-sm font-medium">
-                            {allStats.products.stats?.lowStockCount ||
-                              productStats?.products?.lowStock ||
-                              0}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.outOfStockShort')}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-12 sm:w-16 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-red-600 h-2 rounded-full"
-                              style={{
-                                width: `${((productStats?.products?.outOfStock || 0) / (allStats.products.stats?.total || productStats?.products?.total || 1)) * 100}%`,
-                              }}
-                            ></div>
-                          </div>
-                          <span className="text-xs sm:text-sm font-medium">
-                            {productStats?.products?.outOfStock || 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-3 text-sm sm:text-base">
-                      {tAdmin('dashboard.shop.salesPerformance')}
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-lg sm:text-xl font-bold text-tsa-blue dark:text-tsa-white">
-                          {allStats.overview.stats?.orders.total || 0}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.totalOrders')}
-                        </p>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <p className="text-lg sm:text-xl font-bold text-green-600">
-                          {allStats.overview.stats?.revenue.total
-                            ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
-                            : '0'}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.revenueFcfa')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-3 text-sm sm:text-base">
-                      {tAdmin('dashboard.shop.keyIndicators')}
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.availabilityRate')}
-                        </span>
-                        <span className="font-medium text-green-600 text-xs sm:text-sm">
-                          {productStats?.products?.total
-                            ? `${Math.round(((productStats?.products?.active || 0) / productStats.products.total) * 100)}%`
-                            : '0%'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.activeCategories')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {productStats?.topCategories?.length || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.averageValuePerProduct')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {productStats?.inventory?.totalValue && productStats?.products?.total
-                            ? `${Math.round(productStats.inventory.totalValue / productStats.products.total).toLocaleString()} FCFA`
-                            : '0 FCFA'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="mt-4 sm:mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.shop.analytics.performanceAnalysis')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg">
-                      <p className="text-xl sm:text-2xl font-bold text-tsa-blue dark:text-tsa-white">
-                        {allStats.missions.stats?.byStatus.completed ||
-                          missionStats?.statusStats?.completed ||
-                          0}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        {tAdmin('dashboard.shop.analytics.completedMissions')}
+      {/* Top Performers Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card className="gap-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.labels.topShipper')}s
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 sm:space-y-3">
+              {allStats.missions.stats?.topAffreteurs?.slice(0, 5).map((item) => (
+                <Link to={`/app/user/${item.userId}`} key={item.userId}>
+                  <div
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg"
+                    onClick={() => {
+                      const selectedUser = getUserById(item.userId);
+                      setSelectedUser(selectedUser!);
+                    }}
+                  >
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm truncate">{item.userName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.missionCount} {tAdmin('dashboard.labels.missions')}
                       </p>
                     </div>
-                    <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg">
-                      <p className="text-xl sm:text-2xl font-bold text-green-600">
-                        {((allStats.overview.stats?.revenue.total || 0) / 1000000).toFixed(1)}M
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        {tAdmin('dashboard.shop.analytics.totalRevenue')}
-                      </p>
-                    </div>
+                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                      {tAdmin('dashboard.labels.topShipper')}
+                    </Badge>
                   </div>
-                  <div className="mt-4">
-                    <h4 className="font-medium mb-2 text-sm sm:text-base">
-                      {tAdmin('dashboard.shop.analytics.performanceMetrics')}
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.analytics.publishedMissions')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {allStats.missions.stats?.byStatus.published ||
-                            missionStats?.statusStats?.published ||
-                            0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.analytics.assignedMissions')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {allStats.missions.stats?.byStatus.assigned ||
-                            missionStats?.statusStats?.assigned ||
-                            0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.analytics.completionRate')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {DashboardUtils.calculateSuccessRate(
-                            allStats.missions.stats?.byStatus.completed ||
-                              missionStats?.statusStats?.completed ||
-                              0,
-                            allStats.missions.stats?.total || missionStats?.totals.missions || 0
-                          )}
-                          %
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          {tAdmin('dashboard.shop.analytics.activeUsers')}
-                        </span>
-                        <span className="font-medium text-xs sm:text-sm">
-                          {allStats.users.stats?.active || userStats?.byStatus.active || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </Link>
+              )) || (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">
+                  {tAdmin('dashboard.labels.recent')}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                  <PieChart className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {tAdmin('dashboard.shop.analytics.revenueDistribution')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <h4 className="font-medium mb-3 text-sm sm:text-base">
-                        {tAdmin('dashboard.shop.analytics.distributionByRole')}
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tCommon('roles.affreteur')}s
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-tsa-blue h-2 rounded-full"
-                                style={{
-                                  width: `${((allStats.users.stats?.byRole?.affreteur || userStats?.byRole.affreteur || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium">
-                              {allStats.users.stats?.byRole?.affreteur ||
-                                userStats?.byRole.affreteur ||
-                                0}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tCommon('roles.transporteur')}s
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-green-600 h-2 rounded-full"
-                                style={{
-                                  width: `${((allStats.users.stats?.byRole?.transporteur || userStats?.byRole.transporteur || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium">
-                              {allStats.users.stats?.byRole?.transporteur ||
-                                userStats?.byRole.transporteur ||
-                                0}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tCommon('roles.client')}s
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-purple-600 h-2 rounded-full"
-                                style={{
-                                  width: `${((allStats.users.stats?.byRole?.client || userStats?.byRole.client || 0) / (allStats.users.stats?.total || userStats?.total || 1)) * 100}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-xs sm:text-sm font-medium">
-                              {allStats.users.stats?.byRole?.client ||
-                                userStats?.byRole.client ||
-                                0}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+        <Card className="gap-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.labels.topCarrier')}s
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 sm:space-y-3">
+              {allStats.missions.stats?.topTransporteurs?.slice(0, 5).map((item) => (
+                <Link to={`/app/user/${item.userId}`} key={item.userId}>
+                  <div
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg"
+                    onClick={() => {
+                      const selectedUser = getUserById(item.userId);
+                      setSelectedUser(selectedUser!);
+                    }}
+                  >
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm truncate">{item.userName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.missionCount} {tAdmin('dashboard.labels.missions')}
+                      </p>
                     </div>
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium mb-3 text-sm sm:text-base">
-                        {tAdmin('dashboard.shop.analytics.revenueByPeriod')}
-                      </h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tAdmin('dashboard.shop.analytics.today')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(allStats.overview.stats?.revenue?.today || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tAdmin('dashboard.shop.analytics.last7Days')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(allStats.overview.stats?.revenue?.last7Days || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tAdmin('dashboard.shop.analytics.last30Days')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">
-                            {formatCurrency(allStats.overview.stats?.revenue?.last30Days || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-xs sm:text-sm text-gray-600">
-                            {tAdmin('dashboard.shop.analytics.total')}
-                          </span>
-                          <span className="font-medium text-green-600 text-xs sm:text-sm">
-                            {formatCurrency(allStats.overview.stats?.revenue?.total || 0)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                      {tAdmin('dashboard.labels.topCarrier')}
+                    </Badge>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                </Link>
+              )) || (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">
+                  {tAdmin('dashboard.labels.recent')}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gap-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.labels.topProduct')}s
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 sm:space-y-3">
+              {allStats.overview.stats?.topProducts?.slice(0, 5).map((item) => (
+                <Link to={`/app/products/${item.productId}`} key={item.productId}>
+                  <div
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-950 rounded-lg"
+                    onClick={() => {
+                      const selectedProduct = getProductById(item.productId);
+                      setCurrentProduct(selectedProduct!);
+                    }}
+                  >
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="font-medium text-xs sm:text-sm truncate">{item.productName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.quantitySold} {tAdmin('dashboard.overview.sold') || 'vendus'}
+                      </p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                      {item.revenue} FCFA
+                    </Badge>
+                  </div>
+                </Link>
+              )) || (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm">
+                  {tAdmin('dashboard.labels.recent')}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section - Row 1: Revenue & Orders */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.overview.revenueEvolution') || 'Évolution des Revenus'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={
+                  allStats.overview.stats?.revenue.evolution.last30Days.map((value, index) => ({
+                    day: allStats.overview.stats?.revenue.evolution.labels[index] || index + 1,
+                    revenue: value,
+                  })) || []
+                }
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                />
+                <Tooltip
+                  formatter={(value: number) => [
+                    formatCurrency(value),
+                    tAdmin('dashboard.overview.totalRevenue') || 'Revenus',
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  dot={{ fill: '#8b5cf6', r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.overview.ordersByStatus') || 'Commandes par Statut'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={[
+                    {
+                      name: tCommon('status.pending') || 'En attente',
+                      value: allStats.overview.stats?.orders.byStatus.pending || 0,
+                      color: '#f59e0b',
+                    },
+                    {
+                      name: tCommon('status.paid') || 'Payé',
+                      value: allStats.overview.stats?.orders.byStatus.paid || 0,
+                      color: '#10b981',
+                    },
+                    {
+                      name: tCommon('status.processing') || 'En traitement',
+                      value: allStats.overview.stats?.orders.byStatus.processing || 0,
+                      color: '#3b82f6',
+                    },
+                    {
+                      name: tCommon('status.shipped') || 'Expédié',
+                      value: allStats.overview.stats?.orders.byStatus.shipped || 0,
+                      color: '#8b5cf6',
+                    },
+                    {
+                      name: tCommon('status.delivered') || 'Livré',
+                      value: allStats.overview.stats?.orders.byStatus.delivered || 0,
+                      color: '#059669',
+                    },
+                    {
+                      name: tCommon('status.cancelled') || 'Annulé',
+                      value: allStats.overview.stats?.orders.byStatus.cancelled || 0,
+                      color: '#ef4444',
+                    },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {[
+                    { color: '#f59e0b' },
+                    { color: '#10b981' },
+                    { color: '#3b82f6' },
+                    { color: '#8b5cf6' },
+                    { color: '#059669' },
+                    { color: '#ef4444' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => [
+                    value,
+                    tAdmin('dashboard.overview.totalOrders') || 'Commandes',
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="circle"
+                  wrapperStyle={{ fontSize: '12px' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section - Row 2: Mission Status & User Growth */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.missions.statusDistribution') || 'Distribution des Statuts'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={[
+                    {
+                      name: getStatusLabel('draft', tCommon),
+                      value: allStats.missions.stats?.byStatus.draft || 0,
+                      color: '#9ca3af',
+                    },
+                    {
+                      name: getStatusLabel('published', tCommon),
+                      value: allStats.missions.stats?.byStatus.published || 0,
+                      color: '#f59e0b',
+                    },
+                    {
+                      name: getStatusLabel('assigned', tCommon),
+                      value: allStats.missions.stats?.byStatus.assigned || 0,
+                      color: '#3b82f6',
+                    },
+                    {
+                      name: getStatusLabel('in_progress', tCommon),
+                      value: allStats.missions.stats?.byStatus.in_progress || 0,
+                      color: '#8b5cf6',
+                    },
+                    {
+                      name: getStatusLabel('completed', tCommon),
+                      value: allStats.missions.stats?.byStatus.completed || 0,
+                      color: '#10b981',
+                    },
+                    {
+                      name: getStatusLabel('cancelled', tCommon),
+                      value: allStats.missions.stats?.byStatus.cancelled || 0,
+                      color: '#ef4444',
+                    },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={90}
+                  fill="#8884d8"
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
+                >
+                  {[
+                    { color: '#9ca3af' },
+                    { color: '#f59e0b' },
+                    { color: '#3b82f6' },
+                    { color: '#8b5cf6' },
+                    { color: '#10b981' },
+                    { color: '#ef4444' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: number) => [
+                    value,
+                    tAdmin('dashboard.missions.title') || 'Missions',
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+              {tAdmin('dashboard.users.userGrowth') || 'Croissance des Utilisateurs'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={
+                  allStats.users.stats?.evolution.labels.map((label, index) => ({
+                    date: label,
+                    users: allStats.users.stats?.evolution.data[index] || 0,
+                  })) || []
+                }
+              >
+                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <Tooltip
+                  formatter={(value: number) => [
+                    value,
+                    tAdmin('dashboard.users.newUsers') || 'Nouveaux utilisateurs',
+                  ]}
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="users"
+                  stroke="#3b82f6"
+                  fill="#93c5fd"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section - Row 3: Products by Category */}
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+            {tAdmin('dashboard.shop.productsByCategory') || 'Produits par Catégorie'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={
+                allStats.products.stats?.byCategory.map((cat) => ({
+                  name: cat.categoryName,
+                  products: cat.productCount,
+                  stock: cat.totalStock,
+                })) || []
+              }
+            >
+              <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 12 }}
+                stroke="#6b7280"
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                }}
+              />
+              <Legend />
+              <Bar
+                dataKey="products"
+                fill="#8b5cf6"
+                name={tAdmin('dashboard.shop.products') || 'Produits'}
+              />
+              <Bar
+                dataKey="stock"
+                fill="#3b82f6"
+                name={tAdmin('dashboard.shop.stock') || 'Stock'}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Key Metrics Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {tAdmin('dashboard.shop.analytics.conversionRate') || 'Taux de Conversion'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">
+              {((allStats.overview.stats?.conversion?.total || 0) * 100).toFixed(1)}%
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {tAdmin('dashboard.shop.analytics.ordersVsVisits') || 'Commandes vs Visites'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {tAdmin('dashboard.shop.analytics.averageBasket') || 'Panier Moyen'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">
+              {formatCurrency(allStats.overview.stats?.averageBasket?.total || 0)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {tAdmin('dashboard.shop.analytics.perOrder') || 'Par commande'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {tAdmin('dashboard.missions.completionRate') || 'Taux de Complétion'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">
+              {((allStats.missions.stats?.completionRate || 0) * 100).toFixed(1)}%
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {tAdmin('dashboard.missions.title') || 'Missions'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              {tAdmin('feedbacks.averageRating') || 'Note Moyenne'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold">
+                {allStats.feedbacks.stats?.averageRating?.toFixed(1) || '0.0'}
+              </p>
+              <Star className="h-5 w-5 fill-current text-yellow-500" />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {allStats.feedbacks.stats?.total || 0} {tAdmin('feedbacks.total') || 'avis'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

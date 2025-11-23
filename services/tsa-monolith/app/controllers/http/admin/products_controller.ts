@@ -410,6 +410,7 @@ export default class ProductsController {
         inactiveProducts,
         lowStockProducts,
         outOfStockProducts,
+        totalQuantity,
         totalValue,
         categoriesWithProducts,
       ] = await Promise.all([
@@ -425,6 +426,7 @@ export default class ProductsController {
           .where('isActive', true)
           .select(Database.raw('SUM(price * stock) as value'))
           .first(),
+        Product.query().where('isActive', true).select(Database.raw('SUM(stock) as value')).first(),
         Category.query()
           .join('products', 'categories.id', 'products.category_id')
           .groupBy('categories.id', 'categories.name')
@@ -443,6 +445,7 @@ export default class ProductsController {
           outOfStock: Number(outOfStockProducts[0].$extras.total),
         },
         inventory: {
+          totalQuantity: Number(totalQuantity?.$extras?.value || 0),
           totalValue: Number(totalValue?.$extras?.value || 0),
         },
         topCategories: categoriesWithProducts.map((cat) => ({

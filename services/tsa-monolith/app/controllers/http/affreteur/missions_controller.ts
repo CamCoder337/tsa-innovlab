@@ -256,20 +256,20 @@ export default class MissionsController {
         { client: trx }
       )
 
-      // 📍 Créer des MissionUpdates pour le tracking
-      await MissionUpdate.createStatusUpdate(
-        mission.id,
-        user.id,
-        null,
-        MissionStatus.DRAFT,
-        'Nouvelle mission créé'
-      )
-
       await trx.commit()
 
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        null,
+        null,
+        MissionStatus.DRAFT,
+        'Nouvelle mission créée'
+      )
 
       return response.status(201).json({
         success: true,
@@ -539,18 +539,18 @@ export default class MissionsController {
       mission.status = MissionStatus.PUBLISHED
       await mission.save()
 
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        user.id,
+        null,
         MissionStatus.DRAFT,
         MissionStatus.PUBLISHED,
         'Mission publiée'
       )
-
-      await mission.load('affreteur')
-      await mission.load('adresseDepart')
-      await mission.load('adresseArrivee')
 
       // 🔔 Notifier tous les transporteurs de la nouvelle mission par EMAIL + SSE
       try {
@@ -601,18 +601,18 @@ export default class MissionsController {
       mission.status = MissionStatus.DRAFT
       await mission.save()
 
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        user.id,
+        null,
         MissionStatus.PUBLISHED,
         MissionStatus.DRAFT,
         'Mission dépubliée'
       )
-
-      await mission.load('affreteur')
-      await mission.load('adresseDepart')
-      await mission.load('adresseArrivee')
 
       return response.json({
         success: true,

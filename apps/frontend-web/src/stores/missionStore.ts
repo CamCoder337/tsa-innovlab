@@ -35,7 +35,7 @@ const user = getPersistedUser() || null;
 const initialState = {
   missions: getPersistedData()?.missions || [],
   myMissions: getPersistedData()?.myMissions || [],
-  currentMission: null,
+  currentMission: getPersistedData()?.currentMission || null,
   feedbacks: getPersistedData()?.feedbacks || [],
   currentFeedback: null,
   feedbackStats: getPersistedData()?.feedbackStats || null,
@@ -538,9 +538,8 @@ export const useMissionStore = create<MissionStoreExtended>()(
 
           if (response.data) {
             set((state) => ({
-              missions: state.missions.map((mission) =>
-                mission.id === id ? response.data!.mission : mission
-              ),
+              missions: state.missions.filter((mission) => mission.id !== id),
+              myMissions: [response.data!.mission as Mission, ...state.myMissions],
               currentMission:
                 state.currentMission?.id === id ? response.data!.mission : state.currentMission,
               isLoading: false,

@@ -30,6 +30,8 @@ import type {
   MissionFeedback,
   FeedbackFilterParams,
   FeedbackStats,
+  MissionUpdateFilterParams,
+  MissionUpdate,
 } from '@/types/mission.types';
 import type { User, UpdateUserRequest } from '@/types/auth.types';
 import type { UserFilterParams, UserStats, UserStatusUpdateRequest } from '@/types/user.types';
@@ -41,7 +43,7 @@ import type {
 } from '@/types/admin-stats.types';
 import type {
   Order,
-  AdminOrderFilterParams,
+  OrderFiltersQuery,
   AdminOrderStats,
   UpdateOrderStatusRequest,
   RefundOrderRequest,
@@ -109,7 +111,7 @@ export class AdminService extends BaseApi {
     }
   }
 
-  async getAdminProductStats(): Promise<ApiResponse<ProductStats>> {
+  async getAdminProductStats(): Promise<ApiResponse<{ stats: ProductStats }>> {
     try {
       const response = await this.insertToken().get('/api/admin/products/stats');
       return { data: response.data.data };
@@ -243,6 +245,38 @@ export class AdminService extends BaseApi {
   > {
     try {
       const response = await this.insertToken().put(`/api/admin/missions/${id}/status`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminGetMissionHistory(
+    id: string,
+    params?: MissionUpdateFilterParams
+  ): Promise<
+    ApiResponse<{
+      mission: {
+        id: string;
+        title: string;
+        status: MissionStatus;
+      };
+      pagination: {
+        current_page: number;
+        per_page: number;
+        total: number;
+        last_page: number;
+      };
+      updates: {
+        meta: PaginationMeta;
+        data: MissionUpdate[];
+      };
+    }>
+  > {
+    try {
+      const response = await this.insertToken().get(`/api/admin/missions/${id}/history`, {
+        params,
+      });
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
@@ -408,7 +442,7 @@ export class AdminService extends BaseApi {
   // Order Operations
 
   async adminGetOrders(
-    params?: AdminOrderFilterParams
+    params?: OrderFiltersQuery
   ): Promise<ApiResponse<{ data: Order[]; meta: PaginationMeta }>> {
     try {
       const response = await this.insertToken().get('/api/admin/orders', { params });
@@ -466,7 +500,7 @@ export class AdminService extends BaseApi {
     }
   }
 
-  async exportOrders(params?: Partial<AdminOrderFilterParams>): Promise<ApiResponse<Blob>> {
+  async exportOrders(params?: Partial<OrderFiltersQuery>): Promise<ApiResponse<Blob>> {
     try {
       const response = await this.insertToken().get('/api/admin/orders/export', {
         params,

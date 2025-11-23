@@ -18,14 +18,31 @@ import {
   Mail,
   Calendar,
   RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderStatus, type Order } from '@/types/order.types';
-import { useShopTranslation } from '@/hooks/useTranslation';
+import {
+  useCommonTranslation,
+  useErrorsTranslation,
+  useShopTranslation,
+} from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { adminService } from '@/services/admin.service';
 import type { User } from '@/types/auth.types';
 import { useUsers } from '@/hooks/useUsers';
+import { useOrderStore } from '@/stores/orderStore';
+import { toast } from 'sonner';
 
 // Status config will be created dynamically using translations
 
@@ -66,6 +83,8 @@ const getOrderTimeline = (order: Order, tShop: TFunction): TimelineStep[] => {
 };
 
 export default function OrderDetailsPage() {
+  const { t: tCommon } = useCommonTranslation();
+  const { t: tErrors } = useErrorsTranslation();
   const { t: tShop } = useShopTranslation();
   const { id: orderId } = useParams<{ id: string }>();
   const { currentOrder, isLoading: clientLoading, fetchOrder } = useOrders();
@@ -75,6 +94,8 @@ export default function OrderDetailsPage() {
   const [orderCustomer, setOrderCustomer] = useState<User | null>(null);
   const [adminLoading, setAdminLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const { cancelOrder } = useOrders();
 
   const isAdmin = user?.role === 'admin';
 
@@ -229,6 +250,24 @@ export default function OrderDetailsPage() {
   const statusInfo = statusConfig[order.status];
   const timeline = getOrderTimeline(order, tShop);
   const StatusIcon = statusInfo.icon;
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+    await cancelOrder(order.id);
+
+    const { error } = useOrderStore.getState();
+
+    if (error) {
+      toast.error(error || tErrors('general.somethingWentWrong'));
+      return;
+    }
+
+    setShowCancelDialog(false);
+  };
+
+  const canCancel = order.status === OrderStatus.PENDING || order.status === OrderStatus.PROCESSING;
+
+  const isProcessing = order.status === OrderStatus.PROCESSING;
 
   return (
     <main className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
@@ -520,9 +559,46 @@ export default function OrderDetailsPage() {
                 <span>{tShop('orderDetails.actions.backToOrders')}</span>
               </Link>
             </Button>
+
+            {canCancel && !isAdmin && (
+              <Button
+                variant="destructive"
+                className="w-full text-xs sm:text-sm text-white"
+                onClick={() => setShowCancelDialog(true)}
+              >
+                {tShop('orders.cancelOrder')}
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {isProcessing && <AlertTriangle className="h-5 w-5 text-yellow-500" />}
+              {tShop('orders.cancelOrder')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isProcessing
+                ? tShop('orderDetails.cancel.processingWarning')
+                : tCommon('actions.warning.confirmAction') +
+                  ' ' +
+                  tShop('orders.cancelOrder').toLowerCase()}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelOrder}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {tCommon('actions.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

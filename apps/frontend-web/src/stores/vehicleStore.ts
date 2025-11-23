@@ -17,11 +17,24 @@ interface VehicleStoreState extends VehicleStore {
   vehicleStats: VehicleStats | null;
 }
 
+export function getPersistedData(): Partial<VehicleStoreState> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_vehicles');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted vehicles data:', error);
+  }
+  return null;
+}
+
 const initialState = {
-  vehicles: [],
-  currentVehicle: null,
-  availableVehicles: [],
-  vehicleStats: null,
+  vehicles: getPersistedData()?.vehicles || [],
+  currentVehicle: getPersistedData()?.currentVehicle || null,
+  availableVehicles: getPersistedData()?.availableVehicles || [],
+  vehicleStats: getPersistedData()?.vehicleStats || null,
   isLoading: false,
   error: null,
 };

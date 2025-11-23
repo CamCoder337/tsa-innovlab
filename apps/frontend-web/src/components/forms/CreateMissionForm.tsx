@@ -175,6 +175,10 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
   const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
   const [showDynamicPricing, setShowDynamicPricing] = useState(false);
 
+  // Date picker popover state
+  const [departureDateOpen, setDepartureDateOpen] = useState(false);
+  const [arrivalDateOpen, setArrivalDateOpen] = useState(false);
+
   const INITIAL_VALUES: CreateMissionDto = {
     title: currentMission?.title || '',
     affreteurId: currentMission?.affreteurId || (user?.role === 'admin' ? '' : user?.id || ''),
@@ -375,12 +379,13 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
         useEffect(() => {
           if (
             (!currentMission && values.budgetMin > 0) ||
-            currentMission?.budgetMin !== values.budgetMin ||
-            currentMission?.adresseDepart?.latitude !== values.adresseDepart.latitude ||
-            currentMission?.adresseDepart?.longitude !== values.adresseDepart.longitude ||
-            currentMission?.adresseArrivee?.latitude !== values.adresseArrivee.latitude ||
-            currentMission?.adresseArrivee?.longitude !== values.adresseArrivee.longitude ||
-            currentMission?.poids !== values.poids
+            (currentMission &&
+              (currentMission.budgetMin !== values.budgetMin ||
+                currentMission.adresseDepart?.latitude !== values.adresseDepart.latitude ||
+                currentMission.adresseDepart?.longitude !== values.adresseDepart.longitude ||
+                currentMission.adresseArrivee?.latitude !== values.adresseArrivee.latitude ||
+                currentMission.adresseArrivee?.longitude !== values.adresseArrivee.longitude ||
+                currentMission.poids !== values.poids))
           ) {
             calculateDynamicPricing(values, true, setFieldValue);
             applyDynamicPricing(setFieldValue);
@@ -853,7 +858,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Label>{tForms('labels.estimatedDepartureDate')}</Label>
-                    <Popover>
+                    <Popover open={departureDateOpen} onOpenChange={setDepartureDateOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -886,6 +891,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                               ) {
                                 setFieldValue('dateArriveePrevue', date);
                               }
+                              setDepartureDateOpen(false);
                             }
                           }}
                           disabled={(date) => date < new Date()}
@@ -899,7 +905,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
 
                   <div>
                     <Label>{tForms('labels.expectedArrivalDate')}</Label>
-                    <Popover>
+                    <Popover open={arrivalDateOpen} onOpenChange={setArrivalDateOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -929,6 +935,9 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
                           }
                           onSelect={(date) => {
                             setFieldValue('dateArriveePrevue', date ? date.toISOString() : '');
+                            if (date) {
+                              setArrivalDateOpen(false);
+                            }
                           }}
                           disabled={(date) =>
                             values.dateDepartEstime

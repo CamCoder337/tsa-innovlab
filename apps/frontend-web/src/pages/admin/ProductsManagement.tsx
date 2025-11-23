@@ -25,16 +25,19 @@ import {
   Plus,
   Edit,
   Trash2,
-  Tag,
   TrendingUp,
   CheckCircle,
   AlertTriangle,
   Filter,
   Eye,
   EyeOff,
+  DollarSign,
+  BarChart3,
+  Tag,
 } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
+import { useAllAdminStats } from '@/hooks/useAdminStats';
 import type {
   ProductFilterParams,
   CreateProduct,
@@ -54,12 +57,14 @@ import { useFormik } from 'formik';
 import { toast } from 'sonner';
 import type { Category, CreateCategory, UpdateCategory } from '@/types/category.types';
 import { CategoryForm } from '@/components/forms/CategoryForm';
-import { adminService } from '@/services/admin.service';
 import {
   useAdminTranslation,
   useCommonTranslation,
   useErrorsTranslation,
 } from '@/hooks/useTranslation';
+import { useSearchParams } from 'react-router-dom';
+import { formatCurrency } from '@/lib/utils';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const defaultFilters: ProductFilterParams = {
   search: '',
@@ -76,7 +81,6 @@ const defaultFilters: ProductFilterParams = {
 export default function AdminProductsPage() {
   const {
     products,
-    stats,
     error: productError,
     createProduct,
     updateProduct,
@@ -89,13 +93,15 @@ export default function AdminProductsPage() {
     updateCategory,
     deleteCategory,
   } = useCategories();
+  const allStats = useAllAdminStats();
   const { t: tAdmin } = useAdminTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tErrors } = useErrorsTranslation();
 
   const [filters, setFilters] = useState<ProductFilterParams>(defaultFilters);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('products');
+  const [searchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<UpdateProduct | null>(null);
   const [editingCategory, setEditingCategory] = useState<UpdateCategory | null>(null);
@@ -471,99 +477,268 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
-                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
-                    {tAdmin('products.totalProducts')}
-                  </p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                    {stats?.products?.total || products?.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
-                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
-                    {tCommon('status.active')}
-                  </p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                    {stats?.products?.active ||
-                      products?.filter((product) => product.isActive).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
-                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
-                    {tAdmin('products.lowStock')}
-                  </p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                    {stats?.products?.lowStock || 0}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
-                    {tAdmin('products.totalRevenue')}
-                  </p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                    {((stats?.inventory?.totalValue || 0) / 1000000).toFixed(1)}M || 0
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Onglets */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
-            <TabsTrigger value="products" className="text-xs sm:text-sm truncate">
-              <span>
-                {tAdmin('products.productsTab', {
-                  count: stats?.products?.total || products?.length,
-                })}
-              </span>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="overview">
+              {tAdmin('products.tabs.overview') || "Vue d'ensemble"}
             </TabsTrigger>
-            <TabsTrigger value="categories" className="text-xs sm:text-sm truncate">
-              <span>{tAdmin('products.categoriesTab', { count: categories.length })}</span>
+            <TabsTrigger value="products">
+              {tAdmin('products.tabs.allProducts') || 'Tous les produits'}
+            </TabsTrigger>
+            <TabsTrigger value="categories">
+              {tAdmin('products.tabs.categories') || 'Catégories'}
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              {tAdmin('products.tabs.analytics') || 'Analytiques'}
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Stats - Top 5 */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                      <Package className="h-4 w-4 sm:h-5 sm:w-5 text-tsa-blue dark:text-tsa-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                        {tAdmin('products.totalProducts')}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                        {allStats.products.stats?.total || products?.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                        {tCommon('status.active')}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                        {allStats.products.stats?.active ||
+                          products?.filter((product) => product.isActive).length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                      <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                        {tAdmin('products.lowStock')}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                        {allStats.products.stats?.lowStockCount || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                        {tAdmin('dashboard.shop.totalValue')}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                        {formatCurrency(allStats.products.stats?.totalStockValue || 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg flex-shrink-0">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+                        {tAdmin('dashboard.shop.totalQuantity')}
+                      </p>
+                      <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                        {allStats.products.stats?.totalStock || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Products by Category Chart & Inventory Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    {tAdmin('dashboard.shop.productsByCategory') || 'Produits par Catégorie'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={
+                        allStats.products.stats?.byCategory.map((cat) => ({
+                          name: cat.categoryName,
+                          products: cat.productCount,
+                          stock: cat.totalStock,
+                        })) || []
+                      }
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12 }}
+                        stroke="#6b7280"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                        }}
+                      />
+                      <Bar
+                        dataKey="products"
+                        fill="#8b5cf6"
+                        name={tAdmin('dashboard.shop.products') || 'Produits'}
+                      />
+                      <Bar
+                        dataKey="stock"
+                        fill="#3b82f6"
+                        name={tAdmin('dashboard.shop.stock') || 'Stock'}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{tAdmin('dashboard.shop.inventory') || 'Inventaire'}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <p className="text-2xl font-bold text-tsa-blue dark:text-tsa-white">
+                          {allStats.products.stats?.totalStock || 0}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tAdmin('dashboard.shop.totalQuantity')}
+                        </p>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <p className="text-2xl font-bold text-green-600">
+                          {formatCurrency(allStats.products.stats?.totalStockValue || 0)}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {tAdmin('dashboard.shop.totalValue')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Product Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {tAdmin('dashboard.shop.productDistribution') || 'Distribution des Produits'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {tCommon('status.active')}s
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
+                          style={{
+                            width: `${((allStats.products.stats?.active || 0) / (allStats.products.stats?.total || 1)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {allStats.products.stats?.active || 0}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('products.lowStock')}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-orange-600 h-2 rounded-full"
+                          style={{
+                            width: `${((allStats.products.stats?.lowStockCount || 0) / (allStats.products.stats?.total || 1)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {allStats.products.stats?.lowStockCount || 0}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {tAdmin('dashboard.shop.outOfStockShort')}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-red-600 h-2 rounded-full"
+                          style={{
+                            width: `${((allStats.products.stats?.outOfStockCount || 0) / (allStats.products.stats?.total || 1)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">
+                        {allStats.products.stats?.outOfStockCount || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="products">
-            {/* Filtres et recherche */}
+            {/* Filters and Search */}
             <Card className="mb-4 sm:mb-6">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
@@ -691,50 +866,50 @@ export default function AdminProductsPage() {
                       <Plus className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span>{tAdmin('products.addProduct')}</span>
                     </Button>
-                  </div>
 
-                  <Sheet
-                    open={isDialogOpen}
-                    onOpenChange={(open) => {
-                      if (!open) {
-                        productFormik.resetForm();
-                        setEditingProduct(null);
-                      }
-                      setIsDialogOpen(open);
-                    }}
-                  >
-                    <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
-                      <SheetHeader>
-                        <SheetTitle className="text-base sm:text-lg">
-                          {editingProduct
-                            ? tAdmin('products.editProduct')
-                            : tAdmin('products.addProduct')}
-                        </SheetTitle>
-                        <SheetDescription className="text-xs sm:text-sm">
-                          {editingProduct
-                            ? tAdmin('products.editProductDescription')
-                            : tAdmin('products.addProductDescription')}
-                        </SheetDescription>
-                      </SheetHeader>
-                      <div>
-                        <ProductForm
-                          formik={productFormik}
-                          categories={categories}
-                          isSubmitting={productFormik.isSubmitting}
-                          onCancel={() => {
-                            setIsDialogOpen(false);
-                            productFormik.resetForm();
-                            setEditingProduct(null);
-                          }}
-                        />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
+                    <Sheet
+                      open={isDialogOpen}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          productFormik.resetForm();
+                          setEditingProduct(null);
+                        }
+                        setIsDialogOpen(open);
+                      }}
+                    >
+                      <SheetContent className="w-4/5 sm:min-w-fit p-3 sm:p-4 max-h-screen overflow-y-auto">
+                        <SheetHeader>
+                          <SheetTitle className="text-base sm:text-lg">
+                            {editingProduct
+                              ? tAdmin('products.editProduct')
+                              : tAdmin('products.addProduct')}
+                          </SheetTitle>
+                          <SheetDescription className="text-xs sm:text-sm">
+                            {editingProduct
+                              ? tAdmin('products.editProductDescription')
+                              : tAdmin('products.addProductDescription')}
+                          </SheetDescription>
+                        </SheetHeader>
+                        <div>
+                          <ProductForm
+                            formik={productFormik}
+                            categories={categories}
+                            isSubmitting={productFormik.isSubmitting}
+                            onCancel={() => {
+                              setIsDialogOpen(false);
+                              productFormik.resetForm();
+                              setEditingProduct(null);
+                            }}
+                          />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Liste des produits */}
+            {/* Products List */}
             <Card>
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="text-base sm:text-lg">
@@ -796,55 +971,23 @@ export default function AdminProductsPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                           <div className="text-center sm:text-right">
                             <p className="font-bold text-base sm:text-lg">
-                              {parseFloat(product.price).toLocaleString()} FCFA
+                              {formatCurrency(parseFloat(product.price))}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1 sm:gap-2">
+                          <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className={`gap-1 text-xs ${product.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
-                              onClick={async () => {
-                                try {
-                                  await updateProduct(product.id, {
-                                    id: product.id,
-                                    isActive: !product.isActive,
-                                  });
-                                  if (productError) {
-                                    toast.error(tAdmin('products.updateError'));
-                                    return;
-                                  }
-                                } catch (error) {
-                                  console.log(error);
-                                }
-                              }}
-                            >
-                              {product.isActive ? (
-                                <EyeOff className="h-3 w-3" />
-                              ) : (
-                                <Eye className="h-3 w-3" />
-                              )}
-                              <span className="hidden sm:inline">
-                                {product.isActive ? 'Masquer' : 'Afficher'}
-                              </span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-1 bg-transparent text-xs"
                               onClick={() => handleEditProduct(product)}
                             >
-                              <Edit className="h-3 w-3" />
-                              <span className="hidden sm:inline">{tCommon('actions.edit')}</span>
+                              <Edit className="h-4 w-4" />
                             </Button>
                             <Button
-                              size="sm"
                               variant="outline"
-                              className="gap-1 text-red-600 hover:text-red-700 bg-transparent text-xs"
+                              size="sm"
                               onClick={() => handleDeleteProduct(product.id)}
                             >
-                              <Trash2 className="h-3 w-3" />
-                              <span className="hidden sm:inline">{tCommon('actions.delete')}</span>
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -852,19 +995,95 @@ export default function AdminProductsPage() {
                     );
                   })}
                 </div>
-
-                {filteredProducts.length === 0 && (
-                  <div className="text-center py-6 sm:py-8">
-                    <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                      {tAdmin('products.noProductsFound')}
-                    </p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="categories" className="mt-4 sm:mt-6">
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('products.analytics.salesPerformance') || 'Performance des Ventes'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.totalOrders')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.overview.stats?.orders.total || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.revenueFcfa')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.overview.stats?.revenue.total
+                          ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
+                          : '0'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.availabilityRate')}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {allStats.products.stats?.total
+                          ? `${Math.round(((allStats.products.stats?.active || 0) / allStats.products.stats.total) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('products.analytics.keyIndicators') || 'Indicateurs Clés'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.activeCategories')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.byCategory?.length || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.averageValuePerProduct')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.totalStockValue && allStats.products.stats?.total
+                          ? `${Math.round(allStats.products.stats.totalStockValue / allStats.products.stats.total).toLocaleString()} FCFA`
+                          : '0 FCFA'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.lowStockRate')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.total
+                          ? `${Math.round(((allStats.products.stats?.lowStockCount || 0) / allStats.products.stats.total) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="categories" className="space-y-6">
             <Card>
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-3 sm:pb-6">
                 <CardTitle className="text-base sm:text-lg">
@@ -882,7 +1101,7 @@ export default function AdminProductsPage() {
                   <span>{tAdmin('products.addCategory')}</span>
                 </Button>
                 <Sheet
-                  open={isDialogOpen}
+                  open={isDialogOpen && editingCategory !== null}
                   onOpenChange={(open) => {
                     if (!open) {
                       categoryFormik.resetForm();
@@ -904,15 +1123,15 @@ export default function AdminProductsPage() {
                           : tAdmin('products.addCategoryDescription')}
                       </SheetDescription>
                     </SheetHeader>
-                    <div className="p">
+                    <div className="pt-4">
                       <CategoryForm
                         formik={categoryFormik}
                         categories={categories}
                         isSubmitting={categoryFormik.isSubmitting}
                         onCancel={() => {
                           setIsDialogOpen(false);
-                          productFormik.resetForm();
-                          setEditingProduct(null);
+                          categoryFormik.resetForm();
+                          setEditingCategory(null);
                         }}
                       />
                     </div>
@@ -956,13 +1175,10 @@ export default function AdminProductsPage() {
                           className={`gap-1 text-xs ${category.isActive ? 'bg-red-50 hover:bg-red-100 text-red-700' : 'bg-green-50 hover:bg-green-100 text-green-700'}`}
                           onClick={async () => {
                             try {
-                              const response = await adminService.updateCategory(category.id, {
+                              await updateCategory(category.id, {
                                 id: category.id,
                                 isActive: !category.isActive,
                               });
-                              if (response.data) {
-                                updateCategory(category.id, response.data.category);
-                              }
                             } catch (error) {
                               console.log(error);
                             }
@@ -1001,6 +1217,90 @@ export default function AdminProductsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('products.analytics.salesPerformance') || 'Performance des Ventes'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.totalOrders')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.overview.stats?.orders.total || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.revenueFcfa')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.overview.stats?.revenue.total
+                          ? `${allStats.overview.stats.revenue.total.toLocaleString()}`
+                          : '0'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.availabilityRate')}
+                      </span>
+                      <span className="font-medium text-green-600">
+                        {allStats.products.stats?.total
+                          ? `${Math.round(((allStats.products.stats?.active || 0) / allStats.products.stats.total) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {tAdmin('products.analytics.keyIndicators') || 'Indicateurs Clés'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.activeCategories')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.byCategory?.length || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.averageValuePerProduct')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.totalStockValue && allStats.products.stats?.total
+                          ? `${Math.round(allStats.products.stats.totalStockValue / allStats.products.stats.total).toLocaleString()} FCFA`
+                          : '0 FCFA'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {tAdmin('dashboard.shop.lowStockRate')}
+                      </span>
+                      <span className="font-medium">
+                        {allStats.products.stats?.total
+                          ? `${Math.round(((allStats.products.stats?.lowStockCount || 0) / allStats.products.stats.total) * 100)}%`
+                          : '0%'}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

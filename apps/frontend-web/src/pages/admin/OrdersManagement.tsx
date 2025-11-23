@@ -55,7 +55,7 @@ import {
   DollarSign,
   TrendingUp,
 } from 'lucide-react';
-import { useAdminOrders } from '@/hooks/useAdminOrders';
+import { useOrders } from '@/hooks/useOrders';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
 import { formatCurrency, getStatusColor, getStatusLabel } from '@/lib/utils';
 import { formatDate } from '@/lib/date-utils';
@@ -82,7 +82,7 @@ export default function OrdersManagement() {
     updateOrderStatus,
     cancelOrder,
     setError: clearError,
-  } = useAdminOrders();
+  } = useOrders();
 
   const allStats = useAllAdminStats();
 

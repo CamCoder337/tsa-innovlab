@@ -9,12 +9,25 @@ import type {
 } from '../types/address.types';
 import { addressService } from '@/services/address.service';
 
+export function getPersistedData(): Partial<AddressStore> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_addresses');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted address data:', error);
+  }
+  return null;
+}
+
 export const useAddressStore = create<AddressStore>()(
   persist(
     (set, get) => ({
       // State
-      addresses: [],
-      currentAddress: null,
+      addresses: getPersistedData()?.addresses || [],
+      currentAddress: getPersistedData()?.currentAddress || null,
       isLoading: false,
       error: null,
 

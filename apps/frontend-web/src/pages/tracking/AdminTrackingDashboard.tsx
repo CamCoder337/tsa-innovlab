@@ -51,8 +51,7 @@ const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
 
 export default function AdminTrackingDashboard() {
   const { t: tTracking } = useTrackingTranslation();
-  const { missions, myMissions, isLoading, error, fetchAllMissions, fetchMyMissions, clearError } =
-    useMissions();
+  const { missions, myMissions, isLoading, error, fetchAllMissions, clearError } = useMissions();
 
   // Combine all missions for admin view
   const allMissions = useMemo(() => {
@@ -203,7 +202,7 @@ export default function AdminTrackingDashboard() {
 
   // Handle refresh button click
   const handleRefresh = async () => {
-    await Promise.all([fetchAllMissions(), fetchMyMissions()]);
+    await fetchAllMissions();
   };
 
   // Load data on mount

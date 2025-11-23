@@ -278,6 +278,7 @@ export default function MissionsTransporteurPage() {
                   />
                 </div>
               </div>
+
               <Select value={filterOrigin} onValueChange={setFilterOrigin}>
                 <SelectTrigger className="w-full lg:w-48">
                   <SelectValue
@@ -295,6 +296,7 @@ export default function MissionsTransporteurPage() {
                   ))}
                 </SelectContent>
               </Select>
+
               <Select value={filterDestination} onValueChange={setFilterDestination}>
                 <SelectTrigger className="w-full lg:w-48">
                   <SelectValue

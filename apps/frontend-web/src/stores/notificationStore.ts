@@ -3,9 +3,22 @@ import { persist } from 'zustand/middleware';
 import { notificationService } from '@/services/notification.service';
 import type { NotificationEventData, NotificationStore } from '@/types/notification.types';
 
+export function getPersistedData(): Partial<NotificationStore> | null {
+  try {
+    const persistedData = localStorage.getItem('tsa_notifications');
+    if (persistedData) {
+      const parsed = JSON.parse(persistedData);
+      return parsed.state || null;
+    }
+  } catch (error) {
+    console.error('Error loading persisted notifications data:', error);
+  }
+  return null;
+}
+
 const initialState = {
-  notifications: [],
-  stats: null,
+  notifications: getPersistedData()?.notifications || [],
+  stats: getPersistedData()?.stats || null,
   isLoading: false,
   error: null,
 };

@@ -79,6 +79,9 @@ export interface UserState {
 }
 
 export interface UserActions {
+  setUsers: (users: UserWithStats[]) => void;
+  setSelectedUser: (selectedUser: UserWithStats | null) => void;
+
   // Data fetching
   fetchUsers: (params?: UserFilterParams) => Promise<void>;
   fetchUser: (id: string) => Promise<void>;

@@ -6,7 +6,7 @@ import type { LoginCredentials } from '@/types/auth.types';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { useState, type Dispatch, type SetStateAction } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail, Phone } from 'lucide-react';
 import {
   useAuthTranslation,
   useCommonTranslation,
@@ -15,13 +15,25 @@ import {
 
 const INITIAL_VALUES: LoginCredentials = {
   email: '',
+  phone: '',
   password: '',
   mfaCode: '',
 };
 
-const validationSchema = (showMFA: boolean, t: (key: string) => string) =>
+const validationSchema = (
+  showMFA: boolean,
+  loginMethod: 'email' | 'phone',
+  t: (key: string) => string
+) =>
   Yup.object({
-    email: Yup.string().trim().required(t('validation.required')).email(t('validation.email')),
+    email:
+      loginMethod === 'email'
+        ? Yup.string().trim().required(t('validation.required')).email(t('validation.email'))
+        : Yup.string(),
+    phone:
+      loginMethod === 'phone'
+        ? Yup.string().trim().required(t('validation.required'))
+        : Yup.string(),
     password: Yup.string().required(t('validation.required')),
     mfaCode: showMFA
       ? Yup.string()
@@ -38,6 +50,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const { t: tAuth } = useAuthTranslation();
   const { t: tCommon } = useCommonTranslation();
   const { t: tForms } = useFormsTranslation();
@@ -45,34 +58,98 @@ export default function LoginForm({ onSubmit, showMFA = false, setShowMFA }: Log
   return (
     <Formik<LoginCredentials>
       initialValues={INITIAL_VALUES}
-      validationSchema={validationSchema(showMFA, tForms)}
-      onSubmit={onSubmit}
+      validationSchema={validationSchema(showMFA, loginMethod, tForms)}
+      onSubmit={(values) => {
+        // Clean up values based on login method
+        const submitValues = { ...values };
+        if (loginMethod === 'email') {
+          delete submitValues.phone;
+        } else {
+          delete submitValues.email;
+        }
+        return onSubmit(submitValues);
+      }}
       validateOnBlur={true}
       validateOnChange={true}
     >
       {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
         <Form className="space-y-4">
           <div className="flex flex-col gap-2">
-            <Input
-              name="email"
-              type="email"
-              placeholder={tForms('labels.email')}
-              value={values.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              aria-label="email"
-              aria-invalid={touched.email && !!errors.email}
-              className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
-                        text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
-                          focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
-                          "
-              required
-              disabled={showMFA}
-            />
+            {!showMFA && (
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg mb-2">
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('email')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
+                    loginMethod === 'email'
+                      ? 'bg-white dark:bg-gray-700 text-tsa-blue dark:text-tsa-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <Mail className="h-4 w-4" />
+                  {tForms('labels.email')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('phone')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all ${
+                    loginMethod === 'phone'
+                      ? 'bg-white dark:bg-gray-700 text-tsa-blue dark:text-tsa-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <Phone className="h-4 w-4" />
+                  {tForms('labels.phone')}
+                </button>
+              </div>
+            )}
+
+            {loginMethod === 'email' ? (
+              <Input
+                name="email"
+                type="email"
+                placeholder={tForms('labels.email')}
+                value={values.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                aria-label="email"
+                aria-invalid={touched.email && !!errors.email}
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                            dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                          text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                            focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                            "
+                required
+                disabled={showMFA}
+              />
+            ) : (
+              <Input
+                name="phone"
+                type="tel"
+                placeholder={tForms('labels.phone')}
+                value={values.phone}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                aria-label="phone"
+                aria-invalid={touched.phone && !!errors.phone}
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
+                            dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                          text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
+                            focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
+                            "
+                required
+                disabled={showMFA}
+              />
+            )}
             <div className="flex justify-between">
               <div className="w-1/2 text-sm text-red-600">
-                {touched.email && errors.email ? errors.email : null}
+                {loginMethod === 'email'
+                  ? touched.email && errors.email
+                    ? errors.email
+                    : null
+                  : touched.phone && errors.phone
+                    ? errors.phone
+                    : null}
               </div>
               {!showMFA && (
                 <Link

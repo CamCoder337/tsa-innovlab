@@ -11,6 +11,8 @@ export const useUsers = () => {
     isLoading,
     error,
     pagination,
+    setUsers,
+    setSelectedUser,
     fetchUsers,
     fetchUser,
     fetchUserStats,
@@ -87,6 +89,8 @@ export const useUsers = () => {
     pagination,
 
     // Actions
+    setUsers,
+    setSelectedUser,
     fetchUsers,
     fetchUser,
     fetchUserStats,

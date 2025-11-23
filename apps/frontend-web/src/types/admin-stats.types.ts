@@ -152,6 +152,12 @@ export interface AdminProductStats {
     stock: number;
     stockAlert: number;
   }>;
+  outOfStockCount: number;
+  outOfStockProducts: Array<{
+    productId: string;
+    productName: string;
+    stock: number;
+  }>;
   evolution: {
     labels: string[];
     data: number[];

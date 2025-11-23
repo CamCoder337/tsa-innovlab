@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, DollarSign, Info, AlertTriangle } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, Info, AlertTriangle, Copy, Check } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { getStatusColor } from '@/lib/utils';
 import { getStatusLabel } from '@/lib/utils';
@@ -13,6 +13,7 @@ import {
 import { useUserSearch } from '@/hooks/useUserSearch';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '../ui/button';
 
 interface MissionDetailsProps {
   mission: Mission;
@@ -28,6 +29,15 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
   const { t: tCommon } = useCommonTranslation();
   const { t: tForms } = useFormsTranslation();
   const { t: tMissions } = useMissionsTranslation();
+  const [isIdExpanded, setIsIdExpanded] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyId = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(mission.id);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   // Fetch user names and vehicle info (only if not preloaded)
   useEffect(() => {
@@ -85,12 +95,35 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg sm:text-xl lg:text-2xl flex flex-1 justify-between sm:flex-row sm:items-center gap-2">
-                <p className="truncate flex flex-col">
-                  {mission.title}
-                  <span className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
-                    {mission.id}
-                  </span>
-                </p>
+                <div className="flex flex-col min-w-0 sm:gap-1">
+                  <span className="truncate">{mission.title}</span>
+                  <div
+                    className="flex items-center gap-2 mt-1 cursor-pointer group"
+                    onClick={() => setIsIdExpanded(!isIdExpanded)}
+                  >
+                    <span
+                      className={`text-xs sm:text-sm text-muted-foreground transition-all ${
+                        isIdExpanded ? '' : 'truncate max-w-12'
+                      }`}
+                    >
+                      {mission.id}
+                    </span>
+                    {isIdExpanded && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        onClick={handleCopyId}
+                      >
+                        {isCopied ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className={getStatusColor(mission.status)}>
                     {getStatusLabel(mission.status, tCommon)}
@@ -98,7 +131,7 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
                 </div>
               </CardTitle>
               {mission.typeMarchandise && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs sm:mt-2">
                   {mission.typeMarchandise}
                 </Badge>
               )}
