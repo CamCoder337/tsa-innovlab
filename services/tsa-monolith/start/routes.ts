@@ -156,7 +156,6 @@ router
     router.get('/missions/stats', '#controllers/http/admin/missions_controller.stats')
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
-    // Historique des missions
     router.get('/missions/:id/history', '#controllers/http/admin/missions_controller.getHistory')
 
     // Gestion des commandes
@@ -165,6 +164,12 @@ router
     router.get('/orders/:id', '#controllers/http/admin/orders_controller.show')
     router.put('/orders/:id/status', '#controllers/http/admin/orders_controller.updateStatus')
     router.post('/orders/:id/cancel', '#controllers/http/admin/orders_controller.cancel')
+
+    // Pricing dynamique pour les missions
+    router.post(
+      '/pricing/calculate',
+      '#controllers/http/affreteur/dynamic_pricing_controller.calculate'
+    )
 
     // Audit logs
     router.get('/audit-logs', '#controllers/http/admin/audit_logs_controller.index')

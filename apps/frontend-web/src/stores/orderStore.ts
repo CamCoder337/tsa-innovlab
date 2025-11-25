@@ -5,7 +5,6 @@ import type {
   CreateOrderRequest,
   OrderFiltersQuery,
   UpdateOrderStatusRequest,
-  RefundOrderRequest,
 } from '@/types/order.types';
 import { shopService } from '@/services/shop.service';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -232,46 +231,6 @@ export const useOrderStore = create<OrderStore>()(
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to cancel order',
-            isLoading: false,
-          });
-        }
-      },
-      // Refund order
-      refundOrder: async (orderId: string, data: RefundOrderRequest) => {
-        set({ isLoading: true, error: null });
-
-        try {
-          const response = await adminService.adminRefundOrder(orderId, data);
-
-          if (response.error) {
-            set({
-              error: response.error.message,
-              isLoading: false,
-            });
-            return;
-          }
-
-          if (response.data) {
-            const { orders, currentOrder } = get();
-
-            // Update in orders list
-            const updatedOrders = orders.map((order) =>
-              order.id === orderId ? response.data! : order
-            );
-
-            // Update current order if it matches
-            const updatedCurrentOrder = currentOrder?.id === orderId ? response.data : currentOrder;
-
-            set({
-              orders: updatedOrders,
-              currentOrder: updatedCurrentOrder,
-              isLoading: false,
-              error: null,
-            });
-          }
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Failed to refund order',
             isLoading: false,
           });
         }

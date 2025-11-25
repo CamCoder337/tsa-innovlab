@@ -143,12 +143,6 @@ export interface AdminOrderStats {
   }>;
 }
 
-export interface RefundOrderRequest {
-  amount?: number;
-  reason: string;
-  refundShipping?: boolean;
-}
-
 export interface BulkOrderActionRequest {
   orderIds: string[];
   action: 'cancel' | 'update_status' | 'export' | 'delete';
@@ -182,7 +176,6 @@ export interface OrderStore {
   createOrder: (orderData: CreateOrderRequest) => Promise<Order>;
   updateOrderStatus: (orderId: string, data: UpdateOrderStatusRequest) => Promise<Order | null>;
   cancelOrder: (orderId: string) => Promise<void>;
-  refundOrder: (orderId: string, data: RefundOrderRequest) => Promise<void>;
   fetchStats: () => Promise<void>;
 
   // Utility actions
