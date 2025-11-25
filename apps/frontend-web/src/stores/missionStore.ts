@@ -190,9 +190,9 @@ export const useMissionStore = create<MissionStoreExtended>()(
             set({ isLoading: true, error: null });
 
             const response =
-              user?.role === 'affreteur'
-                ? await missionService.getAffreteurMissions({ page })
-                : await missionService.getTransporteurMissions({ page });
+              user?.role === 'transporteur'
+                ? await missionService.getTransporteurMissions({ page })
+                : await missionService.getAffreteurMissions({ page });
 
             if (response.error) {
               retryAttempts += 1;

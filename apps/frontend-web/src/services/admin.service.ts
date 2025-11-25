@@ -46,9 +46,6 @@ import type {
   OrderFiltersQuery,
   AdminOrderStats,
   UpdateOrderStatusRequest,
-  RefundOrderRequest,
-  BulkOrderActionRequest,
-  BulkOrderActionResult,
 } from '@/types/order.types';
 
 export class AdminService extends BaseApi {
@@ -482,39 +479,9 @@ export class AdminService extends BaseApi {
     }
   }
 
-  async adminRefundOrder(id: string, data: RefundOrderRequest): Promise<ApiResponse<Order>> {
-    try {
-      const response = await this.insertToken().post(`/api/admin/orders/${id}/refund`, data);
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
   async getAdminOrderStats(): Promise<ApiResponse<AdminOrderStats>> {
     try {
       const response = await this.insertToken().get('/api/admin/orders/stats');
-      return { data: response.data.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async exportOrders(params?: Partial<OrderFiltersQuery>): Promise<ApiResponse<Blob>> {
-    try {
-      const response = await this.insertToken().get('/api/admin/orders/export', {
-        params,
-        responseType: 'blob',
-      });
-      return { data: response.data };
-    } catch (error) {
-      return { error: this.getErrorResponse(error) };
-    }
-  }
-
-  async bulkOrderAction(data: BulkOrderActionRequest): Promise<ApiResponse<BulkOrderActionResult>> {
-    try {
-      const response = await this.insertToken().post('/api/admin/orders/bulk-action', data);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };
