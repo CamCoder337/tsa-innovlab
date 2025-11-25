@@ -214,6 +214,40 @@ router
       '#controllers/http/affreteur/missions_controller.getHistory'
     )
 
+    // Tracking et QR code
+    router.get(
+      '/missions/:id/qr-code',
+      '#controllers/http/affreteur/missions_controller.getDeliveryQrCode'
+    )
+    router.post(
+      '/missions/:id/regenerate-qr',
+      '#controllers/http/affreteur/missions_controller.regenerateQrCode'
+    )
+    router.get(
+      '/missions/:id/locations',
+      '#controllers/http/affreteur/missions_controller.getLocationUpdates'
+    )
+    router.get(
+      '/missions/:id/issues',
+      '#controllers/http/affreteur/missions_controller.getIssues'
+    )
+    router.post(
+      '/missions/:id/issues/:issueId/acknowledge',
+      '#controllers/http/affreteur/missions_controller.acknowledgeIssue'
+    )
+    router.post(
+      '/missions/:id/issues/:issueId/resolve',
+      '#controllers/http/affreteur/missions_controller.resolveIssue'
+    )
+    router.post(
+      '/missions/:id/mark-as-paid',
+      '#controllers/http/affreteur/missions_controller.markAsPaid'
+    )
+    router.post(
+      '/missions/:id/complete',
+      '#controllers/http/affreteur/missions_controller.completeMission'
+    )
+
     // Pricing dynamique pour les missions
     router.post(
       '/pricing/calculate',
@@ -293,6 +327,33 @@ router
   })
   .prefix('/api/transporteur')
   .middleware([middleware.auth(), roleGuard(UserRole.TRANSPORTEUR)])
+
+// ===== ROUTES DE TRACKING POUR CHAUFFEURS (Token + PIN Auth) =====
+router
+  .group(() => {
+    // Authentification chauffeur
+    router.post('/authenticate', '#controllers/http/driver/mission_tracking_controller.authenticate')
+  })
+  .prefix('/track/:token')
+
+router
+  .group(() => {
+    // Mise à jour de position
+    router.post('/location', '#controllers/http/driver/mission_tracking_controller.updateLocation')
+
+    // Récupération des positions
+    router.get('/locations', '#controllers/http/driver/mission_tracking_controller.getLocations')
+    router.get('/last-location', '#controllers/http/driver/mission_tracking_controller.getLastLocation')
+
+    // Signalement de problèmes
+    router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
+    router.get('/issues', '#controllers/http/driver/mission_tracking_controller.getIssues')
+  })
+  .prefix('/track/:token')
+  .middleware([() => import('#middleware/tracking_auth_middleware')])
+
+// Validation de livraison via QR code (public)
+router.get('/delivery-proof', '#controllers/http/driver/mission_tracking_controller.validateDelivery')
 
 // ===== ROUTES PUBLIQUES DE TRACKING GPS (TEST ONLY - NO AUTH) =====
 router

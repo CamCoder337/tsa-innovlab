@@ -57,7 +57,7 @@
     "@adonisjs/lucid": "^21.6.1",
     "@adonisjs/mail": "^9.2.2",
     "@adonisjs/redis": "^9.2.0",
-    "@types/qrcode": "^1.5.5",
+    "@types/qrcode": "^1.5.6",
     "@vinejs/vine": "^3.0.1",
     "adonis-autoswagger": "^3.73.0",
     "adonisjs-websocket": "^0.2.3",
