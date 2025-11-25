@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+android/
+ios/
+web-build/
+dist/
+*.config.js
+*.config.ts
+*.backup.tsx
+*.backup.ts

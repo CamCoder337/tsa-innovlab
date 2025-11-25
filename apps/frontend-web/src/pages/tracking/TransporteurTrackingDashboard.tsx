@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
+import DriversLiveMap from '../../components/tracking/DriversLiveMap';
 import {
   Truck,
   Navigation,
@@ -16,6 +17,7 @@ import {
   Phone,
   MessageSquare,
   Star,
+  Users,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useMissions } from '@/hooks/useMissions';
@@ -181,9 +183,13 @@ export default function TransporteurTrackingDashboard() {
 
       {/* Contenu principal */}
       <Tabs defaultValue="current" className="space-y-4">
-        <TabsList className="grid grid-cols-2 lg:grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full">
           <TabsTrigger value="current" className="text-xs sm:text-sm">
             {tTracking('tabs.currentMission')}
+          </TabsTrigger>
+          <TabsTrigger value="drivers" className="text-xs sm:text-sm flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Chauffeurs GPS
           </TabsTrigger>
           <TabsTrigger value="assignments" className="text-xs sm:text-sm">
             {tTracking('tabs.myMissions')}
@@ -379,6 +385,10 @@ export default function TransporteurTrackingDashboard() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="drivers" className="space-y-4">
+          <DriversLiveMap />
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-4">

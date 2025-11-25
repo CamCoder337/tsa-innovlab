@@ -780,6 +780,377 @@ export default class MissionsController {
   }
 
   /**
+   * Générer ou récupérer le QR code de preuve de livraison
+   */
+  async getDeliveryQrCode({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const qrCodeService = (await import('#services/qr_code_service')).default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      // Initialiser le tracking si pas déjà fait
+      if (!mission.qrCodeToken) {
+        const trackingService = (await import('#services/mission_tracking_service')).default
+        await trackingService.initializeTracking(mission)
+        await mission.refresh()
+      }
+
+      const qrCodeDataUrl = await qrCodeService.generateDeliveryQrCode(mission)
+
+      return response.json({
+        success: true,
+        message: 'QR code generated successfully',
+        data: {
+          qrCode: qrCodeDataUrl,
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to generate QR code',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Régénérer le QR code (en cas de perte ou suspicion de fuite)
+   */
+  async regenerateQrCode({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const qrCodeService = (await import('#services/qr_code_service')).default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      await qrCodeService.regenerateQrCodeToken(mission)
+      await mission.refresh()
+
+      const qrCodeDataUrl = await qrCodeService.generateDeliveryQrCode(mission)
+
+      return response.json({
+        success: true,
+        message: 'QR code regenerated successfully',
+        data: {
+          qrCode: qrCodeDataUrl,
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to regenerate QR code',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer une mission comme payée
+   */
+  async markAsPaid({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== MissionStatus.DELIVERED && mission.status !== 'delivered') {
+        return response.status(422).json({
+          success: false,
+          message: 'Mission must be delivered before marking as paid',
+        })
+      }
+
+      mission.status = 'paid' as any
+      mission.paidAt = DateTime.now()
+      await mission.save()
+
+      // TODO: Envoyer notification au transporteur
+
+      return response.json({
+        success: true,
+        message: 'Mission marked as paid successfully',
+        data: { mission },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to mark mission as paid',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Clôturer définitivement une mission
+   */
+  async completeMission({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== 'paid') {
+        return response.status(422).json({
+          success: false,
+          message: 'Mission must be paid before final completion',
+        })
+      }
+
+      mission.status = MissionStatus.COMPLETED
+      await mission.save()
+
+      // TODO: Archiver les données de tracking (optionnel)
+
+      return response.json({
+        success: true,
+        message: 'Mission completed successfully',
+        data: { mission },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to complete mission',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Récupérer les positions GPS d'une mission
+   */
+  async getLocationUpdates({ params, request, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const trackingService = (await import('#services/mission_tracking_service')).default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const limit = request.input('limit', 50)
+      const locations = await trackingService.getRecentLocations(mission.id, limit)
+
+      return response.json({
+        success: true,
+        message: 'Location updates retrieved successfully',
+        data: {
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+          locations,
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve location updates',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Récupérer les problèmes signalés pour une mission
+   */
+  async getIssues({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const MissionIssue = (await import('#models/mission_issue')).default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issues = await MissionIssue.query()
+        .where('mission_id', mission.id)
+        .preload('reportedBy')
+        .orderBy('created_at', 'desc')
+
+      return response.json({
+        success: true,
+        message: 'Issues retrieved successfully',
+        data: { issues },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve issues',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer un problème comme reconnu
+   */
+  async acknowledgeIssue({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const MissionIssue = (await import('#models/mission_issue')).default
+      const { IssueStatus } = await import('#models/mission_issue')
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issue = await MissionIssue.query()
+        .where('id', params.issueId)
+        .where('mission_id', mission.id)
+        .first()
+
+      if (!issue) {
+        return response.status(404).json({
+          success: false,
+          message: 'Issue not found',
+        })
+      }
+
+      issue.status = IssueStatus.ACKNOWLEDGED
+      await issue.save()
+
+      return response.json({
+        success: true,
+        message: 'Issue acknowledged successfully',
+        data: { issue },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to acknowledge issue',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer un problème comme résolu
+   */
+  async resolveIssue({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const MissionIssue = (await import('#models/mission_issue')).default
+      const { IssueStatus } = await import('#models/mission_issue')
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issue = await MissionIssue.query()
+        .where('id', params.issueId)
+        .where('mission_id', mission.id)
+        .first()
+
+      if (!issue) {
+        return response.status(404).json({
+          success: false,
+          message: 'Issue not found',
+        })
+      }
+
+      issue.status = IssueStatus.RESOLVED
+      issue.resolvedAt = DateTime.now()
+      await issue.save()
+
+      return response.json({
+        success: true,
+        message: 'Issue resolved successfully',
+        data: { issue },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to resolve issue',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
    * Récupérer l'historique complet d'une mission
    */
   async getHistory({ params, request, auth, response }: HttpContext) {
