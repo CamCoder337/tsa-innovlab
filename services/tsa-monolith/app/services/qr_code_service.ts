@@ -18,8 +18,6 @@ export class QrCodeService {
     // Générer le QR code en base64
     const qrCodeDataUrl = await QRCode.toDataURL(deliveryProofUrl, {
       errorCorrectionLevel: 'H',
-      type: 'image/png',
-      quality: 0.95,
       margin: 1,
       width: 300,
       color: {

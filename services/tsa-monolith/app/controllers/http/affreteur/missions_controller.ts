@@ -894,14 +894,14 @@ export default class MissionsController {
         })
       }
 
-      if (mission.status !== MissionStatus.DELIVERED && mission.status !== 'delivered') {
+      if (mission.status !== MissionStatus.DELIVERED) {
         return response.status(422).json({
           success: false,
           message: 'Mission must be delivered before marking as paid',
         })
       }
 
-      mission.status = 'paid' as any
+      mission.status = MissionStatus.PAID
       mission.paidAt = DateTime.now()
       await mission.save()
 
