@@ -79,7 +79,7 @@ export default class MissionUpdate extends BaseModel {
   // Factory methods
   public static async createStatusUpdate(
     missionId: string,
-    transporteurId: string | null,
+    transporteurId: string = '',
     oldStatus: string | null,
     newStatus: string,
     description: string = ''

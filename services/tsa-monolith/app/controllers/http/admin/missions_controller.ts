@@ -316,7 +316,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        null,
+        '',
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créé'
@@ -451,7 +451,7 @@ export default class MissionsController {
           // Événement 1 : Annulation par transporteur
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             oldStatus,
             'cancelled' as MissionStatus,
             `Mission annulée par le transporteur ${transporteur?.fullName}. ${validatedData.commentaire || 'Aucune raison fournie'}`
@@ -460,7 +460,7 @@ export default class MissionsController {
           // Événement 2 : Republication automatique
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             'cancelled' as MissionStatus,
             newStatus,
             "Mission automatiquement republiée et disponible pour d'autres transporteurs"
@@ -469,7 +469,7 @@ export default class MissionsController {
           // Mise à jour normale
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             oldStatus,
             newStatus,
             validatedData.commentaire || 'Mise à jour de statut par le transporteur'

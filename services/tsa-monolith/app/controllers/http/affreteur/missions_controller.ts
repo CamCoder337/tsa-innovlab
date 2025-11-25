@@ -265,7 +265,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        null,
+        '',
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créée'
@@ -546,7 +546,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        null,
+        '',
         MissionStatus.DRAFT,
         MissionStatus.PUBLISHED,
         'Mission publiée'
@@ -608,7 +608,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        null,
+        '',
         MissionStatus.PUBLISHED,
         MissionStatus.DRAFT,
         'Mission dépubliée'
