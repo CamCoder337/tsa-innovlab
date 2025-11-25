@@ -235,7 +235,7 @@ export default function LiveGPSTracker({
               streetViewControl: false,
               mapTypeControl: true,
             }}
-            onLoad={(map) => {
+            onLoad={(map: google.maps.Map) => {
               mapRef.current = map;
             }}
           >

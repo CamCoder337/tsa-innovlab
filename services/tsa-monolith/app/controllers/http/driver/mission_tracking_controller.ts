@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import missionTrackingService from '#services/mission_tracking_service'
 import qrCodeService from '#services/qr_code_service'
 import MissionIssue, { IssueType, IssueStatus } from '#models/mission_issue'
+import { MissionStatus } from '#models/mission'
 import { DateTime } from 'luxon'
 
 export default class MissionTrackingController {
@@ -60,6 +61,14 @@ export default class MissionTrackingController {
    * Requiert l'authentification via middleware
    */
   async updateLocation({ request, response, mission }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
+
     const { latitude, longitude, speed, heading, accuracy } = request.only([
       'latitude',
       'longitude',
@@ -107,6 +116,13 @@ export default class MissionTrackingController {
    * Récupère les dernières positions d'une mission
    */
   async getLocations({ request, response, mission }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
     const limit = request.input('limit', 50)
 
     const locations = await missionTrackingService.getRecentLocations(mission.id, limit)
@@ -129,6 +145,13 @@ export default class MissionTrackingController {
    * Récupère la dernière position connue
    */
   async getLastLocation({ response, mission }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
     const location = await missionTrackingService.getLastLocation(mission.id)
 
     return response.ok({
@@ -149,6 +172,13 @@ export default class MissionTrackingController {
    * Signale un problème pendant la mission
    */
   async reportIssue({ request, response, mission }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
     const { type, description, latitude, longitude, photos } = request.only([
       'type',
       'description',
@@ -199,6 +229,13 @@ export default class MissionTrackingController {
    * Récupère tous les problèmes signalés pour une mission
    */
   async getIssues({ response, mission }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
     const issues = await MissionIssue.query().where('mission_id', mission.id).orderBy('created_at', 'desc')
 
     return response.ok({
@@ -262,7 +299,7 @@ export default class MissionTrackingController {
     }
 
     // Marquer la mission comme livrée
-    mission.status = 'delivered'
+    mission.status = MissionStatus.DELIVERED
     mission.deliveredAt = DateTime.now()
     await mission.save()
 

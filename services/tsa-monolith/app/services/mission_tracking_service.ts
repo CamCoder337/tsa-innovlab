@@ -1,4 +1,4 @@
-import Mission from '#models/mission'
+import Mission, { MissionStatus } from '#models/mission'
 import LocationUpdate from '#models/location_update'
 import { randomBytes, randomInt } from 'node:crypto'
 import { DateTime } from 'luxon'
@@ -82,11 +82,11 @@ export class MissionTrackingService {
 
     // Si c'est la première mise à jour de position, démarrer la mission
     if (
-      mission.status === 'assigned' ||
-      mission.status === 'ready_to_start' ||
-      (mission.status === 'published' && !mission.startedAt)
+      mission.status === MissionStatus.ASSIGNED ||
+      mission.status === MissionStatus.READY_TO_START ||
+      (mission.status === MissionStatus.PUBLISHED && !mission.startedAt)
     ) {
-      mission.status = 'in_progress'
+      mission.status = MissionStatus.IN_PROGRESS
       mission.startedAt = DateTime.now()
       await mission.save()
     }

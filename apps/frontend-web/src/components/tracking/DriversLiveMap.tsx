@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Navigation, MapPin, RefreshCw, Activity, Clock } from 'lucide-react';
 import { webSocketService } from '@/services/websocket.service';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
-import { useAuth } from '@/hooks/useAuth';
 import { getCookie } from '@/lib/cookie-utils';
 
 interface DriverPosition {
@@ -22,7 +21,6 @@ interface DriversLiveMapProps {
 }
 
 export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) {
-  const { user } = useAuth();
   const [drivers, setDrivers] = useState<DriverPosition[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
