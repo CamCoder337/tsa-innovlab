@@ -7,8 +7,10 @@ import { MissionDetailsScreen } from '../screens/MissionDetailsScreen';
 import { CreateMissionScreen } from '../screens/CreateMissionScreen';
 import { LiveTrackingScreen } from '../screens/LiveTrackingScreen';
 import { ProofOfDeliveryScreen } from '../screens/ProofOfDeliveryScreen';
+import { SimpleTrackingTestScreen } from '../screens/SimpleTrackingTestScreen';
 
 export type RootStackParamList = {
+  SimpleTrackingTest: undefined;
   MissionList: undefined;
   Map: { missionId: string };
   MissionDetails: { missionId: string };
@@ -43,6 +45,7 @@ export const AppNavigator = () => {
           },
         }}
       >
+        <Stack.Screen name="SimpleTrackingTest" component={SimpleTrackingTestScreen} />
         <Stack.Screen name="MissionList" component={MissionListScreen} />
         <Stack.Screen name="Map" component={MapScreen} />
         <Stack.Screen name="MissionDetails" component={MissionDetailsScreen} />

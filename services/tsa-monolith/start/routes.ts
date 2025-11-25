@@ -294,6 +294,16 @@ router
   .prefix('/api/transporteur')
   .middleware([middleware.auth(), roleGuard(UserRole.TRANSPORTEUR)])
 
+// ===== ROUTES PUBLIQUES DE TRACKING GPS (TEST ONLY - NO AUTH) =====
+router
+  .group(() => {
+    router.post('/update-location', '#controllers/http/public/tracking_controller.updateLocation')
+    router.get('/locations', '#controllers/http/public/tracking_controller.getLocations')
+    router.get('/locations/:deviceId', '#controllers/http/public/tracking_controller.getDeviceLocation')
+    router.delete('/cleanup', '#controllers/http/public/tracking_controller.cleanup')
+  })
+  .prefix('/api/tracking')
+
 // ===== ROUTES PUBLIQUES BOUTIQUE =====
 router
   .group(() => {

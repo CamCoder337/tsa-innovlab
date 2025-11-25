@@ -54,7 +54,12 @@ export const MissionListScreen: React.FC<MissionListScreenProps> = ({ navigation
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft} />
+        <TouchableOpacity
+          style={styles.headerLeft}
+          onPress={() => navigation.navigate('SimpleTrackingTest')}
+        >
+          <Text style={styles.gpsButton}>📍 GPS Test</Text>
+        </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Mes Missions</Text>
         </View>
@@ -161,6 +166,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: Colors.white,
+  },
+  gpsButton: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   tabs: {
     flexDirection: 'row',

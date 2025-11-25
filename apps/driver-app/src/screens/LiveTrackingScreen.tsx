@@ -12,6 +12,7 @@ import {
   DirectionsResult,
 } from '../services/googleMapsService';
 import { formatDistance } from '../utils/missionSimulator';
+import { backendTrackingService } from '../services/backendTrackingService';
 
 interface LiveTrackingScreenProps {
   route: any;
@@ -91,6 +92,16 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
     }
   }, [mission.autoStart, loading, directionsData]);
 
+  // Nettoyer le tracking au démontage du composant
+  useEffect(() => {
+    return () => {
+      backendTrackingService.stopAutoTracking();
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+    };
+  }, []);
+
   // Calculer la distance entre deux points
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; // Rayon de la Terre en mètres
@@ -137,6 +148,10 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
         setEstimatedTimeRemaining(formatDuration(directionsData.duration));
       }
 
+      // Démarrer l'envoi automatique au backend
+      backendTrackingService.startAutoTracking();
+      console.log('📍 Backend tracking started for device:', backendTrackingService.getDeviceId());
+
       // Suivre la position en temps réel
       locationSubscription.current = await Location.watchPositionAsync(
         {
@@ -151,6 +166,14 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
           };
 
           setCurrentPosition(newPosition);
+
+          // Mettre à jour la position dans le service de tracking backend
+          backendTrackingService.updatePosition(
+            location.coords.latitude,
+            location.coords.longitude,
+            location.coords.speed || undefined,
+            location.coords.heading || undefined
+          );
 
           // Ajouter au chemin parcouru
           setTraveledPath((prev) => {
@@ -237,6 +260,11 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
       locationSubscription.current.remove();
       locationSubscription.current = null;
     }
+
+    // Arrêter l'envoi automatique au backend
+    backendTrackingService.stopAutoTracking();
+    console.log('⏹️ Backend tracking stopped');
+
     setTracking(false);
   };
 
