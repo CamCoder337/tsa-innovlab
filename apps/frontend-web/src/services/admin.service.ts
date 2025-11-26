@@ -32,6 +32,7 @@ import type {
   FeedbackStats,
   MissionUpdateFilterParams,
   MissionUpdate,
+  UpdateMissionDto,
 } from '@/types/mission.types';
 import type { User, UpdateUserRequest } from '@/types/auth.types';
 import type { UserFilterParams, UserStats, UserStatusUpdateRequest } from '@/types/user.types';
@@ -229,6 +230,18 @@ export class AdminService extends BaseApi {
     }
   }
 
+  async adminUpdateMission(
+    id: string,
+    data: Partial<UpdateMissionDto>
+  ): Promise<ApiResponse<Mission>> {
+    try {
+      const response = await this.insertToken().put(`/api/admin/missions/${id}`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
   async adminUpdateMissionStatus(
     id: string,
     data: UpdateMissionStatus
@@ -242,6 +255,44 @@ export class AdminService extends BaseApi {
   > {
     try {
       const response = await this.insertToken().put(`/api/admin/missions/${id}/status`, data);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminDeleteMission(
+    id: string
+  ): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    try {
+      await this.insertToken().delete(`/api/admin/missions/${id}`);
+      return { data: { success: true, message: 'Mission deleted successfully' } };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminPublishMission(id: string): Promise<ApiResponse<Mission>> {
+    try {
+      const response = await this.insertToken().post(`/api/admin/missions/${id}/publish`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminUnpublishMission(id: string): Promise<ApiResponse<Mission>> {
+    try {
+      const response = await this.insertToken().post(`/api/admin/missions/${id}/unpublish`);
+      return { data: response.data.data };
+    } catch (error) {
+      return { error: this.getErrorResponse(error) };
+    }
+  }
+
+  async adminGetMissionFeedback(id: string): Promise<ApiResponse<MissionFeedback>> {
+    try {
+      const response = await this.insertToken().get(`/api/admin/missions/${id}/feedback`);
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

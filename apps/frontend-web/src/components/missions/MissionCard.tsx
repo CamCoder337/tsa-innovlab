@@ -167,9 +167,7 @@ export default function MissionCard({
                 <div className="flex items-center gap-1 sm:gap-2">
                   <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                   <span className="text-xs sm:text-sm text-gray-600">
-                    {mission.budgetMin
-                      ? `${mission.budgetMin.toLocaleString()} FCFA`
-                      : tMissions('noBudget')}
+                    {mission.budgetMin ? `${mission.budgetMin.toLocaleString()} FCFA` : 0 + ' FCFA'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">

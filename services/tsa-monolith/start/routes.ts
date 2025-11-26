@@ -155,7 +155,11 @@ router
     router.post('/missions', '#controllers/http/admin/missions_controller.store')
     router.get('/missions/stats', '#controllers/http/admin/missions_controller.stats')
     router.get('/missions/:id', '#controllers/http/admin/missions_controller.show')
+    router.put('/missions/:id', '#controllers/http/admin/missions_controller.update')
+    router.post('/missions/:id/publish', '#controllers/http/admin/missions_controller.publish')
+    router.post('/missions/:id/unpublish', '#controllers/http/admin/missions_controller.unpublish')
     router.put('/missions/:id/status', '#controllers/http/admin/missions_controller.updateStatus')
+    router.get('/missions/:id/feedback', '#controllers/http/admin/missions_controller.getFeedback')
     router.get('/missions/:id/history', '#controllers/http/admin/missions_controller.getHistory')
 
     // Gestion des commandes

@@ -86,6 +86,8 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         oldStatus: oldStatusTranslated,
         newStatus: newStatusTranslated,
       });
+    } else if (event.type === 'status_change' && !event.oldStatus && event.newStatus) {
+      return tMissions(`timeline.newMission`) || `Nouvelle mission crée`;
     }
 
     return event.title;
@@ -102,7 +104,7 @@ export function MissionTimeline({ mission }: MissionTimelineProps) {
         `Mission passée de "${oldStatus}" à "${newStatus}".`
       );
     } else if (event.type === 'status_change' && !event.oldStatus && event.newStatus) {
-      return tMissions(`timeline.newMission`) || `Nouvelle mission crée`;
+      return tMissions(`timeline.newMissionasDraft`) || `Nouvelle mission crée en brouillon`;
     }
   };
 
