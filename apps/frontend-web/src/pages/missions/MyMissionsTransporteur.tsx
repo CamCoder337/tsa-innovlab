@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Package, CheckCircle, Search, Filter, Truck, DollarSign } from 'lucide-react';
+import { Package, CheckCircle, Search, Filter, Truck, DollarSign, Loader } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { useVehicles } from '@/hooks/useVehicles';
 import { toast } from 'sonner';
@@ -37,6 +37,7 @@ export default function MissionsTransporteurPage() {
     missions,
     myMissions,
     currentMission,
+    isLoading: missionsLoading,
     setCurrentMission,
     applyMission,
     updateMissionStatus,
@@ -179,6 +180,13 @@ export default function MissionsTransporteurPage() {
       setIsLoading(false);
     }
   };
+
+  if (missionsLoading)
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-screen">
+        <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
+      </div>
+    );
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50 dark:bg-gray-950 p-3 sm:p-4 lg:p-6">

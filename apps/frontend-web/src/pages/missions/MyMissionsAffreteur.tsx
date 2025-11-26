@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Clock, Plus, Package, MessageSquare } from 'lucide-react';
+import { CheckCircle, Clock, Loader, Plus, Package, MessageSquare } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
@@ -11,7 +11,7 @@ import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTransla
 import { useMissionStore } from '@/stores/missionStore';
 
 export default function MyMissionsAffreteur() {
-  const { myMissions, publishMission, unpublishMission } = useMissions();
+  const { myMissions, isLoading, publishMission, unpublishMission } = useMissions();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
   const { t: tMissions } = useMissionsTranslation();
@@ -34,7 +34,7 @@ export default function MyMissionsAffreteur() {
     // }, 2500);
   };
 
-  const handleunpublish = async (id: string) => {
+  const handleUnpublish = async (id: string) => {
     await unpublishMission(id);
 
     const { error } = useMissionStore.getState();
@@ -56,6 +56,13 @@ export default function MyMissionsAffreteur() {
     if (activeTab === 'draft') return mission.status === 'draft';
     return true;
   });
+
+  if (isLoading)
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-screen">
+        <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
+      </div>
+    );
 
   return (
     <div className="flex flex-1 flex-col p-3 sm:p-4 lg:p-6">
@@ -180,7 +187,7 @@ export default function MyMissionsAffreteur() {
                     key={mission.id}
                     mission={mission}
                     onPublish={handlePublish}
-                    onCancel={handleunpublish}
+                    onCancel={handleUnpublish}
                   />
                 ))}
               </div>
