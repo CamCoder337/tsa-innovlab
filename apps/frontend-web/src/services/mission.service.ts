@@ -2,6 +2,7 @@
 // MISSION SERVICE
 // ============================================================================
 
+import type { UserRole } from '@/types/auth.types';
 import { BaseApi } from './api';
 import { webSocketService } from './websocket.service';
 import type { ApiResponse, PaginatedMetaResponse, PaginationMeta } from '@/types/common.types';
@@ -388,13 +389,16 @@ export class MissionService extends BaseApi {
   }
 
   async calculateDynamicPricing(
+    role: UserRole,
     requestData: DynamicPricingRequest
   ): Promise<ApiResponse<DynamicPricingResponse>> {
+    let response;
     try {
-      const response = await this.insertToken().post(
-        '/api/affreteur/pricing/calculate',
-        requestData
-      );
+      if (role === 'admin') {
+        response = await this.insertToken().post('/api/admin/pricing/calculate', requestData);
+      } else {
+        response = await this.insertToken().post('/api/affreteur/pricing/calculate', requestData);
+      }
       return { data: response.data.data };
     } catch (error) {
       return { error: this.getErrorResponse(error) };

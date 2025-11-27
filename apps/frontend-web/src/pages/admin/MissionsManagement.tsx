@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Star,
   Activity,
+  Loader,
 } from 'lucide-react';
 import { useMissions } from '@/hooks/useMissions';
 import { useAllAdminStats } from '@/hooks/useAdminStats';
@@ -35,11 +36,13 @@ import {
 } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';
 import { DashboardUtils } from '@/lib/dashboard.utils';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { getStatusLabel } from '@/lib/utils';
+import { useMissionStore } from '@/stores/missionStore';
+import { toast } from 'sonner';
 
 export default function MissionsManagement() {
-  const { missions = [], isLoading, error } = useMissions();
+  const { missions = [], isLoading, error, publishMission, unpublishMission } = useMissions();
   const allStats = useAllAdminStats();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOrigin, setFilterOrigin] = useState('all');
@@ -51,6 +54,37 @@ export default function MissionsManagement() {
   const { t: tCommon } = useCommonTranslation();
   const { t: tMissions } = useMissionsTranslation();
   const { t: tVehicles } = useVehiclesTranslation();
+
+  const handlePublish = async (id: string) => {
+    await publishMission(id);
+
+    const { error } = useMissionStore.getState();
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
+    }
+
+    toast.success(tMissions('messages.publishedSuccess'));
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 2500);
+  };
+
+  const handleUnpublish = async (id: string) => {
+    await unpublishMission(id);
+
+    const { error } = useMissionStore.getState();
+
+    if (error) {
+      console.error(error);
+      toast.error(error);
+      return;
+    }
+
+    toast.success(tMissions('messages.cancelledSuccess'));
+  };
 
   const filteredMissions = missions.filter((mission: Mission) => {
     const matchesSearch =
@@ -118,9 +152,12 @@ export default function MissionsManagement() {
     } as Record<MissionStatus | 'all' | 'total', number>
   );
 
-  if (isLoading) {
-    return <div>{tAdmin('missions.loading')}</div>;
-  }
+  if (isLoading)
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center h-screen">
+        <Loader className="animate-spin h-12 w-12 text-tsa-blue dark:text-tsa-white" />
+      </div>
+    );
 
   if (error) {
     return <div>{tAdmin('missions.error')}</div>;
@@ -284,7 +321,6 @@ export default function MissionsManagement() {
                       fill="#8884d8"
                       paddingAngle={2}
                       dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
                     >
                       {[
                         { color: '#9ca3af' },
@@ -307,6 +343,13 @@ export default function MissionsManagement() {
                         border: '1px solid #e5e7eb',
                         borderRadius: '8px',
                       }}
+                    />
+                    <Legend
+                      align="right"
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="wye"
+                      wrapperStyle={{ fontSize: '12px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -510,7 +553,12 @@ export default function MissionsManagement() {
               {filteredMissions.length > 0 ? (
                 <div className="space-y-3 sm:space-y-4 p-3 sm:p-4">
                   {filteredMissions.map((mission) => (
-                    <MissionCard key={mission.id} mission={mission} />
+                    <MissionCard
+                      key={mission.id}
+                      mission={mission}
+                      onPublish={handlePublish}
+                      onCancel={handleUnpublish}
+                    />
                   ))}
                 </div>
               ) : (

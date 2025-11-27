@@ -190,9 +190,9 @@ export const useMissionStore = create<MissionStoreExtended>()(
             set({ isLoading: true, error: null });
 
             const response =
-              user?.role === 'affreteur'
-                ? await missionService.getAffreteurMissions({ page })
-                : await missionService.getTransporteurMissions({ page });
+              user?.role === 'transporteur'
+                ? await missionService.getTransporteurMissions({ page })
+                : await missionService.getAffreteurMissions({ page });
 
             if (response.error) {
               retryAttempts += 1;
@@ -342,7 +342,10 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.updateMission(id, data);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminUpdateMission(id, data)
+              : await missionService.updateMission(id, data);
 
           if (response.error) {
             set({
@@ -380,7 +383,10 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ error: null });
 
-          const response = await missionService.updateMissionStatus(id, data);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminUpdateMissionStatus(id, data)
+              : await missionService.updateMissionStatus(id, data);
 
           if (response.error) {
             set({
@@ -418,7 +424,10 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ error: null });
 
-          const response = await missionService.deleteMission(id);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminDeleteMission(id)
+              : await missionService.deleteMission(id);
 
           if (response.error) {
             set({
@@ -448,7 +457,10 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.publishMission(id);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminPublishMission(id)
+              : await missionService.publishMission(id);
 
           if (response.error) {
             set({
@@ -487,7 +499,10 @@ export const useMissionStore = create<MissionStoreExtended>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await missionService.unpublishMission(id);
+          const response =
+            user?.role === 'admin'
+              ? await adminService.adminUnpublishMission(id)
+              : await missionService.unpublishMission(id);
 
           if (response.error) {
             set({

@@ -8,6 +8,7 @@ import Address from '#models/address'
 import {
   createMissionValidator,
   missionQueryValidator,
+  updateMissionValidator,
   updateStatusValidator,
 } from '#validators/mission_validator'
 import db from '@adonisjs/lucid/services/db'
@@ -316,7 +317,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        null,
+        '',
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créé'
@@ -332,6 +333,312 @@ export default class MissionsController {
       return response.status(500).json({
         success: false,
         message: 'Failed to create mission',
+        error: error.message,
+      })
+    }
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    const trx = await db.transaction()
+
+    try {
+      const validatedData = await request.validateUsing(updateMissionValidator)
+
+      const mission = await Mission.query({ client: trx }).where('id', params.id).first()
+
+      if (!mission) {
+        await trx.rollback()
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      // Vérifier si la mission peut être modifiée (pas de propositions acceptées)
+      if (mission.status === MissionStatus.ASSIGNED || mission.status === MissionStatus.COMPLETED) {
+        await trx.rollback()
+        return response.status(422).json({
+          success: false,
+          message: 'Cannot modify mission with assigned or completed status',
+        })
+      }
+
+      // Gérer les adresses si fournies
+      if (validatedData.adresseDepart) {
+        if (validatedData.adresseDepart.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseDepart.id)
+            .where('user_id', mission.affreteurId)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Departure address not found or does not belong to you',
+              errors: ["L'adresse de départ n'existe pas ou ne vous appartient pas"],
+            })
+          }
+          mission.adresseDepartId = validatedData.adresseDepart.id
+        } else if (validatedData.adresseDepart.street && validatedData.adresseDepart.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
+          const adresse = await Address.create(
+            {
+              userId: mission.affreteurId, // 🔑 Associer l'adresse à l'affréteur connecté
+              street: validatedData.adresseDepart.street,
+              city: validatedData.adresseDepart.city,
+              region: validatedData.adresseDepart.region,
+              country: validatedData.adresseDepart.country || 'Cameroun',
+              postalCode: validatedData.adresseDepart.postalCode,
+              latitude: validatedData.adresseDepart.latitude,
+              longitude: validatedData.adresseDepart.longitude,
+              label: validatedData.adresseDepart.label,
+            },
+            { client: trx }
+          )
+          mission.adresseDepartId = adresse.id
+        }
+      }
+
+      if (validatedData.adresseArrivee) {
+        if (validatedData.adresseArrivee.id) {
+          // ✅ Vérifier que l'adresse existe ET appartient à l'affréteur connecté
+          const existingAddress = await Address.query({ client: trx })
+            .where('id', validatedData.adresseArrivee.id)
+            .where('user_id', mission.affreteurId)
+            .first()
+
+          if (!existingAddress) {
+            await trx.rollback()
+            return response.status(403).json({
+              success: false,
+              message: 'Arrival address not found or does not belong to you',
+              errors: ["L'adresse d'arrivée n'existe pas ou ne vous appartient pas"],
+            })
+          }
+          mission.adresseArriveeId = validatedData.adresseArrivee.id
+        } else if (validatedData.adresseArrivee.street && validatedData.adresseArrivee.city) {
+          // ✅ Créer avec userId de l'affréteur connecté
+          const adresse = await Address.create(
+            {
+              userId: mission.affreteurId, // 🔑 Associer l'adresse à l'affréteur connecté
+              street: validatedData.adresseArrivee.street,
+              city: validatedData.adresseArrivee.city,
+              region: validatedData.adresseArrivee.region,
+              country: validatedData.adresseArrivee.country || 'Cameroun',
+              postalCode: validatedData.adresseArrivee.postalCode,
+              latitude: validatedData.adresseArrivee.latitude,
+              longitude: validatedData.adresseArrivee.longitude,
+              label: validatedData.adresseArrivee.label,
+            },
+            { client: trx }
+          )
+          mission.adresseArriveeId = adresse.id
+        }
+      }
+
+      // Validation métier si budgets fournis
+      const newBudgetMin = validatedData.budgetMin ?? mission.budgetMin
+      const newBudgetMax = validatedData.budgetMax ?? mission.budgetMax
+      if (newBudgetMin && newBudgetMax && newBudgetMin > newBudgetMax) {
+        await trx.rollback()
+        return response.status(422).json({
+          success: false,
+          message: 'Budget minimum cannot be greater than budget maximum',
+        })
+      }
+
+      // Mise à jour des champs
+      mission.merge({
+        title: validatedData.title,
+        description: validatedData.description,
+        typeMarchandise: validatedData.typeMarchandise,
+        poids: validatedData.poids,
+        volume: validatedData.volume,
+        dateDepartEstime: validatedData.dateDepartEstime
+          ? DateTime.fromJSDate(validatedData.dateDepartEstime)
+          : undefined,
+        dateArriveePrevue: validatedData.dateArriveePrevue
+          ? DateTime.fromJSDate(validatedData.dateArriveePrevue)
+          : undefined,
+        budgetMin: validatedData.budgetMin,
+        budgetMax: validatedData.budgetMax,
+        status: validatedData.status as MissionStatus,
+      })
+
+      await mission.save()
+      await trx.commit()
+
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
+      return response.json({
+        success: true,
+        message: 'Mission updated successfully',
+        data: mission,
+      })
+    } catch (error) {
+      await trx.rollback()
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to update mission',
+        error: error.message,
+      })
+    }
+  }
+
+  async publish({ params, response }: HttpContext) {
+    try {
+      const mission = await Mission.query().where('id', params.id).first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== MissionStatus.DRAFT) {
+        return response.status(422).json({
+          success: false,
+          message: 'Only draft missions can be published',
+          currentStatus: mission.status,
+        })
+      }
+
+      // Vérifications avant publication
+      const missingFields = []
+      if (!mission.title) missingFields.push('title')
+      if (!mission.adresseDepartId) missingFields.push('adresse de départ')
+      if (!mission.adresseArriveeId) missingFields.push("adresse d'arrivée")
+
+      if (missingFields.length > 0) {
+        return response.status(422).json({
+          success: false,
+          message: 'Mission cannot be published with missing required fields',
+          missingFields,
+        })
+      }
+
+      mission.status = MissionStatus.PUBLISHED
+      await mission.save()
+
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        null,
+        MissionStatus.DRAFT,
+        MissionStatus.PUBLISHED,
+        'Mission publiée'
+      )
+
+      // 🔔 Notifier tous les transporteurs de la nouvelle mission par EMAIL + SSE
+      try {
+        await this.missionNotificationService.notifyNewMissionToTransporteurs(mission)
+        console.log(`✅ Notifications EMAIL + SSE envoyées pour la mission ${mission.id}`)
+      } catch (notificationError) {
+        console.error('❌ Erreur envoi notifications nouvelle mission:', notificationError)
+        // Ne pas faire échouer la publication si les notifications échouent
+      }
+
+      return response.json({
+        success: true,
+        message: 'Mission published successfully and is now visible to transporters',
+        data: mission,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to publish mission',
+        error: error.message,
+      })
+    }
+  }
+
+  async unpublish({ params, response }: HttpContext) {
+    try {
+      const mission = await Mission.query().where('id', params.id).first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== MissionStatus.PUBLISHED) {
+        return response.status(422).json({
+          success: false,
+          message: 'Only published missions can be unpublished',
+          currentStatus: mission.status,
+        })
+      }
+
+      mission.status = MissionStatus.DRAFT
+      await mission.save()
+
+      await mission.load('affreteur')
+      await mission.load('adresseDepart')
+      await mission.load('adresseArrivee')
+
+      // 📍 Créer des MissionUpdates pour le tracking
+      await MissionUpdate.createStatusUpdate(
+        mission.id,
+        null,
+        MissionStatus.PUBLISHED,
+        MissionStatus.DRAFT,
+        'Mission dépubliée'
+      )
+
+      return response.json({
+        success: true,
+        message: 'Mission unpublished successfully and is now hidden from transporters',
+        data: mission,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to unpublish mission',
+        error: error.message,
+      })
+    }
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    try {
+      const mission = await Mission.query().where('id', params.id).first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      // Vérifier si la mission peut être supprimée (draft ou published sans propositions)
+      if (mission.status === MissionStatus.ASSIGNED || mission.status === MissionStatus.COMPLETED) {
+        return response.status(422).json({
+          success: false,
+          message: 'Cannot delete mission with assigned or completed status',
+        })
+      }
+
+      await mission.delete()
+
+      return response.json({
+        success: true,
+        message: 'Mission deleted successfully',
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to delete mission',
         error: error.message,
       })
     }
@@ -451,7 +758,7 @@ export default class MissionsController {
           // Événement 1 : Annulation par transporteur
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             oldStatus,
             'cancelled' as MissionStatus,
             `Mission annulée par le transporteur ${transporteur?.fullName}. ${validatedData.commentaire || 'Aucune raison fournie'}`
@@ -460,7 +767,7 @@ export default class MissionsController {
           // Événement 2 : Republication automatique
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             'cancelled' as MissionStatus,
             newStatus,
             "Mission automatiquement republiée et disponible pour d'autres transporteurs"
@@ -469,7 +776,7 @@ export default class MissionsController {
           // Mise à jour normale
           await MissionUpdate.createStatusUpdate(
             mission.id,
-            previousTransporteurId,
+            previousTransporteurId!,
             oldStatus,
             newStatus,
             validatedData.commentaire || 'Mise à jour de statut par le transporteur'
@@ -518,6 +825,47 @@ export default class MissionsController {
       return response.status(500).json({
         success: false,
         message: 'Failed to update mission status',
+        error: error.message,
+      })
+    }
+  }
+
+  async getFeedback({ params, response }: HttpContext) {
+    try {
+      const feedbackModule = await import('#models/feedback')
+      const Feedback = feedbackModule.default
+
+      // Vérifier que la mission appartient à cet affreteur
+      const mission = await Mission.query().where('id', params.id).first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const feedback = await Feedback.query()
+        .where('mission_id', mission.id)
+        .preload('transporteur')
+        .first()
+
+      if (!feedback) {
+        return response.status(404).json({
+          success: false,
+          message: 'Feedback not found for this mission',
+        })
+      }
+
+      return response.json({
+        success: true,
+        message: 'Feedback retrieved successfully',
+        data: feedback,
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve feedback',
         error: error.message,
       })
     }

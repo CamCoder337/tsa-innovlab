@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Star, MessageSquare, ThumbsUp, Award, Loader2 } from 'lucide-react';
 import type { Mission, MissionFeedback } from '@/types/mission.types';
 import { useAuth } from '@/hooks/useAuth';
+import { adminService } from '@/services/admin.service';
 import { missionService } from '@/services/mission.service';
 import { toast } from 'sonner';
 import {
@@ -60,7 +61,10 @@ export const MissionAppreciation: React.FC<MissionAppreciationProps> = ({ missio
       setIsLoadingFeedback(true);
 
       try {
-        const response = await missionService.getMissionFeedback(mission.id);
+        const response =
+          user?.role === 'admin'
+            ? await adminService.adminGetMissionFeedback(mission.id)
+            : await missionService.getMissionFeedback(mission.id);
 
         if (response.error) {
           setExistingFeedback(null);

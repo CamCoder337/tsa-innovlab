@@ -285,7 +285,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
             : 'normal',
         };
 
-        const response = await missionService.calculateDynamicPricing(pricingRequest);
+        const response = await missionService.calculateDynamicPricing(user!.role, pricingRequest);
 
         if (response.error) {
           toast.error(response.error.message || 'Erreur lors du calcul du prix dynamique');
@@ -316,7 +316,7 @@ export default function CreateMissionForm({ onSubmit, isSubmitting }: CreateMiss
             : 'normal',
         };
 
-        const response = await missionService.calculateDynamicPricing(pricingRequest);
+        const response = await missionService.calculateDynamicPricing(user!.role, pricingRequest);
 
         if (response.error) {
           toast.error(response.error.message || 'Erreur lors du calcul du prix dynamique');

@@ -478,7 +478,6 @@ export default function AdminDashboard() {
                   fill="#8884d8"
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
                 >
                   {[
                     { color: '#9ca3af' },
@@ -501,6 +500,13 @@ export default function AdminDashboard() {
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
+                />
+                <Legend
+                  align="right"
+                  verticalAlign="bottom"
+                  height={36}
+                  iconType="wye"
+                  wrapperStyle={{ fontSize: '12px' }}
                 />
               </PieChart>
             </ResponsiveContainer>
