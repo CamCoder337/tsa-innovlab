@@ -96,12 +96,10 @@ export default class TrackingController {
     const thirtySecondsAgo = new Date(now.getTime() - 30 * 1000)
 
     // Filtrer les positions de moins de 30 secondes
-    const activePositions = Array.from(TrackingController.positions.values()).filter(
-      (position) => {
-        const positionTime = new Date(position.timestamp)
-        return positionTime > thirtySecondsAgo
-      }
-    )
+    const activePositions = Array.from(TrackingController.positions.values()).filter((position) => {
+      const positionTime = new Date(position.timestamp)
+      return positionTime > thirtySecondsAgo
+    })
 
     return response.json({
       success: true,

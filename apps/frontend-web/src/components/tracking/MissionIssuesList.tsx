@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, CheckCircle2, Clock, MapPin, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,16 +50,16 @@ export default function MissionIssuesList({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     try {
       const response = await missionTrackingService.getIssues(missionId);
       setIssues(response.issues);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching issues:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [missionId]);
 
   useEffect(() => {
     fetchIssues();
@@ -68,7 +68,7 @@ export default function MissionIssuesList({
       const interval = setInterval(fetchIssues, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [missionId, autoRefresh, refreshInterval]);
+  }, [missionId, autoRefresh, refreshInterval, fetchIssues]);
 
   const handleAcknowledge = async (issueId: string) => {
     setActionLoading(issueId);
@@ -76,9 +76,9 @@ export default function MissionIssuesList({
       await missionTrackingService.acknowledgeIssue(missionId, issueId);
       toast.success('Problème reconnu');
       await fetchIssues();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors de la reconnaissance du problème', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setActionLoading(null);
@@ -91,9 +91,9 @@ export default function MissionIssuesList({
       await missionTrackingService.resolveIssue(missionId, issueId);
       toast.success('Problème résolu');
       await fetchIssues();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors de la résolution du problème', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setActionLoading(null);

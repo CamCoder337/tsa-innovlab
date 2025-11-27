@@ -236,10 +236,7 @@ router
       '/missions/:id/locations',
       '#controllers/http/affreteur/missions_controller.getLocationUpdates'
     )
-    router.get(
-      '/missions/:id/issues',
-      '#controllers/http/affreteur/missions_controller.getIssues'
-    )
+    router.get('/missions/:id/issues', '#controllers/http/affreteur/missions_controller.getIssues')
     router.post(
       '/missions/:id/issues/:issueId/acknowledge',
       '#controllers/http/affreteur/missions_controller.acknowledgeIssue'
@@ -341,7 +338,10 @@ router
 router
   .group(() => {
     // Authentification chauffeur
-    router.post('/authenticate', '#controllers/http/driver/mission_tracking_controller.authenticate')
+    router.post(
+      '/authenticate',
+      '#controllers/http/driver/mission_tracking_controller.authenticate'
+    )
   })
   .prefix('/track/:token')
 
@@ -352,7 +352,10 @@ router
 
     // Récupération des positions
     router.get('/locations', '#controllers/http/driver/mission_tracking_controller.getLocations')
-    router.get('/last-location', '#controllers/http/driver/mission_tracking_controller.getLastLocation')
+    router.get(
+      '/last-location',
+      '#controllers/http/driver/mission_tracking_controller.getLastLocation'
+    )
 
     // Signalement de problèmes
     router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
@@ -362,14 +365,20 @@ router
   .middleware([() => import('#middleware/tracking_auth_middleware')])
 
 // Validation de livraison via QR code (public)
-router.get('/delivery-proof', '#controllers/http/driver/mission_tracking_controller.validateDelivery')
+router.get(
+  '/delivery-proof',
+  '#controllers/http/driver/mission_tracking_controller.validateDelivery'
+)
 
 // ===== ROUTES PUBLIQUES DE TRACKING GPS (TEST ONLY - NO AUTH) =====
 router
   .group(() => {
     router.post('/update-location', '#controllers/http/public/tracking_controller.updateLocation')
     router.get('/locations', '#controllers/http/public/tracking_controller.getLocations')
-    router.get('/locations/:deviceId', '#controllers/http/public/tracking_controller.getDeviceLocation')
+    router.get(
+      '/locations/:deviceId',
+      '#controllers/http/public/tracking_controller.getDeviceLocation'
+    )
     router.delete('/cleanup', '#controllers/http/public/tracking_controller.cleanup')
   })
   .prefix('/api/tracking')

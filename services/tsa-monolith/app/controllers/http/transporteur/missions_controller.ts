@@ -157,7 +157,10 @@ export default class MissionsController {
       const query = Mission.query()
         .whereIn('status', [
           MissionStatus.ASSIGNED,
+          MissionStatus.READY_TO_START,
           MissionStatus.IN_PROGRESS,
+          MissionStatus.DELIVERED,
+          MissionStatus.PAID,
           MissionStatus.COMPLETED,
         ])
         .where('transporteur_id', user.id)
@@ -166,6 +169,7 @@ export default class MissionsController {
         })
         .preload('adresseDepart')
         .preload('adresseArrivee')
+        .preload('vehicle') // ✅ Charger le véhicule assigné
         .preload('feedback')
 
       if (status) {

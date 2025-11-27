@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,34 +10,11 @@ import LiveGPSTracker from '@/components/tracking/LiveGPSTracker';
 import MissionIssuesList from '@/components/tracking/MissionIssuesList';
 import MissionPaymentActions from '@/components/tracking/MissionPaymentActions';
 
-// TODO: Import du service missions pour récupérer les détails
-// import { missionService } from '@/services/mission.service';
+// Import du service missions pour récupérer les détails
+import { missionService } from '@/services/mission.service';
 
-interface Mission {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  trackingLinkToken?: string;
-  trackingPin?: string;
-  budgetMin?: number;
-  budgetMax?: number;
-  adresseDepart?: {
-    latitude: number;
-    longitude: number;
-    city: string;
-  };
-  adresseArrivee?: {
-    latitude: number;
-    longitude: number;
-    city: string;
-  };
-  transporteur?: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-  };
-}
+// Import du type Mission depuis les types centralisés
+import type { Mission } from '@/types/mission.types';
 
 const statusLabels: Record<string, string> = {
   draft: 'Brouillon',
@@ -69,54 +46,36 @@ export default function MissionTrackingDashboard() {
   const [mission, setMission] = useState<Mission | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchMissionDetails();
-  }, [missionId]);
-
-  const fetchMissionDetails = async () => {
+  const fetchMissionDetails = useCallback(async () => {
     if (!missionId) return;
 
     setLoading(true);
     try {
-      // TODO: Remplacer par l'appel API réel
-      // const response = await missionService.getMissionById(missionId);
-      // setMission(response.data);
+      // ✅ Appel API réel - Récupère les vraies données de la mission
+      const { data: missionData, error } = await missionService.getAffreteurMission(missionId);
 
-      // Mock data pour démo
-      const mockMission: Mission = {
-        id: missionId,
-        title: 'Livraison Douala - Yaoundé',
-        description: 'Transport de marchandises diverses',
-        status: 'in_progress',
-        trackingLinkToken: 'abc123def456',
-        trackingPin: '123456',
-        budgetMin: 50000,
-        budgetMax: 75000,
-        adresseDepart: {
-          latitude: 4.0511,
-          longitude: 9.7679,
-          city: 'Douala',
-        },
-        adresseArrivee: {
-          latitude: 3.8480,
-          longitude: 11.5021,
-          city: 'Yaoundé',
-        },
-        transporteur: {
-          firstName: 'Jean',
-          lastName: 'Mbarga',
-          phone: '+237 6 XX XX XX XX',
-        },
-      };
-      setMission(mockMission);
-    } catch (error: any) {
+      if (error) {
+        throw new Error(error.message || 'Erreur lors de la récupération de la mission');
+      }
+
+      if (!missionData) {
+        throw new Error('Aucune donnée de mission reçue');
+      }
+
+      // ✅ Les champs trackingLinkToken et trackingPin sont automatiquement inclus !
+      setMission(missionData as Mission);
+    } catch (error: unknown) {
       toast.error('Erreur lors du chargement de la mission', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [missionId]);
+
+  useEffect(() => {
+    fetchMissionDetails();
+  }, [fetchMissionDetails]);
 
   if (loading) {
     return (
@@ -151,7 +110,10 @@ export default function MissionTrackingDashboard() {
           </div>
           <p className="text-muted-foreground">{mission.description}</p>
         </div>
-        <Badge variant={statusColors[mission.status] as any} className="text-sm">
+        <Badge
+          variant={statusColors[mission.status] as 'default' | 'secondary' | 'destructive'}
+          className="text-sm"
+        >
           {statusLabels[mission.status]}
         </Badge>
       </div>
@@ -222,8 +184,8 @@ export default function MissionTrackingDashboard() {
           <DeliveryQRCode
             missionId={mission.id}
             missionTitle={mission.title}
-            trackingToken={mission.trackingLinkToken}
-            trackingPin={mission.trackingPin}
+            trackingToken={mission.trackingLinkToken ?? undefined}
+            trackingPin={mission.trackingPin ?? undefined}
           />
         </TabsContent>
 
@@ -237,8 +199,8 @@ export default function MissionTrackingDashboard() {
           <MissionPaymentActions
             missionId={mission.id}
             missionStatus={mission.status}
-            budgetMin={mission.budgetMin}
-            budgetMax={mission.budgetMax}
+            budgetMin={mission.budgetMin ?? undefined}
+            budgetMax={mission.budgetMax ?? undefined}
             onStatusChange={fetchMissionDetails}
           />
         </TabsContent>

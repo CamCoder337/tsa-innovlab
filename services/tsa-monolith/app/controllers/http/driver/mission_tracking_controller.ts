@@ -87,11 +87,11 @@ export default class MissionTrackingController {
 
     const locationUpdate = await missionTrackingService.recordLocationUpdate(
       mission,
-      parseFloat(latitude),
-      parseFloat(longitude),
-      speed ? parseFloat(speed) : undefined,
-      heading ? parseFloat(heading) : undefined,
-      accuracy ? parseFloat(accuracy) : undefined
+      Number.parseFloat(latitude),
+      Number.parseFloat(longitude),
+      speed ? Number.parseFloat(speed) : undefined,
+      heading ? Number.parseFloat(heading) : undefined,
+      accuracy ? Number.parseFloat(accuracy) : undefined
     )
 
     // Recharger la mission pour obtenir le statut mis à jour
@@ -209,8 +209,8 @@ export default class MissionTrackingController {
       reportedById: mission.transporteurId!,
       type,
       description,
-      latitude: latitude ? parseFloat(latitude) : null,
-      longitude: longitude ? parseFloat(longitude) : null,
+      latitude: latitude ? Number.parseFloat(latitude) : null,
+      longitude: longitude ? Number.parseFloat(longitude) : null,
       photos: photos || null,
       status: IssueStatus.REPORTED,
     })
@@ -236,7 +236,9 @@ export default class MissionTrackingController {
         errors: ['Missing mission in context'],
       })
     }
-    const issues = await MissionIssue.query().where('mission_id', mission.id).orderBy('created_at', 'desc')
+    const issues = await MissionIssue.query()
+      .where('mission_id', mission.id)
+      .orderBy('created_at', 'desc')
 
     return response.ok({
       success: true,
@@ -249,9 +251,9 @@ export default class MissionTrackingController {
    * Valide le QR code et marque la mission comme livrée
    */
   async validateDelivery({ request, response }: HttpContext) {
-    const { token, mission_id, latitude, longitude } = request.qs()
+    const { token, mission_id: missionId, latitude, longitude } = request.qs()
 
-    if (!token || !mission_id) {
+    if (!token || !missionId) {
       return response.badRequest({
         success: false,
         message: 'Token and mission ID are required',
@@ -259,7 +261,7 @@ export default class MissionTrackingController {
       })
     }
 
-    const mission = await qrCodeService.verifyQrCodeToken(mission_id, token)
+    const mission = await qrCodeService.verifyQrCodeToken(missionId, token)
 
     if (!mission) {
       return response.unauthorized({
@@ -282,8 +284,8 @@ export default class MissionTrackingController {
     if (latitude && longitude && mission.adresseArrivee) {
       await mission.load('adresseArrivee')
       const isNear = missionTrackingService.isNearDestination(
-        parseFloat(latitude),
-        parseFloat(longitude),
+        Number.parseFloat(latitude),
+        Number.parseFloat(longitude),
         mission.adresseArrivee.latitude!,
         mission.adresseArrivee.longitude!,
         200 // 200 mètres

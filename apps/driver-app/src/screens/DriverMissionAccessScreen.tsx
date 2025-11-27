@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import driverTrackingService, { type MissionDetails } from '../services/driverTrackingService';
-import { Colors } from '../constants/Colors';
+import { Colors } from '../constants/colors';
 
 interface DriverMissionAccessScreenProps {
   navigation: any;
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   inputContainer: {
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.textPrimary,
   },
   button: {
     flexDirection: 'row',
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   instructionText: {
     flex: 1,
     fontSize: 14,
-    color: Colors.text,
+    color: Colors.textPrimary,
     lineHeight: 20,
   },
   bold: {

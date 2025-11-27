@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import driverTrackingService, { ISSUE_TYPES, type IssueType } from '../services/driverTrackingService';
-import { Colors } from '../constants/Colors';
+import { Colors } from '../constants/colors';
 
 interface DriverReportIssueScreenProps {
   navigation: any;
@@ -139,7 +139,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={Colors.text} />
+            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.title}>Signaler un problème</Text>
           <View style={{ width: 24 }} />
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.textPrimary,
   },
   section: {
     padding: 16,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.textPrimary,
     marginBottom: 12,
   },
   typeGrid: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: 12,
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.textPrimary,
     minHeight: 120,
     elevation: 1,
   },

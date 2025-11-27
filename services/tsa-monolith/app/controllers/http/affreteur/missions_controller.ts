@@ -265,7 +265,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créée'
@@ -546,7 +546,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         MissionStatus.DRAFT,
         MissionStatus.PUBLISHED,
         'Mission publiée'
@@ -608,7 +608,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         MissionStatus.PUBLISHED,
         MissionStatus.DRAFT,
         'Mission dépubliée'
@@ -785,7 +785,8 @@ export default class MissionsController {
   async getDeliveryQrCode({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const qrCodeService = (await import('#services/qr_code_service')).default
+      const qrCodeServiceModule = await import('#services/qr_code_service')
+      const qrCodeService = qrCodeServiceModule.default
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -801,7 +802,8 @@ export default class MissionsController {
 
       // Initialiser le tracking si pas déjà fait
       if (!mission.qrCodeToken) {
-        const trackingService = (await import('#services/mission_tracking_service')).default
+        const trackingServiceModule = await import('#services/mission_tracking_service')
+        const trackingService = trackingServiceModule.default
         await trackingService.initializeTracking(mission)
         await mission.refresh()
       }
@@ -835,7 +837,8 @@ export default class MissionsController {
   async regenerateQrCode({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const qrCodeService = (await import('#services/qr_code_service')).default
+      const qrCodeServiceModule = await import('#services/qr_code_service')
+      const qrCodeService = qrCodeServiceModule.default
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -972,7 +975,8 @@ export default class MissionsController {
   async getLocationUpdates({ params, request, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const trackingService = (await import('#services/mission_tracking_service')).default
+      const trackingServiceModule = await import('#services/mission_tracking_service')
+      const trackingService = trackingServiceModule.default
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -1016,7 +1020,8 @@ export default class MissionsController {
   async getIssues({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const MissionIssue = (await import('#models/mission_issue')).default
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -1055,8 +1060,9 @@ export default class MissionsController {
   async acknowledgeIssue({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const MissionIssue = (await import('#models/mission_issue')).default
-      const { IssueStatus } = await import('#models/mission_issue')
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
+      const { IssueStatus } = missionIssueModule
 
       const mission = await Mission.query()
         .where('id', params.id)
@@ -1105,8 +1111,9 @@ export default class MissionsController {
   async resolveIssue({ params, auth, response }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
-      const MissionIssue = (await import('#models/mission_issue')).default
-      const { IssueStatus } = await import('#models/mission_issue')
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
+      const { IssueStatus } = missionIssueModule
 
       const mission = await Mission.query()
         .where('id', params.id)

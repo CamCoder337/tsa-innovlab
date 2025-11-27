@@ -28,6 +28,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
   const [mapLoading, setMapLoading] = useState(true);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const infoWindowsRef = useRef<Map<string, google.maps.InfoWindow>>(new Map());
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Charger Google Maps
@@ -109,7 +110,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
 
   // Connexion WebSocket pour les mises à jour en temps réel
   useEffect(() => {
-    const handleLocationUpdate = (message: any) => {
+    const handleLocationUpdate = (message: { type: string; data?: DriverPosition }) => {
       if (message.type === 'location_update' && message.data) {
         const position: DriverPosition = message.data;
 
@@ -169,71 +170,148 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Supprimer les markers obsolètes
-    const currentDeviceIds = new Set(drivers.map((d) => d.deviceId));
-    for (const [deviceId, marker] of markersRef.current.entries()) {
-      if (!currentDeviceIds.has(deviceId)) {
-        marker.setMap(null);
-        markersRef.current.delete(deviceId);
+    let isMounted = true;
+
+    const updateMarkers = () => {
+      if (!isMounted || !mapRef.current) return;
+
+      // Supprimer les markers obsolètes
+      const currentDeviceIds = new Set(drivers.map((d) => d.deviceId));
+      for (const [deviceId, marker] of markersRef.current.entries()) {
+        if (!currentDeviceIds.has(deviceId)) {
+          try {
+            // Fermer l'InfoWindow associée si elle existe
+            const infoWindow = infoWindowsRef.current.get(deviceId);
+            if (infoWindow) {
+              infoWindow.close();
+              infoWindowsRef.current.delete(deviceId);
+            }
+            // Supprimer le marker
+            marker.setMap(null);
+            markersRef.current.delete(deviceId);
+          } catch (error) {
+            console.error('Error removing marker:', error);
+          }
+        }
       }
-    }
 
-    // Ajouter/mettre à jour les markers
-    drivers.forEach((driver) => {
-      const position = { lat: driver.latitude, lng: driver.longitude };
-
-      if (markersRef.current.has(driver.deviceId)) {
-        // Mettre à jour position existante
-        const marker = markersRef.current.get(driver.deviceId)!;
-        marker.setPosition(position);
-      } else {
-        // Créer nouveau marker
-        const marker = new google.maps.Marker({
-          position,
-          map: mapRef.current!,
-          title: driver.deviceId,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#3B82F6',
-            fillOpacity: 1,
-            strokeColor: '#FFFFFF',
-            strokeWeight: 2,
-          },
-        });
-
-        // Info window au clic
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px;">
-              <h3 style="font-weight: bold; margin-bottom: 4px;">${driver.deviceId}</h3>
-              <p style="margin: 4px 0;">Lat: ${driver.latitude.toFixed(6)}</p>
-              <p style="margin: 4px 0;">Lng: ${driver.longitude.toFixed(6)}</p>
-              ${driver.speed ? `<p style="margin: 4px 0;">Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</p>` : ''}
-              <p style="margin: 4px 0; font-size: 12px; color: #666;">
-                ${new Date(driver.timestamp).toLocaleString()}
-              </p>
-            </div>
-          `,
-        });
-
-        marker.addListener('click', () => {
-          infoWindow.open(mapRef.current!, marker);
-          setSelectedDriver(driver.deviceId);
-        });
-
-        markersRef.current.set(driver.deviceId, marker);
-      }
-    });
-
-    // Centrer la carte sur les drivers si disponibles
-    if (drivers.length > 0 && !selectedDriver) {
-      const bounds = new google.maps.LatLngBounds();
+      // Ajouter/mettre à jour les markers
       drivers.forEach((driver) => {
-        bounds.extend({ lat: driver.latitude, lng: driver.longitude });
+        if (!isMounted) return;
+
+        const position = { lat: driver.latitude, lng: driver.longitude };
+
+        if (markersRef.current.has(driver.deviceId)) {
+          // Mettre à jour position existante
+          const marker = markersRef.current.get(driver.deviceId)!;
+          try {
+            marker.setPosition(position);
+
+            // Mettre à jour le contenu de l'InfoWindow avec les nouvelles données
+            const infoWindow = infoWindowsRef.current.get(driver.deviceId);
+            if (infoWindow) {
+              infoWindow.setContent(`
+                <div style="padding: 8px;">
+                  <h3 style="font-weight: bold; margin-bottom: 4px;">${driver.deviceId}</h3>
+                  <p style="margin: 4px 0;">Lat: ${driver.latitude.toFixed(6)}</p>
+                  <p style="margin: 4px 0;">Lng: ${driver.longitude.toFixed(6)}</p>
+                  ${driver.speed ? `<p style="margin: 4px 0;">Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</p>` : ''}
+                  <p style="margin: 4px 0; font-size: 12px; color: #666;">
+                    ${new Date(driver.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              `);
+            }
+          } catch (error) {
+            console.error('Error updating marker position:', error);
+          }
+        } else {
+          // Créer nouveau marker
+          try {
+            const marker = new google.maps.Marker({
+              position,
+              map: mapRef.current!,
+              title: driver.deviceId,
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#3B82F6',
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2,
+              },
+            });
+
+            // Info window au clic
+            const infoWindow = new google.maps.InfoWindow({
+              content: `
+                <div style="padding: 8px;">
+                  <h3 style="font-weight: bold; margin-bottom: 4px;">${driver.deviceId}</h3>
+                  <p style="margin: 4px 0;">Lat: ${driver.latitude.toFixed(6)}</p>
+                  <p style="margin: 4px 0;">Lng: ${driver.longitude.toFixed(6)}</p>
+                  ${driver.speed ? `<p style="margin: 4px 0;">Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</p>` : ''}
+                  <p style="margin: 4px 0; font-size: 12px; color: #666;">
+                    ${new Date(driver.timestamp).toLocaleString()}
+                  </p>
+                </div>
+              `,
+            });
+
+            marker.addListener('click', () => {
+              if (isMounted && mapRef.current) {
+                // Fermer toutes les autres InfoWindows avant d'ouvrir celle-ci
+                infoWindowsRef.current.forEach((iw) => iw.close());
+                infoWindow.open(mapRef.current, marker);
+                setSelectedDriver(driver.deviceId);
+              }
+            });
+
+            markersRef.current.set(driver.deviceId, marker);
+            infoWindowsRef.current.set(driver.deviceId, infoWindow);
+          } catch (error) {
+            console.error('Error creating marker:', error);
+          }
+        }
       });
-      mapRef.current.fitBounds(bounds);
-    }
+
+      // Centrer la carte sur les drivers si disponibles
+      if (isMounted && drivers.length > 0 && !selectedDriver && mapRef.current) {
+        try {
+          const bounds = new google.maps.LatLngBounds();
+          drivers.forEach((driver) => {
+            bounds.extend({ lat: driver.latitude, lng: driver.longitude });
+          });
+          mapRef.current.fitBounds(bounds);
+        } catch (error) {
+          console.error('Error fitting bounds:', error);
+        }
+      }
+    };
+
+    updateMarkers();
+
+    return () => {
+      isMounted = false;
+      // Cleanup all InfoWindows first
+      for (const [, infoWindow] of infoWindowsRef.current.entries()) {
+        try {
+          infoWindow.close();
+        } catch (error) {
+          // Ignore errors during cleanup
+        }
+      }
+      infoWindowsRef.current.clear();
+
+      // Cleanup all markers on unmount
+      for (const [, marker] of markersRef.current.entries()) {
+        try {
+          marker.setMap(null);
+        } catch (error) {
+          // Ignore errors during cleanup
+        }
+      }
+      markersRef.current.clear();
+    };
   }, [drivers, selectedDriver]);
 
   const handleRefresh = async () => {

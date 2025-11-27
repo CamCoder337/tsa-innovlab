@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +45,7 @@ export default function LiveGPSTracker({
   const mapRef = useRef<google.maps.Map | null>(null);
 
   // Démarrer le polling
-  const startPolling = () => {
+  const startPolling = useCallback(() => {
     if (stopPollingRef.current) {
       stopPollingRef.current();
     }
@@ -53,42 +53,62 @@ export default function LiveGPSTracker({
     const cleanup = missionTrackingService.startLocationPolling(
       missionId,
       (newLocations) => {
-        setLocations((prev) => [...newLocations, ...prev]);
+        // Use functional update to avoid stale closure
+        setLocations((prev) => {
+          // Avoid duplicates
+          const existingIds = new Set(prev.map((loc) => loc.id));
+          const uniqueNew = newLocations.filter((loc) => !existingIds.has(loc.id));
+          return [...uniqueNew, ...prev];
+        });
         setLastUpdate(new Date());
 
         // Centrer la carte sur la dernière position
         if (newLocations.length > 0 && mapRef.current) {
-          const lastLocation = newLocations[0];
-          mapRef.current.panTo({
-            lat: lastLocation.latitude,
-            lng: lastLocation.longitude,
-          });
+          try {
+            const lastLocation = newLocations[0];
+            mapRef.current.panTo({
+              lat: lastLocation.latitude,
+              lng: lastLocation.longitude,
+            });
+          } catch (error) {
+            console.error('Error panning map:', error);
+          }
         }
       },
       updateInterval
     );
 
     stopPollingRef.current = cleanup;
-  };
+  }, [missionId, updateInterval]);
 
   // Charger les locations initiales
   useEffect(() => {
+    let isMounted = true;
+
     const fetchInitialLocations = async () => {
       setLoading(true);
       try {
         const response = await missionTrackingService.getLocationUpdates(missionId, 100);
-        setLocations(response.locations);
-        if (response.locations.length > 0) {
-          setLastUpdate(new Date(response.locations[0].timestamp));
+        if (isMounted) {
+          setLocations(response.locations);
+          if (response.locations.length > 0) {
+            setLastUpdate(new Date(response.locations[0].timestamp));
+          }
         }
       } catch (error) {
         console.error('Error fetching initial locations:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchInitialLocations();
+
+    return () => {
+      isMounted = false;
+    };
   }, [missionId]);
 
   // Gérer le polling automatique
@@ -102,7 +122,7 @@ export default function LiveGPSTracker({
         stopPollingRef.current();
       }
     };
-  }, [isTracking, missionId, updateInterval]);
+  }, [isTracking, startPolling]);
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
@@ -113,7 +133,12 @@ export default function LiveGPSTracker({
     try {
       const response = await missionTrackingService.getLocationUpdates(missionId, 10);
       if (response.locations.length > 0) {
-        setLocations((prev) => [...response.locations, ...prev]);
+        setLocations((prev) => {
+          // Avoid duplicates
+          const existingIds = new Set(prev.map((loc) => loc.id));
+          const uniqueNew = response.locations.filter((loc) => !existingIds.has(loc.id));
+          return [...uniqueNew, ...prev];
+        });
         setLastUpdate(new Date());
       }
     } catch (error) {

@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import * as Location from 'expo-location';
 import driverTrackingService, { type MissionDetails } from '../services/driverTrackingService';
-import { Colors } from '../constants/Colors';
+import { Colors } from '../constants/colors';
 
 interface DriverMissionTrackingScreenProps {
   navigation: any;
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.textPrimary,
     marginTop: 16,
     marginBottom: 8,
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   missionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   infoRow: {
@@ -506,6 +506,6 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: Colors.textPrimary,
   },
 });

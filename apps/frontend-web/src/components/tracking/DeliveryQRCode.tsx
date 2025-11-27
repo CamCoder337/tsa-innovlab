@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, RefreshCw, Copy, QrCode } from 'lucide-react';
+import { Download, RefreshCw, QrCode } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,8 +16,8 @@ interface DeliveryQRCodeProps {
 export default function DeliveryQRCode({
   missionId,
   missionTitle,
-  trackingToken,
-  trackingPin,
+  // trackingToken et trackingPin ne sont plus utilisés dans ce composant
+  // Ils sont affichés uniquement dans DriverCredentialsDisplay pour le transporteur
 }: DeliveryQRCodeProps) {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,9 +29,9 @@ export default function DeliveryQRCode({
       const response = await missionTrackingService.generateDeliveryQRCode(missionId);
       setQrCodeData(response.qrCode);
       toast.success('QR code généré avec succès');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors de la génération du QR code', {
-        description: error.message || 'Une erreur est survenue',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setLoading(false);
@@ -46,9 +46,9 @@ export default function DeliveryQRCode({
       toast.success('QR code régénéré avec succès', {
         description: 'Ancien QR code invalidé',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors de la régénération du QR code', {
-        description: error.message || 'Une erreur est survenue',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setRegenerating(false);
@@ -67,11 +67,7 @@ export default function DeliveryQRCode({
     toast.success('QR code téléchargé');
   };
 
-  const copyCredentials = () => {
-    const credentials = `Token: ${trackingToken}\nPIN: ${trackingPin}`;
-    navigator.clipboard.writeText(credentials);
-    toast.success('Credentials copiés dans le presse-papier');
-  };
+  // Note: copyCredentials retiré - les credentials ne sont plus affichés pour l'affréteur
 
   return (
     <Card>
@@ -93,26 +89,8 @@ export default function DeliveryQRCode({
           </AlertDescription>
         </Alert>
 
-        {/* Credentials du chauffeur */}
-        {trackingToken && trackingPin && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Credentials pour le chauffeur :</p>
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="space-y-1 font-mono text-sm">
-                <div>
-                  <span className="text-muted-foreground">Token:</span> {trackingToken.slice(0, 16)}
-                  ...
-                </div>
-                <div>
-                  <span className="text-muted-foreground">PIN:</span> {trackingPin}
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={copyCredentials}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Note: Les credentials Token/PIN ne sont PAS affichés ici */}
+        {/* Ils sont affichés uniquement dans l'interface TRANSPORTEUR via DriverCredentialsDisplay */}
 
         {/* QR Code */}
         <div className="flex flex-col items-center gap-4">
@@ -164,14 +142,14 @@ export default function DeliveryQRCode({
           <div className="space-y-2 text-sm text-muted-foreground">
             <p className="font-medium">Comment ça marche ?</p>
             <ol className="list-inside list-decimal space-y-1">
-              <li>Le chauffeur ouvre son application mobile</li>
-              <li>Il se connecte avec le Token et le PIN fournis</li>
-              <li>Il démarre la mission et envoie sa position GPS en temps réel</li>
+              <li>Le transporteur transmet les credentials (Token + PIN) au chauffeur</li>
+              <li>Le chauffeur se connecte à l'application mobile avec ses credentials</li>
+              <li>Le chauffeur démarre la mission et envoie sa position GPS en temps réel</li>
               <li>
-                Arrivé à destination (moins de 200m), il scanne ce QR code pour valider la
-                livraison
+                Arrivé à destination (moins de 200m), le chauffeur scanne ce QR code pour valider
+                la livraison
               </li>
-              <li>La mission passe automatiquement au statut "Livré"</li>
+              <li>La mission passe automatiquement au statut "Livrée"</li>
             </ol>
           </div>
         )}

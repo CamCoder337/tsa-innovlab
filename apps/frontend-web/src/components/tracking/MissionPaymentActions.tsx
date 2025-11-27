@@ -44,9 +44,9 @@ export default function MissionPaymentActions({
         description: 'Le transporteur en a été notifié',
       });
       onStatusChange?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors du marquage comme payé', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setLoading(false);
@@ -63,9 +63,9 @@ export default function MissionPaymentActions({
         description: 'La mission a été archivée',
       });
       onStatusChange?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Erreur lors de la clôture de la mission', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
       });
     } finally {
       setLoading(false);

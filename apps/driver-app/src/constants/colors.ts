@@ -6,11 +6,13 @@ export const Colors = {
   // Couleurs principales TSA
   primary: '#1E40AF', // tsa-blue
   primaryDark: '#1E3A8A', // tsa-blue-dark
+  primaryLight: '#3B82F6', // blue-500 (lighter)
 
   // Couleurs sémantiques
   success: '#10B981', // green-500
   warning: '#F59E0B', // amber-500
   danger: '#EF4444', // red-500
+  error: '#EF4444', // red-500 (alias for danger)
   info: '#3B82F6', // blue-500
 
   // Couleurs de statut des missions
@@ -44,13 +46,22 @@ export const Colors = {
   background: '#F9FAFB',
   surface: '#FFFFFF',
 
-  // Couleurs de texte
+  // Couleurs de texte (object for compatibility)
   text: {
     primary: '#111827',
     secondary: '#6B7280',
     disabled: '#9CA3AF',
     inverse: '#FFFFFF',
   },
+
+  // Couleurs de texte (flat properties for direct use)
+  textPrimary: '#111827', // gray-900
+  textSecondary: '#6B7280', // gray-500
+  textDisabled: '#9CA3AF', // gray-400
+  textInverse: '#FFFFFF',
+
+  // État désactivé
+  disabled: '#9CA3AF', // gray-400
 
   // Couleur de bordure
   border: '#E5E7EB',

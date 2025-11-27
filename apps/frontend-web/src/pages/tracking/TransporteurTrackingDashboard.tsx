@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
 import DriversLiveMap from '../../components/tracking/DriversLiveMap';
+import VehicleTrackingCredentials from '../../components/tracking/VehicleTrackingCredentials';
 import {
   Truck,
   Navigation,
@@ -349,6 +350,15 @@ export default function TransporteurTrackingDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Credentials de tracking du véhicule */}
+                <VehicleTrackingCredentials
+                  missionTitle={currentAssignment.title}
+                  trackingToken={currentAssignment.trackingLinkToken}
+                  trackingPin={currentAssignment.trackingPin}
+                  vehicleRegistration={currentAssignment.vehicle?.registration}
+                  vehicleType={currentAssignment.vehicle?.type}
+                />
 
                 {/* Actions rapides */}
                 <Card>

@@ -2,7 +2,31 @@
 
 ## 📋 Vue d'ensemble
 
-Ce document décrit le système complet de tracking de missions implémenté pour la plateforme TSA Logistics. Le workflow permet aux chauffeurs de suivre leurs missions en temps réel et aux affréteurs de monitorer la progression des livraisons de manière sécurisée.
+Ce document décrit le système complet de tracking de missions implémenté pour la plateforme TSA Logistics. Le workflow permet le suivi GPS en temps réel des **véhicules** en mission et aux affréteurs de monitorer la progression des livraisons de manière sécurisée.
+
+## 🏗️ Architecture
+
+```
+AFFRETEUR (client)
+    ├── Crée des missions
+    └── Suit le tracking GPS
+
+TRANSPORTEUR (entreprise)
+    ├── Possède des Véhicules[]
+    ├── Claim des missions avec UN véhicule
+    ├── Obtient Token + PIN pour le véhicule
+    └── Transmet credentials au conducteur du véhicule
+
+VEHICULE (unité de tracking)
+    ├── Assigné à une mission
+    ├── Possède Token + PIN unique
+    └── Tracké en temps réel par GPS
+
+CONDUCTEUR (utilisateur app mobile)
+    ├── Reçoit Token + PIN du transporteur
+    ├── Se connecte à l'app TSA Driver
+    └── Démarre le tracking GPS automatique
+```
 
 ## 🔄 Flux du Workflow
 
@@ -17,11 +41,11 @@ DRAFT → PUBLISHED → ASSIGNED → READY_TO_START → IN_PROGRESS → DELIVERE
 | Statut | Description | Actions possibles |
 |--------|-------------|-------------------|
 | **DRAFT** | Mission créée, non publiée | Modifier, Publier, Supprimer |
-| **PUBLISHED** | Mission visible aux transporteurs | Assigner, Dépublier |
-| **ASSIGNED** | Transporteur assigné, en attente de démarrage | Générer tracking token/PIN, Initialiser QR code |
-| **READY_TO_START** | Mission prête à démarrer (credentials générés) | Démarrer la mission (première position GPS) |
-| **IN_PROGRESS** | Mission en cours (tracking actif) | Envoyer positions GPS, Signaler problèmes |
-| **DELIVERED** | Livraison confirmée via QR code | Marquer comme payé |
+| **PUBLISHED** | Mission visible aux transporteurs | Claim avec véhicule |
+| **ASSIGNED** | Véhicule assigné (Token + PIN générés) | Transmettre credentials au conducteur |
+| **READY_TO_START** | Conducteur authentifié avec Token + PIN | Démarrer mission (première position GPS) |
+| **IN_PROGRESS** | Véhicule tracké en temps réel | Envoyer positions GPS, Signaler problèmes |
+| **DELIVERED** | Livraison confirmée via QR code scan | Marquer comme payé |
 | **PAID** | Transporteur payé | Clôturer définitivement |
 | **COMPLETED** | Mission terminée et archivée | Consulter historique |
 | **CANCELLED** | Mission annulée | - |
@@ -33,12 +57,27 @@ DRAFT → PUBLISHED → ASSIGNED → READY_TO_START → IN_PROGRESS → DELIVERE
 Nouveaux champs ajoutés :
 
 ```typescript
-- trackingLinkToken: string | null      // Token unique pour l'authentification chauffeur
-- trackingPin: string | null             // PIN à 6 chiffres
+- transporteurId: UUID | null            // Entreprise de transport assignée
+- vehicleId: UUID | null                 // Véhicule assigné (contient conducteur)
+- trackingLinkToken: string | null      // Token unique pour authentification du véhicule
+- trackingPin: string | null             // PIN à 6 chiffres pour le véhicule
 - qrCodeToken: string | null             // Token unique pour validation QR code
 - startedAt: DateTime | null             // Date/heure de démarrage réel
 - deliveredAt: DateTime | null           // Date/heure de livraison
 - paidAt: DateTime | null                // Date/heure de paiement
+```
+
+### Vehicle (existant)
+
+```typescript
+{
+  id: UUID
+  userId: UUID                           // Transporteur propriétaire
+  type: VehicleType                      // truck, van, motorcycle, car
+  registration: string                   // Immatriculation (ex: ABC-123-XY)
+  description: string | null
+  status: VehicleStatus                  // available, in_mission, maintenance, inactive
+}
 ```
 
 ### LocationUpdate (nouveau)
@@ -79,17 +118,35 @@ Gère les problèmes signalés pendant les missions :
 }
 ```
 
-## 🔑 Système d'Authentification Chauffeur
+## 🔑 Système d'Authentification Véhicule
 
 ### Génération automatique des credentials
 
-Lorsqu'une mission passe au statut `ASSIGNED` ou `READY_TO_START` :
+Lorsqu'un **transporteur claim une mission avec un véhicule** (statut `ASSIGNED`) :
 
-1. **Tracking Token** : Token unique de 64 caractères hexadécimaux
+1. **Tracking Token** : Token unique de 64 caractères hexadécimaux (lié au véhicule)
 2. **Tracking PIN** : Code à 6 chiffres (ex: 123456)
 3. **QR Code Token** : Token unique pour validation de livraison
 
-### Authentification
+**Important** : Ces credentials sont liés au **VÉHICULE**, pas au conducteur.
+
+### Workflow d'attribution
+
+```
+1. Transporteur claim la mission avec vehicleId
+2. Backend génère automatiquement :
+   - trackingLinkToken
+   - trackingPin
+   - qrCodeToken
+3. Transporteur voit dans son dashboard :
+   - Véhicule: ABC-123-XY (Camion)
+   - Token: abcd1234...
+   - PIN: 123456
+4. Transporteur transmet Token + PIN au conducteur du véhicule ABC-123-XY
+5. Conducteur se connecte à l'app mobile TSA Driver
+```
+
+### Authentification (App Mobile)
 
 **Endpoint** : `POST /track/:token/authenticate`
 
@@ -110,7 +167,12 @@ Lorsqu'une mission passe au statut `ASSIGNED` ou `READY_TO_START` :
       "title": "Livraison Douala - Yaoundé",
       "status": "assigned",
       "departureAddress": {...},
-      "arrivalAddress": {...}
+      "arrivalAddress": {...},
+      "transporter": {
+        "id": "uuid",
+        "firstName": "Jean",
+        "lastName": "Transporteur"
+      }
     },
     "trackingToken": "abc123..."
   }
@@ -119,10 +181,11 @@ Lorsqu'une mission passe au statut `ASSIGNED` ou `READY_TO_START` :
 
 ### Sécurité
 
-- Chauffeurs ne voient QUE les missions de LEUR transporteur
+- Le conducteur ne voit QUE la mission du VÉHICULE assigné
 - Token + PIN requis pour toutes les opérations
 - Rate limiting sur les tentatives d'authentification
 - Les positions GPS sont isolées par mission
+- Un véhicule = une mission à la fois (status IN_MISSION)
 
 ## 📡 API Endpoints
 

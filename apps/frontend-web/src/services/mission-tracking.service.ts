@@ -97,14 +97,14 @@ export class MissionTrackingService extends BaseApi {
   /**
    * Marquer une mission comme payée
    */
-  async markAsPaid(missionId: string): Promise<{ mission: any }> {
+  async markAsPaid(missionId: string): Promise<{ mission: unknown }> {
     return this.post(`${this.baseUrl}/${missionId}/mark-as-paid`);
   }
 
   /**
    * Clôturer définitivement une mission
    */
-  async completeMission(missionId: string): Promise<{ mission: any }> {
+  async completeMission(missionId: string): Promise<{ mission: unknown }> {
     return this.post(`${this.baseUrl}/${missionId}/complete`);
   }
 

@@ -249,7 +249,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({ route, navigation }) => {
   };
 
   const handleMissionCardPress = () => {
-    navigation.navigate('MissionDetails', { missionId: mission.id });
+    if (mission) {
+      navigation.navigate('MissionDetails', { missionId: mission.id });
+    }
   };
 
   const handleSOSAlert = (type: string, description: string) => {
