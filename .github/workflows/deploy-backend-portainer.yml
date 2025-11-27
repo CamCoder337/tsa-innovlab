@@ -1,6 +1,9 @@
 name: Deploy Backend to Portainer
 
 on:
+  pull_request:
+    branches: [ develop ]
+    types: [ merged ]
   push:
     branches:
       - develop  # Déploiement automatique sur develop
