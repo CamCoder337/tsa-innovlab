@@ -122,7 +122,7 @@ class IntelligentChatbotV4Service:
             logger.info(f"[V4] Processing message from {user_id} ({user_role_normalized})")
             
             # 1. Load conversation history from DB
-            history = await self._load_history_from_db(conv_id)
+            history = await self._load_history_from_db(conv_id, user_id)
             
             # 2. Check for pending confirmations
             pending = await self._get_pending_confirmation(conv_id, history)
@@ -132,6 +132,11 @@ class IntelligentChatbotV4Service:
             
             # 3. Detect intent with LLM (structured JSON)
             intent_detection = await self._detect_intent_with_llm(message, history, user_role_normalized, context)
+            
+            # 3.5. AMBIGUITY CHECK (Clarification Loop)
+            # If confidence is "medium" (0.5 - 0.75), ask for clarification instead of guessing
+            if 0.5 <= intent_detection.confidence <= 0.75 and intent_detection.name != "unknown":
+                return await self._handle_ambiguity(intent_detection, message)
             
             # 4. Check if action requires confirmation
             if intent_detection.requires_confirmation:
@@ -216,104 +221,10 @@ class IntelligentChatbotV4Service:
             history_context = self._format_history_for_prompt(history) if history else "Aucun historique"
             
             # Build prompt for intent detection
-            system_prompt = f"""Tu es l'assistant virtuel de TSA Logistique, spécialisé en transport et pièces détachées reconditionnées.
-
-CONTEXTE UTILISATEUR:
-- Rôle: {user_role}
-- Historique récent: {history_context}
-
-TÂCHE:
-Analyse le message et retourne un JSON avec:
-{{
-  "name": "intention",
-  "confidence": 0.0-1.0,
-  "entities": {{}},
-  "requires_confirmation": false
-}}
-
-INTENTIONS DISPONIBLES:
-- greeting: Salutations, politesse ("bonjour", "salut", "hello")
-- tracking: Suivi de colis/mission ("où est mon colis", "statut livraison", "suivi #123")
-- pricing: Calcul de TARIF/PRIX de transport ("combien coûte", "prix pour", "tarif Douala-Yaoundé")
-- create_mission: Créer une mission de transport (CONFIRMATION REQUISE)
-- claim_mission: Réclamer/accepter une mission (CONFIRMATION REQUISE)
-- delete_mission: Supprimer une mission (CONFIRMATION REQUISE)
-- cancel_order: Annuler une commande (CONFIRMATION REQUISE)
-- search_products: Rechercher pièces détachées, vérifier STOCK/DISPONIBILITÉ ("en stock", "disponible", "cherche pièces", "avez-vous")
-- mission_status: Voir ses missions, statut des courses ("mes missions", "missions en cours")
-- help: Demande d'aide générale ("aide", "comment ça marche")
-- complaint: Plainte, problème, insatisfaction ("problème", "pas content", "retard")
-- unknown: Intention floue ou hors contexte
-
-⚠️ ATTENTION - DISTINCTIONS CRITIQUES:
-- "Combien en stock ?" → search_products (QUANTITÉ disponible)
-- "Combien ça coûte ?" → pricing (PRIX/TARIF)
-- "Avez-vous X ?" → search_products (DISPONIBILITÉ)
-- "Prix de X ?" → pricing (COÛT)
-
-RÈGLES DE CONFIDENCE:
-- 0.9-1.0: Intention évidente et claire ("Bonjour", "Où est mon colis #123", "Calculer prix Douala-Yaoundé")
-- 0.7-0.8: Intention probable mais contexte manquant ("Mon colis", "Combien ça coûte", "Créer mission")
-- 0.5-0.6: Intention ambiguë ("Aide", "Problème", "Voir")
-- 0.0-0.4: Intention très floue ou hors sujet
-
-EXTRACTION D'ENTITÉS:
-- Villes camerounaises: Douala, Yaoundé, Bafoussam, Garoua, Maroua, Bamenda, Ngaoundéré
-  * Tolère fautes: "Daoula"→"Douala", "Yaounde"→"Yaoundé", "Bafousam"→"Bafoussam"
-- IDs de colis/mission: #12345, 12345, "colis 12345", "mission ABC123"
-- Poids: 500kg, 500 kg, 0.5t, 500 kilos → weight_kg: 500
-- Prix: 50000 FCFA, 50k, 50.000 → price: 50000
-- Marques auto: Toyota, Mercedes, Peugeot, Nissan, etc.
-- Types de pièces: amortisseur, frein, moteur, batterie, etc.
-
-EXEMPLES RÉALISTES:
-
-User: "Bonjour"
-{{"name": "greeting", "confidence": 1.0, "entities": {{}}, "requires_confirmation": false}}
-
-User: "salut, c'est où mon colis ?"
-{{"name": "tracking", "confidence": 0.75, "entities": {{}}, "requires_confirmation": false}}
-
-User: "Où est mon colis #12345 ?"
-{{"name": "tracking", "confidence": 0.95, "entities": {{"shipment_id": "12345"}}, "requires_confirmation": false}}
-
-User: "Combien pour transporter 500kg de Daoula à Yaounde ?"
-{{"name": "pricing", "confidence": 0.9, "entities": {{"origin": "Douala", "destination": "Yaoundé", "weight_kg": 500}}, "requires_confirmation": false}}
-
-User: "Crée mission Douala Yaoundé 500kg"
-{{"name": "create_mission", "confidence": 0.85, "entities": {{"origin": "Douala", "destination": "Yaoundé", "weight_kg": 500}}, "requires_confirmation": true}}
-
-User: "avez vous des amortisseurs en stock ?"
-{{"name": "search_products", "confidence": 0.95, "entities": {{"query": "amortisseurs"}}, "requires_confirmation": false}}
-
-User: "combien en stock ?"
-{{"name": "search_products", "confidence": 0.8, "entities": {{}}, "requires_confirmation": false}}
-
-User: "combien d'amortisseurs disponibles ?"
-{{"name": "search_products", "confidence": 0.9, "entities": {{"query": "amortisseurs"}}, "requires_confirmation": false}}
-
-User: "amortisseur toyota"
-{{"name": "search_products", "confidence": 0.95, "entities": {{"query": "amortisseur", "brand": "Toyota"}}, "requires_confirmation": false}}
-
-User: "cherche pièces volvo"
-{{"name": "search_products", "confidence": 0.9, "entities": {{"query": "pièces", "brand": "Volvo"}}, "requires_confirmation": false}}
-
-User: "Combien coûte un amortisseur ?"
-{{"name": "pricing", "confidence": 0.85, "entities": {{"query": "amortisseur"}}, "requires_confirmation": false}}
-
-User: "prix amortisseur"
-{{"name": "pricing", "confidence": 0.9, "entities": {{"query": "amortisseur"}}, "requires_confirmation": false}}
-
-User: "mes missions"
-{{"name": "mission_status", "confidence": 0.95, "entities": {{}}, "requires_confirmation": false}}
-
-User: "j'ai un problème avec ma livraison"
-{{"name": "complaint", "confidence": 0.85, "entities": {{}}, "requires_confirmation": false}}
-
-User: "aide"
-{{"name": "help", "confidence": 0.6, "entities": {{}}, "requires_confirmation": false}}
-
-RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
+            # Build prompt using dynamic builder
+            from app.services.prompt_builder_service import get_prompt_builder
+            prompt_builder = get_prompt_builder()
+            system_prompt = await prompt_builder.build_system_prompt(user_role, history_context)
 
             messages = [
                 {"role": "system", "content": system_prompt},
@@ -556,11 +467,62 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
             return {"error": "products_search_failed"}
     
     async def _fetch_missions_data(self, user_id: str, user_role: str, user_token: Optional[str]) -> Dict[str, Any]:
-        """Fetch missions data (placeholder - to be implemented)"""
-        return {
-            "missions": [],
-            "note": "Fonctionnalité en cours d'implémentation"
-        }
+        """Fetch missions data with role-based access control"""
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                # Base query
+                query_str = """
+                    SELECT id, status, origin, destination, created_at
+                    FROM shipments
+                """
+                
+                params = {"user_id": user_id}
+                
+                # Role-based filtering
+                if user_role == "TRANSPORTEUR":
+                    query_str += " WHERE transporter_id = :user_id"
+                elif user_role == "AFFRETEUR" or user_role == "CLIENT":
+                    query_str += " WHERE client_id = :user_id"
+                else:
+                    # Admin or unknown sees nothing by default for safety, or all if admin (implement as needed)
+                    return {"missions": [], "note": "Rôle non autorisé pour voir les missions"}
+                
+                query_str += " ORDER BY created_at DESC LIMIT 5"
+                
+                results = db.execute(text(query_str), params).fetchall()
+                
+                missions = [
+                    {
+                        "id": r.id,
+                        "status": r.status,
+                        "origin": r.origin,
+                        "destination": r.destination,
+                        "date": r.created_at.strftime("%d/%m/%Y") if r.created_at else "N/A"
+                    }
+                    for r in results
+                ]
+                
+                if not missions:
+                    return {
+                        "missions": [],
+                        "note": "Aucune mission trouvée pour ce compte."
+                    }
+                
+                return {
+                    "missions": missions,
+                    "count": len(missions),
+                    "role": user_role
+                }
+                
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Missions fetch error: {e}")
+            return {"error": "missions_fetch_failed"}
 
     
     async def _generate_contextual_suggestions(
@@ -664,6 +626,26 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
                 label="Voir le catalogue"
             ))
         
+        elif intent.name == "create_mission":
+            actions.append(NavigationAction(
+                type="navigate",
+                target="mission_create",
+                params={
+                    "origin": intent.entities.get("origin"),
+                    "destination": intent.entities.get("destination"),
+                    "weight_kg": intent.entities.get("weight_kg")
+                },
+                label="Créer la mission"
+            ))
+
+        elif intent.name == "claim_mission":
+            actions.append(NavigationAction(
+                type="navigate",
+                target="mission_claim",
+                params={"mission_id": intent.entities.get("mission_id")},
+                label="Réclamer la mission"
+            ))
+        
         return actions
 
     
@@ -671,6 +653,38 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
     # Confirmation Workflow
     # ============================================
     
+    async def _handle_ambiguity(self, intent: IntentDetection, message: str) -> Dict[str, Any]:
+        """
+        Handle ambiguous intents by asking clarifying questions
+        """
+        suggestions = []
+        clarification_msg = ""
+        
+        if intent.name == "pricing":
+            clarification_msg = "Voulez-vous connaître le **tarif d'une livraison** ou le **prix d'une pièce détachée** ?"
+            suggestions = ["Tarif livraison", "Prix pièce auto"]
+            
+        elif intent.name == "search_products":
+            clarification_msg = "Cherchez-vous à **acheter une pièce** ou à **vérifier un stock** ?"
+            suggestions = ["Acheter pièce", "Vérifier stock"]
+            
+        elif intent.name == "tracking":
+             clarification_msg = "Je peux suivre un colis si vous me donnez son **numéro** (ex: #12345). L'avez-vous ?"
+             suggestions = ["Oui, j'ai le numéro", "Non, retrouver mon colis"]
+             
+        else:
+            clarification_msg = "Je ne suis pas sûr de bien comprendre. Pouvez-vous préciser votre demande ?"
+            suggestions = ["Aide", "Menu principal"]
+            
+        return {
+            "message": clarification_msg,
+            "intent": {"name": "clarification", "confidence": 1.0, "entities": {}},
+            "suggestions": suggestions,
+            "actions": [],
+            "requires_human": False,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
     async def _request_confirmation(
         self,
         message: str,
@@ -688,23 +702,9 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
         expires_at = datetime.utcnow() + timedelta(minutes=self.confirmation_timeout_minutes)
         
         # Build confirmation message
-        if intent.name == "create_mission":
-            entities = intent.entities
-            description = f"Créer une mission:\n"
-            description += f"📍 {entities.get('origin')} → {entities.get('destination')}\n"
-            description += f"📦 {entities.get('weight_kg')}kg\n"
-            if entities.get('budget_max'):
-                description += f"💰 Budget: {entities.get('budget_max'):,.0f} FCFA"
-            
-            confirmation_message = f"Je vais {description}\n\n**Confirmez-vous ?**"
-        
-        elif intent.name == "delete_mission":
+        if intent.name == "delete_mission":
             mission_id = intent.entities.get("mission_id")
             confirmation_message = f"⚠️ Vous allez **supprimer** la mission #{mission_id}.\n\n**Êtes-vous sûr ?**"
-        
-        elif intent.name == "claim_mission":
-            mission_id = intent.entities.get("mission_id")
-            confirmation_message = f"Vous allez **réclamer** la mission #{mission_id}.\n\n**Confirmez-vous ?**"
         
         else:
             confirmation_message = f"Cette action nécessite votre confirmation.\n\n**Confirmez-vous ?**"
@@ -842,7 +842,7 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
     # Database Operations (Persistent History)
     # ============================================
     
-    async def _load_history_from_db(self, conv_id: str) -> List[Dict]:
+    async def _load_history_from_db(self, conv_id: str, user_id: str) -> List[Dict]:
         """
         Load conversation history from database (permanent storage)
         """
@@ -856,12 +856,12 @@ RÉPONDS UNIQUEMENT EN JSON, RIEN D'AUTRE."""
                 query = text("""
                     SELECT role, content, intent_name, entities, created_at, actions
                     FROM chatbot_conversations
-                    WHERE conversation_id = :conv_id
+                    WHERE conversation_id = :conv_id AND user_id = :user_id
                     ORDER BY created_at DESC
                     LIMIT 10
                 """)
                 
-                results = db.execute(query, {"conv_id": conv_id}).fetchall()
+                results = db.execute(query, {"conv_id": conv_id, "user_id": user_id}).fetchall()
                 
                 # Reverse to get chronological order
                 history = []
