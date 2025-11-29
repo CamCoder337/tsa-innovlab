@@ -46,6 +46,7 @@ export default class ChatbotController {
         message: message.trim(),
         user_id: user.id.toString(),
         user_role: user.role,
+        user_email: user.email,
         user_token: authToken || undefined, // Pass token for API calls (undefined if empty)
         conversation_id: conversationId || user.id.toString(),
         context: context || {},
@@ -161,6 +162,7 @@ export default class ChatbotController {
         message: message.trim(),
         user_id: user.id.toString(),
         user_role: user.role,
+        user_email: user.email,
         user_token: authToken || undefined,
         conversation_id: conversationId || user.id.toString(),
         context: context || {},

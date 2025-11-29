@@ -7,10 +7,15 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from typing import Generator
 import logging
+import os
 
 from app.core.config import settings, get_database_url
 
 logger = logging.getLogger(__name__)
+
+# Fix for Windows UTF-8 encoding issues with PostgreSQL
+# Force UTF-8 encoding for psycopg2
+os.environ['PGCLIENTENCODING'] = 'UTF8'
 
 # Database URL
 DATABASE_URL = get_database_url()
@@ -25,7 +30,7 @@ if settings.environment == "test":
     )
 else:
     # PostgreSQL for development/production
-    # Add encoding parameters for Windows compatibility
+    # Add encoding parameters for UTF-8 compatibility
     connect_args = {
         "client_encoding": "utf8",
     }

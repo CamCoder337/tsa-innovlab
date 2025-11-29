@@ -1,0 +1,8 @@
+# Crontab for TSA AI Service
+# Cleanup old rate limit records every hour
+
+# Format: minute hour day month weekday command
+0 * * * * cd /app && python -m app.tasks.cleanup_rate_limits >> /var/log/cron.log 2>&1
+
+# Keep cron running
+# This line is required for the cron daemon to work
