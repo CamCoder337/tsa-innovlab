@@ -8,7 +8,7 @@ export default class extends BaseSchema {
       table.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
       table.uuid('user_id').notNullable().index()
       table.timestamp('request_at').notNullable().defaultTo(this.now())
-      
+
       // Index for efficient cleanup and rate limit checks
       table.index(['user_id', 'request_at'])
     })
