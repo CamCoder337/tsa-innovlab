@@ -66,6 +66,7 @@ export interface ChatbotQueryRequest {
   message: string
   user_id: string
   user_role?: string
+  user_email?: string
   user_token?: string
   conversation_id?: string
   context?: Record<string, any>
@@ -365,6 +366,9 @@ export default class AIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': request.user_id,
+          'X-User-Role': request.user_role || 'client',
+          'X-User-Email': request.user_email || '',
         },
         body: JSON.stringify(request),
         signal: AbortSignal.timeout(15000), // 15s timeout
@@ -418,6 +422,9 @@ export default class AIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': request.user_id,
+          'X-User-Role': request.user_role || 'client',
+          'X-User-Email': request.user_email || '',
         },
         body: JSON.stringify(request),
         signal: AbortSignal.timeout(30000), // 30s timeout for streaming
