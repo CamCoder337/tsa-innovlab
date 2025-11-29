@@ -10,7 +10,7 @@ from app.schemas.chatbot import (
     ChatbotResponse,
     ChatbotHealthResponse
 )
-from app.services.chatbot_service import get_chatbot_service, ChatbotService
+from app.services.chatbot_function_calling_service import get_chatbot_function_calling, ChatbotFunctionCallingService
 from app.core.dependencies import get_user_from_header
 
 logger = logging.getLogger(__name__)
@@ -21,42 +21,25 @@ router = APIRouter()
 @router.post("/query", response_model=ChatbotResponse)
 async def chatbot_query(
     request: ChatbotQueryRequest,
-    chatbot_service: ChatbotService = Depends(get_chatbot_service),
+    chatbot_fc: ChatbotFunctionCallingService = Depends(get_chatbot_function_calling),
     user: Optional[dict] = Depends(get_user_from_header)
 ):
     """
-    Process chatbot query
+    Process chatbot query (Migrated to V2 Agentic Engine)
     
-    This endpoint is designed to be called from the monolith's WebSocket handler
-    when a user sends a message starting with '/bot' or similar trigger.
-    
-    Example usage from monolith:
-    ```typescript
-    const response = await fetch('http://tsa-ai:8000/api/ai/chatbot/query', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': user.id,
-        'X-User-Email': user.email,
-        'X-User-Role': user.role
-      },
-      body: JSON.stringify({
-        message: userMessage,
-        user_id: user.id,
-        user_role: user.role,
-        conversation_id: conversationId
-      })
-    })
-    ```
+    This endpoint now uses the Function Calling engine for:
+    - Natural conversation flow
+    - Dynamic tool usage
+    - Ambiguity handling
     """
     try:
         # Use user from headers if available, otherwise from request body
         user_id = user.get('id') if user else request.user_id
         user_role = user.get('role') if user else request.user_role
         
-        logger.info(f"Processing chatbot query from user {user_id}: {request.message[:50]}...")
+        logger.info(f"Processing chatbot query from user {user_id} (V2 Engine): {request.message[:50]}...")
         
-        response = await chatbot_service.process_message(
+        response = await chatbot_fc.process_message(
             message=request.message,
             user_id=user_id,
             user_role=user_role,
@@ -65,7 +48,7 @@ async def chatbot_query(
             context=request.context
         )
         
-        return response
+        return ChatbotResponse(**response)
         
     except Exception as e:
         logger.error(f"Error processing chatbot query: {e}")
@@ -97,7 +80,7 @@ async def chatbot_health():
 @router.get("/history/{conversation_id}")
 async def get_conversation_history(
     conversation_id: str,
-    chatbot_service: ChatbotService = Depends(get_chatbot_service),
+    chatbot_fc: ChatbotFunctionCallingService = Depends(get_chatbot_function_calling),
     user: Optional[dict] = Depends(get_user_from_header)
 ):
     """
@@ -107,7 +90,7 @@ async def get_conversation_history(
     can only access their own conversation history
     """
     try:
-        history = chatbot_service.get_history(conversation_id)
+        history = chatbot_fc.get_history(conversation_id)
         return {
             "conversation_id": conversation_id,
             "messages": history,

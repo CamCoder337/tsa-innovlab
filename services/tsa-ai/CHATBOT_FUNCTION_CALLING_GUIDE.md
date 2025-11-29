@@ -2,14 +2,16 @@
 
 ## 🎯 Architecture Actuelle
 
-**Service Unique:** `chatbot_function_calling_service.py`
+**Version :** 1.0.0  
+**Service Unique :** `chatbot_function_calling_service.py`
 
 Le chatbot TSA utilise une architecture **Pure Function Calling** avec :
 - ✅ 14 fonctions READ-ONLY
 - ✅ Lecture de données réelles depuis PostgreSQL
-- ✅ Navigation hints alignés avec React Router (`/app/*`)
+- ✅ Navigation hints alignés avec React Router (vérifiés dans `App.tsx`)
 - ✅ Suggestions contextuelles intelligentes
-- ✅ Isolation de l'historique par `user_id`
+- ✅ Historique persistant dans PostgreSQL
+- ✅ Rate limiting avec PostgreSQL
 - ✅ Streaming SSE support
 
 ## 📡 Endpoints API
@@ -272,12 +274,9 @@ if (response.navigation) {
 4. **Sécurité** : Historique isolé par user_id
 5. **Performance** : < 2s pour function calls, < 500ms first token en streaming
 
-## 🗑️ Code Supprimé
+## 📚 Documentation
 
-Les services suivants ont été supprimés (code mort) :
-- ❌ `intelligent_chatbot_service.py` (V3)
-- ❌ `intelligent_chatbot_v4_service.py` (V4)
-- ❌ `DEPLOYMENT_CHATBOT_V3.md`
-- ❌ `CHATBOT_V4_MIGRATION_GUIDE.md`
-
-**Total: ~2500 lignes de code mort supprimées**
+**Documentation principale :** `CHATBOT_README.md` (racine du projet)  
+**Ce guide :** Détails techniques des fonctions  
+**Tests :** `tests/test_chatbot_read_only.py`  
+**Migrations :** `services/tsa-monolith/database/migrations/1763100000000_*`
