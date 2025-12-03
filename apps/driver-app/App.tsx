@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React from 'react';
 
 // Ignorer les avertissements spécifiques en développement
 if (__DEV__) {
@@ -20,33 +19,16 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { AppNavigator } from './src/navigation/AppNavigator';
-import { initializeMissions } from './src/services/missionService';
+// import { initializeMissions } from './src/services/missionService'; // Supprimé : données de test non nécessaires
+import './src/i18n'; // Initialize i18n
+import { env } from './src/config/env';
+
+// Log environment configuration on app startup (debug mode only)
+env.logConfig();
 
 export default function App() {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        // Initialiser les missions au démarrage
-        await initializeMissions();
-        setIsReady(true);
-      } catch (error) {
-        console.error('Erreur lors de l\'initialisation:', error);
-        setIsReady(true); // Continuer quand même
-      }
-    };
-
-    initialize();
-  }, []);
-
-  if (!isReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  }
+  // Suppression de l'initialisation des missions de test
+  // L'application utilise maintenant le workflow réel avec authentification Token + PIN
 
   return (
     <GestureHandlerRootView style={styles.container}>

@@ -2,6 +2,7 @@ import Mission, { MissionStatus } from '#models/mission'
 import LocationUpdate from '#models/location_update'
 import { randomBytes, randomInt } from 'node:crypto'
 import { DateTime } from 'luxon'
+import WebSocketService from '#services/websocket_service'
 
 export class MissionTrackingService {
   /**
@@ -65,20 +66,22 @@ export class MissionTrackingService {
     mission: Mission,
     latitude: number,
     longitude: number,
-    speed?: number,
-    heading?: number,
-    accuracy?: number,
-    driverId?: string
+    speed?: number | null,
+    heading?: number | null,
+    accuracy?: number | null,
+    driverId?: string | null
   ): Promise<LocationUpdate> {
-    const locationUpdate = await LocationUpdate.create({
+    const locationData: any = {
       missionId: mission.id,
       driverId: driverId || mission.transporteurId,
       latitude,
       longitude,
-      speed,
-      heading,
-      accuracy,
-    })
+      speed: speed ?? undefined,
+      heading: heading ?? undefined,
+      accuracy: accuracy ?? undefined,
+    };
+
+    const locationUpdate = await LocationUpdate.create(locationData);
 
     // Si c'est la première mise à jour de position, démarrer la mission
     if (
@@ -89,6 +92,18 @@ export class MissionTrackingService {
       mission.status = MissionStatus.IN_PROGRESS
       mission.startedAt = DateTime.now()
       await mission.save()
+    }
+
+    // Envoyer la mise à jour via WebSocket
+    try {
+      const websocketService = WebSocketService.getInstance()
+      await websocketService.broadcastToTransporteurs({
+        type: 'location_update',
+        data: locationData
+      })
+      console.log('📡 Position diffusée via WebSocket:', locationData.deviceId)
+    } catch (error) {
+      console.error('❌ Erreur lors de la diffusion WebSocket:', error)
     }
 
     return locationUpdate

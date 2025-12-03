@@ -12,7 +12,8 @@ import {
   DirectionsResult,
 } from '../services/googleMapsService';
 import { formatDistance } from '../utils/missionSimulator';
-import { backendTrackingService } from '../services/backendTrackingService';
+// DEPRECATED: backendTrackingService has been replaced by the centralized env config system
+// import { backendTrackingService } from '../services/backendTrackingService';
 
 interface LiveTrackingScreenProps {
   route: any;
@@ -95,7 +96,7 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
   // Nettoyer le tracking au démontage du composant
   useEffect(() => {
     return () => {
-      backendTrackingService.stopAutoTracking();
+      console.log('⏹️ Cleaning up location tracking');
       if (locationSubscription.current) {
         locationSubscription.current.remove();
       }
@@ -148,9 +149,8 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
         setEstimatedTimeRemaining(formatDuration(directionsData.duration));
       }
 
-      // Démarrer l'envoi automatique au backend
-      backendTrackingService.startAutoTracking();
-      console.log('📍 Backend tracking started for device:', backendTrackingService.getDeviceId());
+      // DEPRECATED: backendTrackingService removed
+      console.log('📍 Live tracking started (test mode)');
 
       // Suivre la position en temps réel
       locationSubscription.current = await Location.watchPositionAsync(
@@ -167,13 +167,11 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
 
           setCurrentPosition(newPosition);
 
-          // Mettre à jour la position dans le service de tracking backend
-          backendTrackingService.updatePosition(
-            location.coords.latitude,
-            location.coords.longitude,
-            location.coords.speed || undefined,
-            location.coords.heading || undefined
-          );
+          // DEPRECATED: backendTrackingService removed
+          console.log('📍 Position update:', {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude,
+          });
 
           // Ajouter au chemin parcouru
           setTraveledPath((prev) => {
@@ -261,9 +259,8 @@ export const LiveTrackingScreen: React.FC<LiveTrackingScreenProps> = ({ route, n
       locationSubscription.current = null;
     }
 
-    // Arrêter l'envoi automatique au backend
-    backendTrackingService.stopAutoTracking();
-    console.log('⏹️ Backend tracking stopped');
+    // DEPRECATED: backendTrackingService removed
+    console.log('⏹️ Live tracking stopped');
 
     setTracking(false);
   };

@@ -1224,4 +1224,145 @@ export default class MissionsController {
       })
     }
   }
+
+  /**
+   * Get all active GPS locations for missions created by this affreteur
+   * GET /api/affreteur/missions/active-locations
+   */
+  async getActiveLocations({ response, auth, logger }: HttpContext) {
+    logger.info('🟢 DEBUT getActiveLocations (Affreteur)')
+
+    try {
+      const user = auth.getUserOrFail()
+
+      logger.info('📍 Récupération des positions actives pour affreteur', {
+        affreteurId: user.id,
+      })
+
+      // Import LocationUpdate dynamically
+      const { default: LocationUpdate } = await import('#models/location_update')
+
+      // Get all missions created by this affreteur that are in progress
+      const missions = await Mission.query()
+        .where('affreteur_id', user.id)
+        .whereIn('status', [
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.ASSIGNED,
+          MissionStatus.READY_TO_START,
+        ])
+        .preload('affreteur', (query) => {
+          query.select('id', 'firstName', 'lastName')
+        })
+        .preload('adresseDepart')
+        .preload('adresseArrivee')
+        .preload('transporteur', (query) => {
+          query.select('id', 'firstName', 'lastName')
+        })
+
+      logger.info(`✅ ${missions.length} missions trouvées pour l'affreteur`, {
+        missionIds: missions.map(m => m.id)
+      })
+
+      // For each mission, get the latest location update
+      const locationsPromises = missions.map(async (mission) => {
+        const missionId = mission.id
+        logger.info(`🔍 Traitement de la mission ${missionId} (${mission.status})`)
+
+        try {
+          const latestLocation = await LocationUpdate.query()
+            .where('mission_id', missionId)
+            .orderBy('timestamp', 'desc')
+            .first()
+
+          if (!latestLocation) {
+            logger.info(`ℹ️ Aucune position trouvée pour la mission ${missionId}`)
+            return null
+          }
+
+          logger.info(`📡 Position trouvée pour la mission ${missionId}`, {
+            locationId: latestLocation.id,
+            timestamp: latestLocation.timestamp?.toISO()
+          })
+
+          // Check if position is recent (last 5 minutes)
+          const fiveMinutesAgo = DateTime.now().minus({ minutes: 5 })
+          const locationDate = latestLocation.timestamp
+
+          if (!locationDate) {
+            logger.warn(`⚠️ La position ${latestLocation.id} n'a pas de date`)
+            return null
+          }
+
+          if (locationDate < fiveMinutesAgo) {
+            logger.info(`⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`)
+            return null
+          }
+
+          return {
+            missionId: mission.id,
+            missionTitle: mission.title,
+            missionStatus: mission.status,
+            location: {
+              latitude: latestLocation.latitude,
+              longitude: latestLocation.longitude,
+              speed: latestLocation.speed,
+              heading: latestLocation.heading,
+              accuracy: latestLocation.accuracy,
+              timestamp: locationDate.toISO(),
+            },
+            driver: mission.transporteur ? {
+              id: mission.transporteur.id,
+              name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
+            } : null,
+            departure: mission.adresseDepart ? {
+              latitude: mission.adresseDepart.latitude,
+              longitude: mission.adresseDepart.longitude,
+              address: mission.adresseDepart.street,
+            } : null,
+            arrival: mission.adresseArrivee ? {
+              latitude: mission.adresseArrivee.latitude,
+              longitude: mission.adresseArrivee.longitude,
+              address: mission.adresseArrivee.street,
+            } : null,
+          }
+        } catch (error) {
+          logger.error(`❌ Erreur lors du traitement de la mission ${missionId}:`, {
+            error: error.message,
+            stack: error.stack
+          })
+          return null
+        }
+      })
+
+      const locations = (await Promise.all(locationsPromises)).filter(Boolean)
+
+      logger.info(`✅ ${locations.length} positions actives trouvées pour l'affreteur`)
+
+      return response.ok({
+        success: true,
+        data: { locations }
+      })
+    } catch (error) {
+      logger.error('❌ ERREUR CRITIQUE dans getActiveLocations (Affreteur)', {
+        error: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        },
+        timestamp: new Date().toISOString()
+      })
+
+      return response.internalServerError({
+        success: false,
+        message: 'Une erreur est survenue lors de la récupération des positions actives',
+        error: process.env.NODE_ENV === 'development' ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        } : undefined,
+      })
+    } finally {
+      logger.info('🔴 FIN getActiveLocations (Affreteur)')
+    }
+  }
 }

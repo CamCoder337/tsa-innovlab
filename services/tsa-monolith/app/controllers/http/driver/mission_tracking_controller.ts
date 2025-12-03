@@ -4,17 +4,21 @@ import qrCodeService from '#services/qr_code_service'
 import MissionIssue, { IssueType, IssueStatus } from '#models/mission_issue'
 import { MissionStatus } from '#models/mission'
 import { DateTime } from 'luxon'
+import emitter from '@adonisjs/core/services/emitter'
 
 export default class MissionTrackingController {
-  /**
-   * POST /track/:token/authenticate
-   * Authentifie un chauffeur avec le token et le PIN
-   */
-  async authenticate({ request, response }: HttpContext) {
+
+  async authenticate({ request, response, logger }: HttpContext) {
     const { token } = request.params()
     const { pin } = request.only(['pin'])
 
+    logger.info('Tentative d\'authentification', {
+      token: token ? '***' + token.slice(-4) : 'non fourni',
+      pin: pin ? '***' + pin.slice(-1) : 'non fourni'
+    })
+
     if (!pin) {
+      logger.warn('Tentative d\'authentification sans PIN')
       return response.badRequest({
         success: false,
         message: 'PIN is required',
@@ -22,99 +26,112 @@ export default class MissionTrackingController {
       })
     }
 
-    const mission = await missionTrackingService.verifyTrackingCredentials(token, pin)
+    try {
+      const mission = await missionTrackingService.verifyTrackingCredentials(token, pin)
 
-    if (!mission) {
-      return response.unauthorized({
+      if (!mission) {
+        logger.warn('Échec de l\'authentification: identifiants invalides', {
+          token: token ? '***' + token.slice(-4) : 'non fourni'
+        })
+        return response.unauthorized({
+          success: false,
+          message: 'Invalid credentials',
+          errors: ['The tracking token or PIN is incorrect'],
+        })
+      }
+
+      logger.info('Authentification réussie', {
+        missionId: mission.id,
+        status: mission.status
+      })
+
+      return response.ok({
+        success: true,
+        message: 'Authentication successful',
+        data: {
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+            departureAddress: mission.adresseDepart,
+            arrivalAddress: mission.adresseArrivee,
+            estimatedDeparture: mission.dateDepartEstime,
+            estimatedArrival: mission.dateArriveePrevue,
+            transporter: mission.transporteur ? {
+              id: mission.transporteur.id,
+              firstName: mission.transporteur.firstName,
+              lastName: mission.transporteur.lastName,
+            } : null
+          }
+        },
+        trackingToken: token
+      })
+    } catch (error) {
+      logger.error('Erreur lors de l\'authentification', error)
+      return response.internalServerError({
         success: false,
-        message: 'Invalid credentials',
-        errors: ['The tracking token or PIN is incorrect'],
+        message: 'An error occurred during authentication',
+        errors: [error.message]
       })
     }
-
-    return response.ok({
-      success: true,
-      message: 'Authentication successful',
-      data: {
-        mission: {
-          id: mission.id,
-          title: mission.title,
-          status: mission.status,
-          departureAddress: mission.adresseDepart,
-          arrivalAddress: mission.adresseArrivee,
-          estimatedDeparture: mission.dateDepartEstime,
-          estimatedArrival: mission.dateArriveePrevue,
-          transporter: {
-            id: mission.transporteur?.id,
-            firstName: mission.transporteur?.firstName,
-            lastName: mission.transporteur?.lastName,
-          },
-        },
-        trackingToken: token,
-      },
-    })
   }
 
-  /**
-   * POST /track/:token/location
-   * Enregistre une nouvelle position GPS
-   * Requiert l'authentification via middleware
-   */
-  async updateLocation({ request, response, mission }: HttpContext) {
+  async updateLocation({ request, response, mission, logger }: HttpContext) {
+    console.log('🚗 updateLocation called')
+
     if (!mission) {
-      return response.unauthorized({
-        success: false,
-        message: 'Mission not found',
-        errors: ['Missing mission in context'],
-      })
+      console.log('❌ No mission in context')
+      return response.unauthorized({ success: false, message: 'Mission not found' });
     }
+
+    console.log(`✅ Mission found: ${mission.id}`)
 
     const { latitude, longitude, speed, heading, accuracy } = request.only([
-      'latitude',
-      'longitude',
-      'speed',
-      'heading',
-      'accuracy',
-    ])
+      'latitude', 'longitude', 'speed', 'heading', 'accuracy',
+    ]);
 
     if (!latitude || !longitude) {
-      return response.badRequest({
-        success: false,
-        message: 'Latitude and longitude are required',
-        errors: ['Missing GPS coordinates'],
-      })
+      console.log('❌ Missing latitude or longitude')
+      return response.badRequest({ success: false, message: 'Latitude and longitude are required' });
     }
 
-    const locationUpdate = await missionTrackingService.recordLocationUpdate(
-      mission,
-      Number.parseFloat(latitude),
-      Number.parseFloat(longitude),
-      speed ? Number.parseFloat(speed) : undefined,
-      heading ? Number.parseFloat(heading) : undefined,
-      accuracy ? Number.parseFloat(accuracy) : undefined
-    )
+    console.log(`📍 Recording location: ${latitude}, ${longitude}`)
 
-    // Recharger la mission pour obtenir le statut mis à jour
-    await mission.refresh()
+    try {
+      const locationUpdate = await missionTrackingService.recordLocationUpdate(
+        mission,
+        Number(latitude),
+        Number(longitude),
+        speed ? Number(speed) : undefined,
+        heading ? Number(heading) : undefined,
+        accuracy ? Number(accuracy) : undefined
+      );
 
-    return response.ok({
-      success: true,
-      message: 'Location updated successfully',
-      data: {
+      console.log(`✅ Location recorded for mission ${mission.id}. Emitting event...`)
+      logger.info(`Position recorded for mission ${mission.id}. Emitting event...`);
+
+      // Emit event for the listener to handle WebSocket broadcast
+      await emitter.emit('mission:location_update', {
+        missionId: mission.id,
         location: locationUpdate,
-        mission: {
-          id: mission.id,
-          status: mission.status,
-          startedAt: mission.startedAt,
-        },
-      },
-    })
+      });
+
+      console.log(`✅ Event mission:location_update emitted for mission ${mission.id}`)
+      logger.info(`Event mission:location_update emitted for mission ${mission.id}`);
+
+      return response.ok({
+        success: true,
+        message: 'Location updated successfully',
+        data: { location: locationUpdate.toJSON() },
+      });
+
+    } catch (error) {
+      console.error('❌ Error updating location:', error)
+      logger.error('Error updating location', { missionId: mission.id, error: error.message });
+      return response.internalServerError({ success: false, message: 'Failed to update location' });
+    }
   }
 
-  /**
-   * GET /track/:token/locations
-   * Récupère les dernières positions d'une mission
-   */
   async getLocations({ request, response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -140,10 +157,7 @@ export default class MissionTrackingController {
     })
   }
 
-  /**
-   * GET /track/:token/last-location
-   * Récupère la dernière position connue
-   */
+
   async getLastLocation({ response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -167,10 +181,7 @@ export default class MissionTrackingController {
     })
   }
 
-  /**
-   * POST /track/:token/report-issue
-   * Signale un problème pendant la mission
-   */
+
   async reportIssue({ request, response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -195,7 +206,6 @@ export default class MissionTrackingController {
       })
     }
 
-    // Vérifier que le type est valide
     if (!Object.values(IssueType).includes(type)) {
       return response.badRequest({
         success: false,
@@ -215,8 +225,6 @@ export default class MissionTrackingController {
       status: IssueStatus.REPORTED,
     })
 
-    // TODO: Envoyer une notification à l'affréteur et à l'admin
-
     return response.created({
       success: true,
       message: 'Issue reported successfully',
@@ -224,10 +232,7 @@ export default class MissionTrackingController {
     })
   }
 
-  /**
-   * GET /track/:token/issues
-   * Récupère tous les problèmes signalés pour une mission
-   */
+
   async getIssues({ response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -246,10 +251,7 @@ export default class MissionTrackingController {
     })
   }
 
-  /**
-   * GET /delivery-proof
-   * Valide le QR code et marque la mission comme livrée
-   */
+
   async validateDelivery({ request, response }: HttpContext) {
     const { token, mission_id: missionId, latitude, longitude } = request.qs()
 
@@ -271,7 +273,6 @@ export default class MissionTrackingController {
       })
     }
 
-    // Vérifier que la mission est en cours
     if (mission.status !== 'in_progress') {
       return response.badRequest({
         success: false,
@@ -280,7 +281,6 @@ export default class MissionTrackingController {
       })
     }
 
-    // Optionnel : Vérifier la proximité avec le point de livraison
     if (latitude && longitude && mission.adresseArrivee) {
       await mission.load('adresseArrivee')
       const isNear = missionTrackingService.isNearDestination(
@@ -288,7 +288,7 @@ export default class MissionTrackingController {
         Number.parseFloat(longitude),
         mission.adresseArrivee.latitude!,
         mission.adresseArrivee.longitude!,
-        200 // 200 mètres
+        200
       )
 
       if (!isNear) {
@@ -300,12 +300,9 @@ export default class MissionTrackingController {
       }
     }
 
-    // Marquer la mission comme livrée
     mission.status = MissionStatus.DELIVERED
     mission.deliveredAt = DateTime.now()
     await mission.save()
-
-    // TODO: Envoyer une notification à l'affréteur et au transporteur
 
     return response.ok({
       success: true,

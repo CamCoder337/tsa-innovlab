@@ -1,571 +1,398 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Maximize2,
-  MapPin,
-  Package,
-  Truck,
-  Phone,
-  Calendar,
-  User,
-  Mail,
-  Minimize2,
-  Navigation,
-  Route,
-  RefreshCw,
-  X,
-  Activity,
-  CheckCircle,
-  Info,
-  AlertTriangle,
-  Clock,
-  FileText,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useMissions } from '@/hooks/useMissions';
-import {
-  useCommonTranslation,
-  useErrorsTranslation,
-  useMissionsTranslation,
-  useTrackingTranslation,
-} from '@/hooks/useTranslation';
 import { toast } from 'sonner';
-import MissionTrackingMap from '@/components/tracking/MissionTrackingMap';
-import { useAuth } from '@/hooks/useAuth';
-import { useVehicles } from '@/hooks/useVehicles';
-import { missionService } from '@/services/mission.service';
-import type { MissionUpdate } from '@/types/mission.types';
-import { getStatusColor, getStatusLabel } from '@/lib/utils';
-import { ScrollArea } from '@radix-ui/react-scroll-area';
-import { fr } from 'date-fns/locale';
-import { format } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, QrCode, Loader2, MapPin, FileText, AlertTriangle, Activity, Download, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+type Mission = {
+  id: string;
+  status: string;
+  pickupAddress?: string | null;
+  deliveryAddress?: string | null;
+  pickupDate?: string | null;
+  deliveredAt?: string | null;
+  trackingNumber?: string | null;
+  trackingLinkToken?: string | null;
+  qrCodeToken?: string | null;
+  lastUpdated?: string | null;
+  [key: string]: any;
+};
+
+// Fonction utilitaire pour obtenir l'icône en fonction du type d'événement
+const getEventIcon = (type: string) => {
+  switch (type) {
+    case 'status_update':
+      return <RefreshCw className="h-4 w-4" />;
+    case 'location_update':
+      return <MapPin className="h-4 w-4" />;
+    case 'document_uploaded':
+      return <FileText className="h-4 w-4" />;
+    case 'incident_reported':
+      return <AlertTriangle className="h-4 w-4" />;
+    default:
+      return <QrCode className="h-4 w-4" />;
+  }
+};
+
+// Fonction pour obtenir le titre localisé de l'événement
+const getLocalizedEventTitle = (event: { type: string; timestamp: string; message: string; details?: string }, tMissions: (key: string) => string) => {
+  switch (event.type) {
+    case 'status_update':
+      return tMissions('events.status_updated');
+    case 'location_update':
+      return tMissions('events.location_updated');
+    case 'document_uploaded':
+      return tMissions('events.document_uploaded');
+    case 'incident_reported':
+      return tMissions('events.incident_reported');
+    default:
+      return event.type;
+  }
+};
 
 export default function MissionTrackingPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const { myMissions: missions, fetchMission } = useMissions();
-  const { getVehicleById } = useVehicles();
-  const { t: tCommon } = useCommonTranslation();
-  const { t: tTracking } = useTrackingTranslation();
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [vehicleRegistration, setVehicleRegistration] = useState<string>('');
-  const [events, setEvents] = useState<MissionUpdate[]>([]);
-  const { t: tMissions } = useMissionsTranslation();
-  const { t: tErrors } = useErrorsTranslation();
-
-  const mission = missions.find((m) => m.id === id);
-
-  // Fetch user names and vehicle info
-  useEffect(() => {
-    const fetchInfo = async () => {
-      if (user?.role === 'transporteur' && mission?.vehicleId) {
-        const vehicle = await getVehicleById(mission.vehicleId);
-        setVehicleRegistration(vehicle?.registration || '');
-      }
-    };
-
-    fetchInfo();
-  }, [mission?.vehicleId, user?.role, getVehicleById]);
-
-  useEffect(() => {
-    const fetchMissionHistory = async () => {
-      try {
-        if (!mission) return;
-
-        // Fetch mission history from API
-        const response =
-          user?.role === 'transporteur'
-            ? await missionService.getTransporteurMissionHistory(mission.id)
-            : await missionService.getMissionHistory(mission.id);
-
-        if (response.data) {
-          console.log(response.data);
-          setEvents(response.data.updates.data);
-        }
-      } catch {
-        toast.error(tErrors('missions.timelineLoadingError'));
-      }
-    };
-
-    if (mission) fetchMissionHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mission]);
-
-  const getEventIcon = (event: MissionUpdate) => {
-    switch (event.type) {
-      case 'status_change':
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />;
-      case 'location_update':
-        return <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
-      case 'proof_upload':
-        return <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />;
-      case 'note':
-        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />;
-      case 'issue':
-        return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />;
-      default:
-        return <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 dark:text-gray-400" />;
+  const [mission, setMission] = useState<Mission | null>(null);
+  const [events] = useState<Array<{
+    type: string;
+    timestamp: string;
+    message: string;
+    details?: string;
+  }>>([]);
+  const [activeTab, setActiveTab] = useState('status');
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+  
+  const { t } = useTranslation();
+  const tCommon = (key: string) => t(`common.${key}`);
+  const tMissions = (key: string) => t(`missions.${key}`);
+  
+  // Fonction pour rafraîchir les données de la mission
+  const handleRefresh = async (): Promise<void> => {
+    if (!id) return;
+    try {
+      const result = await fetchMission(id);
+      setMission(result as unknown as Mission);
+      console.log('Mission rafraîchie:', result);
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement:', error);
+      toast.error(tCommon('errors.refresh_failed'));
     }
   };
 
-  const getLocalizedEventTitle = (event: MissionUpdate) => {
-    if (event.type === 'status_change' && event.oldStatus && event.newStatus) {
-      const oldStatusTranslated = tCommon(`status.${event.oldStatus}`, event.oldStatus);
-      const newStatusTranslated = tCommon(`status.${event.newStatus}`, event.newStatus);
-
-      return tMissions('timeline.statusChangeTitle', {
-        oldStatus: oldStatusTranslated,
-        newStatus: newStatusTranslated,
-      });
+  // Charger les données de la mission et l'historique
+  useEffect(() => {
+    const loadMissionData = async () => {
+      if (!id) return;
+      
+      // Charger la mission depuis la liste des missions
+      const foundMission = missions.find((m: any) => m.id === id);
+      if (foundMission) {
+        setMission(foundMission as unknown as Mission);
+      }
+      
+      // Essayer de rafraîchir les données
+      await handleRefresh();
+    };
+    
+    loadMissionData();
+  }, [id, missions]);
+  
+  // Fonction pour générer le QR code
+  const generateQRCode = async () => {
+    if (!mission?.id) return;
+    
+    try {
+      setIsGeneratingQR(true);
+      console.log('Génération du QR code pour la mission:', mission.id);
+      
+      // Ici, vous devriez appeler votre service pour générer le QR code
+      // Par exemple: const qrCode = await missionService.generateQRCode(mission.id);
+      // setQrCodeData(qrCode.data);
+      
+      // Simulation pour le débogage
+      setTimeout(() => {
+        console.log('QR code généré avec succès');
+        setQrCodeData('data:image/png;base64,simulated_qr_code_data');
+        setIsGeneratingQR(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Erreur lors de la génération du QR code:', error);
+      toast.error(tMissions('qr_code_generation_failed'));
+      setIsGeneratingQR(false);
     }
-
-    return event.title;
   };
 
   if (!mission) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            {tTracking('mission.notFound')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-8">
-            {tTracking('mission.notFoundMessage', { id })}
-          </p>
-          <Button onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {tTracking('navigation.backToDashboard')}
-          </Button>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>{tCommon('loading')}...</p>
         </div>
       </div>
     );
   }
 
-  const handleRefresh = () => {
-    fetchMission(mission.id);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 sm:p-6 w-full">
-      <div className="mx-auto space-y-4 sm:space-y-6">
-        {/* En-tête avec informations mission */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-xs sm:text-sm"
-              >
-                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-                {tTracking('actions.back')}
-              </Button>
-              <div className="flex items-center gap-2">
-                <Badge className={`text-xs ${getStatusColor(mission.status)}`}>
-                  {getStatusLabel(mission.status, tCommon)}
-                </Badge>
-              </div>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {mission?.title || tTracking('mission.loading')}
-            </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>
-                  {mission?.adresseDepart?.city} → {mission?.adresseArrivee?.city}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>
-                  {mission?.dateDepartEstime
-                    ? new Date(mission.dateDepartEstime).toLocaleDateString()
-                    : tTracking('mission.noDate')}
-                </span>
-              </div>
-              {vehicleRegistration && (
-                <div className="flex items-center gap-2">
-                  <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>{vehicleRegistration}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="flex items-center gap-2 text-xs sm:text-sm"
-            >
-              {isFullscreen ? (
-                <Minimize2 className="w-3 h-3 sm:w-4 sm:h-4" />
-              ) : (
-                <Maximize2 className="w-3 h-3 sm:w-4 sm:h-4" />
-              )}
-              {isFullscreen ? tTracking('actions.exitFullscreen') : tTracking('actions.fullscreen')}
-            </Button>
-            {/* <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="flex items-center gap-2 text-xs sm:text-sm"
-            >
-              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-              {tTracking('actions.export')}
-            </Button> */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={false} // Add loading state here
-              className="flex items-center gap-2 text-xs sm:text-sm"
-            >
-              <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4`} />
-              {tTracking('actions.refresh')}
-            </Button>
-          </div>
+    <div className="container mx-auto p-4 max-w-6xl">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {tMissions('tracking.title')} - {mission.id}
+          </h1>
+          <p className="text-muted-foreground">
+            {tMissions('status')}: <span className="capitalize">{mission.status}</span>
+          </p>
         </div>
-
-        {/* Contenu principal */}
-        <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-white p-3 sm:p-6' : ''}`}>
-          {isFullscreen && (
-            <div className="flex justify-between items-center mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold">{mission?.title}</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFullscreen(false)}
-                className="text-xs sm:text-sm"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
-            </div>
-          )}
-
-          <Tabs defaultValue="tracking" className="space-y-4">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
-              <TabsTrigger value="tracking" className="text-xs sm:text-sm">
-                {tTracking('tabs.realTimeTracking')}
-              </TabsTrigger>
-              <TabsTrigger value="details" className="text-xs sm:text-sm">
-                {tTracking('tabs.missionDetails')}
-              </TabsTrigger>
-              <TabsTrigger value="timeline" className="text-xs sm:text-sm">
-                {tTracking('tabs.timeline')}
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="text-xs sm:text-sm">
-                {tTracking('tabs.documents')}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="tracking" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-                {/* Carte de suivi */}
-                <div className="lg:col-span-3">
-                  <Card className="gap-2">
-                    <CardHeader>
-                      <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-base sm:text-lg">
-                            {tTracking('tracking.liveTracking')}
-                          </span>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                          <Button variant="outline" size="sm" className="text-xs">
-                            <Navigation className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                            {tTracking('tracking.centerOnVehicle')}
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-xs">
-                            <Route className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                            {tTracking('tracking.showRoute')}
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <MissionTrackingMap
-                        className={`${isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[400px] sm:h-[500px] lg:h-[600px]'}`}
-                        missions={mission ? [mission] : []}
-                        selectedMission={mission}
-                        showUserLocation={true}
-                        showRoutes={true}
-                        showLegend={true}
-                      />
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Panneau d'informations */}
-                <div className="space-y-4">
-                  <Card className="gap-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
-                        {tTracking('tracking.liveStatus')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 sm:space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            {tTracking('tracking.currentSpeed')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">65 km/h</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            {tTracking('tracking.estimatedArrival')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">14:30</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            {tTracking('tracking.remainingDistance')}
-                          </span>
-                          <span className="font-medium text-xs sm:text-sm">125 km</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-                            {tTracking('tracking.progress')}
-                          </span>
-                          <span className="font-medium text-green-600 text-xs sm:text-sm">68%</span>
-                        </div>
-                      </div>
-
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-tsa-blue h-2 rounded-full"
-                          style={{ width: '68%' }}
-                        ></div>
-                      </div>
-
-                      <div className="pt-2 border-t">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-xs sm:text-sm font-medium text-green-600">
-                            {tTracking('tracking.vehicleOnline')}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {tTracking('tracking.lastUpdate')}: {new Date().toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="gap-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-                        {tTracking('alerts.title')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="p-2 sm:p-3 bg-green-50 border dark:border-gray-800 border-green-200 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
-                            <span className="text-xs sm:text-sm text-green-800">
-                              {tTracking('alerts.onSchedule')}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-2 sm:p-3 bg-blue-50 border dark:border-gray-800 border-blue-200 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Info className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
-                            <span className="text-xs sm:text-sm text-blue-800">
-                              {tTracking('alerts.normalTraffic')}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="details" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="gap-2">
-                  <CardHeader>
-                    <CardTitle>{tTracking('mission.information')}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {mission.description && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('mission.description')}
-                        </label>
-                        <p className="text-gray-900 dark:text-white">{mission.description}</p>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4">
-                      {mission.typeMarchandise && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                            {tTracking('mission.merchandiseType')}
-                          </label>
-                          <p className="text-gray-900 dark:text-white">{mission.typeMarchandise}</p>
-                        </div>
-                      )}
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('realTime.weight')}
-                        </label>
-                        <p className="text-gray-900 dark:text-white">
-                          {tTracking('mission.weight', { weight: mission.poids })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('mission.estimatedDeparture')}
-                        </label>
-                        <p className="text-gray-900 dark:text-white">
-                          {new Date(mission.dateDepartEstime || '').toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {tTracking('mission.expectedArrival')}
-                        </label>
-                        <p className="text-gray-900 dark:text-white">
-                          {new Date(mission.dateArriveePrevue || '').toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    {/* <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Priorité</label>
-                      <Badge className={getPriorityColor(mission.budgetMax)}>
-                        {mission.budgetMax > 200000 ? 'Urgent' : 'Normal'}
-                      </Badge>
-                    </div> */}
-                  </CardContent>
-                </Card>
-
-                {mission.transporteurId && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Truck className="w-5 h-5" />
-                        {tTracking('transporter.title')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-6 h-6 text-tsa-blue dark:text-tsa-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {tCommon('roles.transporteur') +
-                              ' ' +
-                              mission.transporteur?.firstName +
-                              ' ' +
-                              mission.transporteur?.lastName}
-                          </p>
-                          <p className="font-base">#{mission.transporteurId}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {tTracking('transporter.verified')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Button variant="outline" size="sm">
-                          <Phone className="w-4 h-4 mr-2" />
-                          {tTracking('transporter.call')}
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Mail className="w-4 h-4 mr-2" />
-                          {tTracking('transporter.message')}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="timeline" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{tTracking('timeline.title')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {events.length === 0 ? (
-                    <p className="text-center text-gray-500 dark:text-gray-400 py-6 sm:py-8 text-xs sm:text-sm">
-                      {tMissions('timeline.noEvents')}
-                    </p>
-                  ) : (
-                    <ScrollArea className="h-[300px] sm:h-[400px] pr-2 sm:pr-4">
-                      <div className="space-y-4 sm:space-y-6">
-                        {events.map((event) => (
-                          <div
-                            key={event.id}
-                            className="relative pb-4 sm:pb-6 pl-6 sm:pl-8 border-l-2 border-gray-200 dark:border-gray-700"
-                          >
-                            <div className="absolute -left-2 sm:-left-2.5 mt-1 sm:mt-1.5 h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-tsa-blue/90 flex items-center justify-center">
-                              {getEventIcon(event)}
-                            </div>
-                            <div className="space-y-1 sm:space-y-2">
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                                <h4 className="text-xs sm:text-sm font-medium leading-tight">
-                                  {getLocalizedEventTitle(event)}
-                                </h4>
-                                <time className="text-xs text-muted-foreground flex-shrink-0">
-                                  {format(new Date(event.createdAt), 'PPPp', { locale: fr })}
-                                </time>
-                              </div>
-                              {event.description && (
-                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                  {event.description}
-                                </p>
-                              )}
-                              {event.transporteur && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  {tCommon('by')}{' '}
-                                  {event.transporteur.firstName + ' ' + event.transporteur.lastName}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{tTracking('documents.title')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                    <p>{tTracking('documents.noDocuments')}</p>
-                    <p className="text-sm">{tTracking('documents.documentsWillShow')}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {tCommon('refresh')}
+        </Button>
       </div>
+      
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsTrigger value="status">
+            <Activity className="h-4 w-4 mr-2" />
+            {tMissions('status')}
+          </TabsTrigger>
+          <TabsTrigger value="map">
+            <MapPin className="h-4 w-4 mr-2" />
+            {tMissions('map')}
+          </TabsTrigger>
+          <TabsTrigger value="qrcode">
+            <QrCode className="h-4 w-4 mr-2" />
+            QR Code
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="status" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMissions('mission_details')}</CardTitle>
+              <CardDescription>
+                {tMissions('mission_details_description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">{tMissions('pickup')}</h3>
+                    <p className="text-muted-foreground">
+                      {mission.pickupAddress || tMissions('no_address_provided')}
+                    </p>
+                    {mission.pickupDate && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {new Date(mission.pickupDate).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-2">{tMissions('delivery')}</h3>
+                    <p className="text-muted-foreground">
+                      {mission.deliveryAddress || tMissions('no_address_provided')}
+                    </p>
+                    {mission.deliveryDate && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {new Date(mission.deliveryDate).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <h3 className="font-medium mb-2">{tMissions('tracking_information')}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {tMissions('tracking_number')}:
+                      </p>
+                      <p className="font-mono">{mission.trackingNumber || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        {tMissions('last_updated')}:
+                      </p>
+                      <p>
+                        {mission.lastUpdated 
+                          ? new Date(mission.lastUpdated).toLocaleString() 
+                          : tCommon('never')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMissions('activity_log')}</CardTitle>
+              <CardDescription>
+                {tMissions('activity_log_description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {events.length > 0 ? (
+                <div className="space-y-4">
+                  {events.map((event, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {getEventIcon(event.type)}
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {getLocalizedEventTitle(event, tMissions)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(event.timestamp).toLocaleString()}
+                        </p>
+                        {event.details && (
+                          <p className="text-sm mt-1">{event.details}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>{tMissions('no_activity_yet')}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="map" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMissions('live_location')}</CardTitle>
+              <CardDescription>
+                {tMissions('live_location_description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-96">
+              <div className="h-full bg-muted/50 rounded-md flex items-center justify-center">
+                <p className="text-muted-foreground">
+                  {tMissions('map_placeholder')}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="qrcode" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMissions('delivery_qr_code')}</CardTitle>
+              <CardDescription>
+                {tMissions('delivery_qr_code_description')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              {qrCodeData ? (
+                <>
+                  <div className="p-4 border rounded-lg bg-white">
+                    <img 
+                      src={qrCodeData} 
+                      alt="QR Code de livraison" 
+                      className="w-64 h-64"
+                    />
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      {tCommon('download')}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={generateQRCode}
+                      disabled={isGeneratingQR}
+                      className="gap-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isGeneratingQR ? 'animate-spin' : ''}`} />
+                      {isGeneratingQR ? tCommon('generating') : tCommon('regenerate')}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4 text-center max-w-md">
+                    {tMissions('qr_code_instructions')}
+                  </p>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="mb-4">{tMissions('no_qr_code_generated')}</p>
+                  <Button 
+                    onClick={generateQRCode}
+                    disabled={isGeneratingQR}
+                    className="gap-2"
+                  >
+                    {isGeneratingQR ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {tCommon('generating')}...
+                      </>
+                    ) : (
+                      <>
+                        <QrCode className="h-4 w-4" />
+                        {tMissions('generate_qr_code')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>{tMissions('delivery_confirmation')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  {tMissions('delivery_confirmation_instructions')}
+                </p>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{tMissions('verify_identity')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{tMissions('scan_qr_code')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span>{tMissions('confirm_delivery')}</span>
+                  </div>
+                </div>
+                
+                <Button className="w-full mt-4" size="lg">
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  {tMissions('confirm_delivery')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

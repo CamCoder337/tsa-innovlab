@@ -1,0 +1,89 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Retry",
+    "back": "Back"
+  },
+  "auth": {
+    "login": "Login",
+    "loginTitle": "Authentication",
+    "token": "Tracking token",
+    "pin": "PIN code",
+    "tokenPlaceholder": "Enter your tracking token",
+    "pinPlaceholder": "Enter your 6-digit PIN code",
+    "submit": "Sign in",
+    "invalidCredentials": "Invalid credentials",
+    "authFailed": "Authentication failed",
+    "connectionError": "Unable to connect. Check your credentials.",
+    "authSuccess": "Authentication successful!",
+    "emptyFields": "Please fill in all fields"
+  },
+  "tracking": {
+    "title": "Mission Tracking",
+    "startTracking": "Start GPS tracking",
+    "stopTracking": "Stop GPS tracking",
+    "trackingActive": "GPS tracking active",
+    "trackingInactive": "GPS tracking inactive",
+    "distance": "Distance traveled",
+    "remainingDistance": "Remaining distance",
+    "scanQR": "Scan QR Code",
+    "reportIssue": "Report an issue",
+    "locationUpdate": "Location update",
+    "locationError": "Error sending GPS location",
+    "permissionDenied": "Location permission denied",
+    "departure": "Departure",
+    "arrival": "Arrival",
+    "currentPosition": "Current position"
+  },
+  "qr": {
+    "title": "Scan delivery QR Code",
+    "instructions": "Place the QR code in the frame to scan",
+    "success": "QR Code scanned successfully",
+    "validationSuccess": "Delivery validated successfully!",
+    "validationError": "Error validating delivery",
+    "invalidQR": "Invalid QR Code",
+    "cameraPermission": "Camera permission",
+    "cameraPermissionDenied": "Permission denied",
+    "cameraPermissionMessage": "Please allow camera access in settings to scan QR codes.",
+    "cameraUnavailable": "Camera unavailable",
+    "cameraUnavailableMessage": "Unable to access rear camera."
+  },
+  "issue": {
+    "report": "Report an issue",
+    "title": "Issue type",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe the problem...",
+    "submit": "Send",
+    "types": {
+      "breakdown": "Breakdown",
+      "delay": "Delay",
+      "accident": "Accident",
+      "traffic": "Traffic",
+      "other": "Other"
+    },
+    "success": "Issue reported successfully",
+    "error": "Unable to report issue",
+    "emptyDescription": "Please describe the problem"
+  },
+  "mission": {
+    "title": "Mission",
+    "status": "Status",
+    "details": "Mission details",
+    "departureAddress": "Departure address",
+    "arrivalAddress": "Arrival address",
+    "estimatedDeparture": "Estimated departure",
+    "estimatedArrival": "Estimated arrival",
+    "nearDestination": "You are approaching the destination"
+  },
+  "errors": {
+    "unknown": "An unknown error occurred",
+    "network": "Network error. Check your connection.",
+    "timeout": "Request timed out. Please try again.",
+    "server": "Server error. Please try again later.",
+    "validation": "Data validation error"
+  }
+}

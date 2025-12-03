@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
+// Composants UI nécessaires
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Navigation, MapPin, RefreshCw, Activity, Clock } from 'lucide-react';
-import { webSocketService } from '@/services/websocket.service';
+import { Badge } from '@/components/ui/badge';
+import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
 import { getCookie } from '@/lib/cookie-utils';
+import { useAuthStore } from '@/stores/authStore';
+import { RefreshCw, Clock, MapPin, Activity, Navigation } from 'lucide-react';
 
 interface DriverPosition {
   deviceId: string;
@@ -14,6 +16,8 @@ interface DriverPosition {
   timestamp: string;
   speed?: number;
   heading?: number;
+  accuracy?: number;
+  missionTitle?: string;
 }
 
 interface DriversLiveMapProps {
@@ -21,6 +25,9 @@ interface DriversLiveMapProps {
 }
 
 export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) {
+  console.log('🟠 [DriversLiveMap] Component rendering');
+
+  const { currentUser } = useAuthStore();
   const [drivers, setDrivers] = useState<DriverPosition[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -29,7 +36,17 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
   const infoWindowsRef = useRef<Map<string, google.maps.InfoWindow>>(new Map());
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  console.log('🟠 [DriversLiveMap] State:', {
+    driversCount: drivers.length,
+    selectedDriver,
+    isConnected,
+    mapLoading,
+    hasMap: !!mapRef.current,
+    markersCount: markersRef.current.size,
+  });
 
   // Charger Google Maps
   useEffect(() => {
@@ -93,11 +110,64 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
   useEffect(() => {
     const fetchInitialPositions = async () => {
       try {
-        const response = await fetch('http://localhost:3333/api/tracking/locations');
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+        const token = getCookie('tsa_access_token');
+
+        if (!token) {
+          console.error('❌ No access token found - cannot fetch initial positions');
+          return;
+        }
+
+        // Determine API endpoint based on user role
+        const userRole = currentUser?.role || 'transporteur';
+        const endpoint = userRole === 'affreteur'
+          ? `${apiUrl}/api/affreteur/missions/active-locations`
+          : `${apiUrl}/api/transporteur/missions/active-locations`;
+
+        console.log(`📡 Fetching GPS positions for role: ${userRole} from ${endpoint}`);
+
+        const response = await fetch(endpoint, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
         const data = await response.json();
 
-        if (data.success && data.data.positions) {
-          setDrivers(data.data.positions);
+        if (data.success && data.data.locations) {
+          // Convert locations to driver format
+          const driversData = data.data.locations
+            .map((loc: any) => {
+              // Ensure latitude and longitude are numbers
+              const latitude = Number(loc.location?.latitude);
+              const longitude = Number(loc.location?.longitude);
+
+              // Skip if invalid coordinates
+              if (isNaN(latitude) || isNaN(longitude)) {
+                console.warn('Invalid coordinates for mission:', loc.missionId, loc.location);
+                return null;
+              }
+
+              return {
+                deviceId: `mission-${loc.missionId}`,
+                missionId: loc.missionId,
+                missionTitle: loc.missionTitle,
+                missionStatus: loc.missionStatus,
+                latitude,
+                longitude,
+                speed: loc.location.speed ? Number(loc.location.speed) : undefined,
+                heading: loc.location.heading ? Number(loc.location.heading) : undefined,
+                accuracy: loc.location.accuracy ? Number(loc.location.accuracy) : undefined,
+                timestamp: loc.location.timestamp,
+                driver: loc.driver,
+                departure: loc.departure,
+                arrival: loc.arrival,
+              };
+            })
+            .filter((d: any) => d !== null);
+
+          setDrivers(driversData);
           setLastUpdate(new Date());
         }
       } catch (error) {
@@ -106,29 +176,100 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
     };
 
     fetchInitialPositions();
-  }, []);
+  }, [currentUser]);
 
   // Connexion WebSocket pour les mises à jour en temps réel
   useEffect(() => {
-    const handleLocationUpdate = (message: { type: string; data?: DriverPosition }) => {
-      if (message.type === 'location_update' && message.data) {
-        const position: DriverPosition = message.data;
+    const handleLocationUpdate = (data: any) => {
+      console.log('📍 Received location update:', data);
 
-        setDrivers((prev) => {
-          const existingIndex = prev.findIndex((d) => d.deviceId === position.deviceId);
+      // Vérifier si les données sont valides
+      if (!data || data.latitude === undefined || data.longitude === undefined) {
+        console.error('Invalid location data received:', data);
+        return;
+      }
 
-          if (existingIndex >= 0) {
-            // Mettre à jour position existante
-            const updated = [...prev];
-            updated[existingIndex] = position;
-            return updated;
-          } else {
-            // Ajouter nouvelle position
-            return [...prev, position];
-          }
+      // Extraire les données de localisation
+      const locationData = data.data || data;
+
+      // IMPORTANT: Utiliser TOUJOURS missionId comme deviceId pour éviter les doublons
+      // Si missionId existe, on crée le deviceId cohérent avec l'API REST
+      const deviceId = locationData.missionId
+        ? `mission-${locationData.missionId}`
+        : locationData.deviceId || `driver-${locationData.driverId || 'unknown'}`;
+
+      console.log('📍 WebSocket location update - deviceId:', deviceId, 'missionId:', locationData.missionId);
+
+      const position: DriverPosition = {
+        deviceId,
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        timestamp: locationData.timestamp || new Date().toISOString(),
+        speed: locationData.speed,
+        heading: locationData.heading,
+        accuracy: locationData.accuracy
+      };
+
+      setDrivers((prev) => {
+        const existingIndex = prev.findIndex((d) => d.deviceId === position.deviceId);
+
+        if (existingIndex >= 0) {
+          // Mettre à jour position existante
+          const updated = [...prev];
+          updated[existingIndex] = position;
+          return updated;
+        } else {
+          // Ajouter nouvelle position
+          console.log('🚗 New driver connected:', deviceId);
+          return [...prev, position];
+        }
+      });
+
+      setLastUpdate(new Date());
+
+      // Centrer la carte sur le conducteur actif si c'est le seul
+      if (mapRef.current) {
+        const map = mapRef.current;
+        const bounds = new window.google.maps.LatLngBounds();
+
+        // Ajouter tous les conducteurs visibles
+        drivers.forEach(driver => {
+          bounds.extend({
+            lat: driver.latitude,
+            lng: driver.longitude
+          });
         });
 
-        setLastUpdate(new Date());
+        // Ajouter la nouvelle position
+        bounds.extend({
+          lat: position.latitude,
+          lng: position.longitude
+        });
+
+        // Ajuster la vue de la carte avec une interface de padding correcte
+        if (map && typeof map.fitBounds === 'function') {
+          map.fitBounds(bounds, {
+            top: 100, right: 100, bottom: 100, left: 100
+          });
+        }
+
+        // Limiter le zoom maximum
+        if (map && typeof map.getZoom === 'function') {
+          const currentZoom = map.getZoom();
+          if (currentZoom && currentZoom > 15) {
+            map.setZoom(15);
+          }
+        }
+      }
+    };
+
+    // Gestion des changements de connexion
+    const handleConnectionChange = (status: any) => {
+      console.log('🔄 WebSocket connection status changed:', status);
+      setIsConnected(status.connected);
+
+      if (!status.connected) {
+        console.log('WebSocket disconnected, reconnecting...');
       }
     };
 
@@ -142,23 +283,37 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
 
     try {
       console.log('🔌 Initializing WebSocket with auth token from cookie');
+
+      // Initialiser le service WebSocket
       webSocketService.initialize(token);
 
       // S'abonner aux mises à jour de localisation
-      const unsubscribe = webSocketService.subscribe('location_update', handleLocationUpdate);
+      const unsubscribeLocation = webSocketService.subscribe<DriverPosition>(
+        'location_update',
+        handleLocationUpdate
+      );
 
-      // Vérifier l'état de connexion
-      const checkConnection = setInterval(() => {
-        const status = webSocketService.getConnectionStatus();
-        setIsConnected(status.connected);
-        if (!status.connected && status.reconnectAttempts === 0) {
-          console.log('WebSocket disconnected, reconnecting...');
-        }
-      }, 3000);
+      // S'abonner aux changements d'état de connexion
+      const unsubscribeConnected = webSocketService.subscribe(
+        WebSocketEventType.CONNECTED,
+        () => handleConnectionChange({ connected: true })
+      );
 
+      const unsubscribeDisconnected = webSocketService.subscribe(
+        WebSocketEventType.DISCONNECTED,
+        () => handleConnectionChange({ connected: false })
+      );
+
+      // Vérifier l'état de connexion initial
+      const status = webSocketService.getConnectionStatus();
+      handleConnectionChange(status);
+
+      // Nettoyage lors du démontage du composant
       return () => {
-        clearInterval(checkConnection);
-        unsubscribe();
+        console.log('🧹 Cleaning up WebSocket subscriptions');
+        unsubscribeLocation();
+        unsubscribeConnected();
+        unsubscribeDisconnected();
       };
     } catch (error) {
       console.error('❌ WebSocket connection error:', error);
@@ -168,119 +323,125 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
 
   // Mettre à jour les markers sur la carte
   useEffect(() => {
-    if (!mapRef.current) return;
+    console.log('🟠 [DriversLiveMap] useEffect - updateMarkers triggered');
+    console.log('🟠 [DriversLiveMap] Has map:', !!mapRef.current);
+    console.log('🟠 [DriversLiveMap] Drivers count:', drivers.length);
 
-    let isMounted = true;
+    if (!mapRef.current) {
+      console.log('🟠 [DriversLiveMap] No map ref, skipping markers update');
+      return;
+    }
 
     const updateMarkers = () => {
-      if (!isMounted || !mapRef.current) return;
+      console.log('🟠 [DriversLiveMap] updateMarkers - Start');
+      if (!mapRef.current) {
+        console.log('🟠 [DriversLiveMap] updateMarkers - Skipped (no map)');
+        return;
+      }
 
       // Supprimer les markers obsolètes
       const currentDeviceIds = new Set(drivers.map((d) => d.deviceId));
+      console.log('🟠 [DriversLiveMap] Current device IDs:', Array.from(currentDeviceIds));
+      console.log('🟠 [DriversLiveMap] Existing markers:', Array.from(markersRef.current.keys()));
+
       for (const [deviceId, marker] of markersRef.current.entries()) {
         if (!currentDeviceIds.has(deviceId)) {
+          console.log('🟠 [DriversLiveMap] Removing obsolete marker:', deviceId);
           try {
             // Fermer l'InfoWindow associée si elle existe
             const infoWindow = infoWindowsRef.current.get(deviceId);
             if (infoWindow) {
+              console.log('🟠 [DriversLiveMap] Closing InfoWindow for:', deviceId);
               infoWindow.close();
               infoWindowsRef.current.delete(deviceId);
             }
             // Supprimer le marker
+            console.log('🟠 [DriversLiveMap] Setting marker to null for:', deviceId);
             marker.setMap(null);
             markersRef.current.delete(deviceId);
+            console.log('🟠 [DriversLiveMap] Marker removed successfully:', deviceId);
           } catch (error) {
-            console.error('Error removing marker:', error);
+            console.error('❌ [DriversLiveMap] Error removing marker:', deviceId, error);
           }
         }
       }
 
       // Ajouter/mettre à jour les markers
+      console.log('🟠 [DriversLiveMap] Updating/adding markers for drivers');
+      const bounds = new window.google.maps.LatLngBounds();
+
       drivers.forEach((driver) => {
-        if (!isMounted) return;
+        try {
+          const position = { lat: driver.latitude, lng: driver.longitude };
+          bounds.extend(position);
 
-        const position = { lat: driver.latitude, lng: driver.longitude };
+          if (markersRef.current.has(driver.deviceId)) {
+            // Mettre à jour position existante
+            console.log('🟠 [DriversLiveMap] Updating existing marker:', driver.deviceId);
+            const marker = markersRef.current.get(driver.deviceId);
+            if (marker) {
+              marker.setPosition(position);
 
-        if (markersRef.current.has(driver.deviceId)) {
-          // Mettre à jour position existante
-          const marker = markersRef.current.get(driver.deviceId)!;
-          try {
-            marker.setPosition(position);
-
-            // Mettre à jour le contenu de l'InfoWindow avec les nouvelles données
-            const infoWindow = infoWindowsRef.current.get(driver.deviceId);
-            if (infoWindow) {
-              infoWindow.setContent(`
-                <div style="padding: 8px;">
-                  <h3 style="font-weight: bold; margin-bottom: 4px;">${driver.deviceId}</h3>
-                  <p style="margin: 4px 0;">Lat: ${driver.latitude.toFixed(6)}</p>
-                  <p style="margin: 4px 0;">Lng: ${driver.longitude.toFixed(6)}</p>
-                  ${driver.speed ? `<p style="margin: 4px 0;">Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</p>` : ''}
-                  <p style="margin: 4px 0; font-size: 12px; color: #666;">
-                    ${new Date(driver.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              `);
+              // Mettre à jour le contenu de l'InfoWindow avec les nouvelles données
+              const infoWindow = infoWindowsRef.current.get(driver.deviceId);
+              if (infoWindow) {
+                const content = `
+                  <div style="padding: 8px; min-width: 200px;">
+                    <div style="font-weight: bold; margin-bottom: 4px;">
+                      ${driver.deviceId}
+                    </div>
+                    <div style="font-size: 0.9em;">
+                      <div>Lat: ${driver.latitude.toFixed(6)}</div>
+                      <div>Lng: ${driver.longitude.toFixed(6)}</div>
+                      ${driver.speed ? `<div>Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</div>` : ''}
+                      ${driver.accuracy ? `<div>Précision: ${Math.round(driver.accuracy)} m</div>` : ''}
+                      <div>Dernière mise à jour: ${new Date(driver.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                  </div>
+                `;
+                infoWindow.setContent(content);
+              }
             }
-          } catch (error) {
-            console.error('Error updating marker position:', error);
-          }
-        } else {
-          // Créer nouveau marker
-          try {
-            const marker = new google.maps.Marker({
+          } else {
+            // Ajouter nouveau marker
+            console.log('🟠 [DriversLiveMap] Adding new marker:', driver.deviceId);
+            const marker = new window.google.maps.Marker({
               position,
-              map: mapRef.current!,
+              map: mapRef.current,
               title: driver.deviceId,
-              icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: '#3B82F6',
-                fillOpacity: 1,
-                strokeColor: '#FFFFFF',
-                strokeWeight: 2,
-              },
             });
+            markersRef.current.set(driver.deviceId, marker);
 
-            // Info window au clic
-            const infoWindow = new google.maps.InfoWindow({
-              content: `
-                <div style="padding: 8px;">
-                  <h3 style="font-weight: bold; margin-bottom: 4px;">${driver.deviceId}</h3>
-                  <p style="margin: 4px 0;">Lat: ${driver.latitude.toFixed(6)}</p>
-                  <p style="margin: 4px 0;">Lng: ${driver.longitude.toFixed(6)}</p>
-                  ${driver.speed ? `<p style="margin: 4px 0;">Vitesse: ${(driver.speed * 3.6).toFixed(1)} km/h</p>` : ''}
-                  <p style="margin: 4px 0; font-size: 12px; color: #666;">
-                    ${new Date(driver.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              `,
-            });
-
+            // Ajouter un écouteur d'événement pour l'InfoWindow
+            const infoWindow = new window.google.maps.InfoWindow();
+            infoWindowsRef.current.set(driver.deviceId, infoWindow);
             marker.addListener('click', () => {
-              if (isMounted && mapRef.current) {
-                // Fermer toutes les autres InfoWindows avant d'ouvrir celle-ci
-                infoWindowsRef.current.forEach((iw) => iw.close());
+              const content = `
+                <div style="padding: 8px; min-width: 200px;">
+                  <div style="font-weight: bold; margin-bottom: 4px;">
+                    Conducteur ${driver.deviceId.replace('driver-', '')}
+                  </div>
+                  <div style="font-size: 0.9em;">
+                    <div>Vitesse: ${driver.speed ? `${Math.round(driver.speed * 3.6)} km/h` : 'N/A'}</div>
+                    ${driver.accuracy ? `<div>Précision: ${Math.round(driver.accuracy)} m</div>` : ''}
+                    <div>Dernière mise à jour: ${new Date(driver.timestamp).toLocaleTimeString()}</div>
+                  </div>
+                </div>
+              `;
+              infoWindow.setContent(content);
+              if (mapRef.current) {
                 infoWindow.open(mapRef.current, marker);
-                setSelectedDriver(driver.deviceId);
               }
             });
-
-            markersRef.current.set(driver.deviceId, marker);
-            infoWindowsRef.current.set(driver.deviceId, infoWindow);
-          } catch (error) {
-            console.error('Error creating marker:', error);
           }
+        } catch (error) {
+          console.error('Error updating/adding marker:', error);
         }
       });
 
-      // Centrer la carte sur les drivers si disponibles
-      if (isMounted && drivers.length > 0 && !selectedDriver && mapRef.current) {
+      // Ajuster la vue pour afficher tous les marqueurs
+      if (mapRef.current && !bounds.isEmpty()) {
         try {
-          const bounds = new google.maps.LatLngBounds();
-          drivers.forEach((driver) => {
-            bounds.extend({ lat: driver.latitude, lng: driver.longitude });
-          });
           mapRef.current.fitBounds(bounds);
         } catch (error) {
           console.error('Error fitting bounds:', error);
@@ -289,38 +450,99 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
     };
 
     updateMarkers();
+  }, [drivers, selectedDriver]);
 
+  // Cleanup SEULEMENT au démontage du composant
+  useEffect(() => {
     return () => {
-      isMounted = false;
+      console.log('🟠 [DriversLiveMap] Component unmounting - Final cleanup');
+
       // Cleanup all InfoWindows first
-      for (const [, infoWindow] of infoWindowsRef.current.entries()) {
+      console.log(
+        '🟠 [DriversLiveMap] Cleaning up',
+        infoWindowsRef.current.size,
+        'InfoWindows'
+      );
+      for (const [deviceId, infoWindow] of infoWindowsRef.current.entries()) {
         try {
+          console.log('🟠 [DriversLiveMap] Closing InfoWindow for:', deviceId);
           infoWindow.close();
         } catch (error) {
-          // Ignore errors during cleanup
+          console.error('❌ [DriversLiveMap] Error closing InfoWindow:', deviceId, error);
         }
       }
       infoWindowsRef.current.clear();
 
       // Cleanup all markers on unmount
-      for (const [, marker] of markersRef.current.entries()) {
+      console.log('🟠 [DriversLiveMap] Cleaning up', markersRef.current.size, 'markers');
+      for (const [deviceId, marker] of markersRef.current.entries()) {
         try {
+          console.log('🟠 [DriversLiveMap] Removing marker:', deviceId);
           marker.setMap(null);
         } catch (error) {
-          // Ignore errors during cleanup
+          console.error('❌ [DriversLiveMap] Error removing marker:', deviceId, error);
         }
       }
       markersRef.current.clear();
+      console.log('🟠 [DriversLiveMap] Final cleanup completed');
     };
-  }, [drivers, selectedDriver]);
+  }, []); // Dépendances vides = cleanup SEULEMENT au unmount
 
   const handleRefresh = async () => {
     try {
-      const response = await fetch('http://localhost:3333/api/tracking/locations');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333';
+      const token = getCookie('tsa_access_token');
+
+      // Determine API endpoint based on user role
+      const userRole = currentUser?.role || 'transporteur';
+      const endpoint = userRole === 'affreteur'
+        ? `${apiUrl}/api/affreteur/missions/active-locations`
+        : `${apiUrl}/api/transporteur/missions/active-locations`;
+
+      console.log(`🔄 Refreshing GPS positions for role: ${userRole}`);
+
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
       const data = await response.json();
 
-      if (data.success && data.data.positions) {
-        setDrivers(data.data.positions);
+      if (data.success && data.data.locations) {
+        // Convert locations to driver format
+        const driversData = data.data.locations
+          .map((loc: any) => {
+            // Ensure latitude and longitude are numbers
+            const latitude = Number(loc.location?.latitude);
+            const longitude = Number(loc.location?.longitude);
+
+            // Skip if invalid coordinates
+            if (isNaN(latitude) || isNaN(longitude)) {
+              console.warn('Invalid coordinates for mission:', loc.missionId, loc.location);
+              return null;
+            }
+
+            return {
+              deviceId: `mission-${loc.missionId}`,
+              missionId: loc.missionId,
+              missionTitle: loc.missionTitle,
+              missionStatus: loc.missionStatus,
+              latitude,
+              longitude,
+              speed: loc.location.speed ? Number(loc.location.speed) : undefined,
+              heading: loc.location.heading ? Number(loc.location.heading) : undefined,
+              accuracy: loc.location.accuracy ? Number(loc.location.accuracy) : undefined,
+              timestamp: loc.location.timestamp,
+              driver: loc.driver,
+              departure: loc.departure,
+              arrival: loc.arrival,
+            };
+          })
+          .filter((d: any) => d !== null);
+
+        setDrivers(driversData);
         setLastUpdate(new Date());
       }
     } catch (error) {
@@ -433,11 +655,10 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
                 drivers.map((driver) => (
                   <div
                     key={driver.deviceId}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedDriver === driver.deviceId
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${selectedDriver === driver.deviceId
                         ? 'bg-blue-50 border-blue-300'
                         : 'hover:bg-gray-50'
-                    }`}
+                      }`}
                     onClick={() => {
                       setSelectedDriver(driver.deviceId);
                       if (mapRef.current) {
@@ -451,17 +672,19 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
                   >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
-                        <p className="font-medium text-sm">{driver.deviceId}</p>
+                        <p className="font-medium text-sm">{driver.missionTitle || driver.deviceId}</p>
                         <p className="text-xs text-gray-600 font-mono">
-                          {driver.latitude.toFixed(6)}, {driver.longitude.toFixed(6)}
+                          {typeof driver.latitude === 'number' && typeof driver.longitude === 'number'
+                            ? `${driver.latitude.toFixed(6)}, ${driver.longitude.toFixed(6)}`
+                            : 'Position inconnue'}
                         </p>
-                        {driver.speed !== undefined && (
+                        {driver.speed !== undefined && driver.speed !== null && (
                           <p className="text-xs text-gray-600">
                             🚗 {(driver.speed * 3.6).toFixed(1)} km/h
                           </p>
                         )}
                         <p className="text-xs text-gray-500">
-                          {new Date(driver.timestamp).toLocaleTimeString()}
+                          {driver.timestamp ? new Date(driver.timestamp).toLocaleTimeString() : 'N/A'}
                         </p>
                       </div>
                       <Badge className="bg-green-100 text-green-800 text-xs">Actif</Badge>

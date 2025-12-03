@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { Colors } from '../constants/colors';
-import { backendTrackingService } from '../services/backendTrackingService';
+// DEPRECATED: backendTrackingService has been replaced by the centralized env config system
+// import { backendTrackingService } from '../services/backendTrackingService';
 
 export const SimpleTrackingTestScreen: React.FC = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -38,16 +39,13 @@ export const SimpleTrackingTestScreen: React.FC = () => {
       });
       setLocation(currentLocation);
 
-      // Mettre à jour le service
-      backendTrackingService.updatePosition(
-        currentLocation.coords.latitude,
-        currentLocation.coords.longitude,
-        currentLocation.coords.speed || undefined,
-        currentLocation.coords.heading || undefined
-      );
-
-      // Démarrer l'envoi automatique toutes les 5 secondes
-      backendTrackingService.startAutoTracking();
+      // DEPRECATED: backendTrackingService removed
+      console.log('📍 Position update:', {
+        lat: currentLocation.coords.latitude,
+        lng: currentLocation.coords.longitude,
+        speed: currentLocation.coords.speed,
+        heading: currentLocation.coords.heading,
+      });
 
       // Suivre la position en temps réel
       locationSubscription.current = await Location.watchPositionAsync(
@@ -61,20 +59,18 @@ export const SimpleTrackingTestScreen: React.FC = () => {
           setUpdateCount((prev) => prev + 1);
           setLastUpdate(new Date());
 
-          // Mettre à jour le service
-          backendTrackingService.updatePosition(
-            newLocation.coords.latitude,
-            newLocation.coords.longitude,
-            newLocation.coords.speed || undefined,
-            newLocation.coords.heading || undefined
-          );
+          // DEPRECATED: backendTrackingService removed
+          console.log('📍 Position update:', {
+            lat: newLocation.coords.latitude,
+            lng: newLocation.coords.longitude,
+          });
         }
       );
 
-      console.log('📍 Tracking started for device:', backendTrackingService.getDeviceId());
+      console.log('📍 Tracking started (test mode - no backend service)');
       Alert.alert(
         'Tracking Démarré',
-        `Device ID: ${backendTrackingService.getDeviceId()}\n\nVos positions sont envoyées toutes les 5 secondes.`
+        'Test mode - positions sont loggées en console.'
       );
     } catch (error) {
       console.error('Error starting tracking:', error);
@@ -89,7 +85,7 @@ export const SimpleTrackingTestScreen: React.FC = () => {
       locationSubscription.current = null;
     }
 
-    backendTrackingService.stopAutoTracking();
+    console.log('⏹️ Tracking stopped');
     setTracking(false);
 
     Alert.alert('Tracking Arrêté', 'Le tracking GPS a été arrêté');
@@ -103,8 +99,8 @@ export const SimpleTrackingTestScreen: React.FC = () => {
       </View>
 
       <View style={styles.infoBox}>
-        <Text style={styles.infoLabel}>Device ID:</Text>
-        <Text style={styles.infoValue}>{backendTrackingService.getDeviceId()}</Text>
+        <Text style={styles.infoLabel}>Test Mode:</Text>
+        <Text style={styles.infoValue}>Local GPS Testing</Text>
       </View>
 
       <View style={styles.statusBox}>

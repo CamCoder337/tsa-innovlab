@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import driverTrackingService, { type MissionDetails } from '../services/driverTrackingService';
 import { Colors } from '../constants/colors';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface DriverMissionAccessScreenProps {
   navigation: any;
@@ -23,6 +24,7 @@ interface DriverMissionAccessScreenProps {
 export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps> = ({
   navigation,
 }) => {
+  const { t } = useTranslation();
   const [token, setToken] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,8 +40,6 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
       if (credentials) {
         setToken(credentials.token);
         setPin(credentials.pin);
-        // Auto-authenticate si on a des credentials sauvegardés
-        // handleAuthenticate(credentials.token, credentials.pin);
       }
     } catch (error) {
       console.error('Error checking saved credentials:', error);
@@ -53,12 +53,12 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
     const pinToUse = authPin || pin;
 
     if (!tokenToUse || !pinToUse) {
-      Alert.alert('Erreur', 'Veuillez saisir le token et le PIN');
+      Alert.alert(t('common.error'), t('auth.emptyFields'));
       return;
     }
 
     if (pinToUse.length !== 6) {
-      Alert.alert('Erreur', 'Le PIN doit contenir 6 chiffres');
+      Alert.alert(t('common.error'), t('auth.invalidPin'));
       return;
     }
 
@@ -69,16 +69,16 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
         pinToUse
       );
 
-      Alert.alert('Connexion réussie', `Mission: ${mission.title}`, [
+      Alert.alert(t('auth.authSuccess'), `${t('mission.title')}: ${mission.title}`, [
         {
-          text: 'OK',
+          text: t('common.close'),
           onPress: () => {
-            navigation.replace('DriverMissionTracking', { mission });
+            navigation.navigate('DriverMissionStart', { mission });
           },
         },
       ]);
     } catch (error: any) {
-      Alert.alert('Erreur d\'authentification', error.message);
+      Alert.alert(t('auth.authFailed'), error.message);
     } finally {
       setLoading(false);
     }
@@ -86,18 +86,18 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
 
   const handleClearCredentials = async () => {
     Alert.alert(
-      'Supprimer les identifiants',
-      'Voulez-vous supprimer les identifiants sauvegardés ?',
+      t('auth.clearCredentials'),
+      t('auth.clearCredentialsConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('auth.clearCredentialsAction'),
           style: 'destructive',
           onPress: async () => {
             await driverTrackingService.clearCredentials();
             setToken('');
             setPin('');
-            Alert.alert('Succès', 'Identifiants supprimés');
+            Alert.alert(t('common.success'), t('auth.credentialsCleared'));
           },
         },
       ]
@@ -108,7 +108,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Vérification des identifiants...</Text>
+        <Text style={styles.loadingText}>{t('auth.checkingCredentials')}</Text>
       </View>
     );
   }
@@ -128,17 +128,15 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
             <View style={styles.iconContainer}>
               <Ionicons name="key" size={48} color={Colors.primary} />
             </View>
-            <Text style={styles.title}>Accès Mission Chauffeur</Text>
-            <Text style={styles.subtitle}>
-              Saisissez vos identifiants fournis par le transporteur
-            </Text>
+            <Text style={styles.title}>{t('auth.accessTitle')}</Text>
+            <Text style={styles.subtitle}>{t('auth.accessSubtitle')}</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Token Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Token de Tracking</Text>
+              <Text style={styles.label}>{t('auth.token')}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
                   name="barcode-outline"
@@ -148,7 +146,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Entrez le token"
+                  placeholder={t('auth.tokenPlaceholder')}
                   placeholderTextColor={Colors.textSecondary}
                   value={token}
                   onChangeText={setToken}
@@ -161,7 +159,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
 
             {/* PIN Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Code PIN (6 chiffres)</Text>
+              <Text style={styles.label}>{t('auth.pinLabel')}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
                   name="lock-closed-outline"
@@ -171,7 +169,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="000000"
+                  placeholder={t('auth.pinPlaceholder')}
                   placeholderTextColor={Colors.textSecondary}
                   value={pin}
                   onChangeText={setPin}
@@ -194,7 +192,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
               ) : (
                 <>
                   <Ionicons name="log-in-outline" size={20} color={Colors.white} />
-                  <Text style={styles.buttonText}>Se Connecter</Text>
+                  <Text style={styles.buttonText}>{t('auth.submit')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -207,7 +205,7 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
                 disabled={loading}
               >
                 <Ionicons name="trash-outline" size={16} color={Colors.error} />
-                <Text style={styles.clearButtonText}>Supprimer les identifiants sauvegardés</Text>
+                <Text style={styles.clearButtonText}>{t('auth.savedCredentials')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -216,40 +214,25 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
           <View style={styles.instructions}>
             <View style={styles.instructionHeader}>
               <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
-              <Text style={styles.instructionTitle}>Comment obtenir vos identifiants ?</Text>
+              <Text style={styles.instructionTitle}>{t('auth.howToGetCredentials')}</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>1.</Text>
-              <Text style={styles.instructionText}>
-                Le transporteur vous fournit un <Text style={styles.bold}>Token</Text> et un{' '}
-                <Text style={styles.bold}>PIN</Text>
-              </Text>
+              <Text style={styles.instructionText}>{t('auth.instruction1')}</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>2.</Text>
-              <Text style={styles.instructionText}>
-                Saisissez ces informations dans les champs ci-dessus
-              </Text>
+              <Text style={styles.instructionText}>{t('auth.instruction2')}</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>3.</Text>
-              <Text style={styles.instructionText}>
-                Une fois connecté, vous pourrez démarrer le tracking GPS
-              </Text>
+              <Text style={styles.instructionText}>{t('auth.instruction3')}</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>4.</Text>
-              <Text style={styles.instructionText}>
-                Arrivé à destination, scannez le QR code pour valider la livraison
-              </Text>
+              <Text style={styles.instructionText}>{t('auth.instruction4')}</Text>
             </View>
           </View>
-
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back-outline" size={20} color={Colors.primary} />
-            <Text style={styles.backButtonText}>Retour</Text>
-          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -31,6 +31,9 @@ export enum WebSocketEventType {
   MISSION_NEW = 'mission:new',
   MISSION_UPDATED = 'mission:updated',
   MISSION_STATUS_CHANGED = 'mission:status:changed',
+
+  // Événements de localisation
+  LOCATION_UPDATE = 'location:update',
 }
 
 /**

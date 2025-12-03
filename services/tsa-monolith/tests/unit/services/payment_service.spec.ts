@@ -12,6 +12,7 @@ import Address from '#models/address'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 test.group('PaymentService', (group) => {
+  // @ts-ignore - Database transactions for tests
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
   let paymentService: PaymentService

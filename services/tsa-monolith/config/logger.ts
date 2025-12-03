@@ -1,27 +1,31 @@
 import env from '#start/env'
-import app from '@adonisjs/core/services/app'
-import { defineConfig, targets } from '@adonisjs/core/logger'
+import { defineConfig } from '@adonisjs/core/logger'
 
 const loggerConfig = defineConfig({
   default: 'app',
-
-  /**
-   * The loggers object can be used to define multiple loggers.
-   * By default, we configure only one logger (named "app").
-   */
+  
   loggers: {
     app: {
       enabled: true,
       name: env.get('APP_NAME'),
-      level: env.get('LOG_LEVEL'),
+      level: env.get('LOG_LEVEL', 'info'),
+      
+      // Configuration personnalisée pour la console
       transport: {
-        targets: targets()
-          .pushIf(!app.inProduction, targets.pretty())
-          .pushIf(app.inProduction, targets.file({ destination: 1 }))
-          .toArray(),
-      },
-    },
-  },
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:HH:MM:ss',
+          ignore: 'pid,hostname',
+          messageFormat: '{msg}',
+          singleLine: true,
+          sync: true,
+          // Forcer l'encodage UTF-8
+          customPrettifiers: {}
+        }
+      }
+    }
+  }
 })
 
 export default loggerConfig

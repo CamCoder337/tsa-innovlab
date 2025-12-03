@@ -1,22 +1,30 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { MapScreen } from '../screens/MapScreen';
-import { MissionListScreen } from '../screens/MissionListScreen';
-import { MissionDetailsScreen } from '../screens/MissionDetailsScreen';
-import { CreateMissionScreen } from '../screens/CreateMissionScreen';
-import { LiveTrackingScreen } from '../screens/LiveTrackingScreen';
-import { ProofOfDeliveryScreen } from '../screens/ProofOfDeliveryScreen';
-import { SimpleTrackingTestScreen } from '../screens/SimpleTrackingTestScreen';
+import { DriverMissionAccessScreen } from '../screens/DriverMissionAccessScreen';
+import { DriverMissionStartScreen } from '../screens/DriverMissionStartScreen';
+import { DriverMissionTrackingScreen } from '../screens/DriverMissionTrackingScreen';
+import { DriverReportIssueScreen } from '../screens/DriverReportIssueScreen';
+import DeliveryProofScreen from '../screens/DeliveryProofScreen';
+import type { MissionDetails } from '../services/driverTrackingService';
 
 export type RootStackParamList = {
-  SimpleTrackingTest: undefined;
-  MissionList: undefined;
-  Map: { missionId: string };
-  MissionDetails: { missionId: string };
-  CreateMission: undefined;
-  LiveTracking: { mission: any };
-  ProofOfDelivery: { mission: any };
+  DriverMissionAccess: undefined;
+  DriverMissionStart: { mission: MissionDetails };
+  DriverMissionTracking: { mission: MissionDetails };
+  DriverReportIssue: {
+    currentLocation?: {
+      latitude: number;
+      longitude: number;
+    }
+  };
+  DeliveryProof: {
+    missionId: string;
+    currentLocation?: {
+      latitude: number;
+      longitude: number;
+    }
+  };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -25,7 +33,7 @@ export const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="MissionList"
+        initialRouteName="DriverMissionAccess"
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
@@ -45,13 +53,31 @@ export const AppNavigator = () => {
           },
         }}
       >
-        <Stack.Screen name="SimpleTrackingTest" component={SimpleTrackingTestScreen} />
-        <Stack.Screen name="MissionList" component={MissionListScreen} />
-        <Stack.Screen name="Map" component={MapScreen} />
-        <Stack.Screen name="MissionDetails" component={MissionDetailsScreen} />
-        <Stack.Screen name="CreateMission" component={CreateMissionScreen} />
-        <Stack.Screen name="LiveTracking" component={LiveTrackingScreen} />
-        <Stack.Screen name="ProofOfDelivery" component={ProofOfDeliveryScreen} />
+        <Stack.Screen
+          name="DriverMissionAccess"
+          component={DriverMissionAccessScreen}
+          options={{ title: 'Authentification' }}
+        />
+        <Stack.Screen
+          name="DriverMissionStart"
+          component={DriverMissionStartScreen}
+          options={{ title: 'Démarrer la Mission' }}
+        />
+        <Stack.Screen
+          name="DriverMissionTracking"
+          component={DriverMissionTrackingScreen}
+          options={{ title: 'Suivi de Mission' }}
+        />
+        <Stack.Screen
+          name="DriverReportIssue"
+          component={DriverReportIssueScreen}
+          options={{ title: 'Signaler un Problème' }}
+        />
+        <Stack.Screen
+          name="DeliveryProof"
+          component={DeliveryProofScreen}
+          options={{ title: 'Preuves de Livraison' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

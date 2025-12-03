@@ -5,9 +5,6 @@ import {
   type CreateDirectConversationRequest,
   type CreateMissionConversationRequest,
   type SendMessageRequest,
-  type ChatMessageEvent,
-  type ChatMessageReadEvent,
-  type ChatTypingEvent,
   type ChatState,
   type ChatbotConversation,
   type ChatbotProfile,
@@ -18,7 +15,6 @@ import {
 } from '@/types/chat.types';
 import { chatService } from '@/services/chat.service';
 import { chatbotService } from '@/services/chatbot.service';
-import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
 
 export function getPersistedData(): Partial<ChatState> | null {
   try {
@@ -698,7 +694,9 @@ export const useChatStore = create<ChatState>()(
       },
 
       sendTypingIndicator: (conversationId, isTyping) => {
-        webSocketService.sendTypingIndicator(conversationId, isTyping);
+        // TODO: Implement sendTypingIndicator in WebSocket service
+        // webSocketService.sendTypingIndicator(conversationId, isTyping);
+        console.log('Typing indicator:', conversationId, isTyping);
       },
 
       // Utility actions
@@ -740,27 +738,30 @@ export const useChatStore = create<ChatState>()(
 
 // Initialize WebSocket event listeners
 export const initializeChatWebSocket = () => {
-  const store = useChatStore.getState();
+  // const store = useChatStore.getState();
 
+  // TODO: Add CHAT_* event types to WebSocketEventType enum
   // Subscribe to chat events
-  webSocketService.subscribe(WebSocketEventType.CHAT_MESSAGE, (data: ChatMessageEvent) => {
-    store.handleNewMessage(data.message);
-  });
+  // webSocketService.subscribe(WebSocketEventType.CHAT_MESSAGE, (data: ChatMessageEvent) => {
+  //   store.handleNewMessage(data.message);
+  // });
 
-  webSocketService.subscribe(WebSocketEventType.CHAT_MESSAGE_READ, (data: ChatMessageReadEvent) => {
-    store.handleMessageRead(data.messageId, data.conversationId);
-  });
+  // webSocketService.subscribe(WebSocketEventType.CHAT_MESSAGE_READ, (data: ChatMessageReadEvent) => {
+  //   store.handleMessageRead(data.messageId, data.conversationId);
+  // });
 
-  webSocketService.subscribe(WebSocketEventType.CHAT_TYPING_START, (data: ChatTypingEvent) => {
-    store.handleTypingStart(data.conversationId, data.senderId);
-  });
+  // webSocketService.subscribe(WebSocketEventType.CHAT_TYPING_START, (data: ChatTypingEvent) => {
+  //   store.handleTypingStart(data.conversationId, data.senderId);
+  // });
 
-  webSocketService.subscribe(WebSocketEventType.CHAT_TYPING_STOP, (data: ChatTypingEvent) => {
-    store.handleTypingStop(data.conversationId, data.senderId);
-  });
+  // webSocketService.subscribe(WebSocketEventType.CHAT_TYPING_STOP, (data: ChatTypingEvent) => {
+  //   store.handleTypingStop(data.conversationId, data.senderId);
+  // });
 
-  webSocketService.subscribe(WebSocketEventType.CHAT_CONVERSATION_CREATED, () => {
-    // Refresh conversations when a new one is created
-    store.fetchConversations();
-  });
+  // webSocketService.subscribe(WebSocketEventType.CHAT_CONVERSATION_CREATED, () => {
+  //   // Refresh conversations when a new one is created
+  //   store.fetchConversations();
+  // });
+
+  console.log('Chat WebSocket initialization disabled - needs CHAT_* event types');
 };

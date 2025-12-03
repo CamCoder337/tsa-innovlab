@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Copy, Check, Key, Lock, QrCode, Info, Truck } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { Copy, Check, Eye, EyeOff, Key, Smartphone, Truck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface VehicleTrackingCredentialsProps {
   missionTitle: string;
-  trackingToken?: string | null;
-  trackingPin?: string | null;
-  vehicleRegistration?: string | null; // Immatriculation du véhicule
-  vehicleType?: string; // Type de véhicule (optionnel)
+  trackingToken?: string;
+  trackingPin?: string;
+  vehicleRegistration?: string;
+  vehicleType?: string;
+  className?: string;
 }
 
 export default function VehicleTrackingCredentials({
@@ -20,167 +20,175 @@ export default function VehicleTrackingCredentials({
   trackingPin,
   vehicleRegistration,
   vehicleType,
+  className,
 }: VehicleTrackingCredentialsProps) {
-  const [copied, setCopied] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(false);
+  const [copiedPin, setCopiedPin] = useState(false);
 
-  const copyCredentials = () => {
-    if (!trackingToken || !trackingPin) {
-      toast.error('Credentials non disponibles');
-      return;
-    }
-
-    const credentials = `Mission: ${missionTitle}\nToken: ${trackingToken}\nPIN: ${trackingPin}`;
-    navigator.clipboard.writeText(credentials);
-
-    setCopied(true);
-    toast.success('Credentials copiés dans le presse-papier');
-
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const copyToken = () => {
+  const handleCopyToken = async () => {
     if (!trackingToken) return;
-    navigator.clipboard.writeText(trackingToken);
-    toast.success('Token copié');
+
+    try {
+      await navigator.clipboard.writeText(trackingToken);
+      setCopiedToken(true);
+      setTimeout(() => setCopiedToken(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy token:', error);
+    }
   };
 
-  const copyPin = () => {
+  const handleCopyPin = async () => {
     if (!trackingPin) return;
-    navigator.clipboard.writeText(trackingPin);
-    toast.success('PIN copié');
+
+    try {
+      await navigator.clipboard.writeText(trackingPin);
+      setCopiedPin(true);
+      setTimeout(() => setCopiedPin(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy PIN:', error);
+    }
   };
 
-  if (!trackingToken || !trackingPin) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Truck className="h-5 w-5" />
-            Credentials de Tracking Véhicule
-          </CardTitle>
-          <CardDescription>
-            Identifiants pour le suivi GPS en temps réel - Mission : {missionTitle}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Les credentials de tracking seront générés automatiquement lorsqu'un véhicule sera assigné à cette mission.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
+  const displayPin = showPin ? trackingPin : trackingPin?.replace(/./g, '"');
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Truck className="h-5 w-5" />
-                Credentials de Tracking Véhicule
-              </CardTitle>
-              <CardDescription>
-                Transmettez ces identifiants au conducteur du véhicule assigné
-              </CardDescription>
-            </div>
-          </div>
-          {vehicleRegistration && (
-            <Badge variant="default" className="flex items-center gap-2 w-fit">
-              <Truck className="h-4 w-4" />
-              <span className="font-mono font-bold text-sm">{vehicleRegistration}</span>
-              {vehicleType && <span className="text-xs opacity-80">({vehicleType})</span>}
-            </Badge>
-          )}
-        </div>
+    <Card className={cn('border-2 border-blue-200 dark:border-blue-800', className)}>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <Smartphone className="w-5 h-5 text-blue-600" />
+          <span>Identifiants App Chauffeur</span>
+          <Badge variant="outline" className="ml-auto bg-blue-50 text-blue-700 border-blue-200">
+            GPS Tracking
+          </Badge>
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Alert avec instructions */}
-        <Alert>
-          <QrCode className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Important :</strong> Ces identifiants permettent au conducteur de ce véhicule
-            d'accéder à l'application mobile TSA Driver et de démarrer le tracking GPS en temps réel.
-          </AlertDescription>
-        </Alert>
-
-        {/* Affichage du Token */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Lock className="h-4 w-4 text-muted-foreground" />
-              Token d'Accès
-            </label>
-            <Button variant="ghost" size="sm" onClick={copyToken}>
-              <Copy className="h-4 w-4" />
-            </Button>
+        {/* Info v�hicule */}
+        {(vehicleRegistration || vehicleType) && (
+          <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <Truck className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {vehicleType || 'V�hicule'}
+              </p>
+              {vehicleRegistration && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">{vehicleRegistration}</p>
+              )}
+            </div>
           </div>
-          <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
-            <code className="font-mono text-sm break-all">{trackingToken}</code>
+        )}
+
+        {/* Mission info */}
+        <div className="text-sm text-gray-600 dark:text-gray-300">
+          <p className="font-medium mb-1">Mission:</p>
+          <p className="text-gray-900 dark:text-white">{missionTitle}</p>
+        </div>
+
+        {/* Token de tracking */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+            <Key className="w-4 h-4" />
+            Token de Tracking
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={trackingToken || 'Non g�n�r�'}
+                readOnly
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono"
+              />
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCopyToken}
+              disabled={!trackingToken}
+              className="flex-shrink-0"
+            >
+              {copiedToken ? (
+                <Check className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </Button>
           </div>
         </div>
 
-        {/* Affichage du PIN */}
+        {/* PIN de tracking */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Key className="h-4 w-4 text-muted-foreground" />
-              Code PIN (6 chiffres)
-            </label>
-            <Button variant="ghost" size="sm" onClick={copyPin}>
-              <Copy className="h-4 w-4" />
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+            <Key className="w-4 h-4" />
+            Code PIN (6 chiffres)
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={displayPin || '""""""'}
+                readOnly
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono text-center text-lg tracking-widest"
+              />
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowPin(!showPin)}
+              disabled={!trackingPin}
+              className="flex-shrink-0"
+            >
+              {showPin ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCopyPin}
+              disabled={!trackingPin}
+              className="flex-shrink-0"
+            >
+              {copiedPin ? (
+                <Check className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
             </Button>
           </div>
-          <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
-            <code className="text-2xl font-bold tracking-wider">{trackingPin}</code>
-          </div>
         </div>
-
-        {/* Bouton Copier Tout */}
-        <Button onClick={copyCredentials} className="w-full" size="lg">
-          {copied ? (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Copié !
-            </>
-          ) : (
-            <>
-              <Copy className="mr-2 h-4 w-4" />
-              Copier Token + PIN
-            </>
-          )}
-        </Button>
 
         {/* Instructions */}
-        <div className="space-y-2 rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-4">
-          <p className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
-            <Truck className="h-4 w-4" />
-            Instructions pour le conducteur du véhicule {vehicleRegistration}
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-2">
+            =� Instructions pour le chauffeur:
           </p>
-          <ol className="list-inside list-decimal space-y-1 text-sm text-blue-800 dark:text-blue-200">
-            <li>Télécharger l'application mobile <strong>TSA Driver</strong></li>
-            <li>Entrer le <strong>Token</strong> et le <strong>PIN</strong> fournis ci-dessus</li>
-            <li>Accepter les permissions de localisation GPS</li>
-            <li>Cliquer sur <strong>"Démarrer la mission"</strong></li>
-            <li>
-              Le véhicule sera tracké automatiquement (position GPS toutes les 5 secondes ou 10 mètres)
-            </li>
-            <li>À l'arrivée à destination, scanner le QR code pour confirmer la livraison</li>
+          <ol className="text-xs text-blue-800 dark:text-blue-200 space-y-1 pl-4 list-decimal">
+            <li>T�l�charger l'application mobile "TSA Driver"</li>
+            <li>Saisir le <strong>Token</strong> et le <strong>PIN</strong> ci-dessus</li>
+            <li>Activer le suivi GPS lors du d�part</li>
+            <li>Scanner le QR code � l'arriv�e pour valider la livraison</li>
           </ol>
         </div>
 
-        {/* Avertissement sécurité */}
-        <Alert variant="destructive">
-          <AlertDescription className="text-xs">
-            <strong>⚠️ Sécurité :</strong> Ne partagez ces identifiants qu'avec le conducteur
-            du véhicule <strong>{vehicleRegistration}</strong> assigné à cette mission.
-            Ils donnent accès au tracking GPS et aux informations de livraison.
-          </AlertDescription>
-        </Alert>
+        {/* Status */}
+        {trackingToken && trackingPin ? (
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-green-700 dark:text-green-400 font-medium">
+              Identifiants actifs
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-gray-400" />
+            <span className="text-gray-600 dark:text-gray-400">
+              En attente de g�n�ration des identifiants
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

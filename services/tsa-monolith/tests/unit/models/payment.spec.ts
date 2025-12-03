@@ -7,6 +7,7 @@ import Address from '#models/address'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 test.group('Payment Model', (group) => {
+  // @ts-ignore - Database transactions for tests
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
   test('should check if payment is completed', async ({ assert }) => {

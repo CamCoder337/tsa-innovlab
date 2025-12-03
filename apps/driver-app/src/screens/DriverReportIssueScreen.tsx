@@ -13,8 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import driverTrackingService, { ISSUE_TYPES, type IssueType } from '../services/driverTrackingService';
+import driverTrackingService, { ISSUE_TYPES } from '../services/driverTrackingService';
 import { Colors } from '../constants/colors';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface DriverReportIssueScreenProps {
   navigation: any;
@@ -33,6 +34,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
   route,
 }) => {
   const { currentLocation } = route.params;
+  const { t } = useTranslation();
 
   const [selectedType, setSelectedType] = useState<string>('');
   const [description, setDescription] = useState('');
@@ -47,7 +49,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'L\'accès à la caméra est nécessaire pour prendre une photo');
+        Alert.alert(t('qr.cameraPermission'), t('qr.cameraPermissionMessage'));
         return;
       }
 
@@ -62,7 +64,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert('Erreur', 'Impossible de prendre la photo');
+      Alert.alert(t('common.error'), t('issue.photoError'));
     }
   };
 
@@ -70,7 +72,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'L\'accès à la galerie est nécessaire');
+        Alert.alert(t('issue.galleryPermission'), t('issue.galleryPermissionMessage'));
         return;
       }
 
@@ -86,7 +88,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
+      Alert.alert(t('common.error'), t('issue.imageError'));
     }
   };
 
@@ -97,12 +99,12 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
 
   const handleSubmit = async () => {
     if (!selectedType) {
-      Alert.alert('Type requis', 'Veuillez sélectionner le type de problème');
+      Alert.alert(t('issue.typeRequired'), t('issue.selectType'));
       return;
     }
 
     if (!description.trim()) {
-      Alert.alert('Description requise', 'Veuillez décrire le problème');
+      Alert.alert(t('issue.descriptionRequired'), t('issue.emptyDescription'));
       return;
     }
 
@@ -117,17 +119,17 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
       );
 
       Alert.alert(
-        'Problème signalé',
-        'Le problème a été signalé avec succès. Le transporteur en a été notifié.',
+        t('issue.success'),
+        t('issue.successMessage'),
         [
           {
-            text: 'OK',
+            text: t('common.close'),
             onPress: () => navigation.goBack(),
           },
         ]
       );
     } catch (error: any) {
-      Alert.alert('Erreur', error.message);
+      Alert.alert(t('common.error'), error.message);
     } finally {
       setLoading(false);
     }
@@ -141,15 +143,15 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.title}>Signaler un problème</Text>
+          <Text style={styles.title}>{t('issue.report')}</Text>
           <View style={{ width: 24 }} />
         </View>
 
         {/* Type selection */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Type de problème *</Text>
+          <Text style={styles.sectionTitle}>{t('issue.title')} *</Text>
           <View style={styles.typeGrid}>
-            {ISSUE_TYPES.map((type: IssueType) => (
+            {ISSUE_TYPES.map((type: typeof ISSUE_TYPES[number]) => (
               <TouchableOpacity
                 key={type.value}
                 style={[
@@ -179,7 +181,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
                     selectedType === type.value && styles.typeButtonTextActive,
                   ]}
                 >
-                  {type.label}
+                  {t(`issue.types.${type.value}`)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -188,10 +190,10 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
 
         {/* Description */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description *</Text>
+          <Text style={styles.sectionTitle}>{t('issue.description')} *</Text>
           <TextInput
             style={styles.textArea}
-            placeholder="Décrivez le problème en détail..."
+            placeholder={t('issue.descriptionPlaceholder')}
             placeholderTextColor={Colors.textSecondary}
             value={description}
             onChangeText={setDescription}
@@ -203,15 +205,15 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
 
         {/* Photos */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Photos (optionnel)</Text>
+          <Text style={styles.sectionTitle}>{t('issue.photos')}</Text>
           <View style={styles.photoActions}>
             <TouchableOpacity style={styles.photoButton} onPress={handleTakePhoto}>
               <Ionicons name="camera-outline" size={20} color={Colors.primary} />
-              <Text style={styles.photoButtonText}>Prendre une photo</Text>
+              <Text style={styles.photoButtonText}>{t('issue.takePhoto')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.photoButton} onPress={handlePickImage}>
               <Ionicons name="images-outline" size={20} color={Colors.primary} />
-              <Text style={styles.photoButtonText}>Galerie</Text>
+              <Text style={styles.photoButtonText}>{t('issue.gallery')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -237,7 +239,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
           <View style={styles.locationInfo}>
             <Ionicons name="location-outline" size={16} color={Colors.textSecondary} />
             <Text style={styles.locationText}>
-              Position GPS incluse: {currentLocation.latitude.toFixed(6)},{' '}
+              {t('issue.locationIncluded')}: {currentLocation.latitude.toFixed(6)},{' '}
               {currentLocation.longitude.toFixed(6)}
             </Text>
           </View>
@@ -254,7 +256,7 @@ export const DriverReportIssueScreen: React.FC<DriverReportIssueScreenProps> = (
           ) : (
             <>
               <Ionicons name="send-outline" size={20} color={Colors.white} />
-              <Text style={styles.submitButtonText}>Envoyer le signalement</Text>
+              <Text style={styles.submitButtonText}>{t('issue.submit')}</Text>
             </>
           )}
         </TouchableOpacity>

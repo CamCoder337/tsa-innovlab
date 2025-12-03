@@ -1,8 +1,21 @@
 import axios from 'axios';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { env } from '../config/env';
 
-const API_BASE_URL = 'http://localhost:3333'; // TODO: Move to env config
+// Use centralized environment configuration
+const API_BASE_URL = env.apiBaseUrl();
+const API_TIMEOUT = env.apiTimeout();
+const LOCATION_UPDATE_INTERVAL = env.locationUpdateInterval();
+const LOCATION_DISTANCE_FILTER = env.locationDistanceFilter();
+const LOCATION_ACCURACY_MAP = {
+  lowest: Location.Accuracy.Lowest,
+  low: Location.Accuracy.Low,
+  balanced: Location.Accuracy.Balanced,
+  high: Location.Accuracy.High,
+  highest: Location.Accuracy.Highest,
+  bestForNavigation: Location.Accuracy.BestForNavigation,
+} as const;
 
 export interface MissionDetails {
   id: string;
@@ -17,6 +30,7 @@ export interface MissionDetails {
     country: string;
     latitude: number;
     longitude: number;
+    fullAddress?: string;
   };
   arrivalAddress: {
     id: string;
@@ -26,6 +40,7 @@ export interface MissionDetails {
     country: string;
     latitude: number;
     longitude: number;
+    fullAddress?: string;
   };
   estimatedDeparture: string;
   estimatedArrival: string;
@@ -36,22 +51,7 @@ export interface MissionDetails {
   };
 }
 
-export interface LocationUpdate {
-  id: string;
-  latitude: number;
-  longitude: number;
-  speed?: number;
-  heading?: number;
-  accuracy?: number;
-  timestamp: string;
-}
-
-export interface IssueType {
-  value: 'breakdown' | 'delay' | 'accident' | 'traffic' | 'other';
-  label: string;
-}
-
-export const ISSUE_TYPES: IssueType[] = [
+export const ISSUE_TYPES = [
   { value: 'breakdown', label: 'Panne' },
   { value: 'delay', label: 'Retard' },
   { value: 'accident', label: 'Accident' },
@@ -62,47 +62,41 @@ export const ISSUE_TYPES: IssueType[] = [
 class DriverTrackingService {
   private trackingToken: string | null = null;
   private trackingPin: string | null = null;
-  private locationWatchId: Location.LocationSubscription | null = null;
+  private locationSubscription: Location.LocationSubscription | null = null;
   private isTracking: boolean = false;
 
-  /**
-   * Authentifier le chauffeur avec le token et le PIN
-   */
   async authenticate(token: string, pin: string): Promise<MissionDetails> {
     try {
-      const response = await axios.post(`${API_BASE_URL}/track/${token}/authenticate`, {
-        pin,
-      });
+      const response = await axios.post(`${API_BASE_URL}/track/${token}/authenticate`, { pin });
 
-      if (response.data.success) {
+      if (response.status === 200 && response.data.success) {
         this.trackingToken = token;
         this.trackingPin = pin;
-
-        // Sauvegarder les credentials localement
-        await AsyncStorage.setItem('tracking_token', token);
-        await AsyncStorage.setItem('tracking_pin', pin);
-
+        await AsyncStorage.multiSet([
+            ['tracking_token', token],
+            ['tracking_pin', pin]
+        ]);
+        console.log('Authentication successful and credentials saved.');
         return response.data.data.mission;
       } else {
-        throw new Error(response.data.message || 'Authentification échouée');
+        throw new Error(response.data.message || 'Authentication failed');
       }
     } catch (error: any) {
-      console.error('Authentication error:', error);
-      throw new Error(
-        error.response?.data?.message || 'Impossible de se connecter. Vérifiez vos identifiants.'
-      );
+        const errorMessage = error.response?.data?.message || error.message || 'An unknown error occurred';
+        console.error('Authentication error:', errorMessage);
+        throw new Error(errorMessage);
     }
   }
 
-  /**
-   * Récupérer les credentials sauvegardés
-   */
   async getSavedCredentials(): Promise<{ token: string; pin: string } | null> {
-    try {
+     try {
       const token = await AsyncStorage.getItem('tracking_token');
       const pin = await AsyncStorage.getItem('tracking_pin');
 
       if (token && pin) {
+        // Re-initialize the service with the saved credentials
+        this.trackingToken = token;
+        this.trackingPin = pin;
         return { token, pin };
       }
       return null;
@@ -112,146 +106,94 @@ class DriverTrackingService {
     }
   }
 
-  /**
-   * Supprimer les credentials sauvegardés
-   */
   async clearCredentials(): Promise<void> {
-    try {
-      await AsyncStorage.removeItem('tracking_token');
-      await AsyncStorage.removeItem('tracking_pin');
-      this.trackingToken = null;
-      this.trackingPin = null;
-    } catch (error) {
-      console.error('Error clearing credentials:', error);
-    }
+    await AsyncStorage.multiRemove(['tracking_token', 'tracking_pin']);
+    this.trackingToken = null;
+    this.trackingPin = null;
   }
 
-  /**
-   * Envoyer une mise à jour de position GPS
-   */
   async sendLocationUpdate(
-    latitude: number,
-    longitude: number,
-    speed?: number,
-    heading?: number,
-    accuracy?: number
+    location: Location.LocationObject
   ): Promise<void> {
     if (!this.trackingToken || !this.trackingPin) {
-      throw new Error('Non authentifié');
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_BASE_URL}/track/${this.trackingToken}/location`,
-        {
-          latitude,
-          longitude,
-          speed,
-          heading,
-          accuracy,
-        },
-        {
-          headers: {
-            'X-Tracking-Token': this.trackingToken,
-            'X-Tracking-Pin': this.trackingPin,
-          },
-        }
-      );
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de l\'envoi de la position');
-      }
-    } catch (error: any) {
-      console.error('Error sending location:', error);
-      throw new Error(
-        error.response?.data?.message || 'Impossible d\'envoyer la position GPS'
-      );
-    }
-  }
-
-  /**
-   * Démarrer le tracking GPS automatique
-   */
-  async startLocationTracking(
-    onLocationUpdate?: (location: Location.LocationObject) => void,
-    onError?: (error: string) => void
-  ): Promise<void> {
-    if (this.isTracking) {
-      console.log('Tracking already active');
+      console.warn('Skipping location update: not authenticated.');
       return;
     }
 
     try {
-      // Demander les permissions
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        throw new Error('Permission de localisation refusée');
-      }
+      const url = `${API_BASE_URL}/track/${this.trackingToken}/location`;
+      const payload = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        speed: location.coords.speed,
+        heading: location.coords.heading,
+        accuracy: location.coords.accuracy,
+      };
 
-      // Démarrer le tracking
-      this.locationWatchId = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 5000, // 5 secondes
-          distanceInterval: 10, // 10 mètres
+      await axios.post(url, payload, {
+        headers: {
+          'X-Tracking-Token': this.trackingToken,
+          'X-Tracking-Pin': this.trackingPin,
         },
-        async (location) => {
-          try {
-            // Envoyer la position au serveur
-            await this.sendLocationUpdate(
-              location.coords.latitude,
-              location.coords.longitude,
-              location.coords.speed ?? undefined,
-              location.coords.heading ?? undefined,
-              location.coords.accuracy ?? undefined
-            );
+        timeout: API_TIMEOUT,
+      });
+      console.log(`Location updated sent: ${location.coords.latitude}, ${location.coords.longitude}`);
 
-            // Callback pour mise à jour locale
-            if (onLocationUpdate) {
-              onLocationUpdate(location);
-            }
-          } catch (error: any) {
-            console.error('Error in location callback:', error);
-            if (onError) {
-              onError(error.message);
-            }
-          }
-        }
-      );
-
-      this.isTracking = true;
-      console.log('Location tracking started');
     } catch (error: any) {
-      console.error('Error starting location tracking:', error);
-      if (onError) {
-        onError(error.message);
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to send location update';
+        console.error('sendLocationUpdate error:', errorMessage);
+        // We don't throw here to avoid stopping the background tracking
+    }
+  }
+
+  async startLocationTracking(
+    onLocationUpdate: (location: Location.LocationObject) => void,
+    onError: (error: string) => void
+  ): Promise<void> {
+    if (this.isTracking) {
+      console.log('Tracking is already active.');
+      return;
+    }
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      onError('Permission to access location was denied');
+      throw new Error('Permission to access location was denied');
+    }
+
+    console.log('Starting continuous location tracking...');
+    this.isTracking = true;
+
+    const accuracyLevel = LOCATION_ACCURACY_MAP[env.locationAccuracy()];
+
+    this.locationSubscription = await Location.watchPositionAsync(
+      {
+        accuracy: accuracyLevel,
+        timeInterval: LOCATION_UPDATE_INTERVAL,
+        distanceInterval: LOCATION_DISTANCE_FILTER,
+      },
+      (location) => {
+        console.log('New location received from watcher');
+        this.sendLocationUpdate(location); // Send to server
+        onLocationUpdate(location); // Update UI
       }
-      throw error;
-    }
+    );
+    console.log('Location watcher started.');
   }
 
-  /**
-   * Arrêter le tracking GPS
-   */
   stopLocationTracking(): void {
-    if (this.locationWatchId) {
-      this.locationWatchId.remove();
-      this.locationWatchId = null;
+    if (this.locationSubscription) {
+      this.locationSubscription.remove();
+      this.locationSubscription = null;
       this.isTracking = false;
-      console.log('Location tracking stopped');
+      console.log('Location tracking stopped.');
     }
   }
 
-  /**
-   * Vérifier si le tracking est actif
-   */
   isTrackingActive(): boolean {
     return this.isTracking;
   }
-
-  /**
-   * Signaler un problème
-   */
+  
   async reportIssue(
     type: string,
     description: string,
@@ -260,114 +202,68 @@ class DriverTrackingService {
     longitude?: number
   ): Promise<void> {
     if (!this.trackingToken || !this.trackingPin) {
-      throw new Error('Non authentifié');
+      throw new Error('Not authenticated for reporting an issue.');
     }
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/track/${this.trackingToken}/report-issue`,
-        {
-          type,
-          description,
-          photos,
-          latitude,
-          longitude,
+      const url = `${API_BASE_URL}/track/${this.trackingToken}/report-issue`;
+      const payload = {
+        type,
+        description,
+        photos,
+        latitude,
+        longitude,
+      };
+
+      await axios.post(url, payload, {
+        headers: {
+          'X-Tracking-Token': this.trackingToken,
+          'X-Tracking-Pin': this.trackingPin,
         },
-        {
-          headers: {
-            'X-Tracking-Token': this.trackingToken,
-            'X-Tracking-Pin': this.trackingPin,
-          },
-        }
-      );
+        timeout: API_TIMEOUT,
+      });
+      console.log(`Issue reported: ${type}`);
 
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors du signalement');
-      }
     } catch (error: any) {
-      console.error('Error reporting issue:', error);
-      throw new Error(
-        error.response?.data?.message || 'Impossible de signaler le problème'
-      );
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to report issue';
+      console.error('reportIssue error:', errorMessage);
+      throw new Error(errorMessage);
     }
   }
 
-  /**
-   * Récupérer les problèmes signalés
-   */
-  async getIssues(): Promise<any[]> {
-    if (!this.trackingToken || !this.trackingPin) {
-      throw new Error('Non authentifié');
-    }
 
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/track/${this.trackingToken}/issues`,
-        {
-          headers: {
-            'X-Tracking-Token': this.trackingToken,
-            'X-Tracking-Pin': this.trackingPin,
-          },
-        }
-      );
-
-      if (response.data.success) {
-        return response.data.data.issues;
-      }
-      return [];
-    } catch (error: any) {
-      console.error('Error fetching issues:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Valider la livraison avec le QR code
-   */
   async validateDelivery(qrCodeData: string, latitude?: number, longitude?: number): Promise<void> {
     try {
-      // Extraire le token et mission_id du QR code
       const url = new URL(qrCodeData);
       const token = url.searchParams.get('token');
       const missionId = url.searchParams.get('mission_id');
 
       if (!token || !missionId) {
-        throw new Error('QR code invalide');
+        throw new Error('Invalid QR code data.');
       }
+      
+      const validationUrl = `${API_BASE_URL}/delivery-proof?token=${token}&mission_id=${missionId}`;
+      const response = await axios.get(validationUrl);
 
-      const params = new URLSearchParams({
-        token,
-        mission_id: missionId,
-      });
-
-      if (latitude) params.append('latitude', latitude.toString());
-      if (longitude) params.append('longitude', longitude.toString());
-
-      const response = await axios.get(
-        `${API_BASE_URL}/delivery-proof?${params.toString()}`
-      );
-
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Erreur lors de la validation');
+      if (response.status !== 200 || !response.data.success) {
+         throw new Error(response.data.message || 'Delivery validation failed');
       }
+      console.log('Delivery validated successfully');
+
     } catch (error: any) {
-      console.error('Error validating delivery:', error);
-      throw new Error(
-        error.response?.data?.message || 'Impossible de valider la livraison'
-      );
+        const errorMessage = error.response?.data?.message || error.message || 'An unknown error occurred during validation';
+        console.error('validateDelivery error:', errorMessage);
+        throw new Error(errorMessage);
     }
   }
 
-  /**
-   * Calculer la distance entre deux points (en mètres)
-   */
   calculateDistance(
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number
   ): number {
-    const R = 6371e3; // Rayon de la Terre en mètres
+    const R = 6371e3; // meters
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -376,7 +272,6 @@ class DriverTrackingService {
     const a =
       Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;

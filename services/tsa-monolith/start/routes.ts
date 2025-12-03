@@ -198,6 +198,13 @@ router
     // Gestion des missions
     router.get('/missions', '#controllers/http/affreteur/missions_controller.index')
     router.post('/missions', '#controllers/http/affreteur/missions_controller.store')
+
+    // Get active GPS locations for all missions (MUST BE BEFORE /missions/:id)
+    router.get(
+      '/missions/active-locations',
+      '#controllers/http/affreteur/missions_controller.getActiveLocations'
+    )
+
     router.get('/missions/:id', '#controllers/http/affreteur/missions_controller.show')
     router.put('/missions/:id', '#controllers/http/affreteur/missions_controller.update')
     router.post('/missions/:id/publish', '#controllers/http/affreteur/missions_controller.publish')
@@ -293,6 +300,19 @@ router
       '/missions/available',
       '#controllers/http/transporteur/missions_controller.available'
     )
+
+    // Get active GPS locations for all missions (MUST BE BEFORE /missions/:id)
+    router.get(
+      '/missions/active-locations',
+      '#controllers/http/transporteur/missions_controller.getActiveLocations'
+    )
+
+    // Get location history for a specific mission (MUST BE BEFORE /missions/:id)
+    router.get(
+      '/missions/:id/locations',
+      '#controllers/http/transporteur/missions_controller.getLocationUpdates'
+    )
+
     router.get('/missions/:id', '#controllers/http/transporteur/missions_controller.show')
 
     // Mes missions
@@ -337,7 +357,7 @@ router
 // ===== ROUTES DE TRACKING POUR CHAUFFEURS (Token + PIN Auth) =====
 router
   .group(() => {
-    // Authentification chauffeur
+    // Authentification chauffeur (sans middleware d'authentification)
     router.post(
       '/authenticate',
       '#controllers/http/driver/mission_tracking_controller.authenticate'
@@ -345,24 +365,39 @@ router
   })
   .prefix('/track/:token')
 
+// Routes protégées par le middleware d'authentification
 router
   .group(() => {
     // Mise à jour de position
-    router.post('/location', '#controllers/http/driver/mission_tracking_controller.updateLocation')
+    router.post(
+      '/location',
+      '#controllers/http/driver/mission_tracking_controller.updateLocation'
+    )
 
     // Récupération des positions
-    router.get('/locations', '#controllers/http/driver/mission_tracking_controller.getLocations')
+    router.get(
+      '/locations',
+      '#controllers/http/driver/mission_tracking_controller.getLocations'
+    )
+    
     router.get(
       '/last-location',
       '#controllers/http/driver/mission_tracking_controller.getLastLocation'
     )
 
     // Signalement de problèmes
-    router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
-    router.get('/issues', '#controllers/http/driver/mission_tracking_controller.getIssues')
+    router.post(
+      '/report-issue',
+      '#controllers/http/driver/mission_tracking_controller.reportIssue'
+    )
+    
+    router.get(
+      '/issues',
+      '#controllers/http/driver/mission_tracking_controller.getIssues'
+    )
   })
   .prefix('/track/:token')
-  .middleware([() => import('#middleware/tracking_auth_middleware')])
+  .middleware(middleware.tracking())
 
 // Validation de livraison via QR code (public)
 router.get(
@@ -573,10 +608,12 @@ router.get('/swagger.json', async ({ response }) => {
 // ===== ROUTES WEBSOCKET =====
 // Route principale pour les notifications temps réel
 // Conditionnée pour ne charger que si le provider WebSocket est disponible
+// @ts-ignore - WebSocket support via adonisjs-websocket package
 if (typeof router.ws === 'function') {
+  // @ts-ignore
   router.ws(
     '/ws/notifications',
-    async (ctx) => {
+    async (ctx: any) => {
       try {
         const { ws, auth } = ctx
         // Authentification requise

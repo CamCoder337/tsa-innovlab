@@ -17,6 +17,8 @@
 .env.*.local
 services/tsa-ai/.env
 services/tsa-monolith/.env
+apps/driver-app/.env
+apps/frontend-web/.env
 
 # ================================
 # Python
@@ -116,3 +118,4 @@ coverage/
 .DS_Store
 Thumbs.db
 desktop.ini
+nul
