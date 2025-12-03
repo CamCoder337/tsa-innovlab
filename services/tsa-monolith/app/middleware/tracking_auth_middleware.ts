@@ -14,25 +14,25 @@ export default class TrackingAuthMiddleware {
     try {
       // Récupérer le token depuis l'URL
       const tokenFromUrl = request.param('token')
-      
+
       // Récupérer le token et le PIN depuis les headers ou les paramètres
       const trackingToken = request.header('X-Tracking-Token') || tokenFromUrl
       const trackingPin = request.header('X-Tracking-Pin')
 
-      logger.info('🔐 Tentative d\'authentification tracking', {
+      logger.info("🔐 Tentative d'authentification tracking", {
         url: request.url(),
         method: request.method(),
         hasToken: !!trackingToken,
         hasPin: !!trackingPin,
-        tokenFromUrl: tokenFromUrl ? '***' : 'non fourni'
+        tokenFromUrl: tokenFromUrl ? '***' : 'non fourni',
       })
 
       if (!trackingToken || !trackingPin) {
         logger.warn('❌ Authentification échouée: identifiants manquants', {
           hasToken: !!trackingToken,
-          hasPin: !!trackingPin
+          hasPin: !!trackingPin,
         })
-        
+
         return response.unauthorized({
           success: false,
           message: 'Tracking token and PIN are required',
@@ -49,9 +49,9 @@ export default class TrackingAuthMiddleware {
       if (!mission) {
         logger.warn('❌ Authentification échouée: identifiants invalides', {
           hasToken: !!trackingToken,
-          hasPin: !!trackingPin
+          hasPin: !!trackingPin,
         })
-        
+
         return response.unauthorized({
           success: false,
           message: 'Invalid tracking credentials',
@@ -62,7 +62,7 @@ export default class TrackingAuthMiddleware {
       logger.info('✅ Authentification tracking réussie', {
         missionId: mission.id,
         // Utilisation d'une propriété existante de la mission
-        status: mission.status || 'inconnu'
+        status: mission.status || 'inconnu',
       })
 
       console.log(`✅ Middleware: Mission ${mission.id} authenticated, proceeding to controller...`)
@@ -74,17 +74,17 @@ export default class TrackingAuthMiddleware {
 
       console.log(`✅ Middleware: Controller finished for mission ${mission.id}`)
     } catch (error) {
-      logger.error('❌ Erreur lors de l\'authentification tracking', {
+      logger.error("❌ Erreur lors de l'authentification tracking", {
         error: error.message,
         stack: error.stack,
         url: request.url(),
-        method: request.method()
+        method: request.method(),
       })
-      
+
       return response.status(500).json({
         success: false,
         message: 'Internal server error during authentication',
-        error: error.message
+        error: error.message,
       })
     }
   }

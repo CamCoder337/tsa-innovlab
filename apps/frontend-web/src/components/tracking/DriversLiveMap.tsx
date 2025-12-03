@@ -24,6 +24,50 @@ interface DriversLiveMapProps {
   className?: string;
 }
 
+interface LocationAPIResponse {
+  missionId: string;
+  missionTitle?: string;
+  missionStatus?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+    speed?: number;
+    heading?: number;
+    accuracy?: number;
+    timestamp: string;
+  };
+  driver?: unknown;
+  departure?: unknown;
+  arrival?: unknown;
+}
+
+interface ConnectionStatus {
+  connected: boolean;
+}
+
+interface LocationUpdateData {
+  data?: {
+    missionId?: string;
+    deviceId?: string;
+    driverId?: string;
+    latitude: number;
+    longitude: number;
+    timestamp?: string;
+    speed?: number;
+    heading?: number;
+    accuracy?: number;
+  };
+  missionId?: string;
+  deviceId?: string;
+  driverId?: string;
+  latitude?: number;
+  longitude?: number;
+  timestamp?: string;
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
+}
+
 export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) {
   console.log('🟠 [DriversLiveMap] Component rendering');
 
@@ -138,7 +182,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
         if (data.success && data.data.locations) {
           // Convert locations to driver format
           const driversData = data.data.locations
-            .map((loc: any) => {
+            .map((loc: LocationAPIResponse) => {
               // Ensure latitude and longitude are numbers
               const latitude = Number(loc.location?.latitude);
               const longitude = Number(loc.location?.longitude);
@@ -156,16 +200,16 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
                 missionStatus: loc.missionStatus,
                 latitude,
                 longitude,
-                speed: loc.location.speed ? Number(loc.location.speed) : undefined,
-                heading: loc.location.heading ? Number(loc.location.heading) : undefined,
-                accuracy: loc.location.accuracy ? Number(loc.location.accuracy) : undefined,
-                timestamp: loc.location.timestamp,
+                speed: loc.location?.speed ? Number(loc.location.speed) : undefined,
+                heading: loc.location?.heading ? Number(loc.location.heading) : undefined,
+                accuracy: loc.location?.accuracy ? Number(loc.location.accuracy) : undefined,
+                timestamp: loc.location?.timestamp || new Date().toISOString(),
                 driver: loc.driver,
                 departure: loc.departure,
                 arrival: loc.arrival,
               };
             })
-            .filter((d: any) => d !== null);
+            .filter((d: DriverPosition | null): d is DriverPosition => d !== null);
 
           setDrivers(driversData);
           setLastUpdate(new Date());
@@ -180,7 +224,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
 
   // Connexion WebSocket pour les mises à jour en temps réel
   useEffect(() => {
-    const handleLocationUpdate = (data: any) => {
+    const handleLocationUpdate = (data: LocationUpdateData) => {
       console.log('📍 Received location update:', data);
 
       // Vérifier si les données sont valides
@@ -199,6 +243,12 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
         : locationData.deviceId || `driver-${locationData.driverId || 'unknown'}`;
 
       console.log('📍 WebSocket location update - deviceId:', deviceId, 'missionId:', locationData.missionId);
+
+      // Validate that we have valid coordinates
+      if (locationData.latitude === undefined || locationData.longitude === undefined) {
+        console.error('Invalid location data: missing coordinates', locationData);
+        return;
+      }
 
       const position: DriverPosition = {
         deviceId,
@@ -264,7 +314,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
     };
 
     // Gestion des changements de connexion
-    const handleConnectionChange = (status: any) => {
+    const handleConnectionChange = (status: ConnectionStatus) => {
       console.log('🔄 WebSocket connection status changed:', status);
       setIsConnected(status.connected);
 
@@ -319,6 +369,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
       console.error('❌ WebSocket connection error:', error);
       setIsConnected(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mettre à jour les markers sur la carte
@@ -454,16 +505,20 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
 
   // Cleanup SEULEMENT au démontage du composant
   useEffect(() => {
+    // Capture refs values in local variables for cleanup
+    const infoWindows = infoWindowsRef.current;
+    const markers = markersRef.current;
+
     return () => {
       console.log('🟠 [DriversLiveMap] Component unmounting - Final cleanup');
 
       // Cleanup all InfoWindows first
       console.log(
         '🟠 [DriversLiveMap] Cleaning up',
-        infoWindowsRef.current.size,
+        infoWindows.size,
         'InfoWindows'
       );
-      for (const [deviceId, infoWindow] of infoWindowsRef.current.entries()) {
+      for (const [deviceId, infoWindow] of infoWindows.entries()) {
         try {
           console.log('🟠 [DriversLiveMap] Closing InfoWindow for:', deviceId);
           infoWindow.close();
@@ -471,11 +526,11 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
           console.error('❌ [DriversLiveMap] Error closing InfoWindow:', deviceId, error);
         }
       }
-      infoWindowsRef.current.clear();
+      infoWindows.clear();
 
       // Cleanup all markers on unmount
-      console.log('🟠 [DriversLiveMap] Cleaning up', markersRef.current.size, 'markers');
-      for (const [deviceId, marker] of markersRef.current.entries()) {
+      console.log('🟠 [DriversLiveMap] Cleaning up', markers.size, 'markers');
+      for (const [deviceId, marker] of markers.entries()) {
         try {
           console.log('🟠 [DriversLiveMap] Removing marker:', deviceId);
           marker.setMap(null);
@@ -483,7 +538,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
           console.error('❌ [DriversLiveMap] Error removing marker:', deviceId, error);
         }
       }
-      markersRef.current.clear();
+      markers.clear();
       console.log('🟠 [DriversLiveMap] Final cleanup completed');
     };
   }, []); // Dépendances vides = cleanup SEULEMENT au unmount
@@ -513,7 +568,7 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
       if (data.success && data.data.locations) {
         // Convert locations to driver format
         const driversData = data.data.locations
-          .map((loc: any) => {
+          .map((loc: LocationAPIResponse) => {
             // Ensure latitude and longitude are numbers
             const latitude = Number(loc.location?.latitude);
             const longitude = Number(loc.location?.longitude);
@@ -531,16 +586,16 @@ export default function DriversLiveMap({ className = '' }: DriversLiveMapProps) 
               missionStatus: loc.missionStatus,
               latitude,
               longitude,
-              speed: loc.location.speed ? Number(loc.location.speed) : undefined,
-              heading: loc.location.heading ? Number(loc.location.heading) : undefined,
-              accuracy: loc.location.accuracy ? Number(loc.location.accuracy) : undefined,
-              timestamp: loc.location.timestamp,
+              speed: loc.location?.speed ? Number(loc.location.speed) : undefined,
+              heading: loc.location?.heading ? Number(loc.location.heading) : undefined,
+              accuracy: loc.location?.accuracy ? Number(loc.location.accuracy) : undefined,
+              timestamp: loc.location?.timestamp || new Date().toISOString(),
               driver: loc.driver,
               departure: loc.departure,
               arrival: loc.arrival,
             };
           })
-          .filter((d: any) => d !== null);
+          .filter((d: DriverPosition | null): d is DriverPosition => d !== null);
 
         setDrivers(driversData);
         setLastUpdate(new Date());

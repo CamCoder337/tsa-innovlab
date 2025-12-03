@@ -30,8 +30,15 @@ export interface WebSocketMessage<T = unknown> {
 type EventCallback<T = unknown> = (data: T) => void;
 
 interface WebSocketData {
-  data?: any;
-  [key: string]: any;
+  data?: unknown;
+  missionId?: string;
+  deviceId?: string;
+  latitude?: number;
+  longitude?: number;
+  timestamp?: string;
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
 }
 
 /**
@@ -143,9 +150,9 @@ class WebSocketService {
     try {
       const { type, data, userId } = message;
       console.log(`📨 Received WebSocket message:`, { type, userId });
-      
+
       // Vérifier si le message contient des données et les extraire correctement
-      let messageData: any;
+      let messageData: unknown;
       
       if (data && typeof data === 'object') {
         // Si data est un objet avec une propriété 'data', l'utiliser
@@ -161,10 +168,10 @@ class WebSocketService {
       this.emit(type, messageData);
       
       // Émettre également un événement générique pour tous les messages
-      this.emit('*', { 
-        type, 
-        data: messageData, 
-        userId: userId || (message as any).userId 
+      this.emit('*', {
+        type,
+        data: messageData,
+        userId: userId || message.userId
       });
     } catch (error) {
       console.error('❌ Error handling WebSocket message:', error);

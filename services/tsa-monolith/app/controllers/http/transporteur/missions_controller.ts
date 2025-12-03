@@ -17,7 +17,7 @@ import NotificationManagerService from '#services/notification_manager_service'
 
 @inject()
 export default class MissionsController {
-  constructor(private notificationManager: NotificationManagerService) { }
+  constructor(private notificationManager: NotificationManagerService) {}
 
   async available({ request, response }: HttpContext) {
     try {
@@ -708,15 +708,15 @@ export default class MissionsController {
    */
   async getActiveLocations({ response, auth, logger }: HttpContext) {
     logger.info('🟢 DEBUT getActiveLocations')
-    
+
     try {
       // Authentification
       const user = auth.getUserOrFail()
-      
+
       logger.info('📍 Récupération des positions actives pour le transporteur', {
         transporteurId: user.id,
       })
-      
+
       // Vérification de la connexion à la base de données
       try {
         await Database.rawQuery('SELECT 1')
@@ -724,7 +724,7 @@ export default class MissionsController {
       } catch (dbError) {
         logger.error('❌ Erreur de connexion à la base de données', {
           error: dbError.message,
-          stack: dbError.stack
+          stack: dbError.stack,
         })
         throw new Error('Impossible de se connecter à la base de données')
       }
@@ -746,46 +746,48 @@ export default class MissionsController {
         .preload('transporteur', (query) => {
           query.select('id', 'firstName', 'lastName')
         })
-      
+
       logger.info(`✅ ${missions.length} missions trouvées`, {
-        missionIds: missions.map(m => m.id)
+        missionIds: missions.map((m) => m.id),
       })
 
       logger.info(`🔍 Traitement de ${missions.length} missions`)
-      
+
       // Pour chaque mission, on récupère la dernière position
       const locationsPromises = missions.map(async (mission) => {
         const missionId = mission.id
         logger.info(`🔍 Traitement de la mission ${missionId} (${mission.status})`)
-        
+
         try {
           // Récupération de la dernière position
           const latestLocation = await LocationUpdate.query()
             .where('mission_id', missionId)
             .orderBy('timestamp', 'desc')
             .first()
-          
+
           if (!latestLocation) {
             logger.info(`ℹ️ Aucune position trouvée pour la mission ${missionId}`)
             return null
           }
-          
+
           logger.info(`📡 Position trouvée pour la mission ${missionId}`, {
             locationId: latestLocation.id,
-            timestamp: latestLocation.timestamp?.toISO()
+            timestamp: latestLocation.timestamp?.toISO(),
           })
 
           // Vérification de la date de la position (5 dernières minutes)
           const fiveMinutesAgo = DateTime.now().minus({ minutes: 5 })
           const locationDate = latestLocation.timestamp
-          
+
           if (!locationDate) {
             logger.warn(`⚠️ La position ${latestLocation.id} n'a pas de date`)
             return null
           }
-          
+
           if (locationDate < fiveMinutesAgo) {
-            logger.info(`⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`)
+            logger.info(
+              `⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`
+            )
             return null
           }
 
@@ -802,28 +804,34 @@ export default class MissionsController {
               accuracy: latestLocation.accuracy,
               timestamp: locationDate.toISO(),
             },
-            driver: mission.transporteur ? {
-              id: mission.transporteur.id,
-              name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
-            } : null,
-            departure: mission.adresseDepart ? {
-              latitude: mission.adresseDepart.latitude,
-              longitude: mission.adresseDepart.longitude,
-              address: mission.adresseDepart.street,
-            } : null,
-            arrival: mission.adresseArrivee ? {
-              latitude: mission.adresseArrivee.latitude,
-              longitude: mission.adresseArrivee.longitude,
-              address: mission.adresseArrivee.street,
-            } : null,
+            driver: mission.transporteur
+              ? {
+                  id: mission.transporteur.id,
+                  name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
+                }
+              : null,
+            departure: mission.adresseDepart
+              ? {
+                  latitude: mission.adresseDepart.latitude,
+                  longitude: mission.adresseDepart.longitude,
+                  address: mission.adresseDepart.street,
+                }
+              : null,
+            arrival: mission.adresseArrivee
+              ? {
+                  latitude: mission.adresseArrivee.latitude,
+                  longitude: mission.adresseArrivee.longitude,
+                  address: mission.adresseArrivee.street,
+                }
+              : null,
           }
-          
+
           logger.debug(`📍 Données de position pour la mission ${missionId}:`, locationData)
           return locationData
         } catch (error) {
           logger.error(`❌ Erreur lors du traitement de la mission ${missionId}:`, {
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
           })
           return null
         }
@@ -831,13 +839,14 @@ export default class MissionsController {
 
       // Traitement des résultats
       logger.info('🔍 Traitement des positions...')
-      const locations = (await Promise.all(locationsPromises)).filter(Boolean)
-      
+      const locationsResults = await Promise.all(locationsPromises)
+      const locations = locationsResults.filter(Boolean)
+
       logger.info(`✅ ${locations.length} positions actives trouvées`)
-      
+
       return response.ok({
         success: true,
-        data: { locations }
+        data: { locations },
       })
     } catch (error) {
       logger.error('❌ ERREUR CRITIQUE dans getActiveLocations', {
@@ -850,17 +859,20 @@ export default class MissionsController {
           sqlMessage: error.sqlMessage,
           sqlState: error.sqlState,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
 
       return response.internalServerError({
         success: false,
         message: 'Une erreur est survenue lors de la récupération des positions actives',
-        error: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        } : undefined,
+        error:
+          process.env.NODE_ENV === 'development'
+            ? {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+              }
+            : undefined,
       })
     } finally {
       logger.info('🔴 FIN getActiveLocations')
@@ -886,7 +898,9 @@ export default class MissionsController {
         .first()
 
       if (!mission) {
-        logger.warn(`❌ Mission ${params.id} non trouvée ou n'appartient pas au transporteur ${user.id}`)
+        logger.warn(
+          `❌ Mission ${params.id} non trouvée ou n'appartient pas au transporteur ${user.id}`
+        )
         return response.status(404).json({
           success: false,
           message: 'Mission not found or access denied',

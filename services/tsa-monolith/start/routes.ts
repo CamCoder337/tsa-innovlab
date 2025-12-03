@@ -369,32 +369,20 @@ router
 router
   .group(() => {
     // Mise à jour de position
-    router.post(
-      '/location',
-      '#controllers/http/driver/mission_tracking_controller.updateLocation'
-    )
+    router.post('/location', '#controllers/http/driver/mission_tracking_controller.updateLocation')
 
     // Récupération des positions
-    router.get(
-      '/locations',
-      '#controllers/http/driver/mission_tracking_controller.getLocations'
-    )
-    
+    router.get('/locations', '#controllers/http/driver/mission_tracking_controller.getLocations')
+
     router.get(
       '/last-location',
       '#controllers/http/driver/mission_tracking_controller.getLastLocation'
     )
 
     // Signalement de problèmes
-    router.post(
-      '/report-issue',
-      '#controllers/http/driver/mission_tracking_controller.reportIssue'
-    )
-    
-    router.get(
-      '/issues',
-      '#controllers/http/driver/mission_tracking_controller.getIssues'
-    )
+    router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
+
+    router.get('/issues', '#controllers/http/driver/mission_tracking_controller.getIssues')
   })
   .prefix('/track/:token')
   .middleware(middleware.tracking())

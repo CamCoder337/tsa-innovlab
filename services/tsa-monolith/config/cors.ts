@@ -17,7 +17,7 @@ const corsConfig = defineConfig({
     'Authorization',
     'X-Tracking-Token',
     'X-Tracking-Pin',
-    'X-Requested-With'
+    'X-Requested-With',
   ],
   exposeHeaders: [],
   credentials: true,

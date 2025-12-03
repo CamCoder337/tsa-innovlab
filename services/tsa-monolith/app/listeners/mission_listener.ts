@@ -8,7 +8,9 @@ export default class MissionListener {
    */
   async onLocationUpdate({ missionId, location }: EventsList['mission:location_update']) {
     // Import dynamique pour éviter les dépendances circulaires
-    const { default: WebSocketService, WebSocketEventType } = await import('#services/websocket_service')
+    const { default: WebSocketService, WebSocketEventType } = await import(
+      '#services/websocket_service'
+    )
     const websocketService = WebSocketService.getInstance()
 
     console.log(`📍 Broadcasting location update for mission ${missionId}`)

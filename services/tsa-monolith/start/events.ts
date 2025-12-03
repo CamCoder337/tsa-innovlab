@@ -1,5 +1,5 @@
 import emitter from '@adonisjs/core/services/emitter'
-import MissionListener from '#listeners/mission_listener'
+const MissionListener = () => import('#listeners/mission_listener')
 
 console.log('🔔 Registering mission event listeners...')
 

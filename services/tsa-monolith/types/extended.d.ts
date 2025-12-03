@@ -11,9 +11,7 @@ declare module '@adonisjs/core/http' {
      * Validate request data using a VineJS validator
      * This is a compatibility shim for older AdonisJS code
      */
-    validateUsing<T extends Validator<any, any>>(
-      validator: T
-    ): Promise<Infer<T>>
+    validateUsing<T extends Validator<any, any>>(validator: T): Promise<Infer<T>>
   }
 }
 
@@ -43,9 +41,7 @@ declare module '@vinejs/vine' {
     /**
      * Unique validation rule
      */
-    unique(
-      callback: (db: any, value: string) => Promise<boolean>
-    ): this
+    unique(callback: (db: any, value: string) => Promise<boolean>): this
   }
 }
 

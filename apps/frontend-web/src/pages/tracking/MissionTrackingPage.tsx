@@ -14,12 +14,12 @@ type Mission = {
   pickupAddress?: string | null;
   deliveryAddress?: string | null;
   pickupDate?: string | null;
+  deliveryDate?: string | null;
   deliveredAt?: string | null;
   trackingNumber?: string | null;
   trackingLinkToken?: string | null;
   qrCodeToken?: string | null;
   lastUpdated?: string | null;
-  [key: string]: any;
 };
 
 // Fonction utilitaire pour obtenir l'icône en fonction du type d'événement
@@ -91,7 +91,7 @@ export default function MissionTrackingPage() {
       if (!id) return;
       
       // Charger la mission depuis la liste des missions
-      const foundMission = missions.find((m: any) => m.id === id);
+      const foundMission = missions.find((m: Mission) => m.id === id);
       if (foundMission) {
         setMission(foundMission as unknown as Mission);
       }
@@ -99,8 +99,9 @@ export default function MissionTrackingPage() {
       // Essayer de rafraîchir les données
       await handleRefresh();
     };
-    
+
     loadMissionData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, missions]);
   
   // Fonction pour générer le QR code

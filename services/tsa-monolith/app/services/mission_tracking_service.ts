@@ -79,9 +79,9 @@ export class MissionTrackingService {
       speed: speed ?? undefined,
       heading: heading ?? undefined,
       accuracy: accuracy ?? undefined,
-    };
+    }
 
-    const locationUpdate = await LocationUpdate.create(locationData);
+    const locationUpdate = await LocationUpdate.create(locationData)
 
     // Si c'est la première mise à jour de position, démarrer la mission
     if (
@@ -99,7 +99,7 @@ export class MissionTrackingService {
       const websocketService = WebSocketService.getInstance()
       await websocketService.broadcastToTransporteurs({
         type: 'location_update',
-        data: locationData
+        data: locationData,
       })
       console.log('📡 Position diffusée via WebSocket:', locationData.deviceId)
     } catch (error) {

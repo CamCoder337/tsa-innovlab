@@ -62,7 +62,9 @@ export default class RegenerateTrackingCredentials extends BaseCommand {
         // Petit délai pour éviter les collisions de timestamp
         await new Promise((resolve) => setTimeout(resolve, 10))
       } catch (error) {
-        this.logger.error(`❌ Failed to regenerate credentials for mission ${mission.id}: ${error.message}`)
+        this.logger.error(
+          `❌ Failed to regenerate credentials for mission ${mission.id}: ${error.message}`
+        )
       }
     }
 

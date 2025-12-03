@@ -22,6 +22,34 @@ interface RealTimeRouteTrackerProps {
   className?: string;
 }
 
+interface LocationAPIData {
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
+}
+
+interface LocationUpdateData {
+  data?: {
+    missionId?: string;
+    latitude: number;
+    longitude: number;
+    timestamp?: string;
+    speed?: number;
+    heading?: number;
+    accuracy?: number;
+  };
+  missionId?: string;
+  latitude?: number;
+  longitude?: number;
+  timestamp?: string;
+  speed?: number;
+  heading?: number;
+  accuracy?: number;
+}
+
 export default function RealTimeRouteTracker({ mission, className = '' }: RealTimeRouteTrackerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -174,7 +202,7 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
-            const locationPoints: LocationPoint[] = data.data.map((loc: any) => ({
+            const locationPoints: LocationPoint[] = data.data.map((loc: LocationAPIData) => ({
               latitude: Number(loc.latitude),
               longitude: Number(loc.longitude),
               timestamp: loc.timestamp,
@@ -199,7 +227,7 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
 
   // Écouter les mises à jour WebSocket
   useEffect(() => {
-    const handleLocationUpdate = (data: any) => {
+    const handleLocationUpdate = (data: LocationUpdateData) => {
       console.log('📍 Real-time location update:', data);
 
       const locationData = data.data || data;
@@ -361,7 +389,7 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          const locationPoints: LocationPoint[] = data.data.map((loc: any) => ({
+          const locationPoints: LocationPoint[] = data.data.map((loc: LocationAPIData) => ({
             latitude: Number(loc.latitude),
             longitude: Number(loc.longitude),
             timestamp: loc.timestamp,

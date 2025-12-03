@@ -7,18 +7,17 @@ import { DateTime } from 'luxon'
 import emitter from '@adonisjs/core/services/emitter'
 
 export default class MissionTrackingController {
-
   async authenticate({ request, response, logger }: HttpContext) {
     const { token } = request.params()
     const { pin } = request.only(['pin'])
 
-    logger.info('Tentative d\'authentification', {
+    logger.info("Tentative d'authentification", {
       token: token ? '***' + token.slice(-4) : 'non fourni',
-      pin: pin ? '***' + pin.slice(-1) : 'non fourni'
+      pin: pin ? '***' + pin.slice(-1) : 'non fourni',
     })
 
     if (!pin) {
-      logger.warn('Tentative d\'authentification sans PIN')
+      logger.warn("Tentative d'authentification sans PIN")
       return response.badRequest({
         success: false,
         message: 'PIN is required',
@@ -30,8 +29,8 @@ export default class MissionTrackingController {
       const mission = await missionTrackingService.verifyTrackingCredentials(token, pin)
 
       if (!mission) {
-        logger.warn('Échec de l\'authentification: identifiants invalides', {
-          token: token ? '***' + token.slice(-4) : 'non fourni'
+        logger.warn("Échec de l'authentification: identifiants invalides", {
+          token: token ? '***' + token.slice(-4) : 'non fourni',
         })
         return response.unauthorized({
           success: false,
@@ -42,7 +41,7 @@ export default class MissionTrackingController {
 
       logger.info('Authentification réussie', {
         missionId: mission.id,
-        status: mission.status
+        status: mission.status,
       })
 
       return response.ok({
@@ -57,21 +56,23 @@ export default class MissionTrackingController {
             arrivalAddress: mission.adresseArrivee,
             estimatedDeparture: mission.dateDepartEstime,
             estimatedArrival: mission.dateArriveePrevue,
-            transporter: mission.transporteur ? {
-              id: mission.transporteur.id,
-              firstName: mission.transporteur.firstName,
-              lastName: mission.transporteur.lastName,
-            } : null
-          }
+            transporter: mission.transporteur
+              ? {
+                  id: mission.transporteur.id,
+                  firstName: mission.transporteur.firstName,
+                  lastName: mission.transporteur.lastName,
+                }
+              : null,
+          },
         },
-        trackingToken: token
+        trackingToken: token,
       })
     } catch (error) {
-      logger.error('Erreur lors de l\'authentification', error)
+      logger.error("Erreur lors de l'authentification", error)
       return response.internalServerError({
         success: false,
         message: 'An error occurred during authentication',
-        errors: [error.message]
+        errors: [error.message],
       })
     }
   }
@@ -81,18 +82,22 @@ export default class MissionTrackingController {
 
     if (!mission) {
       console.log('❌ No mission in context')
-      return response.unauthorized({ success: false, message: 'Mission not found' });
+      return response.unauthorized({ success: false, message: 'Mission not found' })
     }
 
     console.log(`✅ Mission found: ${mission.id}`)
 
     const { latitude, longitude, speed, heading, accuracy } = request.only([
-      'latitude', 'longitude', 'speed', 'heading', 'accuracy',
-    ]);
+      'latitude',
+      'longitude',
+      'speed',
+      'heading',
+      'accuracy',
+    ])
 
     if (!latitude || !longitude) {
       console.log('❌ Missing latitude or longitude')
-      return response.badRequest({ success: false, message: 'Latitude and longitude are required' });
+      return response.badRequest({ success: false, message: 'Latitude and longitude are required' })
     }
 
     console.log(`📍 Recording location: ${latitude}, ${longitude}`)
@@ -105,30 +110,29 @@ export default class MissionTrackingController {
         speed ? Number(speed) : undefined,
         heading ? Number(heading) : undefined,
         accuracy ? Number(accuracy) : undefined
-      );
+      )
 
       console.log(`✅ Location recorded for mission ${mission.id}. Emitting event...`)
-      logger.info(`Position recorded for mission ${mission.id}. Emitting event...`);
+      logger.info(`Position recorded for mission ${mission.id}. Emitting event...`)
 
       // Emit event for the listener to handle WebSocket broadcast
       await emitter.emit('mission:location_update', {
         missionId: mission.id,
         location: locationUpdate,
-      });
+      })
 
       console.log(`✅ Event mission:location_update emitted for mission ${mission.id}`)
-      logger.info(`Event mission:location_update emitted for mission ${mission.id}`);
+      logger.info(`Event mission:location_update emitted for mission ${mission.id}`)
 
       return response.ok({
         success: true,
         message: 'Location updated successfully',
         data: { location: locationUpdate.toJSON() },
-      });
-
+      })
     } catch (error) {
       console.error('❌ Error updating location:', error)
-      logger.error('Error updating location', { missionId: mission.id, error: error.message });
-      return response.internalServerError({ success: false, message: 'Failed to update location' });
+      logger.error('Error updating location', { missionId: mission.id, error: error.message })
+      return response.internalServerError({ success: false, message: 'Failed to update location' })
     }
   }
 
@@ -157,7 +161,6 @@ export default class MissionTrackingController {
     })
   }
 
-
   async getLastLocation({ response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -180,7 +183,6 @@ export default class MissionTrackingController {
       },
     })
   }
-
 
   async reportIssue({ request, response, mission }: HttpContext) {
     if (!mission) {
@@ -232,7 +234,6 @@ export default class MissionTrackingController {
     })
   }
 
-
   async getIssues({ response, mission }: HttpContext) {
     if (!mission) {
       return response.unauthorized({
@@ -250,7 +251,6 @@ export default class MissionTrackingController {
       data: { issues },
     })
   }
-
 
   async validateDelivery({ request, response }: HttpContext) {
     const { token, mission_id: missionId, latitude, longitude } = request.qs()

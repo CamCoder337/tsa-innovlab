@@ -3,13 +3,13 @@ import { defineConfig } from '@adonisjs/core/logger'
 
 const loggerConfig = defineConfig({
   default: 'app',
-  
+
   loggers: {
     app: {
       enabled: true,
       name: env.get('APP_NAME'),
       level: env.get('LOG_LEVEL', 'info'),
-      
+
       // Configuration personnalisée pour la console
       transport: {
         target: 'pino-pretty',
@@ -21,11 +21,11 @@ const loggerConfig = defineConfig({
           singleLine: true,
           sync: true,
           // Forcer l'encodage UTF-8
-          customPrettifiers: {}
-        }
-      }
-    }
-  }
+          customPrettifiers: {},
+        },
+      },
+    },
+  },
 })
 
 export default loggerConfig

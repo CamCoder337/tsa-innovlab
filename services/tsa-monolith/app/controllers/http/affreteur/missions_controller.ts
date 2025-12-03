@@ -1260,7 +1260,7 @@ export default class MissionsController {
         })
 
       logger.info(`✅ ${missions.length} missions trouvées pour l'affreteur`, {
-        missionIds: missions.map(m => m.id)
+        missionIds: missions.map((m) => m.id),
       })
 
       // For each mission, get the latest location update
@@ -1281,7 +1281,7 @@ export default class MissionsController {
 
           logger.info(`📡 Position trouvée pour la mission ${missionId}`, {
             locationId: latestLocation.id,
-            timestamp: latestLocation.timestamp?.toISO()
+            timestamp: latestLocation.timestamp?.toISO(),
           })
 
           // Check if position is recent (last 5 minutes)
@@ -1294,7 +1294,9 @@ export default class MissionsController {
           }
 
           if (locationDate < fiveMinutesAgo) {
-            logger.info(`⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`)
+            logger.info(
+              `⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`
+            )
             return null
           }
 
@@ -1310,37 +1312,44 @@ export default class MissionsController {
               accuracy: latestLocation.accuracy,
               timestamp: locationDate.toISO(),
             },
-            driver: mission.transporteur ? {
-              id: mission.transporteur.id,
-              name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
-            } : null,
-            departure: mission.adresseDepart ? {
-              latitude: mission.adresseDepart.latitude,
-              longitude: mission.adresseDepart.longitude,
-              address: mission.adresseDepart.street,
-            } : null,
-            arrival: mission.adresseArrivee ? {
-              latitude: mission.adresseArrivee.latitude,
-              longitude: mission.adresseArrivee.longitude,
-              address: mission.adresseArrivee.street,
-            } : null,
+            driver: mission.transporteur
+              ? {
+                  id: mission.transporteur.id,
+                  name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
+                }
+              : null,
+            departure: mission.adresseDepart
+              ? {
+                  latitude: mission.adresseDepart.latitude,
+                  longitude: mission.adresseDepart.longitude,
+                  address: mission.adresseDepart.street,
+                }
+              : null,
+            arrival: mission.adresseArrivee
+              ? {
+                  latitude: mission.adresseArrivee.latitude,
+                  longitude: mission.adresseArrivee.longitude,
+                  address: mission.adresseArrivee.street,
+                }
+              : null,
           }
         } catch (error) {
           logger.error(`❌ Erreur lors du traitement de la mission ${missionId}:`, {
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
           })
           return null
         }
       })
 
-      const locations = (await Promise.all(locationsPromises)).filter(Boolean)
+      const locationsResults = await Promise.all(locationsPromises)
+      const locations = locationsResults.filter(Boolean)
 
       logger.info(`✅ ${locations.length} positions actives trouvées pour l'affreteur`)
 
       return response.ok({
         success: true,
-        data: { locations }
+        data: { locations },
       })
     } catch (error) {
       logger.error('❌ ERREUR CRITIQUE dans getActiveLocations (Affreteur)', {
@@ -1349,17 +1358,20 @@ export default class MissionsController {
           name: error.name,
           stack: error.stack,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
 
       return response.internalServerError({
         success: false,
         message: 'Une erreur est survenue lors de la récupération des positions actives',
-        error: process.env.NODE_ENV === 'development' ? {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        } : undefined,
+        error:
+          process.env.NODE_ENV === 'development'
+            ? {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+              }
+            : undefined,
       })
     } finally {
       logger.info('🔴 FIN getActiveLocations (Affreteur)')
