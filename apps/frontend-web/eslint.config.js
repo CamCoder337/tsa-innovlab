@@ -7,7 +7,7 @@ import { globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier';
 
 const config = [
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'playwright-report']),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -6,6 +6,7 @@ import Address from '#models/address'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 test.group('Order Model', (group) => {
+  // @ts-ignore - Database transactions for tests
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
   test('should generate unique order number on creation', async ({ assert }) => {

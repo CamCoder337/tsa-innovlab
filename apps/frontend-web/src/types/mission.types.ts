@@ -7,7 +7,10 @@ export type MissionStatus =
   | 'draft'
   | 'published'
   | 'assigned'
+  | 'ready_to_start'
   | 'in_progress'
+  | 'delivered'
+  | 'paid'
   | 'completed'
   | 'cancelled';
 
@@ -31,7 +34,7 @@ export interface Mission extends Timestamps {
   transporteurId?: string | null;
   transporteur?: User;
   vehicleId?: string | null;
-  vehicle?: Vehicle;
+  vehicle?: Vehicle;  // ✅ Le véhicule assigné (contient registration, type, status)
   requiredVehicleType?: VehicleType | null;
   title: string;
   description?: string | null;
@@ -47,6 +50,13 @@ export interface Mission extends Timestamps {
   budgetMin: number | null;
   budgetMax?: number | null;
   status: MissionStatus;
+  // Tracking fields - Credentials pour authentification chauffeur
+  trackingLinkToken?: string | null;
+  trackingPin?: string | null;
+  qrCodeToken?: string | null;
+  startedAt?: string | null;
+  deliveredAt?: string | null;
+  paidAt?: string | null;
   isFlexibleDates?: boolean;
   isFlexibleRoute?: boolean;
   notesComplementaires?: string;

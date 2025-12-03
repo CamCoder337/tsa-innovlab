@@ -77,6 +77,10 @@ export default defineConfig({
       environment: ['web', 'console', 'test'],
     },
     () => import('#start/kernel'),
+    {
+      file: () => import('#start/events'),
+      environment: ['web', 'console', 'test'],
+    },
   ],
 
   /*

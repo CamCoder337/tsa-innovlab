@@ -1,0 +1,74 @@
+{
+  "expo": {
+    "name": "TSA Driver",
+    "slug": "tsa-driver-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "owner": "raylex33",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'application a besoin d'accéder à votre caméra pour scanner les codes QR de livraison.",
+        "NSMicrophoneUsageDescription": "L'application a besoin d'accéder au microphone pour certaines fonctionnalités de la caméra.",
+        "NSLocationWhenInUseUsageDescription": "L'application a besoin d'accéder à votre position pour afficher les itinéraires.",
+        "UIBackgroundModes": [
+          "location"
+        ]
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyD5g9ETxr6QFGf06HzSp48f6E-5HT5K0zo"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD5g9ETxr6QFGf06HzSp48f6E-5HT5K0zo"
+        }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.tsa.driverapp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "34da31b2-0ee5-418c-a9cc-8f31b5e091d5"
+      }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "L'application a besoin d'accéder à votre caméra pour scanner les codes QR de livraison."
+        }
+      ]
+    ],
+    "jsEngine": "hermes",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/34da31b2-0ee5-418c-a9cc-8f31b5e091d5"
+    }
+  }
+}

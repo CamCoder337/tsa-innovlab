@@ -265,7 +265,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créée'
@@ -546,7 +546,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         MissionStatus.DRAFT,
         MissionStatus.PUBLISHED,
         'Mission publiée'
@@ -608,7 +608,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         MissionStatus.PUBLISHED,
         MissionStatus.DRAFT,
         'Mission dépubliée'
@@ -780,6 +780,384 @@ export default class MissionsController {
   }
 
   /**
+   * Générer ou récupérer le QR code de preuve de livraison
+   */
+  async getDeliveryQrCode({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const qrCodeServiceModule = await import('#services/qr_code_service')
+      const qrCodeService = qrCodeServiceModule.default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      // Initialiser le tracking si pas déjà fait
+      if (!mission.qrCodeToken) {
+        const trackingServiceModule = await import('#services/mission_tracking_service')
+        const trackingService = trackingServiceModule.default
+        await trackingService.initializeTracking(mission)
+        await mission.refresh()
+      }
+
+      const qrCodeDataUrl = await qrCodeService.generateDeliveryQrCode(mission)
+
+      return response.json({
+        success: true,
+        message: 'QR code generated successfully',
+        data: {
+          qrCode: qrCodeDataUrl,
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to generate QR code',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Régénérer le QR code (en cas de perte ou suspicion de fuite)
+   */
+  async regenerateQrCode({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const qrCodeServiceModule = await import('#services/qr_code_service')
+      const qrCodeService = qrCodeServiceModule.default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      await qrCodeService.regenerateQrCodeToken(mission)
+      await mission.refresh()
+
+      const qrCodeDataUrl = await qrCodeService.generateDeliveryQrCode(mission)
+
+      return response.json({
+        success: true,
+        message: 'QR code regenerated successfully',
+        data: {
+          qrCode: qrCodeDataUrl,
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to regenerate QR code',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer une mission comme payée
+   */
+  async markAsPaid({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== MissionStatus.DELIVERED) {
+        return response.status(422).json({
+          success: false,
+          message: 'Mission must be delivered before marking as paid',
+        })
+      }
+
+      mission.status = MissionStatus.PAID
+      mission.paidAt = DateTime.now()
+      await mission.save()
+
+      // TODO: Envoyer notification au transporteur
+
+      return response.json({
+        success: true,
+        message: 'Mission marked as paid successfully',
+        data: { mission },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to mark mission as paid',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Clôturer définitivement une mission
+   */
+  async completeMission({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      if (mission.status !== 'paid') {
+        return response.status(422).json({
+          success: false,
+          message: 'Mission must be paid before final completion',
+        })
+      }
+
+      mission.status = MissionStatus.COMPLETED
+      await mission.save()
+
+      // TODO: Archiver les données de tracking (optionnel)
+
+      return response.json({
+        success: true,
+        message: 'Mission completed successfully',
+        data: { mission },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to complete mission',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Récupérer les positions GPS d'une mission
+   */
+  async getLocationUpdates({ params, request, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const trackingServiceModule = await import('#services/mission_tracking_service')
+      const trackingService = trackingServiceModule.default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const limit = request.input('limit', 50)
+      const locations = await trackingService.getRecentLocations(mission.id, limit)
+
+      return response.json({
+        success: true,
+        message: 'Location updates retrieved successfully',
+        data: {
+          mission: {
+            id: mission.id,
+            title: mission.title,
+            status: mission.status,
+          },
+          locations,
+        },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve location updates',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Récupérer les problèmes signalés pour une mission
+   */
+  async getIssues({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issues = await MissionIssue.query()
+        .where('mission_id', mission.id)
+        .preload('reportedBy')
+        .orderBy('created_at', 'desc')
+
+      return response.json({
+        success: true,
+        message: 'Issues retrieved successfully',
+        data: { issues },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to retrieve issues',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer un problème comme reconnu
+   */
+  async acknowledgeIssue({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
+      const { IssueStatus } = missionIssueModule
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issue = await MissionIssue.query()
+        .where('id', params.issueId)
+        .where('mission_id', mission.id)
+        .first()
+
+      if (!issue) {
+        return response.status(404).json({
+          success: false,
+          message: 'Issue not found',
+        })
+      }
+
+      issue.status = IssueStatus.ACKNOWLEDGED
+      await issue.save()
+
+      return response.json({
+        success: true,
+        message: 'Issue acknowledged successfully',
+        data: { issue },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to acknowledge issue',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
+   * Marquer un problème comme résolu
+   */
+  async resolveIssue({ params, auth, response }: HttpContext) {
+    try {
+      const user = auth.getUserOrFail()
+      const missionIssueModule = await import('#models/mission_issue')
+      const MissionIssue = missionIssueModule.default
+      const { IssueStatus } = missionIssueModule
+
+      const mission = await Mission.query()
+        .where('id', params.id)
+        .where('affreteur_id', user.id)
+        .first()
+
+      if (!mission) {
+        return response.status(404).json({
+          success: false,
+          message: 'Mission not found',
+        })
+      }
+
+      const issue = await MissionIssue.query()
+        .where('id', params.issueId)
+        .where('mission_id', mission.id)
+        .first()
+
+      if (!issue) {
+        return response.status(404).json({
+          success: false,
+          message: 'Issue not found',
+        })
+      }
+
+      issue.status = IssueStatus.RESOLVED
+      issue.resolvedAt = DateTime.now()
+      await issue.save()
+
+      return response.json({
+        success: true,
+        message: 'Issue resolved successfully',
+        data: { issue },
+      })
+    } catch (error) {
+      return response.status(500).json({
+        success: false,
+        message: 'Failed to resolve issue',
+        error: error.message,
+      })
+    }
+  }
+
+  /**
    * Récupérer l'historique complet d'une mission
    */
   async getHistory({ params, request, auth, response }: HttpContext) {
@@ -844,6 +1222,159 @@ export default class MissionsController {
         message: 'Failed to retrieve mission history',
         error: error.message,
       })
+    }
+  }
+
+  /**
+   * Get all active GPS locations for missions created by this affreteur
+   * GET /api/affreteur/missions/active-locations
+   */
+  async getActiveLocations({ response, auth, logger }: HttpContext) {
+    logger.info('🟢 DEBUT getActiveLocations (Affreteur)')
+
+    try {
+      const user = auth.getUserOrFail()
+
+      logger.info('📍 Récupération des positions actives pour affreteur', {
+        affreteurId: user.id,
+      })
+
+      // Import LocationUpdate dynamically
+      const { default: LocationUpdate } = await import('#models/location_update')
+
+      // Get all missions created by this affreteur that are in progress
+      const missions = await Mission.query()
+        .where('affreteur_id', user.id)
+        .whereIn('status', [
+          MissionStatus.IN_PROGRESS,
+          MissionStatus.ASSIGNED,
+          MissionStatus.READY_TO_START,
+        ])
+        .preload('affreteur', (query) => {
+          query.select('id', 'firstName', 'lastName')
+        })
+        .preload('adresseDepart')
+        .preload('adresseArrivee')
+        .preload('transporteur', (query) => {
+          query.select('id', 'firstName', 'lastName')
+        })
+
+      logger.info(`✅ ${missions.length} missions trouvées pour l'affreteur`, {
+        missionIds: missions.map((m) => m.id),
+      })
+
+      // For each mission, get the latest location update
+      const locationsPromises = missions.map(async (mission) => {
+        const missionId = mission.id
+        logger.info(`🔍 Traitement de la mission ${missionId} (${mission.status})`)
+
+        try {
+          const latestLocation = await LocationUpdate.query()
+            .where('mission_id', missionId)
+            .orderBy('timestamp', 'desc')
+            .first()
+
+          if (!latestLocation) {
+            logger.info(`ℹ️ Aucune position trouvée pour la mission ${missionId}`)
+            return null
+          }
+
+          logger.info(`📡 Position trouvée pour la mission ${missionId}`, {
+            locationId: latestLocation.id,
+            timestamp: latestLocation.timestamp?.toISO(),
+          })
+
+          // Check if position is recent (last 5 minutes)
+          const fiveMinutesAgo = DateTime.now().minus({ minutes: 5 })
+          const locationDate = latestLocation.timestamp
+
+          if (!locationDate) {
+            logger.warn(`⚠️ La position ${latestLocation.id} n'a pas de date`)
+            return null
+          }
+
+          if (locationDate < fiveMinutesAgo) {
+            logger.info(
+              `⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`
+            )
+            return null
+          }
+
+          return {
+            missionId: mission.id,
+            missionTitle: mission.title,
+            missionStatus: mission.status,
+            location: {
+              latitude: latestLocation.latitude,
+              longitude: latestLocation.longitude,
+              speed: latestLocation.speed,
+              heading: latestLocation.heading,
+              accuracy: latestLocation.accuracy,
+              timestamp: locationDate.toISO(),
+            },
+            driver: mission.transporteur
+              ? {
+                  id: mission.transporteur.id,
+                  name: `${mission.transporteur.firstName} ${mission.transporteur.lastName}`,
+                }
+              : null,
+            departure: mission.adresseDepart
+              ? {
+                  latitude: mission.adresseDepart.latitude,
+                  longitude: mission.adresseDepart.longitude,
+                  address: mission.adresseDepart.street,
+                }
+              : null,
+            arrival: mission.adresseArrivee
+              ? {
+                  latitude: mission.adresseArrivee.latitude,
+                  longitude: mission.adresseArrivee.longitude,
+                  address: mission.adresseArrivee.street,
+                }
+              : null,
+          }
+        } catch (error) {
+          logger.error(`❌ Erreur lors du traitement de la mission ${missionId}:`, {
+            error: error.message,
+            stack: error.stack,
+          })
+          return null
+        }
+      })
+
+      const locationsResults = await Promise.all(locationsPromises)
+      const locations = locationsResults.filter(Boolean)
+
+      logger.info(`✅ ${locations.length} positions actives trouvées pour l'affreteur`)
+
+      return response.ok({
+        success: true,
+        data: { locations },
+      })
+    } catch (error) {
+      logger.error('❌ ERREUR CRITIQUE dans getActiveLocations (Affreteur)', {
+        error: {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        },
+        timestamp: new Date().toISOString(),
+      })
+
+      return response.internalServerError({
+        success: false,
+        message: 'Une erreur est survenue lors de la récupération des positions actives',
+        error:
+          process.env.NODE_ENV === 'development'
+            ? {
+                message: error.message,
+                name: error.name,
+                stack: error.stack,
+              }
+            : undefined,
+      })
+    } finally {
+      logger.info('🔴 FIN getActiveLocations (Affreteur)')
     }
   }
 }

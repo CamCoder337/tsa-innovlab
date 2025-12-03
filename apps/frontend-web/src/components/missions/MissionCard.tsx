@@ -255,6 +255,19 @@ export default function MissionCard({
               </Button>
             )}
 
+            {user?.role === 'affreteur' && ['assigned', 'in_progress', 'delivered'].includes(mission.status) && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="gap-2 w-full sm:w-auto lg:w-full text-xs sm:text-sm px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 border-green-200"
+              >
+                <Link to={`/app/mission/${mission.id}/tracking`} onClick={() => setCurrentMission(mission)}>
+                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span>Suivre la mission</span>
+                </Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

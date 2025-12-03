@@ -12,7 +12,10 @@ export enum MissionStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ASSIGNED = 'assigned',
+  READY_TO_START = 'ready_to_start',
   IN_PROGRESS = 'in_progress',
+  DELIVERED = 'delivered',
+  PAID = 'paid',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
 }
@@ -68,6 +71,25 @@ export default class Mission extends BaseModel {
 
   @column()
   declare status: MissionStatus
+
+  // Tracking fields
+  @column()
+  declare trackingLinkToken: string | null
+
+  @column()
+  declare trackingPin: string | null
+
+  @column()
+  declare qrCodeToken: string | null
+
+  @column.dateTime()
+  declare startedAt: DateTime | null
+
+  @column.dateTime()
+  declare deliveredAt: DateTime | null
+
+  @column.dateTime()
+  declare paidAt: DateTime | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

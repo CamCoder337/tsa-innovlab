@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import MissionTrackingMap from '../../components/tracking/MissionTrackingMap';
+import RealTimeRouteTracker from '../../components/tracking/RealTimeRouteTracker';
+import DriversLiveMap from '../../components/tracking/DriversLiveMap';
+import VehicleTrackingCredentials from '../../components/tracking/VehicleTrackingCredentials';
 import {
   Truck,
   Navigation,
@@ -16,6 +18,7 @@ import {
   Phone,
   MessageSquare,
   Star,
+  Users,
 } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 import { useMissions } from '@/hooks/useMissions';
@@ -24,9 +27,13 @@ import { calculateDistance } from '@/lib/map-utils';
 import { getStatusColor, getStatusLabel } from '@/lib/utils';
 
 export default function TransporteurTrackingDashboard() {
+  console.log('🔵 [TransporteurTrackingDashboard] Component rendering');
+
   const { myMissions: missions } = useMissions();
   const { t: tCommon } = useCommonTranslation();
   const { t: tTracking } = useTrackingTranslation();
+
+  console.log('🔵 [TransporteurTrackingDashboard] Missions loaded:', missions?.length);
 
   // Calculs des KPIs
   const activeAssignments = missions.filter((m) => m.status === 'in_progress');
@@ -40,10 +47,27 @@ export default function TransporteurTrackingDashboard() {
     activeAssignments.length > 0 ? activeAssignments[0] : null
   );
 
+  console.log(
+    '🔵 [TransporteurTrackingDashboard] Active assignments:',
+    activeAssignments?.length
+  );
+  console.log('🔵 [TransporteurTrackingDashboard] Current assignment:', currentAssignment?.id);
+
   // Calculate total distance for in-progress missions
   useEffect(() => {
+    console.log(
+      '🟢 [TransporteurTrackingDashboard] useEffect - calculateTotalDistance triggered'
+    );
+
     const calculateTotalDistance = async () => {
+      console.log(
+        '🟢 [TransporteurTrackingDashboard] Calculating distance for',
+        activeAssignments.length,
+        'missions'
+      );
+
       if (activeAssignments.length === 0) {
+        console.log('🟢 [TransporteurTrackingDashboard] No active assignments, setting distance to 0');
         setTotalDistance(0);
         return;
       }
@@ -53,6 +77,10 @@ export default function TransporteurTrackingDashboard() {
 
         for (const mission of activeAssignments) {
           if (mission.adresseDepart && mission.adresseArrivee) {
+            console.log(
+              '🟢 [TransporteurTrackingDashboard] Calculating distance for mission:',
+              mission.id
+            );
             const distance = await calculateDistance(
               mission.adresseDepart,
               mission.adresseArrivee,
@@ -60,15 +88,21 @@ export default function TransporteurTrackingDashboard() {
             );
 
             if (distance) {
-              console.log(distance);
+              console.log(
+                '🟢 [TransporteurTrackingDashboard] Distance for mission',
+                mission.id,
+                ':',
+                distance
+              );
               total += distance;
             }
           }
         }
 
+        console.log('🟢 [TransporteurTrackingDashboard] Total distance calculated:', total);
         setTotalDistance(total);
       } catch (error) {
-        console.error('Error calculating total distance:', error);
+        console.error('❌ [TransporteurTrackingDashboard] Error calculating total distance:', error);
         setTotalDistance(0);
       }
     };
@@ -181,9 +215,13 @@ export default function TransporteurTrackingDashboard() {
 
       {/* Contenu principal */}
       <Tabs defaultValue="current" className="space-y-4">
-        <TabsList className="grid grid-cols-2 lg:grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full">
           <TabsTrigger value="current" className="text-xs sm:text-sm">
             {tTracking('tabs.currentMission')}
+          </TabsTrigger>
+          <TabsTrigger value="drivers" className="text-xs sm:text-sm flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Chauffeurs GPS
           </TabsTrigger>
           <TabsTrigger value="assignments" className="text-xs sm:text-sm">
             {tTracking('tabs.myMissions')}
@@ -226,24 +264,13 @@ export default function TransporteurTrackingDashboard() {
                   </Card>
                 )}
 
+                {/* Suivi d'itinéraire en temps réel */}
+                <RealTimeRouteTracker mission={currentAssignment} />
+
+                {/* Statut et actions */}
                 <Card>
-                  <CardHeader className="">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Navigation className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Navigation - {currentAssignment.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <MissionTrackingMap
-                      className="h-[400px] sm:h-[500px] lg:h-[700px]"
-                      missions={activeAssignments}
-                      selectedMission={currentAssignment}
-                      onMissionClick={(mission) => setCurrentAssignment(mission)}
-                      showUserLocation={false}
-                      showRoutes={true}
-                      showLegend={false}
-                    />
-                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <CardContent className="p-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <div
@@ -344,6 +371,15 @@ export default function TransporteurTrackingDashboard() {
                   </CardContent>
                 </Card>
 
+                {/* Credentials de tracking du véhicule */}
+                <VehicleTrackingCredentials
+                  missionTitle={currentAssignment.title}
+                  trackingToken={currentAssignment.trackingLinkToken || undefined}
+                  trackingPin={currentAssignment.trackingPin || undefined}
+                  vehicleRegistration={currentAssignment.vehicle?.registration}
+                  vehicleType={currentAssignment.vehicle?.type}
+                />
+
                 {/* Actions rapides */}
                 <Card>
                   <CardHeader className="pb-3 sm:pb-6">
@@ -379,6 +415,10 @@ export default function TransporteurTrackingDashboard() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="drivers" className="space-y-4">
+          <DriversLiveMap />
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-4">
