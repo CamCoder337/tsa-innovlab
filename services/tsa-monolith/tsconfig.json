@@ -6,20 +6,36 @@
     "baseUrl": ".",
     "skipLibCheck": true,
     "paths": {
-      "#enums/*": ["app/enums/*"],
-      "#models/*": ["app/models/*"],
-      "#validators/*": ["app/validators/*"],
-      "#services/*": ["app/services/*"],
-      "#types/*": ["types/*"]
+      "#enums/*": [
+        "app/enums/*"
+      ],
+      "#models/*": [
+        "app/models/*"
+      ],
+      "#validators/*": [
+        "app/validators/*"
+      ],
+      "#services/*": [
+        "app/services/*"
+      ],
+      "#types/*": [
+        "types/*"
+      ]
     }
   },
   "include": [
     "./app/**/*.ts",
+    "./bin/**/*.ts",
+    "./commands/**/*.ts",
     "./config/**/*.ts",
     "./start/**/*.ts",
     "./tests/**/*.ts",
     "./types/**/*.ts",
-    "./types/extended.d.ts"
+    "./types/extended.d.ts",
+    "./adonisrc.ts"
   ],
-  "exclude": ["node_modules", "build"]
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
 }

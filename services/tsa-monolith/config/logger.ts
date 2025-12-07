@@ -11,19 +11,22 @@ const loggerConfig = defineConfig({
       level: env.get('LOG_LEVEL', 'info'),
 
       // Configuration personnalisée pour la console
-      transport: {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:HH:MM:ss',
-          ignore: 'pid,hostname',
-          messageFormat: '{msg}',
-          singleLine: true,
-          sync: true,
-          // Forcer l'encodage UTF-8
-          customPrettifiers: {},
-        },
-      },
+      transport:
+        env.get('NODE_ENV') === 'production'
+          ? undefined
+          : {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'SYS:HH:MM:ss',
+                ignore: 'pid,hostname',
+                messageFormat: '{msg}',
+                singleLine: true,
+                sync: true,
+                // Forcer l'encodage UTF-8
+                customPrettifiers: {},
+              },
+            },
     },
   },
 })
