@@ -11,21 +11,22 @@ const loggerConfig = defineConfig({
       level: env.get('LOG_LEVEL', 'info'),
 
       // Configuration personnalisée pour la console
-      transport: env.get('NODE_ENV') === 'production'
-        ? undefined
-        : {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'SYS:HH:MM:ss',
-            ignore: 'pid,hostname',
-            messageFormat: '{msg}',
-            singleLine: true,
-            sync: true,
-            // Forcer l'encodage UTF-8
-            customPrettifiers: {},
-          },
-        },
+      transport:
+        env.get('NODE_ENV') === 'production'
+          ? undefined
+          : {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'SYS:HH:MM:ss',
+                ignore: 'pid,hostname',
+                messageFormat: '{msg}',
+                singleLine: true,
+                sync: true,
+                // Forcer l'encodage UTF-8
+                customPrettifiers: {},
+              },
+            },
     },
   },
 })
@@ -37,5 +38,5 @@ export default loggerConfig
  * in your application.
  */
 declare module '@adonisjs/core/types' {
-  export interface LoggersList extends InferLoggers<typeof loggerConfig> { }
+  export interface LoggersList extends InferLoggers<typeof loggerConfig> {}
 }
