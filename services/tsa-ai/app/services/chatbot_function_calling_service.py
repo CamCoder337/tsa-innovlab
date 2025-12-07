@@ -101,6 +101,14 @@ class ChatbotFunctionCallingService:
                     "required": ["product_id"]
                 }
             },
+            {
+                "name": "get_categories",
+                "description": "Lister les catégories de produits disponibles (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            },
             
             # === PANIER & COMMANDES (READ-ONLY) ===
             {
@@ -215,6 +223,25 @@ class ChatbotFunctionCallingService:
                     "required": ["origin", "destination"]
                 }
             },
+            {
+                "name": "get_mission_updates",
+                "description": "Voir l'historique des mises à jour d'une mission (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mission_id": {
+                            "type": "string",
+                            "description": "ID de la mission"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre de mises à jour",
+                            "default": 10
+                        }
+                    },
+                    "required": ["mission_id"]
+                }
+            },
             
             # === VÉHICULES (TRANSPORTEUR - READ-ONLY) ===
             {
@@ -270,6 +297,14 @@ class ChatbotFunctionCallingService:
                     "properties": {}
                 }
             },
+            {
+                "name": "get_my_addresses",
+                "description": "Récupérer mes adresses enregistrées (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            },
             
             # === CLARIFICATION ===
             {
@@ -301,6 +336,7 @@ class ChatbotFunctionCallingService:
             # Produits
             "search_products": self._handle_search_products,
             "get_product_details": self._handle_get_product_details,
+            "get_categories": self._handle_get_categories,
             
             # Panier & Commandes (READ-ONLY)
             "get_cart": self._handle_get_cart,
@@ -309,6 +345,7 @@ class ChatbotFunctionCallingService:
             
             # Missions (READ-ONLY)
             "get_user_missions": self._handle_get_user_missions,
+            "get_mission_updates": self._handle_get_mission_updates,
             "get_available_missions": self._handle_get_available_missions,
             "track_shipment": self._handle_track_shipment,
             "calculate_price": self._handle_calculate_price,
@@ -322,6 +359,7 @@ class ChatbotFunctionCallingService:
             
             # Profil (READ-ONLY)
             "get_my_profile": self._handle_get_my_profile,
+            "get_my_addresses": self._handle_get_my_addresses,
             
             # Clarification
             "request_clarification": self._handle_request_clarification,
@@ -1238,30 +1276,35 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             db = SessionLocal()
             try:
-                query_text = "SELECT id, name, price, stock_quantity, brand FROM products WHERE stock_quantity > 0"
+                query_text = "SELECT id, name, price, stock, description, reference FROM products WHERE stock > 0 AND is_active = true"
                 params = {}
                 
                 if args.get("query"):
-                    query_text += " AND LOWER(name) LIKE LOWER(:query)"
+                    query_text += " AND (LOWER(name) LIKE LOWER(:query) OR LOWER(description) LIKE LOWER(:query))"
                     params["query"] = f"%{args['query']}%"
                 
-                if args.get("brand"):
-                    query_text += " AND LOWER(brand) LIKE LOWER(:brand)"
-                    params["brand"] = f"%{args['brand']}%"
+                if args.get("reference"):
+                    query_text += " AND LOWER(reference) LIKE LOWER(:reference)"
+                    params["reference"] = f"%{args['reference']}%"
                 
-                query_text += " ORDER BY stock_quantity DESC LIMIT 5"
+                query_text += " ORDER BY stock DESC LIMIT 5"
                 
                 results = db.execute(text(query_text), params).fetchall()
                 
                 products = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "name": r.name,
                         "price": float(r.price),
-                        "stock": r.stock_quantity,
-                        "brand": r.brand
+                        "stock": r.stock,
+                        "reference": r.reference,
+                        "description": r.description[:100] if r.description else None
                     }
                     for r in results
                 ]
@@ -1492,16 +1535,16 @@ class ChatbotFunctionCallingService:
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT m.id, m.status, m.title,
+                    SELECT m.id, m.status, m.titre as title,
                            ad.city as origin, aa.city as destination,
-                           m.current_location, m.estimated_delivery_date,
+                           m.date_arrivee_prevue as estimated_delivery_date,
                            u.first_name || ' ' || u.last_name as transporter_name
                     FROM missions m
                     LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
                     LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
                     LEFT JOIN users u ON m.transporteur_id = u.id
-                    WHERE m.id = :mission_id
-                      AND (m.affreteur_id = :user_id OR m.transporteur_id = :user_id)
+                    WHERE m.id = CAST(:mission_id AS UUID)
+                      AND (m.affreteur_id = CAST(:user_id AS UUID) OR m.transporteur_id = CAST(:user_id AS UUID))
                     LIMIT 1
                 """)
                 
@@ -1525,7 +1568,7 @@ class ChatbotFunctionCallingService:
                         "title": result.title,
                         "origin": result.origin,
                         "destination": result.destination,
-                        "current_location": result.current_location or result.origin,
+                        "current_location": result.origin,  # Default to origin since no current_location field
                         "estimated_delivery": result.estimated_delivery_date.isoformat() if result.estimated_delivery_date else None,
                         "transporter_name": result.transporter_name
                     }
@@ -1591,6 +1634,10 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
             limit = self._validate_limit(args.get("limit", 10))
             
@@ -1599,17 +1646,21 @@ class ChatbotFunctionCallingService:
                 # Différent selon le rôle
                 if user_role == "AFFRETEUR":
                     query = text("""
-                        SELECT id, title, status, budget_min, budget_max, 
-                               depart_city, arrival_city, created_at
-                        FROM missions
-                        WHERE affreteur_id = :user_id
+                        SELECT m.id, m.titre as title, m.status, m.budget_min, m.budget_max, 
+                               ad.city as depart_city, aa.city as arrival_city, m.created_at
+                        FROM missions m
+                        LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                        LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                        WHERE m.affreteur_id = :user_id
                     """)
                 elif user_role == "TRANSPORTEUR":
                     query = text("""
-                        SELECT id, title, status, budget_min, budget_max,
-                               depart_city, arrival_city, created_at
-                        FROM missions
-                        WHERE transporteur_id = :user_id
+                        SELECT m.id, m.titre as title, m.status, m.budget_min, m.budget_max,
+                               ad.city as depart_city, aa.city as arrival_city, m.created_at
+                        FROM missions m
+                        LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                        LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                        WHERE m.transporteur_id = :user_id
                     """)
                 
                 # Common ordering for both roles
@@ -1623,11 +1674,11 @@ class ChatbotFunctionCallingService:
                 
                 missions = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "title": r.title,
                         "status": r.status,
                         "budget": f"{r.budget_min}-{r.budget_max} FCFA" if r.budget_min else "Non défini",
-                        "path": f"{r.depart_city} → {r.arrival_city}",
+                        "path": f"{r.depart_city} → {r.arrival_city}" if r.depart_city and r.arrival_city else "Non défini",
                         "created_at": r.created_at.isoformat() if r.created_at else None
                     }
                     for r in results
@@ -1645,6 +1696,79 @@ class ChatbotFunctionCallingService:
             logger.error(f"Get user missions error: {e}")
             return {"success": False, "error": "Erreur lors de la récupération des missions"}
     
+    async def _handle_get_mission_updates(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
+        """Get mission updates history"""
+        mission_id = args.get("mission_id")
+        if not mission_id:
+            return {"success": False, "error": "ID mission manquant"}
+        
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            # Handle None args
+            if args is None:
+                args = {}
+            
+            limit = self._validate_limit(args.get("limit", 10))
+            
+            db = SessionLocal()
+            try:
+                # Vérifier que l'utilisateur a accès à cette mission
+                access_query = text("""
+                    SELECT id FROM missions
+                    WHERE id = CAST(:mission_id AS UUID)
+                    AND (affreteur_id = CAST(:user_id AS UUID) OR transporteur_id = CAST(:user_id AS UUID))
+                    LIMIT 1
+                """)
+                
+                access = db.execute(access_query, {"mission_id": mission_id, "user_id": user_id}).fetchone()
+                
+                if not access:
+                    return {"success": False, "error": "Mission non trouvée ou accès refusé"}
+                
+                # Récupérer les mises à jour
+                query = text(f"""
+                    SELECT id, type, title, description, old_status, new_status,
+                           latitude, longitude, address, created_at
+                    FROM mission_updates
+                    WHERE mission_id = CAST(:mission_id AS UUID)
+                    AND is_public = true
+                    ORDER BY created_at DESC
+                    LIMIT {limit}
+                """)
+                
+                results = db.execute(query, {"mission_id": mission_id}).fetchall()
+                
+                updates = [
+                    {
+                        "id": r.id,
+                        "type": r.type,
+                        "title": r.title,
+                        "description": r.description,
+                        "old_status": r.old_status,
+                        "new_status": r.new_status,
+                        "location": {
+                            "latitude": float(r.latitude) if r.latitude else None,
+                            "longitude": float(r.longitude) if r.longitude else None,
+                            "address": r.address
+                        } if r.latitude or r.longitude or r.address else None,
+                        "created_at": r.created_at.isoformat() if r.created_at else None
+                    }
+                    for r in results
+                ]
+                
+                return {
+                    "success": True,
+                    "updates": updates,
+                    "total": len(updates)
+                }
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Get mission updates error: {e}")
+            return {"success": False, "error": "Erreur lors de la récupération des mises à jour"}
+    
     async def _handle_get_product_details(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Get product details"""
         product_id = args.get("product_id")
@@ -1658,9 +1782,9 @@ class ChatbotFunctionCallingService:
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, name, description, price, stock_quantity, brand, category_id
+                    SELECT id, name, description, price, stock, reference, unit, category_id
                     FROM products
-                    WHERE id = :product_id AND is_active = true
+                    WHERE id = CAST(:product_id AS UUID) AND is_active = true
                     LIMIT 1
                 """)
                 
@@ -1670,13 +1794,14 @@ class ChatbotFunctionCallingService:
                     return {
                         "success": True,
                         "product": {
-                            "id": result.id,
+                            "id": str(result.id),
                             "name": result.name,
                             "description": result.description,
                             "price": float(result.price),
-                            "stock": result.stock_quantity,
-                            "brand": result.brand,
-                            "available": result.stock_quantity > 0
+                            "stock": result.stock,
+                            "reference": result.reference,
+                            "unit": result.unit,
+                            "available": result.stock > 0
                         }
                     }
                 else:
@@ -1686,6 +1811,45 @@ class ChatbotFunctionCallingService:
         except Exception as e:
             logger.error(f"Get product details error: {e}")
             return {"success": False, "error": "Erreur lors de la récupération du produit"}
+    
+    async def _handle_get_categories(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
+        """Get product categories"""
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                query = text("""
+                    SELECT id, name, description, slug, parent_id
+                    FROM categories
+                    WHERE is_active = true
+                    ORDER BY display_order ASC, name ASC
+                """)
+                
+                results = db.execute(query).fetchall()
+                
+                categories = [
+                    {
+                        "id": str(r.id),
+                        "name": r.name,
+                        "description": r.description,
+                        "slug": r.slug,
+                        "parent_id": str(r.parent_id) if r.parent_id else None
+                    }
+                    for r in results
+                ]
+                
+                return {
+                    "success": True,
+                    "categories": categories,
+                    "total": len(categories)
+                }
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Get categories error: {e}")
+            return {"success": False, "error": "Erreur lors de la récupération des catégories"}
     
     async def _handle_get_cart(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Get user cart"""
@@ -1697,9 +1861,9 @@ class ChatbotFunctionCallingService:
             try:
                 # Get cart
                 cart_query = text("""
-                    SELECT id, total_amount, items_count
+                    SELECT id
                     FROM carts
-                    WHERE user_id = :user_id AND status = 'active'
+                    WHERE user_id = CAST(:user_id AS UUID) AND status = 'active'
                     LIMIT 1
                 """)
                 cart = db.execute(cart_query, {"user_id": user_id}).fetchone()
@@ -1714,7 +1878,7 @@ class ChatbotFunctionCallingService:
                 # Get cart items
                 items_query = text("""
                     SELECT ci.id, ci.quantity, ci.unit_price,
-                           p.name as product_name, p.stock_quantity
+                           p.name as product_name, p.stock
                     FROM cart_items ci
                     JOIN products p ON ci.product_id = p.id
                     WHERE ci.cart_id = :cart_id
@@ -1727,17 +1891,19 @@ class ChatbotFunctionCallingService:
                         "quantity": item.quantity,
                         "unit_price": float(item.unit_price),
                         "subtotal": float(item.unit_price * item.quantity),
-                        "in_stock": item.stock_quantity >= item.quantity
+                        "in_stock": item.stock >= item.quantity
                     }
                     for item in items
                 ]
+                
+                total = sum(float(item.unit_price * item.quantity) for item in items)
                 
                 return {
                     "success": True,
                     "cart": {
                         "items": cart_items,
-                        "total": float(cart.total_amount) if cart.total_amount else 0,
-                        "items_count": cart.items_count or 0
+                        "total": total,
+                        "items_count": len(cart_items)
                     }
                 }
             finally:
@@ -1755,19 +1921,23 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
             limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, order_number, status, total_amount, created_at
+                    SELECT id, order_number, status, total, created_at
                     FROM orders
-                    WHERE user_id = :user_id
+                    WHERE user_id = CAST(:user_id AS UUID)
                 """)
                 
                 if status_filter != "all":
-                    query = text(str(query) + " AND status = :status")
+                    query = text(str(query) + " AND status = CAST(:status AS order_status)")
                 
                 query = text(str(query) + f" ORDER BY created_at DESC LIMIT {limit}")
                 
@@ -1782,7 +1952,7 @@ class ChatbotFunctionCallingService:
                         "id": str(r.id),
                         "order_number": r.order_number,
                         "status": r.status,
-                        "total": float(r.total_amount),
+                        "total": float(r.total),
                         "date": r.created_at.isoformat() if r.created_at else None
                     }
                     for r in results
@@ -1813,11 +1983,10 @@ class ChatbotFunctionCallingService:
             try:
                 # Get order
                 order_query = text("""
-                    SELECT id, order_number, status, total_amount, 
-                           shipping_address, created_at
+                    SELECT id, order_number, status, total, created_at
                     FROM orders
-                    WHERE (id = :order_id OR order_number = :order_id) 
-                    AND user_id = :user_id
+                    WHERE (id = CAST(:order_id AS UUID) OR order_number = :order_id) 
+                    AND user_id = CAST(:user_id AS UUID)
                     LIMIT 1
                 """)
                 order = db.execute(order_query, {"order_id": order_id, "user_id": user_id}).fetchone()
@@ -1849,7 +2018,7 @@ class ChatbotFunctionCallingService:
                     "order": {
                         "order_number": order.order_number,
                         "status": order.status,
-                        "total": float(order.total_amount),
+                        "total": float(order.total),
                         "items": order_items,
                         "date": order.created_at.isoformat() if order.created_at else None
                     }
@@ -1869,16 +2038,23 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
                 query = text(f"""
-                    SELECT id, title, budget_min, budget_max, 
-                           depart_city, arrival_city, type_marchandise, poids
-                    FROM missions
-                    WHERE status = 'published' AND transporteur_id IS NULL
-                    ORDER BY created_at DESC
+                    SELECT m.id, m.titre as title, m.budget_min, m.budget_max, 
+                           ad.city as depart_city, aa.city as arrival_city, 
+                           m.type_marchandise, m.poids
+                    FROM missions m
+                    LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                    LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                    WHERE m.status = 'published' AND m.transporteur_id IS NULL
+                    ORDER BY m.created_at DESC
                     LIMIT {limit}
                 """)
                 
@@ -1889,7 +2065,7 @@ class ChatbotFunctionCallingService:
                         "id": str(r.id),
                         "title": r.title,
                         "budget": f"{r.budget_min}-{r.budget_max} FCFA" if r.budget_min else "À négocier",
-                        "path": f"{r.depart_city} → {r.arrival_city}",
+                        "path": f"{r.depart_city} → {r.arrival_city}" if r.depart_city and r.arrival_city else "Non défini",
                         "cargo": r.type_marchandise,
                         "weight": f"{r.poids}kg" if r.poids else "Non spécifié"
                     }
@@ -1916,14 +2092,18 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
             
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, immatriculation, type, capacite, status
+                    SELECT id, registration, type, description, status
                     FROM vehicles
-                    WHERE transporteur_id = :user_id
+                    WHERE user_id = CAST(:user_id AS UUID)
                 """)
                 
                 if status_filter != "all":
@@ -1940,9 +2120,9 @@ class ChatbotFunctionCallingService:
                 vehicles = [
                     {
                         "id": str(r.id),
-                        "immatriculation": r.immatriculation,
+                        "registration": r.registration,
                         "type": r.type,
-                        "capacite": f"{r.capacite}kg" if r.capacite else "Non spécifié",
+                        "description": r.description,
                         "status": r.status
                     }
                     for r in results
@@ -2026,6 +2206,10 @@ class ChatbotFunctionCallingService:
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             unread_only = args.get("unread_only", False)
             limit = self._validate_limit(args.get("limit", 10))
             
@@ -2080,7 +2264,7 @@ class ChatbotFunctionCallingService:
                     SELECT id, email, first_name, last_name, phone, role, 
                            email_verified_at, mfa_enabled, created_at
                     FROM users
-                    WHERE id = :user_id
+                    WHERE id = CAST(:user_id AS UUID)
                     LIMIT 1
                 """)
                 
@@ -2117,22 +2301,21 @@ class ChatbotFunctionCallingService:
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, label, address_line1, address_line2, city, 
-                           postal_code, country, is_default
+                    SELECT id, label, street, city, region, 
+                           postal_code, country
                     FROM addresses
-                    WHERE user_id = :user_id
-                    ORDER BY is_default DESC, created_at DESC
+                    WHERE user_id = CAST(:user_id AS UUID)
+                    ORDER BY created_at DESC
                 """)
                 
                 results = db.execute(query, {"user_id": user_id}).fetchall()
                 
                 addresses = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "label": r.label,
-                        "address": f"{r.address_line1}, {r.city}",
-                        "full_address": f"{r.address_line1}, {r.address_line2 or ''}, {r.city}, {r.postal_code or ''}, {r.country}".replace(", ,", ","),
-                        "is_default": r.is_default
+                        "address": f"{r.street}, {r.city}",
+                        "full_address": f"{r.street}, {r.city}, {r.region or ''}, {r.postal_code or ''}, {r.country}".replace(", ,", ",").strip(", "),
                     }
                     for r in results
                 ]

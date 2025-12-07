@@ -39,12 +39,10 @@ class PromptBuilderService:
             
             db = SessionLocal()
             try:
-                # Fetch cities (distinct origins/destinations from shipments)
+                # Fetch cities from addresses table
                 # Fallback to default list if DB is empty
                 cities_query = text("""
-                    SELECT DISTINCT origin FROM shipments
-                    UNION
-                    SELECT DISTINCT destination FROM shipments
+                    SELECT DISTINCT city FROM addresses WHERE city IS NOT NULL
                 """)
                 cities_results = db.execute(cities_query).fetchall()
                 cities = [r[0] for r in cities_results if r[0]]
@@ -54,10 +52,11 @@ class PromptBuilderService:
                 
                 self._cities_cache = sorted(list(set(cities)))
                 
-                # Fetch brands from products
-                brands_query = text("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL")
-                brands_results = db.execute(brands_query).fetchall()
-                brands = [r[0] for r in brands_results if r[0]]
+                # Products table doesn't have brand column, skip this
+                # brands_query = text("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL")
+                # brands_results = db.execute(brands_query).fetchall()
+                # brands = [r[0] for r in brands_results if r[0]]
+                brands = []
                 
                 if not brands:
                     brands = ["Toyota", "Mercedes", "Peugeot", "Nissan", "Mitsubishi", "Suzuki", "Renault"]
