@@ -83,6 +83,7 @@ RUN npm ci --omit=dev --frozen-lockfile && \
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/ace.js ./
+COPY --from=builder /app/bin ./bin
 COPY --from=builder /app/database ./database
 COPY --from=builder /app/commands ./commands
 
