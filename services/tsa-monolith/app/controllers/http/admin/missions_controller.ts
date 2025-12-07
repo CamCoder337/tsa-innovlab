@@ -317,7 +317,7 @@ export default class MissionsController {
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
         mission.id,
-        '',
+        null,
         null,
         MissionStatus.DRAFT,
         'Nouvelle mission créé'

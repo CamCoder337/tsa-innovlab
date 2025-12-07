@@ -26,6 +26,7 @@ server.use([
   () => import('#middleware/container_bindings_middleware'),
   () => import('#middleware/force_json_response_middleware'),
   () => import('@adonisjs/cors/cors_middleware'),
+  () => import('#middleware/request_logger'),
 ])
 
 /**
@@ -44,4 +45,5 @@ router.use([
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
   role: () => import('#middleware/role_middleware'),
+  tracking: () => import('#middleware/tracking_auth_middleware'),
 })

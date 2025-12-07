@@ -15,6 +15,7 @@ import testUtils from '@adonisjs/core/services/test_utils'
  * 4. Tous les clients utilisent le même mot de passe par défaut
  */
 test.group('Client Default Password', (group) => {
+  // @ts-ignore - Database transactions for tests
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
   test('should create client with default password Admin123!', async ({ assert }) => {

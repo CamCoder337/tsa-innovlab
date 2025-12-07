@@ -8,6 +8,7 @@ import Category from '#models/category'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 test.group('Cart Model', (group) => {
+  // @ts-ignore - Database transactions for tests
   group.each.setup(() => testUtils.db().withGlobalTransaction())
 
   test('should check if cart is expired', async ({ assert }) => {

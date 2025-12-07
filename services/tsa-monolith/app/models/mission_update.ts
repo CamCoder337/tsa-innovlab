@@ -79,14 +79,14 @@ export default class MissionUpdate extends BaseModel {
   // Factory methods
   public static async createStatusUpdate(
     missionId: string,
-    transporteurId: string | null,
+    transporteurId: string | null = null,
     oldStatus: string | null,
     newStatus: string,
     description: string = ''
   ): Promise<MissionUpdate> {
     return await MissionUpdate.create({
       missionId,
-      transporteurId,
+      transporteurId: transporteurId || null, // 🔧 Convertir chaîne vide en null
       type: MissionUpdateType.STATUS_CHANGE,
       title: `Statut changé: ${oldStatus} → ${newStatus}`,
       description,

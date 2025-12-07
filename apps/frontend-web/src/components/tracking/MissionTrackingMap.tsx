@@ -100,10 +100,16 @@ export default function MissionTrackingMap({
       const mapsService = mapsServiceRef.current;
 
       // Nettoyer seulement les marqueurs de missions (pas le marqueur utilisateur)
-      missionMarkerIdsRef.current.forEach((markerId) => {
-        mapsService.removeMarker(markerId);
-      });
-      missionMarkerIdsRef.current.clear();
+      if (mapsService) {
+        missionMarkerIdsRef.current.forEach((markerId) => {
+          try {
+            mapsService.removeMarker(markerId);
+          } catch (error) {
+            console.warn(`Failed to remove marker ${markerId}:`, error);
+          }
+        });
+        missionMarkerIdsRef.current.clear();
+      }
 
       // Nettoyer les routes existantes
       mapsService.clearRoutes();
