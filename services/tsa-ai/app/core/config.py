@@ -92,10 +92,36 @@ settings = Settings()
 
 # Environment-specific configurations
 def get_database_url() -> str:
-    """Get database URL based on environment"""
+    """Get database URL based on environment with UTF-8 encoding"""
+    from urllib.parse import quote_plus
+    
+    base_url = settings.database_url
     if settings.environment == "test":
-        return settings.database_url.replace("/tsa_contest", "/tsa_contest_test")
-    return settings.database_url
+        base_url = base_url.replace("/tsa_contest", "/tsa_contest_test")
+    
+    # Fix URL encoding for special characters in password
+    # Replace unencoded special characters
+    if "@" in base_url and ":" in base_url:
+        # Extract password and encode it
+        parts = base_url.split("://")
+        if len(parts) == 2:
+            protocol = parts[0]
+            rest = parts[1]
+            if "@" in rest:
+                auth_part, host_part = rest.split("@", 1)
+                if ":" in auth_part:
+                    user, password = auth_part.split(":", 1)
+                    # Encode password
+                    encoded_password = quote_plus(password)
+                    base_url = f"{protocol}://{user}:{encoded_password}@{host_part}"
+    
+    # Add client_encoding parameter if not already present
+    if "?" not in base_url:
+        base_url += "?client_encoding=utf8"
+    elif "client_encoding" not in base_url:
+        base_url += "&client_encoding=utf8"
+    
+    return base_url
 
 
 def is_production() -> bool:

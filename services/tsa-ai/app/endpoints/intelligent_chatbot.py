@@ -62,6 +62,7 @@ async def intelligent_chatbot_query(
         user_role = request.user_role
 
         logger.info(f"[Chatbot FC] Query from {user_id} ({user_role}): {request.message[:50]}...")
+        logger.info(f"[Chatbot FC] DEBUG: user_id type={type(user_id)}, value={user_id}, repr={repr(user_id)}")
 
         response = await chatbot_fc.process_message(
             message=request.message,
@@ -173,24 +174,25 @@ async def intelligent_chatbot_health():
     """Health check for intelligent chatbot"""
     return {
         "status": "healthy",
-        "version": "4.0.0-function-calling",
-        "architecture": "Pure Function Calling + Hybrid Navigation",
+        "version": "1.0.0",
+        "architecture": "Pure Function Calling",
         "features": [
-            "15 critical functions",
-            "Real-time data from DB",
-            "Intelligent navigation hints",
+            "14 READ-ONLY functions",
+            "Real-time data from PostgreSQL",
+            "Navigation hints (verified with App.tsx)",
             "Contextual suggestions",
             "Streaming support (SSE)",
-            "Conversation memory",
+            "Persistent conversation history",
+            "Rate limiting (PostgreSQL)",
             "Error recovery & retry",
             "Analytics & monitoring",
-            "Multi-role support",
-            "80%+ coverage"
+            "Multi-role support"
         ],
         "performance": {
             "simple_queries": "< 200ms",
             "function_calls": "< 2s",
-            "streaming": "First token < 500ms"
+            "streaming": "First token < 500ms",
+            "database_queries": "< 100ms"
         }
     }
 

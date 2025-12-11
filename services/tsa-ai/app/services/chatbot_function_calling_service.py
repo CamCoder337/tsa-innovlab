@@ -5,6 +5,7 @@ Let the LLM decide freely what to do
 import logging
 import httpx
 import json
+import re
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
@@ -26,6 +27,10 @@ class ChatbotFunctionCallingService:
         self.llm_model = settings.llm_model
         self.llm_base_url = "https://api.groq.com/openai/v1"
         self.monolith_base_url = settings.monolith_api_url
+        
+        # Initialize PromptBuilderService for dynamic prompting
+        from app.services.prompt_builder_service import PromptBuilderService
+        self.prompt_builder = PromptBuilderService.get_instance()
         
         # Register available functions
         self.functions = self._register_functions()
@@ -94,6 +99,14 @@ class ChatbotFunctionCallingService:
                         }
                     },
                     "required": ["product_id"]
+                }
+            },
+            {
+                "name": "get_categories",
+                "description": "Lister les catégories de produits disponibles (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
                 }
             },
             
@@ -210,6 +223,25 @@ class ChatbotFunctionCallingService:
                     "required": ["origin", "destination"]
                 }
             },
+            {
+                "name": "get_mission_updates",
+                "description": "Voir l'historique des mises à jour d'une mission (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mission_id": {
+                            "type": "string",
+                            "description": "ID de la mission"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Nombre de mises à jour",
+                            "default": 10
+                        }
+                    },
+                    "required": ["mission_id"]
+                }
+            },
             
             # === VÉHICULES (TRANSPORTEUR - READ-ONLY) ===
             {
@@ -265,6 +297,14 @@ class ChatbotFunctionCallingService:
                     "properties": {}
                 }
             },
+            {
+                "name": "get_my_addresses",
+                "description": "Récupérer mes adresses enregistrées (LECTURE SEULE).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {}
+                }
+            },
             
             # === CLARIFICATION ===
             {
@@ -296,6 +336,7 @@ class ChatbotFunctionCallingService:
             # Produits
             "search_products": self._handle_search_products,
             "get_product_details": self._handle_get_product_details,
+            "get_categories": self._handle_get_categories,
             
             # Panier & Commandes (READ-ONLY)
             "get_cart": self._handle_get_cart,
@@ -304,6 +345,7 @@ class ChatbotFunctionCallingService:
             
             # Missions (READ-ONLY)
             "get_user_missions": self._handle_get_user_missions,
+            "get_mission_updates": self._handle_get_mission_updates,
             "get_available_missions": self._handle_get_available_missions,
             "track_shipment": self._handle_track_shipment,
             "calculate_price": self._handle_calculate_price,
@@ -317,6 +359,7 @@ class ChatbotFunctionCallingService:
             
             # Profil (READ-ONLY)
             "get_my_profile": self._handle_get_my_profile,
+            "get_my_addresses": self._handle_get_my_addresses,
             
             # Clarification
             "request_clarification": self._handle_request_clarification,
@@ -578,6 +621,8 @@ class ChatbotFunctionCallingService:
         import time
         start_time = time.time()
         
+        logger.info(f"[process_message] RECEIVED: user_id={user_id} (type={type(user_id)}), user_role={user_role}")
+        
         user_role_normalized = user_role.upper() if user_role else "CLIENT"
         
         # 🔒 SECURITY FIX: Force conversation_id = user_id
@@ -586,8 +631,8 @@ class ChatbotFunctionCallingService:
         conv_id = user_id  # ← ALWAYS use user_id, ignore client input
         
         try:
-            # Check rate limit
-            is_allowed, remaining = self._check_rate_limit(user_id)
+            # Check rate limit using DB (distributed across instances)
+            is_allowed, remaining = await self._check_rate_limit_db(user_id)
             if not is_allowed:
                 logger.warning(f"Rate limit exceeded for user {user_id}")
                 return {
@@ -607,16 +652,22 @@ class ChatbotFunctionCallingService:
                     logger.info(f"Clarification resolved: '{message}' → '{clarified_message}'")
                     message = clarified_message
                     self._clear_pending_clarification(conv_id)
-            
-            # Build system prompt (conversational, no rigid categories)
-            system_prompt = self._build_conversational_prompt(user_role_normalized, context)
-            
-            # Build messages
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message}
-            ]
-            
+        except Exception as e:
+            logger.error(f"Error during initial checks: {e}")
+            # Continue with processing even if checks fail
+        
+        # Build system prompt (conversational, no rigid categories)
+        # Use the shared PromptBuilderService for dynamic entities and consistent instructions
+        system_prompt = await self.prompt_builder.build_conversational_prompt(user_role_normalized, context)
+        
+        # Build messages
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": message}
+        ]
+        
+        # Call LLM API
+        try:
             # Call LLM with function calling
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -736,12 +787,16 @@ class ChatbotFunctionCallingService:
                     "timestamp": datetime.utcnow().isoformat()
                 }
                 
+                # Clean response from artifacts (e.g. <function=...>)
+                response_data["message"] = self._clean_response(response_data["message"])
+                
                 # Add navigation hint if available (HYBRID approach)
                 if navigation_hint:
                     response_data["navigation"] = navigation_hint
                 
-                # Save to conversation memory
-                self._save_to_memory(conv_id, message, final_message)
+                # Save to DB instead of memory (persistent storage)
+                await self._save_to_db(user_id, "user", message)
+                await self._save_to_db(user_id, "assistant", final_message)
                 
                 # Track metrics
                 self._track_metrics(
@@ -793,151 +848,9 @@ class ChatbotFunctionCallingService:
                 "timestamp": datetime.utcnow().isoformat()
             }
     
-    def _build_conversational_prompt(self, user_role: str, context: Optional[Dict] = None) -> str:
-        """Build natural conversational prompt with role-based context and page context"""
+    # _build_conversational_prompt removed - using PromptBuilderService instead
         
-        # Contexte de page (si fourni)
-        page_context = ""
-        if context:
-            current_page = context.get("current_page", "")
-            if current_page:
-                if "shop" in current_page or "products" in current_page or "catalogue" in current_page:
-                    page_context = "\n🛍️ CONTEXTE PAGE: L'utilisateur est dans la BOUTIQUE/CATALOGUE.\nToute question sur 'prix' concerne les PRODUITS, pas le transport.\n"
-                elif "missions" in current_page or "transport" in current_page:
-                    page_context = "\n🚚 CONTEXTE PAGE: L'utilisateur est dans les MISSIONS/TRANSPORT.\nToute question sur 'prix' concerne les TARIFS DE TRANSPORT, pas les produits.\n"
-                elif "cart" in current_page or "panier" in current_page:
-                    page_context = "\n🛒 CONTEXTE PAGE: L'utilisateur est dans son PANIER.\nIl veut probablement gérer ses articles ou passer commande.\n"
-                elif "orders" in current_page or "commandes" in current_page:
-                    page_context = "\n📦 CONTEXTE PAGE: L'utilisateur consulte ses COMMANDES.\nIl veut probablement suivre ou voir les détails d'une commande.\n"
-                elif "vehicles" in current_page or "vehicules" in current_page:
-                    page_context = "\n🚗 CONTEXTE PAGE: L'utilisateur gère ses VÉHICULES.\nIl veut probablement voir ou modifier ses véhicules.\n"
-        
-        # Contexte spécifique par rôle
-        role_context = {
-            "CLIENT": """
-CONTEXTE UTILISATEUR:
-- Rôle: CLIENT (acheteur de pièces détachées)
-- Intérêts: ACHETER DES PIÈCES (amortisseurs, freins, moteurs, etc.) + suivre ses commandes
-- Quand il parle de "prix", "coût", "tarif" → PROBABLEMENT prix de produits (sauf mention de villes)
-- Fonctions prioritaires: search_products(), get_cart(), get_my_orders()
-- Accès boutique: OUI ✅
-""",
-            "TRANSPORTEUR": """
-CONTEXTE UTILISATEUR:
-- Rôle: TRANSPORTEUR (chauffeur/livreur)
-- Intérêts: TROUVER DES MISSIONS + gérer véhicules + ACHETER DES PIÈCES pour ses véhicules
-- Quand il parle de "prix", "coût", "tarif" → PEUT ÊTRE produits OU transport (DEMANDER CLARIFICATION si ambigu)
-- Fonctions prioritaires: get_available_missions(), get_my_vehicles(), search_products()
-- Accès boutique: OUI ✅ (pour acheter pièces pour ses véhicules)
-""",
-            "AFFRETEUR": """
-CONTEXTE UTILISATEUR:
-- Rôle: AFFRETEUR (créateur de missions de transport)
-- Intérêts: CRÉER DES MISSIONS + calculer tarifs transport + ACHETER DES PIÈCES
-- Quand il parle de "prix", "coût", "tarif" → PEUT ÊTRE produits OU transport (DEMANDER CLARIFICATION si ambigu)
-- Fonctions prioritaires: get_user_missions(), calculate_price(), search_products()
-- Accès boutique: OUI ✅ (pour acheter pièces)
-""",
-            "ADMIN": """
-CONTEXTE UTILISATEUR:
-- Rôle: ADMIN (administrateur)
-- Accès complet: produits, missions, véhicules, commandes, tout !
-- Quand il parle de "prix", "coût", "tarif" → TOUJOURS DEMANDER CLARIFICATION (trop ambigu)
-- Accès boutique: OUI ✅
-"""
-        }
-        
-        role_info = role_context.get(user_role, role_context["CLIENT"])
-        
-        return f"""Tu es l'assistant virtuel INFORMATIF de TSA Logistique au Cameroun.
 
-🎯 TON RÔLE: GUIDE et CONSEILLER (PAS exécutant)
-- Consulter des informations pour l'utilisateur
-- Guider vers les bonnes pages de l'interface
-- Expliquer comment faire les actions
-- Parler naturellement comme un humain camerounais sympathique
-{page_context}
-{role_info}
-
-⚠️ IMPORTANT - TU ES EN MODE LECTURE SEULE:
-❌ TU NE PEUX PAS créer, modifier ou supprimer quoi que ce soit
-❌ TU NE PEUX PAS ajouter au panier, passer de commandes, créer de missions
-✅ TU PEUX SEULEMENT consulter des informations et guider l'utilisateur
-
-FONCTIONS DISPONIBLES (READ-ONLY):
-Tu as accès à des fonctions pour CONSULTER des données réelles:
-
-**Produits & Catalogue (LECTURE SEULE):**
-- search_products(): Chercher des PIÈCES DÉTACHÉES, vérifier stock, voir PRIX DES PRODUITS
-- get_product_details(): Détails et PRIX d'une pièce spécifique
-
-**Panier & Commandes (LECTURE SEULE):**
-- get_cart(): Voir le contenu du panier
-- get_my_orders(): Liste des commandes
-- get_order_details(): Détails d'une commande
-
-**Missions Transport (LECTURE SEULE):**
-- get_user_missions(): Missions de l'utilisateur
-- get_available_missions(): Missions disponibles
-- track_shipment(): Obtenir le lien vers le tracking en temps réel
-- calculate_price(): Calculer un TARIF DE TRANSPORT entre villes (CALCUL SEUL, pas de création)
-
-**Véhicules (LECTURE SEULE):**
-- get_my_vehicles(): Véhicules du transporteur
-
-**Messages & Notifications (LECTURE SEULE):**
-- get_unread_messages(): Messages non lus
-- get_notifications(): Notifications
-
-**Profil (LECTURE SEULE):**
-- get_my_profile(): Informations du profil
-
-COMMENT RÉPONDRE AUX DEMANDES D'ACTIONS:
-
-❌ User: "Ajoute un amortisseur au panier"
-✅ Bot: "Je ne peux pas ajouter au panier directement, mais voici l'amortisseur Toyota (180k FCFA, en stock). [Voir le produit] ← Tu pourras l'ajouter en 1 clic"
-
-❌ User: "Crée une mission Douala-Yaoundé"
-✅ Bot: "Je ne peux pas créer de missions, mais je peux t'aider ! 📋
-📍 Douala → Yaoundé
-📦 500kg estimé
-💰 Prix: 125,000 FCFA
-[Ouvrir le formulaire] ← Je vais pré-remplir les infos"
-
-❌ User: "Passe ma commande"
-✅ Bot: "Je ne peux pas passer de commandes, mais ton panier est prêt ! 🛒
-3 articles - 450k FCFA
-[Aller au paiement] ← Finalise ici"
-
-❌ User: "Où est mon colis #123 ?"
-✅ Bot: "Voici le suivi de ton colis #123. [Voir le tracking] ← Suivi en temps réel sur la carte"
-
-EXEMPLES CRITIQUES (pour éviter les confusions):
-❌ "Les prix des amortisseurs" → NE PAS appeler calculate_price() (c'est pour transport)
-✅ "Les prix des amortisseurs" → Appeler search_products(query="amortisseurs")
-
-❌ "Combien coûte Douala Yaoundé" → NE PAS appeler search_products()
-✅ "Combien coûte Douala Yaoundé" → Appeler calculate_price(origin="Douala", destination="Yaoundé")
-
-STYLE DE CONVERSATION:
-- Parle comme sur WhatsApp (naturel, pas robotique)
-- Tutoie l'utilisateur
-- Sois concis (2-3 phrases max)
-- Utilise 1-2 emojis maximum
-- PAS de markdown (**bold**, ##headers)
-- PAS de listes numérotées
-- Toujours proposer un lien/bouton vers la page appropriée
-
-RÈGLES CRITIQUES:
-- Tu es un GUIDE, pas un exécutant
-- Si l'utilisateur demande une ACTION, explique que tu ne peux pas la faire ET propose un lien vers l'interface
-- Si tu as besoin de données, appelle la fonction appropriée
-- Si plusieurs infos sont demandées, appelle plusieurs fonctions
-- ⚠️ SI C'EST AMBIGU → Appelle request_clarification() avec 2-3 options claires
-- Ne JAMAIS prétendre avoir fait une action que tu n'as pas faite
-- Sois toujours honnête sur tes limites
-
-Réponds naturellement à l'utilisateur."""
     
     def _generate_smart_suggestions(self, message: str, response: str, user_role: str) -> List[str]:
         """
@@ -1121,7 +1034,7 @@ Réponds naturellement à l'utilisateur."""
             mission_id = result.get("mission", {}).get("id") or result.get("shipment_id")
             if mission_id:
                 return {
-                    "route": f"/app/mission/{mission_id}/tracking",
+                    "path": f"/app/mission/{mission_id}/tracking",
                     "label": "Voir le tracking en temps réel",
                     "description": "Suivi sur carte interactive"
                 }
@@ -1130,7 +1043,7 @@ Réponds naturellement à l'utilisateur."""
             product_id = result.get("product", {}).get("id")
             if product_id:
                 return {
-                    "route": f"/app/shop/product/{product_id}",
+                    "path": f"/app/shop/product/{product_id}",
                     "label": "Voir le produit",
                     "description": "Détails complets et ajout au panier"
                 }
@@ -1139,7 +1052,7 @@ Réponds naturellement à l'utilisateur."""
             order_id = result.get("order", {}).get("id")
             if order_id:
                 return {
-                    "route": f"/app/shop/order/{order_id}",
+                    "path": f"/app/shop/order/{order_id}",
                     "label": "Voir la commande",
                     "description": "Détails et statut de livraison"
                 }
@@ -1148,7 +1061,7 @@ Réponds naturellement à l'utilisateur."""
             pricing = result.get("pricing", {})
             if pricing:
                 return {
-                    "route": "/app/missions/create",
+                    "path": "/app/missions/create",
                     "label": "Créer cette mission",
                     "description": f"{pricing.get('origin')} → {pricing.get('destination')}",
                     "prefill": {
@@ -1163,13 +1076,13 @@ Réponds naturellement à l'utilisateur."""
             cart_count = result.get("cart", {}).get("items_count", 0)
             if cart_count > 0:
                 return {
-                    "route": "/app/shop/cart",
+                    "path": "/app/shop/cart",
                     "label": "Voir mon panier",
                     "description": f"{cart_count} article(s)"
                 }
             else:
                 return {
-                    "route": "/app/shop",
+                    "path": "/app/shop",
                     "label": "Voir le catalogue",
                     "description": "Ton panier est vide"
                 }
@@ -1177,37 +1090,37 @@ Réponds naturellement à l'utilisateur."""
         # Static navigation map for other functions
         navigation_map = {
             "get_my_orders": {
-                "route": "/app/shop/orders",
+                "path": "/app/shop/orders",
                 "label": "Voir toutes mes commandes",
                 "description": "Historique complet"
             },
             "get_user_missions": {
-                "route": "/app/missions",
+                "path": "/app/missions",
                 "label": "Voir toutes mes missions",
                 "description": "Gérer mes missions"
             },
             "get_available_missions": {
-                "route": "/app/missions",
+                "path": "/app/missions",
                 "label": "Voir toutes les missions",
                 "description": "Missions disponibles"
             },
             "get_my_vehicles": {
-                "route": "/app/vehicles",
+                "path": "/app/vehicles",
                 "label": "Gérer mes véhicules",
                 "description": "Ajouter ou modifier"
             },
             "get_notifications": {
-                "route": "/app/notifications",
+                "path": "/app/notifications",
                 "label": "Voir toutes les notifications",
                 "description": "Centre de notifications"
             },
             "get_my_profile": {
-                "route": "/app/profile",
+                "path": "/app/profile",
                 "label": "Voir mon profil",
                 "description": "Paramètres du compte"
             },
             "search_products": {
-                "route": "/app/shop",
+                "path": "/app/shop",
                 "label": "Voir le catalogue",
                 "description": "Tous les produits disponibles"
             }
@@ -1227,7 +1140,7 @@ Réponds naturellement à l'utilisateur."""
         if any(word in response_lower for word in ["créer", "création", "mission", "formulaire"]):
             if user_role in ["AFFRETEUR", "ADMIN"]:
                 return {
-                    "route": "/app/missions/create",
+                    "path": "/app/missions/create",
                     "label": "Créer une mission",
                     "description": "Formulaire de création"
                 }
@@ -1235,42 +1148,42 @@ Réponds naturellement à l'utilisateur."""
         if any(word in response_lower for word in ["prix", "tarif", "calculer", "coût"]) and \
            any(word in message_lower for word in ["douala", "yaoundé", "bafoussam", "transport"]):
             return {
-                "route": "/app/missions/create",
+                "path": "/app/missions/create",
                 "label": "Créer une mission",
                 "description": "Avec calcul de prix"
             }
         
         if any(word in response_lower for word in ["produit", "pièce", "catalogue", "stock"]):
             return {
-                "route": "/app/shop",
+                "path": "/app/shop",
                 "label": "Voir le catalogue",
                 "description": "Tous les produits disponibles"
             }
         
         if any(word in response_lower for word in ["panier", "article"]):
             return {
-                "route": "/app/shop/cart",
+                "path": "/app/shop/cart",
                 "label": "Voir mon panier",
                 "description": "Gérer mes articles"
             }
         
         if any(word in response_lower for word in ["commande", "order"]):
             return {
-                "route": "/app/shop/orders",
+                "path": "/app/shop/orders",
                 "label": "Mes commandes",
                 "description": "Historique et suivi"
             }
         
         if any(word in response_lower for word in ["mission", "transport"]) and user_role != "CLIENT":
             return {
-                "route": "/app/missions",
+                "path": "/app/missions",
                 "label": "Mes missions",
                 "description": "Gérer mes missions"
             }
         
         if any(word in response_lower for word in ["véhicule", "camion"]) and user_role == "TRANSPORTEUR":
             return {
-                "route": "/app/vehicles",
+                "path": "/app/vehicles",
                 "label": "Mes véhicules",
                 "description": "Gérer ma flotte"
             }
@@ -1363,30 +1276,35 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             db = SessionLocal()
             try:
-                query_text = "SELECT id, name, price, stock_quantity, brand FROM products WHERE stock_quantity > 0"
+                query_text = "SELECT id, name, price, stock, description, reference FROM products WHERE stock > 0 AND is_active = true"
                 params = {}
                 
                 if args.get("query"):
-                    query_text += " AND LOWER(name) LIKE LOWER(:query)"
+                    query_text += " AND (LOWER(name) LIKE LOWER(:query) OR LOWER(description) LIKE LOWER(:query))"
                     params["query"] = f"%{args['query']}%"
                 
-                if args.get("brand"):
-                    query_text += " AND LOWER(brand) LIKE LOWER(:brand)"
-                    params["brand"] = f"%{args['brand']}%"
+                if args.get("reference"):
+                    query_text += " AND LOWER(reference) LIKE LOWER(:reference)"
+                    params["reference"] = f"%{args['reference']}%"
                 
-                query_text += " ORDER BY stock_quantity DESC LIMIT 5"
+                query_text += " ORDER BY stock DESC LIMIT 5"
                 
                 results = db.execute(text(query_text), params).fetchall()
                 
                 products = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "name": r.name,
                         "price": float(r.price),
-                        "stock": r.stock_quantity,
-                        "brand": r.brand
+                        "stock": r.stock,
+                        "reference": r.reference,
+                        "description": r.description[:100] if r.description else None
                     }
                     for r in results
                 ]
@@ -1402,6 +1320,197 @@ Réponds naturellement à l'utilisateur."""
             logger.error(f"Search products error: {e}")
             return {"success": False, "error": "Erreur lors de la recherche"}
     
+    def _validate_limit(self, limit: Any) -> int:
+        """Validate and sanitize limit parameter"""
+        try:
+            limit_int = int(limit)
+            return max(1, min(limit_int, 20))  # Clamp between 1-20
+        except (ValueError, TypeError):
+            return 10  # Default safe value
+    
+    def _validate_uuid(self, value: Any) -> Optional[str]:
+        """Validate UUID format"""
+        if not value:
+            return None
+        try:
+            import uuid
+            # Try to parse as UUID
+            uuid.UUID(str(value))
+            return str(value)
+        except (ValueError, AttributeError):
+            # Not a valid UUID, return as string (might be order_number, etc.)
+            return str(value).strip()
+    
+    async def _save_to_db(self, user_id: str, role: str, content: str, metadata: Optional[Dict] = None):
+        """
+        Save message to PostgreSQL chatbot_history table
+        
+        Args:
+            user_id: User ID
+            role: 'user' or 'assistant'
+            content: Message content
+            metadata: Optional metadata (function calls, etc.)
+        """
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                query = text("""
+                    INSERT INTO chatbot_history (user_id, role, content, metadata, created_at)
+                    VALUES (:user_id, :role, :content, :metadata, NOW())
+                """)
+                
+                db.execute(query, {
+                    "user_id": user_id,
+                    "role": role,
+                    "content": content,
+                    "metadata": json.dumps(metadata) if metadata else None
+                })
+                db.commit()
+                logger.debug(f"Saved message to DB: user={user_id}, role={role}")
+            except Exception as e:
+                logger.error(f"Error saving to DB: {e}", exc_info=True)
+                db.rollback()
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Database connection error: {e}", exc_info=True)
+    
+    async def _load_from_db(self, user_id: str, limit: int = 10) -> List[Dict]:
+        """
+        Load conversation history from PostgreSQL chatbot_history table
+        
+        Args:
+            user_id: User ID
+            limit: Maximum number of messages to load
+            
+        Returns:
+            List of messages in chronological order
+        """
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                query = text("""
+                    SELECT role, content, created_at
+                    FROM chatbot_history
+                    WHERE user_id = :user_id
+                    ORDER BY created_at DESC
+                    LIMIT :limit
+                """)
+                
+                results = db.execute(query, {
+                    "user_id": user_id,
+                    "limit": limit
+                }).fetchall()
+                
+                # Reverse to get chronological order (oldest first)
+                messages = []
+                for r in reversed(results):
+                    messages.append({
+                        "role": r.role,
+                        "content": r.content,
+                        "timestamp": r.created_at.isoformat()
+                    })
+                
+                logger.debug(f"Loaded {len(messages)} messages from DB for user {user_id}")
+                return messages
+            except Exception as e:
+                logger.error(f"Error loading from DB: {e}", exc_info=True)
+                return []
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Database connection error: {e}", exc_info=True)
+            return []
+    
+    async def _check_rate_limit_db(self, user_id: str) -> tuple[bool, int]:
+        """
+        Check rate limit using PostgreSQL chatbot_rate_limits table
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Tuple of (is_allowed, remaining_requests)
+        """
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            from datetime import timedelta
+            
+            db = SessionLocal()
+            try:
+                # Count requests in last minute
+                query = text("""
+                    SELECT COUNT(*) as count
+                    FROM chatbot_rate_limits
+                    WHERE user_id = :user_id
+                      AND request_at > NOW() - INTERVAL '1 minute'
+                """)
+                
+                result = db.execute(query, {"user_id": user_id}).fetchone()
+                current_count = result.count if result else 0
+                remaining = self.rate_limit_max - current_count
+                
+                if current_count >= self.rate_limit_max:
+                    logger.warning(f"Rate limit exceeded for user {user_id}: {current_count}/{self.rate_limit_max}")
+                    return False, 0
+                
+                # Record this request
+                insert_query = text("""
+                    INSERT INTO chatbot_rate_limits (user_id, request_at)
+                    VALUES (:user_id, NOW())
+                """)
+                db.execute(insert_query, {"user_id": user_id})
+                db.commit()
+                
+                logger.debug(f"Rate limit check: user={user_id}, count={current_count + 1}/{self.rate_limit_max}")
+                return True, remaining - 1
+            except Exception as e:
+                logger.error(f"Rate limit check error: {e}", exc_info=True)
+                db.rollback()
+                # Fail open - allow request if DB error
+                return True, 10
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Database connection error: {e}", exc_info=True)
+            # Fail open - allow request if DB error
+            return True, 10
+    
+    async def _cleanup_old_rate_limits(self):
+        """
+        Clean up old rate limit records (run periodically)
+        Removes records older than 1 hour
+        """
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                query = text("""
+                    DELETE FROM chatbot_rate_limits
+                    WHERE request_at < NOW() - INTERVAL '1 hour'
+                """)
+                
+                result = db.execute(query)
+                db.commit()
+                deleted_count = result.rowcount
+                logger.info(f"Cleaned up {deleted_count} old rate limit records")
+            except Exception as e:
+                logger.error(f"Cleanup error: {e}", exc_info=True)
+                db.rollback()
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Database connection error: {e}", exc_info=True)
+    
     async def _handle_track_shipment(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """
         Track shipment - Read REAL data from missions table
@@ -1409,10 +1518,15 @@ Réponds naturellement à l'utilisateur."""
         """
         shipment_id = args.get("shipment_id")
         if not shipment_id:
-            return {"success": False, "error": "Quel est le numéro de ton colis ?"}
+            return {
+                "success": False,
+                "error": "Quel est le numéro de ton colis ?",
+                "error_type": "missing_parameter"
+            }
         
-        # Clean shipment_id (remove # or M- prefix)
+        # Clean and validate shipment_id
         shipment_id = str(shipment_id).replace("#", "").replace("M-", "").strip()
+        shipment_id = self._validate_uuid(shipment_id)
         
         try:
             from app.core.database import SessionLocal
@@ -1421,16 +1535,16 @@ Réponds naturellement à l'utilisateur."""
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT m.id, m.status, m.title,
+                    SELECT m.id, m.status, m.titre as title,
                            ad.city as origin, aa.city as destination,
-                           m.current_location, m.estimated_delivery_date,
+                           m.date_arrivee_prevue as estimated_delivery_date,
                            u.first_name || ' ' || u.last_name as transporter_name
                     FROM missions m
                     LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
                     LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
                     LEFT JOIN users u ON m.transporteur_id = u.id
-                    WHERE m.id = :mission_id
-                      AND (m.affreteur_id = :user_id OR m.transporteur_id = :user_id)
+                    WHERE m.id = CAST(:mission_id AS UUID)
+                      AND (m.affreteur_id = CAST(:user_id AS UUID) OR m.transporteur_id = CAST(:user_id AS UUID))
                     LIMIT 1
                 """)
                 
@@ -1442,18 +1556,19 @@ Réponds naturellement à l'utilisateur."""
                 if not result:
                     return {
                         "success": False,
-                        "error": f"Mission #{shipment_id} non trouvée ou tu n'y as pas accès"
+                        "error": f"Mission #{shipment_id} non trouvée ou tu n'y as pas accès",
+                        "error_type": "not_found"
                     }
                 
                 return {
                     "success": True,
                     "mission": {
-                        "id": result.id,
+                        "id": str(result.id),
                         "status": result.status,
                         "title": result.title,
                         "origin": result.origin,
                         "destination": result.destination,
-                        "current_location": result.current_location or result.origin,
+                        "current_location": result.origin,  # Default to origin since no current_location field
                         "estimated_delivery": result.estimated_delivery_date.isoformat() if result.estimated_delivery_date else None,
                         "transporter_name": result.transporter_name
                     }
@@ -1465,7 +1580,9 @@ Réponds naturellement à l'utilisateur."""
             logger.error(f"Track shipment error: {e}", exc_info=True)
             return {
                 "success": False,
-                "error": "Erreur lors de la récupération des données de tracking"
+                "error": "Erreur lors de la récupération des données de tracking",
+                "error_type": "database_error",
+                "details": str(e) if logger.level <= 10 else None  # Include details in debug mode
             }
     
     async def _handle_calculate_price(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
@@ -1517,33 +1634,36 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
-            limit = args.get("limit", 10)
+            limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
                 # Différent selon le rôle
                 if user_role == "AFFRETEUR":
                     query = text("""
-                        SELECT id, title, status, budget_min, budget_max, 
-                               depart_city, arrival_city, created_at
-                        FROM missions
-                        WHERE affreteur_id = :user_id
+                        SELECT m.id, m.titre as title, m.status, m.budget_min, m.budget_max, 
+                               ad.city as depart_city, aa.city as arrival_city, m.created_at
+                        FROM missions m
+                        LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                        LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                        WHERE m.affreteur_id = :user_id
                     """)
                 elif user_role == "TRANSPORTEUR":
                     query = text("""
-                        SELECT id, title, status, budget_min, budget_max,
-                               depart_city, arrival_city, created_at
-                        FROM missions
-                        WHERE transporteur_id = :user_id
+                        SELECT m.id, m.titre as title, m.status, m.budget_min, m.budget_max,
+                               ad.city as depart_city, aa.city as arrival_city, m.created_at
+                        FROM missions m
+                        LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                        LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                        WHERE m.transporteur_id = :user_id
                     """)
-                else:
-                    return {"success": False, "error": "Rôle non autorisé pour les missions"}
                 
-                # Ajouter filtre statut
-                if status_filter != "all":
-                    query = text(str(query) + " AND status = :status")
-                
+                # Common ordering for both roles
                 query = text(str(query) + f" ORDER BY created_at DESC LIMIT {limit}")
                 
                 params = {"user_id": user_id}
@@ -1554,11 +1674,11 @@ Réponds naturellement à l'utilisateur."""
                 
                 missions = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "title": r.title,
                         "status": r.status,
                         "budget": f"{r.budget_min}-{r.budget_max} FCFA" if r.budget_min else "Non défini",
-                        "route": f"{r.depart_city} → {r.arrival_city}",
+                        "path": f"{r.depart_city} → {r.arrival_city}" if r.depart_city and r.arrival_city else "Non défini",
                         "created_at": r.created_at.isoformat() if r.created_at else None
                     }
                     for r in results
@@ -1576,6 +1696,79 @@ Réponds naturellement à l'utilisateur."""
             logger.error(f"Get user missions error: {e}")
             return {"success": False, "error": "Erreur lors de la récupération des missions"}
     
+    async def _handle_get_mission_updates(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
+        """Get mission updates history"""
+        mission_id = args.get("mission_id")
+        if not mission_id:
+            return {"success": False, "error": "ID mission manquant"}
+        
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            # Handle None args
+            if args is None:
+                args = {}
+            
+            limit = self._validate_limit(args.get("limit", 10))
+            
+            db = SessionLocal()
+            try:
+                # Vérifier que l'utilisateur a accès à cette mission
+                access_query = text("""
+                    SELECT id FROM missions
+                    WHERE id = CAST(:mission_id AS UUID)
+                    AND (affreteur_id = CAST(:user_id AS UUID) OR transporteur_id = CAST(:user_id AS UUID))
+                    LIMIT 1
+                """)
+                
+                access = db.execute(access_query, {"mission_id": mission_id, "user_id": user_id}).fetchone()
+                
+                if not access:
+                    return {"success": False, "error": "Mission non trouvée ou accès refusé"}
+                
+                # Récupérer les mises à jour
+                query = text(f"""
+                    SELECT id, type, title, description, old_status, new_status,
+                           latitude, longitude, address, created_at
+                    FROM mission_updates
+                    WHERE mission_id = CAST(:mission_id AS UUID)
+                    AND is_public = true
+                    ORDER BY created_at DESC
+                    LIMIT {limit}
+                """)
+                
+                results = db.execute(query, {"mission_id": mission_id}).fetchall()
+                
+                updates = [
+                    {
+                        "id": r.id,
+                        "type": r.type,
+                        "title": r.title,
+                        "description": r.description,
+                        "old_status": r.old_status,
+                        "new_status": r.new_status,
+                        "location": {
+                            "latitude": float(r.latitude) if r.latitude else None,
+                            "longitude": float(r.longitude) if r.longitude else None,
+                            "address": r.address
+                        } if r.latitude or r.longitude or r.address else None,
+                        "created_at": r.created_at.isoformat() if r.created_at else None
+                    }
+                    for r in results
+                ]
+                
+                return {
+                    "success": True,
+                    "updates": updates,
+                    "total": len(updates)
+                }
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Get mission updates error: {e}")
+            return {"success": False, "error": "Erreur lors de la récupération des mises à jour"}
+    
     async def _handle_get_product_details(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Get product details"""
         product_id = args.get("product_id")
@@ -1589,9 +1782,9 @@ Réponds naturellement à l'utilisateur."""
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, name, description, price, stock_quantity, brand, category_id
+                    SELECT id, name, description, price, stock, reference, unit, category_id
                     FROM products
-                    WHERE id = :product_id AND is_active = true
+                    WHERE id = CAST(:product_id AS UUID) AND is_active = true
                     LIMIT 1
                 """)
                 
@@ -1601,13 +1794,14 @@ Réponds naturellement à l'utilisateur."""
                     return {
                         "success": True,
                         "product": {
-                            "id": result.id,
+                            "id": str(result.id),
                             "name": result.name,
                             "description": result.description,
                             "price": float(result.price),
-                            "stock": result.stock_quantity,
-                            "brand": result.brand,
-                            "available": result.stock_quantity > 0
+                            "stock": result.stock,
+                            "reference": result.reference,
+                            "unit": result.unit,
+                            "available": result.stock > 0
                         }
                     }
                 else:
@@ -1617,6 +1811,45 @@ Réponds naturellement à l'utilisateur."""
         except Exception as e:
             logger.error(f"Get product details error: {e}")
             return {"success": False, "error": "Erreur lors de la récupération du produit"}
+    
+    async def _handle_get_categories(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
+        """Get product categories"""
+        try:
+            from app.core.database import SessionLocal
+            from sqlalchemy import text
+            
+            db = SessionLocal()
+            try:
+                query = text("""
+                    SELECT id, name, description, slug, parent_id
+                    FROM categories
+                    WHERE is_active = true
+                    ORDER BY display_order ASC, name ASC
+                """)
+                
+                results = db.execute(query).fetchall()
+                
+                categories = [
+                    {
+                        "id": str(r.id),
+                        "name": r.name,
+                        "description": r.description,
+                        "slug": r.slug,
+                        "parent_id": str(r.parent_id) if r.parent_id else None
+                    }
+                    for r in results
+                ]
+                
+                return {
+                    "success": True,
+                    "categories": categories,
+                    "total": len(categories)
+                }
+            finally:
+                db.close()
+        except Exception as e:
+            logger.error(f"Get categories error: {e}")
+            return {"success": False, "error": "Erreur lors de la récupération des catégories"}
     
     async def _handle_get_cart(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """Get user cart"""
@@ -1628,9 +1861,9 @@ Réponds naturellement à l'utilisateur."""
             try:
                 # Get cart
                 cart_query = text("""
-                    SELECT id, total_amount, items_count
+                    SELECT id
                     FROM carts
-                    WHERE user_id = :user_id AND status = 'active'
+                    WHERE user_id = CAST(:user_id AS UUID) AND status = 'active'
                     LIMIT 1
                 """)
                 cart = db.execute(cart_query, {"user_id": user_id}).fetchone()
@@ -1645,7 +1878,7 @@ Réponds naturellement à l'utilisateur."""
                 # Get cart items
                 items_query = text("""
                     SELECT ci.id, ci.quantity, ci.unit_price,
-                           p.name as product_name, p.stock_quantity
+                           p.name as product_name, p.stock
                     FROM cart_items ci
                     JOIN products p ON ci.product_id = p.id
                     WHERE ci.cart_id = :cart_id
@@ -1658,17 +1891,19 @@ Réponds naturellement à l'utilisateur."""
                         "quantity": item.quantity,
                         "unit_price": float(item.unit_price),
                         "subtotal": float(item.unit_price * item.quantity),
-                        "in_stock": item.stock_quantity >= item.quantity
+                        "in_stock": item.stock >= item.quantity
                     }
                     for item in items
                 ]
+                
+                total = sum(float(item.unit_price * item.quantity) for item in items)
                 
                 return {
                     "success": True,
                     "cart": {
                         "items": cart_items,
-                        "total": float(cart.total_amount) if cart.total_amount else 0,
-                        "items_count": cart.items_count or 0
+                        "total": total,
+                        "items_count": len(cart_items)
                     }
                 }
             finally:
@@ -1686,19 +1921,23 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
-            limit = args.get("limit", 10)
+            limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, order_number, status, total_amount, created_at
+                    SELECT id, order_number, status, total, created_at
                     FROM orders
-                    WHERE user_id = :user_id
+                    WHERE user_id = CAST(:user_id AS UUID)
                 """)
                 
                 if status_filter != "all":
-                    query = text(str(query) + " AND status = :status")
+                    query = text(str(query) + " AND status = CAST(:status AS order_status)")
                 
                 query = text(str(query) + f" ORDER BY created_at DESC LIMIT {limit}")
                 
@@ -1710,10 +1949,10 @@ Réponds naturellement à l'utilisateur."""
                 
                 orders = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "order_number": r.order_number,
                         "status": r.status,
-                        "total": float(r.total_amount),
+                        "total": float(r.total),
                         "date": r.created_at.isoformat() if r.created_at else None
                     }
                     for r in results
@@ -1744,11 +1983,10 @@ Réponds naturellement à l'utilisateur."""
             try:
                 # Get order
                 order_query = text("""
-                    SELECT id, order_number, status, total_amount, 
-                           shipping_address, created_at
+                    SELECT id, order_number, status, total, created_at
                     FROM orders
-                    WHERE (id = :order_id OR order_number = :order_id) 
-                    AND user_id = :user_id
+                    WHERE (id = CAST(:order_id AS UUID) OR order_number = :order_id) 
+                    AND user_id = CAST(:user_id AS UUID)
                     LIMIT 1
                 """)
                 order = db.execute(order_query, {"order_id": order_id, "user_id": user_id}).fetchone()
@@ -1780,7 +2018,7 @@ Réponds naturellement à l'utilisateur."""
                     "order": {
                         "order_number": order.order_number,
                         "status": order.status,
-                        "total": float(order.total_amount),
+                        "total": float(order.total),
                         "items": order_items,
                         "date": order.created_at.isoformat() if order.created_at else None
                     }
@@ -1800,16 +2038,23 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
-            limit = args.get("limit", 10)
+            # Handle None args
+            if args is None:
+                args = {}
+            
+            limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
                 query = text(f"""
-                    SELECT id, title, budget_min, budget_max, 
-                           depart_city, arrival_city, type_marchandise, poids
-                    FROM missions
-                    WHERE status = 'published' AND transporteur_id IS NULL
-                    ORDER BY created_at DESC
+                    SELECT m.id, m.titre as title, m.budget_min, m.budget_max, 
+                           ad.city as depart_city, aa.city as arrival_city, 
+                           m.type_marchandise, m.poids
+                    FROM missions m
+                    LEFT JOIN addresses ad ON m.adresse_depart_id = ad.id
+                    LEFT JOIN addresses aa ON m.adresse_arrivee_id = aa.id
+                    WHERE m.status = 'published' AND m.transporteur_id IS NULL
+                    ORDER BY m.created_at DESC
                     LIMIT {limit}
                 """)
                 
@@ -1817,10 +2062,10 @@ Réponds naturellement à l'utilisateur."""
                 
                 missions = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "title": r.title,
                         "budget": f"{r.budget_min}-{r.budget_max} FCFA" if r.budget_min else "À négocier",
-                        "route": f"{r.depart_city} → {r.arrival_city}",
+                        "path": f"{r.depart_city} → {r.arrival_city}" if r.depart_city and r.arrival_city else "Non défini",
                         "cargo": r.type_marchandise,
                         "weight": f"{r.poids}kg" if r.poids else "Non spécifié"
                     }
@@ -1847,14 +2092,18 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             status_filter = args.get("status", "all")
             
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, immatriculation, type, capacite, status
+                    SELECT id, registration, type, description, status
                     FROM vehicles
-                    WHERE transporteur_id = :user_id
+                    WHERE user_id = CAST(:user_id AS UUID)
                 """)
                 
                 if status_filter != "all":
@@ -1870,10 +2119,10 @@ Réponds naturellement à l'utilisateur."""
                 
                 vehicles = [
                     {
-                        "id": r.id,
-                        "immatriculation": r.immatriculation,
+                        "id": str(r.id),
+                        "registration": r.registration,
                         "type": r.type,
-                        "capacite": f"{r.capacite}kg" if r.capacite else "Non spécifié",
+                        "description": r.description,
                         "status": r.status
                     }
                     for r in results
@@ -1932,7 +2181,7 @@ Réponds naturellement à l'utilisateur."""
                 
                 conversations = [
                     {
-                        "conversation_id": conv.id,
+                        "conversation_id": str(conv.id),
                         "type": conv.type,
                         "other_user": conv.other_user_name,
                         "unread_count": conv.unread_in_conv
@@ -1957,8 +2206,12 @@ Réponds naturellement à l'utilisateur."""
             from app.core.database import SessionLocal
             from sqlalchemy import text
             
+            # Handle None args
+            if args is None:
+                args = {}
+            
             unread_only = args.get("unread_only", False)
-            limit = args.get("limit", 10)
+            limit = self._validate_limit(args.get("limit", 10))
             
             db = SessionLocal()
             try:
@@ -1977,7 +2230,7 @@ Réponds naturellement à l'utilisateur."""
                 
                 notifications = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "type": r.type,
                         "title": r.title,
                         "message": r.message,
@@ -2011,7 +2264,7 @@ Réponds naturellement à l'utilisateur."""
                     SELECT id, email, first_name, last_name, phone, role, 
                            email_verified_at, mfa_enabled, created_at
                     FROM users
-                    WHERE id = :user_id
+                    WHERE id = CAST(:user_id AS UUID)
                     LIMIT 1
                 """)
                 
@@ -2021,7 +2274,7 @@ Réponds naturellement à l'utilisateur."""
                     return {
                         "success": True,
                         "profile": {
-                            "id": result.id,
+                            "id": str(result.id),
                             "email": result.email,
                             "name": f"{result.first_name} {result.last_name}",
                             "phone": result.phone,
@@ -2048,22 +2301,21 @@ Réponds naturellement à l'utilisateur."""
             db = SessionLocal()
             try:
                 query = text("""
-                    SELECT id, label, address_line1, address_line2, city, 
-                           postal_code, country, is_default
+                    SELECT id, label, street, city, region, 
+                           postal_code, country
                     FROM addresses
-                    WHERE user_id = :user_id
-                    ORDER BY is_default DESC, created_at DESC
+                    WHERE user_id = CAST(:user_id AS UUID)
+                    ORDER BY created_at DESC
                 """)
                 
                 results = db.execute(query, {"user_id": user_id}).fetchall()
                 
                 addresses = [
                     {
-                        "id": r.id,
+                        "id": str(r.id),
                         "label": r.label,
-                        "address": f"{r.address_line1}, {r.city}",
-                        "full_address": f"{r.address_line1}, {r.address_line2 or ''}, {r.city}, {r.postal_code or ''}, {r.country}".replace(", ,", ","),
-                        "is_default": r.is_default
+                        "address": f"{r.street}, {r.city}",
+                        "full_address": f"{r.street}, {r.city}, {r.region or ''}, {r.postal_code or ''}, {r.country}".replace(", ,", ",").strip(", "),
                     }
                     for r in results
                 ]
@@ -2081,8 +2333,8 @@ Réponds naturellement à l'utilisateur."""
     
     async def _handle_request_clarification(self, args: Dict, user_id: str, user_role: str, token: Optional[str]) -> Dict:
         """
-        Handle clarification request
-        This is a special function that doesn't fetch data but signals ambiguity
+        Handle clarification request.
+        This is a special function that does not fetch data but signals ambiguity.
         """
         ambiguity_reason = args.get("ambiguity_reason", "Requête ambiguë")
         options = args.get("options", [])
@@ -2159,13 +2411,30 @@ Réponds naturellement à l'utilisateur."""
         return True, remaining - 1
 
 
+    def _clean_response(self, text: str) -> str:
+        """Clean response from artifacts like <function=...> tags"""
+        if not text:
+            return ""
+        
+        # Remove <function=name>...</function> tags
+        # This regex matches <function=name> content </function>
+        # It uses non-greedy matching for content
+        cleaned = re.sub(r'<function=[^>]+>.*?</function>', '', text, flags=re.DOTALL)
+        
+        # Also remove standalone <function=name> tags if any
+        cleaned = re.sub(r'<function=[^>]+>', '', cleaned)
+        cleaned = re.sub(r'</function>', '', cleaned)
+        
+        return cleaned.strip()
+
 # Singleton
 _chatbot_fc: Optional[ChatbotFunctionCallingService] = None
 
 
 def get_chatbot_function_calling() -> ChatbotFunctionCallingService:
-    """Get or create function calling chatbot"""
+    "Get or create function calling chatbot"
     global _chatbot_fc
     if _chatbot_fc is None:
         _chatbot_fc = ChatbotFunctionCallingService()
     return _chatbot_fc
+

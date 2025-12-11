@@ -25,7 +25,7 @@ async def get_user_from_header(
     if settings.environment == "development":
         # For development, return mock user if no headers
         return {
-            "id": int(x_user_id) if x_user_id else 1,
+            "id": x_user_id if x_user_id else "1",
             "email": x_user_email or "dev@tsa.com",
             "role": x_user_role or "admin"
         }
@@ -35,7 +35,7 @@ async def get_user_from_header(
         return None
 
     return {
-        "id": int(x_user_id),
+        "id": x_user_id,
         "email": x_user_email,
         "role": x_user_role
     }

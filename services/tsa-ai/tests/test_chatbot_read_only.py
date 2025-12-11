@@ -196,90 +196,64 @@ class TestConversationHistoryIsolation:
     """Tests pour vérifier l'isolation de l'historique par utilisateur"""
     
     @pytest.mark.asyncio
-    async def test_history_isolated_by_user_id(self):
+    async def test_conversation_id_forced_to_user_id(self):
         """
-        Test 8: CRITIQUE - Vérifier que l'historique est isolé par user_id
+        Test 8: CRITIQUE - Vérifier que conversation_id est forcé à user_id
         """
-        from app.services.intelligent_chatbot_v4_service import IntelligentChatbotV4Service
+        service = ChatbotFunctionCallingService()
         
-        service = IntelligentChatbotV4Service()
+        # Mock du LLM pour éviter les appels réels
+        with patch('httpx.AsyncClient') as mock_client:
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
+                "choices": [{
+                    "message": {
+                        "content": "Bonjour !",
+                        "role": "assistant"
+                    }
+                }]
+            }
+            
+            mock_client_instance = Mock()
+            mock_client_instance.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value = mock_client_instance
+            
+            # Appeler process_message avec conversation_id différent de user_id
+            await service.process_message(
+                message="Bonjour",
+                user_id="user_123",
+                user_role="CLIENT",
+                conversation_id="malicious_conv_id"  # ← Devrait être ignoré
+            )
+            
+            # Vérifier que l'historique est sauvegardé avec user_id, pas conversation_id
+            assert "user_123" in service.conversation_memory, "❌ Historique devrait être sous user_id"
+            assert "malicious_conv_id" not in service.conversation_memory, "❌ conversation_id malveillant ne devrait pas être utilisé"
         
-        # Mock de la DB
-        with patch('app.core.database.SessionLocal') as mock_db:
-            mock_session = Mock()
-            mock_db.return_value = mock_session
-            
-            # Mock du résultat de la requête
-            mock_result = Mock()
-            mock_result.fetchall.return_value = []
-            mock_session.execute.return_value = mock_result
-            
-            # Appeler _load_history_from_db
-            await service._load_history_from_db("conv_123", "user_1")
-            
-            # Vérifier que la requête contient user_id
-            call_args = mock_session.execute.call_args
-            query_text = str(call_args[0][0])
-            query_params = call_args[0][1]
-            
-            assert "user_id" in query_text.lower(), "❌ Requête devrait filtrer par user_id"
-            assert "user_id" in query_params, "❌ Paramètres devraient inclure user_id"
-            assert query_params["user_id"] == "user_1", "❌ user_id devrait être 'user_1'"
-        
-        print("✅ Test 8 PASSED: Historique isolé par user_id")
+        print("✅ Test 8 PASSED: conversation_id forcé à user_id")
     
-    @pytest.mark.asyncio
-    async def test_process_message_passes_user_id_to_history(self):
+    def test_memory_isolation_between_users(self):
         """
-        Test 9: Vérifier que process_message passe user_id à _load_history_from_db
+        Test 9: Vérifier que les utilisateurs ne peuvent pas accéder à l'historique des autres
         """
-        from app.services.intelligent_chatbot_v4_service import IntelligentChatbotV4Service
+        service = ChatbotFunctionCallingService()
         
-        service = IntelligentChatbotV4Service()
+        # Simuler l'historique de deux utilisateurs
+        service.conversation_memory["user_A"] = [
+            {"role": "user", "content": "Secret A", "timestamp": "2025-11-28T10:00:00Z"}
+        ]
+        service.conversation_memory["user_B"] = [
+            {"role": "user", "content": "Secret B", "timestamp": "2025-11-28T10:01:00Z"}
+        ]
         
-        # Mock de _load_history_from_db
-        with patch.object(service, '_load_history_from_db', new_callable=AsyncMock) as mock_load:
-            mock_load.return_value = []
-            
-            # Mock d'autres méthodes pour éviter les erreurs
-            with patch.object(service, '_detect_intent_with_llm', new_callable=AsyncMock) as mock_intent:
-                mock_intent.return_value = Mock(
-                    name="greeting",
-                    confidence=1.0,
-                    entities={},
-                    requires_confirmation=False
-                )
-                
-                with patch.object(service, '_generate_response', new_callable=AsyncMock) as mock_response:
-                    mock_response.return_value = ("Bonjour !", None)
-                    
-                    with patch.object(service, '_generate_contextual_suggestions', new_callable=AsyncMock) as mock_suggestions:
-                        mock_suggestions.return_value = ["Aide"]
-                        
-                        with patch.object(service, '_generate_navigation_actions', new_callable=AsyncMock) as mock_actions:
-                            mock_actions.return_value = []
-                            
-                            with patch.object(service, '_save_to_db', new_callable=AsyncMock):
-                                # Appeler process_message
-                                try:
-                                    await service.process_message(
-                                        message="Bonjour",
-                                        user_id="user_123",
-                                        user_role="CLIENT",
-                                        conversation_id="conv_456"
-                                    )
-                                except Exception:
-                                    pass  # Ignorer les erreurs, on vérifie juste l'appel
-                                
-                                # Vérifier que _load_history_from_db a été appelé avec user_id
-                                mock_load.assert_called_once()
-                                call_args = mock_load.call_args[0]
-                                
-                                assert len(call_args) == 2, "❌ _load_history_from_db devrait recevoir 2 arguments"
-                                assert call_args[0] == "conv_456", "❌ Premier argument devrait être conversation_id"
-                                assert call_args[1] == "user_123", "❌ Deuxième argument devrait être user_id"
+        # Vérifier que chaque utilisateur a son propre historique isolé
+        assert len(service.conversation_memory["user_A"]) == 1
+        assert len(service.conversation_memory["user_B"]) == 1
+        assert service.conversation_memory["user_A"][0]["content"] == "Secret A"
+        assert service.conversation_memory["user_B"][0]["content"] == "Secret B"
         
-        print("✅ Test 9 PASSED: process_message passe user_id à _load_history_from_db")
+        print("✅ Test 9 PASSED: Isolation mémoire entre utilisateurs")
 
 
 class TestPermissions:

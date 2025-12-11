@@ -43,10 +43,14 @@ Créer l'"Uber de la logistique" avec une plateforme qui transforme la façon do
 - Système de retours et garanties
 
 #### 5. 💬 Chatbot & Support Tactique
-- Support client 24/7 automatisé
+- Support client 24/7 automatisé avec IA (Groq LLM)
+- 14 fonctions READ-ONLY pour consultation de données
+- Navigation intelligente vers les pages appropriées
 - Chat en temps réel multi-canal
 - Système d'urgence pour transporteurs
 - Analyse de sentiment automatique
+
+**📚 Documentation Chatbot :** Voir [CHATBOT_QUICK_START.md](CHATBOT_QUICK_START.md) ou [CHATBOT_INDEX.md](CHATBOT_INDEX.md)
 
 #### 6. 🤖 IA & Data : Le Cerveau Prédictif
 - Prédiction des retards avec facteurs explicatifs
