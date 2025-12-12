@@ -58,6 +58,7 @@ export default function RealTimeMissionTracker({ className = '' }: RealTimeMissi
     // webSocketService.on('disconnect', handleConnectionStatus);
 
     if (webSocketService.isConnected()) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         handleConnectionStatus(true);
     }
 

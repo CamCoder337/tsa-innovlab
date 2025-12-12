@@ -47,7 +47,7 @@ export default class EmailService {
   }
 
   async sendWelcomeEmail(user: User) {
-    const dashboardUrl = `${env.get('FRONTEND_URL')}/dashboard`
+    const dashboardUrl = `${env.get('FRONTEND_URL')}/app`
 
     return this.send(
       user.email,
@@ -65,7 +65,7 @@ export default class EmailService {
   }
 
   async sendNewMissionNotification(transporteur: User, mission: Mission) {
-    const missionUrl = `${env.get('FRONTEND_URL')}/missions/${mission.id}`
+    const missionUrl = `${env.get('FRONTEND_URL')}/app/missions/${mission.id}`
 
     return this.send(
       transporteur.email,
@@ -139,7 +139,7 @@ export default class EmailService {
       'emails/low_stock_alert',
       {
         products,
-        dashboardUrl: `${env.get('FRONTEND_URL')}/admin/products`,
+        dashboardUrl: `${env.get('FRONTEND_URL')}/app/products`,
         alertDate: DateTime.now().toFormat('dd/MM/yyyy HH:mm'),
       }
     )
@@ -153,7 +153,7 @@ export default class EmailService {
       {
         userName: user.fullName || 'Utilisateur',
         enabledAt: DateTime.now().toFormat('dd/MM/yyyy HH:mm'),
-        securityUrl: `${env.get('FRONTEND_URL')}/settings/security`,
+        securityUrl: `${env.get('FRONTEND_URL')}/app/settings#mfa`,
       }
     )
   }
@@ -185,7 +185,7 @@ export default class EmailService {
         recoveryCodes,
         accountName,
         issuer,
-        mfaUrl: `${env.get('FRONTEND_URL')}/settings/mfa`,
+        mfaUrl: `${env.get('FRONTEND_URL')}/app/settings#mfa`,
         supportEmail: env.get('SUPPORT_EMAIL', 'support@tsa-logistics.com'),
       },
       true // Test queue Redis à nouveau
