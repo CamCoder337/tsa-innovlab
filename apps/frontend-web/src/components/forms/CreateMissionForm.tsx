@@ -77,11 +77,8 @@ const ClientSideAddressPicker = ({
   className,
   showMap,
 }: AddressPickerProps) => {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Check if we're on the client side
+  const isClient = typeof window !== 'undefined';
 
   if (!isClient) {
     return <AddressPickerLoading />;

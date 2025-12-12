@@ -319,7 +319,7 @@ export default function ClientSettings() {
             <Separator />
 
             {/* MFA Settings
-            <div className="space-y-4">
+            <div id="mfa" className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium flex items-center gap-2">

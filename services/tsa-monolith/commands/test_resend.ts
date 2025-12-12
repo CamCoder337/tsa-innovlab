@@ -46,16 +46,16 @@ export default class TestResend extends BaseCommand {
               <h1 style="color: #2c3e50; text-align: center; margin-bottom: 30px;">
                 TSA Logistics
               </h1>
-              
+
               <p>Bonjour,</p>
-              
+
               <p>Nous vous remercions d'avoir créé votre compte sur TSA Logistics, la plateforme leader pour la gestion logistique au Cameroun.</p>
-              
+
               <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3498db;">
                 <p style="margin: 0;"><strong>Votre compte a été créé avec succès.</strong></p>
                 <p style="margin: 5px 0 0 0; color: #666;">Date: ${new Date().toLocaleDateString('fr-FR')}</p>
               </div>
-              
+
               <p>Notre plateforme vous permet de :</p>
               <ul>
                 <li>Gérer vos missions de transport</li>
@@ -63,21 +63,21 @@ export default class TestResend extends BaseCommand {
                 <li>Suivre vos expéditions en temps réel</li>
                 <li>Accéder à des analyses détaillées</li>
               </ul>
-              
+
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${env.get('FRONTEND_URL')}/dashboard" 
+                <a href="${env.get('FRONTEND_URL')}/app"
                    style="background: #3498db; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
                   Accéder à mon tableau de bord
                 </a>
               </div>
-              
+
               <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-              
+
               <p style="color: #666; font-size: 14px;">
-                Si vous avez des questions, notre équipe support est disponible à 
+                Si vous avez des questions, notre équipe support est disponible à
                 <a href="mailto:support@cam-coder.com">support@cam-coder.com</a>
               </p>
-              
+
               <p style="color: #666; font-size: 12px; text-align: center; margin-top: 30px;">
                 © ${new Date().getFullYear()} TSA Logistics - Tous droits réservés<br>
                 Cameroun - Solutions logistiques innovantes

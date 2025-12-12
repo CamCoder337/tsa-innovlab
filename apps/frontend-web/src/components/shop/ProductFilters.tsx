@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
@@ -25,21 +25,18 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
   const { categories = [], isLoading: isLoadingCategories } = useCategories();
   const { t: tShop } = useShopTranslation();
   const { t: tCommon } = useCommonTranslation();
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    filters.minPrice ?? PRICE_RANGE.min,
-    filters.maxPrice ?? PRICE_RANGE.max,
-  ]);
+
+  // Derive priceRange from filters prop instead of syncing with useEffect
+  const priceRange: [number, number] = useMemo(
+    () => [filters.minPrice ?? PRICE_RANGE.min, filters.maxPrice ?? PRICE_RANGE.max],
+    [filters.minPrice, filters.maxPrice]
+  );
 
   // Memoize filtered categories to prevent unnecessary re-renders
   const visibleCategories = useMemo(
     () => categories.filter((cat) => cat.isActive !== false),
     [categories]
   );
-
-  // Update internal state when filters prop changes
-  useEffect(() => {
-    setPriceRange([filters.minPrice ?? PRICE_RANGE.min, filters.maxPrice ?? PRICE_RANGE.max]);
-  }, [filters.minPrice, filters.maxPrice]);
 
   // Memoize handlers to prevent unnecessary re-renders
   const handleCategoryChange = useCallback(
@@ -59,7 +56,6 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
   const handlePriceRangeChange = useCallback(
     (value: number[]) => {
       const [min, max] = value;
-      setPriceRange([min, max]);
       onFiltersChange({
         ...filters,
         minPrice: min === PRICE_RANGE.min ? undefined : min,
@@ -100,7 +96,6 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
       lowStock: undefined,
       isActive: undefined,
     });
-    setPriceRange([PRICE_RANGE.min, PRICE_RANGE.max]);
   }, [onFiltersChange]);
 
   // Calculate active filters count
@@ -145,7 +140,7 @@ export function ProductFilters({ filters, onFiltersChange, className = '' }: Pro
               placeholder={tShop('filters.searchPlaceholder')}
               value={filters.search || ''}
               onChange={handleSearchChange}
-              className="w-full pl-9 border-0"
+              className="w-full pl-9 border-0 focus-visible:ring-0"
             />
             <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
