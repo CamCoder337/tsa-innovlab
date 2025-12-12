@@ -1,22 +1,52 @@
 import Mission, { MissionStatus } from '#models/mission'
 import LocationUpdate from '#models/location_update'
-import { randomBytes, randomInt } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { DateTime } from 'luxon'
 import WebSocketService from '#services/websocket_service'
+import string from '@adonisjs/core/helpers/string'
+import { Exception } from '@adonisjs/core/exceptions'
 
 export class MissionTrackingService {
   /**
    * Génère un token unique pour le tracking d'une mission
+   * @deprecated Plus utilisé - L'authentification se fait via JWT avec PIN uniquement
    */
   generateTrackingToken(): string {
     return randomBytes(32).toString('hex')
   }
 
   /**
-   * Génère un PIN à 6 chiffres
+   * Génère un PIN alphanumérique de 6 caractères (ex: A3X9K2)
    */
   generateTrackingPin(): string {
-    return randomInt(100000, 999999).toString()
+    return string.generateRandom(6).toUpperCase()
+  }
+
+  /**
+   * Génère un PIN alphanumérique unique pour une mission
+   * Vérifie l'unicité parmi les missions actives
+   * @throws Exception si impossible de générer un PIN unique après 10 tentatives
+   */
+  async generateUniqueTrackingPin(): Promise<string> {
+    let attempts = 0
+    const maxAttempts = 10
+
+    while (attempts < maxAttempts) {
+      const pin = this.generateTrackingPin()
+
+      // Vérifier unicité pour missions actives
+      const existing = await Mission.query()
+        .where('tracking_pin', pin)
+        .whereIn('status', ['assigned', 'ready_to_start', 'in_progress'])
+        .first()
+
+      if (!existing) return pin
+      attempts++
+    }
+
+    throw new Exception('Unable to generate unique PIN after 10 attempts', {
+      status: 500,
+    })
   }
 
   /**
@@ -29,13 +59,12 @@ export class MissionTrackingService {
   /**
    * Initialise les credentials de tracking pour une mission
    * Appelé automatiquement quand une mission passe au statut ASSIGNED ou READY_TO_START
+   * Génère un PIN alphanumérique unique et un QR code token
    */
   async initializeTracking(mission: Mission): Promise<void> {
-    if (!mission.trackingLinkToken) {
-      mission.trackingLinkToken = this.generateTrackingToken()
-    }
+    // Ne plus générer trackingLinkToken - authentification via JWT uniquement
     if (!mission.trackingPin) {
-      mission.trackingPin = this.generateTrackingPin()
+      mission.trackingPin = await this.generateUniqueTrackingPin()
     }
     if (!mission.qrCodeToken) {
       mission.qrCodeToken = this.generateQrCodeToken()
@@ -45,6 +74,8 @@ export class MissionTrackingService {
 
   /**
    * Vérifie les credentials de tracking (token + PIN)
+   * @deprecated Plus utilisé - L'authentification se fait via JWT avec PIN uniquement
+   * Voir DriverAuthController.login() pour la nouvelle méthode d'authentification
    */
   async verifyTrackingCredentials(token: string, pin: string): Promise<Mission | null> {
     const mission = await Mission.query()
@@ -79,6 +110,7 @@ export class MissionTrackingService {
       speed: speed ?? undefined,
       heading: heading ?? undefined,
       accuracy: accuracy ?? undefined,
+      timestamp: new Date().toISOString(),
     }
 
     const locationUpdate = await LocationUpdate.create(locationData)
@@ -94,14 +126,15 @@ export class MissionTrackingService {
       await mission.save()
     }
 
-    // Envoyer la mise à jour via WebSocket
+    // Envoyer la mise à jour via WebSocket (format compatible avec le frontend)
     try {
       const websocketService = WebSocketService.getInstance()
       await websocketService.broadcastToTransporteurs({
-        type: 'location_update',
+        type: 'location:update', // Utiliser le même type que le frontend attend
         data: locationData,
+        timestamp: new Date().toISOString(),
       })
-      console.log('📡 Position diffusée via WebSocket:', locationData.deviceId)
+      console.log('📡 Position diffusée via WebSocket aux transporteurs')
     } catch (error) {
       console.error('❌ Erreur lors de la diffusion WebSocket:', error)
     }
