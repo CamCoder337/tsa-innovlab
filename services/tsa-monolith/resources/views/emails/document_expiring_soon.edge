@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document expirant bientôt</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: {{ urgency === 'urgent' ? '#dc3545' : '#ffc107' }}; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+    <h1 style="margin: 0;">{{ urgency === 'urgent' ? '⚠️ URGENT' : '⏰ Rappel' }}</h1>
+    <p style="margin: 10px 0 0 0; font-size: 18px;">Votre document expire bientôt</p>
+  </div>
+
+  <div style="background-color: #f8f9fa; padding: 20px; border-radius: 0 0 5px 5px;">
+    <p>Bonjour <strong>{{ user.firstName }} {{ user.lastName }}</strong>,</p>
+
+    <p>Nous vous informons que votre document <strong>{{ documentType.labelFr }}</strong> expire dans <strong style="color: {{ urgency === 'urgent' ? '#dc3545' : '#ffc107' }}">{{ daysLeft }} jour(s)</strong>.</p>
+
+    <div style="background-color: white; padding: 15px; margin: 20px 0; border-left: 4px solid {{ urgency === 'urgent' ? '#dc3545' : '#ffc107' }}; border-radius: 3px;">
+      <p style="margin: 0;"><strong>Détails du document :</strong></p>
+      <ul style="margin: 10px 0;">
+        <li>Type : {{ documentType.labelFr }}</li>
+        <li>Date d'expiration : {{ expirationDate.toFormat('dd/MM/yyyy') }}</li>
+        <li>Jours restants : {{ daysLeft }}</li>
+      </ul>
+    </div>
+
+    @if(urgency === 'urgent')
+      <p style="color: #dc3545; font-weight: bold;">⚠️ Action urgente requise !</p>
+      <p>Veuillez renouveler ce document dès que possible pour éviter toute interruption de service.</p>
+    @else
+      <p>Pensez à renouveler ce document avant son expiration pour maintenir votre compte à jour.</p>
+    @end
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="{{ env('FRONTEND_URL') }}/documents" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+        Renouveler mon document
+      </a>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+
+    <p style="font-size: 12px; color: #6c757d;">
+      Cet email est un rappel automatique. Si vous avez déjà renouvelé ce document, veuillez ignorer ce message.
+    </p>
+
+    <p style="font-size: 12px; color: #6c757d;">
+      Cordialement,<br>
+      L'équipe TSA Logistics
+    </p>
+  </div>
+</body>
+</html>
