@@ -43,7 +43,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   useEffect(() => {
     if (autoFocus && inputRefs.current[0]) {
       inputRefs.current[0].focus();
-      setActiveIndex(0);
+      // activeIndex will be set via onFocus handler
     }
   }, [autoFocus]);
 

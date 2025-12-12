@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductRecommendations } from '@/components/shop/ProductRecommendations';
 import { VisualSearch } from '@/components/shop/VisualSearch';
@@ -44,6 +44,7 @@ import { useVisualRecognitionSearch } from '@/hooks/useVisualRecognitionSearch';
 import { toast } from 'sonner';
 import { useCommonTranslation, useShopTranslation } from '@/hooks/useTranslation';
 import { matchesSearchQuery } from '@/utils/search.utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function ShopPage() {
   const { t: tCommon } = useCommonTranslation();
@@ -59,7 +60,8 @@ export default function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const isMobile = useIsMobile();
+  const itemsPerPage = isMobile ? 20 : 21;
   const [filters, setFilters] = useState<ProductFilterParams>({
     search: '',
     categoryId: [],
@@ -157,11 +159,6 @@ export default function ShopPage() {
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
-  // Reset to first page when filters change
-  const resetPagination = () => {
-    setCurrentPage(1);
-  };
-
   // Update filters and reset pagination
   const updateFilters = (newFilters: ProductFilterParams) => {
     setFilters(newFilters);
@@ -247,10 +244,6 @@ export default function ShopPage() {
     (filters.maxPrice !== undefined && filters.maxPrice < 100000) ||
     filters.inStock ||
     filters.lowStock;
-
-  useEffect(() => {
-    resetPagination();
-  }, [filters]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -354,7 +347,7 @@ export default function ShopPage() {
               placeholder={tShop('search.placeholder')}
               className="pl-9 pr-10"
               value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onChange={(e) => updateFilters({ ...filters, search: e.target.value })}
             />
             <VisualSearch className="animate-in slide-in-from-top-2 duration-300 absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
@@ -364,7 +357,7 @@ export default function ShopPage() {
         <div className="flex items-center justify-between gap-3">
           <Select
             value={filters.sortBy || 'updatedAt'}
-            onValueChange={(value: string) => setFilters({ ...filters, sortBy: value })}
+            onValueChange={(value: string) => updateFilters({ ...filters, sortBy: value })}
           >
             <SelectTrigger className="flex-1 min-w-0">
               <SelectValue placeholder={tShop('sorting.sortBy')} />
@@ -403,7 +396,7 @@ export default function ShopPage() {
         <div
           className={`${showFilters ? 'block' : 'hidden'} md:block w-full lg:w-80 flex-shrink-0`}
         >
-          <ProductFilters filters={filters} onFiltersChange={setFilters} />
+          <ProductFilters filters={filters} onFiltersChange={updateFilters} />
         </div>
 
         {/* Products Grid */}
