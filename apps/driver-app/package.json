@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
+    "start": "node scripts/smart-start.js",
+    "start:basic": "expo start",
+    "start:tunnel": "expo start --tunnel --clear",
     "dev": "npm run update-ip && expo start --clear",
     "update-ip": "node scripts/detect-local-ip.js",
+    "diagnose": "node scripts/diagnose-connection.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -14,7 +17,17 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "test": "npm run typecheck && npm run lint && npm run format:check"
+    "test": "npm run typecheck && npm run lint && npm run format:check",
+    "env:dev": "node scripts/switch-env.js development",
+    "env:prod": "node scripts/switch-env.js production",
+    "check": "node scripts/pre-deploy-check.js",
+    "deploy:android": "node scripts/deploy.js android eas",
+    "deploy:ios": "node scripts/deploy.js ios eas",
+    "deploy:both": "node scripts/deploy.js both eas",
+    "deploy:android:local": "node scripts/deploy.js android local",
+    "build:eas": "npx eas build --platform android --profile production",
+    "update:eas": "npx eas update --branch production",
+    "publish": "npx expo publish"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

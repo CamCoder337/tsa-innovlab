@@ -36,7 +36,9 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
 
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
   const [locationPath, setLocationPath] = useState<{ latitude: number; longitude: number }[]>([]);
-  const [routeToDestination, setRouteToDestination] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [routeToPickup, setRouteToPickup] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [routePickupToDelivery, setRoutePickupToDelivery] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [routeToCurrentDestination, setRouteToCurrentDestination] = useState<{ latitude: number; longitude: number }[]>([]);
   const [distanceToDestination, setDistanceToDestination] = useState<number | null>(null);
   const [isNearDestination, setIsNearDestination] = useState(false);
 
@@ -72,7 +74,7 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
     };
   }, []);
 
-  // Effect to handle location updates
+  // Effect to handle location updates and calculate all routes
   useEffect(() => {
     if (!currentLocation || !mapRef.current) return;
 
@@ -84,28 +86,45 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
       zoom: 16,
     }, { duration: 1000 });
 
-    // Recalculate route and distance
-    const recalculateRoute = async () => {
-      // Determine the target destination: pickup point if cargo not picked up, else arrival address
-      const targetDestination = !isCargoPickedUp && mission.departureAddress
-        ? { latitude: mission.departureAddress.latitude, longitude: mission.departureAddress.longitude }
-        : { latitude: mission.arrivalAddress.latitude, longitude: mission.arrivalAddress.longitude };
-
-      const origin = { latitude: currentLocation.coords.latitude, longitude: currentLocation.coords.longitude };
-
-      const dist = googleMapsService.calculateDistance(origin, targetDestination) / 1000; // km
-      setDistanceToDestination(dist);
-      setIsNearDestination(dist < 0.2); // 200m threshold
+    // Calculate all routes
+    const calculateAllRoutes = async () => {
+      const driverPosition = { latitude: currentLocation.coords.latitude, longitude: currentLocation.coords.longitude };
+      const pickupPoint = { latitude: mission.departureAddress.latitude, longitude: mission.departureAddress.longitude };
+      const deliveryPoint = { latitude: mission.arrivalAddress.latitude, longitude: mission.arrivalAddress.longitude };
 
       try {
-        const newRoute = await googleMapsService.getDirections(origin, targetDestination);
-        setRouteToDestination(newRoute);
+        // 1. Route from driver to pickup (always show if cargo not picked up)
+        if (!isCargoPickedUp) {
+          const routeToPickupPoints = await googleMapsService.getDirections(driverPosition, pickupPoint);
+          setRouteToPickup(routeToPickupPoints);
+          
+          // Calculate distance to pickup for display
+          const distToPickup = googleMapsService.calculateDistance(driverPosition, pickupPoint) / 1000;
+          setDistanceToDestination(distToPickup);
+          setIsNearDestination(distToPickup < 0.2);
+        } else {
+          // If cargo picked up, clear pickup route and calculate distance to delivery
+          setRouteToPickup([]);
+          const distToDelivery = googleMapsService.calculateDistance(driverPosition, deliveryPoint) / 1000;
+          setDistanceToDestination(distToDelivery);
+          setIsNearDestination(distToDelivery < 0.2);
+        }
+
+        // 2. Route from pickup to delivery (always show for mission planning)
+        const routePickupDeliveryPoints = await googleMapsService.getDirections(pickupPoint, deliveryPoint);
+        setRoutePickupToDelivery(routePickupDeliveryPoints);
+
+        // 3. Current route to active destination
+        const targetDestination = !isCargoPickedUp ? pickupPoint : deliveryPoint;
+        const currentRoutePoints = await googleMapsService.getDirections(driverPosition, targetDestination);
+        setRouteToCurrentDestination(currentRoutePoints);
+
       } catch (error) {
-        console.error('Could not recalculate route:', error);
+        console.error('Could not calculate routes:', error);
       }
     };
 
-    recalculateRoute();
+    calculateAllRoutes();
 
   }, [currentLocation, isCargoPickedUp]);
 
@@ -138,8 +157,8 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
           longitudeDelta: 0.0421,
         }}
       >
-        {/* Pickup/Depot Marker - Only show if cargo not picked up */}
-        {!isCargoPickedUp && mission.departureAddress && (
+        {/* Pickup/Depot Marker - Always show */}
+        {mission.departureAddress && (
           <Marker
             coordinate={{ latitude: mission.departureAddress.latitude, longitude: mission.departureAddress.longitude }}
             title={t('tracking.pickup', 'Dépôt (Pickup)')}
@@ -147,7 +166,7 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
           />
         )}
 
-        {/* Destination Marker */}
+        {/* Destination Marker - Always show */}
         {mission.arrivalAddress && (
           <Marker
             coordinate={{ latitude: mission.arrivalAddress.latitude, longitude: mission.arrivalAddress.longitude }}
@@ -156,14 +175,44 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
           />
         )}
 
-        {/* Traveled Path */}
+        {/* Traveled Path - Actual path taken by driver */}
         {locationPath.length > 1 && (
-          <Polyline coordinates={locationPath} strokeColor={Colors.disabled} strokeWidth={5} />
+          <Polyline 
+            coordinates={locationPath} 
+            strokeColor="#666666" 
+            strokeWidth={4}
+            lineDashPattern={[0]}
+          />
         )}
 
-        {/* Route to Destination */}
-        {routeToDestination.length > 0 && (
-          <Polyline coordinates={routeToDestination} strokeColor={Colors.primary} strokeWidth={7} />
+        {/* Route from Driver to Pickup (Orange - only if cargo not picked up) */}
+        {!isCargoPickedUp && routeToPickup.length > 0 && (
+          <Polyline 
+            coordinates={routeToPickup} 
+            strokeColor="#FF8C00" 
+            strokeWidth={6}
+            lineDashPattern={[10, 5]}
+          />
+        )}
+
+        {/* Route from Pickup to Delivery (Green dashed - mission plan) */}
+        {routePickupToDelivery.length > 0 && (
+          <Polyline 
+            coordinates={routePickupToDelivery} 
+            strokeColor="#32CD32" 
+            strokeWidth={5}
+            lineDashPattern={[15, 10]}
+          />
+        )}
+
+        {/* Current Active Route (Blue solid - to current destination) */}
+        {routeToCurrentDestination.length > 0 && (
+          <Polyline 
+            coordinates={routeToCurrentDestination} 
+            strokeColor={Colors.primary} 
+            strokeWidth={7}
+            lineDashPattern={[0]}
+          />
         )}
 
         {/* Driver's Marker */}
@@ -187,6 +236,29 @@ export const DriverMissionTrackingScreen: React.FC<DriverMissionTrackingScreenPr
             : `${t('tracking.to', 'Vers:')} ${mission.arrivalAddress.city}`
           }
         </Text>
+      </View>
+
+      {/* Route Legend */}
+      <View style={styles.legendCard}>
+        <Text style={styles.legendTitle}>Itinéraires</Text>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendLine, { backgroundColor: Colors.primary }]} />
+          <Text style={styles.legendText}>Route active</Text>
+        </View>
+        {!isCargoPickedUp && (
+          <View style={styles.legendItem}>
+            <View style={[styles.legendLine, { backgroundColor: '#FF8C00' }]} />
+            <Text style={styles.legendText}>Vers dépôt</Text>
+          </View>
+        )}
+        <View style={styles.legendItem}>
+          <View style={[styles.legendLine, { backgroundColor: '#32CD32' }]} />
+          <Text style={styles.legendText}>Plan mission</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendLine, { backgroundColor: '#666666' }]} />
+          <Text style={styles.legendText}>Trajet parcouru</Text>
+        </View>
       </View>
 
       {/* Actions Panel */}
@@ -238,6 +310,41 @@ const styles = StyleSheet.create({
   },
   distanceText: { fontSize: 28, fontWeight: 'bold', color: Colors.textPrimary },
   addressText: { fontSize: 16, color: Colors.textSecondary, marginTop: 4 },
+  legendCard: {
+    position: 'absolute',
+    top: 160,
+    left: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 12,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    minWidth: 140,
+  },
+  legendTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  legendLine: {
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
   actions: {
     position: 'absolute',
     bottom: 20,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,10 +15,21 @@ export const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ onScan, onClose })
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
+  // Réinitialiser l'état scanned quand le composant est monté
+  useEffect(() => {
+    setScanned(false);
+  }, []);
+
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     if (!scanned) {
+      console.log('📱 QR Code scanned:', data.substring(0, 50) + '...');
       setScanned(true);
       onScan({ type, data });
+      
+      // Fermer automatiquement après scan pour éviter les scans multiples
+      setTimeout(() => {
+        onClose();
+      }, 100);
     }
   };
 

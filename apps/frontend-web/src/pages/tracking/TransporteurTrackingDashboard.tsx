@@ -374,7 +374,6 @@ export default function TransporteurTrackingDashboard() {
                 {/* Credentials de tracking du véhicule */}
                 <VehicleTrackingCredentials
                   missionTitle={currentAssignment.title}
-                  trackingToken={currentAssignment.trackingLinkToken || undefined}
                   trackingPin={currentAssignment.trackingPin || undefined}
                   vehicleRegistration={currentAssignment.vehicle?.registration}
                   vehicleType={currentAssignment.vehicle?.type}

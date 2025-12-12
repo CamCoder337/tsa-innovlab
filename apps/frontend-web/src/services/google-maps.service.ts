@@ -132,6 +132,20 @@ export class GoogleMapsService {
     }
   }
 
+  /**
+   * Set an existing map instance (useful when map is created outside this service)
+   */
+  setMap(map: google.maps.Map): void {
+    this.map = map;
+    if (!this.directionsService) {
+      this.directionsService = new google.maps.DirectionsService();
+    }
+    if (!this.elevationService) {
+      this.elevationService = new google.maps.ElevationService();
+    }
+    console.log('✅ Google Maps Service map instance set');
+  }
+
   // ==================== LAYER MANAGEMENT ====================
 
   /**
@@ -568,6 +582,20 @@ export class GoogleMapsService {
   }
 
   /**
+   * Remove a specific route by its ID
+   */
+  removeRoute(routeId: string): void {
+    const polyline = this.polylines.get(routeId);
+    if (polyline) {
+      polyline.setMap(null);
+      this.polylines.delete(routeId);
+      console.log(`✅ Route ${routeId} removed`);
+    } else {
+      console.warn(`⚠️ Route ${routeId} not found`);
+    }
+  }
+
+  /**
    * Validate coordinates are valid and in reasonable range
    */
   private isValidCoordinate(coord: { lat: number; lng: number }): boolean {
@@ -948,8 +976,15 @@ export class GoogleMapsService {
     destination: { lat: number; lng: number }
   ): Promise<number | null> {
     try {
-      // Ensure Google Maps is loaded with geometry library
-      await googleMapsLoader.load({ libraries: ['geometry'] });
+      // Check if Google Maps is already loaded
+      if (!window.google?.maps) {
+        // Ensure Google Maps is loaded with geometry library
+        await googleMapsLoader.load({ libraries: ['geometry'] });
+      } else if (!window.google.maps.geometry) {
+        // If Google Maps is loaded but geometry library is missing, use fallback
+        console.warn('Google Maps geometry library not available. Using fallback calculation.');
+        return this.calculateSimpleDistance(origin, destination);
+      }
 
       // Use spherical geometry to calculate distance
       const originLatLng = new google.maps.LatLng(origin.lat, origin.lng);
@@ -964,8 +999,35 @@ export class GoogleMapsService {
       return Math.round(distanceInMeters / 1000); // Convert to km and round
     } catch (error) {
       console.error('Error calculating distance:', error);
-      return null;
+      // Fallback to simple distance calculation
+      return this.calculateSimpleDistance(origin, destination);
     }
+  }
+
+  /**
+   * Simple distance calculation using Haversine formula (fallback)
+   */
+  private calculateSimpleDistance(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+  ): number {
+    const R = 6371; // Earth's radius in km
+    const dLat = this.toRad(destination.lat - origin.lat);
+    const dLon = this.toRad(destination.lng - origin.lng);
+    const lat1 = this.toRad(origin.lat);
+    const lat2 = this.toRad(destination.lat);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return Math.round(distance);
+  }
+
+  private toRad(degrees: number): number {
+    return (degrees * Math.PI) / 180;
   }
 
   async calculateDistanceWithDirections(
@@ -981,10 +1043,24 @@ export class GoogleMapsService {
     durationInTraffic?: number;
   } | null> {
     try {
-      // Ensure Google Maps is loaded
-      await googleMapsLoader.load({ libraries: ['routes'] });
+      // Check if Google Maps is already loaded
+      if (!window.google?.maps) {
+        // Ensure Google Maps is loaded
+        await googleMapsLoader.load({ libraries: ['routes'] });
+      }
 
       if (!this.directionsService) {
+        if (!window.google?.maps?.DirectionsService) {
+          console.error('Google Maps DirectionsService not available');
+          // Fallback to simple distance calculation
+          const distance = this.calculateSimpleDistance(origin, destination);
+          // Estimate duration: ~60 km/h average speed
+          const estimatedDuration = Math.round((distance / 60) * 60); // in minutes
+          return {
+            distance,
+            duration: estimatedDuration,
+          };
+        }
         this.directionsService = new google.maps.DirectionsService();
       }
 

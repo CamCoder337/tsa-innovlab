@@ -62,7 +62,7 @@ export default function MissionTrackingDashboard() {
         throw new Error('Aucune donnée de mission reçue');
       }
 
-      // ✅ Les champs trackingLinkToken et trackingPin sont automatiquement inclus !
+      // ✅ Le champ trackingPin est automatiquement inclus
       setMission(missionData as Mission);
     } catch (error: unknown) {
       toast.error('Erreur lors du chargement de la mission', {
@@ -181,12 +181,7 @@ export default function MissionTrackingDashboard() {
 
         {/* Tab: QR Code */}
         <TabsContent value="qrcode" className="space-y-4">
-          <DeliveryQRCode
-            missionId={mission.id}
-            missionTitle={mission.title}
-            trackingToken={mission.trackingLinkToken ?? undefined}
-            trackingPin={mission.trackingPin ?? undefined}
-          />
+          <DeliveryQRCode missionId={mission.id} missionTitle={mission.title} />
         </TabsContent>
 
         {/* Tab: Problèmes */}

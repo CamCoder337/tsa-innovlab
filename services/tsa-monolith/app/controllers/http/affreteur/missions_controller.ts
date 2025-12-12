@@ -256,11 +256,27 @@ export default class MissionsController {
         { client: trx }
       )
 
+      // 🔑 Initialiser les credentials de tracking (PIN et QR code) dès la création
+      // Fait AVANT le commit pour être dans la transaction
+      const trackingServiceModule = await import('#services/mission_tracking_service')
+      const trackingService = trackingServiceModule.default
+
+      // Générer les tokens directement dans la transaction
+      if (!mission.trackingPin) {
+        mission.trackingPin = await trackingService.generateUniqueTrackingPin()
+      }
+      if (!mission.qrCodeToken) {
+        mission.qrCodeToken = trackingService.generateQrCodeToken()
+      }
+      // Sauvegarder dans la transaction en utilisant le client de transaction
+      await mission.useTransaction(trx).save()
+
       await trx.commit()
 
       await mission.load('affreteur')
       await mission.load('adresseDepart')
       await mission.load('adresseArrivee')
+      await mission.refresh()
 
       // 📍 Créer des MissionUpdates pour le tracking
       await MissionUpdate.createStatusUpdate(
@@ -1242,13 +1258,16 @@ export default class MissionsController {
       // Import LocationUpdate dynamically
       const { default: LocationUpdate } = await import('#models/location_update')
 
-      // Get all missions created by this affreteur that are in progress
+      // Get all missions created by this affreteur (actives + terminées pour historique)
       const missions = await Mission.query()
         .where('affreteur_id', user.id)
         .whereIn('status', [
           MissionStatus.IN_PROGRESS,
           MissionStatus.ASSIGNED,
           MissionStatus.READY_TO_START,
+          MissionStatus.DELIVERED,
+          MissionStatus.PAID,
+          MissionStatus.COMPLETED,
         ])
         .preload('affreteur', (query) => {
           query.select('id', 'firstName', 'lastName')

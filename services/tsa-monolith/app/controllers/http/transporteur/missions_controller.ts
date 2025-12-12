@@ -707,36 +707,39 @@ export default class MissionsController {
    * GET /api/transporteur/missions/active-locations
    */
   async getActiveLocations({ response, auth, logger }: HttpContext) {
-    logger.info('🟢 DEBUT getActiveLocations')
+    logger.info('[GPS] DEBUT getActiveLocations')
 
     try {
       // Authentification
       const user = auth.getUserOrFail()
 
-      logger.info('📍 Récupération des positions actives pour le transporteur', {
+      logger.info('[GPS] Recuperation des positions actives pour le transporteur', {
         transporteurId: user.id,
       })
 
       // Vérification de la connexion à la base de données
       try {
         await Database.rawQuery('SELECT 1')
-        logger.info('✅ Connexion à la base de données OK')
+        logger.info('[GPS] Connexion a la base de donnees OK')
       } catch (dbError) {
-        logger.error('❌ Erreur de connexion à la base de données', {
+        logger.error('[GPS] Erreur de connexion a la base de donnees', {
           error: dbError.message,
           stack: dbError.stack,
         })
         throw new Error('Impossible de se connecter à la base de données')
       }
 
-      // Récupération des missions actives
-      logger.info('🔍 Récupération des missions actives...')
+      // Récupération des missions (actives + terminées pour historique)
+      logger.info('[GPS] Recuperation des missions...')
       const missions = await Mission.query()
         .where('transporteur_id', user.id)
         .whereIn('status', [
           MissionStatus.IN_PROGRESS,
           MissionStatus.ASSIGNED,
           MissionStatus.READY_TO_START,
+          MissionStatus.DELIVERED,
+          MissionStatus.PAID,
+          MissionStatus.COMPLETED,
         ])
         .preload('affreteur', (query) => {
           query.select('id', 'firstName', 'lastName')
@@ -747,16 +750,16 @@ export default class MissionsController {
           query.select('id', 'firstName', 'lastName')
         })
 
-      logger.info(`✅ ${missions.length} missions trouvées`, {
+      logger.info(`[GPS] ${missions.length} missions trouvees`, {
         missionIds: missions.map((m) => m.id),
       })
 
-      logger.info(`🔍 Traitement de ${missions.length} missions`)
+      logger.info(`[GPS] Traitement de ${missions.length} missions`)
 
-      // Pour chaque mission, on récupère la dernière position
+      // Pour chaque mission, on récupère la dernière position (ou retourne les infos de base même sans position)
       const locationsPromises = missions.map(async (mission) => {
         const missionId = mission.id
-        logger.info(`🔍 Traitement de la mission ${missionId} (${mission.status})`)
+        logger.info(`[GPS] Traitement de la mission ${missionId} (${mission.status})`)
 
         try {
           // Récupération de la dernière position
@@ -765,45 +768,39 @@ export default class MissionsController {
             .orderBy('timestamp', 'desc')
             .first()
 
-          if (!latestLocation) {
-            logger.info(`ℹ️ Aucune position trouvée pour la mission ${missionId}`)
-            return null
+          // Vérifier si on a une position récente (moins de 5 minutes)
+          let locationData: any = null
+          if (latestLocation) {
+            const fiveMinutesAgo = DateTime.now().minus({ minutes: 5 })
+            const locationDate = latestLocation.timestamp
+
+            if (locationDate && locationDate >= fiveMinutesAgo) {
+              logger.info(`[GPS] Position recente trouvee pour la mission ${missionId}`, {
+                locationId: latestLocation.id,
+                timestamp: locationDate.toISO(),
+              })
+
+              locationData = {
+                latitude: latestLocation.latitude,
+                longitude: latestLocation.longitude,
+                speed: latestLocation.speed,
+                heading: latestLocation.heading,
+                accuracy: latestLocation.accuracy,
+                timestamp: locationDate.toISO(),
+              }
+            } else {
+              logger.info(`[GPS] Position trop ancienne ou sans date pour la mission ${missionId}`)
+            }
+          } else {
+            logger.info(`[GPS] Aucune position trouvee pour la mission ${missionId}`)
           }
 
-          logger.info(`📡 Position trouvée pour la mission ${missionId}`, {
-            locationId: latestLocation.id,
-            timestamp: latestLocation.timestamp?.toISO(),
-          })
-
-          // Vérification de la date de la position (5 dernières minutes)
-          const fiveMinutesAgo = DateTime.now().minus({ minutes: 5 })
-          const locationDate = latestLocation.timestamp
-
-          if (!locationDate) {
-            logger.warn(`⚠️ La position ${latestLocation.id} n'a pas de date`)
-            return null
-          }
-
-          if (locationDate < fiveMinutesAgo) {
-            logger.info(
-              `⏱️ Position trop ancienne pour la mission ${missionId} (${locationDate.toISO()})`
-            )
-            return null
-          }
-
-          // Construction de l'objet de retour
-          const locationData = {
+          // Toujours retourner les données de la mission avec départ/arrivée, même sans position GPS
+          const missionData = {
             missionId: mission.id,
             missionTitle: mission.title,
             missionStatus: mission.status,
-            location: {
-              latitude: latestLocation.latitude,
-              longitude: latestLocation.longitude,
-              speed: latestLocation.speed,
-              heading: latestLocation.heading,
-              accuracy: latestLocation.accuracy,
-              timestamp: locationDate.toISO(),
-            },
+            location: locationData, // null si pas de position récente
             driver: mission.transporteur
               ? {
                   id: mission.transporteur.id,
@@ -826,10 +823,20 @@ export default class MissionsController {
               : null,
           }
 
-          logger.debug(`📍 Données de position pour la mission ${missionId}:`, locationData)
-          return locationData
+          logger.info(`📍 Données pour la mission ${missionId}:`, {
+            hasLocation: !!locationData,
+            hasDeparture: !!missionData.departure,
+            hasArrival: !!missionData.arrival,
+            departureLat: missionData.departure?.latitude,
+            departureLng: missionData.departure?.longitude,
+            arrivalLat: missionData.arrival?.latitude,
+            arrivalLng: missionData.arrival?.longitude,
+            missionTitle: missionData.missionTitle,
+            missionStatus: missionData.missionStatus,
+          })
+          return missionData
         } catch (error) {
-          logger.error(`❌ Erreur lors du traitement de la mission ${missionId}:`, {
+          logger.error(`[GPS] Erreur lors du traitement de la mission ${missionId}:`, {
             error: error.message,
             stack: error.stack,
           })
@@ -838,18 +845,32 @@ export default class MissionsController {
       })
 
       // Traitement des résultats
-      logger.info('🔍 Traitement des positions...')
+      logger.info('[GPS] Traitement des positions...')
       const locationsResults = await Promise.all(locationsPromises)
       const locations = locationsResults.filter(Boolean)
 
-      logger.info(`✅ ${locations.length} positions actives trouvées`)
+      logger.info(`[GPS] ${locations.length} positions actives trouvees`)
+
+      // Log détaillé des premières locations pour debug
+      if (locations.length > 0) {
+        const firstLocation = locations[0]!
+        logger.info(`[GPS] Premiere location detaillee:`, {
+          missionId: firstLocation.missionId,
+          missionTitle: firstLocation.missionTitle,
+          hasLocation: !!firstLocation.location,
+          hasDeparture: !!firstLocation.departure,
+          hasArrival: !!firstLocation.arrival,
+          departure: firstLocation.departure,
+          arrival: firstLocation.arrival,
+        })
+      }
 
       return response.ok({
         success: true,
         data: { locations },
       })
     } catch (error) {
-      logger.error('❌ ERREUR CRITIQUE dans getActiveLocations', {
+      logger.error('[GPS] ERREUR CRITIQUE dans getActiveLocations', {
         error: {
           message: error.message,
           name: error.name,
@@ -875,7 +896,7 @@ export default class MissionsController {
             : undefined,
       })
     } finally {
-      logger.info('🔴 FIN getActiveLocations')
+      logger.info('[GPS] FIN getActiveLocations')
     }
   }
 
@@ -885,7 +906,7 @@ export default class MissionsController {
    */
   async getLocationUpdates({ params, request, auth, response, logger }: HttpContext) {
     try {
-      logger.info('🟢 DEBUT getLocationUpdates pour mission', params.id)
+      logger.info('[GPS] DEBUT getLocationUpdates pour mission', params.id)
 
       const user = auth.getUserOrFail()
       const trackingServiceModule = await import('#services/mission_tracking_service')
@@ -899,7 +920,7 @@ export default class MissionsController {
 
       if (!mission) {
         logger.warn(
-          `❌ Mission ${params.id} non trouvée ou n'appartient pas au transporteur ${user.id}`
+          `[GPS] Mission ${params.id} non trouvee ou n'appartient pas au transporteur ${user.id}`
         )
         return response.status(404).json({
           success: false,
@@ -911,7 +932,7 @@ export default class MissionsController {
       const limit = Math.min(request.input('limit', 50), 200)
       const locations = await trackingService.getRecentLocations(mission.id, limit)
 
-      logger.info(`✅ ${locations.length} positions récupérées pour la mission ${mission.id}`)
+      logger.info(`[GPS] ${locations.length} positions recuperees pour la mission ${mission.id}`)
 
       return response.json({
         success: true,
@@ -919,7 +940,7 @@ export default class MissionsController {
         data: locations,
       })
     } catch (error) {
-      logger.error('❌ ERREUR dans getLocationUpdates', {
+      logger.error('[GPS] ERREUR dans getLocationUpdates', {
         error: error.message,
         stack: error.stack,
         missionId: params.id,
@@ -931,7 +952,7 @@ export default class MissionsController {
         error: process.env.NODE_ENV === 'development' ? error.message : undefined,
       })
     } finally {
-      logger.info('🔴 FIN getLocationUpdates')
+      logger.info('[GPS] FIN getLocationUpdates')
     }
   }
 }

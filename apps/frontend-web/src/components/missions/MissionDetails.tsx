@@ -41,15 +41,21 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
 
   // Fetch user names and vehicle info (only if not preloaded)
   useEffect(() => {
+    let isMounted = true;
+
     const fetchInfo = async () => {
       // Use preloaded transporteur data first, fallback to fetch
       if (user?.role !== 'transporteur' && mission.transporteurId) {
         if (mission.transporteur) {
           const name = `${mission.transporteur.firstName} ${mission.transporteur.lastName}`;
-          setTransporteurName(name);
+          if (isMounted) setTransporteurName(name);
         } else {
-          const name = await getUserName(mission.transporteurId);
-          setTransporteurName(name);
+          try {
+            const name = await getUserName(mission.transporteurId);
+            if (isMounted) setTransporteurName(name);
+          } catch (error) {
+            console.error('Error fetching transporteur name:', error);
+          }
         }
       }
 
@@ -57,35 +63,44 @@ export function MissionDetails({ mission }: MissionDetailsProps) {
       if (user?.role !== 'affreteur' && mission.affreteurId) {
         if (mission.affreteur) {
           const name = `${mission.affreteur.firstName} ${mission.affreteur.lastName}`;
-          setAffreteurName(name);
+          if (isMounted) setAffreteurName(name);
         } else {
-          const name = await getUserName(mission.affreteurId);
-          setAffreteurName(name);
+          try {
+            const name = await getUserName(mission.affreteurId);
+            if (isMounted) setAffreteurName(name);
+          } catch (error) {
+            console.error('Error fetching affreteur name:', error);
+          }
         }
       }
 
       // Use preloaded vehicle data first, fallback to fetch
       if (user?.role === 'transporteur' && mission.vehicleId) {
         if (mission.vehicle) {
-          setVehicleRegistration(mission.vehicle.registration);
+          if (isMounted) setVehicleRegistration(mission.vehicle.registration);
         } else {
-          const vehicle = await getVehicleById(mission.vehicleId);
-          setVehicleRegistration(vehicle?.registration || '');
+          const vehicle = getVehicleById(mission.vehicleId);
+          if (isMounted) setVehicleRegistration(vehicle?.registration || '');
         }
       }
     };
 
     fetchInfo();
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     mission.transporteurId,
-    mission.transporteur,
+    mission.transporteur?.firstName,
+    mission.transporteur?.lastName,
     mission.affreteurId,
-    mission.affreteur,
+    mission.affreteur?.firstName,
+    mission.affreteur?.lastName,
     mission.vehicleId,
-    mission.vehicle,
+    mission.vehicle?.registration,
     user?.role,
-    getUserName,
-    getVehicleById,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   return (

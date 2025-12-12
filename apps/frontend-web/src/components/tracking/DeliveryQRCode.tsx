@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, RefreshCw, QrCode } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Download, RefreshCw, QrCode, Share2, Copy } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,19 +9,19 @@ import missionTrackingService from '@/services/mission-tracking.service';
 interface DeliveryQRCodeProps {
   missionId: string;
   missionTitle: string;
-  trackingToken?: string;
-  trackingPin?: string;
 }
 
-export default function DeliveryQRCode({
-  missionId,
-  missionTitle,
-  // trackingToken et trackingPin ne sont plus utilisés dans ce composant
-  // Ils sont affichés uniquement dans DriverCredentialsDisplay pour le transporteur
-}: DeliveryQRCodeProps) {
+export default function DeliveryQRCode({ missionId, missionTitle }: DeliveryQRCodeProps) {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+
+  // Auto-generate QR code when component mounts
+  useEffect(() => {
+    if (!qrCodeData && !loading) {
+      generateQRCode();
+    }
+  }, [missionId]);
 
   const generateQRCode = async () => {
     setLoading(true);
@@ -67,6 +67,51 @@ export default function DeliveryQRCode({
     toast.success('QR code téléchargé');
   };
 
+  const shareQRCode = async () => {
+    if (!qrCodeData) return;
+
+    try {
+      // Convert data URL to blob
+      const response = await fetch(qrCodeData);
+      const blob = await response.blob();
+      const file = new File([blob], `qr-code-mission-${missionId}.png`, { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `QR Code - ${missionTitle}`,
+          text: `QR Code de livraison pour la mission: ${missionTitle}`,
+          files: [file],
+        });
+        toast.success('QR code partagé');
+      } else {
+        // Fallback: copy to clipboard
+        await copyQRCodeToClipboard();
+      }
+    } catch (error) {
+      console.error('Error sharing QR code:', error);
+      toast.error('Erreur lors du partage');
+    }
+  };
+
+  const copyQRCodeToClipboard = async () => {
+    if (!qrCodeData) return;
+
+    try {
+      const response = await fetch(qrCodeData);
+      const blob = await response.blob();
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blob
+        })
+      ]);
+      toast.success('QR code copié dans le presse-papiers');
+    } catch (error) {
+      console.error('Error copying QR code:', error);
+      toast.error('Erreur lors de la copie');
+    }
+  };
+
   // Note: copyCredentials retiré - les credentials ne sont plus affichés pour l'affréteur
 
   return (
@@ -84,8 +129,7 @@ export default function DeliveryQRCode({
         {/* Alert avec instructions */}
         <Alert>
           <AlertDescription>
-            <strong>Instructions :</strong> Le chauffeur doit scanner ce QR code lorsqu'il est à
-            proximité du point de livraison (moins de 200m) pour confirmer la livraison.
+            <strong>Instructions :</strong> Le chauffeur doit scanner ce QR code pour confirmer la livraison.
           </AlertDescription>
         </Alert>
 
@@ -96,17 +140,30 @@ export default function DeliveryQRCode({
         <div className="flex flex-col items-center gap-4">
           {qrCodeData ? (
             <>
-              <div className="rounded-lg border-2 border-dashed p-4">
-                <img src={qrCodeData} alt="QR Code de livraison" className="h-64 w-64" />
+              <div className="rounded-lg border-2 border-dashed border-gray-300 p-6 bg-white shadow-sm">
+                <img 
+                  src={qrCodeData} 
+                  alt="QR Code de livraison" 
+                  className="h-64 w-64 mx-auto" 
+                  style={{ imageRendering: 'pixelated' }}
+                />
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
-                <Button onClick={downloadQRCode} variant="outline">
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button onClick={downloadQRCode} variant="outline" size="sm">
                   <Download className="mr-2 h-4 w-4" />
-                  Télécharger PNG
+                  Télécharger
                 </Button>
-                <Button onClick={regenerateQRCode} variant="outline" disabled={regenerating}>
+                <Button onClick={shareQRCode} variant="outline" size="sm">
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Partager
+                </Button>
+                <Button onClick={copyQRCodeToClipboard} variant="outline" size="sm">
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copier
+                </Button>
+                <Button onClick={regenerateQRCode} variant="outline" size="sm" disabled={regenerating}>
                   <RefreshCw className={`mr-2 h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />
                   Régénérer
                 </Button>
@@ -146,7 +203,7 @@ export default function DeliveryQRCode({
               <li>Le chauffeur se connecte à l'application mobile avec ses credentials</li>
               <li>Le chauffeur démarre la mission et envoie sa position GPS en temps réel</li>
               <li>
-                Arrivé à destination (moins de 200m), le chauffeur scanne ce QR code pour valider
+                Arrivé à destination, le chauffeur scanne ce QR code pour valider
                 la livraison
               </li>
               <li>La mission passe automatiquement au statut "Livrée"</li>
