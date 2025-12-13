@@ -15,6 +15,7 @@ import {
   Headset,
   Settings,
   LogOut,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   Sidebar as UISidebar,
@@ -36,6 +37,7 @@ import {
   useAuthTranslation,
 } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
+import { useEmergencyStats } from '@/hooks/useEmergencyStats';
 
 type SidebarItem = {
   id: string;
@@ -179,6 +181,12 @@ const getAdminMenu = (tNav: (key: string) => string): SidebarItem[] => [
     href: '/app',
   },
   {
+    id: 'emergencies',
+    label: 'Urgences SOS',
+    icon: AlertTriangle,
+    href: '/app/emergencies',
+  },
+  {
     id: 'missions',
     label: tNav('menu.missions'),
     icon: Package,
@@ -261,6 +269,23 @@ function GetMenuByRole(): SidebarItem[] {
   return getAffreteurMenu(tNav);
 }
 
+function EmergencyBadge() {
+  const { activeCount, hasCritical } = useEmergencyStats();
+  
+  if (activeCount === 0) return null;
+  
+  return (
+    <span
+      className={`
+        ml-auto px-2 py-0.5 text-xs font-bold rounded-full
+        ${hasCritical ? 'bg-red-600 text-white animate-pulse' : 'bg-orange-500 text-white'}
+      `}
+    >
+      {activeCount}
+    </span>
+  );
+}
+
 function MenuTree({ items }: { items: SidebarItem[] }) {
   const { pathname } = useLocation();
   return (
@@ -315,8 +340,9 @@ function MenuTree({ items }: { items: SidebarItem[] }) {
           ) : item.href ? (
             <SidebarMenuButton asChild isActive={pathname === item.href} tooltip={item.label}>
               <Link to={item.href} className="flex items-center gap-3 font-medium">
-                <item.icon className="h-5 w-5" />
+                <item.icon className={`h-5 w-5 ${item.id === 'emergencies' ? 'text-red-600' : ''}`} />
                 <span className="text-base">{item.label}</span>
+                {item.id === 'emergencies' && <EmergencyBadge />}
               </Link>
             </SidebarMenuButton>
           ) : (

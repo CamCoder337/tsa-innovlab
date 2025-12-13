@@ -4,6 +4,12 @@ export default class extends BaseSchema {
   protected tableName = 'chatbot_history'
 
   async up() {
+    // Vérifier si la table existe déjà (créée manuellement ou par une autre migration)
+    const hasTable = await this.schema.hasTable(this.tableName)
+    if (hasTable) {
+      return
+    }
+
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.raw('gen_random_uuid()'))
       table.uuid('user_id').notNullable().index()

@@ -31,13 +31,19 @@ const INITIAL_VALUES: RegisterFormData = {
 
 const USER_ROLES: UserRole[] = ['affreteur', 'transporteur'];
 
-const validationSchema = (t: (key: string) => string) =>
+const validationSchema = (t: (key: string, options?: Record<string, unknown>) => string) =>
   Yup.object({
     firstName: Yup.string().trim().required(t('validation.required')),
     lastName: Yup.string().trim().required(t('validation.required')),
-    email: Yup.string().trim().required(t('validation.required')).email(t('validation.email')),
+    email: Yup.string()
+      .trim()
+      .required(t('validation.required'))
+      .max(255, t('validation.maxLength', { max: '255' }))
+      .email(t('validation.email')),
     password: Yup.string()
       .required(t('validation.required'))
+      .min(8, t('validation.minLength', { min: '8' }))
+      .max(255, t('validation.maxLength', { max: '255' }))
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])/, t('validation.password')),
     confirmPassword: Yup.string()
       .required(t('validation.required'))
@@ -110,8 +116,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   value={values.firstName}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
                           focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
                           "
@@ -131,8 +137,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   value={values.lastName}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
                           focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
                           "
@@ -154,8 +160,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                 value={values.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
                           focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
                           "
@@ -177,8 +183,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   value={values.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
                           focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
                           "
@@ -210,8 +216,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   value={values.confirmPassword}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70 
-                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700 
+                  className="h-12 border-tsa-blue dark:border-tsa-gray placeholder:text-tsa-blue/70
+                          dark:placeholder:text-tsa-white/50 bg-white dark:bg-gray-700
                         text-gray-900 dark:text-tsa-white placeholder:text-sm placeholder:font-medium
                           focus:ring-2 focus:ring-tsa-blue focus:border-tsa-blue dark:focus:ring-tsa-blue/50
                           "
@@ -258,22 +264,22 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
                   tn: '.. ... ...',
                 }}
                 // Tailwind-driven styles via className + dynamic dark mode
-                inputClass="!text-tsa-blue dark:!text-tsa-white !font-medium !text-base 
-                            !h-full !w-full !px-12 !py-1 !border-0 
-                            !outline-none placeholder:!text-tsa-blue/60 
-                            dark:placeholder:!text-tsa-white/60 focus:!ring-2 
+                inputClass="!text-tsa-blue dark:!text-tsa-white !font-medium !text-base
+                            !h-full !w-full !px-12 !py-1 !border-0
+                            !outline-none placeholder:!text-tsa-blue/60
+                            dark:placeholder:!text-tsa-white/60 focus:!ring-2
                             focus:!ring-tsa-blue/50 dark:focus:!ring-tsa-blue/40
                             "
-                containerClass="!h-12 !bg-transparent dark:!bg-gray-700 !border 
+                containerClass="!h-12 !bg-transparent dark:!bg-gray-700 !border
                                 !border-tsa-blue dark:!border-tsa-gray !rounded-lg
-                                focus-within:!ring-2 focus-within:!ring-tsa-blue/30 
-                                dark:focus-within:!ring-tsa-blue/40 transition-all 
+                                focus-within:!ring-2 focus-within:!ring-tsa-blue/30
+                                dark:focus-within:!ring-tsa-blue/40 transition-all
                                 duration-200"
-                buttonClass="!bg-transparent dark:!bg-gray-700 !border-0 !border-r 
-                              !border-r-tsa-blue dark:!border-r-tsa-gray 
+                buttonClass="!bg-transparent dark:!bg-gray-700 !border-0 !border-r
+                              !border-r-tsa-blue dark:!border-r-tsa-gray
                               "
-                dropdownClass="!border !border-tsa-blue dark:!border-tsa-blue/60 
-                              !rounded-lg !shadow-lg !bg-white dark:!bg-gray-700 
+                dropdownClass="!border !border-tsa-blue dark:!border-tsa-blue/60
+                              !rounded-lg !shadow-lg !bg-white dark:!bg-gray-700
                               !text-gray-900 dark:!text-tsa-white !mt-1
                               "
                 searchClass="dark:bg-gray-700 !placeholder-tsa-blue/50 dark:!placeholder-tsa-white/50
@@ -317,8 +323,8 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
 
             <Button
               type="submit"
-              className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90 
-              hover:bg-tsa-blue active:bg-tsa-blue/80 text-white font-semibold 
+              className="w-4/5 justify-self-center flex h-12 bg-tsa-blue/90
+              hover:bg-tsa-blue active:bg-tsa-blue/80 text-white font-semibold
               text-2xl disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-150"
               loading={isSubmitting}
               disabled={isSubmitting || Object.keys(errors).length > 0}
@@ -332,7 +338,7 @@ export default function RegisterForm({ onSubmit, isSubmitting = false }: Registe
               </span>
               <Link
                 to="/app/login"
-                className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80 
+                className="text-tsa-blue dark:text-tsa-white hover:underline hover:text-tsa-blue/80
                 dark:hover:text-tsa-blue font-medium text-sm transition-colors "
               >
                 {tAuth('login.label')}

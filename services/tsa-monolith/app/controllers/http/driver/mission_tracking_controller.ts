@@ -1,7 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import missionTrackingService from '#services/mission_tracking_service'
 import qrCodeService from '#services/qr_code_service'
-import MissionIssue, { IssueType, IssueStatus } from '#models/mission_issue'
+import MissionIssue, { IssueType, IssueStatus, IssuePriority } from '#models/mission_issue'
+import Conversation, { ConversationType } from '#models/conversation'
 import { MissionStatus } from '#models/mission'
 import { DateTime } from 'luxon'
 import emitter from '@adonisjs/core/services/emitter'
@@ -250,6 +251,135 @@ export default class MissionTrackingController {
       success: true,
       data: { issues },
     })
+  }
+
+  /**
+   * 🚨 SOS - Signaler une urgence
+   * 
+   * Endpoint dédié aux situations d'urgence (accident, panne grave, problème médical, sécurité)
+   * Crée automatiquement une conversation d'urgence et notifie les admins + affréteur
+   */
+  async reportSOS({ request, response, mission, logger }: HttpContext) {
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Mission not found',
+        errors: ['Missing mission in context'],
+      })
+    }
+
+    const { type, latitude, longitude, description } = request.only([
+      'type',
+      'latitude',
+      'longitude',
+      'description',
+    ])
+
+    // Validation du type d'urgence
+    const validTypes = [IssueType.BREAKDOWN, IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY]
+    if (!type || !validTypes.includes(type)) {
+      return response.badRequest({
+        success: false,
+        message: 'Invalid SOS type',
+        errors: [`Type must be one of: ${validTypes.join(', ')}`],
+      })
+    }
+
+    // Validation GPS (requis pour SOS)
+    if (!latitude || !longitude) {
+      return response.badRequest({
+        success: false,
+        message: 'GPS location required for SOS',
+        errors: ['latitude and longitude are required'],
+      })
+    }
+
+    logger.info(`🚨 SOS received for mission ${mission.id}`, { type, latitude, longitude })
+
+    try {
+      // Déterminer la priorité selon le type
+      const priorityMap: Record<string, IssuePriority> = {
+        [IssueType.ACCIDENT]: IssuePriority.CRITICAL,
+        [IssueType.MEDICAL]: IssuePriority.CRITICAL,
+        [IssueType.SECURITY]: IssuePriority.CRITICAL,
+        [IssueType.BREAKDOWN]: IssuePriority.HIGH,
+      }
+      const priority = priorityMap[type] || IssuePriority.HIGH
+
+      // Charger les relations nécessaires
+      await mission.load('affreteur')
+
+      // Créer une conversation d'urgence si l'affréteur existe
+      let emergencyConversation: Conversation | null = null
+      if (mission.affreteurId && mission.transporteurId) {
+        emergencyConversation = await Conversation.create({
+          type: ConversationType.MISSION,
+          user1Id: mission.transporteurId,
+          user2Id: mission.affreteurId,
+          missionId: mission.id,
+          lastActivityAt: DateTime.now(),
+        })
+        logger.info(`📱 Emergency conversation created: ${emergencyConversation.id}`)
+      }
+
+      // Créer le MissionIssue avec flag urgence
+      const issue = await MissionIssue.create({
+        missionId: mission.id,
+        reportedById: mission.transporteurId!,
+        type,
+        description: description || `SOS: ${type}`,
+        latitude: Number.parseFloat(latitude),
+        longitude: Number.parseFloat(longitude),
+        status: IssueStatus.REPORTED,
+        isEmergency: true,
+        priority,
+        emergencyConversationId: emergencyConversation?.id || null,
+      })
+
+      logger.info(`🚨 SOS Issue created: ${issue.id} (priority: ${priority})`)
+
+      // Émettre l'événement SOS pour notification temps réel
+      await emitter.emit('mission:sos_alert', {
+        issue,
+        mission,
+      })
+
+      return response.created({
+        success: true,
+        message: 'SOS received. Help is on the way.',
+        data: {
+          issue: {
+            id: issue.id,
+            type: issue.type,
+            priority: issue.priority,
+            status: issue.status,
+            location: {
+              lat: issue.latitude,
+              lng: issue.longitude,
+            },
+            createdAt: issue.createdAt.toISO(),
+          },
+          conversationId: emergencyConversation?.id || null,
+          emergencyContacts: {
+            police: '117',
+            samu: '119',
+            pompiers: '118',
+          },
+        },
+      })
+    } catch (error) {
+      logger.error('❌ Error creating SOS', { missionId: mission.id, error: error.message })
+      return response.internalServerError({
+        success: false,
+        message: 'Failed to process SOS. Please call emergency services directly.',
+        errors: [error.message],
+        emergencyContacts: {
+          police: '117',
+          samu: '119',
+          pompiers: '118',
+        },
+      })
+    }
   }
 
   async validateDelivery({ request, response }: HttpContext) {

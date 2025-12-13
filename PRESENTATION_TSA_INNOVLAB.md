@@ -266,11 +266,11 @@ Creer l'"Uber de la logistique" : une plateforme qui connecte affreteurs, transp
 ---
 
 
-## SLIDE 7 : MODULES 5-6 (CHATBOT IA + DATA PREDICTIF)
+## SLIDE 7 : MODULES 5-6 (CHATBOT IA + SUPPORT SOS + DATA PREDICTIF)
 
 ### Module 5 : Chatbot et Support Tactique
 
-**Probleme resolu** : Reclamations en 72h+, clients bloques la nuit
+**Probleme resolu** : Reclamations en 72h+, clients bloques la nuit, urgences non gerees
 
 **Fonctionnalites implementees** :
 
@@ -279,10 +279,51 @@ Creer l'"Uber de la logistique" : une plateforme qui connecte affreteurs, transp
 - Triple canal : Admin/Transporteur, Admin/Affreteur, Support clients
 - Navigation intelligente vers les pages appropriees
 - Analyse de sentiment automatique (detection clients mecontents)
-- Bouton SOS pour urgences (panne, accident)
 - Historique complet des conversations
 
-**Resultat** : Resolution automatique des questions frequentes, support instantane
+---
+
+**Systeme SOS - Support Tactique (Innovation Cle)**
+
+| Type Urgence | Actions Automatiques |
+|--------------|---------------------|
+| Panne (breakdown) | Depanneur proche, alerte affreteur |
+| Accident | Secours (119), autorites, assurance |
+| Medical | SAMU, hopital proche, contact proche |
+| Securite | Police, mise en securite, alerte admin |
+
+**Workflow SOS en 9 Etapes** :
+
+```
+1. TRANSPORTEUR appuie sur bouton SOS (2 sec)
+         |
+2. App envoie position GPS + type urgence
+         |
+3. Backend cree : MissionIssue (is_emergency=true)
+                  Conversation urgente
+                  Evenement WebSocket
+         |
+4. NOTIFICATIONS simultanees :
+   - Affreteur : Push + WebSocket
+   - Admins : Badge rouge + Toast + Son d'alerte
+         |
+5. CHATBOT demarre avec contexte urgence :
+   "Je vois que tu as un probleme. Que s'est-il passe?"
+   Suggestions : [Panne moteur] [Accident] [Autre]
+         |
+6. TRANSPORTEUR repond via chat
+         |
+7. CHATBOT propose des actions :
+   - Contacter un depanneur proche
+   - Alerter l'affreteur
+   - Appeler les secours
+         |
+8. ADMIN peut rejoindre la conversation en temps reel
+         |
+9. Resolution : Admin ou Affreteur marque comme resolu
+```
+
+**Resultat** : Resolution automatique des questions frequentes, support instantane, urgences gerees en moins de 5 minutes
 
 ---
 

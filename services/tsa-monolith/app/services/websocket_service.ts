@@ -34,6 +34,11 @@ export enum WebSocketEventType {
 
   // Événements de localisation
   LOCATION_UPDATE = 'location:update',
+
+  // Événements SOS / Urgences
+  SOS_ALERT = 'sos:alert',
+  SOS_ACKNOWLEDGED = 'sos:acknowledged',
+  SOS_RESOLVED = 'sos:resolved',
 }
 
 /**
