@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 import driverTrackingService, { type MissionDetails } from '../services/driverTrackingService';
 import { Colors } from '../constants/colors';
 import { useTranslation } from '../hooks/useTranslation';
@@ -25,60 +27,53 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
   navigation,
 }) => {
   const { t } = useTranslation();
-  const [token, setToken] = useState('');
+  const { toast, showSuccess, showError, showWarning, hideToast } = useToast();
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
-  const [checkingSavedCredentials, setCheckingSavedCredentials] = useState(true);
+  const [checkingSavedToken, setCheckingSavedToken] = useState(true);
 
   useEffect(() => {
-    checkSavedCredentials();
+    checkSavedToken();
   }, []);
 
-  const checkSavedCredentials = async () => {
+  const checkSavedToken = async () => {
     try {
-      const credentials = await driverTrackingService.getSavedCredentials();
-      if (credentials) {
-        setToken(credentials.token);
-        setPin(credentials.pin);
+      const token = await driverTrackingService.getSavedToken();
+      if (token) {
+        // Token exists, auto-navigate or show option to use it
+        console.log('Saved token found');
       }
     } catch (error) {
-      console.error('Error checking saved credentials:', error);
+      console.error('Error checking saved token:', error);
     } finally {
-      setCheckingSavedCredentials(false);
+      setCheckingSavedToken(false);
     }
   };
 
-  const handleAuthenticate = async (authToken?: string, authPin?: string) => {
-    const tokenToUse = authToken || token;
+  const handleAuthenticate = async (authPin?: string) => {
     const pinToUse = authPin || pin;
 
-    if (!tokenToUse || !pinToUse) {
-      Alert.alert(t('common.error'), t('auth.emptyFields'));
+    if (!pinToUse) {
+      showError(t('auth.emptyFields'));
       return;
     }
 
-    if (pinToUse.length !== 6) {
-      Alert.alert(t('common.error'), t('auth.invalidPin'));
+    if (pinToUse.length < 6 || pinToUse.length > 8) {
+      showError('PIN must be 6-8 characters');
       return;
     }
 
     setLoading(true);
     try {
-      const mission: MissionDetails = await driverTrackingService.authenticate(
-        tokenToUse,
-        pinToUse
-      );
+      const mission: MissionDetails = await driverTrackingService.authenticate(pinToUse);
 
-      Alert.alert(t('auth.authSuccess'), `${t('mission.title')}: ${mission.title}`, [
-        {
-          text: t('common.close'),
-          onPress: () => {
-            navigation.navigate('DriverMissionStart', { mission });
-          },
-        },
-      ]);
+      showSuccess(`${t('mission.title')}: ${mission.title}`);
+      // Naviguer après un délai pour laisser le temps de voir le toast
+      setTimeout(() => {
+        navigation.navigate('DriverMissionStart', { mission });
+      }, 2000);
     } catch (error: any) {
-      Alert.alert(t('auth.authFailed'), error.message);
+      showError(error.message);
     } finally {
       setLoading(false);
     }
@@ -95,16 +90,15 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
           style: 'destructive',
           onPress: async () => {
             await driverTrackingService.clearCredentials();
-            setToken('');
             setPin('');
-            Alert.alert(t('common.success'), t('auth.credentialsCleared'));
+            showSuccess(t('auth.credentialsCleared'));
           },
         },
       ]
     );
   };
 
-  if (checkingSavedCredentials) {
+  if (checkingSavedToken) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -134,32 +128,10 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Token Input */}
+            {/* PIN Input (Alphanumeric 6-8 characters) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('auth.token')}</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons
-                  name="barcode-outline"
-                  size={20}
-                  color={Colors.textSecondary}
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder={t('auth.tokenPlaceholder')}
-                  placeholderTextColor={Colors.textSecondary}
-                  value={token}
-                  onChangeText={setToken}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!loading}
-                />
-              </View>
-            </View>
-
-            {/* PIN Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>{t('auth.pinLabel')}</Text>
+              <Text style={styles.label}>Mission PIN Code</Text>
+              <Text style={styles.sublabel}>Enter the 6-8 character alphanumeric code</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
                   name="lock-closed-outline"
@@ -169,13 +141,13 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder={t('auth.pinPlaceholder')}
+                  placeholder="Example: A3X9K2"
                   placeholderTextColor={Colors.textSecondary}
                   value={pin}
-                  onChangeText={setPin}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  secureTextEntry
+                  onChangeText={(text) => setPin(text.toUpperCase())}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxLength={8}
                   editable={!loading}
                 />
               </View>
@@ -198,14 +170,14 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
             </TouchableOpacity>
 
             {/* Clear Credentials Button */}
-            {(token || pin) && (
+            {pin && (
               <TouchableOpacity
                 style={styles.clearButton}
                 onPress={handleClearCredentials}
                 disabled={loading}
               >
                 <Ionicons name="trash-outline" size={16} color={Colors.error} />
-                <Text style={styles.clearButtonText}>{t('auth.savedCredentials')}</Text>
+                <Text style={styles.clearButtonText}>Clear Saved Token</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -214,27 +186,35 @@ export const DriverMissionAccessScreen: React.FC<DriverMissionAccessScreenProps>
           <View style={styles.instructions}>
             <View style={styles.instructionHeader}>
               <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
-              <Text style={styles.instructionTitle}>{t('auth.howToGetCredentials')}</Text>
+              <Text style={styles.instructionTitle}>How to access your mission</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>1.</Text>
-              <Text style={styles.instructionText}>{t('auth.instruction1')}</Text>
+              <Text style={styles.instructionText}>Receive the mission PIN code from your dispatcher or transport company</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>2.</Text>
-              <Text style={styles.instructionText}>{t('auth.instruction2')}</Text>
+              <Text style={styles.instructionText}>Enter the PIN code in the field above (6-8 alphanumeric characters)</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>3.</Text>
-              <Text style={styles.instructionText}>{t('auth.instruction3')}</Text>
+              <Text style={styles.instructionText}>Tap "Log In" to access the mission details and start tracking</Text>
             </View>
             <View style={styles.instructionItem}>
               <Text style={styles.instructionNumber}>4.</Text>
-              <Text style={styles.instructionText}>{t('auth.instruction4')}</Text>
+              <Text style={styles.instructionText}>The PIN gives you access to one specific mission and its tracking features</Text>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Toast notifications */}
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+      />
     </SafeAreaView>
   );
 };
@@ -298,6 +278,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  sublabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
     marginBottom: 8,
   },
   inputContainer: {

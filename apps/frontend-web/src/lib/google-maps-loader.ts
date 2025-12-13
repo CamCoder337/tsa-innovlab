@@ -50,9 +50,25 @@ class GoogleMapsLoader {
   }
 
   async load(options: GoogleMapsLoaderOptions = {}): Promise<void> {
-    // If already loaded, return immediately
-    if (this.isLoaded && window.google?.maps) {
-      return Promise.resolve();
+    // If already loaded and Google Maps is available, return immediately
+    if (this.isLoaded && window.google?.maps && window.google.maps.Map) {
+      // Check if required libraries are available
+      const { libraries = [] } = options;
+      const missingLibraries = libraries.filter((lib) => {
+        if (lib === 'places') return !window.google.maps.places;
+        if (lib === 'geometry') return !window.google.maps.geometry;
+        if (lib === 'routes') return !window.google.maps.DirectionsService;
+        if (lib === 'marker') return !window.google.maps.marker;
+        return false;
+      });
+
+      if (missingLibraries.length === 0) {
+        return Promise.resolve();
+      } else {
+        console.warn(`Some libraries are missing: ${missingLibraries.join(', ')}. Attempting to reload with libraries.`);
+        // Libraries are missing, need to reload with them
+        this.isLoaded = false;
+      }
     }
 
     // If currently loading, return the existing promise
@@ -67,6 +83,12 @@ class GoogleMapsLoader {
     try {
       await this.loadPromise;
       this.isLoaded = true;
+    } catch (error) {
+      // Reset state on error so we can retry
+      this.isLoaded = false;
+      this.isLoading = false;
+      this.loadPromise = null;
+      throw error;
     } finally {
       this.isLoading = false;
     }
@@ -74,12 +96,25 @@ class GoogleMapsLoader {
 
   private loadScript(options: GoogleMapsLoaderOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-      // --- 1. Nettoyer les anciens scripts ---
-      document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach((s) => s.remove());
-      document.querySelectorAll('script[src*="google.com/maps/api/js"]').forEach((s) => s.remove());
-
       const apiKey = getGoogleMapsApiKey();
-      if (!apiKey) return reject(new Error('Missing API key'));
+      if (!apiKey) {
+        console.error('❌ Google Maps API key is missing. Please set VITE_GOOGLE_MAPS_API_KEY in your environment variables.');
+        return reject(new Error('Missing API key'));
+      }
+
+      // Check if script is already in the DOM
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript && window.google?.maps) {
+        console.log('✅ Google Maps script already loaded');
+        return resolve();
+      }
+
+      // --- 1. Nettoyer les anciens scripts seulement si nécessaire ---
+      if (existingScript && !window.google?.maps) {
+        console.log('⚠️ Removing existing script that failed to load');
+        document.querySelectorAll('script[src*="maps.googleapis.com"]').forEach((s) => s.remove());
+        document.querySelectorAll('script[src*="google.com/maps/api/js"]').forEach((s) => s.remove());
+      }
 
       const { libraries = ['places', 'geometry', 'marker'], version = 'weekly' } = options;
       const language = i18n.language;
@@ -88,28 +123,50 @@ class GoogleMapsLoader {
       const callbackName = `gmaps_cb_${Date.now()}`;
       window[callbackName] = () => {
         delete window[callbackName];
-        console.log('Google Maps API prête via callback');
+        console.log('✅ Google Maps API loaded successfully via callback');
         resolve();
       };
 
       const script = document.createElement('script');
-      script.src =
+      const url =
         `https://maps.googleapis.com/maps/api/js` +
         `?key=${apiKey}` +
         `&language=${language}` +
         `&libraries=${libraries.join(',')}` +
         `&v=${version}` +
         `&callback=${callbackName}`;
+      
+      script.src = url;
       script.async = true;
       script.defer = true;
 
-      const timeoutId = setTimeout(() => reject(new Error('Timeout')), 20000);
+      const timeoutId = setTimeout(() => {
+        console.error('❌ Google Maps API load timeout after 20 seconds');
+        reject(new Error('Timeout loading Google Maps API'));
+      }, 20000);
 
-      script.onload = () => clearTimeout(timeoutId); // le vrai succès arrive dans le callback
+      script.onload = () => {
+        // Le vrai succès arrive dans le callback, mais onclear le timeout ici aussi
+        console.log('📡 Google Maps script loaded, waiting for callback...');
+      };
+      
       script.onerror = (e) => {
         clearTimeout(timeoutId);
-        reject(new Error('Script load failed: ' + e));
+        console.error('❌ Failed to load Google Maps script:', {
+          url,
+          error: e,
+          apiKeyPresent: !!apiKey,
+          apiKeyLength: apiKey?.length || 0,
+        });
+        const errorType = typeof e === 'object' && e !== null && 'type' in e ? (e as Event).type : 'Unknown error';
+        reject(new Error(`Script load failed: ${errorType}. Check your API key and network connection.`));
       };
+
+      console.log('📡 Loading Google Maps API:', {
+        url: url.replace(apiKey, '***'),
+        libraries: libraries.join(', '),
+        language,
+      });
 
       document.head.appendChild(script);
     });

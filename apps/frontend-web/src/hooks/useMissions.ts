@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useMissionStore } from '@/stores/missionStore';
 import type { Mission, MissionStatus } from '@/types/mission.types';
+import { isMissionCompleted, ACTIVE_MISSION_STATUSES } from '@/lib/utils';
 
 /**
  * Main missions hook providing all mission functionality
@@ -35,7 +36,7 @@ export const useMissions = () => {
 
   const getCompletedMissions = useCallback((): Mission[] => {
     return [...store.missions, ...store.myMissions].filter(
-      (mission) => mission.status === 'completed'
+      (mission) => isMissionCompleted(mission.status)
     );
   }, [store.missions, store.myMissions]);
 
@@ -70,7 +71,7 @@ export const useMissions = () => {
 
   const getInProgressMissions = useCallback(() => {
     return [...store.missions, ...store.myMissions].filter((mission) =>
-      ['assigned', 'in_progress'].includes(mission.status)
+      ACTIVE_MISSION_STATUSES.includes(mission.status)
     ).length;
   }, [store.missions, store.myMissions]);
 
@@ -80,7 +81,7 @@ export const useMissions = () => {
       store.fetchMission(id);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [store.currentMission]
+    [store.fetchMission]
   );
 
   return {

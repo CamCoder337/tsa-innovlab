@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 
 interface VehicleTrackingCredentialsProps {
   missionTitle: string;
-  trackingToken?: string;
   trackingPin?: string;
   vehicleRegistration?: string;
   vehicleType?: string;
@@ -16,27 +15,13 @@ interface VehicleTrackingCredentialsProps {
 
 export default function VehicleTrackingCredentials({
   missionTitle,
-  trackingToken,
   trackingPin,
   vehicleRegistration,
   vehicleType,
   className,
 }: VehicleTrackingCredentialsProps) {
   const [showPin, setShowPin] = useState(false);
-  const [copiedToken, setCopiedToken] = useState(false);
   const [copiedPin, setCopiedPin] = useState(false);
-
-  const handleCopyToken = async () => {
-    if (!trackingToken) return;
-
-    try {
-      await navigator.clipboard.writeText(trackingToken);
-      setCopiedToken(true);
-      setTimeout(() => setCopiedToken(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy token:', error);
-    }
-  };
 
   const handleCopyPin = async () => {
     if (!trackingPin) return;
@@ -50,7 +35,10 @@ export default function VehicleTrackingCredentials({
     }
   };
 
-  const displayPin = showPin ? trackingPin : trackingPin?.replace(/./g, '"');
+  // Affichage du PIN format√© (groupes de 3 caract√®res pour lisibilit√©)
+  const displayPin = showPin
+    ? trackingPin?.match(/.{1,3}/g)?.join(' ')
+    : trackingPin?.replace(/./g, '‚Ä¢');
 
   return (
     <Card className={cn('border-2 border-blue-200 dark:border-blue-800', className)}>
@@ -64,13 +52,13 @@ export default function VehicleTrackingCredentials({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Info vÈhicule */}
+        {/* Info v√©hicule */}
         {(vehicleRegistration || vehicleType) && (
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <Truck className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {vehicleType || 'VÈhicule'}
+                {vehicleType || 'V√©hicule'}
               </p>
               {vehicleRegistration && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">{vehicleRegistration}</p>
@@ -85,48 +73,17 @@ export default function VehicleTrackingCredentials({
           <p className="text-gray-900 dark:text-white">{missionTitle}</p>
         </div>
 
-        {/* Token de tracking */}
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-            <Key className="w-4 h-4" />
-            Token de Tracking
-          </label>
-          <div className="flex gap-2">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={trackingToken || 'Non gÈnÈrÈ'}
-                readOnly
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono"
-              />
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCopyToken}
-              disabled={!trackingToken}
-              className="flex-shrink-0"
-            >
-              {copiedToken ? (
-                <Check className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-
         {/* PIN de tracking */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
             <Key className="w-4 h-4" />
-            Code PIN (6 chiffres)
+            Code PIN (6-8 caract√®res alphanum√©riques)
           </label>
           <div className="flex gap-2">
             <div className="flex-1 relative">
               <input
                 type="text"
-                value={displayPin || '""""""'}
+                value={displayPin || '‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢'}
                 readOnly
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 font-mono text-center text-lg tracking-widest"
               />
@@ -163,29 +120,29 @@ export default function VehicleTrackingCredentials({
         {/* Instructions */}
         <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-2">
-            =Ò Instructions pour le chauffeur:
+            üì± Instructions pour le chauffeur:
           </p>
           <ol className="text-xs text-blue-800 dark:text-blue-200 space-y-1 pl-4 list-decimal">
-            <li>TÈlÈcharger l'application mobile "TSA Driver"</li>
-            <li>Saisir le <strong>Token</strong> et le <strong>PIN</strong> ci-dessus</li>
-            <li>Activer le suivi GPS lors du dÈpart</li>
-            <li>Scanner le QR code ‡ l'arrivÈe pour valider la livraison</li>
+            <li>T√©l√©charger l'application mobile "TSA Driver"</li>
+            <li>Saisir le <strong>Code PIN</strong> ci-dessus lors de la connexion</li>
+            <li>Le suivi GPS sera activ√© automatiquement</li>
+            <li>Scanner le QR code √† l'arriv√©e pour valider la livraison</li>
           </ol>
         </div>
 
         {/* Status */}
-        {trackingToken && trackingPin ? (
+        {trackingPin ? (
           <div className="flex items-center gap-2 text-sm">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-green-700 dark:text-green-400 font-medium">
-              Identifiants actifs
+              Code PIN actif
             </span>
           </div>
         ) : (
           <div className="flex items-center gap-2 text-sm">
             <div className="w-2 h-2 rounded-full bg-gray-400" />
             <span className="text-gray-600 dark:text-gray-400">
-              En attente de gÈnÈration des identifiants
+              En attente de g√©n√©ration du code PIN
             </span>
           </div>
         )}

@@ -1,6 +1,6 @@
 import type { Mission } from '@/types/mission.types';
 import type { User } from '@/types/auth.types';
-import { getStatusColor } from '@/lib/utils';
+import { getStatusColor, isMissionCompleted, ACTIVE_MISSION_STATUSES, COMPLETED_MISSION_STATUSES } from '@/lib/utils';
 import { getTimeAgo, formatCurrency } from './utils';
 
 export interface DashboardMetrics {
@@ -20,17 +20,17 @@ export class DashboardUtils {
     availableMissions?: Mission[]
   ): DashboardMetrics {
     const activeMissions = missions.filter((m) =>
-      ['assigned', 'in_progress'].includes(m.status)
+      ACTIVE_MISSION_STATUSES.includes(m.status)
     ).length;
 
     const totalActiveMissions = missions.filter((m) =>
-      ['assigned', 'in_progress', 'completed'].includes(m.status)
+      [...ACTIVE_MISSION_STATUSES, ...COMPLETED_MISSION_STATUSES].includes(m.status)
     ).length;
 
-    const completedMissions = missions.filter((m) => m.status === 'completed').length;
+    const completedMissions = missions.filter((m) => isMissionCompleted(m.status)).length;
 
     const totalRevenue = missions
-      .filter((m) => m.status === 'completed')
+      .filter((m) => isMissionCompleted(m.status))
       .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     const averageCost = completedMissions > 0 ? totalRevenue / completedMissions : 0;
@@ -74,7 +74,7 @@ export class DashboardUtils {
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const monthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    const completedMissions = missions.filter((m) => m.status === 'completed');
+    const completedMissions = missions.filter((m) => isMissionCompleted(m.status));
 
     const todayEarnings = completedMissions
       .filter((m) => new Date(m.updatedAt) >= todayStart)
@@ -159,7 +159,7 @@ export class DashboardUtils {
     // Performance recommendation
     const completionRate =
       missions.length > 0
-        ? (missions.filter((m) => m.status === 'completed').length / missions.length) * 100
+        ? (missions.filter((m) => isMissionCompleted(m.status)).length / missions.length) * 100
         : 0;
 
     if (completionRate > 90) {
@@ -193,9 +193,9 @@ export class DashboardUtils {
     const monthlyMissions = missions.filter((m) => new Date(m.createdAt) >= monthStart);
 
     const created = monthlyMissions.length;
-    const completed = monthlyMissions.filter((m) => m.status === 'completed').length;
+    const completed = monthlyMissions.filter((m) => isMissionCompleted(m.status)).length;
     const totalCost = monthlyMissions
-      .filter((m) => m.status === 'completed')
+      .filter((m) => isMissionCompleted(m.status))
       .reduce((sum, m) => sum + (m.budgetMin || 0), 0);
 
     // Estimate savings (mock calculation)

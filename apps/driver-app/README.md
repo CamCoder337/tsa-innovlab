@@ -85,10 +85,12 @@ npm start
 ```
 
 Ensuite :
+
 1. **Scanner le QR code** avec l'app Expo Go sur votre téléphone
 2. L'app se lancera automatiquement
 
 **Ou utiliser un émulateur** :
+
 ```bash
 # Android
 npm run android
@@ -99,7 +101,7 @@ npm run ios
 
 ## 📁 Structure du Projet
 
-```
+```bash
 driver-app/
 ├── src/
 │   ├── components/           # Composants réutilisables
@@ -149,7 +151,9 @@ L'application est **100% autonome** et fonctionne **sans serveur backend**. Tout
 ### Architecture de Stockage
 
 #### 1. **AsyncStorage** (Stockage Persistant)
+
 Toutes les missions et paramètres sont sauvegardés dans AsyncStorage :
+
 - `@tsa_driver_missions` : Toutes les missions (actives et terminées)
 - `@tsa_driver_settings` : Paramètres de l'application
 - `@tsa_driver_profile` : Profil du chauffeur
@@ -157,14 +161,18 @@ Toutes les missions et paramètres sont sauvegardés dans AsyncStorage :
 - `@tsa_driver_pod_signatures` : Index des signatures
 
 #### 2. **FileSystem** (Fichiers Locaux)
+
 Les photos et signatures sont sauvegardées dans le répertoire de documents de l'app :
+
 - Photos de livraison : `${FileSystem.documentDirectory}/pod_photo_*.jpg`
 - Signatures : `${FileSystem.documentDirectory}/pod_signature_*.png`
 
 ### Services Disponibles
 
 #### `localStorageService.ts`
+
 Service de gestion du stockage persistant :
+
 ```typescript
 import { saveMissions, loadMissions, saveMission } from './services/localStorageService';
 
@@ -179,7 +187,9 @@ await saveMission(updatedMission);
 ```
 
 #### `proofOfDeliveryService.ts`
+
 Gestion des preuves de livraison :
+
 ```typescript
 import { saveProofPhoto, saveProofSignature, saveProofOfDelivery }
   from './services/proofOfDeliveryService';
@@ -195,7 +205,9 @@ await saveProofOfDelivery(mission, proofData);
 ```
 
 #### `missionService.ts` (Mis à Jour)
+
 Service métier avec persistance automatique :
+
 ```typescript
 import {
   initializeMissions,
@@ -220,6 +232,7 @@ await createMission(newMission);
 ### Premier Lancement
 
 Au premier démarrage, l'app :
+
 1. Vérifie si des données existent dans AsyncStorage
 2. Si aucune donnée : charge **5 missions de démonstration** depuis `mockMissions.ts`
 3. Sauvegarde ces missions dans AsyncStorage
@@ -245,12 +258,14 @@ Au premier démarrage, l'app :
 ### Persistance des Données
 
 ✅ **Toutes les modifications sont automatiquement sauvegardées** :
+
 - Changement de statut de mission
 - Ajout de nouvelle mission
 - Photos et signatures
 - Paramètres utilisateur
 
 ✅ **Les données restent disponibles** :
+
 - Après redémarrage de l'app
 - Après redémarrage du téléphone
 - Même sans connexion internet
@@ -258,6 +273,7 @@ Au premier démarrage, l'app :
 ### Gestion des Données
 
 #### Voir les données stockées
+
 ```typescript
 // Dans un écran ou composant
 import { loadMissions } from '../services/localStorageService';
@@ -267,6 +283,7 @@ console.log('Missions stockées:', missions);
 ```
 
 #### Réinitialiser les données
+
 ```typescript
 import { clearAllData } from '../services/localStorageService';
 
@@ -294,6 +311,7 @@ Ces missions utilisent des **villes réelles du Cameroun** avec coordonnées GPS
 Pour connecter l'app au backend AdonisJS :
 
 1. **Créer un service API** :
+
 ```typescript
 // src/services/api.ts
 import axios from 'axios';
@@ -327,6 +345,7 @@ export const missionApi = {
 ## 📸 Captures d'Écran (à venir)
 
 Une fois l'app lancée, vous verrez :
+
 - 🗺️ Carte avec 3 missions actives affichées
 - 📋 Liste avec onglets Actives/Terminées
 - 🔍 Détails complets avec boutons d'action
@@ -348,6 +367,7 @@ npm install
 ## 📞 Support
 
 Pour toute question sur l'app mobile, consultez la documentation Expo :
+
 - [Expo Docs](https://docs.expo.dev/)
 - [React Navigation Docs](https://reactnavigation.org/)
 - [react-native-maps Docs](https://github.com/react-native-maps/react-native-maps)

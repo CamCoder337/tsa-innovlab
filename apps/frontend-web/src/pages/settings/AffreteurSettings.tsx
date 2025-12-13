@@ -443,7 +443,7 @@ function AffreteurSettings() {
             <Separator />
 
             {/* MFA Settings */}
-            <div className="space-y-4 flex flex-col justify-between">
+            <div id="mfa" className="space-y-4 flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium flex items-center gap-2">

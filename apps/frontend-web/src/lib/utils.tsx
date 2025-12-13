@@ -4,6 +4,22 @@ import type { MissionStatus } from '@/types/mission.types';
 import { type OrderStatus, PaymentMethod, type PaymentStatus } from '@/types/order.types';
 import { CheckCircle, Clock, Package, XCircle } from 'lucide-react';
 
+// Statuts de missions terminées (selon le backend)
+export const COMPLETED_MISSION_STATUSES: MissionStatus[] = ['delivered', 'paid', 'completed'];
+
+// Statuts de missions actives
+export const ACTIVE_MISSION_STATUSES: MissionStatus[] = ['assigned', 'in_progress'];
+
+// Helper pour vérifier si une mission est terminée
+export function isMissionCompleted(status: MissionStatus): boolean {
+  return COMPLETED_MISSION_STATUSES.includes(status);
+}
+
+// Helper pour vérifier si une mission est active
+export function isMissionActive(status: MissionStatus): boolean {
+  return ACTIVE_MISSION_STATUSES.includes(status);
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

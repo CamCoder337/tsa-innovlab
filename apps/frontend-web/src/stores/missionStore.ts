@@ -252,6 +252,7 @@ export const useMissionStore = create<MissionStoreExtended>()(
             set({
               error: response.error.message,
               isLoading: false,
+              currentMission: null, // Réinitialiser la mission en cas d'erreur
             });
             return;
           }
@@ -262,11 +263,20 @@ export const useMissionStore = create<MissionStoreExtended>()(
               isLoading: false,
               error: null,
             });
+          } else {
+            // Si pas de données mais pas d'erreur, considérer comme mission non trouvée
+            set({
+              currentMission: null,
+              isLoading: false,
+              error: 'Mission not found',
+            });
           }
         } catch (error) {
+          console.error('Error fetching mission:', error);
           set({
             error: error instanceof Error ? error.message : 'Failed to fetch mission',
             isLoading: false,
+            currentMission: null, // Réinitialiser la mission en cas d'erreur
           });
         }
       },

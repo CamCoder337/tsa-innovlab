@@ -45,5 +45,6 @@ router.use([
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
   role: () => import('#middleware/role_middleware'),
-  tracking: () => import('#middleware/tracking_auth_middleware'),
+  missionAccess: () => import('#middleware/mission_access_middleware'),
+  // tracking: () => import('#middleware/tracking_auth_middleware'), // Deprecated - Use auth middleware instead
 })

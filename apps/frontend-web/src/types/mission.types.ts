@@ -51,8 +51,8 @@ export interface Mission extends Timestamps {
   budgetMax?: number | null;
   status: MissionStatus;
   // Tracking fields - Credentials pour authentification chauffeur
-  trackingLinkToken?: string | null;
-  trackingPin?: string | null;
+  // trackingLinkToken?: string | null; // @deprecated Plus utilisé - Auth se fait via JWT avec PIN uniquement
+  trackingPin?: string | null; // PIN alphanumérique 6-8 caractères pour auth chauffeur
   qrCodeToken?: string | null;
   startedAt?: string | null;
   deliveredAt?: string | null;

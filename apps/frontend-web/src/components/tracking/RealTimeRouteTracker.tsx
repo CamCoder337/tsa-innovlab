@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { googleMapsLoader } from '@/lib/google-maps-loader';
 import { getCookie } from '@/lib/cookie-utils';
 import { webSocketService, WebSocketEventType } from '@/services/websocket.service';
+import GoogleMapsService from '@/services/google-maps.service';
 import { Navigation, Clock, RefreshCw } from 'lucide-react';
 import type { Mission } from '@/types/mission.types';
 
@@ -53,7 +54,9 @@ interface LocationUpdateData {
 export default function RealTimeRouteTracker({ mission, className = '' }: RealTimeRouteTrackerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const polylinesRef = useRef<google.maps.Polyline[]>([]);
+  const mapsServiceRef = useRef<GoogleMapsService | null>(null);
+  const polylinesRef = useRef<google.maps.Polyline[]>([]); // Polylines du chemin parcouru
+  const currentRouteIdRef = useRef<string | null>(null); // ID de la route actuelle
   const currentMarkerRef = useRef<google.maps.Marker | null>(null);
   const startMarkerRef = useRef<google.maps.Marker | null>(null);
   const endMarkerRef = useRef<google.maps.Marker | null>(null);
@@ -92,7 +95,7 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
     };
   }, []);
 
-  // Initialiser la carte
+  // Initialiser la carte (une seule fois)
   useEffect(() => {
     if (isLoading || !mapContainerRef.current || mapRef.current) {
       return;
@@ -105,12 +108,9 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
 
     console.log('🗺️ Creating route tracker map...');
     try {
-      // Centre sur le point de départ de la mission
-      const centerLat = mission.adresseDepart?.latitude || 3.8480;
-      const centerLng = mission.adresseDepart?.longitude || 11.5021;
-
+      // Centre par défaut
       const map = new google.maps.Map(mapContainerRef.current, {
-        center: { lat: Number(centerLat), lng: Number(centerLng) },
+        center: { lat: 3.8480, lng: 11.5021 },
         zoom: 13,
         mapTypeControl: true,
         streetViewControl: false,
@@ -119,62 +119,181 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
 
       mapRef.current = map;
 
-      // Ajouter les marqueurs de départ et arrivée
-      if (mission.adresseDepart) {
-        startMarkerRef.current = new google.maps.Marker({
-          position: {
-            lat: Number(mission.adresseDepart.latitude),
-            lng: Number(mission.adresseDepart.longitude),
-          },
-          map: map,
-          title: 'Départ',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#10b981',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-          label: {
-            text: 'D',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontWeight: 'bold',
-          },
-        });
-      }
-
-      if (mission.adresseArrivee) {
-        endMarkerRef.current = new google.maps.Marker({
-          position: {
-            lat: Number(mission.adresseArrivee.latitude),
-            lng: Number(mission.adresseArrivee.longitude),
-          },
-          map: map,
-          title: 'Arrivée',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 8,
-            fillColor: '#ef4444',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          },
-          label: {
-            text: 'A',
-            color: '#ffffff',
-            fontSize: '12px',
-            fontWeight: 'bold',
-          },
-        });
-      }
+      // Initialiser GoogleMapsService avec la carte déjà créée
+      const mapsService = new GoogleMapsService();
+      mapsService.setMap(map);
+      mapsServiceRef.current = mapsService;
 
       console.log('✅ Route tracker map created');
     } catch (error) {
       console.error('❌ Error creating map:', error);
     }
-  }, [isLoading, mission]);
+
+    // Cleanup function
+    return () => {
+      console.log('[RealTimeRouteTracker] Cleaning up map');
+      if (mapsServiceRef.current) {
+        mapsServiceRef.current.clearRoutes();
+      }
+      if (startMarkerRef.current) {
+        startMarkerRef.current.setMap(null);
+        startMarkerRef.current = null;
+      }
+      if (endMarkerRef.current) {
+        endMarkerRef.current.setMap(null);
+        endMarkerRef.current = null;
+      }
+    };
+  }, [isLoading]);
+
+  // Mettre à jour les marqueurs et la route quand la mission change
+  useEffect(() => {
+    if (!mapRef.current || !mapsServiceRef.current || !mission) {
+      return;
+    }
+
+    console.log('[RealTimeRouteTracker] Updating markers and route for mission:', mission.id);
+
+    // Supprimer l'ancienne route si elle existe
+    if (currentRouteIdRef.current) {
+      console.log('[RealTimeRouteTracker] Removing previous route:', currentRouteIdRef.current);
+      mapsServiceRef.current.removeRoute(currentRouteIdRef.current);
+      currentRouteIdRef.current = null;
+    }
+
+    // Supprimer les anciens marqueurs
+    if (startMarkerRef.current) {
+      startMarkerRef.current.setMap(null);
+      startMarkerRef.current = null;
+    }
+    if (endMarkerRef.current) {
+      endMarkerRef.current.setMap(null);
+      endMarkerRef.current = null;
+    }
+
+    // Centre sur le point de départ de la mission
+    const centerLat = mission.adresseDepart?.latitude || 3.8480;
+    const centerLng = mission.adresseDepart?.longitude || 11.5021;
+    if (mapRef.current) {
+      mapRef.current.setCenter({ lat: Number(centerLat), lng: Number(centerLng) });
+    }
+
+    // Ajouter les marqueurs de départ et arrivée
+    console.log('[RealTimeRouteTracker] Mission data:', {
+      hasDepart: !!mission.adresseDepart,
+      hasArrivee: !!mission.adresseArrivee,
+      departLat: mission.adresseDepart?.latitude,
+      departLng: mission.adresseDepart?.longitude,
+      arriveeLat: mission.adresseArrivee?.latitude,
+      arriveeLng: mission.adresseArrivee?.longitude,
+    });
+
+    if (mission.adresseDepart) {
+      const departLat = Number(mission.adresseDepart.latitude);
+      const departLng = Number(mission.adresseDepart.longitude);
+      
+      console.log('[RealTimeRouteTracker] Creating departure marker:', {
+        lat: departLat,
+        lng: departLng,
+        isValid: !isNaN(departLat) && !isNaN(departLng),
+      });
+
+      if (!isNaN(departLat) && !isNaN(departLng)) {
+        startMarkerRef.current = new google.maps.Marker({
+          position: {
+            lat: departLat,
+            lng: departLng,
+          },
+          map: mapRef.current,
+          title: 'Départ',
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            scaledSize: new google.maps.Size(32, 32),
+          },
+        });
+        console.log('[RealTimeRouteTracker] Departure marker created');
+      } else {
+        console.error('[RealTimeRouteTracker] Invalid departure coordinates:', {
+          lat: mission.adresseDepart.latitude,
+          lng: mission.adresseDepart.longitude,
+        });
+      }
+    } else {
+      console.warn('[RealTimeRouteTracker] No departure address');
+    }
+
+    if (mission.adresseArrivee) {
+      const arriveeLat = Number(mission.adresseArrivee.latitude);
+      const arriveeLng = Number(mission.adresseArrivee.longitude);
+      
+      console.log('[RealTimeRouteTracker] Creating arrival marker:', {
+        lat: arriveeLat,
+        lng: arriveeLng,
+        isValid: !isNaN(arriveeLat) && !isNaN(arriveeLng),
+      });
+
+      if (!isNaN(arriveeLat) && !isNaN(arriveeLng)) {
+        endMarkerRef.current = new google.maps.Marker({
+          position: {
+            lat: arriveeLat,
+            lng: arriveeLng,
+          },
+          map: mapRef.current,
+          title: 'Arrivée',
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            scaledSize: new google.maps.Size(32, 32),
+          },
+        });
+        console.log('[RealTimeRouteTracker] Arrival marker created');
+      } else {
+        console.error('[RealTimeRouteTracker] Invalid arrival coordinates:', {
+          lat: mission.adresseArrivee.latitude,
+          lng: mission.adresseArrivee.longitude,
+        });
+      }
+    } else {
+      console.warn('[RealTimeRouteTracker] No arrival address');
+    }
+
+    // Calculer la route réelle entre départ et arrivée avec Google Maps Directions API
+    if (mission.adresseDepart && mission.adresseArrivee && mapsServiceRef.current) {
+      const departLat = Number(mission.adresseDepart.latitude);
+      const departLng = Number(mission.adresseDepart.longitude);
+      const arriveeLat = Number(mission.adresseArrivee.latitude);
+      const arriveeLng = Number(mission.adresseArrivee.longitude);
+
+      if (!isNaN(departLat) && !isNaN(departLng) && !isNaN(arriveeLat) && !isNaN(arriveeLng)) {
+        const newRouteId = `route-${mission.id}`;
+        console.log('[RealTimeRouteTracker] Calculating route with Google Maps Directions API for mission', mission.id);
+
+        // Utiliser Google Maps Directions API pour calculer la vraie route
+        mapsServiceRef.current.displayRoute(
+          { lat: departLat, lng: departLng },
+          { lat: arriveeLat, lng: arriveeLng },
+          {
+            routeId: newRouteId,
+            strokeColor: '#2563eb',
+            strokeOpacity: 0.6,
+            strokeWeight: 3,
+            departureTime: new Date(),
+            trafficModel: 'best_guess',
+          }
+        ).then((result) => {
+          if (result && result.routes && result.routes[0] && result.routes[0].overview_path) {
+            currentRouteIdRef.current = newRouteId;
+            console.log('[RealTimeRouteTracker] Route calculated successfully with', result.routes[0].overview_path.length, 'points');
+          } else {
+            console.warn('[RealTimeRouteTracker] Route calculation returned no valid route');
+          }
+        }).catch((error) => {
+          console.error('[RealTimeRouteTracker] Error calculating route:', error);
+        });
+      } else {
+        console.error('[RealTimeRouteTracker] Cannot calculate route - invalid coordinates');
+      }
+    }
+  }, [mission]);
 
   // Récupérer l'historique des positions
   useEffect(() => {
@@ -262,15 +381,39 @@ export default function RealTimeRouteTracker({ mission, className = '' }: RealTi
 
   // Mettre à jour la polyline et le marqueur quand les positions changent
   useEffect(() => {
-    if (!mapRef.current || !window.google?.maps || locations.length === 0) {
+    if (!mapRef.current || !window.google?.maps) {
       return;
     }
 
     console.log(`🗺️ Updating route with ${locations.length} points`);
 
-    // Supprimer les anciennes polylines
+    // Supprimer UNIQUEMENT les polylines du chemin parcouru (pas la polyline de route)
     polylinesRef.current.forEach((polyline) => polyline.setMap(null));
     polylinesRef.current = [];
+
+    // Si pas de locations, on affiche quand même les marqueurs de départ/arrivée et la route
+    if (locations.length === 0) {
+      console.log('[RealTimeRouteTracker] No locations yet, but showing departure/arrival markers and route');
+      
+      // Ajuster la vue pour afficher départ et arrivée
+      const bounds = new google.maps.LatLngBounds();
+      if (mission.adresseDepart) {
+        bounds.extend({
+          lat: Number(mission.adresseDepart.latitude),
+          lng: Number(mission.adresseDepart.longitude),
+        });
+      }
+      if (mission.adresseArrivee) {
+        bounds.extend({
+          lat: Number(mission.adresseArrivee.latitude),
+          lng: Number(mission.adresseArrivee.longitude),
+        });
+      }
+      if (!bounds.isEmpty()) {
+        mapRef.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+      }
+      return;
+    }
 
     // Créer le chemin à partir des positions
     const path = locations.map((loc) => ({

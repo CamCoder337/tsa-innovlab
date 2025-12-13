@@ -8,6 +8,13 @@ import missionTrackingService, { type LocationUpdate } from '@/services/mission-
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+// Interface pour les routes calculées
+interface RouteInfo {
+  path: google.maps.LatLng[];
+  distance: string;
+  duration: string;
+}
+
 interface LiveGPSTrackerProps {
   missionId: string;
   departureLocation?: { lat: number; lng: number };
@@ -33,7 +40,7 @@ export default function LiveGPSTracker({
   autoStart = true,
   updateInterval = 5000,
 }: LiveGPSTrackerProps) {
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   });
 
@@ -41,8 +48,80 @@ export default function LiveGPSTracker({
   const [isTracking, setIsTracking] = useState(autoStart);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [plannedRoute, setPlannedRoute] = useState<RouteInfo | null>(null); // Route départ → arrivée
+  const [currentToDestRoute, setCurrentToDestRoute] = useState<RouteInfo | null>(null); // Position actuelle → arrivée
+  const [routesLoading, setRoutesLoading] = useState(false);
   const stopPollingRef = useRef<(() => void) | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
+
+  // Fonction pour calculer une route
+  const calculateRoute = useCallback(
+    async (
+      origin: { lat: number; lng: number },
+      destination: { lat: number; lng: number }
+    ): Promise<RouteInfo | null> => {
+      if (!directionsServiceRef.current) return null;
+
+      return new Promise((resolve) => {
+        directionsServiceRef.current!.route(
+          {
+            origin: new google.maps.LatLng(origin.lat, origin.lng),
+            destination: new google.maps.LatLng(destination.lat, destination.lng),
+            travelMode: google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK && result) {
+              const route = result.routes[0];
+              const leg = route.legs[0];
+              resolve({
+                path: route.overview_path,
+                distance: leg.distance?.text || '',
+                duration: leg.duration?.text || '',
+              });
+            } else {
+              console.error('Erreur calcul route:', status);
+              resolve(null);
+            }
+          }
+        );
+      });
+    },
+    []
+  );
+
+  // Calculer la route planifiée (départ → arrivée)
+  const calculatePlannedRoute = useCallback(async () => {
+    if (!departureLocation || !arrivalLocation || !isLoaded) return;
+
+    setRoutesLoading(true);
+    try {
+      const route = await calculateRoute(departureLocation, arrivalLocation);
+      setPlannedRoute(route);
+    } catch (error) {
+      console.error('Erreur calcul route planifiée:', error);
+    } finally {
+      setRoutesLoading(false);
+    }
+  }, [departureLocation, arrivalLocation, isLoaded, calculateRoute]);
+
+  // Calculer la route depuis la position actuelle vers l'arrivée
+  const calculateCurrentToDestRoute = useCallback(async () => {
+    if (!arrivalLocation || !locations.length || !isLoaded) return;
+
+    const currentLocation = locations[0];
+    const currentPos = {
+      lat: currentLocation.latitude,
+      lng: currentLocation.longitude,
+    };
+
+    try {
+      const route = await calculateRoute(currentPos, arrivalLocation);
+      setCurrentToDestRoute(route);
+    } catch (error) {
+      console.error('Erreur calcul route actuelle:', error);
+    }
+  }, [arrivalLocation, locations, isLoaded, calculateRoute]);
 
   // Démarrer le polling
   const startPolling = useCallback(() => {
@@ -81,6 +160,20 @@ export default function LiveGPSTracker({
     stopPollingRef.current = cleanup;
   }, [missionId, updateInterval]);
 
+  // Initialiser le service de directions quand Google Maps est chargé
+  useEffect(() => {
+    if (isLoaded && !directionsServiceRef.current) {
+      directionsServiceRef.current = new google.maps.DirectionsService();
+    }
+  }, [isLoaded]);
+
+  // Calculer la route planifiée au chargement
+  useEffect(() => {
+    if (isLoaded && departureLocation && arrivalLocation) {
+      calculatePlannedRoute();
+    }
+  }, [isLoaded, departureLocation, arrivalLocation, calculatePlannedRoute]);
+
   // Charger les locations initiales
   useEffect(() => {
     let isMounted = true;
@@ -110,6 +203,13 @@ export default function LiveGPSTracker({
       isMounted = false;
     };
   }, [missionId]);
+
+  // Recalculer la route actuelle → destination quand la position change
+  useEffect(() => {
+    if (locations.length > 0) {
+      calculateCurrentToDestRoute();
+    }
+  }, [locations, calculateCurrentToDestRoute]);
 
   // Gérer le polling automatique
   useEffect(() => {
@@ -173,6 +273,27 @@ export default function LiveGPSTracker({
       }));
   };
 
+  if (loadError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Suivi GPS en Temps Réel</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground mb-2">
+              Impossible de charger la carte
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Vérifiez votre connexion internet ou contactez le support
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!isLoaded) {
     return (
       <Card>
@@ -180,7 +301,10 @@ export default function LiveGPSTracker({
           <CardTitle>Suivi GPS en Temps Réel</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
+          <div className="text-center py-8">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -201,6 +325,7 @@ export default function LiveGPSTracker({
               {locations.length} position{locations.length > 1 ? 's' : ''} enregistrée
               {locations.length > 1 ? 's' : ''}
               {lastUpdate && ` • Dernière mise à jour ${formatDistanceToNow(lastUpdate, { locale: fr, addSuffix: true })}`}
+              {routesLoading && ' • Calcul des itinéraires...'}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -224,6 +349,45 @@ export default function LiveGPSTracker({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Informations des routes */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Route planifiée */}
+          {plannedRoute && (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-2 w-6 bg-green-500 border-dashed" style={{ borderStyle: 'dashed', borderWidth: '1px 0' }} />
+                <h4 className="font-medium text-green-800">Route planifiée</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-green-600">Distance: {plannedRoute.distance}</p>
+                </div>
+                <div>
+                  <p className="text-green-600">Durée: {plannedRoute.duration}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Route actuelle */}
+          {currentToDestRoute && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-2 w-6 bg-orange-500" />
+                <h4 className="font-medium text-orange-800">Route actuelle</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-orange-600">Distance: {currentToDestRoute.distance}</p>
+                </div>
+                <div>
+                  <p className="text-orange-600">Durée: {currentToDestRoute.duration}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Informations position actuelle */}
         {currentLocation && (
           <div className="grid grid-cols-2 gap-4 rounded-lg border p-4 sm:grid-cols-4">
@@ -305,14 +469,39 @@ export default function LiveGPSTracker({
               />
             )}
 
+            {/* Route planifiée (départ → arrivée) */}
+            {plannedRoute && (
+              <Polyline
+                path={plannedRoute.path}
+                options={{
+                  strokeColor: '#10B981', // Vert pour la route planifiée
+                  strokeOpacity: 0.7,
+                  strokeWeight: 4,
+                  // Note: strokeDashArray n'est pas supporté par Google Maps Polyline
+                }}
+              />
+            )}
+
+            {/* Route actuelle (position → arrivée) */}
+            {currentToDestRoute && locations.length > 0 && (
+              <Polyline
+                path={currentToDestRoute.path}
+                options={{
+                  strokeColor: '#F59E0B', // Orange pour la route actuelle
+                  strokeOpacity: 0.8,
+                  strokeWeight: 5,
+                }}
+              />
+            )}
+
             {/* Polyline (chemin parcouru) */}
             {locations.length > 1 && (
               <Polyline
                 path={getPath()}
                 options={{
-                  strokeColor: '#4F46E5',
-                  strokeOpacity: 0.8,
-                  strokeWeight: 4,
+                  strokeColor: '#4F46E5', // Bleu pour le chemin parcouru
+                  strokeOpacity: 0.9,
+                  strokeWeight: 3,
                 }}
               />
             )}
@@ -320,7 +509,7 @@ export default function LiveGPSTracker({
         </div>
 
         {/* Légende */}
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center sm:gap-4">
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-green-500" />
             <span className="text-muted-foreground">Départ</span>
@@ -332,6 +521,14 @@ export default function LiveGPSTracker({
           <div className="flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-indigo-600" />
             <span className="text-muted-foreground">Position actuelle</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-0.5 w-6 bg-green-500 border-dashed border-t-2" style={{ borderStyle: 'dashed' }} />
+            <span className="text-muted-foreground">Route planifiée</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-6 bg-orange-500" />
+            <span className="text-muted-foreground">Route actuelle</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-0.5 w-6 bg-indigo-600" />

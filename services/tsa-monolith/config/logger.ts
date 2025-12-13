@@ -23,8 +23,10 @@ const loggerConfig = defineConfig({
                 messageFormat: '{msg}',
                 singleLine: true,
                 sync: true,
-                // Forcer l'encodage UTF-8
+                // Forcer l'encodage UTF-8 pour Windows
                 customPrettifiers: {},
+                // Utiliser des caractères ASCII simples pour éviter les problèmes d'encodage
+                hideObject: false,
               },
             },
     },
