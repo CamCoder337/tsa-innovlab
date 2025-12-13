@@ -8,7 +8,7 @@ from . import (
     visual_recognition,
     pricing_simple,
     chatbot,
-    intelligent_chatbot
+    kyc
 )
 
 __all__ = [
@@ -18,5 +18,5 @@ __all__ = [
     "visual_recognition",
     "pricing_simple",
     "chatbot",
-    "intelligent_chatbot"
+    "kyc"
 ]

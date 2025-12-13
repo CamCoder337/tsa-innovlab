@@ -177,14 +177,36 @@ async def get_conversation_history(
 ):
     """
     Get conversation history for a user
+    
+    🔒 SECURITY: Users can only access their own conversation history
+    conversation_id must match the authenticated user's ID
     """
     try:
+        # 🔒 SECURITY: Verify user can only access their own history
+        user_id = user.get('id') if user else None
+        
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
+        
+        # conversation_id must match user_id (enforced isolation)
+        if str(conversation_id) != str(user_id):
+            logger.warning(f"🚨 SECURITY: User {user_id} attempted to access conversation {conversation_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only access your own conversation history"
+            )
+        
         history = chatbot_fc.get_history(conversation_id)
         return {
             "conversation_id": conversation_id,
             "messages": history,
             "count": len(history)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching conversation history: {e}")
         raise HTTPException(
