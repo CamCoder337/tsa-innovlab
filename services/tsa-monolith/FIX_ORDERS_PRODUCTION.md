@@ -58,6 +58,7 @@ node check_orders_tables.mjs
 ```
 
 **Migrations requises pour le système de commandes :**
+
 - `1759501000000_create_carts_table`
 - `1759502000000_create_cart_items_table`
 - `1759503000000_create_orders_table`
@@ -89,24 +90,28 @@ ls -la build/app/controllers/http/admin/orders_controller.js
 Après avoir corrigé les migrations et/ou le build, **REDÉMARRER le serveur** :
 
 #### Si vous utilisez PM2 :
+
 ```bash
 pm2 restart tsa-monolith
 pm2 logs tsa-monolith --lines 50
 ```
 
 #### Si vous utilisez Docker :
+
 ```bash
 docker-compose restart tsa-monolith
 docker-compose logs -f tsa-monolith --tail=50
 ```
 
 #### Si vous utilisez systemd :
+
 ```bash
 sudo systemctl restart tsa-monolith
 sudo journalctl -u tsa-monolith -f
 ```
 
 #### Si vous lancez directement avec node :
+
 ```bash
 # Arrêter le processus actuel (Ctrl+C ou kill)
 pkill -f "node.*server.js"
@@ -121,6 +126,7 @@ node build/bin/server.js
 Une fois les corrections appliquées et le serveur redémarré :
 
 ### 1. Test de la route Health
+
 ```bash
 curl https://votre-domaine.com/health
 
@@ -128,6 +134,7 @@ curl https://votre-domaine.com/health
 ```
 
 ### 2. Test de la route Orders (avec authentification)
+
 ```bash
 # Récupérer un token admin
 TOKEN=$(curl -X POST https://votre-domaine.com/api/auth/login \
@@ -143,7 +150,9 @@ curl https://votre-domaine.com/api/admin/orders \
 ```
 
 ### 3. Test depuis le frontend
+
 Ouvrez votre application frontend et :
+
 - ✅ Connectez-vous en tant qu'admin
 - ✅ Accédez à la page "Gestion des Commandes"
 - ✅ Vérifiez que les commandes s'affichent (même si vide)
@@ -235,11 +244,13 @@ pm2 logs tsa-monolith --err --lines 100
 Si vous êtes bloqué :
 
 1. **Partagez la sortie du diagnostic** :
+
    ```bash
    node check_orders_tables.mjs > diagnostic.txt 2>&1
    ```
 
 2. **Partagez les logs du serveur** :
+
    ```bash
    # Docker
    docker-compose logs tsa-monolith --tail=100 > logs.txt 2>&1

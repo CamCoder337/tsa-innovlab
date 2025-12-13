@@ -56,9 +56,7 @@ export default class DocumentVerificationService {
     }
 
     // Récupérer ou créer le statut de vérification
-    let verificationStatus = await UserVerificationStatus.query()
-      .where('user_id', userId)
-      .first()
+    let verificationStatus = await UserVerificationStatus.query().where('user_id', userId).first()
 
     if (!verificationStatus) {
       verificationStatus = await UserVerificationStatus.create({
@@ -88,9 +86,7 @@ export default class DocumentVerificationService {
   /**
    * Calcule et met à jour le statut de vérification d'un véhicule
    */
-  async calculateVehicleVerificationStatus(
-    vehicleId: string
-  ): Promise<VehicleVerificationStatus> {
+  async calculateVehicleVerificationStatus(vehicleId: string): Promise<VehicleVerificationStatus> {
     const vehicle = await Vehicle.findOrFail(vehicleId)
 
     // Récupérer les types de documents requis pour le type de véhicule
@@ -98,9 +94,7 @@ export default class DocumentVerificationService {
     const requiredCount = requiredDocuments.length
 
     // Récupérer tous les documents du véhicule
-    const documents = await Document.query()
-      .where('vehicle_id', vehicleId)
-      .preload('documentType')
+    const documents = await Document.query().where('vehicle_id', vehicleId).preload('documentType')
 
     // Compter les documents par statut
     const submittedCount = documents.length
@@ -159,8 +153,7 @@ export default class DocumentVerificationService {
       })
     } else {
       vehicleStatus.verificationStatus = verificationStatus
-      vehicleStatus.verifiedAt =
-        verificationStatus === KycStatus.VALIDATED ? verifiedAt : null
+      vehicleStatus.verifiedAt = verificationStatus === KycStatus.VALIDATED ? verifiedAt : null
       vehicleStatus.documentsRequiredCount = requiredCount
       vehicleStatus.documentsSubmittedCount = submittedCount
       vehicleStatus.documentsValidatedCount = validatedCount
@@ -198,11 +191,7 @@ export default class DocumentVerificationService {
   /**
    * Valide un document (action admin)
    */
-  async validateDocument(
-    documentId: string,
-    adminId: string,
-    notes?: string
-  ): Promise<Document> {
+  async validateDocument(documentId: string, adminId: string, notes?: string): Promise<Document> {
     const document = await Document.findOrFail(documentId)
 
     if (document.status !== DocumentStatus.PENDING) {
@@ -280,11 +269,7 @@ export default class DocumentVerificationService {
   /**
    * Rejette un document (action admin)
    */
-  async rejectDocument(
-    documentId: string,
-    adminId: string,
-    reason: string
-  ): Promise<Document> {
+  async rejectDocument(documentId: string, adminId: string, reason: string): Promise<Document> {
     const document = await Document.findOrFail(documentId)
 
     if (document.status !== DocumentStatus.PENDING) {
@@ -428,10 +413,7 @@ export default class DocumentVerificationService {
     const documents30Days = await Document.query()
       .where('status', DocumentStatus.VALIDATED)
       .whereNotNull('expiration_date')
-      .whereBetween('expiration_date', [
-        now.toSQLDate()!,
-        now.plus({ days: 30 }).toSQLDate()!,
-      ])
+      .whereBetween('expiration_date', [now.toSQLDate()!, now.plus({ days: 30 }).toSQLDate()!])
       .whereNull('expiration_notified_at')
 
     for (const document of documents30Days) {

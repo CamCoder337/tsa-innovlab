@@ -56,9 +56,18 @@ export const updateDocumentValidator = vine.compile(
 export const searchDocumentsValidator = vine.compile(
   vine.object({
     status: vine.enum(['pending', 'validated', 'rejected', 'expired', 'replaced']).optional(),
-    documentTypeId: vine.string().uuid({ version: [4] }).optional(),
-    userId: vine.string().uuid({ version: [4] }).optional(),
-    vehicleId: vine.string().uuid({ version: [4] }).optional(),
+    documentTypeId: vine
+      .string()
+      .uuid({ version: [4] })
+      .optional(),
+    userId: vine
+      .string()
+      .uuid({ version: [4] })
+      .optional(),
+    vehicleId: vine
+      .string()
+      .uuid({ version: [4] })
+      .optional(),
     page: vine.number().positive().optional(),
     limit: vine.number().positive().max(100).optional(),
   })
