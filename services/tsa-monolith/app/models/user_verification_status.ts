@@ -13,6 +13,8 @@ export enum KycStatus {
 }
 
 export default class UserVerificationStatus extends BaseModel {
+  static table = 'user_verification_status'
+
   @column({ isPrimary: true })
   declare id: string
 

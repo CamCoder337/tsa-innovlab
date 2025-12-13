@@ -5,6 +5,8 @@ import Vehicle from '#models/vehicle'
 import { KycStatus } from '#models/user_verification_status'
 
 export default class VehicleVerificationStatus extends BaseModel {
+  static table = 'vehicle_verification_status'
+
   @column({ isPrimary: true })
   declare id: string
 

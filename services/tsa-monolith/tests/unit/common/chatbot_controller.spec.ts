@@ -1,10 +1,53 @@
 import { test } from '@japa/runner'
 import Database from '@adonisjs/lucid/services/db'
 import User, { UserRole, UserStatus } from '#models/user'
+import AIService from '#services/ai_service'
+import sinon from 'sinon'
+import app from '@adonisjs/core/services/app'
 
 test.group('Chatbot Controller', (group) => {
   let testUser: User
   let userToken: string
+  let aiServiceStub: sinon.SinonStubbedInstance<AIService>
+
+  group.setup(async () => {
+    // ✅ CORRECTION: Pas besoin d'importer start/app, utiliser app service directement
+    await app.init()
+
+    // Create AI service stub
+    aiServiceStub = sinon.createStubInstance(AIService)
+
+    // Mock chatbot query method
+    aiServiceStub.queryChatbot.resolves({
+      message: 'Bonjour! Comment puis-je vous aider?',
+      intent: {
+        name: 'greeting',
+        confidence: 0.95,
+        entities: {}, // ✅ Champ requis
+      },
+      suggestions: ['Suivre mon colis', 'Créer une mission', 'Voir les tarifs'],
+      requires_human: false, // ✅ Champ requis
+      timestamp: new Date().toISOString(), // ✅ Champ requis
+    })
+
+    // Mock get conversation history
+    aiServiceStub.getChatbotHistory.resolves({
+      success: true,
+      messages: [],
+    })
+
+    // Mock chatbot health (retourne un boolean)
+    aiServiceStub.checkChatbotHealth.resolves(true)
+
+    // ✅ Swap the AI service with our stub in the container
+    app.container.swap(AIService, () => aiServiceStub as any)
+  })
+
+  group.teardown(async () => {
+    // ✅ Restore original AI service
+    app.container.restore(AIService)
+    sinon.restore()
+  })
 
   group.each.setup(async () => {
     await Database.beginGlobalTransaction()
@@ -34,16 +77,15 @@ test.group('Chatbot Controller', (group) => {
       message: 'Bonjour',
     })
 
-    // Should return 200 or 503 (if AI service is down)
-    assert.oneOf(response.status(), [200, 503])
+    response.assertStatus(200)
+    assert.properties(response.body(), ['success', 'message', 'intent', 'suggestions'])
+    assert.isTrue(response.body().success)
+    assert.isString(response.body().message)
+    assert.isObject(response.body().intent)
+    assert.isArray(response.body().suggestions)
 
-    if (response.status() === 200) {
-      assert.properties(response.body(), ['success', 'message', 'intent', 'suggestions'])
-      assert.isTrue(response.body().success)
-      assert.isString(response.body().message)
-      assert.isObject(response.body().intent)
-      assert.isArray(response.body().suggestions)
-    }
+    // Verify AI service was called
+    sinon.assert.calledOnce(aiServiceStub.queryChatbot)
   })
 
   test('should reject empty message', async ({ client, assert }) => {
@@ -76,24 +118,41 @@ test.group('Chatbot Controller', (group) => {
       .get(`/api/common/chatbot/history/${testUser.id}`)
       .bearerToken(userToken)
 
-    // Should return 200 or 503 (if AI service is down)
-    assert.oneOf(response.status(), [200, 503])
+    response.assertStatus(200)
+    assert.properties(response.body(), ['success'])
+    assert.isTrue(response.body().success)
 
-    if (response.status() === 200) {
-      assert.properties(response.body(), ['success'])
-      assert.isTrue(response.body().success)
-    }
+    // Verify AI service was called
+    sinon.assert.calledOnce(aiServiceStub.getChatbotHistory)
   })
 
   test('should check chatbot health', async ({ client, assert }) => {
-    const response = await client.get('/api/common/chatbot/health')
+    const response = await client.get('/api/common/chatbot/health').bearerToken(userToken)
 
-    // Should return 200 or 503 (if AI service is down)
-    assert.oneOf(response.status(), [200, 503])
-    assert.properties(response.body(), ['success', 'status'])
+    response.assertStatus(200)
+    // Le contrôleur retourne { success: boolean, healthy: boolean }
+    assert.properties(response.body(), ['success', 'healthy'])
+    assert.isTrue(response.body().success)
+    assert.isTrue(response.body().healthy)
+
+    // Verify AI service was called
+    sinon.assert.calledOnce(aiServiceStub.checkChatbotHealth)
   })
 
   test('should handle complex queries', async ({ client, assert }) => {
+    // Configure stub for pricing query
+    aiServiceStub.queryChatbot.resolves({
+      message: 'Le tarif pour un transport de Douala à Yaoundé pour 500kg est environ 50,000 FCFA.',
+      intent: {
+        name: 'pricing',
+        confidence: 0.92,
+        entities: { weight: '500kg', origin: 'Douala', destination: 'Yaoundé' },
+      },
+      suggestions: ['Créer une mission', 'Voir les transporteurs disponibles'],
+      requires_human: false,
+      timestamp: new Date().toISOString(),
+    })
+
     const response = await client
       .post('/api/common/chatbot/query')
       .bearerToken(userToken)
@@ -104,16 +163,10 @@ test.group('Chatbot Controller', (group) => {
         },
       })
 
-    assert.oneOf(response.status(), [200, 503])
-
-    if (response.status() === 200) {
-      assert.isTrue(response.body().success)
-      assert.isString(response.body().message)
-      // Should detect pricing intent
-      if (response.body().intent) {
-        assert.oneOf(response.body().intent.name, ['pricing', 'unknown'])
-      }
-    }
+    response.assertStatus(200)
+    assert.isTrue(response.body().success)
+    assert.isString(response.body().message)
+    assert.equal(response.body().intent.name, 'pricing')
   })
 
   test('should handle conversation context', async ({ client, assert }) => {
@@ -125,7 +178,8 @@ test.group('Chatbot Controller', (group) => {
       conversation_id: conversationId,
     })
 
-    assert.oneOf(response1.status(), [200, 503])
+    response1.assertStatus(200)
+    assert.isTrue(response1.body().success)
 
     // Second message in same conversation
     const response2 = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
@@ -133,10 +187,20 @@ test.group('Chatbot Controller', (group) => {
       conversation_id: conversationId,
     })
 
-    assert.oneOf(response2.status(), [200, 503])
+    response2.assertStatus(200)
+    assert.isTrue(response2.body().success)
+  })
 
-    if (response2.status() === 200) {
-      assert.isTrue(response2.body().success)
-    }
+  test('should handle AI service errors gracefully', async ({ client, assert }) => {
+    // Configure stub to throw error
+    aiServiceStub.queryChatbot.rejects(new Error('AI service unavailable'))
+
+    const response = await client.post('/api/common/chatbot/query').bearerToken(userToken).json({
+      message: 'Test error handling',
+    })
+
+    response.assertStatus(503)
+    assert.isFalse(response.body().success)
+    assert.include(response.body().message.toLowerCase(), 'unavailable')
   })
 })

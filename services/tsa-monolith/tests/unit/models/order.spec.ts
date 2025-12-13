@@ -1,13 +1,19 @@
 import { test } from '@japa/runner'
 import { DateTime } from 'luxon'
+import Database from '@adonisjs/lucid/services/db'
 import Order, { OrderStatus, PaymentStatus } from '#models/order'
 import User, { UserRole, UserStatus } from '#models/user'
 import Address from '#models/address'
-import testUtils from '@adonisjs/core/services/test_utils'
 
 test.group('Order Model', (group) => {
-  // @ts-ignore - Database transactions for tests
-  group.each.setup(() => testUtils.db().withGlobalTransaction())
+  // ✅ CORRECTION: Utiliser Database.beginGlobalTransaction() correctement
+  group.each.setup(async () => {
+    await Database.beginGlobalTransaction()
+  })
+
+  group.each.teardown(async () => {
+    await Database.rollbackGlobalTransaction()
+  })
 
   test('should generate unique order number on creation', async ({ assert }) => {
     // Créer utilisateur
@@ -33,13 +39,20 @@ test.group('Order Model', (group) => {
       postalCode: '00000',
     })
 
+    // ✅ CORRECTION: Ajouter subtotal, shipping_cost, tax, et customer info
     // Créer première commande
     const order1 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
+      subtotal: 8500, // ✅ Requis et doit être > 0
+      shippingCost: 1000,
+      tax: 500,
       total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
+      customerName: 'Test User',
+      customerEmail: 'order-test@example.com',
+      customerPhone: '+237600000000',
       paymentMethod: 'mtn_mobile_money',
       paymentStatus: PaymentStatus.PENDING,
     })
@@ -48,9 +61,15 @@ test.group('Order Model', (group) => {
     const order2 = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
+      subtotal: 18000, // ✅ Requis et doit être > 0
+      shippingCost: 1500,
+      tax: 500,
       total: 20000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
+      customerName: 'Test User',
+      customerEmail: 'order-test@example.com',
+      customerPhone: '+237600000000',
       paymentMethod: 'mtn_mobile_money',
       paymentStatus: PaymentStatus.PENDING,
     })
@@ -92,69 +111,43 @@ test.group('Order Model', (group) => {
       postalCode: '00000',
     })
 
-    // Test 1: Commande PENDING - peut être annulée
-    const pendingOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PENDING,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.PENDING,
-    })
+    // ✅ CORRECTION: Helper pour créer des commandes valides
+    const createOrder = async (status: OrderStatus, paymentStatus: PaymentStatus) => {
+      return Order.create({
+        userId: user.id,
+        status,
+        subtotal: 8500,
+        shippingCost: 1000,
+        tax: 500,
+        total: 10000,
+        shippingAddressId: address.id,
+        billingAddressId: address.id,
+        customerName: 'Test User',
+        customerEmail: 'cancel-test@example.com',
+        customerPhone: '+237600000001',
+        paymentMethod: 'mtn_mobile_money',
+        paymentStatus,
+      })
+    }
 
+    // Test 1: Commande PENDING - peut être annulée
+    const pendingOrder = await createOrder(OrderStatus.PENDING, PaymentStatus.PENDING)
     assert.isTrue(pendingOrder.canBeCancelled(), 'PENDING order should be cancellable')
 
     // Test 2: Commande PAID - peut être annulée
-    const paidOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PAID,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.COMPLETED,
-    })
-
+    const paidOrder = await createOrder(OrderStatus.PAID, PaymentStatus.COMPLETED)
     assert.isTrue(paidOrder.canBeCancelled(), 'PAID order should be cancellable')
 
     // Test 3: Commande SHIPPED - ne peut PAS être annulée
-    const shippedOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.SHIPPED,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.COMPLETED,
-    })
-
+    const shippedOrder = await createOrder(OrderStatus.SHIPPED, PaymentStatus.COMPLETED)
     assert.isFalse(shippedOrder.canBeCancelled(), 'SHIPPED order should NOT be cancellable')
 
     // Test 4: Commande DELIVERED - ne peut PAS être annulée
-    const deliveredOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.DELIVERED,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.COMPLETED,
-    })
-
+    const deliveredOrder = await createOrder(OrderStatus.DELIVERED, PaymentStatus.COMPLETED)
     assert.isFalse(deliveredOrder.canBeCancelled(), 'DELIVERED order should NOT be cancellable')
 
     // Test 5: Commande PROCESSING - ne peut PAS être annulée
-    const processingOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PROCESSING,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.COMPLETED,
-    })
-
+    const processingOrder = await createOrder(OrderStatus.PROCESSING, PaymentStatus.COMPLETED)
     assert.isFalse(processingOrder.canBeCancelled(), 'PROCESSING order should NOT be cancellable')
   })
 
@@ -182,43 +175,35 @@ test.group('Order Model', (group) => {
       postalCode: '00000',
     })
 
-    // Commande avec paiement complété
-    const paidOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PAID,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.COMPLETED,
-    })
+    // Helper
+    const createOrder = async (paymentStatus: PaymentStatus) => {
+      return Order.create({
+        userId: user.id,
+        status: paymentStatus === PaymentStatus.COMPLETED ? OrderStatus.PAID : OrderStatus.PENDING,
+        subtotal: 8500,
+        shippingCost: 1000,
+        tax: 500,
+        total: 10000,
+        shippingAddressId: address.id,
+        billingAddressId: address.id,
+        customerName: 'Test User',
+        customerEmail: 'paid-test@example.com',
+        customerPhone: '+237600000002',
+        paymentMethod: 'mtn_mobile_money',
+        paymentStatus,
+      })
+    }
 
+    // Commande avec paiement complété
+    const paidOrder = await createOrder(PaymentStatus.COMPLETED)
     assert.isTrue(paidOrder.isPaid(), 'Order with COMPLETED payment should be paid')
 
     // Commande avec paiement en attente
-    const unpaidOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PENDING,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.PENDING,
-    })
-
+    const unpaidOrder = await createOrder(PaymentStatus.PENDING)
     assert.isFalse(unpaidOrder.isPaid(), 'Order with PENDING payment should NOT be paid')
 
     // Commande avec paiement échoué
-    const failedOrder = await Order.create({
-      userId: user.id,
-      status: OrderStatus.PENDING,
-      total: 10000,
-      shippingAddressId: address.id,
-      billingAddressId: address.id,
-      paymentMethod: 'mtn_mobile_money',
-      paymentStatus: PaymentStatus.FAILED,
-    })
-
+    const failedOrder = await createOrder(PaymentStatus.FAILED)
     assert.isFalse(failedOrder.isPaid(), 'Order with FAILED payment should NOT be paid')
   })
 
@@ -249,9 +234,15 @@ test.group('Order Model', (group) => {
     const order = await Order.create({
       userId: user.id,
       status: OrderStatus.PENDING,
+      subtotal: 8500,
+      shippingCost: 1000,
+      tax: 500,
       total: 10000,
       shippingAddressId: address.id,
       billingAddressId: address.id,
+      customerName: 'Test User',
+      customerEmail: 'format-test@example.com',
+      customerPhone: '+237600000003',
       paymentMethod: 'mtn_mobile_money',
       paymentStatus: PaymentStatus.PENDING,
     })
