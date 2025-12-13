@@ -3,6 +3,8 @@ import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import Mission from '#models/mission'
+import Document from '#models/document'
+import VehicleVerificationStatus from '#models/vehicle_verification_status'
 
 export enum VehicleType {
   TRUCK = 'truck', // Camion (poids lourd)
@@ -49,6 +51,12 @@ export default class Vehicle extends BaseModel {
 
   @hasMany(() => Mission, { foreignKey: 'vehicleId' })
   declare missions: HasMany<typeof Mission>
+
+  @hasMany(() => Document, { foreignKey: 'vehicleId' })
+  declare documents: HasMany<typeof Document>
+
+  @hasMany(() => VehicleVerificationStatus, { foreignKey: 'vehicleId' })
+  declare verificationStatuses: HasMany<typeof VehicleVerificationStatus>
 
   /**
    * Vérifie si le véhicule est disponible pour une nouvelle mission

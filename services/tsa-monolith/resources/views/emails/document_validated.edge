@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Document validé
+    </title>
+  </head>
+  <body
+    style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;"
+  >
+    <div
+      style="background-color: #28a745; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;"
+    >
+      <h1 style="margin: 0;">
+        ✅ Document validé
+      </h1>
+      <p style="margin: 10px 0 0 0; font-size: 18px;">
+        Félicitations !
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 0 0 5px 5px;">
+      <p>
+        Bonjour <strong>{{ user.firstName }} {{ user.lastName }}</strong>,
+      </p>
+
+      <p>
+        Bonne nouvelle ! Votre document <strong>{{ documentType.labelFr }}</strong>a été validé avec succès.
+      </p>
+
+      <div
+        style="background-color: #d4edda; padding: 15px; margin: 20px 0; border-left: 4px solid #28a745; border-radius: 3px;"
+      >
+        <p style="margin: 0; color: #155724;">
+          <strong>✓ Validation confirmée</strong>
+        </p>
+        <p style="margin: 10px 0 0 0; color: #155724;">
+          Votre document a été vérifié et approuvé par notre équipe.
+        </p>
+      </div>
+
+      <div
+        style="background-color: white; padding: 15px; margin: 20px 0; border-left: 4px solid #dee2e6; border-radius: 3px;"
+      >
+        <p style="margin: 0;">
+          <strong>Détails :</strong>
+        </p>
+        <ul style="margin: 10px 0;">
+          <li>
+            Type de document : {{ documentType.labelFr }}
+          </li>
+          <li>
+            Date de validation : {{ validatedAt.toFormat('dd/MM/yyyy à HH:mm') }}
+          </li>
+          @if(document.expirationDate)
+            <li>
+              Valide jusqu'au : {{ document.expirationDate.toFormat('dd/MM/yyyy') }}
+            </li>
+          @end
+          <li>
+            Statut : <span style="color: #28a745; font-weight: bold;">VALIDÉ</span>
+          </li>
+        </ul>
+      </div>
+
+      @if(document.expirationDate)
+        <p
+          style="font-size: 14px; color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 3px;"
+        >
+          💡 <strong>Rappel :</strong>Ce document expire le {{ document.expirationDate.toFormat('dd/MM/yyyy') }}. Vous recevrez un rappel avant son expiration.
+        </p>
+      @end
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a
+          href="{{ env('FRONTEND_URL') }}/documents"
+          style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;"
+        >
+          Voir mes documents
+      </a>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;" />
+
+      <p style="font-size: 12px; color: #6c757d;">
+        Merci de maintenir vos documents à jour !
+      </p>
+
+      <p style="font-size: 12px; color: #6c757d;">
+        Cordialement,<br />
+        L'équipe TSA Logistics
+      </p>
+    </div>
+  </body>
+</html>

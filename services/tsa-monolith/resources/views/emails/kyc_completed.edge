@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Vérification KYC complète
+    </title>
+  </head>
+  <body
+    style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;"
+  >
+    <div
+      style="background-color: #28a745; color: white; padding: 30px; text-align: center; border-radius: 5px 5px 0 0;"
+    >
+      <h1 style="margin: 0; font-size: 32px;">
+        🎉 Félicitations !
+      </h1>
+      <p style="margin: 15px 0 0 0; font-size: 20px;">
+        Votre vérification KYC est complète
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; padding: 30px; border-radius: 0 0 5px 5px;">
+      <p style="font-size: 18px;">
+        Bonjour <strong>{{ user.firstName }} {{ user.lastName }}</strong>,
+      </p>
+
+      <p style="font-size: 16px;">
+        Excellente nouvelle ! Tous vos documents ont été vérifiés et validés avec succès.
+      </p>
+
+      <div
+        style="background-color: #d4edda; padding: 20px; margin: 25px 0; border-left: 4px solid #28a745; border-radius: 3px; text-align: center;"
+      >
+        <p style="margin: 0; color: #155724; font-size: 24px; font-weight: bold;">
+          ✓ COMPTE VÉRIFIÉ
+        </p>
+        <p style="margin: 10px 0 0 0; color: #155724; font-size: 14px;">
+          Votre profil est maintenant complet et actif
+        </p>
+      </div>
+
+      <div
+        style="background-color: white; padding: 20px; margin: 25px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+      >
+        <p style="margin: 0 0 15px 0;">
+          <strong style="font-size: 16px;">Vous pouvez maintenant :</strong>
+        </p>
+        <ul style="margin: 0; padding-left: 20px; line-height: 2;">
+          <li>
+            ✓ Accéder à toutes les fonctionnalités de la plateforme
+          </li>
+          <li>
+            ✓ Créer et gérer vos missions de transport
+          </li>
+          <li>
+            ✓ Profiter pleinement de nos services
+          </li>
+        </ul>
+      </div>
+
+      <p
+        style="background-color: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 3px; border-left: 4px solid #17a2b8;"
+      >
+        💡 <strong>Rappel important :</strong>Pensez à mettre à jour vos documents avant leur expiration pour maintenir votre compte actif.
+      </p>
+
+      <div style="text-align: center; margin: 35px 0;">
+        <a
+          href="{{ env('FRONTEND_URL') }}/dashboard"
+          style="background-color: #28a745; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-size: 16px; font-weight: bold;"
+        >
+          Accéder à mon tableau de bord
+      </a>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;" />
+
+      <p style="font-size: 14px; color: #6c757d; text-align: center;">
+        Merci de votre confiance et bienvenue sur TSA Logistics !
+      </p>
+
+      <p style="font-size: 12px; color: #6c757d; text-align: center;">
+        Cordialement,<br />
+        L'équipe TSA Logistics
+      </p>
+    </div>
+  </body>
+</html>

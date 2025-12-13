@@ -118,6 +118,38 @@ router
   })
   .prefix('/api/auth')
 
+// ===== ROUTES DOCUMENTS (Utilisateurs authentifiés) =====
+router
+  .group(() => {
+    // Documents personnels
+    router.get('/documents', '#controllers/documents_controller.index')
+    router.post('/documents', '#controllers/documents_controller.store')
+    router.get(
+      '/documents/verification-status',
+      '#controllers/documents_controller.verificationStatus'
+    )
+    router.get('/documents/required', '#controllers/documents_controller.required')
+    router.get('/documents/:id', '#controllers/documents_controller.show')
+    router.put('/documents/:id', '#controllers/documents_controller.update')
+    router.delete('/documents/:id', '#controllers/documents_controller.destroy')
+
+    // Documents véhicules
+    router.get(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/documents_controller.vehicleDocuments'
+    )
+    router.post(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/documents_controller.storeVehicleDocument'
+    )
+    router.get(
+      '/vehicles/:vehicleId/verification-status',
+      '#controllers/documents_controller.vehicleVerificationStatus'
+    )
+  })
+  .prefix('/api')
+  .middleware(middleware.auth())
+
 // ===== ROUTES ADMIN =====
 router
   .group(() => {
@@ -188,6 +220,31 @@ router
     router.get('/feedbacks', '#controllers/http/admin/feedbacks_controller.index')
     router.get('/feedbacks/stats', '#controllers/http/admin/feedbacks_controller.stats')
     router.get('/feedbacks/:id', '#controllers/http/admin/feedbacks_controller.show')
+
+    // Gestion des documents (Admin)
+    router.get('/documents', '#controllers/http/admin/documents_controller.index')
+    router.get('/documents/pending', '#controllers/http/admin/documents_controller.pending')
+    router.get('/documents/expiring', '#controllers/http/admin/documents_controller.expiring')
+    router.get('/documents/:id', '#controllers/http/admin/documents_controller.show')
+    router.post('/documents/:id/validate', '#controllers/http/admin/documents_controller.validate')
+    router.post('/documents/:id/reject', '#controllers/http/admin/documents_controller.reject')
+    router.get(
+      '/users/:userId/documents',
+      '#controllers/http/admin/documents_controller.userDocuments'
+    )
+    router.get(
+      '/users/:userId/verification-status',
+      '#controllers/http/admin/documents_controller.userVerificationStatus'
+    )
+    router.get(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/http/admin/documents_controller.vehicleDocuments'
+    )
+    router.get(
+      '/vehicles/:vehicleId/verification-status',
+      '#controllers/http/admin/documents_controller.vehicleVerificationStatus'
+    )
+    router.get('/verification-dashboard', '#controllers/http/admin/documents_controller.dashboard')
   })
   .prefix('/api/admin')
   .middleware([middleware.auth(), roleGuard(UserRole.ADMIN)])
