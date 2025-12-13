@@ -23,8 +23,23 @@ export const plugins: Config['plugins'] = [assert(), apiClient(), pluginAdonisJS
  * The teardown functions are executed after all the tests
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
-  teardown: [],
+  setup: [
+    async () => {
+      console.log('🔧 Running migrations...')
+      await testUtils.db().migrate()
+
+      console.log('🌱 Seeding reference data (document_types, etc.)...')
+      await testUtils.db().seed()
+
+      console.log('✅ Test database initialized')
+    },
+  ],
+  teardown: [
+    async () => {
+      console.log('🧹 Cleaning up test database...')
+      await testUtils.db().truncate()
+    },
+  ],
 }
 
 /**
@@ -34,10 +49,26 @@ export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
 export const configureSuite: Config['configureSuite'] = (suite) => {
   if (['browser', 'functional', 'e2e'].includes(suite.name)) {
     return suite.setup(() => testUtils.httpServer().start())
+    // Pas de truncate ici - on utilise les transactions par test
   }
 
-  // Start HTTP server for unit tests that test controllers (making HTTP requests)
+  // Configuration pour les tests unitaires
   if (suite.name === 'unit') {
     return suite.setup(() => testUtils.httpServer().start())
+    // Pas de truncate ici - on utilise les transactions par test
   }
 }
+
+/**
+ * IMPORTANT: Dans chaque fichier de test, utilisez:
+ *
+ * group.each.setup(async () => {
+ *   await Database.beginGlobalTransaction()
+ * })
+ *
+ * group.each.teardown(async () => {
+ *   await Database.rollbackGlobalTransaction()
+ * })
+ *
+ * Cela garantit l'isolation complète entre chaque test.
+ */

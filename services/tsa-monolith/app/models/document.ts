@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, column, belongsTo, hasMany, beforeCreate } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import DocumentType from '#models/document_type'
 import User from '#models/user'
@@ -17,6 +17,17 @@ export enum DocumentStatus {
 export default class Document extends BaseModel {
   @column({ isPrimary: true })
   declare id: string
+
+  /**
+   * Hook exécuté avant la création d'un document
+   * Initialise la version à 1 si elle n'est pas définie
+   */
+  @beforeCreate()
+  static assignVersion(document: Document) {
+    if (!document.version) {
+      document.version = 1
+    }
+  }
 
   @column({ columnName: 'document_type_id' })
   declare documentTypeId: string

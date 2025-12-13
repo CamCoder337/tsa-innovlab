@@ -13,8 +13,9 @@ test.group('DocumentType Model', (group) => {
   })
 
   test('should create a document type for users', async ({ assert }) => {
+    // ✅ CORRECTION: Utiliser des codes uniques avec timestamp pour éviter collisions avec seeds
     const docType = await DocumentType.create({
-      code: 'CNI',
+      code: `TEST_CNI_${Date.now()}`,
       labelFr: "Carte Nationale d'Identité",
       labelEn: 'National Identity Card',
       applicableTo: DocumentApplicableTo.USER,
@@ -30,7 +31,7 @@ test.group('DocumentType Model', (group) => {
     })
 
     assert.exists(docType.id)
-    assert.equal(docType.code, 'CNI')
+    assert.include(docType.code, 'TEST_CNI_')
     assert.equal(docType.applicableTo, DocumentApplicableTo.USER)
     assert.isTrue(docType.hasExpiration)
     assert.equal(docType.defaultValidityDays, 3650)
@@ -38,7 +39,7 @@ test.group('DocumentType Model', (group) => {
 
   test('should create a document type for vehicles', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'CARTE_GRISE',
+      code: `TEST_CARTE_GRISE_${Date.now()}`,
       labelFr: 'Carte Grise',
       labelEn: 'Vehicle Registration',
       applicableTo: DocumentApplicableTo.VEHICLE,
@@ -61,7 +62,7 @@ test.group('DocumentType Model', (group) => {
     assert,
   }) => {
     const docType = await DocumentType.create({
-      code: 'REGISTRE_COMMERCE',
+      code: `TEST_REGISTRE_${Date.now()}`,
       labelFr: 'Registre de Commerce',
       labelEn: 'Business Registration',
       applicableTo: DocumentApplicableTo.USER,
@@ -81,7 +82,7 @@ test.group('DocumentType Model', (group) => {
     assert,
   }) => {
     const docType = await DocumentType.create({
-      code: 'OPTIONAL_DOC',
+      code: `TEST_OPTIONAL_${Date.now()}`,
       labelFr: 'Document Optionnel',
       labelEn: 'Optional Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -98,7 +99,7 @@ test.group('DocumentType Model', (group) => {
     assert,
   }) => {
     const docType = await DocumentType.create({
-      code: 'ASSURANCE',
+      code: `TEST_ASSURANCE_${Date.now()}`,
       labelFr: 'Assurance Véhicule',
       labelEn: 'Vehicle Insurance',
       applicableTo: DocumentApplicableTo.VEHICLE,
@@ -119,7 +120,7 @@ test.group('DocumentType Model', (group) => {
     assert,
   }) => {
     const docType = await DocumentType.create({
-      code: 'OPTIONAL_VEHICLE_DOC',
+      code: `TEST_OPT_VEHICLE_${Date.now()}`,
       labelFr: 'Document Optionnel Véhicule',
       labelEn: 'Optional Vehicle Document',
       applicableTo: DocumentApplicableTo.VEHICLE,
@@ -134,7 +135,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getAllowedFormats() should return allowed file formats', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'TEST_DOC',
+      code: `TEST_FORMATS_${Date.now()}`,
       labelFr: 'Test Document',
       labelEn: 'Test Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -153,7 +154,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getAllowedFormats() should return empty array when no restrictions', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'TEST_DOC',
+      code: `TEST_NO_RESTRICT_${Date.now()}`,
       labelFr: 'Test Document',
       labelEn: 'Test Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -169,7 +170,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getMaxFileSizeMB() should return max file size', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'TEST_DOC',
+      code: `TEST_SIZE_${Date.now()}`,
       labelFr: 'Test Document',
       labelEn: 'Test Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -187,7 +188,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getMaxFileSizeMB() should return default 5MB when no restrictions', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'TEST_DOC',
+      code: `TEST_DEFAULT_SIZE_${Date.now()}`,
       labelFr: 'Test Document',
       labelEn: 'Test Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -202,7 +203,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getLabel() should return French label by default', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'CNI',
+      code: `TEST_LABEL_FR_${Date.now()}`,
       labelFr: "Carte Nationale d'Identité",
       labelEn: 'National Identity Card',
       applicableTo: DocumentApplicableTo.USER,
@@ -217,7 +218,7 @@ test.group('DocumentType Model', (group) => {
 
   test('getLabel() should return English label when specified', async ({ assert }) => {
     const docType = await DocumentType.create({
-      code: 'CNI',
+      code: `TEST_LABEL_EN_${Date.now()}`,
       labelFr: "Carte Nationale d'Identité",
       labelEn: 'National Identity Card',
       applicableTo: DocumentApplicableTo.USER,
@@ -237,7 +238,7 @@ test.group('DocumentType Model', (group) => {
     }
 
     const docType = await DocumentType.create({
-      code: 'CNI',
+      code: `TEST_RULES_${Date.now()}`,
       labelFr: "Carte Nationale d'Identité",
       labelEn: 'National Identity Card',
       applicableTo: DocumentApplicableTo.USER,
@@ -254,8 +255,9 @@ test.group('DocumentType Model', (group) => {
   })
 
   test('should support display order for sorting', async ({ assert }) => {
+    const timestamp = Date.now()
     const doc1 = await DocumentType.create({
-      code: 'DOC1',
+      code: `TEST_SORT1_${timestamp}`,
       labelFr: 'Document 1',
       labelEn: 'Document 1',
       applicableTo: DocumentApplicableTo.USER,
@@ -265,7 +267,7 @@ test.group('DocumentType Model', (group) => {
     })
 
     const doc2 = await DocumentType.create({
-      code: 'DOC2',
+      code: `TEST_SORT2_${timestamp}`,
       labelFr: 'Document 2',
       labelEn: 'Document 2',
       applicableTo: DocumentApplicableTo.USER,
@@ -275,7 +277,7 @@ test.group('DocumentType Model', (group) => {
     })
 
     const doc3 = await DocumentType.create({
-      code: 'DOC3',
+      code: `TEST_SORT3_${timestamp}`,
       labelFr: 'Document 3',
       labelEn: 'Document 3',
       applicableTo: DocumentApplicableTo.USER,
@@ -284,16 +286,22 @@ test.group('DocumentType Model', (group) => {
       displayOrder: 2,
     })
 
-    const sorted = await DocumentType.query().orderBy('display_order', 'asc')
+    // ✅ CORRECTION: Query uniquement nos documents de test
+    const sorted = await DocumentType.query()
+      .where('code', 'like', `TEST_SORT%${timestamp}`)
+      .orderBy('display_order', 'asc')
 
+    assert.lengthOf(sorted, 3)
     assert.equal(sorted[0].id, doc2.id)
     assert.equal(sorted[1].id, doc3.id)
     assert.equal(sorted[2].id, doc1.id)
   })
 
   test('should filter active document types', async ({ assert }) => {
+    const timestamp = Date.now()
+
     await DocumentType.create({
-      code: 'ACTIVE_DOC',
+      code: `TEST_ACTIVE_${timestamp}`,
       labelFr: 'Active Document',
       labelEn: 'Active Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -303,7 +311,7 @@ test.group('DocumentType Model', (group) => {
     })
 
     await DocumentType.create({
-      code: 'INACTIVE_DOC',
+      code: `TEST_INACTIVE_${timestamp}`,
       labelFr: 'Inactive Document',
       labelEn: 'Inactive Document',
       applicableTo: DocumentApplicableTo.USER,
@@ -312,12 +320,18 @@ test.group('DocumentType Model', (group) => {
       displayOrder: 2,
     })
 
-    const activeTypes = await DocumentType.query().where('is_active', true)
-    const inactiveTypes = await DocumentType.query().where('is_active', false)
+    // ✅ CORRECTION: Query uniquement nos documents de test
+    const activeTypes = await DocumentType.query()
+      .where('code', 'like', `TEST_%${timestamp}`)
+      .where('is_active', true)
+
+    const inactiveTypes = await DocumentType.query()
+      .where('code', 'like', `TEST_%${timestamp}`)
+      .where('is_active', false)
 
     assert.lengthOf(activeTypes, 1)
-    assert.equal(activeTypes[0].code, 'ACTIVE_DOC')
+    assert.equal(activeTypes[0].code, `TEST_ACTIVE_${timestamp}`)
     assert.lengthOf(inactiveTypes, 1)
-    assert.equal(inactiveTypes[0].code, 'INACTIVE_DOC')
+    assert.equal(inactiveTypes[0].code, `TEST_INACTIVE_${timestamp}`)
   })
 })
