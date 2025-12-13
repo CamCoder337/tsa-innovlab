@@ -85,18 +85,23 @@ export default class ChatbotController {
   /**
    * Get conversation history
    * GET /api/common/chatbot/history/:conversationId
+   * 
+   * 🔒 SECURITY: Users can only access their own conversation history
    */
   async history({ params, response, auth }: HttpContext) {
     try {
       const user = auth.getUserOrFail()
       const { conversationId } = params
 
-      // Ensure user can only access their own conversation
-      // In production, add proper authorization check
+      // 🔒 SECURITY: Ensure user can only access their own conversation
       if (conversationId !== user.id.toString()) {
-        logger.warn('User attempted to access another conversation', {
+        logger.warn('🚨 SECURITY: User attempted to access another conversation', {
           userId: user.id,
           requestedConversationId: conversationId,
+        })
+        return response.forbidden({
+          success: false,
+          message: 'You can only access your own conversation history',
         })
       }
 
