@@ -48,7 +48,9 @@ test.group('SOS Listener - Unit Tests', () => {
   test('MissionIssue isCritical helper should work correctly', async ({ assert }) => {
     // Simuler la logique du helper isCritical
     const isCritical = (isEmergency: boolean, type: IssueType): boolean => {
-      return isEmergency && [IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY].includes(type)
+      return (
+        isEmergency && [IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY].includes(type)
+      )
     }
 
     assert.isTrue(isCritical(true, IssueType.ACCIDENT))

@@ -30,7 +30,11 @@ export default class EmergenciesController {
 
     // Filtrer par statut
     if (status === 'active') {
-      query = query.whereIn('status', [IssueStatus.REPORTED, IssueStatus.ACKNOWLEDGED, IssueStatus.IN_PROGRESS])
+      query = query.whereIn('status', [
+        IssueStatus.REPORTED,
+        IssueStatus.ACKNOWLEDGED,
+        IssueStatus.IN_PROGRESS,
+      ])
     } else if (status && status !== 'all') {
       query = query.where('status', status)
     }
@@ -52,51 +56,61 @@ export default class EmergenciesController {
    * Statistiques des urgences
    */
   async stats({ response }: HttpContext) {
-    const [
-      totalActive,
-      criticalCount,
-      highCount,
-      resolvedToday,
-      avgResponseTime,
-    ] = await Promise.all([
-      // Urgences actives
-      MissionIssue.query()
-        .where('is_emergency', true)
-        .whereIn('status', [IssueStatus.REPORTED, IssueStatus.ACKNOWLEDGED, IssueStatus.IN_PROGRESS])
-        .count('* as count')
-        .first(),
-      
-      // Urgences critiques
-      MissionIssue.query()
-        .where('is_emergency', true)
-        .where('priority', IssuePriority.CRITICAL)
-        .whereIn('status', [IssueStatus.REPORTED, IssueStatus.ACKNOWLEDGED, IssueStatus.IN_PROGRESS])
-        .count('* as count')
-        .first(),
-      
-      // Urgences haute priorité
-      MissionIssue.query()
-        .where('is_emergency', true)
-        .where('priority', IssuePriority.HIGH)
-        .whereIn('status', [IssueStatus.REPORTED, IssueStatus.ACKNOWLEDGED, IssueStatus.IN_PROGRESS])
-        .count('* as count')
-        .first(),
-      
-      // Résolues aujourd'hui
-      MissionIssue.query()
-        .where('is_emergency', true)
-        .where('status', IssueStatus.RESOLVED)
-        .where('resolved_at', '>=', DateTime.now().startOf('day').toSQL())
-        .count('* as count')
-        .first(),
-      
-      // Temps de réponse moyen (en minutes)
-      db.from('mission_issues')
-        .where('is_emergency', true)
-        .whereNotNull('first_response_at')
-        .select(db.raw('AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 60) as avg_minutes'))
-        .first(),
-    ])
+    const [totalActive, criticalCount, highCount, resolvedToday, avgResponseTime] =
+      await Promise.all([
+        // Urgences actives
+        MissionIssue.query()
+          .where('is_emergency', true)
+          .whereIn('status', [
+            IssueStatus.REPORTED,
+            IssueStatus.ACKNOWLEDGED,
+            IssueStatus.IN_PROGRESS,
+          ])
+          .count('* as count')
+          .first(),
+
+        // Urgences critiques
+        MissionIssue.query()
+          .where('is_emergency', true)
+          .where('priority', IssuePriority.CRITICAL)
+          .whereIn('status', [
+            IssueStatus.REPORTED,
+            IssueStatus.ACKNOWLEDGED,
+            IssueStatus.IN_PROGRESS,
+          ])
+          .count('* as count')
+          .first(),
+
+        // Urgences haute priorité
+        MissionIssue.query()
+          .where('is_emergency', true)
+          .where('priority', IssuePriority.HIGH)
+          .whereIn('status', [
+            IssueStatus.REPORTED,
+            IssueStatus.ACKNOWLEDGED,
+            IssueStatus.IN_PROGRESS,
+          ])
+          .count('* as count')
+          .first(),
+
+        // Résolues aujourd'hui
+        MissionIssue.query()
+          .where('is_emergency', true)
+          .where('status', IssueStatus.RESOLVED)
+          .where('resolved_at', '>=', DateTime.now().startOf('day').toSQL())
+          .count('* as count')
+          .first(),
+
+        // Temps de réponse moyen (en minutes)
+        db
+          .from('mission_issues')
+          .where('is_emergency', true)
+          .whereNotNull('first_response_at')
+          .select(
+            db.raw('AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 60) as avg_minutes')
+          )
+          .first(),
+      ])
 
     return response.ok({
       success: true,
@@ -251,7 +265,7 @@ export default class EmergenciesController {
    */
   async resolve({ params, request, response, auth }: HttpContext) {
     const admin = auth.getUserOrFail()
-    const { resolution_notes } = request.only(['resolution_notes'])
+    const { resolutionNotes } = request.only(['resolutionNotes'])
 
     const issue = await MissionIssue.query()
       .where('id', params.id)
@@ -279,8 +293,8 @@ export default class EmergenciesController {
     if (!issue.handledById) {
       issue.handledById = admin.id
     }
-    if (resolution_notes) {
-      issue.description = `${issue.description}\n\n--- RÉSOLUTION ---\n${resolution_notes}`
+    if (resolutionNotes) {
+      issue.description = `${issue.description}\n\n--- RÉSOLUTION ---\n${resolutionNotes}`
     }
     await issue.save()
 

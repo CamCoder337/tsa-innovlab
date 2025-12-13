@@ -214,9 +214,18 @@ router
     router.get('/emergencies', '#controllers/http/admin/emergencies_controller.index')
     router.get('/emergencies/stats', '#controllers/http/admin/emergencies_controller.stats')
     router.get('/emergencies/:id', '#controllers/http/admin/emergencies_controller.show')
-    router.post('/emergencies/:id/acknowledge', '#controllers/http/admin/emergencies_controller.acknowledge')
-    router.post('/emergencies/:id/in-progress', '#controllers/http/admin/emergencies_controller.markInProgress')
-    router.post('/emergencies/:id/resolve', '#controllers/http/admin/emergencies_controller.resolve')
+    router.post(
+      '/emergencies/:id/acknowledge',
+      '#controllers/http/admin/emergencies_controller.acknowledge'
+    )
+    router.post(
+      '/emergencies/:id/in-progress',
+      '#controllers/http/admin/emergencies_controller.markInProgress'
+    )
+    router.post(
+      '/emergencies/:id/resolve',
+      '#controllers/http/admin/emergencies_controller.resolve'
+    )
 
     // Statistiques
     router.get('/stats/overview', '#controllers/http/admin/stats_controller.overview')

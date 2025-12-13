@@ -96,6 +96,9 @@ export default class MissionIssue extends BaseModel {
 
   // Helper pour déterminer si c'est une urgence critique
   get isCritical(): boolean {
-    return this.isEmergency && [IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY].includes(this.type)
+    return (
+      this.isEmergency &&
+      [IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY].includes(this.type)
+    )
   }
 }

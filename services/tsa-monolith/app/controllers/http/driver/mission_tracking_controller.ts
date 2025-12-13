@@ -177,7 +177,7 @@ export default class MissionTrackingController {
 
   /**
    * 🚨 SOS - Signaler une urgence
-   * 
+   *
    * Endpoint dédié aux situations d'urgence (accident, panne grave, problème médical, sécurité)
    * Crée automatiquement une conversation d'urgence et notifie les admins + affréteur
    */
@@ -198,7 +198,12 @@ export default class MissionTrackingController {
     ])
 
     // Validation du type d'urgence
-    const validTypes = [IssueType.BREAKDOWN, IssueType.ACCIDENT, IssueType.MEDICAL, IssueType.SECURITY]
+    const validTypes = [
+      IssueType.BREAKDOWN,
+      IssueType.ACCIDENT,
+      IssueType.MEDICAL,
+      IssueType.SECURITY,
+    ]
     if (!type || !validTypes.includes(type)) {
       return response.badRequest({
         success: false,

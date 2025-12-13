@@ -2,7 +2,7 @@ import type { EventsList } from '@adonisjs/core/types'
 
 /**
  * SOS Listener - Gère les alertes d'urgence
- * 
+ *
  * Workflow:
  * 1. Reçoit l'événement mission:sos_alert
  * 2. Broadcast aux admins connectés (WebSocket)
@@ -29,9 +29,8 @@ export default class SosListener {
       type: issue.type,
       priority: issue.priority,
       description: issue.description,
-      location: issue.latitude && issue.longitude 
-        ? { lat: issue.latitude, lng: issue.longitude }
-        : null,
+      location:
+        issue.latitude && issue.longitude ? { lat: issue.latitude, lng: issue.longitude } : null,
       transporteurId: mission.transporteurId,
       affreteurId: mission.affreteurId,
       conversationId: issue.emergencyConversationId,
@@ -39,9 +38,10 @@ export default class SosListener {
     }
 
     // 1. Broadcast à tous les admins connectés
-    const adminConnections = websocketService.getActiveConnections()
-      .filter(conn => conn.role === 'admin')
-    
+    const adminConnections = websocketService
+      .getActiveConnections()
+      .filter((conn) => conn.role === 'admin')
+
     console.log(`📡 Broadcasting SOS to ${adminConnections.length} admin(s)`)
 
     for (const admin of adminConnections) {
@@ -112,8 +112,9 @@ export default class SosListener {
     }
 
     // Notifier tous les admins (pour mettre à jour leur dashboard)
-    const adminConnections = websocketService.getActiveConnections()
-      .filter(conn => conn.role === 'admin')
+    const adminConnections = websocketService
+      .getActiveConnections()
+      .filter((conn) => conn.role === 'admin')
 
     for (const admin of adminConnections) {
       await websocketService.sendToUser(admin.userId, {
@@ -147,10 +148,7 @@ export default class SosListener {
     }
 
     // Notifier toutes les parties concernées
-    const userIds = [
-      mission.transporteurId,
-      mission.affreteurId,
-    ].filter(Boolean) as string[]
+    const userIds = [mission.transporteurId, mission.affreteurId].filter(Boolean) as string[]
 
     for (const userId of userIds) {
       await websocketService.sendToUser(userId, {
@@ -164,8 +162,9 @@ export default class SosListener {
     }
 
     // Notifier tous les admins
-    const adminConnections = websocketService.getActiveConnections()
-      .filter(conn => conn.role === 'admin')
+    const adminConnections = websocketService
+      .getActiveConnections()
+      .filter((conn) => conn.role === 'admin')
 
     for (const admin of adminConnections) {
       await websocketService.sendToUser(admin.userId, {

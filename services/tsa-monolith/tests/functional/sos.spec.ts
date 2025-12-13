@@ -9,7 +9,6 @@ import crypto from 'node:crypto'
 test.group('SOS API - Driver Endpoint', (group) => {
   let affreteur: User
   let transporteur: User
-  let mission: Mission
   let trackingToken: string
   let trackingPin: string
 
@@ -51,7 +50,7 @@ test.group('SOS API - Driver Endpoint', (group) => {
     trackingToken = crypto.randomBytes(32).toString('hex')
     trackingPin = '1234'
 
-    mission = await Mission.create({
+    await Mission.create({
       title: 'Mission SOS Test',
       description: 'Test mission for SOS',
       typeMarchandise: 'Electronics',
@@ -83,7 +82,7 @@ test.group('SOS API - Driver Endpoint', (group) => {
 
     response.assertStatus(201)
     response.assertBodyContains({ success: true })
-    
+
     const body = response.body()
     assert.exists(body.data.issue)
     assert.equal(body.data.issue.type, 'accident')
@@ -187,13 +186,11 @@ test.group('SOS API - Driver Endpoint', (group) => {
   })
 
   test('should reject SOS without authentication', async ({ client }) => {
-    const response = await client
-      .post(`/track/${trackingToken}/sos`)
-      .json({
-        type: 'accident',
-        latitude: 4.0511,
-        longitude: 9.7679,
-      })
+    const response = await client.post(`/track/${trackingToken}/sos`).json({
+      type: 'accident',
+      latitude: 4.0511,
+      longitude: 9.7679,
+    })
 
     response.assertStatus(401)
   })
@@ -335,7 +332,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
     response.assertStatus(200)
     const emergencies = response.body().data.data
     assert.isArray(emergencies)
-    
+
     // Toutes les urgences retournées doivent être actives
     emergencies.forEach((e: any) => {
       assert.include(['reported', 'acknowledged', 'in_progress'], e.status)
@@ -350,7 +347,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
 
     response.assertStatus(200)
     const emergencies = response.body().data.data
-    
+
     emergencies.forEach((e: any) => {
       assert.equal(e.priority, 1)
     })
@@ -366,7 +363,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
 
     response.assertStatus(200)
     response.assertBodyContains({ success: true })
-    
+
     const stats = response.body().data
     assert.exists(stats.active)
     assert.exists(stats.critical)
@@ -385,7 +382,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
 
     response.assertStatus(200)
     response.assertBodyContains({ success: true })
-    
+
     const emergency = response.body().data.emergency
     assert.equal(emergency.id, sosIssue.id)
     assert.equal(emergency.isEmergency, true)
@@ -410,7 +407,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
 
     response.assertStatus(200)
     response.assertBodyContains({ success: true })
-    
+
     const issue = response.body().data.issue
     assert.equal(issue.status, IssueStatus.ACKNOWLEDGED)
     assert.equal(issue.handledById, admin.id)
@@ -472,7 +469,7 @@ test.group('SOS API - Admin Endpoints', (group) => {
 
     response.assertStatus(200)
     response.assertBodyContains({ success: true })
-    
+
     const issue = response.body().data.issue
     assert.equal(issue.status, IssueStatus.RESOLVED)
     assert.exists(issue.resolvedAt)
