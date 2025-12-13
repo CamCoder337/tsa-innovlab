@@ -257,6 +257,78 @@ class DriverTrackingService {
     }
   }
 
+  /**
+   * 🚨 SOS - Signaler une urgence
+   * 
+   * Types d'urgence:
+   * - breakdown: Panne grave
+   * - accident: Accident de la route
+   * - medical: Urgence médicale
+   * - security: Problème de sécurité (agression, vol)
+   */
+  async reportSOS(
+    type: 'breakdown' | 'accident' | 'medical' | 'security',
+    description?: string
+  ): Promise<{ issueId: string; conversationId: number | null; emergencyContacts: Record<string, string> }> {
+    if (!this.trackingToken || !this.trackingPin) {
+      throw new Error('Not authenticated for SOS.');
+    }
+
+    // Obtenir la position GPS actuelle
+    let latitude: number | undefined;
+    let longitude: number | undefined;
+    
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      latitude = location.coords.latitude;
+      longitude = location.coords.longitude;
+    } catch (error) {
+      console.warn('Could not get GPS location for SOS:', error);
+      // On continue quand même - le backend retournera une erreur si GPS requis
+    }
+
+    try {
+      const url = `${API_BASE_URL}/track/${this.trackingToken}/sos`;
+      const payload = {
+        type,
+        description,
+        latitude,
+        longitude,
+      };
+
+      const response = await axios.post(url, payload, {
+        headers: {
+          'X-Tracking-Token': this.trackingToken,
+          'X-Tracking-Pin': this.trackingPin,
+        },
+        timeout: API_TIMEOUT,
+      });
+
+      console.log(`🚨 SOS sent: ${type}`);
+      
+      return {
+        issueId: response.data.data.issue.id,
+        conversationId: response.data.data.conversationId,
+        emergencyContacts: response.data.data.emergencyContacts,
+      };
+
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send SOS';
+      console.error('🚨 SOS error:', errorMessage);
+      
+      // Retourner les contacts d'urgence même en cas d'erreur
+      const emergencyContacts = error.response?.data?.emergencyContacts || {
+        police: '117',
+        samu: '119',
+        pompiers: '118',
+      };
+      
+      throw { message: errorMessage, emergencyContacts };
+    }
+  }
+
 
   /**
    * Valide seulement le QR code sans changer le statut de la mission

@@ -40,6 +40,7 @@ const Chat = lazy(() => import('./pages/ChatPage'));
 const Transactions = lazy(() => import('./pages/BillingPage'));
 const TrackingDashboardPage = lazy(() => import('./pages/tracking/TrackingDashboardPage'));
 const MissionTrackingPage = lazy(() => import('./pages/tracking/MissionTrackingPage'));
+const EmergenciesManagement = lazy(() => import('./pages/admin/EmergenciesManagement'));
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -329,6 +330,14 @@ function App() {
           element={
             <Suspense fallback={<LoadingFallback2 />}>
               <MissionTrackingPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="emergencies"
+          element={
+            <Suspense fallback={<LoadingFallback2 />}>
+              <EmergenciesManagement />
             </Suspense>
           }
         />

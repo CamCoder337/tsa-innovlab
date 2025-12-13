@@ -23,14 +23,24 @@ class ChatbotFunctionCallingService:
     """
     
     def __init__(self):
+        # Primary LLM config
         self.llm_api_key = settings.groq_api_key
         self.llm_model = settings.llm_model
         self.llm_base_url = "https://api.groq.com/openai/v1"
+        
+        # Fallback LLM config (second Groq account)
+        self.llm_api_key_fallback = settings.groq_api_key_fallback
+        self.llm_model_fallback = settings.llm_model_fallback
+        
         self.monolith_base_url = settings.monolith_api_url
         
         # Initialize PromptBuilderService for dynamic prompting
         from app.services.prompt_builder_service import PromptBuilderService
         self.prompt_builder = PromptBuilderService.get_instance()
+        
+        logger.info(f"🤖 Chatbot initialized with model: {self.llm_model}")
+        if self.llm_api_key_fallback:
+            logger.info(f"🔄 Fallback model available: {self.llm_model_fallback}")
         
         # Register available functions
         self.functions = self._register_functions()
@@ -53,9 +63,111 @@ class ChatbotFunctionCallingService:
             "total_queries": 0,
             "function_calls": {},  # Count per function
             "errors": 0,
+            "fallback_used": 0,
             "avg_response_time_ms": 0,
             "total_response_time_ms": 0
         }
+    
+    async def _call_llm_with_fallback(
+        self,
+        messages: List[Dict],
+        use_functions: bool = True,
+        client: httpx.AsyncClient = None
+    ) -> Dict[str, Any]:
+        """
+        Call LLM with automatic fallback to secondary API key/model
+        
+        Strategy:
+        1. Try primary key + model
+        2. If 400/429/500 error, try fallback key + model
+        3. Log detailed error info for debugging
+        
+        Returns:
+            Dict with 'success', 'data' or 'error', 'used_fallback'
+        """
+        configs = [
+            {"api_key": self.llm_api_key, "model": self.llm_model, "name": "primary"},
+        ]
+        
+        # Add fallback if configured
+        if self.llm_api_key_fallback:
+            configs.append({
+                "api_key": self.llm_api_key_fallback,
+                "model": self.llm_model_fallback,
+                "name": "fallback"
+            })
+        
+        should_close_client = client is None
+        if client is None:
+            client = httpx.AsyncClient(timeout=30.0)
+        
+        last_error = None
+        
+        try:
+            for config in configs:
+                try:
+                    payload = {
+                        "model": config["model"],
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 800
+                    }
+                    
+                    if use_functions:
+                        payload["functions"] = self.functions
+                        payload["function_call"] = "auto"
+                    
+                    logger.debug(f"🔄 Calling LLM ({config['name']}): {config['model']}")
+                    
+                    response = await client.post(
+                        f"{self.llm_base_url}/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {config['api_key']}",
+                            "Content-Type": "application/json"
+                        },
+                        json=payload
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        used_fallback = config["name"] == "fallback"
+                        if used_fallback:
+                            self.metrics["fallback_used"] += 1
+                            logger.info(f"✅ Fallback LLM succeeded with {config['model']}")
+                        return {
+                            "success": True,
+                            "data": data,
+                            "used_fallback": used_fallback,
+                            "model_used": config["model"]
+                        }
+                    
+                    # Log detailed error
+                    error_body = response.text
+                    logger.warning(
+                        f"❌ LLM {config['name']} error {response.status_code}: {error_body[:500]}"
+                    )
+                    last_error = f"{response.status_code}: {error_body[:200]}"
+                    
+                    # Only retry on certain errors
+                    if response.status_code not in [400, 429, 500, 502, 503]:
+                        break  # Don't retry on 401, 403, etc.
+                        
+                except httpx.TimeoutException as e:
+                    logger.warning(f"⏱️ LLM {config['name']} timeout: {e}")
+                    last_error = f"Timeout: {e}"
+                except Exception as e:
+                    logger.warning(f"❌ LLM {config['name']} exception: {e}")
+                    last_error = str(e)
+            
+            return {
+                "success": False,
+                "error": last_error or "All LLM attempts failed",
+                "used_fallback": len(configs) > 1
+            }
+            
+        finally:
+            if should_close_client:
+                await client.aclose()
     
     def _register_functions(self) -> List[Dict[str, Any]]:
         """
@@ -421,6 +533,9 @@ class ChatbotFunctionCallingService:
             # Build messages with conversation history
             messages = [{"role": "system", "content": system_prompt}]
             
+            # 🔒 SECURITY: Force conversation_id = user_id (same as process_message)
+            conv_id = user_id
+            
             # Add conversation history (context)
             if conv_id in self.conversation_memory:
                 history = self.conversation_memory[conv_id]
@@ -457,7 +572,7 @@ class ChatbotFunctionCallingService:
                 if response.status_code != 200:
                     yield {
                         "type": "error",
-                        "message": "Erreur lors de la communication avec le LLM"
+                        "message": "Problème temporaire. Réessaie dans un instant 🔄"
                     }
                     return
                 
@@ -593,8 +708,8 @@ class ChatbotFunctionCallingService:
             logger.error(f"Streaming error: {e}", exc_info=True)
             yield {
                 "type": "error",
-                "message": "Désolé, j'ai rencontré une erreur.",
-                "requires_human": True
+                "message": "Oups, quelque chose n'a pas fonctionné. Réessaie 🔄",
+                "requires_human": False
             }
     
     async def process_message(
@@ -636,8 +751,8 @@ class ChatbotFunctionCallingService:
             if not is_allowed:
                 logger.warning(f"Rate limit exceeded for user {user_id}")
                 return {
-                    "message": "Tu envoies trop de messages. Attends un peu avant de réessayer 😊",
-                    "suggestions": ["Attendre 1 minute", "Contacter le support"],
+                    "message": "Tu envoies trop de messages. Patiente quelques secondes avant de réessayer 😊",
+                    "suggestions": ["Réessayer", "Voir mes missions", "Voir le catalogue"],
                     "requires_human": False,
                     "rate_limited": True,
                     "timestamp": datetime.utcnow().isoformat()
@@ -666,31 +781,18 @@ class ChatbotFunctionCallingService:
             {"role": "user", "content": message}
         ]
         
-        # Call LLM API
+        # Call LLM API with fallback support
         try:
-            # Call LLM with function calling
+            # Call LLM with function calling (with automatic fallback)
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    f"{self.llm_base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.llm_api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": self.llm_model,
-                        "messages": messages,
-                        "functions": self.functions,
-                        "function_call": "auto",
-                        "temperature": 0.7,
-                        "max_tokens": 800
-                    }
-                )
+                llm_result = await self._call_llm_with_fallback(messages, use_functions=True, client=client)
                 
-                if response.status_code != 200:
-                    raise Exception(f"LLM API error: {response.status_code}")
+                if not llm_result["success"]:
+                    raise Exception(f"LLM API error: {llm_result['error']}")
                 
-                data = response.json()
+                data = llm_result["data"]
                 llm_message = data["choices"][0]["message"]
+                model_used = llm_result.get("model_used", self.llm_model)
                 
                 # Check if LLM wants to call a function
                 if llm_message.get("function_call"):
@@ -734,25 +836,16 @@ class ChatbotFunctionCallingService:
                             "content": json.dumps(function_result, ensure_ascii=False)
                         })
                         
-                        # Second LLM call: Generate natural response with results
-                        response2 = await client.post(
-                            f"{self.llm_base_url}/chat/completions",
-                            headers={
-                                "Authorization": f"Bearer {self.llm_api_key}",
-                                "Content-Type": "application/json"
-                            },
-                            json={
-                                "model": self.llm_model,
-                                "messages": messages,
-                                "temperature": 0.7,
-                                "max_tokens": 500
-                            }
+                        # Second LLM call: Generate natural response with results (with fallback)
+                        llm_result2 = await self._call_llm_with_fallback(
+                            messages, use_functions=False, client=client
                         )
                         
-                        if response2.status_code == 200:
-                            data2 = response2.json()
+                        if llm_result2["success"]:
+                            data2 = llm_result2["data"]
                             final_message = data2["choices"][0]["message"]["content"]
                         else:
+                            logger.warning(f"Second LLM call failed: {llm_result2['error']}")
                             final_message = "J'ai récupéré les données mais j'ai un problème pour te répondre."
                         
                         # Generate suggestions
@@ -811,8 +904,8 @@ class ChatbotFunctionCallingService:
             logger.error(f"Timeout error: {e}")
             self._track_metrics(0, None, success=False)
             return {
-                "message": "Le service met trop de temps à répondre. Réessaie dans quelques secondes 🕐",
-                "suggestions": ["Réessayer", "Simplifier la question", "Contacter le support"],
+                "message": "Le service met un peu de temps. Réessaie ou simplifie ta question 🕐",
+                "suggestions": ["Réessayer", "Simplifier la question", "Voir le menu"],
                 "requires_human": False,
                 "error_type": "timeout",
                 "timestamp": datetime.utcnow().isoformat()
@@ -821,8 +914,8 @@ class ChatbotFunctionCallingService:
             logger.error(f"HTTP error: {e}")
             self._track_metrics(0, None, success=False)
             return {
-                "message": "Problème de connexion avec le service IA. Réessaie dans un instant 🔌",
-                "suggestions": ["Réessayer", "Contacter le support"],
+                "message": "Problème de connexion temporaire. Réessaie dans un instant 🔌",
+                "suggestions": ["Réessayer", "Voir mes missions", "Voir le catalogue"],
                 "requires_human": False,
                 "error_type": "http_error",
                 "timestamp": datetime.utcnow().isoformat()
@@ -831,8 +924,8 @@ class ChatbotFunctionCallingService:
             logger.error(f"JSON decode error: {e}")
             self._track_metrics(0, None, success=False)
             return {
-                "message": "Erreur de traitement de la réponse. Reformule ta question 🔄",
-                "suggestions": ["Reformuler", "Réessayer", "Contacter le support"],
+                "message": "Je n'ai pas bien compris. Peux-tu reformuler ta question ? 🔄",
+                "suggestions": ["Reformuler", "Réessayer", "Voir le menu"],
                 "requires_human": False,
                 "error_type": "json_error",
                 "timestamp": datetime.utcnow().isoformat()
@@ -841,9 +934,9 @@ class ChatbotFunctionCallingService:
             logger.error(f"Unexpected error: {e}", exc_info=True)
             self._track_metrics(0, None, success=False)
             return {
-                "message": "Désolé, j'ai rencontré une erreur inattendue. Un agent va t'aider 🆘",
-                "suggestions": ["Contacter le support", "Réessayer plus tard"],
-                "requires_human": True,
+                "message": "Oups, quelque chose n'a pas fonctionné. Réessaie ou utilise le menu 📋",
+                "suggestions": ["Réessayer", "Voir mes missions", "Voir le catalogue"],
+                "requires_human": False,
                 "error_type": "unexpected",
                 "timestamp": datetime.utcnow().isoformat()
             }
@@ -1020,6 +1113,17 @@ class ChatbotFunctionCallingService:
             "avg_response_time_ms": 0,
             "total_response_time_ms": 0
         }
+    
+    def get_history(self, conversation_id: str) -> List[Dict[str, Any]]:
+        """
+        Get conversation history for a user
+        
+        🔒 SECURITY: conversation_id should be the user_id
+        (enforced by process_message which forces conv_id = user_id)
+        """
+        if conversation_id in self.conversation_memory:
+            return self.conversation_memory[conversation_id]
+        return []
     
     def _get_navigation_hint(self, function_name: str, result: Dict) -> Optional[Dict]:
         """

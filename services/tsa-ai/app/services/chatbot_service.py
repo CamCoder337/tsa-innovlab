@@ -134,8 +134,8 @@ class ChatbotService:
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return ChatbotResponse(
-                message="Désolé, j'ai rencontré une erreur. Un agent humain va vous aider.",
-                requires_human=True
+                message="Oups, quelque chose n'a pas fonctionné. Réessaie ou utilise le menu 📋",
+                requires_human=False
             )
     
     async def _handle_with_llm(
@@ -348,13 +348,12 @@ class ChatbotService:
                     message = (
                         f"{status_info['icon']} **Colis #{shipment_id} - {status_info['label']}**\n\n"
                         f"📍 Trajet: {result.origin} → {result.destination}\n"
-                        f"❌ Cette mission a été annulée\n"
-                        f"💬 Contactez le support pour plus d'informations"
+                        f"❌ Cette mission a été annulée"
                     )
                     suggestions = [
-                        "Contacter le support",
                         "Créer nouvelle mission",
-                        "Voir historique"
+                        "Voir historique",
+                        "Mes missions"
                     ]
                 else:
                     transporter_info = ""
@@ -432,7 +431,7 @@ class ChatbotService:
         return ChatbotResponse(
             message=message,
             intent=Intent(name="tracking", confidence=confidence, entities=entities),
-            suggestions=["Se connecter", "Créer une mission", "Support"],
+            suggestions=["Se connecter", "Créer une mission", "Aide"],
             data={"shipment_id": shipment_id, "simulated": True}
         )
     
@@ -530,11 +529,10 @@ class ChatbotService:
         except Exception as e:
             logger.error(f"Pricing calculation error: {e}")
             return ChatbotResponse(
-                message="❌ Désolé, je n'ai pas pu calculer le prix pour le moment.\n"
-                       "Veuillez réessayer ou contacter le support.",
+                message="❌ Je n'ai pas pu calculer le prix pour le moment. Réessaie dans un instant.",
                 intent=Intent(name="pricing", confidence=confidence, entities=entities),
-                requires_human=True,
-                suggestions=["Réessayer", "Contacter le support"]
+                requires_human=False,
+                suggestions=["Réessayer", "Voir les tarifs", "Créer une mission"]
             )
     
     async def _handle_products(
@@ -725,23 +723,23 @@ class ChatbotService:
             logger.warning(f"Mission status denied - user_id: {user_id}, role: {user_role} (normalized: {normalized_role})")
             
             if not user_role:
-                message = "⚠️ Impossible de vérifier votre rôle.\n\nVeuillez vous reconnecter ou contacter le support."
+                message = "⚠️ Impossible de vérifier ton rôle. Reconnecte-toi pour continuer."
             else:
-                message = f"⚠️ Accès aux missions réservé aux Affréteurs, Transporteurs et Admins.\n\nVotre rôle actuel : {user_role}"
+                message = f"⚠️ Accès aux missions réservé aux Affréteurs, Transporteurs et Admins.\n\nTon rôle actuel : {user_role}"
             
             return ChatbotResponse(
                 message=message,
                 intent=Intent(name="mission_status", confidence=confidence, entities=entities),
-                suggestions=["Contacter le support", "En savoir plus", "Aide"]
+                suggestions=["Se reconnecter", "En savoir plus", "Aide"]
             )
         
         # Call monolith API instead of direct DB access
         if not user_token:
             logger.warning(f"No user token provided for mission status - user_id: {user_id}")
             return ChatbotResponse(
-                message="⚠️ Impossible de récupérer vos missions.\n\nVeuillez vous reconnecter.",
+                message="⚠️ Impossible de récupérer tes missions. Reconnecte-toi pour continuer.",
                 intent=Intent(name="mission_status", confidence=confidence, entities=entities),
-                suggestions=["Se reconnecter", "Support"],
+                suggestions=["Se reconnecter", "Aide"],
                 data={"error": "no_token"}
             )
         
@@ -916,21 +914,21 @@ class ChatbotService:
                     # Return helpful message
                     if detected_role == 'affreteur':
                         message = (
-                            f"📦 **Vos missions (Affréteur)**\n\n"
-                            f"Impossible de récupérer vos missions pour le moment.\n"
-                            f"Veuillez réessayer ou utiliser le tableau de bord."
+                            f"📦 **Tes missions (Affréteur)**\n\n"
+                            f"Impossible de récupérer tes missions pour le moment.\n"
+                            f"Réessaie ou utilise le tableau de bord."
                         )
-                        suggestions = ["Réessayer", "Tableau de bord", "Support"]
+                        suggestions = ["Réessayer", "Tableau de bord", "Aide"]
                     elif detected_role == 'transporteur':
                         message = (
                             f"🚛 **Missions disponibles (Transporteur)**\n\n"
                             f"Impossible de récupérer les missions pour le moment.\n"
-                            f"Veuillez réessayer ou utiliser le tableau de bord."
+                            f"Réessaie ou utilise le tableau de bord."
                         )
-                        suggestions = ["Réessayer", "Tableau de bord", "Support"]
+                        suggestions = ["Réessayer", "Tableau de bord", "Aide"]
                     else:
-                        message = "⚠️ Impossible de récupérer vos missions.\n\nVeuillez réessayer ou contacter le support."
-                        suggestions = ["Réessayer", "Support"]
+                        message = "⚠️ Impossible de récupérer tes missions. Réessaie dans un instant."
+                        suggestions = ["Réessayer", "Aide"]
                     
                     return ChatbotResponse(
                         message=message,
@@ -993,16 +991,16 @@ class ChatbotService:
             logger.error(f"Error calling monolith API for mission status: {e}")
             # Fallback to generic message
             if normalized_role == "TRANSPORTEUR":
-                message = "🚛 Impossible de récupérer les missions pour le moment.\n\nVeuillez réessayer."
+                message = "🚛 Impossible de récupérer les missions pour le moment. Réessaie dans un instant."
             elif normalized_role == "AFFRETEUR":
-                message = "📦 Impossible de récupérer vos missions pour le moment.\n\nVeuillez réessayer."
+                message = "📦 Impossible de récupérer tes missions pour le moment. Réessaie dans un instant."
             else:
-                message = "👑 Impossible de récupérer les statistiques pour le moment.\n\nVeuillez réessayer."
+                message = "👑 Impossible de récupérer les statistiques pour le moment. Réessaie dans un instant."
             
             return ChatbotResponse(
                 message=message,
                 intent=Intent(name="mission_status", confidence=confidence, entities=entities),
-                suggestions=["Réessayer", "Support", "Aide"],
+                suggestions=["Réessayer", "Tableau de bord", "Aide"],
                 data={"error": True, "error_message": str(e)}
             )
     

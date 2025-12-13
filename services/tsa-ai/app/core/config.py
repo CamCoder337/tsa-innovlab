@@ -78,7 +78,9 @@ class Settings(BaseSettings):
     
     # LLM Configuration (Groq)
     groq_api_key: Optional[str] = Field(default=None, alias="GROQ_API_KEY")
+    groq_api_key_fallback: Optional[str] = Field(default=None, alias="GROQ_API_KEY_FALLBACK")
     llm_model: str = Field(default="llama-3.3-70b-versatile", alias="LLM_MODEL")
+    llm_model_fallback: str = Field(default="llama-3.1-8b-instant", alias="LLM_MODEL_FALLBACK")
     llm_enabled: bool = Field(default=True, alias="LLM_ENABLED")
 
     class Config:

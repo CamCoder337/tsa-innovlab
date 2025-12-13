@@ -16,7 +16,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from app.core.config import settings, is_production
 from app.core.database import init_db, close_db
 from app.core.metrics import setup_metrics
-from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot, intelligent_chatbot, kyc
+from app.endpoints import health, eta, product_recommendations, visual_recognition, pricing_simple, chatbot, kyc
 from prometheus_client import make_asgi_app
 
 # Configure logging
@@ -195,13 +195,7 @@ app.include_router(
 app.include_router(
     chatbot.router,
     prefix="/api/ai/chatbot",
-    tags=["Chatbot (Legacy)"]
-)
-
-app.include_router(
-    intelligent_chatbot.router,
-    prefix="/api/ai/chatbot/v2",
-    tags=["Chatbot V2 (Intelligent)"]
+    tags=["Chatbot"]
 )
 
 app.include_router(

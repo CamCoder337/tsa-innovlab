@@ -210,6 +210,23 @@ router
     // Audit logs
     router.get('/audit-logs', '#controllers/http/admin/audit_logs_controller.index')
 
+    // 🚨 Gestion des urgences SOS
+    router.get('/emergencies', '#controllers/http/admin/emergencies_controller.index')
+    router.get('/emergencies/stats', '#controllers/http/admin/emergencies_controller.stats')
+    router.get('/emergencies/:id', '#controllers/http/admin/emergencies_controller.show')
+    router.post(
+      '/emergencies/:id/acknowledge',
+      '#controllers/http/admin/emergencies_controller.acknowledge'
+    )
+    router.post(
+      '/emergencies/:id/in-progress',
+      '#controllers/http/admin/emergencies_controller.markInProgress'
+    )
+    router.post(
+      '/emergencies/:id/resolve',
+      '#controllers/http/admin/emergencies_controller.resolve'
+    )
+
     // Statistiques
     router.get('/stats/overview', '#controllers/http/admin/stats_controller.overview')
     router.get('/stats/users', '#controllers/http/admin/stats_controller.users')
@@ -431,9 +448,12 @@ router
       '#controllers/http/driver/mission_tracking_controller.getLastLocation'
     )
 
-    // Signalement de problèmes
+    // Signalement de problèmes (non-urgents)
     router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
     router.get('/issues', '#controllers/http/driver/mission_tracking_controller.getIssues')
+
+    // 🚨 SOS - Urgences (panne grave, accident, médical, sécurité)
+    router.post('/sos', '#controllers/http/driver/mission_tracking_controller.reportSOS')
 
     // Validation QR code et finalisation de mission
     router.get(
