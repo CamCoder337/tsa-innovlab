@@ -15,16 +15,14 @@
 
 ---
 
-**Equipe de Developpement**
+**Equipe de Developpement (4 personnes)**
 
 | Role | Responsabilite |
 |------|----------------|
-| Product Owner | Vision produit, backlog, priorisation |
-| Scrum Master | Facilitation Agile, rituels Scrum |
-| Dev Frontend | React + TypeScript, interfaces utilisateur |
-| Dev Backend | AdonisJS, APIs, logique metier |
-| Data Scientist | FastAPI Python, IA, predictions |
-| DevOps/QA | Tests, CI/CD, deploiement |
+| Product Owner / Scrum Master | Vision produit, backlog, facilitation Agile |
+| Dev Full-Stack Frontend | React + TypeScript, interfaces utilisateur |
+| Dev Full-Stack Backend | AdonisJS, APIs, logique metier |
+| Data Scientist / DevOps | FastAPI Python, IA, CI/CD, deploiement |
 
 ---
 
@@ -127,27 +125,62 @@ Creer l'"Uber de la logistique" : une plateforme qui connecte affreteurs, transp
 
 ## SLIDE 4 : ARCHITECTURE TECHNIQUE
 
-### Stack Technologique Moderne et Scalable
+### Monolithe Modulaire Bi-Polyglotte
 
 ---
 
-**Architecture 3-Tiers**
+**Architecture Reelle (Honnete)**
 
 ```
-+------------------+     +------------------+     +------------------+
-|   FRONTEND WEB   |     |   BACKEND API    |     |   SERVICES IA    |
-|                  |     |                  |     |                  |
-| React + TypeScript|<--->|    AdonisJS     |<--->|  FastAPI Python  |
-| Vite + TailwindCSS|     |   TypeScript    |     |  Groq LLM        |
-|                  |     |                  |     |  ML Models       |
-+------------------+     +------------------+     +------------------+
-         |                       |                       |
-         v                       v                       v
++------------------+     +----------------------------------------+
+|   FRONTEND WEB   |     |          BACKEND (2 Monolithes)        |
+|                  |     |                                        |
+| React + TypeScript|     |  +----------------+  +---------------+ |
+| Vite + TailwindCSS|<--->|  | tsa-monolith   |  |   tsa-ai      | |
+|                  |     |  | (AdonisJS)     |<->| (FastAPI)     | |
+| + Driver App     |     |  | 80+ endpoints  |  | 6 modules IA  | |
+| (React Native)   |     |  +----------------+  +---------------+ |
++------------------+     +----------------------------------------+
+         |                              |
+         v                              v
 +------------------------------------------------------------------+
-|                        BASE DE DONNEES                           |
-|              SQLite (dev) / PostgreSQL (prod)                    |
+|                        PostgreSQL (BDD partagee)                 |
 +------------------------------------------------------------------+
 ```
+
+---
+
+**Pourquoi "Monolithe Modulaire" et pas "Microservices" ?**
+
+| Critere | Microservices | Notre Architecture |
+|---------|---------------|-------------------|
+| Deploiement | Independant par service | 2 conteneurs couples |
+| BDD | 1 BDD par service | 1 BDD partagee |
+| Communication | Event-driven / Message Queue | HTTP synchrone |
+| Scaling | Granulaire | Par monolithe entier |
+
+**Verdict** : Architecture "Bi-Monolithique Polyglotte" - 2 monolithes (TypeScript + Python) communiquant via HTTP REST.
+
+---
+
+**Avantages de ce Choix (Pragmatisme)**
+
+| Avantage | Explication |
+|----------|-------------|
+| Developpement rapide | Pas de complexite distribuee |
+| Debugging simple | Stack trace lineaire, pas de traces distribuees |
+| Equipe de 4 | Adapte a une petite equipe |
+| Time-to-market | Priorite au MVP fonctionnel |
+
+---
+
+**Limites Assumees**
+
+| Limite | Mitigation |
+|--------|------------|
+| Scaling couple | Docker Compose permet replicas si besoin |
+| Single point of failure | Monitoring + restart automatique |
+| Pas de resilience native | Acceptable pour le MVP |
 
 ---
 
@@ -155,28 +188,18 @@ Creer l'"Uber de la logistique" : une plateforme qui connecte affreteurs, transp
 
 | Couche | Technologie | Justification |
 |--------|-------------|---------------|
-| Frontend | React + TypeScript + Vite | Performance, typage fort, DX |
+| Frontend | React + TypeScript + Vite | Performance, typage fort |
+| Mobile | React Native (Expo) | Code partage avec web |
 | Backend | AdonisJS (TypeScript) | Framework robuste, ORM integre |
 | IA/ML | FastAPI (Python) | Ecosysteme ML, async natif |
-| LLM | Groq API | Inference rapide, cout optimise |
-| BDD | PostgreSQL | ACID, scalabilite, JSON natif |
-| Temps Reel | WebSocket | Notifications instantanees |
-| Maps | Google Maps API | Tracking GPS, calcul routes |
-| Paiement | MTN Mobile Money | Adapte au marche africain |
+| LLM | Groq API (Llama 3.3 70B) | Inference rapide, cout optimise |
+| BDD | PostgreSQL | ACID, JSON natif |
+| Temps Reel | WebSocket (Socket.io) | GPS, SOS, notifications |
+| Maps | Google Maps API | Tracking, calcul routes |
 
 ---
 
-**Principes d'Architecture**
-
-- API RESTful documentee (OpenAPI/Swagger)
-- Separation des responsabilites (Frontend / Backend / IA)
-- Microservices pour l'IA (scalabilite independante)
-- CI/CD avec GitHub Actions
-- Conteneurisation Docker
-
----
-
-[PLACEHOLDER IMAGE : Diagramme d'architecture avec 3 blocs (Frontend, Backend, IA) connectes, base de donnees en bas, services externes (Maps, Paiement, Notifications) sur le cote]
+[PLACEHOLDER IMAGE : Diagramme montrant 2 blocs monolithiques (tsa-monolith + tsa-ai) avec fleche HTTP entre eux, BDD PostgreSQL partagee en bas, services externes sur le cote]
 
 ---
 
