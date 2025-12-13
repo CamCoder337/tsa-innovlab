@@ -24,6 +24,7 @@ docker exec tsa-backend node ace migration:run --force && docker restart tsa-bac
 ```
 
 **Ce que fait cette commande :**
+
 1. Exécute toutes les migrations manquantes dans le conteneur `tsa-backend`
 2. Redémarre le conteneur pour recharger les routes
 
@@ -65,6 +66,7 @@ chmod +x /tmp/run_migrations_production.sh
 ```
 
 Le script va :
+
 - ✅ Vérifier que le conteneur est actif
 - ✅ Afficher l'état des migrations avant/après
 - ✅ Lancer toutes les migrations manquantes
@@ -127,6 +129,7 @@ Si les migrations ne fonctionnent toujours pas après les avoir lancées manuell
 5. Cliquer **"Update the stack"**
 
 Portainer va :
+
 - Re-pull le code depuis GitHub (branche `develop`)
 - Reconstruire l'image Docker (avec le nouveau code)
 - Lancer automatiquement les migrations au démarrage (via le `Dockerfile`)
@@ -173,6 +176,7 @@ docker logs tsa-backend --tail 200 | grep -i "error\|migration"
 ```
 
 Causes fréquentes :
+
 - Base de données non accessible
 - Permissions insuffisantes
 - Conflit de schéma (tables déjà existantes)
@@ -182,6 +186,7 @@ Causes fréquentes :
 Même après les migrations, si les routes ne marchent pas :
 
 1. **Vérifier que le build est à jour** :
+
    ```bash
    docker exec tsa-backend ls -la build/app/controllers/http/admin/orders_controller.js
    ```
@@ -189,6 +194,7 @@ Même après les migrations, si les routes ne marchent pas :
    Si le fichier n'existe pas → Le build est obsolète → Redéployer la stack
 
 2. **Vérifier les routes dans le code compilé** :
+
    ```bash
    docker exec tsa-backend grep -n "orders_controller" build/start/routes.js
    ```
@@ -206,13 +212,13 @@ Même après les migrations, si les routes ne marchent pas :
 
 Ces 5 migrations doivent être exécutées :
 
-| Ordre | Migration | Table Créée | Description |
-|-------|-----------|-------------|-------------|
-| 1 | `1759501000000_create_carts_table` | `carts` | Paniers d'achat |
-| 2 | `1759502000000_create_cart_items_table` | `cart_items` | Articles dans le panier |
-| 3 | `1759503000000_create_orders_table` | `orders` | **Commandes** ⭐ |
-| 4 | `1759504000000_create_order_items_table` | `order_items` | Articles de la commande |
-| 5 | `1759505000000_create_payments_table` | `payments` | Paiements |
+| Ordre | Migration                                | Table Créée   | Description             |
+| ----- | ---------------------------------------- | ------------- | ----------------------- |
+| 1     | `1759501000000_create_carts_table`       | `carts`       | Paniers d'achat         |
+| 2     | `1759502000000_create_cart_items_table`  | `cart_items`  | Articles dans le panier |
+| 3     | `1759503000000_create_orders_table`      | `orders`      | **Commandes** ⭐        |
+| 4     | `1759504000000_create_order_items_table` | `order_items` | Articles de la commande |
+| 5     | `1759505000000_create_payments_table`    | `payments`    | Paiements               |
 
 ---
 
@@ -237,6 +243,7 @@ curl http://51.91.77.0:30000/api/admin/orders
 **Attendu** : `{"success":false,"message":"E_UNAUTHORIZED_ACCESS: Unauthorized access",...}`
 
 ✅ Si vous avez cette erreur, **c'est NORMAL et c'est BON** ! Cela signifie que :
+
 - La route existe ✅
 - Le contrôleur fonctionne ✅
 - Seule l'authentification manque (ce qui est attendu)

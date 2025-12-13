@@ -33,12 +33,39 @@ interface RouteInfo {
 const getCoordinatesFromAddress = (
   address: Address | undefined
 ): { lat: number; lng: number } | null => {
-  if (!address || address.latitude === undefined || address.longitude === undefined) {
+  if (!address) {
+    console.warn('Address is undefined');
     return null;
   }
+  
+  // Vérifier si les coordonnées existent et sont valides
+  const lat = address.latitude;
+  const lng = address.longitude;
+  
+  if (lat === undefined || lat === null || lng === undefined || lng === null) {
+    console.warn('Address missing coordinates:', {
+      addressId: address.id,
+      hasLat: lat !== undefined && lat !== null,
+      hasLng: lng !== undefined && lng !== null,
+    });
+    return null;
+  }
+  
+  const latNum = Number(lat);
+  const lngNum = Number(lng);
+  
+  if (isNaN(latNum) || isNaN(lngNum)) {
+    console.warn('Address has invalid coordinates:', {
+      addressId: address.id,
+      lat,
+      lng,
+    });
+    return null;
+  }
+  
   return {
-    lat: Number(address.latitude),
-    lng: Number(address.longitude),
+    lat: latNum,
+    lng: lngNum,
   };
 };
 
@@ -123,9 +150,20 @@ export default function MissionTrackingMap({
         const departPosition = getCoordinatesFromAddress(mission.adresseDepart);
         const arriveePosition = getCoordinatesFromAddress(mission.adresseArrivee);
 
+        console.log(`[Map] Mission ${mission.id}:`, {
+          hasDepartAddress: !!mission.adresseDepart,
+          hasArriveeAddress: !!mission.adresseArrivee,
+          departPosition,
+          arriveePosition,
+          departLat: mission.adresseDepart?.latitude,
+          departLng: mission.adresseDepart?.longitude,
+          arriveeLat: mission.adresseArrivee?.latitude,
+          arriveeLng: mission.adresseArrivee?.longitude,
+        });
+
         // Skip mission if coordinates are invalid
         if (!departPosition || !arriveePosition) {
-          console.warn(`Mission ${mission.id} has invalid coordinates, skipping`);
+          console.warn(`[Map] Mission ${mission.id} has invalid coordinates, skipping route calculation`);
           continue;
         }
 
@@ -179,6 +217,12 @@ export default function MissionTrackingMap({
 
         // Calculate route and ETA
         if (showRoutes) {
+          console.log(`[MissionTrackingMap] Calculating route for mission ${mission.id}`, {
+            departPosition,
+            arriveePosition,
+            showRoutes,
+          });
+
           // Créer une promesse avec délai pour éviter rate limiting
           const routePromise = (async () => {
             try {
@@ -188,6 +232,7 @@ export default function MissionTrackingMap({
                 await new Promise((resolve) => setTimeout(resolve, delayMs));
               }
 
+              console.log(`[MissionTrackingMap] Calling displayRoute for mission ${mission.id}`);
               const result = await mapsService.displayRoute(departPosition, arriveePosition, {
                 routeId: `route-${mission.id}`,
                 strokeColor: '#2563eb',
@@ -195,6 +240,12 @@ export default function MissionTrackingMap({
                 strokeOpacity: mission.id === selectedMission?.id ? 0.8 : 0.6,
                 departureTime: new Date(), // Use current time for real-time traffic
                 trafficModel: 'best_guess', // Best realistic estimate
+              });
+
+              console.log(`[MissionTrackingMap] displayRoute result for mission ${mission.id}:`, {
+                hasResult: !!result,
+                hasRoutes: !!result?.routes,
+                routesCount: result?.routes?.length || 0,
               });
 
               if (

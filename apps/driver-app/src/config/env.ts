@@ -66,11 +66,32 @@ const DEFAULTS = {
 } as const;
 
 /**
+ * Detect local IP address automatically for iOS Simulator
+ * Falls back to localhost if detection fails
+ */
+function getLocalIpAddress(): string {
+  try {
+    // Try to get local IP from Expo Constants (auto-detected)
+    const debuggerHost = Constants.expoConfig?.hostUri;
+    if (debuggerHost) {
+      const ip = debuggerHost.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        return `http://${ip}:3333`;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to detect local IP, falling back to localhost');
+  }
+  return 'http://localhost:3333';
+}
+
+/**
  * Platform-specific API base URLs for development
+ * iOS automatically detects your machine's IP address
  */
 const PLATFORM_DEFAULTS = {
   android: 'http://10.0.2.2:3333', // Android Emulator
-  ios: 'http://localhost:3333', // iOS Simulator
+  ios: getLocalIpAddress(), // iOS Simulator - Auto-detected!
   web: 'http://localhost:3333', // Web
   default: 'http://localhost:3333',
 } as const;
@@ -92,10 +113,16 @@ function getEnvVar(key: keyof RawEnvironmentVariables): string | undefined {
     return String(expoValue);
   }
 
-  // Try process.env
-  const envValue = process.env[key];
-  if (envValue !== undefined && envValue !== null && envValue !== '') {
-    return String(envValue);
+  // Try process.env (with safe check for React Native)
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      const envValue = process.env[key];
+      if (envValue !== undefined && envValue !== null && envValue !== '') {
+        return String(envValue);
+      }
+    }
+  } catch (error) {
+    // process.env not available in this environment, skip
   }
 
   return undefined;

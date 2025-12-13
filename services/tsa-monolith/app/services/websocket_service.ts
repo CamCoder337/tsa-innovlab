@@ -135,7 +135,10 @@ class WebSocketService {
 
           // Si le message est déjà structuré avec type/data, l'envoyer tel quel
           if ((message as any).type && (message as any).data !== undefined) {
-            wsMessage = message
+            wsMessage = {
+              ...message,
+              timestamp: (message as any).timestamp || new Date().toISOString(),
+            }
           } else {
             // Sinon, créer la structure complète
             wsMessage = {
@@ -145,8 +148,17 @@ class WebSocketService {
             }
           }
 
-          connection.ws.send(JSON.stringify(wsMessage))
+          const messageStr = JSON.stringify(wsMessage)
+          connection.ws.send(messageStr)
+          console.log(`✅ WebSocket: Message envoyé à transporteur ${connection.userId}`, {
+            type: wsMessage.type,
+            missionId: (wsMessage.data as any)?.missionId,
+            hasCoordinates:
+              !!(wsMessage.data as any)?.latitude && !!(wsMessage.data as any)?.longitude,
+          })
           count++
+        } else {
+          console.log(`⚠️  WebSocket: Connexion fermée pour transporteur ${connection.userId}`)
         }
       } catch (error) {
         console.error(

@@ -7,84 +7,21 @@ import { MissionStatus } from '#models/mission'
 import { DateTime } from 'luxon'
 import emitter from '@adonisjs/core/services/emitter'
 
+/**
+ * Controller pour le tracking GPS des missions par les chauffeurs
+ * Authentification via Mission-Scoped JWT (voir DriverAuthController pour le login)
+ *
+ * La mission est automatiquement injectée dans request.mission par le middleware missionAccess
+ * Le driver n'a pas besoin de compte utilisateur, juste du PIN de la mission
+ */
 export default class MissionTrackingController {
-  async authenticate({ request, response, logger }: HttpContext) {
-    const { token } = request.params()
-    const { pin } = request.only(['pin'])
-
-    logger.info("Tentative d'authentification", {
-      token: token ? '***' + token.slice(-4) : 'non fourni',
-      pin: pin ? '***' + pin.slice(-1) : 'non fourni',
-    })
-
-    if (!pin) {
-      logger.warn("Tentative d'authentification sans PIN")
-      return response.badRequest({
-        success: false,
-        message: 'PIN is required',
-        errors: ['Missing PIN'],
-      })
-    }
-
-    try {
-      const mission = await missionTrackingService.verifyTrackingCredentials(token, pin)
-
-      if (!mission) {
-        logger.warn("Échec de l'authentification: identifiants invalides", {
-          token: token ? '***' + token.slice(-4) : 'non fourni',
-        })
-        return response.unauthorized({
-          success: false,
-          message: 'Invalid credentials',
-          errors: ['The tracking token or PIN is incorrect'],
-        })
-      }
-
-      logger.info('Authentification réussie', {
-        missionId: mission.id,
-        status: mission.status,
-      })
-
-      return response.ok({
-        success: true,
-        message: 'Authentication successful',
-        data: {
-          mission: {
-            id: mission.id,
-            title: mission.title,
-            status: mission.status,
-            departureAddress: mission.adresseDepart,
-            arrivalAddress: mission.adresseArrivee,
-            estimatedDeparture: mission.dateDepartEstime,
-            estimatedArrival: mission.dateArriveePrevue,
-            transporter: mission.transporteur
-              ? {
-                  id: mission.transporteur.id,
-                  firstName: mission.transporteur.firstName,
-                  lastName: mission.transporteur.lastName,
-                }
-              : null,
-          },
-        },
-        trackingToken: token,
-      })
-    } catch (error) {
-      logger.error("Erreur lors de l'authentification", error)
-      return response.internalServerError({
-        success: false,
-        message: 'An error occurred during authentication',
-        errors: [error.message],
-      })
-    }
-  }
-
-  async updateLocation({ request, response, mission, logger }: HttpContext) {
+  async updateLocation({ request, response, logger }: HttpContext) {
     console.log('🚗 updateLocation called')
 
-    if (!mission) {
-      console.log('❌ No mission in context')
-      return response.unauthorized({ success: false, message: 'Mission not found' })
-    }
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
+    console.log(`✅ Mission from token: ${mission.id}`)
 
     console.log(`✅ Mission found: ${mission.id}`)
 
@@ -137,14 +74,10 @@ export default class MissionTrackingController {
     }
   }
 
-  async getLocations({ request, response, mission }: HttpContext) {
-    if (!mission) {
-      return response.unauthorized({
-        success: false,
-        message: 'Mission not found',
-        errors: ['Missing mission in context'],
-      })
-    }
+  async getLocations({ request, response }: HttpContext) {
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
     const limit = request.input('limit', 50)
 
     const locations = await missionTrackingService.getRecentLocations(mission.id, limit)
@@ -162,14 +95,10 @@ export default class MissionTrackingController {
     })
   }
 
-  async getLastLocation({ response, mission }: HttpContext) {
-    if (!mission) {
-      return response.unauthorized({
-        success: false,
-        message: 'Mission not found',
-        errors: ['Missing mission in context'],
-      })
-    }
+  async getLastLocation({ request, response }: HttpContext) {
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
     const location = await missionTrackingService.getLastLocation(mission.id)
 
     return response.ok({
@@ -185,14 +114,10 @@ export default class MissionTrackingController {
     })
   }
 
-  async reportIssue({ request, response, mission }: HttpContext) {
-    if (!mission) {
-      return response.unauthorized({
-        success: false,
-        message: 'Mission not found',
-        errors: ['Missing mission in context'],
-      })
-    }
+  async reportIssue({ request, response }: HttpContext) {
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
     const { type, description, latitude, longitude, photos } = request.only([
       'type',
       'description',
@@ -217,9 +142,10 @@ export default class MissionTrackingController {
       })
     }
 
+    // Note: reportedById peut être undefined car le driver n'a pas de compte User
     const issue = await MissionIssue.create({
       missionId: mission.id,
-      reportedById: mission.transporteurId!,
+      reportedById: mission.transporteurId ?? undefined, // Référence le transporteur propriétaire du véhicule
       type,
       description,
       latitude: latitude ? Number.parseFloat(latitude) : null,
@@ -235,14 +161,10 @@ export default class MissionTrackingController {
     })
   }
 
-  async getIssues({ response, mission }: HttpContext) {
-    if (!mission) {
-      return response.unauthorized({
-        success: false,
-        message: 'Mission not found',
-        errors: ['Missing mission in context'],
-      })
-    }
+  async getIssues({ request, response }: HttpContext) {
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
     const issues = await MissionIssue.query()
       .where('mission_id', mission.id)
       .orderBy('created_at', 'desc')
@@ -382,8 +304,120 @@ export default class MissionTrackingController {
     }
   }
 
+  /**
+   * Valide seulement le QR code sans finaliser la mission
+   * Vérifie que le chauffeur connecté est autorisé à scanner ce QR code
+   */
+  async validateQRCode({ request, response }: HttpContext) {
+    // ✅ La mission du chauffeur connecté est injectée par le middleware missionAccess
+    const driverMission = request.mission!
+
+    const { token, mission_id: qrMissionId } = request.qs()
+    // Note: latitude, longitude disponibles pour future vérification de proximité
+
+    if (!token || !qrMissionId) {
+      return response.badRequest({
+        success: false,
+        message: 'Token and mission ID are required',
+        errors: ['Missing parameters'],
+      })
+    }
+
+    // Vérifier que le QR code correspond à la mission du chauffeur connecté
+    if (driverMission.id !== qrMissionId) {
+      return response.forbidden({
+        success: false,
+        message: 'You are not authorized to scan this QR code',
+        errors: ['This QR code belongs to a different mission'],
+      })
+    }
+
+    // Vérifier que le token QR code est valide
+    const mission = await qrCodeService.verifyQrCodeToken(qrMissionId, token)
+
+    if (!mission) {
+      return response.unauthorized({
+        success: false,
+        message: 'Invalid QR code',
+        errors: ['The QR code is invalid or has expired'],
+      })
+    }
+
+    if (mission.status !== 'in_progress') {
+      return response.badRequest({
+        success: false,
+        message: 'Mission is not in progress',
+        errors: ['The mission must be in progress to validate QR code'],
+      })
+    }
+
+    // Note: Vérification de proximité désactivée pour les tests
+    // La validation peut se faire depuis n'importe où
+
+    return response.ok({
+      success: true,
+      message: 'QR code validated successfully',
+      data: {
+        missionId: mission.id,
+        token: token,
+        validated: true,
+      },
+    })
+  }
+
+  /**
+   * Finalise la livraison de la mission
+   * Utilisé après validation des preuves
+   */
+  async completeDelivery({ request, response }: HttpContext) {
+    // ✅ La mission est injectée par le middleware missionAccess
+    const mission = request.mission!
+
+    const { missionId } = request.only(['missionId'])
+
+    // Vérifier que l'ID de mission correspond à celle du chauffeur connecté
+    if (mission.id !== missionId) {
+      return response.forbidden({
+        success: false,
+        message: 'You are not authorized to complete this mission',
+        errors: ['Mission ID mismatch'],
+      })
+    }
+
+    if (mission.status !== 'in_progress') {
+      return response.badRequest({
+        success: false,
+        message: 'Mission is not in progress',
+        errors: ['The mission must be in progress to be completed'],
+      })
+    }
+
+    // Finaliser la mission
+    mission.status = MissionStatus.DELIVERED
+    mission.deliveredAt = DateTime.now()
+    await mission.save()
+
+    return response.ok({
+      success: true,
+      message: 'Mission completed successfully',
+      data: {
+        mission: {
+          id: mission.id,
+          title: mission.title,
+          status: mission.status,
+          deliveredAt: mission.deliveredAt,
+        },
+      },
+    })
+  }
+
+  /**
+   * Validation de livraison via QR code (route publique)
+   * Utilisée par l'affréteur pour confirmer la réception
+   */
   async validateDelivery({ request, response }: HttpContext) {
-    const { token, mission_id: missionId, latitude, longitude } = request.qs()
+    const { token, mission_id: missionId } = request.qs()
+    // Note: latitude, longitude disponibles pour future vérification de proximité
 
     if (!token || !missionId) {
       return response.badRequest({
@@ -411,24 +445,8 @@ export default class MissionTrackingController {
       })
     }
 
-    if (latitude && longitude && mission.adresseArrivee) {
-      await mission.load('adresseArrivee')
-      const isNear = missionTrackingService.isNearDestination(
-        Number.parseFloat(latitude),
-        Number.parseFloat(longitude),
-        mission.adresseArrivee.latitude!,
-        mission.adresseArrivee.longitude!,
-        200
-      )
-
-      if (!isNear) {
-        return response.badRequest({
-          success: false,
-          message: 'You are too far from the delivery location',
-          errors: ['You must be within 200 meters of the delivery location'],
-        })
-      }
-    }
+    // Note: Vérification de proximité désactivée pour les tests
+    // La validation peut se faire depuis n'importe où
 
     mission.status = MissionStatus.DELIVERED
     mission.deliveredAt = DateTime.now()

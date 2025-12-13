@@ -1,8 +1,14 @@
 import { BaseApi } from './api';
 
+/**
+ * @deprecated Cette interface n'est plus utilisée
+ * L'authentification des chauffeurs se fait maintenant via :
+ * POST /api/driver/auth/login avec uniquement le PIN
+ * Retourne un JWT standard utilisé avec Authorization: Bearer <token>
+ */
 export interface TrackingCredentials {
-  trackingToken: string;
-  trackingPin: string;
+  // trackingToken: string; // @deprecated Plus utilisé
+  trackingPin: string; // PIN alphanumérique 6-8 caractères
 }
 
 export interface LocationUpdate {
@@ -47,14 +53,18 @@ export class MissionTrackingService extends BaseApi {
    * Générer le QR code de livraison pour une mission
    */
   async generateDeliveryQRCode(missionId: string): Promise<QRCodeResponse> {
-    return this.get(`${this.baseUrl}/${missionId}/qr-code`);
+    const response = await this.get(`${this.baseUrl}/${missionId}/qr-code`);
+    // Handle nested response structure from backend
+    return response.data || response;
   }
 
   /**
    * Régénérer le QR code (en cas de perte ou suspicion)
    */
   async regenerateQRCode(missionId: string): Promise<QRCodeResponse> {
-    return this.post(`${this.baseUrl}/${missionId}/regenerate-qr`);
+    const response = await this.post(`${this.baseUrl}/${missionId}/regenerate-qr`);
+    // Handle nested response structure from backend
+    return response.data || response;
   }
 
   /**

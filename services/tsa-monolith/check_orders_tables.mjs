@@ -17,13 +17,7 @@ const config = {
   database: process.env.DB_DATABASE || 'tsa_contest',
 }
 
-const REQUIRED_TABLES = [
-  'carts',
-  'cart_items',
-  'orders',
-  'order_items',
-  'payments',
-]
+const REQUIRED_TABLES = ['carts', 'cart_items', 'orders', 'order_items', 'payments']
 
 const REQUIRED_MIGRATIONS = [
   '1759501000000_create_carts_table',
@@ -68,9 +62,7 @@ async function checkDatabase() {
 
     // Vérifier les migrations manquantes
     const executedMigrations = migrationsResult.rows.map((r) => r.name)
-    const missingMigrations = REQUIRED_MIGRATIONS.filter(
-      (m) => !executedMigrations.includes(m)
-    )
+    const missingMigrations = REQUIRED_MIGRATIONS.filter((m) => !executedMigrations.includes(m))
 
     if (missingMigrations.length > 0) {
       console.log(`\n⚠️  ${missingMigrations.length} migrations MANQUANTES :`)
@@ -149,7 +141,7 @@ async function checkDatabase() {
       console.log('      docker-compose restart')
     } else {
       console.log('✅ Toutes les tables et migrations sont présentes')
-      console.log('\n🔧 Si l\'erreur persiste, vérifiez:')
+      console.log("\n🔧 Si l'erreur persiste, vérifiez:")
       console.log('   1. Le build est à jour: npm run build')
       console.log('   2. Le serveur a été redémarré')
       console.log('   3. Les routes sont bien enregistrées dans start/routes.ts')
@@ -158,7 +150,7 @@ async function checkDatabase() {
     console.log('')
   } catch (error) {
     console.error('❌ Erreur:', error.message)
-    console.error('\n⚠️  Vérifiez vos variables d\'environnement DB_*')
+    console.error("\n⚠️  Vérifiez vos variables d'environnement DB_*")
     process.exit(1)
   } finally {
     await client.end()

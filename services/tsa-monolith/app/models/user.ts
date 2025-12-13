@@ -10,6 +10,8 @@ import Mission from '#models/mission'
 import Vehicle from '#models/vehicle'
 import AuditLog from '#models/audit_log'
 import Address from '#models/address'
+import Document from '#models/document'
+import UserVerificationStatus from '#models/user_verification_status'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import string from '@adonisjs/core/helpers/string'
 
@@ -94,6 +96,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare auditLogs: HasMany<typeof AuditLog>
   @hasMany(() => Address)
   declare addresses: HasMany<typeof Address>
+
+  @hasMany(() => Document)
+  declare documents: HasMany<typeof Document>
+
+  @hasMany(() => UserVerificationStatus)
+  declare verificationStatuses: HasMany<typeof UserVerificationStatus>
 
   get fullName(): string {
     return `${this.firstName ?? ''} ${this.lastName ?? ''}`.trim()

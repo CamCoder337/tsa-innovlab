@@ -20,7 +20,7 @@ export const useUserSearch = () => {
       setIsLoading(true);
       try {
         // Search for user by ID (we'll use email search as fallback)
-        const response = await chatService.searchUsers({ limit: 100 });
+        const response = await chatService.searchUsers({ limit: 50 });
 
         if (response.error || !response.data) {
           return null;

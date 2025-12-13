@@ -31,6 +31,7 @@ import {
 } from '@/hooks/useTranslation';
 import { useSearchParams } from 'react-router-dom';
 import { useMissionStore } from '@/stores/missionStore';
+import { isMissionCompleted, ACTIVE_MISSION_STATUSES } from '@/lib/utils';
 
 export default function MissionsTransporteurPage() {
   const {
@@ -86,8 +87,8 @@ export default function MissionsTransporteurPage() {
     } else {
       // For other tabs, filter myMissions by status
       baseMissions = myMissions.filter((mission) => {
-        if (activeTab === 'completed') return mission.status === 'completed';
-        if (activeTab === 'active') return ['assigned', 'in_progress'].includes(mission.status);
+        if (activeTab === 'completed') return isMissionCompleted(mission.status);
+        if (activeTab === 'active') return ACTIVE_MISSION_STATUSES.includes(mission.status);
         return true;
       });
     }
@@ -249,7 +250,7 @@ export default function MissionsTransporteurPage() {
                     {tMissions('myMissions.transporteur.stats.completedMissions')}
                   </p>
                   <p className="text-lg sm:text-2xl font-bold">
-                    {myMissions.filter((m) => m.status === 'completed').length}
+                    {myMissions.filter((m) => isMissionCompleted(m.status)).length}
                   </p>
                 </div>
               </div>

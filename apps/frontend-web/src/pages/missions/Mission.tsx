@@ -43,8 +43,11 @@ export default function MissionDetailsPage() {
 
   // Fetch mission data when component mounts or ID changes
   useEffect(() => {
-    if (id && !currentMission) {
-      fetchMission(id);
+    if (id) {
+      // Vérifier si la mission actuelle correspond à l'ID demandé
+      if (!currentMission || currentMission.id !== id) {
+        fetchMission(id);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

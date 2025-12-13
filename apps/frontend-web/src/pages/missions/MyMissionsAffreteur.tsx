@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import MissionCard from '@/components/missions/MissionCard';
 import { useMissionsTranslation, useCommonTranslation } from '@/hooks/useTranslation';
 import { useMissionStore } from '@/stores/missionStore';
+import { isMissionCompleted, ACTIVE_MISSION_STATUSES } from '@/lib/utils';
 
 export default function MyMissionsAffreteur() {
   const { myMissions, isLoading, publishMission, unpublishMission } = useMissions();
@@ -51,8 +52,8 @@ export default function MyMissionsAffreteur() {
   const filteredMissions = myMissions.filter((mission) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'pending') return mission.status === 'published';
-    if (activeTab === 'actives') return ['assigned', 'in_progress'].includes(mission.status);
-    if (activeTab === 'completed') return mission.status === 'completed';
+    if (activeTab === 'actives') return ACTIVE_MISSION_STATUSES.includes(mission.status);
+    if (activeTab === 'completed') return isMissionCompleted(mission.status);
     if (activeTab === 'draft') return mission.status === 'draft';
     return true;
   });
@@ -131,7 +132,7 @@ export default function MyMissionsAffreteur() {
                   {tCommon('status.completed')}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold">
-                  {myMissions.filter((m) => m.status === 'completed').length}
+                  {myMissions.filter((m) => isMissionCompleted(m.status)).length}
                 </p>
               </div>
             </div>

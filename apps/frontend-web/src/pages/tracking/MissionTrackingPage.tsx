@@ -5,160 +5,118 @@ import { useMissions } from '@/hooks/useMissions';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, QrCode, Loader2, MapPin, FileText, AlertTriangle, Activity, Download, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, QrCode, Loader2, MapPin, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { Mission } from '@/types/mission.types';
+import DeliveryQRCode from '@/components/tracking/DeliveryQRCode';
+import SimpleMapFallback from '@/components/tracking/SimpleMapFallback';
+import { missionService } from '@/services/mission.service';
 
-type Mission = {
-  id: string;
-  status: string;
-  pickupAddress?: string | null;
-  deliveryAddress?: string | null;
-  pickupDate?: string | null;
-  deliveryDate?: string | null;
-  deliveredAt?: string | null;
-  trackingNumber?: string | null;
-  trackingLinkToken?: string | null;
-  qrCodeToken?: string | null;
-  lastUpdated?: string | null;
-};
-
-// Fonction utilitaire pour obtenir l'icône en fonction du type d'événement
-const getEventIcon = (type: string) => {
-  switch (type) {
-    case 'status_update':
-      return <RefreshCw className="h-4 w-4" />;
-    case 'location_update':
-      return <MapPin className="h-4 w-4" />;
-    case 'document_uploaded':
-      return <FileText className="h-4 w-4" />;
-    case 'incident_reported':
-      return <AlertTriangle className="h-4 w-4" />;
-    default:
-      return <QrCode className="h-4 w-4" />;
-  }
-};
-
-// Fonction pour obtenir le titre localisé de l'événement
-const getLocalizedEventTitle = (event: { type: string; timestamp: string; message: string; details?: string }, tMissions: (key: string) => string) => {
-  switch (event.type) {
-    case 'status_update':
-      return tMissions('events.status_updated');
-    case 'location_update':
-      return tMissions('events.location_updated');
-    case 'document_uploaded':
-      return tMissions('events.document_uploaded');
-    case 'incident_reported':
-      return tMissions('events.incident_reported');
-    default:
-      return event.type;
-  }
-};
 
 export default function MissionTrackingPage() {
   const { id } = useParams<{ id: string }>();
-  const { myMissions: missions, fetchMission } = useMissions();
+  const { myMissions: missions, currentMission } = useMissions();
   const [mission, setMission] = useState<Mission | null>(null);
-  const [events] = useState<Array<{
-    type: string;
-    timestamp: string;
-    message: string;
-    details?: string;
-  }>>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('status');
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
-  
+
   const { t } = useTranslation();
   const tCommon = (key: string) => t(`common.${key}`);
-  const tMissions = (key: string) => t(`missions.${key}`);
   
-  // Fonction pour rafraîchir les données de la mission
-  const handleRefresh = async (): Promise<void> => {
+  // Fonction pour charger les données de la mission
+  const loadMission = async () => {
     if (!id) return;
+    
+    setLoading(true);
     try {
-      const result = await fetchMission(id);
-      setMission(result as unknown as Mission);
-      console.log('Mission rafraîchie:', result);
-    } catch (error) {
-      console.error('Erreur lors du rafraîchissement:', error);
-      toast.error(tCommon('errors.refresh_failed'));
-    }
-  };
-
-  // Charger les données de la mission et l'historique
-  useEffect(() => {
-    const loadMissionData = async () => {
-      if (!id) return;
+      // Charger depuis le serveur
+      const response = await missionService.getAffreteurMission(id);
       
-      // Charger la mission depuis la liste des missions
-      const foundMission = missions.find((m: Mission) => m.id === id);
-      if (foundMission) {
-        setMission(foundMission as unknown as Mission);
+      if (response.error) {
+        throw new Error(response.error.message || 'Erreur lors du chargement de la mission');
       }
       
-      // Essayer de rafraîchir les données
-      await handleRefresh();
-    };
-
-    loadMissionData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, missions]);
-  
-  // Fonction pour générer le QR code
-  const generateQRCode = async () => {
-    if (!mission?.id) return;
-    
-    try {
-      setIsGeneratingQR(true);
-      console.log('Génération du QR code pour la mission:', mission.id);
-      
-      // Ici, vous devriez appeler votre service pour générer le QR code
-      // Par exemple: const qrCode = await missionService.generateQRCode(mission.id);
-      // setQrCodeData(qrCode.data);
-      
-      // Simulation pour le débogage
-      setTimeout(() => {
-        console.log('QR code généré avec succès');
-        setQrCodeData('data:image/png;base64,simulated_qr_code_data');
-        setIsGeneratingQR(false);
-      }, 1000);
-      
+      if (response.data) {
+        setMission(response.data);
+      } else {
+        // Fallback: chercher dans le store
+        const foundMission = missions.find((m: any) => m.id === id) || currentMission;
+        if (foundMission && foundMission.id === id) {
+          setMission(foundMission as Mission);
+        }
+      }
     } catch (error) {
-      console.error('Erreur lors de la génération du QR code:', error);
-      toast.error(tMissions('qr_code_generation_failed'));
-      setIsGeneratingQR(false);
+      console.error('Erreur lors du chargement de la mission:', error);
+      toast.error(tCommon('errors.load_failed'));
+      
+      // Fallback: chercher dans le store
+      const foundMission = missions.find((m: any) => m.id === id) || currentMission;
+      if (foundMission && foundMission.id === id) {
+        setMission(foundMission as Mission);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!mission) {
+  // Charger les données de la mission au montage et quand l'ID change
+  useEffect(() => {
+    loadMission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+  
+  // Mettre à jour la mission quand elle change dans le store
+  useEffect(() => {
+    if (id && (currentMission?.id === id || missions.some((m: any) => m.id === id))) {
+      const foundMission = currentMission?.id === id ? currentMission : missions.find((m: any) => m.id === id);
+      if (foundMission) {
+        setMission(foundMission as Mission);
+      }
+    }
+  }, [id, currentMission, missions]);
+
+  if (loading || !mission) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>{tCommon('loading')}...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p>Chargement...</p>
         </div>
       </div>
     );
   }
+  
+  // Helper pour formater l'adresse
+  const formatAddress = (address: any): string => {
+    if (!address) return 'Adresse non fournie';
+    if (typeof address === 'string') return address;
+    const parts = [
+      address.street,
+      address.city,
+      address.postalCode,
+      address.country
+    ].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : address.label || 'Adresse non fournie';
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold">
-            {tMissions('tracking.title')} - {mission.id}
+            {mission.title}
           </h1>
           <p className="text-muted-foreground">
-            {tMissions('status')}: <span className="capitalize">{mission.status}</span>
+            Statut: <span className="capitalize">{mission.status}</span>
           </p>
         </div>
         <Button 
           variant="outline" 
-          onClick={handleRefresh}
+          onClick={loadMission}
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          {tCommon('refresh')}
+          Actualiser
         </Button>
       </div>
       
@@ -170,11 +128,11 @@ export default function MissionTrackingPage() {
         <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="status">
             <Activity className="h-4 w-4 mr-2" />
-            {tMissions('status')}
+            Statut
           </TabsTrigger>
           <TabsTrigger value="map">
             <MapPin className="h-4 w-4 mr-2" />
-            {tMissions('map')}
+            Carte
           </TabsTrigger>
           <TabsTrigger value="qrcode">
             <QrCode className="h-4 w-4 mr-2" />
@@ -185,55 +143,55 @@ export default function MissionTrackingPage() {
         <TabsContent value="status" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{tMissions('mission_details')}</CardTitle>
+              <CardTitle>Détails de la mission</CardTitle>
               <CardDescription>
-                {tMissions('mission_details_description')}
+                Informations sur les points de départ et d'arrivée
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="font-medium mb-2">{tMissions('pickup')}</h3>
+                    <h3 className="font-medium mb-2">Départ</h3>
                     <p className="text-muted-foreground">
-                      {mission.pickupAddress || tMissions('no_address_provided')}
+                      {formatAddress(mission.adresseDepart)}
                     </p>
-                    {mission.pickupDate && (
+                    {mission.dateDepartEstime && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        {new Date(mission.pickupDate).toLocaleString()}
+                        {new Date(mission.dateDepartEstime).toLocaleString()}
                       </p>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-medium mb-2">{tMissions('delivery')}</h3>
+                    <h3 className="font-medium mb-2">Arrivée</h3>
                     <p className="text-muted-foreground">
-                      {mission.deliveryAddress || tMissions('no_address_provided')}
+                      {formatAddress(mission.adresseArrivee)}
                     </p>
-                    {mission.deliveryDate && (
+                    {mission.dateArriveePrevue && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        {new Date(mission.deliveryDate).toLocaleString()}
+                        {new Date(mission.dateArriveePrevue).toLocaleString()}
                       </p>
                     )}
                   </div>
                 </div>
                 
                 <div className="pt-4 border-t">
-                  <h3 className="font-medium mb-2">{tMissions('tracking_information')}</h3>
+                  <h3 className="font-medium mb-2">Informations de suivi</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        {tMissions('tracking_number')}:
+                        Numéro de suivi:
                       </p>
-                      <p className="font-mono">{mission.trackingNumber || 'N/A'}</p>
+                      <p className="font-mono">{mission.trackingPin || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        {tMissions('last_updated')}:
+                        Dernière mise à jour:
                       </p>
                       <p>
-                        {mission.lastUpdated 
-                          ? new Date(mission.lastUpdated).toLocaleString() 
-                          : tCommon('never')}
+                        {mission.lastPositionUpdate 
+                          ? new Date(mission.lastPositionUpdate).toLocaleString() 
+                          : 'Jamais'}
                       </p>
                     </div>
                   </div>
@@ -244,154 +202,99 @@ export default function MissionTrackingPage() {
           
           <Card>
             <CardHeader>
-              <CardTitle>{tMissions('activity_log')}</CardTitle>
+              <CardTitle>Journal d'activité</CardTitle>
               <CardDescription>
-                {tMissions('activity_log_description')}
+                Historique des événements de la mission
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {events.length > 0 ? (
-                <div className="space-y-4">
-                  {events.map((event, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getEventIcon(event.type)}
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {getLocalizedEventTitle(event, tMissions)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(event.timestamp).toLocaleString()}
-                        </p>
-                        {event.details && (
-                          <p className="text-sm mt-1">{event.details}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>{tMissions('no_activity_yet')}</p>
-                </div>
-              )}
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Aucune activité pour le moment</p>
+                <p className="text-sm mt-2">
+                  L'historique des activités sera bientôt disponible
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="map" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{tMissions('live_location')}</CardTitle>
-              <CardDescription>
-                {tMissions('live_location_description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-96">
-              <div className="h-full bg-muted/50 rounded-md flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  {tMissions('map_placeholder')}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Debug info */}
+          <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+            Debug: Départ={mission.adresseDepart ? 'OK' : 'MANQUANT'}, 
+            Arrivée={mission.adresseArrivee ? 'OK' : 'MANQUANT'},
+            Coords départ={mission.adresseDepart?.latitude ? `${mission.adresseDepart.latitude},${mission.adresseDepart.longitude}` : 'MANQUANT'},
+            Coords arrivée={mission.adresseArrivee?.latitude ? `${mission.adresseArrivee.latitude},${mission.adresseArrivee.longitude}` : 'MANQUANT'}
+          </div>
+          
+          {mission.adresseDepart && mission.adresseArrivee ? (
+            <>
+              {/* Use simple map fallback for now since Google Maps API might not be configured */}
+              <SimpleMapFallback
+                missionId={mission.id}
+                departureLocation={
+                  mission.adresseDepart
+                    ? {
+                        lat: Number(mission.adresseDepart.latitude),
+                        lng: Number(mission.adresseDepart.longitude),
+                      }
+                    : undefined
+                }
+                arrivalLocation={
+                  mission.adresseArrivee
+                    ? {
+                        lat: Number(mission.adresseArrivee.latitude),
+                        lng: Number(mission.adresseArrivee.longitude),
+                      }
+                    : undefined
+                }
+                departureAddress={formatAddress(mission.adresseDepart)}
+                arrivalAddress={formatAddress(mission.adresseArrivee)}
+              />
+            </>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Suivi GPS</CardTitle>
+                <CardDescription>
+                  Informations de localisation de la mission
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-lg font-medium mb-2">Données de localisation manquantes</p>
+                    <p className="text-sm text-muted-foreground">
+                      Les coordonnées de départ et d'arrivée sont nécessaires pour afficher la carte
+                    </p>
+                  </div>
+                  
+                  {/* Show available address info */}
+                  {(mission.adresseDepart || mission.adresseArrivee) && (
+                    <div className="space-y-3">
+                      {mission.adresseDepart && (
+                        <div className="p-3 border rounded-lg">
+                          <h4 className="font-medium text-green-700">Point de départ</h4>
+                          <p className="text-sm text-muted-foreground">{formatAddress(mission.adresseDepart)}</p>
+                        </div>
+                      )}
+                      {mission.adresseArrivee && (
+                        <div className="p-3 border rounded-lg">
+                          <h4 className="font-medium text-red-700">Point d'arrivée</h4>
+                          <p className="text-sm text-muted-foreground">{formatAddress(mission.adresseArrivee)}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         
         <TabsContent value="qrcode" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>{tMissions('delivery_qr_code')}</CardTitle>
-              <CardDescription>
-                {tMissions('delivery_qr_code_description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              {qrCodeData ? (
-                <>
-                  <div className="p-4 border rounded-lg bg-white">
-                    <img 
-                      src={qrCodeData} 
-                      alt="QR Code de livraison" 
-                      className="w-64 h-64"
-                    />
-                  </div>
-                  <div className="mt-4 flex gap-2">
-                    <Button variant="outline" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      {tCommon('download')}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={generateQRCode}
-                      disabled={isGeneratingQR}
-                      className="gap-2"
-                    >
-                      <RefreshCw className={`h-4 w-4 ${isGeneratingQR ? 'animate-spin' : ''}`} />
-                      {isGeneratingQR ? tCommon('generating') : tCommon('regenerate')}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-4 text-center max-w-md">
-                    {tMissions('qr_code_instructions')}
-                  </p>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="mb-4">{tMissions('no_qr_code_generated')}</p>
-                  <Button 
-                    onClick={generateQRCode}
-                    disabled={isGeneratingQR}
-                    className="gap-2"
-                  >
-                    {isGeneratingQR ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        {tCommon('generating')}...
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="h-4 w-4" />
-                        {tMissions('generate_qr_code')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>{tMissions('delivery_confirmation')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  {tMissions('delivery_confirmation_instructions')}
-                </p>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span>{tMissions('verify_identity')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span>{tMissions('scan_qr_code')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span>{tMissions('confirm_delivery')}</span>
-                  </div>
-                </div>
-                
-                <Button className="w-full mt-4" size="lg">
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  {tMissions('confirm_delivery')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <DeliveryQRCode missionId={mission.id} missionTitle={mission.title} />
         </TabsContent>
       </Tabs>
     </div>

@@ -118,6 +118,38 @@ router
   })
   .prefix('/api/auth')
 
+// ===== ROUTES DOCUMENTS (Utilisateurs authentifiés) =====
+router
+  .group(() => {
+    // Documents personnels
+    router.get('/documents', '#controllers/documents_controller.index')
+    router.post('/documents', '#controllers/documents_controller.store')
+    router.get(
+      '/documents/verification-status',
+      '#controllers/documents_controller.verificationStatus'
+    )
+    router.get('/documents/required', '#controllers/documents_controller.required')
+    router.get('/documents/:id', '#controllers/documents_controller.show')
+    router.put('/documents/:id', '#controllers/documents_controller.update')
+    router.delete('/documents/:id', '#controllers/documents_controller.destroy')
+
+    // Documents véhicules
+    router.get(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/documents_controller.vehicleDocuments'
+    )
+    router.post(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/documents_controller.storeVehicleDocument'
+    )
+    router.get(
+      '/vehicles/:vehicleId/verification-status',
+      '#controllers/documents_controller.vehicleVerificationStatus'
+    )
+  })
+  .prefix('/api')
+  .middleware(middleware.auth())
+
 // ===== ROUTES ADMIN =====
 router
   .group(() => {
@@ -196,6 +228,31 @@ router
     router.get('/feedbacks', '#controllers/http/admin/feedbacks_controller.index')
     router.get('/feedbacks/stats', '#controllers/http/admin/feedbacks_controller.stats')
     router.get('/feedbacks/:id', '#controllers/http/admin/feedbacks_controller.show')
+
+    // Gestion des documents (Admin)
+    router.get('/documents', '#controllers/http/admin/documents_controller.index')
+    router.get('/documents/pending', '#controllers/http/admin/documents_controller.pending')
+    router.get('/documents/expiring', '#controllers/http/admin/documents_controller.expiring')
+    router.get('/documents/:id', '#controllers/http/admin/documents_controller.show')
+    router.post('/documents/:id/validate', '#controllers/http/admin/documents_controller.validate')
+    router.post('/documents/:id/reject', '#controllers/http/admin/documents_controller.reject')
+    router.get(
+      '/users/:userId/documents',
+      '#controllers/http/admin/documents_controller.userDocuments'
+    )
+    router.get(
+      '/users/:userId/verification-status',
+      '#controllers/http/admin/documents_controller.userVerificationStatus'
+    )
+    router.get(
+      '/vehicles/:vehicleId/documents',
+      '#controllers/http/admin/documents_controller.vehicleDocuments'
+    )
+    router.get(
+      '/vehicles/:vehicleId/verification-status',
+      '#controllers/http/admin/documents_controller.vehicleVerificationStatus'
+    )
+    router.get('/verification-dashboard', '#controllers/http/admin/documents_controller.dashboard')
   })
   .prefix('/api/admin')
   .middleware([middleware.auth(), roleGuard(UserRole.ADMIN)])
@@ -362,26 +419,21 @@ router
   .prefix('/api/transporteur')
   .middleware([middleware.auth(), roleGuard(UserRole.TRANSPORTEUR)])
 
-// ===== ROUTES DE TRACKING POUR CHAUFFEURS (Token + PIN Auth) =====
+// ===== ROUTES D'AUTHENTIFICATION DRIVER =====
 router
   .group(() => {
-    // Authentification chauffeur (sans middleware d'authentification)
-    router.post(
-      '/authenticate',
-      '#controllers/http/driver/mission_tracking_controller.authenticate'
-    )
+    router.post('/login', '#controllers/http/driver/auth_controller.login')
   })
-  .prefix('/track/:token')
+  .prefix('/api/driver/auth')
 
-// Routes protégées par le middleware d'authentification
+// ===== ROUTES DE TRACKING POUR CHAUFFEURS (Mission-Scoped JWT) =====
 router
   .group(() => {
-    // Mise à jour de position
+    // Mise à jour de position GPS
     router.post('/location', '#controllers/http/driver/mission_tracking_controller.updateLocation')
 
     // Récupération des positions
     router.get('/locations', '#controllers/http/driver/mission_tracking_controller.getLocations')
-
     router.get(
       '/last-location',
       '#controllers/http/driver/mission_tracking_controller.getLastLocation'
@@ -389,14 +441,23 @@ router
 
     // Signalement de problèmes (non-urgents)
     router.post('/report-issue', '#controllers/http/driver/mission_tracking_controller.reportIssue')
-
     router.get('/issues', '#controllers/http/driver/mission_tracking_controller.getIssues')
 
     // 🚨 SOS - Urgences (panne grave, accident, médical, sécurité)
     router.post('/sos', '#controllers/http/driver/mission_tracking_controller.reportSOS')
+
+    // Validation QR code et finalisation de mission
+    router.get(
+      '/validate-qr',
+      '#controllers/http/driver/mission_tracking_controller.validateQRCode'
+    )
+    router.post(
+      '/complete-delivery',
+      '#controllers/http/driver/mission_tracking_controller.completeDelivery'
+    )
   })
-  .prefix('/track/:token')
-  .middleware(middleware.tracking())
+  .prefix('/api/driver/tracking')
+  .middleware(middleware.missionAccess())
 
 // Validation de livraison via QR code (public)
 router.get(
