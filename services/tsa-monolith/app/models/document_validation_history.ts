@@ -14,6 +14,8 @@ export enum DocumentValidationAction {
 }
 
 export default class DocumentValidationHistory extends BaseModel {
+  static table = 'document_validation_history'
+
   @column({ isPrimary: true })
   declare id: string
 

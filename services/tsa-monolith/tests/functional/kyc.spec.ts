@@ -61,7 +61,7 @@ test.group('KYC Module', (group) => {
   })
 
   test('should check KYC service health', async ({ assert, client: httpClient }) => {
-    const response = await httpClient.get('/api/kyc/health')
+    const response = await httpClient.get('/api/kyc/health').bearerToken(clientToken)
 
     // Le service peut être disponible ou non selon l'environnement
     assert.isTrue(response.status() === 200 || response.status() === 503)

@@ -196,6 +196,12 @@ test.group('Document Model', (group) => {
       status: DocumentStatus.PENDING,
     })
 
+    assert.isTrue(pendingDoc.canBeValidated())
+
+    // Marquer comme remplacé avant de créer un nouveau document pour le même user/type
+    pendingDoc.status = DocumentStatus.REPLACED
+    await pendingDoc.save()
+
     const validatedDoc = await Document.create({
       documentTypeId: testDocumentType.id,
       userId: testUser.id,
@@ -206,7 +212,6 @@ test.group('Document Model', (group) => {
       status: DocumentStatus.VALIDATED,
     })
 
-    assert.isTrue(pendingDoc.canBeValidated())
     assert.isFalse(validatedDoc.canBeValidated())
   })
 
@@ -221,6 +226,12 @@ test.group('Document Model', (group) => {
       status: DocumentStatus.PENDING,
     })
 
+    assert.isTrue(pendingDoc.canBeRejected())
+
+    // Marquer comme remplacé avant de créer un nouveau document pour le même user/type
+    pendingDoc.status = DocumentStatus.REPLACED
+    await pendingDoc.save()
+
     const rejectedDoc = await Document.create({
       documentTypeId: testDocumentType.id,
       userId: testUser.id,
@@ -231,7 +242,6 @@ test.group('Document Model', (group) => {
       status: DocumentStatus.REJECTED,
     })
 
-    assert.isTrue(pendingDoc.canBeRejected())
     assert.isFalse(rejectedDoc.canBeRejected())
   })
 
@@ -296,14 +306,20 @@ test.group('Document Model', (group) => {
       const doc = await Document.create({
         documentTypeId: testDocumentType.id,
         userId: testUser.id,
-        fileUrl: 'https://example.com/test.jpg',
-        fileName: 'test.jpg',
+        fileUrl: `https://example.com/test-${status}.jpg`,
+        fileName: `test-${status}.jpg`,
         fileSizeBytes: 1024,
         mimeType: 'image/jpeg',
         status,
       })
 
       assert.equal(doc.statusLabel, label)
+
+      // Marquer comme remplacé pour éviter conflit avec le prochain document
+      if (status !== DocumentStatus.REPLACED) {
+        doc.status = DocumentStatus.REPLACED
+        await doc.save()
+      }
     }
   })
 
@@ -320,14 +336,18 @@ test.group('Document Model', (group) => {
       const doc = await Document.create({
         documentTypeId: testDocumentType.id,
         userId: testUser.id,
-        fileUrl: 'https://example.com/test.jpg',
-        fileName: 'test.jpg',
+        fileUrl: `https://example.com/test-${bytes}.jpg`,
+        fileName: `test-${bytes}.jpg`,
         fileSizeBytes: bytes,
         mimeType: 'image/jpeg',
         status: DocumentStatus.PENDING,
       })
 
       assert.equal(doc.fileSizeFormatted, expected)
+
+      // Marquer comme remplacé pour éviter conflit avec le prochain document
+      doc.status = DocumentStatus.REPLACED
+      await doc.save()
     }
   })
 
